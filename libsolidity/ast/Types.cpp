@@ -852,6 +852,11 @@ bool StringLiteralType::operator==(const Type& _other) const
 	return m_value == dynamic_cast<StringLiteralType const&>(_other).m_value;
 }
 
+std::string StringLiteralType::toString(bool) const
+{
+	return "literal_string \"" + m_value + "\"";
+}
+
 TypePointer StringLiteralType::mobileType() const
 {
 	return make_shared<ArrayType>(DataLocation::Memory, true);

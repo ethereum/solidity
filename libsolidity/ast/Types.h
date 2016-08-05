@@ -419,7 +419,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override { return 0; }
 
-	virtual std::string toString(bool) const override { return "literal_string \"" + m_value + "\""; }
+	virtual std::string toString(bool) const override;
 	virtual TypePointer mobileType() const override;
 
 	std::string const& value() const { return m_value; }
