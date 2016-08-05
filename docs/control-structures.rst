@@ -354,7 +354,7 @@ This document does not want to be a full description of the Ethereum virtual mac
 following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
-Note that the order of arguments can be seed to be reversed in non-functional style (explained below).
+Note that the order of arguments can seem to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
 special and all others push exactly one item onte the stack.
 
