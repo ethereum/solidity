@@ -23,7 +23,7 @@ At a global level, you can use import statements of the following form:
 
   import "filename";
 
-...will import all global symbols from "filename" (and symbols imported there) into the
+This statement imports all global symbols from "filename" (and symbols imported there) into the
 current global scope (different than in ES6 but backwards-compatible for Solidity).
 
 ::
