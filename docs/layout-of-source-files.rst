@@ -157,3 +157,23 @@ You can use Doxygen-style tags inside these comments to document
 functions, annotate conditions for formal verification, and provide a
 **confirmation text** which is shown to users when they attempt to invoke a
 function.
+
+In the following example we document the title of the contract, the explanation
+for the two input parameters and two returned values.
+
+::
+
+ /** @title Shape calculator.*/
+ contract shapeCalculator{
+     /**@dev Calculates a rectangle's surface and perimeter.
+      * @param w Width of the rectangle.
+      * @param h Height of the rectangle.
+      * @return s The calculated surface.
+      * @return p The calculated perimeter.
+      */
+     function rectangle(uint w, uint h) returns (uint s, uint p){
+         s = w*h;
+         p = 2*(w+h);
+     }
+ }
+
