@@ -44,7 +44,7 @@ Another syntax is not part of ES6, but probably convenient:
 
   import "filename" as symbolName;
 
-...is equivalent to ``import * as symbolName from "filename";``.
+which is equivalent to ``import * as symbolName from "filename";``.
 
 Paths
 -----
