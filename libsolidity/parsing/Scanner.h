@@ -175,6 +175,7 @@ private:
 	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
+	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
@@ -185,6 +186,7 @@ private:
 	inline Token::Value selectToken(char _next, Token::Value _then, Token::Value _else);
 
 	bool scanHexByte(char& o_scannedByte);
+	bool scanUnicode(unsigned& o_codepoint);
 
 	/// Scans a single Solidity token.
 	void scanToken();

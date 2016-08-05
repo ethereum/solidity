@@ -177,6 +177,41 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 	return true;
 }
 
+bool Scanner::scanUnicode(unsigned & o_codepoint)
+{
+	unsigned x = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		int d = hexValue(m_char);
+		if (d < 0)
+		{
+			rollback(i);
+			return false;
+		}
+		x = x * 16 + d;
+		advance();
+	}
+	o_codepoint = x;
+	return true;
+}
+
+// This supports codepoints between 0000 and FFFF.
+void Scanner::addUnicodeAsUTF8(unsigned codepoint)
+{
+	if (codepoint <= 0x7f)
+		addLiteralChar(codepoint);
+	else if (codepoint <= 0x7ff)
+	{
+		addLiteralChar(0xc0 | (codepoint >> 6));
+		addLiteralChar(0x80 | (codepoint & 0x3f));
+	}
+	else
+	{
+		addLiteralChar(0xe0 | (codepoint >> 12));
+		addLiteralChar(0x80 | ((codepoint >> 6) & 0x3f));
+		addLiteralChar(0x80 | (codepoint & 0x3f));
+	}
+}
 
 // Ensure that tokens can be stored in a byte.
 BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
@@ -607,6 +642,14 @@ bool Scanner::scanEscape()
 	case 'v':
 		c = '\v';
 		break;
+	case 'u':
+	{
+		unsigned codepoint;
+		if (!scanUnicode(codepoint))
+			return false;
+		addUnicodeAsUTF8(codepoint);
+		return true;
+	}
 	case 'x':
 		if (!scanHexByte(c))
 			return false;
