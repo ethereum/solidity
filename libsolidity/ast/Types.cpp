@@ -26,6 +26,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcore/UTF8.h>
 #include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 
@@ -854,6 +855,11 @@ bool StringLiteralType::operator==(const Type& _other) const
 
 std::string StringLiteralType::toString(bool) const
 {
+	int invalidSequence;
+
+	if (!dev::utf8::validate(m_value, invalidSequence))
+		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
+
 	return "literal_string \"" + m_value + "\"";
 }
 
