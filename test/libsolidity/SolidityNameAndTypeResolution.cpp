@@ -3823,6 +3823,16 @@ BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
 	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
 }
 
+BOOST_AUTO_TEST_CASE(modifier_without_underscore)
+{
+	char const* text = R"(
+		contract test {
+			modifier m() {}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::SyntaxError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -40,13 +40,26 @@ void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string con
 	m_errors.push_back(err);
 }
 
+bool SyntaxChecker::visit(ModifierDefinition const&)
+{
+	m_placeholderFound = false;
+	return true;
+}
+
+void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
+{
+	if (!m_placeholderFound)
+		syntaxError(_modifier.body().location(), "Modifier body does not contain '_'.");
+	m_placeholderFound = false;
+}
+
 bool SyntaxChecker::visit(WhileStatement const&)
 {
 	m_inLoopDepth++;
 	return true;
 }
 
-void SyntaxChecker::endVisit(WhileStatement const&)
+void SyntaxChecker::endVisit(WhileStatement const&	)
 {
 	m_inLoopDepth--;
 }
@@ -75,6 +88,12 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
 		syntaxError(_breakStatement.location(), "\"break\" has to be in a \"for\" or \"while\" loop.");
+	return true;
+}
+
+bool SyntaxChecker::visit(const PlaceholderStatement&)
+{
+	m_placeholderFound = true;
 	return true;
 }
 
