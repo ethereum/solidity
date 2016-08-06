@@ -24,28 +24,22 @@
 using namespace std;
 using namespace dev::test;
 
-Options::Options(int argc, char** argv)
+Options const& Options::get()
 {
-	tArgc = 0;
-	tArgv = new char*[argc];
-	for (auto i = 0; i < argc; i++)
-	{
-		string arg = argv[i];
-		if (arg == "--ipc" && i + 1 < argc)
-		{
-			ipcPath = argv[i + 1];
-			i++;
-		}
-		else
-		{
-			tArgv[i] = argv[i];
-			tArgc++;
-		}
-	}
+	static Options instance;
+	return instance;
 }
 
-Options const& Options::get(int argc, char** argv)
+Options::Options()
 {
-	static Options instance(argc, argv);
-	return instance;
+	auto const& suite = boost::unit_test::framework::master_test_suite();
+	for (auto i = 0; i < suite.argc; i++)
+		if (string(suite.argv[i]) == "--ipc" && i + 1 < suite.argc)
+		{
+			ipcPath = suite.argv[i + 1];
+			i++;
+		}
+	if (ipcPath.empty())
+		if (auto path = getenv("ETH_TEST_IPC"))
+			ipcPath = path;
 }
