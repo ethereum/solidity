@@ -33,10 +33,6 @@
 #include "Exceptions.h"
 #include <json/json.h>
 
-namespace Json
-{
-class Value;
-}
 namespace dev
 {
 namespace eth

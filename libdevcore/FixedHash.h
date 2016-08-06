@@ -26,8 +26,6 @@
 #include <array>
 #include <cstdint>
 #include <algorithm>
-#include <boost/random/random_device.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/functional/hash.hpp>
 #include "CommonData.h"
 
@@ -37,8 +35,6 @@ namespace dev
 /// Compile-time calculation of Log2 of constant values.
 template <unsigned N> struct StaticLog2 { enum { result = 1 + StaticLog2<N/2>::result }; };
 template <> struct StaticLog2<1> { enum { result = 0 }; };
-
-extern boost::random_device s_fixedHashEngine;
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
@@ -149,17 +145,6 @@ public:
 
 	/// @returns a constant reference to the object's data as an STL array.
 	std::array<byte, N> const& asArray() const { return m_data; }
-
-	/// Populate with random data.
-	template <class Engine>
-	void randomize(Engine& _eng)
-	{
-		for (auto& i: m_data)
-			i = (uint8_t)boost::random::uniform_int_distribution<uint16_t>(0, 255)(_eng);
-	}
-
-	/// @returns a random valued object.
-	static FixedHash random() { FixedHash ret; ret.randomize(s_fixedHashEngine); return ret; }
 
 	struct hash
 	{
@@ -278,10 +263,6 @@ inline h160 left160(h256 const& _t)
 	memcpy(&ret[0], _t.data(), 20);
 	return ret;
 }
-
-h128 fromUUID(std::string const& _uuid);
-
-std::string toUUID(h128 const& _uuid);
 
 inline std::string toString(h256s const& _bs)
 {
