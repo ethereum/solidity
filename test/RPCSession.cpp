@@ -245,11 +245,15 @@ void RPCSession::test_mineBlocks(int _number)
 	rpcCall("test_mineBlocks", { to_string(_number) }, true);
 
 	//@TODO do not use polling - but that would probably need a change to the test client
-	for (size_t polls = 0; polls < 100; ++polls)
+	unsigned sleepTime = 10;
+	for (size_t polls = 0; polls < 10; ++polls)
 	{
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
 			return;
-		std::this_thread::sleep_for(chrono::milliseconds(10)); //it does not work faster then 10 ms
+		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
+		if (sleepTime > 500)
+			cout << "Mining timeout, sleeping for " << sleepTime << " ms" << endl;
+		sleepTime *= 2;
 	}
 
 	BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");

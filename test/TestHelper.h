@@ -107,7 +107,7 @@ struct Options: boost::noncopyable
 {
 	std::string ipcPath;
 
-	Options const& get();
+	static Options const& get();
 
 private:
 	Options();
