@@ -2390,7 +2390,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_multi_invocation)
 
 BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
 {
-	// Here, the explicit return prevents the second execution
+	// Note that return sets the return variable and jumps to the end of the current function or
+	// modifier code block.
 	char const* sourceCode = R"(
 		contract C {
 			modifier repeat(bool twice) { if (twice) _ _ }
@@ -2399,7 +2400,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(1));
-	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_overriding)
@@ -6878,6 +6879,137 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(return_does_not_skip_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier setsx {
+				_
+				x = 9;
+			}
+			function f() setsx returns (uint) {
+				return 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(9)));
+}
+
+BOOST_AUTO_TEST_CASE(break_in_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 0; i < 10; i++) {
+					_
+					break;
+				}
+			}
+			function f() run {
+				x++;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 0; i < 10; i++) {
+					_
+					break;
+				}
+			}
+			function f() run {
+				x++;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(mutex)
+{
+	char const* sourceCode = R"(
+		contract mutexed {
+			bool locked;
+			modifier protected {
+				if (locked) throw;
+				locked = true;
+				_
+				locked = false;
+			}
+		}
+		contract Fund is mutexed {
+			uint shares;
+			function Fund() { shares = msg.value; }
+			function withdraw(uint amount) protected returns (uint) {
+				// NOTE: It is very bad practice to write this function this way.
+				// Please refer to the documentation of how to do this properly.
+				if (amount > shares) throw;
+				if (!msg.sender.call.value(amount)()) throw;
+				shares -= amount;
+				return shares;
+			}
+			function withdrawUnprotected(uint amount) returns (uint) {
+				// NOTE: It is very bad practice to write this function this way.
+				// Please refer to the documentation of how to do this properly.
+				if (amount > shares) throw;
+				if (!msg.sender.call.value(amount)()) throw;
+				shares -= amount;
+				return shares;
+			}
+		}
+		contract Attacker {
+			Fund public fund;
+			uint callDepth;
+			bool protected;
+			function setProtected(bool _protected) { protected = _protected; }
+			function Attacker(Fund _fund) { fund = _fund; }
+			function attack() returns (uint) {
+				callDepth = 0;
+				return attackInternal();
+			}
+			function attackInternal() internal returns (uint) {
+				if (protected)
+					return fund.withdraw(10);
+				else
+					return fund.withdrawUnprotected(10);
+			}
+			function() {
+				callDepth++;
+				if (callDepth < 4)
+					attackInternal();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 500, "Fund");
+	auto fund = m_contractAddress;
+	BOOST_CHECK_EQUAL(balanceAt(fund), 500);
+	compileAndRun(sourceCode, 0, "Attacker", encodeArgs(u160(fund)));
+	BOOST_CHECK(callContractFunction("setProtected(bool)", true) == encodeArgs());
+	BOOST_CHECK(callContractFunction("attack()") == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(fund), 500);
+	BOOST_CHECK(callContractFunction("setProtected(bool)", false) == encodeArgs());
+	BOOST_CHECK(callContractFunction("attack()") == encodeArgs(u256(460)));
+	BOOST_CHECK_EQUAL(balanceAt(fund), 460);
 }
 
 BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)

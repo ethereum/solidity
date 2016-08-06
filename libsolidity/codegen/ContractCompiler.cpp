@@ -431,16 +431,16 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		if (auto c = m_context.nextConstructor(dynamic_cast<ContractDefinition const&>(*_function.scope())))
 			appendBaseConstructor(*c);
 
-	m_returnTag = m_context.newTag();
+	solAssert(m_returnTags.empty(), "");
 	m_breakTags.clear();
 	m_continueTags.clear();
 	m_stackCleanupForReturn = 0;
 	m_currentFunction = &_function;
-	m_modifierDepth = 0;
+	m_modifierDepth = -1;
 
 	appendModifierOrFunctionCode();
 
-	m_context << m_returnTag;
+	solAssert(m_returnTags.empty(), "");
 
 	// Now we need to re-shuffle the stack. For this we keep a record of the stack layout
 	// that shows the target positions of the elements, where "-1" denotes that this element needs
@@ -695,7 +695,7 @@ bool ContractCompiler::visit(Return const& _return)
 	}
 	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
 		m_context << Instruction::POP;
-	m_context.appendJumpTo(m_returnTag);
+	m_context.appendJumpTo(m_returnTags.back());
 	m_context.adjustStackOffset(m_stackCleanupForReturn);
 	return false;
 }
@@ -755,9 +755,7 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _placeholderStatement);
-	++m_modifierDepth;
 	appendModifierOrFunctionCode();
-	--m_modifierDepth;
 	checker.check();
 	return true;
 }
@@ -775,10 +773,15 @@ void ContractCompiler::appendMissingFunctions()
 void ContractCompiler::appendModifierOrFunctionCode()
 {
 	solAssert(m_currentFunction, "");
+	unsigned stackSurplus = 0;
+	Block const* codeBlock = nullptr;
+
+	m_modifierDepth++;
+
 	if (m_modifierDepth >= m_currentFunction->modifiers().size())
 	{
 		solAssert(m_currentFunction->isImplemented(), "");
-		m_currentFunction->body().accept(*this);
+		codeBlock = &m_currentFunction->body();
 	}
 	else
 	{
@@ -786,37 +789,45 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 		// constructor call should be excluded
 		if (dynamic_cast<ContractDefinition const*>(modifierInvocation->name()->annotation().referencedDeclaration))
-		{
-			++m_modifierDepth;
 			appendModifierOrFunctionCode();
-			--m_modifierDepth;
-			return;
-		}
-
-		ModifierDefinition const& modifier = m_context.functionModifier(modifierInvocation->name()->name());
-		CompilerContext::LocationSetter locationSetter(m_context, modifier);
-		solAssert(modifier.parameters().size() == modifierInvocation->arguments().size(), "");
-		for (unsigned i = 0; i < modifier.parameters().size(); ++i)
+		else
 		{
-			m_context.addVariable(*modifier.parameters()[i]);
-			compileExpression(
-				*modifierInvocation->arguments()[i],
-				modifier.parameters()[i]->annotation().type
-			);
+			ModifierDefinition const& modifier = m_context.functionModifier(modifierInvocation->name()->name());
+			CompilerContext::LocationSetter locationSetter(m_context, modifier);
+			solAssert(modifier.parameters().size() == modifierInvocation->arguments().size(), "");
+			for (unsigned i = 0; i < modifier.parameters().size(); ++i)
+			{
+				m_context.addVariable(*modifier.parameters()[i]);
+				compileExpression(
+					*modifierInvocation->arguments()[i],
+					modifier.parameters()[i]->annotation().type
+				);
+			}
+			for (VariableDeclaration const* localVariable: modifier.localVariables())
+				appendStackVariableInitialisation(*localVariable);
+
+			stackSurplus =
+				CompilerUtils::sizeOnStack(modifier.parameters()) +
+				CompilerUtils::sizeOnStack(modifier.localVariables());
+			codeBlock = &modifier.body();
+
+			codeBlock = &modifier.body();
 		}
-		for (VariableDeclaration const* localVariable: modifier.localVariables())
-			appendStackVariableInitialisation(*localVariable);
-
-		unsigned const c_stackSurplus = CompilerUtils::sizeOnStack(modifier.parameters()) +
-										CompilerUtils::sizeOnStack(modifier.localVariables());
-		m_stackCleanupForReturn += c_stackSurplus;
-
-		modifier.body().accept(*this);
-
-		for (unsigned i = 0; i < c_stackSurplus; ++i)
-			m_context << Instruction::POP;
-		m_stackCleanupForReturn -= c_stackSurplus;
 	}
+
+	if (codeBlock)
+	{
+		m_returnTags.push_back(m_context.newTag());
+
+		codeBlock->accept(*this);
+
+		solAssert(!m_returnTags.empty(), "");
+		m_context << m_returnTags.back();
+		m_returnTags.pop_back();
+
+		CompilerUtils(m_context).popStackSlots(stackSurplus);
+	}
+	m_modifierDepth--;
 }
 
 void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration const& _variable)
