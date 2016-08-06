@@ -19,5 +19,3 @@ eth_use(${EXECUTABLE} REQUIRED Solidity::evmasm)
 #target_link_libraries(${EXECUTABLE} evmasm)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
-
