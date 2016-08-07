@@ -71,7 +71,6 @@ Section: science
 Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
 Build-Depends: debhelper (>= 9.0.0),
-               dh_sphinxdoc,
                libcryptopp-dev,
                cmake,
                g++-4.8,
@@ -115,13 +114,13 @@ export DH_OPTIONS
 
 
 %:
-	dh \$@ --buildsystem=cmake --with sphinxdoc
+	dh \$@ --buildsystem=cmake #--with sphinxdoc
 
 override_dh_auto_test:
 
-override_dh_installdocs:
-	make -C docs html
-	dh_installdocs docs/_build/html
+#override_dh_installdocs:
+#	make -C docs html
+#	dh_installdocs docs/_build/html
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
