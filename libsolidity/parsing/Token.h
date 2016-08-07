@@ -141,6 +141,7 @@ namespace solidity
 	\
 	/* Keywords */                                                     \
 	K(Anonymous, "anonymous", 0)                                       \
+	K(As, "as", 0)                                                     \
 	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
 	K(Const, "constant", 0)                                            \
@@ -171,6 +172,7 @@ namespace solidity
 	K(Storage, "storage", 0)                                           \
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
+	K(Using, "using", 0)                                               \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
 	\
@@ -216,7 +218,6 @@ namespace solidity
 	/* Keywords reserved for future use. */                            \
 	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
-	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
 	K(Final, "final", 0)                                               \
@@ -232,7 +233,6 @@ namespace solidity
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
-	K(Using, "using", 0)                                               \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
