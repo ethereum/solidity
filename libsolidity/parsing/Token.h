@@ -214,6 +214,7 @@ namespace solidity
 	T(Identifier, NULL, 0)                                             \
 	\
 	/* Keywords reserved for future use. */                            \
+	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
 	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
@@ -221,9 +222,11 @@ namespace solidity
 	K(Final, "final", 0)                                               \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
+	K(Interface, "interface", 0)                                       \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
+	K(Payable, "payable", 0)                                           \
 	K(Relocatable, "relocatable", 0)                                   \
 	K(Switch, "switch", 0)                                             \
 	K(Try, "try", 0)                                                   \
