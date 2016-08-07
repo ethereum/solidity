@@ -74,6 +74,13 @@ matrix:
               # See https://github.com/ethereum/webthree-umbrella/issues/565
               - TRAVIS_BUILD_TYPE=Debug
               - ZIP_SUFFIX=osx-elcapitan
+        - os: osx
+          osx_image: xcode8
+          env:
+              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
+              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
+              - TRAVIS_BUILD_TYPE=Debug
+              - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
 
