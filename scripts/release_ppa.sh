@@ -3,25 +3,40 @@
 ## This is used to package .deb packages and upload them to the launchpad
 ## ppa servers for building.
 ##
-## The gnupg key for "build@ethdev.com" has to be present in order to sign
+## If no argument is given, creates a package for the develop branch
+## and uploads it to the ethereum/ethereum-dev ppa.
+##
+## If an argument is given, it is used as a tag and the resulting package
+## is uploaded to the ethereum/ethereum ppa.
+##
+## The gnupg key for "builds@ethereum.org" has to be present in order to sign
 ## the package.
 ##
 ## It will clone the Solidity git from github, determine the version,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
-## A version, tag or commit hash can be given as argument.
-##
 ##############################################################################
 
 set -ev
 
+if [ -z "$1" ]
+then
+    branch=develop
+else
+    branch=$1
+fi
+
+if [ "$branch" = develop ]
+    pparepo=ethereum/ethereum-dev
+    ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-dev/+files
+else
+    pparepo=ethereum/ethereum
+    ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum/+files
+fi
+
 keyid=703F83D0
 email=builds@ethereum.org
 packagename=solc
-
-# TODO determine whether to use dev or not
-pparepo=ethereum/ethereum-dev
-ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-dev/+files
 
 for distribution in trusty vivid wily xenial yakkety
 do
@@ -30,7 +45,7 @@ mkdir $distribution
 cd $distribution
 
 # Fetch source
-git clone --recursive https://github.com/ethereum/solidity.git -b $1
+git clone --recursive https://github.com/ethereum/solidity.git -b "$branch"
 mv solidity solc
 
 # Determine version
@@ -40,11 +55,23 @@ commithash=`git rev-parse --short HEAD`
 committimestamp=`git show --format=%ci HEAD | head -n 1`
 commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10`
 
-# TODO determine if we are on a "release" (tagged commit?) and push to non-dev in that case
 # TODO store the commit hash in a file so that the build info mechanism can pick it up even without git
 
-debversion="$version-nightly-$commitdate-ffi-$commithash"
-tar --mtime "$committimestamp" --exclude .git -czf ../${packagename}_${debversion}.orig.tar.gz .
+if [ $branch = develop]
+then
+    debversion="$version-nightly-$commitdate-$commithash"
+else
+    debversion="$version"
+fi
+
+# gzip will create different tars all the time and we are not allowed
+# to upload the same file twice with different contents, so we only
+# create it once.
+if [ -n -e /tmp/${packagename}_${debversion}.orig.tar.gz ]
+then
+    tar --exclude .git -czf /tmp/${packagename}_${debversion}.orig.tar.gz .
+fi
+cp /tmp/${packagename}_${debversion}.orig.tar.gz ../
 
 # Create debian package information
 
