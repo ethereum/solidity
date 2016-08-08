@@ -27,9 +27,6 @@
 namespace dev
 {
 
-namespace utf8
-{
-
 
 bool validate(std::string const& _input, size_t& _invalidPosition)
 {
@@ -80,7 +77,5 @@ bool validate(std::string const& _input, size_t& _invalidPosition)
 	return false;
 }
 
-
-}
 
 }

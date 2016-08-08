@@ -857,7 +857,7 @@ std::string StringLiteralType::toString(bool) const
 {
 	size_t invalidSequence;
 
-	if (!dev::utf8::validate(m_value, invalidSequence))
+	if (!dev::validate(m_value, invalidSequence))
 		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
 
 	return "literal_string \"" + m_value + "\"";
