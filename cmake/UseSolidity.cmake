@@ -25,7 +25,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "solidity" OR ${SUBMODULE} STREQUAL "")
-		eth_use(${TARGET} ${REQUIRED} Dev::devcore Solidity::evmasm)
+		eth_use(${TARGET} ${REQUIRED} Dev::soldevcore Solidity::evmasm)
 		target_link_libraries(${TARGET} ${Solidity_SOLIDITY_LIBRARIES})
 	endif()
 

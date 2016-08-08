@@ -116,7 +116,7 @@ emcmake cmake \
   -DJSONCPP_INCLUDE_DIR="$WORKSPACE"/jsoncpp/include/ \
   -DCRYPTOPP_LIBRARY="$WORKSPACE"/cryptopp/src/libcryptlib.a \
   -DCRYPTOPP_INCLUDE_DIR="$WORKSPACE"/cryptopp/src/ \
-  -DDev_DEVCORE_LIBRARY="$WORKSPACE"/solidity/build/libdevcore/libdevcore.a \
+  -DDev_DEVCORE_LIBRARY="$WORKSPACE"/solidity/build/libdevcore/libsoldevcore.a \
   -DEth_EVMASM_LIBRARY="$WORKSPACE"/solidity/build/libevmasm/libevmasm.a \
   -DETH_STATIC=1 -DTESTS=0 \
   ..
