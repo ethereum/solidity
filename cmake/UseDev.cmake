@@ -22,9 +22,9 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	endif()
 
-	if (${SUBMODULE} STREQUAL "devcore")
+	if (${SUBMODULE} STREQUAL "soldevcore")
 		eth_use(${TARGET} ${REQUIRED} Dev::base)
-		target_link_libraries(${TARGET} devcore)
+		target_link_libraries(${TARGET} soldevcore)
 	endif()
 
 endfunction()
