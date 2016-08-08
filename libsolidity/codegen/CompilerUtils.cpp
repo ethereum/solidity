@@ -288,8 +288,8 @@ void CompilerUtils::memoryCopy()
 	m_context << u256(0) << u256(identityContractAddress);
 	// compute gas costs
 	m_context << u256(32) << Instruction::DUP5 << u256(31) << Instruction::ADD;
-	static unsigned c_identityGas = 3;
-	static unsigned c_identityWordGas = 15;
+	static unsigned c_identityGas = 15;
+	static unsigned c_identityWordGas = 3;
 	m_context << Instruction::DIV << u256(c_identityWordGas) << Instruction::MUL;
 	m_context << u256(c_identityGas) << Instruction::ADD;
 	m_context << Instruction::CALL;
