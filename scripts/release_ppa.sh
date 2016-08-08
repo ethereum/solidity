@@ -50,13 +50,13 @@ tar --mtime "$committimestamp" --exclude .git -czf ../${packagename}_${debversio
 
 case $distribution in
     trusty)
-        jsoncpplib=libjsoncppv0
+        jsoncpplib=libjsoncpp0
         ;;
     vivid)
-        jsoncpplib=libjsoncppv0
+        jsoncpplib=libjsoncpp0
         ;;
     wily)
-        jsoncpplib=libjsoncppv0v5
+        jsoncpplib=libjsoncpp0v5
         ;;
     *)
         jsoncpplib=libjsoncpp1
