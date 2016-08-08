@@ -24,7 +24,7 @@
 #include <map>
 #include <functional>
 #include <memory>
-#include <libdevcore/SHA3.h>
+#include <libevmasm/SHA3.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>

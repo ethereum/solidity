@@ -31,7 +31,7 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
-#include <libdevcore/Common.h>
+#include <libevmasm/Common.h>
 
 namespace dev {
 namespace solidity {

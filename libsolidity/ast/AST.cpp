@@ -28,7 +28,7 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
-#include <libdevcore/SHA3.h>
+#include <libevmasm/SHA3.h>
 
 using namespace std;
 using namespace dev;

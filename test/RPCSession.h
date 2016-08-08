@@ -21,7 +21,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#include "libdevcore/UndefMacros.h"
+#include "libevmasm/UndefMacros.h"
 #else
 #include <sys/types.h>
 #include <sys/socket.h>

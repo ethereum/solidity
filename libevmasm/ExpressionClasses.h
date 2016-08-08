@@ -26,8 +26,8 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <libdevcore/Common.h>
 #include <libevmasm/AssemblyItem.h>
+#include "Common.h"
 
 namespace dev
 {

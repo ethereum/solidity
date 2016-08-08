@@ -23,15 +23,13 @@
 
 #include <iostream>
 #include <sstream>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/SHA3.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/LinkerObject.h>
-#include "Exceptions.h"
 #include <json/json.h>
+#include "Assertions.h"
+#include "SHA3.h"
 
 namespace dev
 {

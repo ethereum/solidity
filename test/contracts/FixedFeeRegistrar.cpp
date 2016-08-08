@@ -32,7 +32,7 @@
 #pragma warning(pop)
 #endif
 
-#include <libdevcore/Hash.h>
+#include <libevmasm/Hash.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;

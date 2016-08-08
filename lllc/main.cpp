@@ -23,9 +23,10 @@
 #include <fstream>
 #include <iostream>
 #include <liblll/Compiler.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonData.h>
+#include <libevmasm/CommonIO.h>
+#include <libevmasm/CommonData.h>
 #include <libevmasm/Instruction.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;

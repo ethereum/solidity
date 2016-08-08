@@ -22,8 +22,8 @@
 
 #include <libsolidity/interface/Version.h>
 #include <string>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Common.h>
+#include <libevmasm/CommonData.h>
+#include <libevmasm/Common.h>
 #include <libsolidity/interface/Utils.h>
 #include <solidity/BuildInfo.h>
 

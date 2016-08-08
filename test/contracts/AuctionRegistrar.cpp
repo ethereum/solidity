@@ -23,8 +23,8 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/ABI.h>
-#include <libdevcore/Hash.h>
+#include <libevmasm/ABI.h>
+#include <libevmasm/Hash.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;

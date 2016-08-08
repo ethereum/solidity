@@ -22,9 +22,7 @@
 #pragma once
 
 #include <functional>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
-#include "Exceptions.h"
+#include "Assertions.h"
 
 namespace dev
 {

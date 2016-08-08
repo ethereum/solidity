@@ -24,7 +24,7 @@
 #include <string>
 #include <stdio.h>
 #include <thread>
-#include <libdevcore/CommonData.h>
+#include <libevmasm/CommonData.h>
 #include <json/reader.h>
 #include <json/writer.h>
 #include "RPCSession.h"

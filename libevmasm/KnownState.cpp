@@ -22,9 +22,9 @@
  */
 
 #include "KnownState.h"
+#include "AssemblyItem.h"
+#include "SHA3.h"
 #include <functional>
-#include <libdevcore/SHA3.h>
-#include <libevmasm/AssemblyItem.h>
 
 using namespace std;
 using namespace dev;

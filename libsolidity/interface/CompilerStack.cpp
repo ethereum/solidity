@@ -36,7 +36,7 @@
 #include <libsolidity/interface/InterfaceHandler.h>
 #include <libsolidity/formal/Why3Translator.h>
 
-#include <libdevcore/SHA3.h>
+#include <libevmasm/SHA3.h>
 
 using namespace std;
 using namespace dev;

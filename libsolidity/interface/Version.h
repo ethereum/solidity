@@ -23,7 +23,7 @@
 #pragma once
 
 #include <string>
-#include <libdevcore/Common.h>
+#include <libevmasm/Common.h>
 
 namespace dev
 {

@@ -23,9 +23,9 @@
 #include <libsolidity/ast/Types.h>
 #include <limits>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/SHA3.h>
+#include <libevmasm/CommonIO.h>
+#include <libevmasm/CommonData.h>
+#include <libevmasm/SHA3.h>
 #include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 

@@ -28,7 +28,7 @@
 #include <boost/spirit/include/support_utree.hpp>
 #pragma warning(pop)
 #pragma GCC diagnostic pop
-#include <libdevcore/CommonIO.h>
+#include <libevmasm/CommonIO.h>
 #include <libevmasm/Instruction.h>
 #include "CompilerState.h"
 #include "Parser.h"

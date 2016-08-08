@@ -27,8 +27,8 @@
 #include "../TestHelper.h"
 #include "../RPCSession.h"
 
-#include <libdevcore/ABI.h>
-#include <libdevcore/FixedHash.h>
+#include <libevmasm/ABI.h>
+#include <libevmasm/FixedHash.h>
 #include <libevmasm/Instruction.h>
 
 #include <libsolidity/interface/CompilerStack.h>

@@ -25,8 +25,8 @@
 
 #include <vector>
 #include <memory>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
+#include "Assertions.h"
+#include "Common.h"
 #include <libevmasm/ExpressionClasses.h>
 
 namespace dev

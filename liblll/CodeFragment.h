@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libevmasm/Common.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include "Exceptions.h"

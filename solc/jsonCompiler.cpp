@@ -24,9 +24,9 @@
 #include <functional>
 #include <iostream>
 #include <json/json.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
+#include <libevmasm/Common.h>
+#include <libevmasm/CommonData.h>
+#include <libevmasm/CommonIO.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolidity/parsing/Scanner.h>

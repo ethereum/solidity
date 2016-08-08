@@ -22,8 +22,8 @@
 #pragma once
 
 #include <vector>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
+#include "CommonData.h"
+#include "CommonIO.h"
 
 namespace dev
 {

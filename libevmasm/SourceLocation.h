@@ -26,7 +26,7 @@
 #include <string>
 #include <ostream>
 #include <tuple>
-#include <libdevcore/Common.h> // defines noexcept macro for MSVC
+#include "Common.h" // defines noexcept macro for MSVC
 
 namespace dev
 {

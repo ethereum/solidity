@@ -21,10 +21,10 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/SHA3.h>
+#include "Common.h"
+#include "FixedHash.h"
+#include "CommonData.h"
+#include "SHA3.h"
 
 namespace dev
 {

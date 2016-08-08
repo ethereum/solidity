@@ -27,12 +27,12 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 #include <boost/rational.hpp>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
+#include <libevmasm/Common.h>
+#include <libevmasm/CommonIO.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
-#include <libdevcore/UndefMacros.h>
+#include <libevmasm/UndefMacros.h>
 
 namespace dev
 {

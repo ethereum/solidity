@@ -19,11 +19,11 @@
  * @date 2014
  */
 
-#include "./Instruction.h"
-
+#include "Instruction.h"
+#include "CommonIO.h"
 #include <functional>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
+
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;

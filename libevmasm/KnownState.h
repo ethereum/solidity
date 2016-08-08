@@ -35,8 +35,9 @@
 #include <boost/bimap.hpp>
 #pragma warning(pop)
 #pragma GCC diagnostic pop
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/Exceptions.h>
+
+#include "Exceptions.h"
+#include "KnownState.h"
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
 

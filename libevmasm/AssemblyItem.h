@@ -23,10 +23,10 @@
 
 #include <iostream>
 #include <sstream>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
+#include "Assertions.h"
+#include "Common.h"
 #include "Exceptions.h"
 using namespace dev::solidity;
 

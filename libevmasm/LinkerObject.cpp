@@ -19,8 +19,8 @@
  * @date 2015
  */
 
+#include "CommonData.h"
 #include <libevmasm/LinkerObject.h>
-#include <libdevcore/CommonData.h>
 
 using namespace dev;
 using namespace dev::eth;

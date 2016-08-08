@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
+#include <libevmasm/Assertions.h>
 #include <libsolidity/interface/Exceptions.h>
 
 namespace dev

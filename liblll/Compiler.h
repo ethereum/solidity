@@ -23,7 +23,7 @@
 
 #include <string>
 #include <vector>
-#include <libdevcore/Common.h>
+#include <libevmasm/Common.h>
 
 namespace dev
 {

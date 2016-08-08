@@ -23,8 +23,8 @@
 #include <utility>
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/Common.h>
-#include <libdevcore/SHA3.h>
+#include <libevmasm/Common.h>
+#include <libevmasm/SHA3.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerContext.h>

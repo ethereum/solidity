@@ -30,8 +30,8 @@
 #include <functional>
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+#include <libevmasm/Common.h>
+#include <libevmasm/FixedHash.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
 #include <libsolidity/interface/Exceptions.h>

@@ -24,7 +24,7 @@
 #include <functional>
 #include <memory>
 #include <boost/noncopyable.hpp>
-#include <libdevcore/Common.h>
+#include <libevmasm/Common.h>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>

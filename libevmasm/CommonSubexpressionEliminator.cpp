@@ -23,9 +23,9 @@
 
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/SHA3.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
+#include "SHA3.h"
 
 using namespace std;
 using namespace dev;
