@@ -150,12 +150,14 @@ case $(uname -s) in
             Alpine)
                 #Alpine
                 echo "Installing solidity dependencies on Alpine Linux."
-                echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
-                echo "If you would like to get 'install_deps.sh' working for Alpine Linux, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/solidity."
-                echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                exit 1
+
+                # All our dependencies can be found in the Alpine Linux official repositories.
+                # See https://pkgs.alpinelinux.org/
+                
+                apk update
+                apk upgrade
+                apk add boost-dev build-base cmake jsoncpp-dev
+
                 ;;
 
 #------------------------------------------------------------------------------
