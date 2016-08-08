@@ -33,7 +33,7 @@ namespace utf8
 
 /// Validate an input for UTF8 encoding
 /// @returns true if it is invalid and the first invalid position in invalidPosition
-bool validate(std::string const& _input, int& _invalidPosition);
+bool validate(std::string const& _input, size_t& _invalidPosition);
 
 }
 

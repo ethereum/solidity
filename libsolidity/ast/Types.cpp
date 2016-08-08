@@ -855,7 +855,7 @@ bool StringLiteralType::operator==(const Type& _other) const
 
 std::string StringLiteralType::toString(bool) const
 {
-	int invalidSequence;
+	size_t invalidSequence;
 
 	if (!dev::utf8::validate(m_value, invalidSequence))
 		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
