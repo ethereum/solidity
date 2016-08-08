@@ -31,19 +31,19 @@ namespace utf8
 {
 
 
-bool validate(std::string input, int &invalidPosition)
+bool validate(std::string const& _input, int& _invalidPosition)
 {
-	const int length = input.length();
+	const int length = _input.length();
 	bool valid = true;
 	int i = 0;
 
 	for (; i < length; i++)
 	{
-		if ((unsigned char)input[i] < 0x80)
+		if ((unsigned char)_input[i] < 0x80)
 			continue;
 
 		int count = 0;
-		switch(input[i] & 0xe0) {
+		switch(_input[i] & 0xe0) {
 			case 0xc0: count = 1; break;
 			case 0xe0: count = 2; break;
 			case 0xf0: count = 3; break;
@@ -65,7 +65,7 @@ bool validate(std::string input, int &invalidPosition)
 		for (int j = 0; j < count; j++)
 		{
 			i++;
-			if ((input[i] & 0xc0) != 0x80)
+			if ((_input[i] & 0xc0) != 0x80)
 			{
 				valid = false;
 				break;
@@ -76,7 +76,7 @@ bool validate(std::string input, int &invalidPosition)
 	if (valid)
 		return true;
 
-	invalidPosition = i;
+	_invalidPosition = i;
 	return false;
 }
 
