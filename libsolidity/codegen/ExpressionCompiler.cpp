@@ -1367,9 +1367,20 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			if (c_numBits - c_fractionalBits == 0)
 			{
 				//take two numbers, cut them in half, multiply them, simple as that.
-				m_context << c_halfShift << Instruction::DUP1 << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV); 
-				m_context << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				appendInlineAssembly(R"(
+					{
+						let firstNum := dup1
+						let secondNum := dup3
+						let runningTotal := mul($div(firstNum, $halfShift), $div(secondNum, $halfShift))
+					}
+				)", map<string, string> {
+						{"$div", (c_isSigned ? "sdiv" : "div")},
+						{"$halfShift", toString(c_halfShift)}
+				});
 
+				/*m_context << c_halfShift << Instruction::DUP1 << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV); 
+				m_context << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				*/
 			}
 			else if (c_numBits > 128)
 			{
@@ -1384,7 +1395,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				//m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 				if (c_fractionalBits > c_intBits)
 				{
-					//we need this here because overwise we will have an overflow with our fractional bits
+					//we need this here because otherwise we will have an overflow with our fractional bits
 
 					appendInlineAssembly(R"(
 						{
@@ -1455,14 +1466,26 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			}
 			else
 			{
-				//multiply, then shift right...this is your fraction.
+				appendInlineAssembly(R"(
+					{
+						let firstNum := dup1
+						let secondNum := dup3
+						let fraction := $div(mul(firstNum, secondNum), $fractionShift)
+						let integer := mul(div(secondNum, $fractionShift), firstNum)
+						let runningTotal := add(integer, fraction)
+					}
+				)", map<string, string> {
+						{"$div", (c_isSigned ? "sdiv" : "div")},
+						{"$fractionShift", toString(c_fractionShift)},
+				});
+				/*//multiply, then shift right...this is your fraction.
 				m_context << Instruction::MUL << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 				//now redo the process...
 				m_context << Instruction::DUP2 << Instruction::DUP4;
 				//but this time, get the integer portion.
 				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
 				//add
-				m_context << Instruction::ADD;
+				m_context << Instruction::ADD;*/
 			}
 		}
 		else
@@ -1805,9 +1828,9 @@ void ExpressionCompiler::appendInlineAssembly(string const& _assembly, map<strin
 		string assembly = _assembly;
 		for (auto const& replacement: _replacements)
 			assembly = boost::algorithm::replace_all_copy(assembly, replacement.first, replacement.second);
-		cout << assembly << endl;
+		cout << "append inline assembly input: " << assembly << endl;
 		string passFail = bool(assembly::InlineAssemblyStack().parseAndAssemble(assembly, m_context.nonConstAssembly())) ? "pass" : "fail";
-		cout << passFail << endl;
+		cout << "did it pass or fail?: " << passFail << endl;
 		solAssert(!!assembly::InlineAssemblyStack().parseAndAssemble(assembly, m_context.nonConstAssembly()), "");
 	}
 }

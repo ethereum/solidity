@@ -161,7 +161,6 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			literal = "byte";
 		else
 			literal = m_scanner->currentLiteral();
-		cout << "CURRENT LITERAL: " << literal << endl;
 		// first search the set of instructions.
 		if (s_instructions.count(literal))
 		{
@@ -181,7 +180,6 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	case Token::StringLiteral:
 	case Token::Number:
 	{
-		cout << "String/Num literal: " << m_scanner->currentLiteral() << endl;
 		ret = Literal{
 			location(),
 			m_scanner->currentToken() == Token::Number,

@@ -138,7 +138,6 @@ void ParserBase::parserError(string const& _description)
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	cout << _description << endl;
 	parserError(_description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
