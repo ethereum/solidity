@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
+#include <boost/algorithm/string/replace.hpp>
 #include <utility>
 #include <numeric>
 #include <boost/algorithm/string/replace.hpp>
