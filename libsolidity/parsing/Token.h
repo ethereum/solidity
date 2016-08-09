@@ -291,6 +291,7 @@ public:
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
+	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }
 
 	// @returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
