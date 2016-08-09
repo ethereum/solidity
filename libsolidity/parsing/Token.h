@@ -214,6 +214,7 @@ namespace solidity
 	T(Identifier, NULL, 0)                                             \
 	\
 	/* Keywords reserved for future use. */                            \
+	K(After, "after", 0)                                               \
 	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
@@ -229,10 +230,6 @@ namespace solidity
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Using, "using", 0)                                               \
-	\
-	/* Deprecated tokens. */                                           \
-	K(After, "after", 0)                                               \
-	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -288,7 +285,6 @@ public:
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
-	static bool isDeprecated(Value op) { return op == After; }
 
 	// @returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
