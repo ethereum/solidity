@@ -306,7 +306,7 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// for non-address integers, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
-			_operator == Token::After || _operator == Token::BitNot)
+			_operator == Token::BitNot)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -416,8 +416,7 @@ TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 		_operator == Token::Add || 
 		_operator == Token::Sub ||
 		_operator == Token::Inc || 
-		_operator == Token::Dec ||
-		_operator == Token::After
+		_operator == Token::Dec
 	)
 		return shared_from_this();
 	else
