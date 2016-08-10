@@ -339,7 +339,7 @@ these curly braces, the following can be used (see the later sections for more d
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcode in functional style, e.g. ``add(1, mlod(0))``
+ - opcodes in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
  - identifiers (externals, labels or assembly-local variables), e.g. ``jump(name)``, ``3 x add``
@@ -354,7 +354,7 @@ This document does not want to be a full description of the Ethereum virtual mac
 following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
-Note that the order of arguments can be seed to be reversed in non-functional style (explained below).
+Note that the order of arguments can be seen as being reversed compared to the instructional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
 special and all others push exactly one item onte the stack.
 
