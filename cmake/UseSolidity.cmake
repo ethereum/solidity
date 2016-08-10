@@ -14,18 +14,18 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	target_include_directories(${TARGET} PUBLIC ${Solidity_INCLUDE_DIRS})
 
-	if (${SUBMODULE} STREQUAL "evmasm")
-		eth_use(${TARGET} ${REQUIRED} )
-                target_link_libraries(${TARGET} ${Solidity_EVMASM_LIBRARIES})
+	if (${SUBMODULE} STREQUAL "solevmasm")
+		eth_use(${TARGET} ${REQUIRED} Jsoncpp)
+		target_link_libraries(${TARGET} ${Solidity_SOLEVMASM_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "lll")
-		eth_use(${TARGET} ${REQUIRED} Solidity::evmasm)
+		eth_use(${TARGET} ${REQUIRED} Solidity::solevmasm)
 		target_link_libraries(${TARGET} ${Solidity_LLL_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "solidity" OR ${SUBMODULE} STREQUAL "")
-		eth_use(${TARGET} ${REQUIRED} Dev::soldevcore Solidity::evmasm)
+		eth_use(${TARGET} ${REQUIRED} Dev::soldevcore Solidity::solevmasm)
 		target_link_libraries(${TARGET} ${Solidity_SOLIDITY_LIBRARIES})
 	endif()
 
