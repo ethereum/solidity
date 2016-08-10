@@ -337,7 +337,7 @@ Inline assembly parses comments, literals and identifiers exactly as Solidity, s
 usual ``//`` and ``/* */`` comments. Inline assembly is initiated by ``assembly { ... }`` and inside
 these curly braces, the following can be used (see the later sections for more details)
 
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+ - literals, e.g. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
  - opcodes in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
