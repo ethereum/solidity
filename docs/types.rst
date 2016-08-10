@@ -150,7 +150,7 @@ Dynamically-sized byte array
     Dynamically-sized UTF8-encoded string, see :ref:`arrays`. Not a value-type!
 
 As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
-for arbitrary-length string (utf-8) data. If you can limit the length to a certain
+for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
 number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
@@ -216,7 +216,7 @@ String Literals
 
 String Literals are written with double quotes (``"abc"``). As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32`` if they fit, to ``bytes`` and to ``string``.
 
-String Literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF8 sequence.
+String Literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
 .. index:: enum
 
@@ -353,7 +353,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
 .. note::
     If you want to access the byte-representation of a string ``s``, use
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
-    that you are accessing the low-level bytes of the utf-8 representation,
+    that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
 .. index:: ! array;allocating, new
