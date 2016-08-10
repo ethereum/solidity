@@ -362,6 +362,7 @@ void ASTJsonConverter::endVisit(FunctionDefinition const&)
 
 void ASTJsonConverter::endVisit(VariableDeclaration const&)
 {
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(TypeName const&)
