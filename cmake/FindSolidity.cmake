@@ -7,7 +7,7 @@
 #  SOLIDITY_INCLUDE_DIRS
 
 include(EthUtils)
-set(LIBS solidity;lll;evmasm)
+set(LIBS solidity;lll;solevmasm)
 
 set(Solidity_INCLUDE_DIRS "${SOL_DIR}")
 
