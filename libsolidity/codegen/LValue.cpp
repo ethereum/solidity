@@ -17,7 +17,7 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
- * LValues for use in the expresison compiler.
+ * LValues for use in the expression compiler.
  */
 
 #include <libsolidity/codegen/LValue.h>
