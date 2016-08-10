@@ -147,7 +147,7 @@ Dynamically-sized byte array
 ``bytes``:
     Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
 ``string``:
-    Dynamically-sized UTF8-encoded string, see :ref:`arrays`. Not a value-type!
+    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
 
 As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
 for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
