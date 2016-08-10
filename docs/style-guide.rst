@@ -118,7 +118,7 @@ Source File Encoding
 UTF-8 or ASCII encoding is preferred.
 
 Imports
-==========
+=======
 
 Import statements should always be placed at the top of the file.
 
@@ -518,6 +518,18 @@ No::
 
 Other Recommendations
 =====================
+
+* Strings should be quoted with double-quotes instead of single-quotes.
+
+Yes::
+
+    str = "foo";
+    str = "Hamlet says, 'To be or not to be...'";
+
+No::
+
+    str = 'bar';
+    str = '"Be yourself; everyone else is already taken." -Oscar Wilde';
 
 * Surround operators with a single space on either side.
 
