@@ -15,8 +15,8 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	target_include_directories(${TARGET} PUBLIC ${Solidity_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "evmasm")
-		eth_use(${TARGET} ${REQUIRED} )
-                target_link_libraries(${TARGET} ${Solidity_EVMASM_LIBRARIES})
+		eth_use(${TARGET} ${REQUIRED} Jsoncpp)
+		target_link_libraries(${TARGET} ${Solidity_EVMASM_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "lll")
