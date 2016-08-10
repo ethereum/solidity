@@ -27,6 +27,7 @@ else
 fi
 
 if [ "$branch" = develop ]
+then
     pparepo=ethereum/ethereum-dev
     ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-dev/+files
 else
@@ -57,7 +58,7 @@ commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10`
 
 # TODO store the commit hash in a file so that the build info mechanism can pick it up even without git
 
-if [ $branch = develop]
+if [ $branch = develop ]
 then
     debversion="$version-nightly-$commitdate-$commithash"
 else
@@ -67,7 +68,7 @@ fi
 # gzip will create different tars all the time and we are not allowed
 # to upload the same file twice with different contents, so we only
 # create it once.
-if [ -n -e /tmp/${packagename}_${debversion}.orig.tar.gz ]
+if [ ! -e /tmp/${packagename}_${debversion}.orig.tar.gz ]
 then
     tar --exclude .git -czf /tmp/${packagename}_${debversion}.orig.tar.gz .
 fi
@@ -117,6 +118,8 @@ Package: solc
 Architecture: any-i386 any-amd64
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}, $jsoncpplib
+Replaces: lllc (<< 1:0.3.6)
+Conflicts: libethereum (<= 1.2.9)
 Description: Solidity compiler.
  The commandline interface to the Solidity smart contract compiler.
 EOF
@@ -194,7 +197,7 @@ mkdir debian/source
 echo "3.0 (quilt)" > debian/source/format
 chmod +x debian/rules
 
-versionsuffix=0ubuntu4~${distribution}
+versionsuffix=0ubuntu1~${distribution}
 # bump version / add entry to changelog
 EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithash}"
 
