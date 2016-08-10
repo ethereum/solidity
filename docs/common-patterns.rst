@@ -18,74 +18,57 @@ introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
 This is an example of the withdrawal pattern in practice in
-an Ether storage contract.
+an Ether "store" contract.
 
 ::
 
-    contract WithdrawalPatternAuction {
-        address public beneficiary;
-        uint public auctionStart;
-        uint public biddingTime;
+    contract WithdrawalStore {
 
-        address public highestBidder;
-        uint public highestBid;
-
-        mapping(address => uint) pendingReturns;
-
-        bool ended;
-
-        function WithdrawalPatternAuction(
-            uint _biddingTime,
-            address _beneficiary
-        ) {
-            beneficiary = _beneficiary;
-            auctionStart = now;
-            biddingTime = _biddingTime;
+        struct Item {
+            uint price;
+            uint quantity;
         }
 
-        function bid() {
-            if (now > auctionStart + biddingTime) {
+        modifier onlyOwner {
+            if (msg.sender == owner) {
+                _
+            }
+            else {
                 throw;
             }
-            if (msg.value <= highestBid) {
-                throw;
+        }
+
+        address owner;
+        mapping (string => Item) inventory;
+
+        function WithdrawalStore() {
+            owner = msg.sender;
+        }
+
+        function updateInventory(
+            string _item,
+            uint _price,
+            uint _quantity
+        ) onlyOwner {
+            inventory[_item] = Item(_price, _quantity);
+        }
+
+        // Notice that the owner withdraws their own Ether
+        function withdraw() onlyOwner {
+            owner.send(this.balance);
+        }
+
+        function buy(string _item) returns (bool) {
+            if (
+                inventory[_item].quantity > 0 &&
+                inventory[_item].price <= msg.value
+            ) {
+                inventory[_item].quantity--;
+                return true;
             }
-
-            // Note that funds for unsucessful
-            // bids are returned using the
-            // pendingReturns mapping
-            if (highestBidder != 0) {
-                pendingReturns[highestBidder] += highestBid;
+            else {
+                return false;
             }
-            highestBidder = msg.sender;
-            highestBid = msg.value;
-        }
-
-        // Withdraw a bid that was overbid.
-        function withdraw() {
-            var amount = pendingReturns[msg.sender];
-            // It is important to set this to zero because the recipient
-            // can call this function again as part of the receiving call
-            // before `send` returns.
-            pendingReturns[msg.sender] = 0;
-            if (!msg.sender.send(amount))
-                throw; // If anything fails, this will revert the changes above
-        }
-
-        function auctionEnd() {
-            if (now <= auctionStart + biddingTime)
-                throw;
-            if (ended)
-                throw;
-
-            ended = true;
-
-            if (!beneficiary.send(this.balance))
-                throw;
-        }
-
-        function () {
-            throw;
         }
     }
 
@@ -93,66 +76,55 @@ This is as opposed to the more intuitive sending pattern.
 
 ::
 
-    contract SendPatternAuction {
-        address public beneficiary;
-        uint public auctionStart;
-        uint public biddingTime;
+    contract SendStore {
 
-        address public highestBidder;
-        uint public highestBid;
-
-        bool ended;
-
-        function WithdrawalPatternAuction(
-            uint _biddingTime,
-            address _beneficiary
-        ) {
-            beneficiary = _beneficiary;
-            auctionStart = now;
-            biddingTime = _biddingTime;
+        struct Item {
+            uint price;
+            uint quantity;
         }
 
-        function bid() {
-            if (now > auctionStart + biddingTime) {
+        modifier onlyOwner {
+            if (msg.sender == owner) {
+                _
+            }
+            else {
                 throw;
             }
-            if (msg.value <= highestBid) {
-                throw;
-            }
-
-            // Note that funds are
-            // immedietally sent back to
-            // unsucessful bidders
-            if (highestBidder != 0) {
-                msg.sender.send(amount);// DANGER - send is unchecked!
-            }
-            highestBidder = msg.sender;
-            highestBid = msg.value;
         }
 
-        function auctionEnd() {
-            if (now <= auctionStart + biddingTime)
-                throw;
-            if (ended)
-                throw;
+        address owner;
+        mapping (string => Item) inventory;
 
-            ended = true;
-
-            if (!beneficiary.send(this.balance))
-                throw;
+        function SendStore() {
+            owner = msg.sender;
         }
 
-        function () {
-            throw;
+        function updateInventory(
+            string _item,
+            uint _price,
+            uint _quantity
+        ) onlyOwner {
+            inventory[_item] = Item(_price, _quantity);
+        }
+
+        function buy(string _item) returns (bool) {
+            if (
+                inventory[_item].quantity > 0 &&
+                inventory[_item].price <= msg.value
+            ) {
+                inventory[_item].quantity--;
+                owner.send(msg.value);// WARNING - this send is unchecked!!
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     }
 
 Notice that, in this example, an attacker could trap
-the previous highest bidder's funds in the contract
-by causing the execution of `send` to fail.
-
-The full auction example can be found at
-:ref:`simple_auction`.
+the owner's funds in the contract by causing the
+execution of `send` to fail through a callstack attack.
 
 .. index:: access;restricting
 
