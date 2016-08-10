@@ -61,7 +61,7 @@ Set up Homebrew:
     brew upgrade
 
     brew install boost --c++11             # this takes a while
-    brew install cmake cryptopp gmp
+    brew install cmake cryptopp gmp jsoncpp
 
 Ubuntu Trusty (14.04)
 ---------------------
