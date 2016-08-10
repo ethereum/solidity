@@ -120,33 +120,28 @@ env:
         - ENCRYPTION_LABEL="6d4541b72666"
         - JOB=default
 
-# This is the deploy target for the Emscripten build.
-# It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'
-# step to https://github.com/ethereum/solc-bin/tree/gh-pages/bin.
-# Both the build and deploy steps for Emscripten are only run within the Ubuntu
-# configurations (not for macOS).  That is controlled by conditionals within the bash
-# scripts because TravisCI doesn't provide much in the way of conditional logic.
-
 deploy:
-    provider: script
-    script: test $JOB != emscripten || scripts/release_emscripten.sh
-    skip_cleanup: true
-    on:
-        branch: develop
+    # This is the deploy target for the Emscripten build.
+    # It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'
+    # step to https://github.com/ethereum/solc-bin/tree/gh-pages/bin.
+    # Both the build and deploy steps for Emscripten are only run within the Ubuntu
+    # configurations (not for macOS).  That is controlled by conditionals within the bash
+    # scripts because TravisCI doesn't provide much in the way of conditional logic.
+    - provider: script
+      script: test $JOB != emscripten || scripts/release_emscripten.sh
+      skip_cleanup: true
+      on:
+          branch: develop
 
-# This is the deploy target for the native build (Linux and macOS)
-# which generates development ZIPs per commit.  We are in agreement
-# that this is probably noisy overkill, so will want to renable this
-# functionality wrapped in some conditionals so that it only runs
-# when building the 'release' branch.
-#
-#deploy:
-#    provider: releases
-#    api_key:
-#        secure: mGeDrlCbhPNQVqrk5wSqFZe/7C5HUIBWcZECJcFrEldN6ELj3a8mhDX9EWebidyFmZsf3ipKVMycJtXZHlH2kVZ0nZdRulq4bYhLiUFRaFQCHMW35dml5mxO/FPp+jhhZaylDUx+cI6AULbj8DvNFqSCfjx8qimRhJjRY4JHeG71N6g5+LU2/dA01D4Y97BUbQ5dYcmEyuEsriSpXOElIQIIv3+Q6MJNnLzxUA6EXsp4Qt3Qf3R1+EkI/RWOPbQsddpFNJBcBNOscCUFSZV3+ZK9E2RyHbPaL+Da4aJKVpgD7X1TFudq4PClMUTkg8CuJh/kvy9wkpaWyYHbLGQqu1vQ+NQ+vlTAKf8U+1xhC1IkX6nA+g4TlRksZRltRhpkBPnFoaQQGjD9eYyT1V/Htrn8Y/VGbYPBVa0GcEYXG5pDCBPz91RBpYwDcyUg9DEPNI6zYfQY8jA8xqtFwPX79Y22MDXIKhBskK00geuzh7Npy5Rnh4fLqVKMlffvYx3kwp444EFWtQ5jxbRCym2Th6EldkOM8Kble1JvixQtVb4s+DpTuwHCTrXZhwMuJpmwgRx52zyIsGrBPF3MOmdlwl+l0TD8UEJXt0JM1XSF1AROyYwXKDZQ9Qt4sd9ZKSWWaLJMEJf4kkZWYgTEI/FhOWlfshQCt8Z9S9r4fq2ywoo=
-#    file: $TRAVIS_BUILD_DIR/solidity-develop-$ZIP_SUFFIX.zip
-#    skip_cleanup: true
-#    on:
-#        repo: ethereum/solidity
-#        branch: develop
-
+    # This is the deploy target for the native build (Linux and macOS)
+    # which generates ZIPs per commit.  We are in agreement that
+    # generating ZIPs per commit for the develop branch is probably
+    # just noise, so we only run this deployment target on 'release'.
+    - provider: releases
+      api_key:
+          secure: mGeDrlCbhPNQVqrk5wSqFZe/7C5HUIBWcZECJcFrEldN6ELj3a8mhDX9EWebidyFmZsf3ipKVMycJtXZHlH2kVZ0nZdRulq4bYhLiUFRaFQCHMW35dml5mxO/FPp+jhhZaylDUx+cI6AULbj8DvNFqSCfjx8qimRhJjRY4JHeG71N6g5+LU2/dA01D4Y97BUbQ5dYcmEyuEsriSpXOElIQIIv3+Q6MJNnLzxUA6EXsp4Qt3Qf3R1+EkI/RWOPbQsddpFNJBcBNOscCUFSZV3+ZK9E2RyHbPaL+Da4aJKVpgD7X1TFudq4PClMUTkg8CuJh/kvy9wkpaWyYHbLGQqu1vQ+NQ+vlTAKf8U+1xhC1IkX6nA+g4TlRksZRltRhpkBPnFoaQQGjD9eYyT1V/Htrn8Y/VGbYPBVa0GcEYXG5pDCBPz91RBpYwDcyUg9DEPNI6zYfQY8jA8xqtFwPX79Y22MDXIKhBskK00geuzh7Npy5Rnh4fLqVKMlffvYx3kwp444EFWtQ5jxbRCym2Th6EldkOM8Kble1JvixQtVb4s+DpTuwHCTrXZhwMuJpmwgRx52zyIsGrBPF3MOmdlwl+l0TD8UEJXt0JM1XSF1AROyYwXKDZQ9Qt4sd9ZKSWWaLJMEJf4kkZWYgTEI/FhOWlfshQCt8Z9S9r4fq2ywoo=
+      file: $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
+      skip_cleanup: true
+      on:
+          repo: ethereum/solidity
+          branch: release

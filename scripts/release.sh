@@ -89,4 +89,4 @@ fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.
 
-zip -j $REPO_ROOT/solidity-develop-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+zip -j $REPO_ROOT/solidity-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
