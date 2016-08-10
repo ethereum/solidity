@@ -32,7 +32,10 @@ skip_tags: true
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
-cache: build
+# NB: Appveyor cache is disabled, because it is proving very unreliable.
+# We can re-enable it when we find a way to mitigate the unreliability
+# issues.  Have automated builds be reliable is the more important thing.
+#cache: build
 install:
     - git submodule update --init --recursive
     - scripts/install_deps.bat
@@ -54,23 +57,22 @@ build_script:
 #    - pkill eth
 
 artifacts:
-    - path: solidity-develop-windows.zip
-      name: solidity-develop-windows-zip
+    - path: solidity-windows.zip
+      name: solidity-windows-zip
 
-# This is the deploy target for Windows
-# which generates development ZIPs per commit.  We are in agreement
-# that this is probably noisy overkill, so will want to renable this
-# functionality wrapped in some conditionals so that it only runs
-# when building the 'release' branch.
-#
-#deploy:
-#    release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
-#    tag: develop-v$(APPVEYOR_BUILD_VERSION)
-#    description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
-#    prerelease: true
-#    provider: GitHub
-#    auth_token:
-#        secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-#    artifact: solidity-develop-windows-zip
-#    on:
-#        branch: standalone_changes
+# This is the deploy target for Windows which generates ZIPs per commit.
+# We are in agreement that generating ZIPs per commit for the develop
+# branch is probably just noise, so we only run this deployment target
+# on 'release'.
+
+deploy:
+    release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
+    tag: develop-v$(APPVEYOR_BUILD_VERSION)
+    description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+    prerelease: true
+    provider: GitHub
+    auth_token:
+        secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
+    artifact: solidity-windows-zip
+    on:
+        branch: release

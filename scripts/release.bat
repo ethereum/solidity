@@ -28,7 +28,6 @@ REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
 
-REM TODO - Add soltest\%CONFIGURATION%\soltest.exe, when that is buildable.
-7z a solidity-develop-windows.zip ^
-    .\build\solc\%CONFIGURATION%\solc.exe ^
+7z a solidity-windows.zip ^
+    .\build\solc\%CONFIGURATION%\solc.exe .\build\test\%CONFIGURATION%\soltest.exe ^
     "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
