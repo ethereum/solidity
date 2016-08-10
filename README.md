@@ -6,7 +6,7 @@ To get started you can find a basic introduction to the language in the [Solidit
 
 You can start using [Solidity in your browser](https://ethereum.github.io/browser-solidity/) with no need to download or compile anything.
 
-[Changelog](https://github.com/ethereum/wiki/wiki/Solidity-Changelog)
+[Changelog](https://github.com/ethereum/solidity/blob/develop/Changelog.md)
 
 The [Solidity Features](https://github.com/ethereum/wiki/wiki/Solidity-Features) page contains a list of already completed Solidity feature stories with explanations and demonstrations, it is being updated continuously. More technical information you can find in the [Pivotal Tracker](https://www.pivotaltracker.com/n/projects/1189488).
 
