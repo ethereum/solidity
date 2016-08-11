@@ -52,19 +52,19 @@ git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
 # We only want one release per day and we do not want to push the same commit twice.
-if ls ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js" > /dev/null
-then
-  true
-else
-  # This file is assumed to be the product of the build_emscripten.sh script.
-  cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
-  ./update-index.sh
-  cd bin
-  LATEST=$(ls -r soljson-v* | head -n 1)
-  cp "$LATEST" soljson-latest.js
-  cp soljson-latest.js ../soljson.js
-  git add .
-  git add ../soljson.js
-  git commit -m "Added compiler version $LATEST"
-  git push origin gh-pages
-fi
+for f in ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js"
+do
+  [ -f "$f" ] && echo "Not publishing, we already published this version today." && exit 0
+done
+
+# This file is assumed to be the product of the build_emscripten.sh script.
+cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
+./update-index.sh
+cd bin
+LATEST=$(ls -r soljson-v* | head -n 1)
+cp "$LATEST" soljson-latest.js
+cp soljson-latest.js ../soljson.js
+git add .
+git add ../soljson.js
+git commit -m "Added compiler version $LATEST"
+git push origin gh-pages
