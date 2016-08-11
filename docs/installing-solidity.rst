@@ -73,7 +73,7 @@ to compile Solidity on Ubuntu 14.04 (Trusty Tahr).
 
     sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
         libjsoncpp-dev
-    
+
     sudo add-apt-repository -y ppa:ethereum/ethereum
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     sudo apt-get -y update
@@ -94,7 +94,7 @@ installed either by adding the Ethereum PPA (Option 1) or by backporting
 
     sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
         libjsoncpp-dev
-    
+
     # (Option 1) For those willing to add the Ethereum PPA:
     sudo add-apt-repository -y ppa:ethereum/ethereum
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev

@@ -147,7 +147,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    contract TxUserWallet {  
+    contract TxUserWallet {
         address owner;
 
         function TxUserWallet() {
@@ -164,7 +164,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    contract TxAttackWallet {  
+    contract TxAttackWallet {
         address owner;
 
         function TxAttackWallet() {
