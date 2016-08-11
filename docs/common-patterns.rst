@@ -18,56 +18,45 @@ introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
 This is an example of the withdrawal pattern in practice in
-an Ether "store" contract.
+a contract where the goal is to send the most money to the
+contract in order to become the "richest".
+
+In the following contract, if you are usurped as the richest,
+you will recieve the funds of the person who has gone on to
+become the richest.
 
 ::
 
-    contract WithdrawalStore {
+    contract WithdrawalContract {
+        address public richest;
+        uint public mostSent;
 
-        struct Item {
-            uint price;
-            uint quantity;
+        mapping (address => uint) pending;
+        
+        function WithdrawalContract() {
+            richest = msg.sender;
+            mostSent = msg.value;
         }
 
-        modifier onlyOwner {
-            if (msg.sender == owner) {
-                _
-            }
-            else {
-                throw;
-            }
-        }
-
-        address owner;
-        mapping (string => Item) inventory;
-
-        function WithdrawalStore() {
-            owner = msg.sender;
-        }
-
-        function updateInventory(
-            string _item,
-            uint _price,
-            uint _quantity
-        ) onlyOwner {
-            inventory[_item] = Item(_price, _quantity);
-        }
-
-        // Notice that the owner withdraws their own Ether
-        function withdraw() onlyOwner {
-            owner.send(this.balance);
-        }
-
-        function buy(string _item) returns (bool) {
-            if (
-                inventory[_item].quantity > 0 &&
-                inventory[_item].price <= msg.value
-            ) {
-                inventory[_item].quantity--;
+        function becomeRichest() returns (bool) {
+            if (msg.value > mostSent) {
+                richest = msg.sender;
+                mostSent = msg.value;
+                pending[richest] = msg.value;
                 return true;
             }
             else {
                 return false;
+            }
+        }
+
+        function withdraw() {
+            uint amount = pending[msg.sender];
+            // Remember to zero the pending refund before sending
+            // to prevent re-entrancy attacks
+            pending[msg.sender] = 0;
+            if (!msg.sender.send(amount)) {
+                throw;
             }
         }
     }
@@ -76,44 +65,20 @@ This is as opposed to the more intuitive sending pattern.
 
 ::
 
-    contract SendStore {
-
-        struct Item {
-            uint price;
-            uint quantity;
+    contract SendContract {
+        address public richest;
+        uint public mostSent;
+        
+        function SendContract() {
+            richest = msg.sender;
+            mostSent = msg.value;
         }
 
-        modifier onlyOwner {
-            if (msg.sender == owner) {
-                _
-            }
-            else {
-                throw;
-            }
-        }
-
-        address owner;
-        mapping (string => Item) inventory;
-
-        function SendStore() {
-            owner = msg.sender;
-        }
-
-        function updateInventory(
-            string _item,
-            uint _price,
-            uint _quantity
-        ) onlyOwner {
-            inventory[_item] = Item(_price, _quantity);
-        }
-
-        function buy(string _item) returns (bool) {
-            if (
-                inventory[_item].quantity > 0 &&
-                inventory[_item].price <= msg.value
-            ) {
-                inventory[_item].quantity--;
-                owner.send(msg.value);// WARNING - this send is unchecked!!
+        function becomeRichest() returns (bool) {
+            if (msg.value > mostSent) {
+                richest = msg.sender;
+                mostSent = msg.value;
+                richest.send(msg.value);
                 return true;
             }
             else {
@@ -122,9 +87,9 @@ This is as opposed to the more intuitive sending pattern.
         }
     }
 
-Notice that, in this example, an attacker could trap
-the owner's funds in the contract by causing the
-execution of `send` to fail through a callstack attack.
+Notice that, in this example, an attacker could trap the
+previous richest person's funds in the contract by causing
+the execution of `send` to fail through a callstack attack.
 
 .. index:: access;restricting
 
