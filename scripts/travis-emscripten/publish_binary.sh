@@ -52,10 +52,20 @@ git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
 # We only want one release per day and we do not want to push the same commit twice.
+set -v
+pwd
+ls
+ls ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js"
+
 for f in ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js"
 do
+  ls "$f"
   [ -f "$f" ] && echo "Not publishing, we already published this version today." && exit 0
 done
+
+echo "Would have published."
+# disable publishing for now
+exit 0
 
 # This file is assumed to be the product of the build_emscripten.sh script.
 cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
