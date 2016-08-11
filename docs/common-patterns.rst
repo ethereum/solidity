@@ -156,9 +156,9 @@ function finishes.
 
 .. note::
     As of version 0.3.6, modifier code placed after a function (i.e. after "_") 
-    will run even if the function explicitly returns. **In older versions, 
-    modifiers could get skipped because when applied, they simply replaced code 
-    instead of using a function call.**
+    will run even if the function explicitly returns. **In older versions, a return statement
+    in a modified function would cause modifier code after "_" to get skipped.** Modifiers
+    used to simply replaced code instead of using a function call.
 ::
 
     contract StateMachine {
@@ -214,9 +214,6 @@ function finishes.
 
         // This modifier goes to the next stage
         // after the function is done.
-        // If you use `return` in the function,
-        // `nextStage` will not be called
-        // automatically.
         modifier transitionNext()
         {
             _
