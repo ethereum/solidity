@@ -80,13 +80,11 @@ restrictions highly readable.
         // fee being associated with a function call.
         // If the caller sent too much, he or she is
         // refunded, but only after the function body.
-        // This is dangerous, because if the function
-        // uses `return` explicitly, this will not be
-        // done!
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
             _
+            // this runs after the function body, even if the function explicitly returns (as of Version 0.3.6)
             if (msg.value > _amount)
                 msg.sender.send(msg.value - _amount);
         }
@@ -157,14 +155,10 @@ to automatically go to the next stage when the
 function finishes.
 
 .. note::
-    **Modifier May be Skipped**.
-    Since modifiers are applied by simply replacing
-    code and not by using a function call,
-    the code in the transitionNext modifier
-    can be skipped if the function itself uses
-    return. If you want to do that, make sure
-    to call nextStage manually from those functions.
-
+    As of version 0.3.6, modifier code placed after a function (i.e. after "_") 
+    will run even if the function explicitly returns. **In older versions, 
+    modifiers could be skipped because when applied, they simply replaced code 
+    instead of using a function call.**
 ::
 
     contract StateMachine {
