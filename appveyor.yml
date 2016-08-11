@@ -64,6 +64,15 @@ artifacts:
 # We are in agreement that generating ZIPs per commit for the develop
 # branch is probably just noise, so we only run this deployment target
 # on 'release'.
+#
+# See https://www.appveyor.com/docs/deployment/github for information
+# on GitHub Releases in Appveyor.
+#
+# You need to generate a GitHub personal access token for Appveyor
+# See https://github.com/settings/tokens for more information on that.
+# The token you generate there (in an encrypted form) is what is
+# passed to this deployment target in the 'auth_token' parameter
+# below.
 
 deploy:
     release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
@@ -75,4 +84,4 @@ deploy:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
     artifact: solidity-windows-zip
     on:
-        branch: release
+        branch: develop
