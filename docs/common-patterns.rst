@@ -23,7 +23,7 @@ contract in order to become the "richest".
 
 In the following contract, if you are usurped as the richest,
 you will recieve the funds of the person who has gone on to
-become the richest.
+become the new richest.
 
 ::
 
@@ -32,7 +32,7 @@ become the richest.
         uint public mostSent;
 
         mapping (address => uint) pending;
-        
+
         function WithdrawalContract() {
             richest = msg.sender;
             mostSent = msg.value;
@@ -68,7 +68,7 @@ This is as opposed to the more intuitive sending pattern.
     contract SendContract {
         address public richest;
         uint public mostSent;
-        
+
         function SendContract() {
             richest = msg.sender;
             mostSent = msg.value;
@@ -93,12 +93,13 @@ This is as opposed to the more intuitive sending pattern.
     }
 
 Notice that, in this example, an attacker could trap the
-contract into an unusable state by causing the ``richest``
-to be a contract that has a fallback function which consumes
-more than the 2300 gas stipend.  That way, whenever ``send``
-is called to deliver funds to the "poisoned" contract, it
-will cause execution to always fail because there is not
-enough gas to finish the execution of the fallback function. 
+contract into an unusable state by causing ``richest`` to be
+the address of a  contract that has a fallback function
+which consumes more than the 2300 gas stipend.  That way,
+whenever ``send`` is called to deliver funds to the
+"poisoned" contract, it will cause execution to always fail
+because there will not be enough gas to finish the execution
+of the fallback function.
 
 .. index:: access;restricting
 
