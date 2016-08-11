@@ -171,9 +171,9 @@ for the two input parameters and two returned values.
       * @return s The calculated surface.
       * @return p The calculated perimeter.
       */
-     function rectangle(uint w, uint h) returns (uint s, uint p){
-         s = w*h;
-         p = 2*(w+h);
+     function rectangle(uint w, uint h) returns (uint s, uint p) {
+         s = w * h;
+         p = 2 * (w + h);
      }
  }
 
