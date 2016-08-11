@@ -40,9 +40,9 @@ become the richest.
 
         function becomeRichest() returns (bool) {
             if (msg.value > mostSent) {
+                pending[richest] = msg.value;
                 richest = msg.sender;
                 mostSent = msg.value;
-                pending[richest] = msg.value;
                 return true;
             }
             else {
@@ -76,9 +76,14 @@ This is as opposed to the more intuitive sending pattern.
 
         function becomeRichest() returns (bool) {
             if (msg.value > mostSent) {
+                // Check if call succeeds to prevent an attacker
+                // from trapping the previous person's funds in
+                // this contract through a callstack attack
+                if (!richest.send(msg.value)) {
+                    throw;
+                }
                 richest = msg.sender;
                 mostSent = msg.value;
-                richest.send(msg.value);
                 return true;
             }
             else {
@@ -88,8 +93,12 @@ This is as opposed to the more intuitive sending pattern.
     }
 
 Notice that, in this example, an attacker could trap the
-previous richest person's funds in the contract by causing
-the execution of `send` to fail through a callstack attack.
+contract into an unusable state by causing the ``richest``
+to be a contract that has a fallback function which consumes
+more than the 2300 gas stipend.  That way, whenever ``send``
+is called to deliver funds to the "poisoned" contract, it
+will cause execution to always fail because there is not
+enough gas to finish the execution of the fallback function. 
 
 .. index:: access;restricting
 
