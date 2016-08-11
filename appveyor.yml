@@ -84,4 +84,4 @@ deploy:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
     artifact: solidity-windows-zip
     on:
-        branch: develop
+        branch: release
