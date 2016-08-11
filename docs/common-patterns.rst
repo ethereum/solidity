@@ -157,7 +157,7 @@ function finishes.
 .. note::
     As of version 0.3.6, modifier code placed after a function (i.e. after "_") 
     will run even if the function explicitly returns. **In older versions, 
-    modifiers could be skipped because when applied, they simply replaced code 
+    modifiers could get skipped because when applied, they simply replaced code 
     instead of using a function call.**
 ::
 
