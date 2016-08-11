@@ -61,7 +61,7 @@ It depends on the compiler (see below) how to actually resolve the paths.
 In general, the directory hierarchy does not need to strictly map onto your local
 filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
 
-Use in actual Compilers
+Use in Actual Compilers
 -----------------------
 
 When the compiler is invoked, it is not only possible to specify how to
