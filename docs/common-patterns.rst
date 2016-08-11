@@ -155,6 +155,7 @@ to automatically go to the next stage when the
 function finishes.
 
 .. note::
+    **Modifier May be Skipped (OLD)**
     As of version 0.3.6, modifier code placed after a function (i.e. after "_") 
     will run even if the function explicitly returns. **In older versions, a return statement
     in a modified function would cause modifier code after "_" to get skipped.** Modifiers
