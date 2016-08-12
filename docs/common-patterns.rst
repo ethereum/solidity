@@ -80,6 +80,9 @@ restrictions highly readable.
         // fee being associated with a function call.
         // If the caller sent too much, he or she is
         // refunded, but only after the function body.
+        // This is dangerous, because if the function
+        // uses `return` explicitly, this will not be
+        // done!
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
