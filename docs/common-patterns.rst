@@ -82,7 +82,7 @@ restrictions highly readable.
         // refunded, but only after the function body.
         // This is dangerous, because if the function
         // uses `return` explicitly, this will not be
-        // done!
+        // done! This behavior will be fixed in Version 0.4.0.
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
