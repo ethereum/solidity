@@ -932,10 +932,11 @@ encoding of the address of the library contract.
 
 Restrictions for libraries in comparison to contracts:
 
-- no state variables
-- cannot inherit nor be inherited
+- No state variables
+- Cannot inherit nor be inherited
+- Cannot recieve Ether
 
-(these might be lifted at a later point)
+(These might be lifted at a later point.)
 
 .. index:: ! using for, library
 
