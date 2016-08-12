@@ -95,7 +95,7 @@ registering with username and password - all you need is an Ethereum keypair.
 This contract introduces some new concepts, let us go through them one by one.
 
 The line ``address public minter;`` declares a state variable of type address
-that is publicly accessible. The ``address`` type is a 160 bit value
+that is publicly accessible. The ``address`` type is a 160-bit value
 that does not allow any arithmetic operations. It is suitable for
 storing addresses of contracts or keypairs belonging to external
 persons. The keyword ``public`` automatically generates a function that
@@ -220,7 +220,7 @@ only the person holding the keys to the account can transfer money from it.
 Blocks
 ======
 
-One major obstacle to overcome is what in bitcoin terms is called "double-spend attack":
+One major obstacle to overcome is what in Bitcoin terms is called "double-spend attack":
 What happens if two transactions exist in the network that both want to empty an account,
 a so-called conflict?
 
@@ -277,7 +277,7 @@ of transactions sent from that address, the so-called "nonce").
 Apart from the fact whether an account stores code or not,
 the EVM treats the two types equally, though.
 
-Every account has a persistent key-value store mapping 256 bit words to 256 bit
+Every account has a persistent key-value store mapping 256-bit words to 256-bit
 words called **storage**.
 
 Furthermore, every account has a **balance** in
@@ -332,7 +332,7 @@ Storage, Memory and the Stack
 =============================
 
 Each account has a persistent memory area which is called **storage**.
-Storage is a key-value store that maps 256 bit words to 256 bit words.
+Storage is a key-value store that maps 256-bit words to 256-bit words.
 It is not possible to enumerate storage from within a contract
 and it is comparatively costly to read and even more so, to modify
 storage. A contract can neither read nor write to any storage apart
@@ -340,7 +340,7 @@ from its own.
 
 The second memory area is called **memory**, of which a contract obtains
 a freshly cleared instance for each message call. Memory can be
-addressed at byte level, but read and written to in 32 byte (256 bit)
+addressed at byte level, but read and written to in 32 byte (256-bit)
 chunks. Memory is more costly the larger it grows (it scales
 quadratically).
 
@@ -364,7 +364,7 @@ Instruction Set
 
 The instruction set of the EVM is kept minimal in order to avoid
 incorrect implementations which could cause consensus problems.
-All instructions operate on the basic data type, 256 bit words.
+All instructions operate on the basic data type, 256-bit words.
 The usual arithmetic, bit, logical and comparison operations are present.
 Conditional and unconditional jumps are possible. Furthermore,
 contracts can access relevant properties of the current block
