@@ -221,6 +221,9 @@ function finishes.
 
         // This modifier goes to the next stage
         // after the function is done.
+        // If you use `return` in the function,
+        // `nextStage` will not be called
+        // automatically.
         modifier transitionNext()
         {
             _
