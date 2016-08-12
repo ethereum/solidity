@@ -182,5 +182,5 @@ deploy:
       skip_cleanup: true
       on:
           repo: ethereum/solidity
-          branch: develop
+          branch: release
           condition: $JOB != docs || $JOB != emscripten
