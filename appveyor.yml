@@ -27,7 +27,7 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
-version: 0.3.5.{build}
+version: 0.3.6.{build}
 skip_tags: true
 os: Visual Studio 2015
 configuration:
@@ -84,4 +84,4 @@ deploy:
         secure: HPjiugbDSCsEFTphj/qwHuSw80/BV1xWoSvj95CPmtb16Ukh2VQbLVB7iFtZSans
     artifact: solidity-windows-zip
     on:
-        branch: release
+        branch: develop
