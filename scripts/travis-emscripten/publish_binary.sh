@@ -58,10 +58,6 @@ then
   exit 0
 fi
 
-echo "Would have published."
-# disable publishing for now
-exit 0
-
 # This file is assumed to be the product of the build_emscripten.sh script.
 cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
 ./update-index.sh
