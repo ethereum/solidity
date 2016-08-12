@@ -185,7 +185,6 @@ namespace solidity
 	K(SubDay, "days", 0)                                               \
 	K(SubWeek, "weeks", 0)                                             \
 	K(SubYear, "years", 0)                                             \
-	K(After, "after", 0)                                               \
 	/* type keywords*/                                                 \
 	K(Int, "int", 0)                                                   \
 	K(UInt, "uint", 0)                                                 \
@@ -215,6 +214,7 @@ namespace solidity
 	T(Identifier, NULL, 0)                                             \
 	\
 	/* Keywords reserved for future use. */                            \
+	K(After, "after", 0)                                               \
 	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
@@ -277,7 +277,7 @@ public:
 
 	static bool isBitOp(Value op) { return (BitOr <= op && op <= BitAnd) || op == BitNot; }
 	static bool isBooleanOp(Value op) { return (Or <= op && op <= And) || op == Not; }
-	static bool isUnaryOp(Value op) { return (Not <= op && op <= Delete) || op == Add || op == Sub || op == After; }
+	static bool isUnaryOp(Value op) { return (Not <= op && op <= Delete) || op == Add || op == Sub; }
 	static bool isCountOp(Value op) { return op == Inc || op == Dec; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }

@@ -56,7 +56,7 @@ VariableDefinition = VariableDeclaration ( '=' Expression )?
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression =
   ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | '(' Expression ')' )
-  | ('!' | '~' | 'after' | 'delete' | '++' | '--' | '+' | '-') Expression
+  | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
   | Expression ('+' | '-') Expression

@@ -275,12 +275,6 @@ BOOST_AUTO_TEST_CASE(time_subdenominations)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SubYear);
 }
 
-BOOST_AUTO_TEST_CASE(time_after)
-{
-	Scanner scanner(CharStream("after 1"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::After);
-}
-
 BOOST_AUTO_TEST_CASE(empty_comment)
 {
 	Scanner scanner(CharStream("//\ncontract{}"));
