@@ -14,7 +14,7 @@ A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`
 Time Units
 ==========
 
-Suffixes of ``seconds``, ``minutes``, ``hours``, ``days``, ``weeks`` and
+Suffixes like ``seconds``, ``minutes``, ``hours``, ``days``, ``weeks`` and
 ``years`` after literal numbers can be used to convert between units of time where seconds are the base
 unit and units are considered naively in the following way:
 
