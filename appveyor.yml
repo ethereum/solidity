@@ -27,8 +27,6 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
-version: 0.3.6.{build}
-skip_tags: true
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
@@ -75,8 +73,6 @@ artifacts:
 # below.
 
 deploy:
-    release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
-    tag: develop-v$(APPVEYOR_BUILD_VERSION)
     description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
     prerelease: true
     provider: GitHub

@@ -183,4 +183,4 @@ deploy:
       on:
           repo: ethereum/solidity
           branch: develop
-          condition: $JOB != docs || $JOB != emscripten
+          condition: $JOB != docs && $JOB != emscripten
