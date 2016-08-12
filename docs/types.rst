@@ -57,6 +57,8 @@ Operators:
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
+Division by zero and modulus with zero throws an exception.
+
 .. index:: address, balance, send, call, callcode, delegatecall
 
 .. _address:
