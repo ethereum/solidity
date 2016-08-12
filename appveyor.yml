@@ -81,7 +81,7 @@ deploy:
     prerelease: true
     provider: GitHub
     auth_token:
-        secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
+        secure: HPjiugbDSCsEFTphj/qwHuSw80/BV1xWoSvj95CPmtb16Ukh2VQbLVB7iFtZSans
     artifact: solidity-windows-zip
     on:
         branch: release
