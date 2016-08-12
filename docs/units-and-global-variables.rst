@@ -7,7 +7,7 @@ Units and Globally Available Variables
 Ether Units
 ===========
 
-A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be "wei", e.g. ``2 ether == 2000 finney`` evaluates to ``true``.
+A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be Wei, e.g. ``2 ether == 2000 finney`` evaluates to ``true``.
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
