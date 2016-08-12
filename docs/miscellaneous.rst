@@ -286,7 +286,7 @@ Global Variables
 - ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
 - ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the (tightly packed) arguments
-- ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature
+- ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``

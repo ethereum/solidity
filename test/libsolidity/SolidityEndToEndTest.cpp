@@ -6855,11 +6855,9 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 
 BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)
 {
-	// ecrecover should throw for malformed input
+	// ecrecover should return zero for malformed input
 	// (v should be 27 or 28, not 1)
-	// This is quite hard to test because the precompiled does NOT throw, instead it just
-	// does not write to its output area, we have to check that and currently do it
-	// by checking whether ecrecover "returns" zero.
+	// Note that the precompile does not return zero but returns nothing.
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (address) {
@@ -6868,7 +6866,7 @@ BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
