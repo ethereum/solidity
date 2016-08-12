@@ -362,6 +362,7 @@ void ASTJsonConverter::endVisit(FunctionDefinition const&)
 
 void ASTJsonConverter::endVisit(VariableDeclaration const&)
 {
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(TypeName const&)
@@ -378,10 +379,12 @@ void ASTJsonConverter::endVisit(UserDefinedTypeName const&)
 
 void ASTJsonConverter::endVisit(Mapping const&)
 {
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(InlineAssembly const&)
 {
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Block const&)
