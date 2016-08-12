@@ -19,7 +19,8 @@ more about this on the :ref:`security_considerations` page.
 
 This is an example of the withdrawal pattern in practice in
 a contract where the goal is to send the most money to the
-contract in order to become the "richest".
+contract in order to become the "richest", inspired by
+`King of the Ether <https://www.kingoftheether.com/>`_.
 
 In the following contract, if you are usurped as the richest,
 you will recieve the funds of the person who has gone on to
