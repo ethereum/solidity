@@ -32,7 +32,7 @@ become the new richest.
         address public richest;
         uint public mostSent;
 
-        mapping (address => uint) pending;
+        mapping (address => uint) pendingWithdrawals;
 
         function WithdrawalContract() {
             richest = msg.sender;
@@ -41,7 +41,7 @@ become the new richest.
 
         function becomeRichest() returns (bool) {
             if (msg.value > mostSent) {
-                pending[richest] = msg.value;
+                pendingWithdrawals[richest] += msg.value;
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
@@ -52,10 +52,10 @@ become the new richest.
         }
 
         function withdraw() {
-            uint amount = pending[msg.sender];
-            // Remember to zero the pending refund before sending
-            // to prevent re-entrancy attacks
-            pending[msg.sender] = 0;
+            uint amount = pendingWithdrawals[msg.sender];
+            // Remember to zero the pending refund before
+            // sending to prevent re-entrancy attacks
+            pendingWithdrawals[msg.sender] = 0;
             if (!msg.sender.send(amount)) {
                 throw;
             }
