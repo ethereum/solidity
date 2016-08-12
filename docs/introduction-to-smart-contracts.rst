@@ -300,7 +300,7 @@ If the target account is the zero-account (the account with the
 address ``0``), the transaction creates a **new contract**.
 As already mentioned, the address of that contract is not
 the zero address but an address derived from the sender and
-its number of transaction sent (the "nonce"). The payload
+its number of transactions sent (the "nonce"). The payload
 of such a contract creation transaction is taken to be
 EVM bytecode and executed. The output of this execution is
 permanently stored as the code of the contract.
