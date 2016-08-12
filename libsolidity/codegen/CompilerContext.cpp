@@ -23,6 +23,7 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <utility>
 #include <numeric>
+#include <boost/algorithm/string/replace.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
