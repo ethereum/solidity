@@ -236,7 +236,7 @@ Ethereum this is roughly every 17 seconds.
 
 As part of the "order selection mechanism" (which is called "mining") it may happen that
 blocks are reverted from time to time, but only at the "tip" of the chain. The more
-blocks are reverted the less likely it is. So it might be that your transactions
+blocks that are added on top, the less likely it is. So it might be that your transactions
 are reverted and even removed from the blockchain, but the longer you wait, the less
 likely it will be.
 
