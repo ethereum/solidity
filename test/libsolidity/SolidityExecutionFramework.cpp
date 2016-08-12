@@ -39,9 +39,6 @@ string getIPCSocketPath()
 {
 	string ipcPath = dev::test::Options::get().ipcPath;
 	if (ipcPath.empty())
-		if (auto path = getenv("ETH_TEST_IPC"))
-			ipcPath = path;
-	if (ipcPath.empty())
 		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path> or the environment variable ETH_TEST_IPC)");
 
 	return ipcPath;

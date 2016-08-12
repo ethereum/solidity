@@ -103,19 +103,15 @@ namespace test
 	while (0)
 
 
-	class Options
-	{
-	public:
-		std::string ipcPath;
-		int tArgc;
-		char **tArgv;
-		/// Get reference to options
-		/// The first time used, options are parsed with argc, argv
-		static Options const& get(int argc = 0, char** argv = 0);
+struct Options: boost::noncopyable
+{
+	std::string ipcPath;
 
-	private:
-		Options(int argc, char** argv = 0);
-		Options(Options const&) = delete;
-	};
+	static Options const& get();
+
+private:
+	Options();
+};
+
 }
 }

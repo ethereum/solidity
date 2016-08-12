@@ -51,7 +51,7 @@ build_script:
 #    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
 #    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
 #    - start eth.exe --test -d %TMP%\eth_for_soltest
-#    - soltest.exe --ipc %TMP%\eth_for_soltest\geth.ipc
+#    - soltest.exe -- --ipc %TMP%\eth_for_soltest\geth.ipc
 #    - pkill eth
 
 artifacts:

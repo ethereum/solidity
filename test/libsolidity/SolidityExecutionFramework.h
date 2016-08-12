@@ -33,6 +33,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 
 namespace dev
 {
@@ -68,7 +69,17 @@ public:
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
+		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
+		{
+			for (auto const& error: m_compiler.errors())
+				SourceReferenceFormatter::printExceptionInformation(
+					std::cerr,
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
+				);
+			BOOST_ERROR("Compiling contract failed");
+		}
 		eth::LinkerObject obj = m_compiler.object(_contractName);
 		obj.link(_libraryAddresses);
 		BOOST_REQUIRE(obj.linkReferences.empty());

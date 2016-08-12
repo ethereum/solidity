@@ -124,6 +124,8 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
+	unsigned m_sleepTime = 10;
+	unsigned m_successfulMineRuns = 0;
 
 	std::vector<std::string> m_accounts;
 };

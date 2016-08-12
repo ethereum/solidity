@@ -244,15 +244,38 @@ void RPCSession::test_mineBlocks(int _number)
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
 	rpcCall("test_mineBlocks", { to_string(_number) }, true);
 
-	//@TODO do not use polling - but that would probably need a change to the test client
-	for (size_t polls = 0; polls < 100; ++polls)
+	bool mined = false;
+
+	// We auto-calibrate the time it takes to mine the transaction.
+	// It would be better to go without polling, but that would probably need a change to the test client
+
+	unsigned sleepTime = m_sleepTime;
+	size_t polls = 0;
+	for (; polls < 10 && !mined; ++polls)
 	{
+		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
-			return;
-		std::this_thread::sleep_for(chrono::milliseconds(10)); //it does not work faster then 10 ms
+			mined = true;
+		else
+			sleepTime *= 2;
+	}
+	if (polls > 1)
+	{
+		m_successfulMineRuns = 0;
+		m_sleepTime += 2;
+	}
+	else if (polls == 1)
+	{
+		m_successfulMineRuns++;
+		if (m_successfulMineRuns > 5)
+		{
+			m_successfulMineRuns = 0;
+			m_sleepTime--;
+		}
 	}
 
-	BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
+	if (!mined)
+		BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 }
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
