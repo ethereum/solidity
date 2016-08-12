@@ -399,7 +399,7 @@ What character set does Solidity use?
 =====================================
 
 Solidity is character set agnostic concerning strings in the source code, although
-utf-8 is recommended. Identifiers (variables, functions, ...) can only use
+UTF-8 is recommended. Identifiers (variables, functions, ...) can only use
 ASCII.
 
 What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
@@ -741,15 +741,15 @@ see a 32-byte hex value, this is just ``"stringliteral"`` in hex.
 The type ``bytes`` is similar, only that it can change its length.
 
 Finally, ``string`` is basically identical to ``bytes`` only that it is assumed
-to hold the utf-8 encoding of a real string. Since ``string`` stores the
-data in utf-8 encoding it is quite expensive to compute the number of
+to hold the UTF-8 encoding of a real string. Since ``string`` stores the
+data in UTF-8 encoding it is quite expensive to compute the number of
 characters in the string (the encoding of some characters takes more
 than a single byte). Because of that, ``string s; s.length`` is not yet
 supported and not even index access ``s[2]``. But if you want to access
 the low-level byte encoding of the string, you can use
 ``bytes(s).length`` and ``bytes(s)[2]`` which will result in the number
-of bytes in the utf-8 encoding of the string (not the number of
-characters) and the second byte (not character) of the utf-8 encoded
+of bytes in the UTF-8 encoding of the string (not the number of
+characters) and the second byte (not character) of the UTF-8 encoded
 string, respectively.
 
 
