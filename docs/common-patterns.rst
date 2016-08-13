@@ -166,7 +166,7 @@ function finishes.
     to call nextStage manually from those functions. 
     With version 0.4.0 (unreleased), modifier 
     code will run even if the function explicitly returns.
-    
+
 ::
 
     contract StateMachine {
