@@ -164,8 +164,6 @@ function finishes.
     can be skipped if the function itself uses
     return. If you want to do that, make sure
     to call nextStage manually from those functions. 
-    With version 0.4.0 (unreleased), modifier 
-    code will run even if the function explicitly returns.
 
 ::
 
