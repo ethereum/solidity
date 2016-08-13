@@ -163,7 +163,7 @@ function finishes.
     the code in the transitionNext modifier
     can be skipped if the function itself uses
     return. If you want to do that, make sure
-    to call nextStage manually from those functions. 
+    to call nextStage manually from those functions.
 
 ::
 
