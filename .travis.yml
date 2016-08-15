@@ -54,7 +54,6 @@ matrix:
           compiler: gcc
           env:
               - TRAVIS_DOCS=On
-              - TRAVIS_INSTALL_DEPS=Off
               - TRAVIS_RELEASE=Off
               - TRAVIS_TESTS=Off
 
