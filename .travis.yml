@@ -133,17 +133,17 @@ cache:
         - jsoncpp
 
 install:
-    - test $TRAVIS_INSTALL_DEPS==Off || ./scripts/install_deps.sh
+    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
 before_script:
-    - test $TRAVIS_EMSCRIPTEN==Off || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE==Off || (mkdir -p build
+    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
+    - test $TRAVIS_RELEASE != On || (mkdir -p build
       && cd build
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
       && ./scripts/release.sh $ZIP_SUFFIX )
 script:
-    - test $TRAVIS_DOCS==Off || ./scripts/docs.sh
+    - test $TRAVIS_DOCS != On || ./scripts/docs.sh
 
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
     # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
@@ -155,7 +155,7 @@ script:
     # itself is broken from the failure messages which we are seeing.
     #
     # More details on known issues at https://github.com/ethereum/solidity/issues/769    
-    - test $TRAVIS_TESTS==Off || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
+    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
 env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
@@ -219,4 +219,4 @@ deploy:
       on:
           repo: ethereum/solidity
           branch: release
-          condition: $TRAVIS_RELEASE==On
+          condition: $TRAVIS_RELEASE == On
