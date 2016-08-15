@@ -82,7 +82,7 @@ restrictions highly readable.
         // refunded, but only after the function body.
         // This is dangerous, because if the function
         // uses `return` explicitly, this will not be
-        // done!
+        // done! This behavior will be fixed in Version 0.4.0.
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
@@ -163,7 +163,9 @@ function finishes.
     the code in the transitionNext modifier
     can be skipped if the function itself uses
     return. If you want to do that, make sure
-    to call nextStage manually from those functions.
+    to call nextStage manually from those functions. 
+    With version 0.4.0 (unreleased), modifier code 
+    will run even if the function explicitly returns.
 
 ::
 
