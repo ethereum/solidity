@@ -217,5 +217,5 @@ deploy:
       skip_cleanup: true
       on:
           repo: ethereum/solidity
-          branch: develop
+          branch: release
           condition: $TRAVIS_RELEASE == On
