@@ -80,7 +80,7 @@ deploy:
         secure: HPjiugbDSCsEFTphj/qwHuSw80/BV1xWoSvj95CPmtb16Ukh2VQbLVB7iFtZSans
     artifact: solidity-windows-zip
     on:
-        branch: develop
+        branch: release
 
 notifications:
     - provider: GitHubPullRequest
