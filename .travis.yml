@@ -27,36 +27,40 @@
 language: cpp
 branches:
     # We need to whitelist the branches which we want to have "push" automation.
-    # Pull requests will be built whatever the branches are for them.
+    # Pull request automation is not constrained to this set of branches.
     only:
         - develop
         - release
-    
-    # This blacklisting is an (unsuccessful) attempt to filter out some currently
-    # unexplained 'untagged' builds which are endemic in bobsummerwill/cpp-ethereum
-    # in my 'merge_repos' branch.   I suspect that these are rogue tags which
-    # are being created by Appveyor as part of the Github Releases flow, but
-    # I haven't pinned it down yet.
-    #
-    # See https://github.com/ethereum/webthree-umbrella/issues/697
-    # See https://twitter.com/BobSummerwill/status/762802834857340929
-    except:
-        - /develop-v[0-9]/
 matrix:
     include:
+        # Ubuntu 14.04 LTS "Trusty Tahr"
+        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
+        #
+        # TravisCI doesn't directly support any new Ubuntu releases.  These is
+        # some Docker support, which we should probably investigate, at least for
+        # Ubuntu 16.04 LTS "Xenial Xerus"
+        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
         - os: linux
           dist: trusty
           sudo: required
           compiler: gcc
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - ZIP_SUFFIX=ubuntu-trusty
+
+        # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
         - os: linux
           dist: trusty
           sudo: required
           compiler: gcc
           env:
-              - JOB=docs
+              - TRAVIS_DOCS=On
+              - TRAVIS_INSTALL_DEPS=Off
+              - TRAVIS_RELEASE=Off
+              - TRAVIS_TESTS=Off
+
+        # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
+        # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
+        # and in other Ethereum web-based development contexts.
         - os: linux
           dist: trusty
           sudo: required
@@ -66,30 +70,56 @@ matrix:
           before_install:
               - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
           env:
-              - JOB=emscripten
+              - TRAVIS_EMSCRIPTEN=On
+              - TRAVIS_INSTALL_DEPS=Off
+              - TRAVIS_RELEASE=Off
+              - TRAVIS_TESTS=Off
+
+        # OS X Mavericks (10.9)
+        # https://en.wikipedia.org/wiki/OS_X_Mavericks
+        #
         - os: osx
           osx_image: beta-xcode6.2
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - ZIP_SUFFIX=osx-mavericks
+
+        # OS X Yosemite (10.10)
+        # https://en.wikipedia.org/wiki/OS_X_Yosemite
+        #
         - os: osx
           osx_image: xcode7.1
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+              # https://github.com/ethereum/solidity/issues/894
+              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-yosemite
+
+        # OS X El Capitan (10.11)
+        # https://en.wikipedia.org/wiki/OS_X_El_Capitan
+        #
         - os: osx
           osx_image: xcode7.3
           env:
               # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
               # See https://github.com/ethereum/webthree-umbrella/issues/565
               - TRAVIS_BUILD_TYPE=Debug
+              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+              # https://github.com/ethereum/solidity/issues/894
+              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-elcapitan
+
+        # macOS Sierra (10.12)
+        # https://en.wikipedia.org/wiki/MacOS_Sierra
+        #
         - os: osx
           osx_image: xcode8
           env:
               # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
               # See https://travis-ci.org/ethereum/solidity/jobs/150240930
               - TRAVIS_BUILD_TYPE=Debug
+              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+              # https://github.com/ethereum/solidity/issues/894
+              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
@@ -103,16 +133,18 @@ cache:
         - jsoncpp
 
 install:
-    - test $JOB != default -a $JOB != docs || ./scripts/install_deps.sh
+    - test $TRAVIS_INSTALL_DEPS==Off || ./scripts/install_deps.sh
 before_script:
-    - test $JOB != emscripten || ./scripts/build_emscripten.sh
-    - test $JOB != default || (mkdir -p build
+    - test $TRAVIS_EMSCRIPTEN==Off || ./scripts/build_emscripten.sh
+    - test $TRAVIS_RELEASE==Off || (mkdir -p build
       && cd build
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
       && ./scripts/release.sh $ZIP_SUFFIX )
 script:
+    - test $TRAVIS_DOCS==Off || ./scripts/docs.sh
+
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
     # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
     # up to 3 times before giving up and declaring the tests as broken.
@@ -123,12 +155,16 @@ script:
     # itself is broken from the failure messages which we are seeing.
     #
     # More details on known issues at https://github.com/ethereum/solidity/issues/769    
-    - test $JOB != default || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
-    - test $JOB != docs || ./scripts/docs.sh
+    - test $TRAVIS_TESTS==Off || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
 env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
-        - JOB=default
+        - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        - TRAVIS_DOCS=Off
+        - TRAVIS_EMSCRIPTEN=Off
+        - TRAVIS_INSTALL_DEPS=On
+        - TRAVIS_RELEASE=On
+        - TRAVIS_TESTS=On
 
 deploy:
     # This is the deploy target for the Emscripten build.
@@ -138,7 +174,7 @@ deploy:
     # configurations (not for macOS).  That is controlled by conditionals within the bash
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
     - provider: script
-      script: test $JOB != emscripten || scripts/release_emscripten.sh
+      script: test $TRAVIS_EMSCRIPTEN != On || scripts/release_emscripten.sh
       skip_cleanup: true
       on:
           branch: develop
@@ -183,4 +219,4 @@ deploy:
       on:
           repo: ethereum/solidity
           branch: release
-          condition: $JOB != docs && $JOB != emscripten
+          condition: $TRAVIS_RELEASE==On
