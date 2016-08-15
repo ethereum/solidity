@@ -81,3 +81,9 @@ deploy:
     artifact: solidity-windows-zip
     on:
         branch: release
+
+notifications:
+    - provider: GitHubPullRequest
+      on_build_success: false
+      on_build_failure: false
+      on_build_status_changed: false
