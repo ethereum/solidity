@@ -85,14 +85,13 @@ public:
 
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Should return
-	/// @param _addStandardSources Adds standard sources if @a _addStandardSources.
-	explicit CompilerStack(bool _addStandardSources = true, ReadFileCallback const& _readFile = ReadFileCallback());
+	explicit CompilerStack(ReadFileCallback const& _readFile = ReadFileCallback());
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
-	void reset(bool _keepSources = false, bool _addStandardSources = true);
+	void reset(bool _keepSources = false);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.

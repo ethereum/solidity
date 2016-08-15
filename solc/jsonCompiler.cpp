@@ -159,7 +159,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			return result;
 		};
 	}
-	CompilerStack compiler(true, readCallback);
+	CompilerStack compiler(readCallback);
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return compiler.scanner(_sourceName); };
 	bool success = false;
 	try

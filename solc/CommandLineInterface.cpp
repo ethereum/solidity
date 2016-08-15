@@ -560,7 +560,7 @@ bool CommandLineInterface::processInput()
 		}
 	};
 
-	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));
+	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{

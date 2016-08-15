@@ -67,7 +67,7 @@ public:
 		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
 	)
 	{
-		m_compiler.reset(false, m_addStandardSources);
+		m_compiler.reset(false);
 		m_compiler.addSource("", _sourceCode);
 		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
 		{
@@ -290,7 +290,6 @@ protected:
 
 	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
-	bool m_addStandardSources = false;
 	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
