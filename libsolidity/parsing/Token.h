@@ -229,6 +229,7 @@ namespace solidity
 	K(Of, "of", 0)                                                     \
 	K(Payable, "payable", 0)                                           \
 	K(Relocatable, "relocatable", 0)                                   \
+	K(Static, "static", 0)                                             \
 	K(Switch, "switch", 0)                                             \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
