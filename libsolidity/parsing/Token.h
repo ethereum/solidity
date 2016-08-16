@@ -155,6 +155,7 @@ namespace solidity
 	K(External, "external", 0)                                         \
 	K(For, "for", 0)                                                   \
 	K(Function, "function", 0)                                         \
+	K(Hex, "hex", 0)                                                   \
 	K(If, "if", 0)                                                     \
 	K(Indexed, "indexed", 0)                                           \
 	K(Internal, "internal", 0)                                         \

@@ -591,7 +591,23 @@ void Scanner::scanToken()
 			break;
 		default:
 			if (isIdentifierStart(m_char))
+			{
 				tie(token, m, n) = scanIdentifierOrKeyword();
+
+				// Special case for hexademical literals
+				if (token == Token::Hex)
+				{
+					// reset
+					m = 0;
+					n = 0;
+
+					// Special quoted hex string must follow
+					if (m_char == '"' || m_char == '\'')
+						token = scanHexString();
+					else
+						token = Token::Illegal;
+				}
+			}
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
 			else if (skipWhitespace())
@@ -676,6 +692,25 @@ Token::Value Scanner::scanString()
 		}
 		else
 			addLiteralChar(c);
+	}
+	if (m_char != quote)
+		return Token::Illegal;
+	literal.complete();
+	advance();  // consume quote
+	return Token::StringLiteral;
+}
+
+Token::Value Scanner::scanHexString()
+{
+	char const quote = m_char;
+	advance();  // consume quote
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
+	while (m_char != quote && !isSourcePastEndOfInput() && !isLineTerminator(m_char))
+	{
+		char c = m_char;
+		if (!scanHexByte(c))
+			return Token::Illegal;
+		addLiteralChar(c);
 	}
 	if (m_char != quote)
 		return Token::Illegal;

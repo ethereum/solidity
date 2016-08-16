@@ -218,6 +218,15 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
+.. index:: literal, bytes
+
+Hexadecimal Literals
+--------------------
+
+Hexademical Literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
+
+Hexademical Literals behave like String Literals and have the same convertibility restrictions.
+
 .. index:: enum
 
 .. _enums:
