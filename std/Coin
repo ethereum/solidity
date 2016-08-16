@@ -1,0 +1,9 @@
+contract Coin {
+	function isApprovedFor(address _target, address _proxy) constant returns (bool _r) {}
+	function isApproved(address _proxy) constant returns (bool _r) {}
+	function sendCoinFrom(address _from, uint256 _val, address _to) {}
+	function coinBalanceOf(address _a) constant returns (uint256 _r) {}
+	function sendCoin(uint256 _val, address _to) {}
+	function coinBalance() constant returns (uint256 _r) {}
+	function approve(address _a) {}
+}

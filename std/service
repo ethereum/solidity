@@ -1,0 +1,8 @@
+import "Config";
+import "configUser";
+
+contract service is configUser {
+    function service(uint _n) {
+        Config(configAddr()).register(_n, this);
+    }
+}

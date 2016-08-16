@@ -1,0 +1,6 @@
+contract Config {
+    function lookup(uint256 service) constant returns (address a) {}
+    function kill() {}
+    function unregister(uint256 id) {}
+    function register(uint256 id, address service) {}
+}

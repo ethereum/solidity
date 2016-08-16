@@ -1,0 +1,6 @@
+contract CoinReg{
+	function count() constant returns (uint256 r) {}
+	function info(uint256 i) constant returns (address addr, bytes3 name, uint256 denom) {}
+	function register(bytes3 name, uint256 denom) {}
+	function unregister() {}
+}
