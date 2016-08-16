@@ -2410,7 +2410,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_overriding)
 			modifier mod { _ }
 		}
 		contract C is A {
-			modifier mod { }
+			modifier mod { if (false) _ }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -2427,7 +2427,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 			function f2() { data |= 0x20; }
 			function f3() { }
 			modifier mod1 { f2(); _ }
-			modifier mod2 { f3(); }
+			modifier mod2 { f3(); if (false) _ }
 			function getData() returns (uint r) { return data; }
 		}
 		contract C is A {

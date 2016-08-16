@@ -901,8 +901,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) {} }
-		contract B is A { modifier mod(uint a) {} }
+		contract A { modifier mod(uint a) { _ } }
+		contract B is A { modifier mod(uint a) { _ } }
 	)";
 	BOOST_CHECK(success(text));
 }
@@ -910,8 +910,8 @@ BOOST_AUTO_TEST_CASE(legal_modifier_override)
 BOOST_AUTO_TEST_CASE(illegal_modifier_override)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) {} }
-		contract B is A { modifier mod(uint8 a) {} }
+		contract A { modifier mod(uint a) { _ } }
+		contract B is A { modifier mod(uint8 a) { _ } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
@@ -919,8 +919,8 @@ BOOST_AUTO_TEST_CASE(illegal_modifier_override)
 BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) {} }
-		contract B is A { function mod(uint a) {} }
+		contract A { modifier mod(uint a) { _ } }
+		contract B is A { function mod(uint a) { } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
@@ -928,8 +928,8 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 {
 	char const* text = R"(
-		contract A { function mod(uint a) {} }
-		contract B is A { modifier mod(uint a) {} }
+		contract A { function mod(uint a) { } }
+		contract B is A { modifier mod(uint a) { _ } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
@@ -938,8 +938,8 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 {
 	char const* text = R"(
 		contract A {
-			function f(uint a) mod(2) returns (uint r) {}
-			modifier mod(uint a) { return 7; }
+			function f(uint a) mod(2) returns (uint r) { }
+			modifier mod(uint a) { _ return 7; }
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
