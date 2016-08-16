@@ -122,7 +122,13 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 
 bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 {
-	addJsonNode(_node, "Inheritance", { }, true);
+	addJsonNode(_node, "Inheritance", {}, true);
+	return true;
+}
+
+bool ASTJsonConverter::visit(UsingForDirective const& _node)
+{
+	addJsonNode(_node, "UsingFor", {}, true);
 	return true;
 }
 
@@ -352,6 +358,11 @@ void ASTJsonConverter::endVisit(ContractDefinition const&)
 }
 
 void ASTJsonConverter::endVisit(InheritanceSpecifier const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(UsingForDirective const&)
 {
 	goUp();
 }

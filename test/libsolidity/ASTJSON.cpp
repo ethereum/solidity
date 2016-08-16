@@ -76,6 +76,23 @@ BOOST_AUTO_TEST_CASE(inheritance_specifier)
 	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["children"][0]["attributes"]["name"], "C1");
 }
 
+BOOST_AUTO_TEST_CASE(using_for_directive)
+{
+	CompilerStack c;
+	c.addSource("a", "library L {} contract C { using L for uint; }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value usingFor = astJson["children"][1]["children"][0];
+	BOOST_CHECK_EQUAL(usingFor["name"], "UsingFor");
+	BOOST_CHECK_EQUAL(usingFor["src"], "26:17:1");
+	BOOST_CHECK_EQUAL(usingFor["children"][0]["name"], "UserDefinedTypeName");
+	BOOST_CHECK_EQUAL(usingFor["children"][0]["attributes"]["name"], "L");
+	BOOST_CHECK_EQUAL(usingFor["children"][1]["name"], "ElementaryTypeName");
+	BOOST_CHECK_EQUAL(usingFor["children"][1]["attributes"]["name"], "uint");    
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
