@@ -27,6 +27,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/inlineasm/AsmStack.h>
 
+using namespace std;
 namespace dev
 {
 namespace solidity
@@ -68,7 +69,7 @@ private:
 	void handleFormal();
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
-	void readInputFilesAndConfigureRemappings();
+	void readInputFilesAndConfigureRemappings(bool usestdin, vector<string> inputFiles);
 	/// Tries to read from the file @a _input or interprets _input literally if that fails.
 	/// It then tries to parse the contents and appends to m_libraries.
 	bool parseLibraryOption(std::string const& _input);
