@@ -100,11 +100,13 @@ of unused parameters (especially return parameters) can be omitted.
             f({value: 2, key: 3});
         }
 
-        // omitted parameters
+        // omitted name for parameter
         function func(uint k, uint) returns(uint) {
             return k;
         }
     }
+    
+Note that when calling the function, the argument list must match by name every parameter from the function declaration - though in an arbitrary order.
 
 Order of Evaluation of Expressions
 ==================================
