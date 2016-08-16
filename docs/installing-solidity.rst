@@ -29,105 +29,78 @@ To install it, simply use
 Details about the usage of the Node.js package can be found in the
 `solc-js repository <https://github.com/ethereum/solc-js>`_.
 
-Binary Packages
+Binary Releases
 ===============
 
-Binary packages of Solidity together with its IDE Mix are available through
-the `C++ bundle <https://github.com/ethereum/webthree-umbrella/releases>`_ of
-Ethereum.
+The `solidity-v0.3.6 <https://github.com/ethereum/solidity/releases/tag/v0.3.6>`_
+release (10th August 2016) was the first "standalone" version of Solidity.
+All runtime dependencies onto cpp-ethereum have been removed.  This was a pretty
+major refactoring.  We also transitioned from Jenkins to TravisCI and Appveyor.
 
-Building from Source
-====================
+At the time of writing, our Homebrew and ZIP workflows have not yet been
+restored.  They will be back for the pending solidity-v0.4.0 release.
 
-Building Solidity is quite similar on MacOS X, Ubuntu and probably other Unices.
-This guide starts explaining how to install the dependencies for each platform
-and then shows how to build Solidity itself.
+Ubuntu PPAs **are** working, though there are still some clashes with the
+cpp-ethereum PPAs which won't be resolved until the next cpp-ethereum release.
+This is the sequence of commands which should be successful.  We will get the
+PPAs into a state where they can cleanly coexist as soon as we can. ::
 
-MacOS X
--------
-
-
-Requirements:
-
-- OS X Yosemite (10.10.5)
-- Homebrew
-- Xcode
-
-Set up Homebrew:
-
-.. code-block:: bash
-
-    brew update
-    brew upgrade
-
-    brew install boost --c++11             # this takes a while
-    brew install cmake cryptopp gmp jsoncpp
-
-Ubuntu Trusty (14.04)
----------------------
-
-Below are the instructions to install the minimal dependencies required
-to compile Solidity on Ubuntu 14.04 (Trusty Tahr).
-
-.. code-block:: bash
-
-    sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
-        libjsoncpp-dev
-    
     sudo add-apt-repository -y ppa:ethereum/ethereum
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-    sudo apt-get -y update
-    sudo apt-get -y upgrade # this will update cmake to version 3.x
-    sudo apt-get -y install libcryptopp-dev libjsoncpp-dev
+    apt-get remove libethereum solc cpp-ethereum
+    apt-get install solc
 
-Ubuntu Xenial (16.04)
----------------------
 
-Below are the instructions to install the minimal dependencies required
-to compile Solidity on Ubuntu 16.04 (Xenial Xerus).
+Building from Source (macOS, Debian or Ubuntu)
+==============================================
 
-One of the dependencies (Crypto++ Library, with version >= 5.6.2) can be
-installed either by adding the Ethereum PPA (Option 1) or by backporting
-``libcrypto++`` from Ubuntu Development to Ubuntu Xenial (Option 2).
+As of August 2016 we now support an **install_deps.sh** script which encodes all of the
+distro-specific installation steps for macOS, Debian and Ubuntu, with support for more
+distros being added all the time.
 
-.. code-block:: bash
-
-    sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
-        libjsoncpp-dev
-    
-    # (Option 1) For those willing to add the Ethereum PPA:
-    sudo add-apt-repository -y ppa:ethereum/ethereum
-    sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-    sudo apt-get -y update
-    sudo apt-get -y upgrade
-    sudo apt-get -y install libcryptopp-dev
-    
-    ## (Option 2) For those willing to backport libcrypto++:
-    #sudo apt-get -y install ubuntu-dev-tools
-    #sudo pbuilder create
-    #mkdir ubuntu
-    #cd ubuntu
-    #backportpackage --workdir=. --build --dont-sign libcrypto++
-    #sudo dpkg -i buildresult/libcrypto++6_*.deb buildresult/libcrypto++-dev_*.deb
-    #cd ..
-
-Building
---------
-
-Run this if you plan on installing Solidity only:
+So the build process is very trivial for these OSes:
 
 .. code-block:: bash
 
     git clone --recursive https://github.com/ethereum/solidity.git
     cd solidity
+    ./scripts/install_deps.sh
     mkdir build
     cd build
     cmake .. && make
 
-If you want to help developing Solidity,
-you should fork Solidity and add your personal fork as a second remote:
+Building from Source (Windows)
+======================================
+
+Pre-requisites
+--------------------------------------------------------------------------------
+
+You will need to install the following dependencies
+
++------------------------------+-------------------------------------------------------+
+| Software                     | Notes                                                 |
++==============================+=======================================================+
+| `Git for Windows`_           | Command-line tool for retrieving source from Github.  |
++------------------------------+-------------------------------------------------------+
+| `CMake`_                     | Cross-platform build file generator.                  |
++------------------------------+-------------------------------------------------------+
+| `Visual Studio 2015`_        | C++ compiler and dev environment.                     |
++------------------------------+-------------------------------------------------------+
+
+.. _Git for Windows: https://git-scm.com/download/win
+.. _CMake: https://cmake.org/download/
+.. _Visual Studio 2015: https://www.visualstudio.com/products/vs-2015-product-editions
+
+From there, the build process is very similar to macOS and Linux:
 
 .. code-block:: bash
 
+    git clone --recursive https://github.com/ethereum/solidity.git
     cd solidity
-    git remote add personal git@github.com:username/solidity.git
+    scripts\install_deps.bat
+    mkdir build
+    cd build
+    cmake -G "Visual Studio 14 2015 Win64" ..
+
+And then open the generated **cpp-ethereum.sln** file in Visual Studio, where you can
+build and debug it to your hearts content.
