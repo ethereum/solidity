@@ -23,9 +23,12 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <utility>
 #include <numeric>
+#include <boost/algorithm/string/replace.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmStack.h>
 
 using namespace std;
 
@@ -170,6 +173,51 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	newStack.push(_node);
 	std::swap(m_visitedNodes, newStack);
 	updateSourceLocation();
+}
+
+void CompilerContext::appendInlineAssembly(
+	string const& _assembly,
+	vector<string> const& _localVariables,
+	map<string, string> const& _replacements
+)
+{
+	string replacedAssembly;
+	string const* assembly = &_assembly;
+	if (!_replacements.empty())
+	{
+		replacedAssembly = _assembly;
+		for (auto const& replacement: _replacements)
+			replacedAssembly = boost::algorithm::replace_all_copy(replacedAssembly, replacement.first, replacement.second);
+		assembly = &replacedAssembly;
+	}
+
+	unsigned startStackHeight = stackHeight();
+	auto identifierAccess = [&](
+		assembly::Identifier const& _identifier,
+		eth::Assembly& _assembly,
+		assembly::CodeGenerator::IdentifierContext _context
+	) {
+		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
+		if (it == _localVariables.end())
+			return false;
+		unsigned stackDepth = _localVariables.end() - it;
+		int stackDiff = _assembly.deposit() - startStackHeight + stackDepth;
+		if (stackDiff < 1 || stackDiff > 16)
+			BOOST_THROW_EXCEPTION(
+				CompilerError() <<
+				errinfo_comment("Stack too deep, try removing local variables.")
+			);
+		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+			_assembly.append(dupInstruction(stackDiff));
+		else
+		{
+			_assembly.append(swapInstruction(stackDiff));
+			_assembly.append(Instruction::POP);
+		}
+		return true;
+	};
+
+	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, m_asm, identifierAccess), "");
 }
 
 void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
