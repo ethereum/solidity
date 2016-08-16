@@ -108,6 +108,23 @@ BOOST_AUTO_TEST_CASE(enum_definition)
 	BOOST_CHECK_EQUAL(enumDefinition["src"], "13:9:1");
 }
 
+BOOST_AUTO_TEST_CASE(enum_value)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { enum E { A, B } }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value enumDefinition = astJson["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(enumDefinition["children"][0]["name"], "EnumValue");
+	BOOST_CHECK_EQUAL(enumDefinition["children"][0]["attributes"]["name"], "A");
+	BOOST_CHECK_EQUAL(enumDefinition["children"][0]["src"], "22:1:1");
+	BOOST_CHECK_EQUAL(enumDefinition["children"][1]["name"], "EnumValue");
+	BOOST_CHECK_EQUAL(enumDefinition["children"][1]["attributes"]["name"], "B");
+	BOOST_CHECK_EQUAL(enumDefinition["children"][1]["src"], "25:1:1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
