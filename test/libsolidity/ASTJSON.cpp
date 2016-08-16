@@ -62,6 +62,20 @@ BOOST_AUTO_TEST_CASE(source_location)
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["src"], "13:32:1");
 }
 
+BOOST_AUTO_TEST_CASE(inheritance_specifier)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C1 {} contract C2 is C1 {}");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	BOOST_CHECK_EQUAL(astJson["children"][1]["attributes"]["name"], "C2");
+	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["name"], "Inheritance");
+	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["children"][0]["name"], "UserDefinedTypeName");
+	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["children"][0]["attributes"]["name"], "C1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
