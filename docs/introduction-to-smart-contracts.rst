@@ -220,7 +220,7 @@ only the person holding the keys to the account can transfer money from it.
 Blocks
 ======
 
-One major obstacle to overcome is what in Bitcoin terms is called "double-spend attack":
+One major obstacle to overcome is what, in Bitcoin terms, is called "double-spend attack":
 What happens if two transactions exist in the network that both want to empty an account,
 a so-called conflict?
 
