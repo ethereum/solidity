@@ -56,6 +56,9 @@ Available Solidity Integrations
 * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
     Plugin for the Vim editor providing syntax highlighting.
 
+* `Vim Syntastic <https://github.com/scrooloose/syntastic>`_
+    Plugin for the Vim editor providing compile checking.
+
 Discontinued:
 
 * `Mix IDE <https://github.com/ethereum/mix/>`_
