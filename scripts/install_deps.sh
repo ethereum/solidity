@@ -55,6 +55,11 @@
 # Check for 'uname' and abort if it is not available.
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires 'uname' to identify the platform."; exit 1; }
 
+detect_linux_distro() {
+    DISTRO=$(lsb_release -is)
+    echo $DISTRO
+}
+
 case $(uname -s) in
 
 #------------------------------------------------------------------------------
@@ -124,7 +129,7 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
         
     Linux)
-        case $(lsb_release -is) in
+        case $(detect_linux_distro) in
 
 #------------------------------------------------------------------------------
 # Arch Linux
