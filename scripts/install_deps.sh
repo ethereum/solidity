@@ -167,7 +167,6 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
                 
                 apk update
-                apk upgrade
                 apk add boost-dev build-base cmake jsoncpp-dev
 
                 ;;
