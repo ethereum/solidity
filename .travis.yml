@@ -1,27 +1,25 @@
 #------------------------------------------------------------------------------
 # TravisCI configuration file for solidity.
 #
-# The documentation for solidity is hosted at:
-#
-# http://solidity.readthedocs.org
+# The documentation for solidity is hosted at http://solidity.readthedocs.org
 #
 # ------------------------------------------------------------------------------
-# This file is part of cpp-ethereum.
+# This file is part of solidity.
 #
-# cpp-ethereum is free software: you can redistribute it and/or modify
+# solidity is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# cpp-ethereum is distributed in the hope that it will be useful,
+# solidity is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+# along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2016 cpp-ethereum contributors.
+# (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
 language: cpp
@@ -200,11 +198,6 @@ deploy:
     # good bits back out of what it generated.  The gem changes all the
     # whitespace and deletes comments, so cannot be used as-is.  But
     # it does generate an appropriate auth token.
-    #
-    # TODO - I do not know if the api_key below which work correctly
-    # for ethereum/solidity.   I suspect not, for the same reason as
-    # my auth token does not work for Appveyor.  I don't have enough
-    # permissions to enable this myself.  Christian should be able to.
     #
     # See https://docs.travis-ci.com/user/deployment/releases
     # See https://blog.travis-ci.com/2013-01-28-token-token-token/
