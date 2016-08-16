@@ -56,7 +56,14 @@
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires 'uname' to identify the platform."; exit 1; }
 
 detect_linux_distro() {
-    DISTRO=$(lsb_release -is)
+    if [ $(command -v lsb_release) ]; then
+        DISTRO=$(lsb_release -is)
+    elif [ -f /etc/os-release ]; then
+        # extract 'foo' from NAME=foo, only on the line with NAME=foo
+        DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
+    else
+        DISTRO=''
+    fi
     echo $DISTRO
 }
 
