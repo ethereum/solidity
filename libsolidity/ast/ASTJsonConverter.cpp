@@ -138,6 +138,12 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(EnumDefinition const& _node)
+{
+	addJsonNode(_node, "Enum", { make_pair("name", _node.name()) }, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(ParameterList const& _node)
 {
 	addJsonNode(_node, "ParameterList", {}, true);
@@ -368,6 +374,11 @@ void ASTJsonConverter::endVisit(UsingForDirective const&)
 }
 
 void ASTJsonConverter::endVisit(StructDefinition const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(EnumDefinition const&)
 {
 	goUp();
 }
