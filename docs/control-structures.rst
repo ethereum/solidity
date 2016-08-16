@@ -87,8 +87,7 @@ parentheses at the end perform the actual call.
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
 
-Function call arguments can also be given by name, in any order, and the names
-of unused parameters (especially return parameters) can be omitted.
+Function call arguments can also be given by name, in any order.
 
 ::
 
@@ -99,14 +98,20 @@ of unused parameters (especially return parameters) can be omitted.
             // named arguments
             f({value: 2, key: 3});
         }
+    }
+Note that when calling the function, the argument list must match by name every parameter from the function declaration - though in an arbitrary order.
 
+Also, the names of unused parameters (especially return parameters) can be omitted.
+
+::
+
+    contract C {
         // omitted name for parameter
         function func(uint k, uint) returns(uint) {
             return k;
         }
     }
     
-Note that when calling the function, the argument list must match by name every parameter from the function declaration - though in an arbitrary order.
 
 Order of Evaluation of Expressions
 ==================================
