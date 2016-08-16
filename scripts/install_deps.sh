@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for solidity on a
+# Shell script for installing pre-requisite packages for solidity on a
 # variety of Linux and other UNIX-derived platforms.
 #
 # This is an "infrastucture-as-code" alternative to the manual build
