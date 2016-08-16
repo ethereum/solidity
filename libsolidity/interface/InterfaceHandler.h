@@ -73,7 +73,6 @@ public:
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's ABI Interface
 	static std::string abiInterface(ContractDefinition const& _contractDef);
-	static std::string ABISolidityInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's user documentation
