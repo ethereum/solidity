@@ -520,14 +520,14 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 | create(v, p, s)         |      | create new contract with code mem[p..(p+s)) and send v wei      |
 |                         |      | and return the new address                                      |
 +-------------------------+------+-----------------------------------------------------------------+
-| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize)]      |
+| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize))      |
 | insize, out, outsize)   |      | providing g gas and v wei and output area                       |
-|                         |      | mem[out..(out+outsize)] returting 1 on error (out of gas)       |
+|                         |      | mem[out..(out+outsize)) returning 1 on error (out of gas)       |
 +-------------------------+------+-----------------------------------------------------------------+
-| callcode(g, a, v, in,   |      | identical to call but only use the code from a and stay         |
+| callcode(g, a, v, in,   |      | identical to `call` but only use the code from a and stay       |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
 +-------------------------+------+-----------------------------------------------------------------+
-| delegatecall(g, a, in,  |      | identical to callcode but also keep ``caller``                  |
+| delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
 | return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
