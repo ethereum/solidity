@@ -6839,6 +6839,33 @@ BOOST_AUTO_TEST_CASE(skip_dynamic_types_for_structs)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(2), u256(6)));
 }
 
+BOOST_AUTO_TEST_CASE(failed_create)
+{
+	char const* sourceCode = R"(
+		contract D { }
+		contract C {
+			uint public x;
+			function f(uint amount) returns (address) {
+				x++;
+				return (new D).value(amount)();
+			}
+			function stack(uint depth) returns (address) {
+				if (depth < 1024)
+					return this.stack(depth - 1);
+				else
+					return f(0);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", 20) != encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256)", 20) == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("stack(uint256)", 1023) == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 {
 	char const* sourceCode = R"(
