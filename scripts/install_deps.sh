@@ -159,7 +159,7 @@ case $(uname -s) in
 # Alpine Linux
 #------------------------------------------------------------------------------
 
-            Alpine)
+            "Alpine Linux")
                 #Alpine
                 echo "Installing solidity dependencies on Alpine Linux."
 
