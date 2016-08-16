@@ -310,21 +310,18 @@ void CommandLineInterface::handleFormal()
 
 void CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
+	vector<string> inputFiles;
+	bool addStdin = false;
 	if (!m_args.count("input-file"))
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			m_sourceCodes[g_stdinFileName].append(s + '\n');
-		}
-	}
+		addStdin = true;
 	else
 		for (string path: m_args["input-file"].as<vector<string>>())
 		{
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
 				path = string(eq + 1, path.end());
+			else if (path == "-")
+				addStdin = true;
 			else
 			{
 				auto infile = boost::filesystem::path(path);
@@ -345,6 +342,15 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
+	if (addStdin)
+	{
+		string s;
+		while (!cin.eof())
+		{
+			getline(cin, s);
+			m_sourceCodes[g_stdinFileName].append(s + '\n');
+		}
+	}
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -399,9 +405,9 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 	po::options_description desc(
 		R"(solc, the Solidity commandline compiler.
 Usage: solc [options] [input_file...]
-Compiles the given Solidity input files (or the standard input if none given) and
-outputs the components specified in the options at standard output or in files in
-the output directory, if specified.
+Compiles the given Solidity input files (or the standard input if none given or
+"-" is used as a file name) and outputs the components specified in the options
+at standard output or in files in the output directory, if specified.
 Example: solc --bin -o /tmp/solcoutput contract.sol
 
 Allowed options)",
