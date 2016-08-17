@@ -139,6 +139,36 @@ BOOST_AUTO_TEST_CASE(modifier_definition)
 	BOOST_CHECK_EQUAL(modifier["src"], "13:24:1");
 }
 
+BOOST_AUTO_TEST_CASE(modifier_invocation)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { modifier M(uint i) { _ } function F() M(1) {} }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value modifier = astJson["children"][0]["children"][1]["children"][2];
+	BOOST_CHECK_EQUAL(modifier["name"], "Modifier");
+	BOOST_CHECK_EQUAL(modifier["src"], "51:4:1");
+	BOOST_CHECK_EQUAL(modifier["children"][0]["attributes"]["type"], "modifier (uint256)");
+	BOOST_CHECK_EQUAL(modifier["children"][0]["attributes"]["value"], "M");
+	BOOST_CHECK_EQUAL(modifier["children"][1]["attributes"]["value"], "1");
+}
+
+BOOST_AUTO_TEST_CASE(event_definition)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { event E(); }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value event = astJson["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(event["name"], "Event");
+	BOOST_CHECK_EQUAL(event["attributes"]["name"], "E");
+	BOOST_CHECK_EQUAL(event["src"], "13:10:1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

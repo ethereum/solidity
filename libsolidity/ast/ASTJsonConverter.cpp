@@ -181,8 +181,20 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(ModifierInvocation const& _node)
+{
+	addJsonNode(_node, "Modifier", {}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(TypeName const&)
 {
+	return true;
+}
+
+bool ASTJsonConverter::visit(EventDefinition const& _node)
+{
+	addJsonNode(_node, "Event", { make_pair("name", _node.name()) }, true);
 	return true;
 }
 
@@ -416,6 +428,16 @@ void ASTJsonConverter::endVisit(VariableDeclaration const&)
 }
 
 void ASTJsonConverter::endVisit(ModifierDefinition const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(ModifierInvocation const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(EventDefinition const&)
 {
 	goUp();
 }
