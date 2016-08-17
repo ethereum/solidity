@@ -503,9 +503,9 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | callvalue               |      | wei sent together with the current call                         |
 +-------------------------+------+-----------------------------------------------------------------+
-| calldataload(p)         |      | call data starting from position p (32 bytes)                   |
+| calldataload(p)         |      | calldata starting from position p (32 bytes)                    |
 +-------------------------+------+-----------------------------------------------------------------+
-| calldatasize            |      | size of call data in bytes                                      |
+| calldatasize            |      | size of calldata in bytes                                       |
 +-------------------------+------+-----------------------------------------------------------------+
 | calldatacopy(t, f, s)   | `-`  | copy s bytes from calldata at position f to mem at position t   |
 +-------------------------+------+-----------------------------------------------------------------+
