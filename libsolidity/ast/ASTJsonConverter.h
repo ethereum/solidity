@@ -141,11 +141,10 @@ public:
 
 private:
 	void process();
-	void addKeyValue(Json::Value& _obj, std::string const& _key, std::string const& _val);
 	void addJsonNode(
 		ASTNode const& _node,
 		std::string const& _nodeName,
-		std::initializer_list<std::pair<std::string const, std::string const>> _list,
+		std::initializer_list<std::pair<std::string const, Json::Value const>> _attributes,
 		bool _hasChildren
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
