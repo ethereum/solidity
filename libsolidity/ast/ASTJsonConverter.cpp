@@ -236,6 +236,12 @@ bool ASTJsonConverter::visit(Block const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(PlaceholderStatement const& _node)
+{
+	addJsonNode(_node, "Placeholder", {}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(IfStatement const& _node)
 {
 	addJsonNode(_node, "IfStatement", {}, true);
@@ -476,6 +482,11 @@ void ASTJsonConverter::endVisit(InlineAssembly const&)
 }
 
 void ASTJsonConverter::endVisit(Block const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(PlaceholderStatement const&)
 {
 	goUp();
 }

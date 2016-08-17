@@ -182,6 +182,19 @@ BOOST_AUTO_TEST_CASE(array_type_name)
 	BOOST_CHECK_EQUAL(array["src"], "13:6:1");
 }
 
+BOOST_AUTO_TEST_CASE(placeholder_statement)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { modifier M { _ } }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value placeholder = astJson["children"][0]["children"][0]["children"][1]["children"][0];
+	BOOST_CHECK_EQUAL(placeholder["name"], "Placeholder");
+	BOOST_CHECK_EQUAL(placeholder["src"], "26:1:1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
