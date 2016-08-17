@@ -4,3 +4,5 @@ import "./Config";
 import "./configUser";
 import "./NameReg";
 import "./named";
+import "./Coin";
+import "./ExampleCoin";
