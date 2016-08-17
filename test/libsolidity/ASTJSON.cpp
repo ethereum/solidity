@@ -169,6 +169,19 @@ BOOST_AUTO_TEST_CASE(event_definition)
 	BOOST_CHECK_EQUAL(event["src"], "13:10:1");
 }
 
+BOOST_AUTO_TEST_CASE(array_type_name)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { uint[] i; }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value array = astJson["children"][0]["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(array["name"], "ArrayTypeName");
+	BOOST_CHECK_EQUAL(array["src"], "13:6:1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

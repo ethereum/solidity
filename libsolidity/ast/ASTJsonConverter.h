@@ -68,6 +68,7 @@ public:
 	bool visit(ElementaryTypeName const& _node) override;
 	bool visit(UserDefinedTypeName const& _node) override;
 	bool visit(Mapping const& _node) override;
+	bool visit(ArrayTypeName const& _node) override;
 	bool visit(InlineAssembly const& _node) override;
 	bool visit(Block const& _node) override;
 	bool visit(IfStatement const& _node) override;
@@ -109,6 +110,7 @@ public:
 	void endVisit(ElementaryTypeName const&) override;
 	void endVisit(UserDefinedTypeName const&) override;
 	void endVisit(Mapping const&) override;
+	void endVisit(ArrayTypeName const&) override;
 	void endVisit(InlineAssembly const&) override;
 	void endVisit(Block const&) override;
 	void endVisit(IfStatement const&) override;
