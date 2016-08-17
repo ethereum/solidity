@@ -69,6 +69,10 @@ this does not execute a constructor. We could also have used ``function setFeed(
 only (locally) sets the value and amount of gas sent with the function call and only the
 parentheses at the end perform the actual call.
 
+Function calls cause exceptions if the called contract does not exist (in the
+sense that the account does not contain code) or if the called contract itself
+throws an exception or goes out of gas.
+
 .. warning::
     Any interaction with another contract imposes a potential danger, especially
     if the source code of the contract is not known in advance. The current

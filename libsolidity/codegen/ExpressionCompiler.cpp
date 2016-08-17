@@ -1524,6 +1524,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << u256(0);
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
+	// Check the the target contract exists (has code) for non-low-level calls.
+	if (funKind == FunctionKind::External || funKind == FunctionKind::CallCode || funKind == FunctionKind::DelegateCall)
+	{
+		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
+
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
