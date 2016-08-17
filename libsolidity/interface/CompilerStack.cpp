@@ -358,11 +358,6 @@ string const& CompilerStack::interface(string const& _contractName) const
 	return metadata(_contractName, DocumentationType::ABIInterface);
 }
 
-string const& CompilerStack::solidityInterface(string const& _contractName) const
-{
-	return metadata(_contractName, DocumentationType::ABISolidityInterface);
-}
-
 string const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
@@ -382,9 +377,6 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 		break;
 	case DocumentationType::ABIInterface:
 		doc = &currentContract.interface;
-		break;
-	case DocumentationType::ABISolidityInterface:
-		doc = &currentContract.solidityInterface;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
