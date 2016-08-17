@@ -1,12 +1,12 @@
 #------------------------------------------------------------------------------
 # EthCompilerSettings.cmake
 #
-# CMake file for cpp-ethereum project which specifies our compiler settings
+# CMake file for solidity project which specifies our compiler settings
 # for each supported platform and build configuration.
 #
-# See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/.
+# The documentation for solidity is hosted at http://solidity.readthedocs.org
 #
-# Copyright (c) 2014-2016 cpp-ethereum contributors.
+# Copyright (c) 2014-2016 solidity contributors.
 #------------------------------------------------------------------------------
 
 # Clang seeks to be command-line compatible with GCC as much as possible, so
