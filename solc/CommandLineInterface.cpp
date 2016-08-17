@@ -65,7 +65,6 @@ namespace solidity
 {
 
 static string const g_argAbiStr = "abi";
-static string const g_argSolInterfaceStr = "interface";
 static string const g_argSignatureHashes = "hashes";
 static string const g_argGas = "gas";
 static string const g_argAsmStr = "asm";
@@ -116,7 +115,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		return false;
 	for (string const& arg: {
 		g_argAbiStr,
-		g_argSolInterfaceStr,
 		g_argSignatureHashes,
 		g_argNatspecUserStr,
 		g_argAstJson,
@@ -214,11 +212,6 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 		argName = g_argAbiStr;
 		suffix = ".abi";
 		title = "Contract JSON ABI";
-		break;
-	case DocumentationType::ABISolidityInterface:
-		argName = g_argSolInterfaceStr;
-		suffix = "_interface.sol";
-		title = "Contract Solidity ABI";
 		break;
 	case DocumentationType::NatspecUser:
 		argName = g_argNatspecUserStr;
@@ -455,7 +448,6 @@ Allowed options)",
 		(g_argRuntimeBinaryStr.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argCloneBinaryStr.c_str(), "Binary of the clone contracts in hex.")
 		(g_argAbiStr.c_str(), "ABI specification of the contracts.")
-		(g_argSolInterfaceStr.c_str(), "Solidity interface of the contracts.")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
@@ -643,8 +635,6 @@ void CommandLineInterface::handleCombinedJSON()
 	for (string const& contractName: contracts)
 	{
 		Json::Value contractData(Json::objectValue);
-		if (requests.count("interface"))
-			contractData["interface"] = m_compiler->solidityInterface(contractName);
 		if (requests.count("abi"))
 			contractData["abi"] = m_compiler->interface(contractName);
 		if (requests.count("bin"))
@@ -901,7 +891,6 @@ void CommandLineInterface::outputCompilationResults()
 		handleBytecode(contract);
 		handleSignatureHashes(contract);
 		handleMeta(DocumentationType::ABIInterface, contract);
-		handleMeta(DocumentationType::ABISolidityInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);
 		handleMeta(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
