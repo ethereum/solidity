@@ -175,6 +175,12 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(ModifierDefinition const& _node)
+{
+	addJsonNode(_node, "ModifierDefinition", { make_pair("name", _node.name()) }, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(TypeName const&)
 {
 	return true;
@@ -405,6 +411,11 @@ void ASTJsonConverter::endVisit(FunctionDefinition const&)
 }
 
 void ASTJsonConverter::endVisit(VariableDeclaration const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(ModifierDefinition const&)
 {
 	goUp();
 }
