@@ -1,0 +1,55 @@
+import "./Token";
+
+contract ExampleToken is Token {
+	uint256 tokenSupply;
+	mapping (address => uint256) balances;
+	mapping (address =>
+		mapping (address => uint256)) approvedTransfers;
+
+	function ExampleToken(address _initialOwner, uint256 _supply) {
+		tokenSupply = _supply;
+		balances[_initialOwner] = _supply;
+	}
+
+	function totalSupply() constant returns (uint256 supply) {
+		return tokenSupply;
+	}
+
+	function balanceOf(address _owner) constant returns (uint256 balance) {
+		return balances[_owner];
+	}
+
+	function transfer(address _to, uint256 _value) returns (bool success) {
+		if (balances[msg.sender] >= _value) {
+			balances[msg.sender] -= _value;
+			balances[_to] += _value;
+			Transfer(msg.sender, _to, _value);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+		if (approvedTransfers[_from][msg.sender] >= _value) {
+			approvedTransfers[_from][msg.sender] -= _value;
+			balances[_to] += _value;
+			Transfer(_from, _to, _value);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	function approve(address _spender, uint256 _value) returns (bool success) {
+		approvedTransfers[msg.sender][_spender] = _value;
+		Approval(msg.sender, _spender, _value);
+		return true;
+	}
+
+	function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+		return approvedTransfers[_owner][_spender];
+	}
+}
