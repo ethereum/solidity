@@ -40,11 +40,9 @@ class ContractCompiler: private ASTConstVisitor
 public:
 	explicit ContractCompiler(CompilerContext& _context, bool _optimise):
 		m_optimise(_optimise),
-		m_context(_context),
-		m_returnTag(eth::Tag, u256(-1))
+		m_context(_context)
 	{
 		m_context = CompilerContext();
-		m_returnTag = m_context.newTag();
 	}
 
 	void compileContract(
@@ -122,7 +120,8 @@ private:
 	CompilerContext& m_context;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
-	eth::AssemblyItem m_returnTag; ///< tag to jump to for a "return" statement
+	/// Tag to jump to for a "return" statement, needs to be stacked because of modifiers.
+	std::vector<eth::AssemblyItem> m_returnTags;
 	unsigned m_modifierDepth = 0;
 	FunctionDefinition const* m_currentFunction = nullptr;
 	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag

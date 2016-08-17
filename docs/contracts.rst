@@ -314,14 +314,40 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
     }
 
+    contract Mutex {
+        bool locked;
+        modifier noReentrancy() {
+            if (locked) throw;
+            locked = true;
+            _
+            locked = false;
+        }
+
+        /// This function is protected by a mutex, which means that
+        /// reentrant calls from within msg.sender.call cannot call f again.
+        /// The `return 7` statement assigns 7 to the return value but still
+        /// executes the statement `locked = false` in the modifier.
+        function f() noReentrancy returns (uint) {
+            if (!msg.sender.call()) throw;
+            return 7;
+        }
+    }
+
 Multiple modifiers can be applied to a function by specifying them in a
-whitespace-separated list and will be evaluated in order. Explicit returns from
-a modifier or function body immediately leave the whole function, while control
-flow reaching the end of a function or modifier body continues after the "_" in
-the preceding modifier. Arbitrary expressions are allowed for modifier
-arguments and in this context, all symbols visible from the function are
-visible in the modifier. Symbols introduced in the modifier are not visible in
-the function (as they might change by overriding).
+whitespace-separated list and will be evaluated in order.
+
+.. warning::
+    In an earlier version of Solidity, ``return`` statements in functions
+    having modifiers behaved differently.
+
+Explicit returns from a modifier or function body only leave the current
+modifier or function body. Return variables are assigned and
+control flow continues after the "_" in the preceding modifier.
+
+Arbitrary expressions are allowed for modifier arguments and in this context,
+all symbols visible from the function are visible in the modifier. Symbols
+introduced in the modifier are not visible in the function (as they might
+change by overriding).
 
 .. index:: ! constant
 
