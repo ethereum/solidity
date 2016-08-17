@@ -31,6 +31,7 @@ namespace solidity
 /**
  * The module that performs syntax analysis on the AST:
  *  - whether continue/break is in a for/while loop.
+ *  - whether a modifier contains at least one '_'
  */
 class SyntaxChecker: private ASTConstVisitor
 {
@@ -44,6 +45,9 @@ private:
 	/// Adds a new error to the list of errors.
 	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
+	virtual bool visit(ModifierDefinition const& _modifier) override;
+	virtual void endVisit(ModifierDefinition const& _modifier) override;
+
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual void endVisit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
@@ -52,7 +56,12 @@ private:
 	virtual bool visit(Continue const& _continueStatement) override;
 	virtual bool visit(Break const& _breakStatement) override;
 
+	virtual bool visit(PlaceholderStatement const& _placeholderStatement) override;
+
 	ErrorList& m_errors;
+
+	/// Flag that indicates whether a function modifier actually contains '_'.
+	bool m_placeholderFound = false;
 
 	int m_inLoopDepth = 0;
 };
