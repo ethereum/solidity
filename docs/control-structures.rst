@@ -82,7 +82,7 @@ parentheses at the end perform the actual call.
     that the called contract can change state variables of the calling contract
     via its functions. Write your functions in a way that, for example, calls to
     external functions happen after any changes to state variables in your contract
-    so your contract is not vulnerable to a recursive call exploit.
+    so your contract is not vulnerable to a reentrancy exploit.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
