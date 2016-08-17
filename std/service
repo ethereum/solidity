@@ -1,5 +1,5 @@
-import "Config";
-import "configUser";
+import "./Config";
+import "./configUser";
 
 contract service is configUser {
     function service(uint _n) {

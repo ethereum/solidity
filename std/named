@@ -1,6 +1,6 @@
-import "Config";
-import "NameReg";
-import "configUser";
+import "./Config";
+import "./NameReg";
+import "./configUser";
 
 contract named is configUser {
     function named(bytes32 name) { 
