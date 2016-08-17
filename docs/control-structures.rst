@@ -299,12 +299,13 @@ In the following example, we show how ``throw`` can be used to easily revert an 
         }
     }
 
-Currently, there are four situations, where exceptions happen automatically in Solidity:
+Currently, there are five situations, where exceptions happen automatically in Solidity:
 
 1. If you access an array beyond its length (i.e. ``x[i]`` where ``i >= x.length``).
 2. If a function called via a message call does not finish properly (i.e. it runs out of gas or throws an exception itself).
 3. If a non-existent function on a library is called or Ether is sent to a library.
 4. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+5. If you perform an external function call targeting a contract that contains no code.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 
