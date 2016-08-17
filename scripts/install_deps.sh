@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for solidity on a
+# Shell script for installing pre-requisite packages for solidity on a
 # variety of Linux and other UNIX-derived platforms.
 #
 # This is an "infrastucture-as-code" alternative to the manual build
@@ -12,16 +12,8 @@
 # flow for all supported operating systems:
 #
 # - git clone --recursive
-# - ./install_deps.sh
+# - ./scripts/install_deps.sh
 # - cmake && make
-#
-# At the time of writing we are assuming that 'lsb_release' is present for all
-# Linux distros, which is not a valid assumption.  We will need a variety of
-# approaches to actually get this working across all the distros which people
-# are using.
-#
-# See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
-# for some more background on this common problem.
 #
 # TODO - There is no support here yet for cross-builds in any form, only
 # native builds.  Expanding the functionality here to cover the mobile,
@@ -54,6 +46,19 @@
 
 # Check for 'uname' and abort if it is not available.
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires 'uname' to identify the platform."; exit 1; }
+
+# See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
+detect_linux_distro() {
+    if [ $(command -v lsb_release) ]; then
+        DISTRO=$(lsb_release -is)
+    elif [ -f /etc/os-release ]; then
+        # extract 'foo' from NAME=foo, only on the line with NAME=foo
+        DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
+    else
+        DISTRO=''
+    fi
+    echo $DISTRO
+}
 
 case $(uname -s) in
 
@@ -124,7 +129,7 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
         
     Linux)
-        case $(lsb_release -is) in
+        case $(detect_linux_distro) in
 
 #------------------------------------------------------------------------------
 # Arch Linux
@@ -147,7 +152,7 @@ case $(uname -s) in
 # Alpine Linux
 #------------------------------------------------------------------------------
 
-            Alpine)
+            "Alpine Linux")
                 #Alpine
                 echo "Installing solidity dependencies on Alpine Linux."
 
@@ -155,7 +160,6 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
                 
                 apk update
-                apk upgrade
                 apk add boost-dev build-base cmake jsoncpp-dev
 
                 ;;
