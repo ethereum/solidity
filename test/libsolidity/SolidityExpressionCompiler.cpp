@@ -323,7 +323,15 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 					   byte(Instruction::OR),
 					   byte(Instruction::SUB),
 					   byte(Instruction::ADD),
+					   byte(Instruction::DUP2),
+					   byte(Instruction::ISZERO),
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::JUMPI),
 					   byte(Instruction::MOD),
+					   byte(Instruction::DUP2),
+					   byte(Instruction::ISZERO),
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::JUMPI),
 					   byte(Instruction::DIV),
 					   byte(Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());

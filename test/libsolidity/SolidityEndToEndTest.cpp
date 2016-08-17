@@ -6209,6 +6209,27 @@ BOOST_AUTO_TEST_CASE(addmod_mulmod)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(divisiod_by_zero)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function div(uint a, uint b) returns (uint) {
+				return a / b;
+			}
+			function mod(uint a, uint b) returns (uint) {
+				return a % b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("div(uint256,uint256)", 7, 2) == encodeArgs(u256(3)));
+	// throws
+	BOOST_CHECK(callContractFunction("div(uint256,uint256)", 7, 0) == encodeArgs());
+	BOOST_CHECK(callContractFunction("mod(uint256,uint256)", 7, 2) == encodeArgs(u256(1)));
+	// throws
+	BOOST_CHECK(callContractFunction("mod(uint256,uint256)", 7, 0) == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(string_allocation_bug)
 {
 	char const* sourceCode = R"(

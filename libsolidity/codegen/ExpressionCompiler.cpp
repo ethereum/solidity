@@ -1324,11 +1324,18 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::MUL;
 		break;
 	case Token::Div:
-		m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-		break;
 	case Token::Mod:
-		m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+	{
+		// Test for division by zero
+		m_context << Instruction::DUP2 << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+
+		if (_operator == Token::Div)
+			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		else
+			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 		break;
+	}
 	case Token::Exp:
 		m_context << Instruction::EXP;
 		break;
