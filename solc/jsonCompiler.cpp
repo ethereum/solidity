@@ -207,7 +207,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		for (string const& contractName: compiler.contractNames())
 		{
 			Json::Value contractData(Json::objectValue);
-			contractData["solidity_interface"] = compiler.solidityInterface(contractName);
+			contractData["solidityInterface"] = compiler.solidityInterface(contractName);
 			contractData["interface"] = compiler.interface(contractName);
 			contractData["bytecode"] = compiler.object(contractName).toHex();
 			contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
@@ -217,7 +217,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			auto sourceMap = compiler.sourceMapping(contractName);
 			contractData["srcmap"] = sourceMap ? *sourceMap : "";
 			auto runtimeSourceMap = compiler.runtimeSourceMapping(contractName);
-			contractData["srcmap-runtime"] = runtimeSourceMap ? *runtimeSourceMap : "";
+			contractData["srcmapRuntime"] = runtimeSourceMap ? *runtimeSourceMap : "";
 			ostringstream unused;
 			contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
 			output["contracts"][contractName] = contractData;
