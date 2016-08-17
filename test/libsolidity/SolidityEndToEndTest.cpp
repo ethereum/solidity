@@ -6880,6 +6880,22 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)
+{
+	// ecrecover should return zero for malformed input
+	// (v should be 27 or 28, not 1)
+	// Note that the precompile does not return zero but returns nothing.
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (address) {
+				return ecrecover(bytes32(uint(-1)), 1, 2, 3);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

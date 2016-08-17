@@ -95,7 +95,7 @@ Mathematical and Cryptographic Functions
 ``ripemd160(...) returns (bytes20)``:
     compute RIPEMD-160 hash of the (tightly packed) arguments
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
-    recover the address associated with the public key from elliptic curve signature
+    recover the address associated with the public key from elliptic curve signature or return zero on error
 
 In the above, "tightly packed" means that the arguments are concatenated without padding.
 This means that the following are all identical::
