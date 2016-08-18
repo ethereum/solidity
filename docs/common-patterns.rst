@@ -51,13 +51,17 @@ become the new richest.
             }
         }
 
-        function withdraw() {
+        function withdraw() returns (bool) {
             uint amount = pendingWithdrawals[msg.sender];
             // Remember to zero the pending refund before
             // sending to prevent re-entrancy attacks
             pendingWithdrawals[msg.sender] = 0;
-            if (!msg.sender.send(amount)) {
-                throw;
+            if (msg.sender.send(amount)) {
+                return true;
+            }
+            else {
+                pendingWithdrawals[msg.sender] = amount;
+                return false;
             }
         }
     }
