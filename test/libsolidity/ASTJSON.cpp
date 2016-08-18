@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	BOOST_CHECK_EQUAL(astJson["name"], "root");
+	BOOST_CHECK_EQUAL(astJson["name"], "SourceUnit");
 }
 
 BOOST_AUTO_TEST_CASE(source_location)
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(source_location)
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	BOOST_CHECK_EQUAL(astJson["name"], "root");
+	BOOST_CHECK_EQUAL(astJson["name"], "SourceUnit");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["name"], "ContractDefinition");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["name"], "FunctionDefinition");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["src"], "13:32:1");

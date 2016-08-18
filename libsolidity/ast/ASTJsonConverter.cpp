@@ -107,7 +107,7 @@ bool ASTJsonConverter::visit(SourceUnit const&)
 {
 	Json::Value children(Json::arrayValue);
 
-	m_astJson["name"] = "root";
+	m_astJson["name"] = "SourceUnit";
 	m_astJson["children"] = children;
 	m_jsonNodePtrs.push(&m_astJson["children"]);
 
