@@ -89,11 +89,6 @@ ASTJsonConverter::ASTJsonConverter(
 	map<string, unsigned> _sourceIndices
 ): m_ast(&_ast), m_sourceIndices(_sourceIndices)
 {
-	Json::Value children(Json::arrayValue);
-
-	m_astJson["name"] = "root";
-	m_astJson["children"] = children;
-	m_jsonNodePtrs.push(&m_astJson["children"]);
 }
 
 void ASTJsonConverter::print(ostream& _stream)
@@ -106,6 +101,17 @@ Json::Value const& ASTJsonConverter::json()
 {
 	process();
 	return m_astJson;
+}
+
+bool ASTJsonConverter::visit(SourceUnit const&)
+{
+	Json::Value children(Json::arrayValue);
+
+	m_astJson["name"] = "root";
+	m_astJson["children"] = children;
+	m_jsonNodePtrs.push(&m_astJson["children"]);
+
+	return true;
 }
 
 bool ASTJsonConverter::visit(ImportDirective const& _node)
@@ -388,6 +394,11 @@ bool ASTJsonConverter::visit(Literal const& _node)
 					make_pair("value", _node.value()),
 					make_pair("type", type(_node)) });
 	return true;
+}
+
+void ASTJsonConverter::endVisit(SourceUnit const&)
+{
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(ImportDirective const&)

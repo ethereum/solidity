@@ -51,6 +51,7 @@ public:
 	void print(std::ostream& _stream);
 	Json::Value const& json();
 
+	bool visit(SourceUnit const& _node) override;
 	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
 	bool visit(InheritanceSpecifier const& _node) override;
@@ -94,6 +95,7 @@ public:
 	bool visit(ElementaryTypeNameExpression const& _node) override;
 	bool visit(Literal const& _node) override;
 
+	void endVisit(SourceUnit const&) override;
 	void endVisit(ImportDirective const&) override;
 	void endVisit(ContractDefinition const&) override;
 	void endVisit(InheritanceSpecifier const&) override;
