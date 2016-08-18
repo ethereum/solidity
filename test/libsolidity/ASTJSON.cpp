@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(source_location)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	BOOST_CHECK_EQUAL(astJson["name"], "root");
-	BOOST_CHECK_EQUAL(astJson["children"][0]["name"], "Contract");
-	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["name"], "Function");
+	BOOST_CHECK_EQUAL(astJson["children"][0]["name"], "ContractDefinition");
+	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["name"], "FunctionDefinition");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["src"], "13:32:1");
 }
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(inheritance_specifier)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	BOOST_CHECK_EQUAL(astJson["children"][1]["attributes"]["name"], "C2");
-	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["name"], "Inheritance");
+	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["name"], "InheritanceSpecifier");
 	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["src"], "30:2:1");
 	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["children"][0]["name"], "UserDefinedTypeName");
 	BOOST_CHECK_EQUAL(astJson["children"][1]["children"][0]["children"][0]["attributes"]["name"], "C1");
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(using_for_directive)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	Json::Value usingFor = astJson["children"][1]["children"][0];
-	BOOST_CHECK_EQUAL(usingFor["name"], "UsingFor");
+	BOOST_CHECK_EQUAL(usingFor["name"], "UsingForDirective");
 	BOOST_CHECK_EQUAL(usingFor["src"], "26:17:1");
 	BOOST_CHECK_EQUAL(usingFor["children"][0]["name"], "UserDefinedTypeName");
 	BOOST_CHECK_EQUAL(usingFor["children"][0]["attributes"]["name"], "L");
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(enum_definition)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	Json::Value enumDefinition = astJson["children"][0]["children"][0];
-	BOOST_CHECK_EQUAL(enumDefinition["name"], "Enum");
+	BOOST_CHECK_EQUAL(enumDefinition["name"], "EnumDefinition");
 	BOOST_CHECK_EQUAL(enumDefinition["attributes"]["name"], "E");
 	BOOST_CHECK_EQUAL(enumDefinition["src"], "13:9:1");
 }
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(modifier_invocation)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	Json::Value modifier = astJson["children"][0]["children"][1]["children"][2];
-	BOOST_CHECK_EQUAL(modifier["name"], "Modifier");
+	BOOST_CHECK_EQUAL(modifier["name"], "ModifierInvocation");
 	BOOST_CHECK_EQUAL(modifier["src"], "51:4:1");
 	BOOST_CHECK_EQUAL(modifier["children"][0]["attributes"]["type"], "modifier (uint256)");
 	BOOST_CHECK_EQUAL(modifier["children"][0]["attributes"]["value"], "M");
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(event_definition)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	Json::Value event = astJson["children"][0]["children"][0];
-	BOOST_CHECK_EQUAL(event["name"], "Event");
+	BOOST_CHECK_EQUAL(event["name"], "EventDefinition");
 	BOOST_CHECK_EQUAL(event["attributes"]["name"], "E");
 	BOOST_CHECK_EQUAL(event["src"], "13:10:1");
 }
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(placeholder_statement)
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
 	Json::Value placeholder = astJson["children"][0]["children"][0]["children"][1]["children"][0];
-	BOOST_CHECK_EQUAL(placeholder["name"], "Placeholder");
+	BOOST_CHECK_EQUAL(placeholder["name"], "PlaceholderStatement");
 	BOOST_CHECK_EQUAL(placeholder["src"], "26:1:1");
 }
 
