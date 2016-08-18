@@ -127,11 +127,11 @@ Those names will still be present on the stack, but they are inaccessible.
 
 .. _creating-contracts:
 
-Creating Contracts via new
-==========================
+Creating Contracts via ``new``
+==============================
 
 A contract can create a new contract using the ``new`` keyword. The full
-code of the contract to be created has to be known and thus recursive
+code of the contract being created has to be known and, thus, recursive
 creation-dependencies are now possible.
 
 ::
@@ -142,6 +142,8 @@ creation-dependencies are now possible.
             x = a;
         }
     }
+
+
     contract C {
         D d = new D(4); // will be executed as part of C's constructor
 
