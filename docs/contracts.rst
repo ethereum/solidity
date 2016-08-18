@@ -179,7 +179,7 @@ and the default is ``internal``.
 .. note::
     Everything that is inside a contract is visible to
     all external observers. Making something ``private``
-    only prevents other contract from accessing and modifying
+    only prevents other contracts from accessing and modifying
     the information, but it will still be visible to the
     whole world outside of the blockchain.
 
@@ -194,9 +194,16 @@ return parameter list for functions.
         function setData(uint a) internal { data = a; }
         uint public data;
     }
+    contract Caller {
+        function readData(){
+            C c = new C();
+            uint local = c.data(); // call accessor
+            local = f(7); // error
+        }
+    }
 
 Other contracts can call ``c.data()`` to retrieve the value of data in state
-storage, but are not able to call ``f``. Contracts derived from ``c`` can call
+storage, but are not able to call ``f``. Contracts derived from ``C`` can call
 ``setData`` to alter the value of ``data`` (but only in their own state).
 
 .. index:: ! accessor;function, ! function;accessor
@@ -205,16 +212,16 @@ Accessor Functions
 ==================
 
 The compiler automatically creates accessor functions for
-all public state variables. The contract given below will
-have a function called ``data`` that does not take any
-arguments and returns a uint, the value of the state
+all public state variables. For the contract given below the compiler will
+generate a function called ``data`` that does not take any
+arguments and returns a ``uint``, the value of the state
 variable ``data``. The initialization of state variables can
 be done at declaration.
 
 The accessor functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
-it is a state variable and if it is accessed externally
-(i.e. with ``this.``), it is a function.
+it is evaluated as state variable and if it is accessed externally
+(i.e. with ``this.``), it is evaluated as function.
 
 ::
 
