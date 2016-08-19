@@ -1,28 +1,20 @@
 import "./Token.sol";
 
 contract StandardToken is Token {
-	uint256 tokenSupply;
-	mapping (address => uint256) balances;
+	uint256 public totalSupply;
+	mapping (address => uint256) public balanceOf;
 	mapping (address =>
-		mapping (address => uint256)) approvedTransfers;
+		mapping (address => uint256)) public allowance;
 
 	function StandardToken(address _initialOwner, uint256 _supply) {
-		tokenSupply = _supply;
-		balances[_initialOwner] = _supply;
-	}
-
-	function totalSupply() constant returns (uint256 supply) {
-		return tokenSupply;
-	}
-
-	function balanceOf(address _owner) constant returns (uint256 balance) {
-		return balances[_owner];
+		totalSupply = _supply;
+		balanceOf[_initialOwner] = _supply;
 	}
 
 	function transfer(address _to, uint256 _value) returns (bool success) {
-		if (balances[msg.sender] >= _value) {
-			balances[msg.sender] -= _value;
-			balances[_to] += _value;
+		if (balanceOf[msg.sender] >= _value) {
+			balanceOf[msg.sender] -= _value;
+			balanceOf[_to] += _value;
 			Transfer(msg.sender, _to, _value);
 			return true;
 		}
@@ -32,9 +24,9 @@ contract StandardToken is Token {
 	}
 
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		if (approvedTransfers[_from][msg.sender] >= _value) {
-			approvedTransfers[_from][msg.sender] -= _value;
-			balances[_to] += _value;
+		if (allowance[_from][msg.sender] >= _value) {
+			allowance[_from][msg.sender] -= _value;
+			balanceOf[_to] += _value;
 			Transfer(_from, _to, _value);
 			return true;
 		}
@@ -44,12 +36,8 @@ contract StandardToken is Token {
 	}
 
 	function approve(address _spender, uint256 _value) returns (bool success) {
-		approvedTransfers[msg.sender][_spender] = _value;
+		allowance[msg.sender][_spender] = _value;
 		Approval(msg.sender, _spender, _value);
 		return true;
-	}
-
-	function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
-		return approvedTransfers[_owner][_spender];
 	}
 }
