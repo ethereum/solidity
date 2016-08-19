@@ -194,16 +194,16 @@ return parameter list for functions.
         function setData(uint a) internal { data = a; }
         uint public data;
     }
-    contract Caller {
+    contract D {
         function readData(){
             C c = new C();
-            uint local = c.data(); // call accessor
+            uint local = c.data();
             local = f(7); // error
         }
     }
 
-Other contracts can call ``c.data()`` to retrieve the value of data in state
-storage, but are not able to call ``f``. Contracts derived from ``C`` can call
+An other contract ``D`` can call ``c.data()`` to retrieve the value of data in state
+storage, is not able to call ``f``. Contracts derived from ``C`` can call
 ``setData`` to alter the value of ``data`` (but only in their own state).
 
 .. index:: ! accessor;function, ! function;accessor
