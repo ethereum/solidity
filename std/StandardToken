@@ -1,12 +1,12 @@
 import "./Token";
 
-contract ExampleToken is Token {
+contract StandardToken is Token {
 	uint256 tokenSupply;
 	mapping (address => uint256) balances;
 	mapping (address =>
 		mapping (address => uint256)) approvedTransfers;
 
-	function ExampleToken(address _initialOwner, uint256 _supply) {
+	function StandardToken(address _initialOwner, uint256 _supply) {
 		tokenSupply = _supply;
 		balances[_initialOwner] = _supply;
 	}

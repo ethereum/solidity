@@ -1,4 +1,4 @@
 import "./owned";
 import "./mortal";
 import "./Token";
-import "./ExampleToken";
+import "./StandardToken";
