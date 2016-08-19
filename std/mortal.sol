@@ -1,4 +1,4 @@
-import "./owned";
+import "./owned.sol";
 
 contract mortal is owned {
     function kill() {

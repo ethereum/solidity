@@ -1,4 +1,4 @@
-import "./Token";
+import "./Token.sol";
 
 contract StandardToken is Token {
 	uint256 tokenSupply;

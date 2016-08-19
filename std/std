@@ -1,4 +1,0 @@
-import "./owned";
-import "./mortal";
-import "./Token";
-import "./StandardToken";
