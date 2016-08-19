@@ -55,6 +55,7 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
+	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition(bool _isLibrary);
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();

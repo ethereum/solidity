@@ -45,15 +45,17 @@ namespace
 {
 
 pair<ASTPointer<SourceUnit>, std::shared_ptr<Error::Type const>>
-parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
+parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true)
 {
+	// Silence compiler version warning
+	string source = _insertVersionPragma ? "pragma solidity >=0;\n" + _source : _source;
 	ErrorList errors;
 	Parser parser(errors);
 	ASTPointer<SourceUnit> sourceUnit;
 	// catch exceptions for a transition period
 	try
 	{
-		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(source)));
 		if(!sourceUnit)
 			return make_pair(sourceUnit, nullptr);
 
@@ -445,8 +447,8 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 		"}\n";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[0].get());
-	BOOST_CHECK(contract);
+	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_REQUIRE(contract);
 	BOOST_CHECK(!contract->annotation().isFullyImplemented);
 	BOOST_CHECK(!contract->definedFunctions()[0]->isImplemented());
 }
@@ -460,12 +462,12 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 		)";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
-	BOOST_CHECK(base);
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
+	BOOST_REQUIRE(base);
 	BOOST_CHECK(!base->annotation().isFullyImplemented);
 	BOOST_CHECK(!base->definedFunctions()[0]->isImplemented());
-	BOOST_CHECK(derived);
+	BOOST_REQUIRE(derived);
 	BOOST_CHECK(derived->annotation().isFullyImplemented);
 	BOOST_CHECK(derived->definedFunctions()[0]->isImplemented());
 }
@@ -479,8 +481,8 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 		)";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(base);
 	BOOST_CHECK(!base->annotation().isFullyImplemented);
 	BOOST_REQUIRE(derived);
@@ -527,9 +529,9 @@ BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
 		)";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 3);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
-	BOOST_CHECK(derived);
+	BOOST_CHECK_EQUAL(nodes.size(), 4);
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[3].get());
+	BOOST_REQUIRE(derived);
 	BOOST_CHECK(!derived->annotation().isFullyImplemented);
 }
 
@@ -553,9 +555,9 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 	)";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 2);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
-	BOOST_CHECK(derived);
+	BOOST_CHECK_EQUAL(nodes.size(), 3);
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
+	BOOST_REQUIRE(derived);
 	BOOST_CHECK(!derived->annotation().isFullyImplemented);
 }
 
@@ -3849,6 +3851,23 @@ BOOST_AUTO_TEST_CASE(modifier_without_underscore)
 		contract test {
 			modifier m() {}
 		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::SyntaxError);
+}
+
+BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
+{
+	char const* text = "contract C {}";
+	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
+	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!!sourceAndError.first);
+	BOOST_CHECK(*sourceAndError.second == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unsatisfied_version)
+{
+	char const* text = R"(
+		pragma solidity ^99.99.0;
 	)";
 	BOOST_CHECK(expectError(text, true) == Error::Type::SyntaxError);
 }

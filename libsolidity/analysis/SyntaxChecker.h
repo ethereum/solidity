@@ -45,6 +45,10 @@ private:
 	/// Adds a new error to the list of errors.
 	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
+	virtual bool visit(SourceUnit const& _sourceUnit) override;
+	virtual void endVisit(SourceUnit const& _sourceUnit) override;
+	virtual bool visit(PragmaDirective const& _pragma) override;
+
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual void endVisit(ModifierDefinition const& _modifier) override;
 
@@ -62,6 +66,9 @@ private:
 
 	/// Flag that indicates whether a function modifier actually contains '_'.
 	bool m_placeholderFound = false;
+
+	/// Flag that indicates whether some version pragma was present.
+	bool m_versionPragmaFound = false;
 
 	int m_inLoopDepth = 0;
 };

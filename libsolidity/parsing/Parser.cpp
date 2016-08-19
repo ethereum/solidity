@@ -76,6 +76,9 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		{
 			switch (auto token = m_scanner->currentToken())
 			{
+			case Token::Pragma:
+				nodes.push_back(parsePragmaDirective());
+				break;
 			case Token::Import:
 				nodes.push_back(parseImportDirective());
 				break;
@@ -95,6 +98,36 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			throw; // Something is weird here, rather throw again.
 		return nullptr;
 	}
+}
+
+ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
+{
+	// pragma anything* ;
+	// Currently supported:
+	// pragma solidity ^0.4.0 || ^0.3.0;
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Pragma);
+	vector<string> literals;
+	vector<Token::Value> tokens;
+	do
+	{
+		Token::Value token = m_scanner->currentToken();
+		if (token == Token::Illegal)
+			parserError("Token incompatible with Solidity parser as part of pragma directive.");
+		else
+		{
+			string literal = m_scanner->currentLiteral();
+			if (literal.empty() && Token::toString(token))
+				literal = Token::toString(token);
+			literals.push_back(literal);
+			tokens.push_back(token);
+		}
+		m_scanner->next();
+	}
+	while (m_scanner->currentToken() != Token::Semicolon && m_scanner->currentToken() != Token::EOS);
+	nodeFactory.markEndPosition();
+	expectToken(Token::Semicolon);
+	return nodeFactory.createNode<PragmaDirective>(tokens, literals);
 }
 
 ASTPointer<ImportDirective> Parser::parseImportDirective()

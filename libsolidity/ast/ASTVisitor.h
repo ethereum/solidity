@@ -44,6 +44,7 @@ class ASTVisitor
 {
 public:
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
+	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ContractDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier& _node) { return visitNode(_node); }
@@ -88,6 +89,7 @@ public:
 	virtual bool visit(Literal& _node) { return visitNode(_node); }
 
 	virtual void endVisit(SourceUnit& _node) { endVisitNode(_node); }
+	virtual void endVisit(PragmaDirective& _node) { endVisitNode(_node); }
 	virtual void endVisit(ImportDirective& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier& _node) { endVisitNode(_node); }
@@ -144,6 +146,7 @@ class ASTConstVisitor
 {
 public:
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
+	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ContractDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier const& _node) { return visitNode(_node); }
@@ -188,6 +191,7 @@ public:
 	virtual bool visit(Literal const& _node) { return visitNode(_node); }
 
 	virtual void endVisit(SourceUnit const& _node) { endVisitNode(_node); }
+	virtual void endVisit(PragmaDirective const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ImportDirective const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier const& _node) { endVisitNode(_node); }

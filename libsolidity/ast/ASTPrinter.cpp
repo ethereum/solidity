@@ -47,6 +47,13 @@ void ASTPrinter::print(ostream& _stream)
 }
 
 
+bool ASTPrinter::visit(PragmaDirective const& _node)
+{
+	writeLine("PragmaDirective");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(ImportDirective const& _node)
 {
 	writeLine("ImportDirective \"" + _node.path() + "\"");
@@ -353,6 +360,11 @@ bool ASTPrinter::visit(Literal const& _node)
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
+}
+
+void ASTPrinter::endVisit(PragmaDirective const&)
+{
+	m_indentation--;
 }
 
 void ASTPrinter::endVisit(ImportDirective const&)

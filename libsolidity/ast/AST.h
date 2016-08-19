@@ -176,6 +176,34 @@ private:
 };
 
 /**
+ * Pragma directive, only version requirements in the form `pragma solidity "^0.4.0";` are
+ * supported for now.
+ */
+class PragmaDirective: public ASTNode
+{
+public:
+	PragmaDirective(
+		SourceLocation const& _location,
+		std::vector<Token::Value> const& _tokens,
+		std::vector<ASTString> const& _literals
+	): ASTNode(_location), m_tokens(_tokens), m_literals(_literals)
+	{}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<Token::Value> const& tokens() const { return m_tokens; }
+	std::vector<ASTString> const& literals() const { return m_literals; }
+
+private:
+
+	/// Sequence of tokens following the "pragma" keyword.
+	std::vector<Token::Value> m_tokens;
+	/// Sequence of literals following the "pragma" keyword.
+	std::vector<ASTString> m_literals;
+};
+
+/**
  * Import directive for referencing other files / source objects.
  * Example: import "abc.sol" // imports all symbols of "abc.sol" into current scope
  * Source objects are identified by a string which can be a file name but does not have to be.

@@ -45,6 +45,18 @@ void SourceUnit::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void PragmaDirective::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void PragmaDirective::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
 void ImportDirective::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);

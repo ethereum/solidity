@@ -15,9 +15,11 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <libsolidity/analysis/SyntaxChecker.h>
 #include <memory>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/interface/Version.h>
 
 using namespace std;
 using namespace dev;
@@ -27,7 +29,7 @@ using namespace dev::solidity;
 bool SyntaxChecker::checkSyntax(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
-	return m_errors.empty();
+	return Error::containsOnlyWarnings(m_errors);
 }
 
 void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string const& _description)
@@ -38,6 +40,51 @@ void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string con
 		errinfo_comment(_description);
 
 	m_errors.push_back(err);
+}
+
+bool SyntaxChecker::visit(SourceUnit const&)
+{
+	m_versionPragmaFound = false;
+	return true;
+}
+
+void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
+{
+	if (!m_versionPragmaFound)
+	{
+		auto err = make_shared<Error>(Error::Type::Warning);
+		*err <<
+			errinfo_sourceLocation(_sourceUnit.location()) <<
+			errinfo_comment(
+				string("Source file does not specify required compiler version! ") +
+				string("Consider adding \"pragma solidity ^") + VersionNumber + string(";\".")
+			);
+		m_errors.push_back(err);
+	}
+}
+
+bool SyntaxChecker::visit(PragmaDirective const& _pragma)
+{
+	solAssert(!_pragma.tokens().empty(), "");
+	solAssert(_pragma.tokens().size() == _pragma.literals().size(), "");
+	if (_pragma.tokens()[0] != Token::Identifier && _pragma.literals()[0] != "solidity")
+		syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
+	else
+	{
+		vector<Token::Value> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
+		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
+		SemVerMatchExpressionParser parser(tokens, literals);
+		auto matchExpression = parser.parse();
+		SemVerVersion currentVersion{string(VersionNumber)};
+		if (!matchExpression.matches(currentVersion))
+			syntaxError(
+				_pragma.location(),
+				"Source file requires different compiler version (current compiler is " +
+				string(VersionNumber) + ")."
+			);
+		m_versionPragmaFound = true;
+	}
+	return true;
 }
 
 bool SyntaxChecker::visit(ModifierDefinition const&)
@@ -91,7 +138,7 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 	return true;
 }
 
-bool SyntaxChecker::visit(const PlaceholderStatement&)
+bool SyntaxChecker::visit(PlaceholderStatement const&)
 {
 	m_placeholderFound = true;
 	return true;

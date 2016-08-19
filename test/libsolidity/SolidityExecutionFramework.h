@@ -67,8 +67,10 @@ public:
 		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
 	)
 	{
+		// Silence compiler version warning
+		std::string sourceCode = "pragma solidity >=0;\n" + _sourceCode;
 		m_compiler.reset(false);
-		m_compiler.addSource("", _sourceCode);
+		m_compiler.addSource("", sourceCode);
 		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
 		{
 			for (auto const& error: m_compiler.errors())

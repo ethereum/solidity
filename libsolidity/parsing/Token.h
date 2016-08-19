@@ -167,6 +167,7 @@ namespace solidity
 	K(Modifier, "modifier", 0)                                         \
 	K(New, "new", 0)                                                   \
 	K(Public, "public", 0)                                             \
+	K(Pragma, "pragma", 0)                                             \
 	K(Private, "private", 0)                                           \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
