@@ -1,5 +1,0 @@
-contract configUser {
-    function configAddr() constant returns (address a) {
-        return 0xc6d9d2cd449a754c494264e1809c50e34d64562b;
-    }
-}

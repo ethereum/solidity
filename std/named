@@ -1,9 +1,0 @@
-import "./Config";
-import "./NameReg";
-import "./configUser";
-
-contract named is configUser {
-    function named(bytes32 name) { 
-        NameReg(Config(configAddr()).lookup(1)).register(name);
-    }
-}

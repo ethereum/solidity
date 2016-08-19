@@ -1,8 +1,4 @@
 import "./owned";
 import "./mortal";
-import "./Config";
-import "./configUser";
-import "./NameReg";
-import "./named";
-import "./Coin";
-import "./ExampleCoin";
+import "./Token";
+import "./ExampleToken";

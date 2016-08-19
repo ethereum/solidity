@@ -1,9 +1,0 @@
-import "./CoinReg";
-import "./Config";
-import "./configUser";
-
-contract coin is configUser {
-    function coin(bytes3 name, uint denom) {
-        CoinReg(Config(configAddr()).lookup(3)).register(name, denom);
-    }
-}
