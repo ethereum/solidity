@@ -101,7 +101,7 @@ and then run the compiler as
 
 As a more complex example, suppose you rely on some module that uses a
 very old version of dapp-bin. That old version of dapp-bin is checked
-out at ``/usr/local/dapp-bin_old``, then you can use 
+out at ``/usr/local/dapp-bin_old``, then you can use
 
 .. code-block:: bash
 

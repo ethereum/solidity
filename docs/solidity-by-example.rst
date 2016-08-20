@@ -191,6 +191,8 @@ contract into a blind auction where it is not
 possible to see the actual bid until the bidding
 period ends.
 
+.. _simple_auction:
+
 Simple Open Auction
 ===================
 
@@ -269,7 +271,7 @@ activate themselves.
                 // highestBidder.send(highestBid) is a security risk
                 // because it can be prevented by the caller by e.g.
                 // raising the call stack to 1023. It is always safer
-                // to let the recipient withdraw their money themselves. 
+                // to let the recipient withdraw their money themselves.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;

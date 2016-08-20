@@ -70,7 +70,7 @@ Solidity Tools
 
 * `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
     Try Solidity instantly with a command-line Solidity console.
-    
+
 * `solgraph <https://github.com/raineorshine/solgraph>`_
     Visualize Solidity control flow and highlight potential security vulnerabilities.
 
