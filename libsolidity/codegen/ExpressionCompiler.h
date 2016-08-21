@@ -118,13 +118,6 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
-	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
-	/// prior to parsing the inline assembly.
-	void appendInlineAssembly(
-		std::string const& _assembly,
-		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
-	);
-
 	bool m_optimize;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;

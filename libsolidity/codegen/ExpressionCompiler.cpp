@@ -220,6 +220,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			// value lvalue_ref value lvalue_ref
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
+		//auto identifiers = _assignment.annotation()
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.annotation().type);
 		if (lvalueSize > 0)
 		{
@@ -1367,13 +1368,13 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			if (c_numBits - c_fractionalBits == 0)
 			{
 				//take two numbers, cut them in half, multiply them, simple as that.
-				appendInlineAssembly(R"(
+				m_context.appendInlineAssembly(R"(
 					{
 						let firstNum := dup1
 						let secondNum := dup3
 						let runningTotal := mul($div(firstNum, $halfShift), $div(secondNum, $halfShift))
 					}
-				)", map<string, string> {
+				)", {}, map<string, string> {
 						{"$div", (c_isSigned ? "sdiv" : "div")},
 						{"$halfShift", toString(c_halfShift)}
 				});
@@ -1397,7 +1398,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				{
 					//we need this here because otherwise we will have an overflow with our fractional bits
 
-					appendInlineAssembly(R"(
+					m_context.appendInlineAssembly(R"(
 						{
 							let firstNum := dup1
 							let secondNum := dup3
@@ -1414,7 +1415,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 						//C*B
 							runningTotal := add(runningTotal, mul(C, B))
 						}
-					)", map<string, string> {
+					)", {}, map<string, string> {
 							{"$div", (c_isSigned ? "sdiv" : "div")},
 							{"$halfShift", toString(c_halfShift)},
 							{"$fractionShift", toString(c_fractionShift)},
@@ -1425,7 +1426,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				}
 				else
 				{
-					appendInlineAssembly(R"(
+					m_context.appendInlineAssembly(R"(
 						{
 							let firstNum := dup1
 							let secondNum := dup3
@@ -1442,7 +1443,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 						//C*B
 							runningTotal := add(runningTotal, mul(C, B))
 						}
-					)", map<string, string> {
+					)", {}, map<string, string> {
 							{"$fractionShift", toString(c_fractionShift)},
 							{"$mod", (c_isSigned ? "smod" : "mod")},
 							{"$div", (c_isSigned ? "sdiv" : "div")}
@@ -1466,7 +1467,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			}
 			else
 			{
-				appendInlineAssembly(R"(
+				m_context.appendInlineAssembly(R"(
 					{
 						let firstNum := dup1
 						let secondNum := dup3
@@ -1474,7 +1475,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 						let integer := mul(div(secondNum, $fractionShift), firstNum)
 						let runningTotal := add(integer, fraction)
 					}
-				)", map<string, string> {
+				)", {}, map<string, string> {
 						{"$div", (c_isSigned ? "sdiv" : "div")},
 						{"$fractionShift", toString(c_fractionShift)},
 				});
@@ -1817,22 +1818,6 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 CompilerUtils ExpressionCompiler::utils()
 {
 	return CompilerUtils(m_context);
-}
-
-void ExpressionCompiler::appendInlineAssembly(string const& _assembly, map<string, string> const& _replacements)
-{
-	if (_replacements.empty())
-		solAssert(!!assembly::InlineAssemblyStack().parseAndAssemble(_assembly, m_context.nonConstAssembly()), "");
-	else
-	{
-		string assembly = _assembly;
-		for (auto const& replacement: _replacements)
-			assembly = boost::algorithm::replace_all_copy(assembly, replacement.first, replacement.second);
-		cout << "append inline assembly input: " << assembly << endl;
-		string passFail = bool(assembly::InlineAssemblyStack().parseAndAssemble(assembly, m_context.nonConstAssembly())) ? "pass" : "fail";
-		cout << "did it pass or fail?: " << passFail << endl;
-		solAssert(!!assembly::InlineAssemblyStack().parseAndAssemble(assembly, m_context.nonConstAssembly()), "");
-	}
 }
 
 }
