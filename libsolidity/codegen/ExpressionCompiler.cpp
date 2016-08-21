@@ -1327,7 +1327,7 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	bool c_isSigned;
+	bool c_isSigned = false;
 	bool c_isFractional = false;
 	u256 c_fractionShift = u256(1);
 	u256 c_halfShift = u256(1);
@@ -1351,6 +1351,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		c_fractionShift = (u256(1) << (c_fractionalBits));
 		c_halfShift = (u256(1) << (c_fractionalBits / 2));
 	}
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Expected numeric type."));
 
 
 	switch (_operator)
