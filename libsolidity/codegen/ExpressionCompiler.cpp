@@ -1494,20 +1494,6 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			m_context << Instruction::MUL;
 		break;
 	case Token::Div:
-		if (c_isFractional)
-		{
-			//divide, then shift left...this is your integer.
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << c_fractionShift << Instruction::MUL;
-			//now redo the process...
-			m_context << Instruction::DUP2 << Instruction::DUP4;
-			//but this time, get the fraction portion.
-			m_context << c_fractionShift << Instruction::SWAP1 << Instruction::MUL << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-			//add
-			m_context << Instruction::ADD;
-		}
-		else
-			m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-		break;
 	case Token::Mod:
 	{
 		// Test for division by zero
@@ -1515,7 +1501,21 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 
 		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		{
+			if (c_isFractional)
+			{
+				//divide, then shift left...this is your integer.
+				m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << c_fractionShift << Instruction::MUL;
+				//now redo the process...
+				m_context << Instruction::DUP2 << Instruction::DUP4;
+				//but this time, get the fraction portion.
+				m_context << c_fractionShift << Instruction::SWAP1 << Instruction::MUL << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+				//add
+				m_context << Instruction::ADD;
+			}
+			else
+				m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		}
 		else
 			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 		break;
