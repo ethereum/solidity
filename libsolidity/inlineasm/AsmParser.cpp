@@ -121,7 +121,7 @@ assembly::Statement Parser::parseStatement()
 
 assembly::Statement Parser::parseExpression()
 {
-	Statement operation = parseElementaryOperation();
+	Statement operation = parseElementaryOperation(true);
 	if (m_scanner->currentToken() == Token::LParen)
 		return parseFunctionalInstruction(std::move(operation));
 	else

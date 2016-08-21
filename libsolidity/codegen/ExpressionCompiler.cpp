@@ -1328,7 +1328,7 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
 	bool c_isSigned;
-	bool c_isFractional;
+	bool c_isFractional = false;
 	u256 c_fractionShift = u256(1);
 	u256 c_halfShift = u256(1);
 	int c_fractionalBits = 0;
@@ -1339,7 +1339,6 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	{
 		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 		c_isSigned = type.isSigned();
-		c_isFractional = false;
 	}
 	else if (_type.category() == Type::Category::FixedPoint)
 	{

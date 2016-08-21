@@ -1199,6 +1199,7 @@ public:
 	Expression const& leftHandSide() const { return *m_leftHandSide; }
 	Token::Value assignmentOperator() const { return m_assigmentOperator; }
 	Expression const& rightHandSide() const { return *m_rightHandSide; }
+
 private:
 	ASTPointer<Expression> m_leftHandSide;
 	Token::Value m_assigmentOperator;
