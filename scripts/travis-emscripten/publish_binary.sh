@@ -60,7 +60,7 @@ fi
 
 # This file is assumed to be the product of the build_emscripten.sh script.
 cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
-./update-index.sh
+node ./update
 cd bin
 LATEST=$(ls -r soljson-v* | head -n 1)
 cp "$LATEST" soljson-latest.js
