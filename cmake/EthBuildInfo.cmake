@@ -19,7 +19,7 @@ function(create_build_info NAME)
 		set(ETH_BUILD_COMPILER "unknown")
 	endif ()
 
-	set(ETH_BUILD_PLATFORM "${ETH_BUILD_OS}/${ETH_BUILD_COMPILER}")
+	set(ETH_BUILD_PLATFORM "${ETH_BUILD_OS}.${ETH_BUILD_COMPILER}")
 
 	#cmake build type may be not speCified when using msvc
 	if (CMAKE_BUILD_TYPE)
@@ -36,8 +36,6 @@ function(create_build_info NAME)
 		-DETH_BUILD_OS="${ETH_BUILD_OS}"
 		-DETH_BUILD_COMPILER="${ETH_BUILD_COMPILER}"
 		-DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}"
-		-DETH_BUILD_NUMBER="${BUILD_NUMBER}"
-		-DETH_VERSION_SUFFIX="${VERSION_SUFFIX}"
 		-DPROJECT_VERSION="${PROJECT_VERSION}"
 		-P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
