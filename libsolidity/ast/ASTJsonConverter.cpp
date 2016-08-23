@@ -31,21 +31,10 @@ namespace dev
 namespace solidity
 {
 
-void ASTJsonConverter::addKeyValue(Json::Value& _obj, string const& _key, string const& _val)
-{
-	// special handling for booleans
-	if (_key == "const" || _key == "public" || _key == "local" ||
-		_key == "lvalue" || _key == "local_lvalue" || _key == "prefix")
-		_obj[_key] = (_val == "1") ? true : false;
-	else
-		// else simply add it as a string
-		_obj[_key] = _val;
-}
-
 void ASTJsonConverter::addJsonNode(
 	ASTNode const& _node,
 	string const& _nodeName,
-	initializer_list<pair<string const, string const>> _list,
+	initializer_list<pair<string const, Json::Value const>> _attributes,
 	bool _hasChildren = false
 )
 {
@@ -54,11 +43,11 @@ void ASTJsonConverter::addJsonNode(
 	node["id"] = reinterpret_cast<Json::UInt64>(&_node);
 	node["src"] = sourceLocationToString(_node.location());
 	node["name"] = _nodeName;
-	if (_list.size() != 0)
+	if (_attributes.size() != 0)
 	{
 		Json::Value attrs;
-		for (auto& e: _list)
-			addKeyValue(attrs, e.first, e.second);
+		for (auto& e: _attributes)
+			attrs[e.first] = e.second;
 		node["attributes"] = attrs;
 	}
 
@@ -122,7 +111,15 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 
 bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
-	addJsonNode(_node, "ContractDefinition", { make_pair("name", _node.name()) }, true);
+	Json::Value linearizedBaseContracts(Json::arrayValue);
+	for (auto const& baseContract: _node.annotation().linearizedBaseContracts)
+		linearizedBaseContracts.append(reinterpret_cast<Json::UInt64>(baseContract));
+	addJsonNode(_node, "ContractDefinition", {
+		make_pair("name", _node.name()),
+		make_pair("isLibrary", _node.isLibrary()),
+		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
+		make_pair("linearizedBaseContracts", linearizedBaseContracts),
+	}, true);
 	return true;
 }
 
@@ -164,11 +161,11 @@ bool ASTJsonConverter::visit(ParameterList const& _node)
 
 bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
-	addJsonNode(_node, "FunctionDefinition",
-				{ make_pair("name", _node.name()),
-					make_pair("public", boost::lexical_cast<std::string>(_node.isPublic())),
-					make_pair("const", boost::lexical_cast<std::string>(_node.isDeclaredConst())) },
-				true);
+	addJsonNode(_node, "FunctionDefinition", {
+		make_pair("name", _node.name()),
+		make_pair("public", _node.isPublic()),
+		make_pair("constant", _node.isDeclaredConst())
+	}, true);
 	return true;
 }
 
@@ -176,7 +173,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
 	addJsonNode(_node, "VariableDeclaration", {
 		make_pair("name", _node.name()),
-		make_pair("name", _node.name()),
+		make_pair("type", type(_node))
 	}, true);
 	return true;
 }
@@ -326,7 +323,7 @@ bool ASTJsonConverter::visit(TupleExpression const& _node)
 bool ASTJsonConverter::visit(UnaryOperation const& _node)
 {
 	addJsonNode(_node, "UnaryOperation",
-				{ make_pair("prefix", boost::lexical_cast<std::string>(_node.isPrefixOperation())),
+				{ make_pair("prefix", _node.isPrefixOperation()),
 					make_pair("operator", Token::toString(_node.getOperator())),
 					make_pair("type", type(_node)) },
 				true);
@@ -345,7 +342,7 @@ bool ASTJsonConverter::visit(BinaryOperation const& _node)
 bool ASTJsonConverter::visit(FunctionCall const& _node)
 {
 	addJsonNode(_node, "FunctionCall", {
-		make_pair("type_conversion", boost::lexical_cast<std::string>(_node.annotation().isTypeConversion)),
+		make_pair("type_conversion", _node.annotation().isTypeConversion),
 		make_pair("type", type(_node))
 	}, true);
 	return true;
@@ -359,10 +356,10 @@ bool ASTJsonConverter::visit(NewExpression const& _node)
 
 bool ASTJsonConverter::visit(MemberAccess const& _node)
 {
-	addJsonNode(_node, "MemberAccess",
-				{ make_pair("member_name", _node.memberName()),
-					make_pair("type", type(_node)) },
-				true);
+	addJsonNode(_node, "MemberAccess", {
+		make_pair("member_name", _node.memberName()),
+		make_pair("type", type(_node))
+	}, true);
 	return true;
 }
 
@@ -381,18 +378,21 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
-	addJsonNode(_node, "ElementaryTypenameExpression",
-				{ make_pair("value", _node.typeName().toString()), make_pair("type", type(_node)) });
+	addJsonNode(_node, "ElementaryTypenameExpression", {
+		make_pair("value", _node.typeName().toString()),
+		make_pair("type", type(_node))
+	});
 	return true;
 }
 
 bool ASTJsonConverter::visit(Literal const& _node)
 {
 	char const* tokenString = Token::toString(_node.token());
-	addJsonNode(_node, "Literal",
-				{ make_pair("string", (tokenString) ? tokenString : "null"),
-					make_pair("value", _node.value()),
-					make_pair("type", type(_node)) });
+	addJsonNode(_node, "Literal", {
+		make_pair("string", tokenString ? tokenString : Json::Value()),
+		make_pair("value", _node.value()),
+		make_pair("type", type(_node))
+	});
 	return true;
 }
 
