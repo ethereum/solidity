@@ -141,6 +141,8 @@ cache:
 
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
+    - test "$TRAVIS_PULL_REQUESTS" != "false" || test "$TRAVIS_BRANCH" != release || echo -n > prerelease.txt # this is a proper release
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
     - test $TRAVIS_RELEASE != On || (mkdir -p build

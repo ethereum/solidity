@@ -23,6 +23,7 @@ endif()
 # If it does not exist, create our own prerelease string
 if (EXISTS ${ETH_SOURCE_DIR}/prerelease.txt)
 	file(READ ${ETH_SOURCE_DIR}/prerelease.txt SOL_VERSION_PRERELEASE)
+	string(STRIP ${SOL_VERSION_PRERELEASE} SOL_VERSION_PRERELEASE)
 else()
 	string(TIMESTAMP SOL_VERSION_PRERELEASE "develop.%Y.%m.%d" UTC)
 endif()

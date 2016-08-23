@@ -56,13 +56,13 @@ commithash=`git rev-parse --short HEAD`
 committimestamp=`git show --format=%ci HEAD | head -n 1`
 commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10`
 
-# TODO store the commit hash in a file so that the build info mechanism can pick it up even without git
-
+echo "$commithash" > commit_hash.txt
 if [ $branch = develop ]
 then
     debversion="$version-nightly-$commitdate-$commithash"
 else
     debversion="$version"
+    echo -n > prerelease.txt # proper release
 fi
 
 # gzip will create different tars all the time and we are not allowed
