@@ -922,7 +922,7 @@ custom types without the overhead of external function calls:
 As the compiler cannot know where the library will be
 deployed at, these addresses have to be filled into the
 final bytecode by a linker
-(see :ref:`commandline-compiler`) on how to use the
+(see :ref:`commandline-compiler` for how to use the
 commandline compiler for linking). If the addresses are not
 given as arguments to the compiler, the compiled hex code
 will contain placeholders of the form ``__Set______`` (where
