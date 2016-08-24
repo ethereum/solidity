@@ -48,7 +48,7 @@ pair<ASTPointer<SourceUnit>, std::shared_ptr<Error::Type const>>
 parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true)
 {
 	// Silence compiler version warning
-	string source = _insertVersionPragma ? "pragma solidity >=0;\n" + _source : _source;
+	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
 	ErrorList errors;
 	Parser parser(errors);
 	ASTPointer<SourceUnit> sourceUnit;
