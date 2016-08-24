@@ -130,9 +130,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		if (previousOwner != 0) {
 			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
 				throw;
-		}
-		else
-		{
+		} else {
 			if (!auction.highestBidder.send(auction.highestBid - auction.secondHighestBid))
 				throw;
 		}
@@ -147,9 +145,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 			if (now < m_toRecord[_name].renewalDate)
 				throw;
 			bid(_name, msg.sender, msg.value);
-		}
-		else
-		{
+		} else {
 			Record record = m_toRecord[_name];
 			if (record.owner != 0)
 				throw;
