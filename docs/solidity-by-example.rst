@@ -133,8 +133,7 @@ of votes.
                 // If the delegate already voted,
                 // directly add to the number of votes
                 proposals[delegate.vote].voteCount += sender.weight;
-            }
-            else {
+            } else {
                 // If the delegate did not vote yet,
                 // add to her weight.
                 delegate.weight += sender.weight;

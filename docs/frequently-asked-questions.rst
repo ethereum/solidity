@@ -461,16 +461,17 @@ If you do not want to throw, you can return a pair::
 
         function getCounter(uint index)
             returns (uint counter, bool error) {
-                if (index >= counters.length) return (0, true);
-                else return (counters[index], false);
+                if (index >= counters.length)
+                    return (0, true);
+                else
+                    return (counters[index], false);
         }
 
         function checkCounter(uint index) {
             var (counter, error) = getCounter(index);
             if (error) {
                 ...
-            }
-            else {
+            } else {
                 ...
             }
         }

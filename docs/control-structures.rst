@@ -275,8 +275,7 @@ As a result, the following code is legal, despite being poorly written::
         uint bar = 5;
         if (true) {
             bar += baz;
-        }
-        else {
+        } else {
             uint baz = 10;// never executes
         }
         return bar;// returns 5
