@@ -25,7 +25,6 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/Hash.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
@@ -1700,9 +1699,15 @@ BOOST_AUTO_TEST_CASE(sha256)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto f = [&](u256 const& _input) -> u256
+	auto f = [&](u256 const& _x) -> bytes
 	{
-		return dev::sha256(dev::ref(toBigEndian(_input)));
+		if (_x == u256(4))
+			return fromHex("e38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f");
+		if (_x == u256(5))
+			return fromHex("96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47");
+		if (_x == u256(-1))
+			return fromHex("af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051");
+		return fromHex("");
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1717,9 +1722,15 @@ BOOST_AUTO_TEST_CASE(ripemd)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto f = [&](u256 const& _input) -> u256
+	auto f = [&](u256 const& _x) -> bytes
 	{
-		return h256(dev::ripemd160(h256(_input).ref()), h256::AlignLeft);	// This should be aligned right. i guess it's fixed elsewhere?
+		if (_x == u256(4))
+			return fromHex("1b0f3c404d12075c68c938f9f60ebea4f74941a0000000000000000000000000");
+		if (_x == u256(5))
+			return fromHex("ee54aa84fc32d8fed5a5fe160442ae84626829d9000000000000000000000000");
+		if (_x == u256(-1))
+			return fromHex("1cf4e77f5966e13e109703cd8a0df7ceda7f3dc3000000000000000000000000");
+		return fromHex("");
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
