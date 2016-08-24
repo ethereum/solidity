@@ -12,7 +12,7 @@ contract StandardToken is Token {
 	}
 
 	function transfer(address _to, uint256 _value) returns (bool success) {
-		if (balanceOf[msg.sender] >= _value) {
+		if (balanceOf[msg.sender] >= _value && balanceOf[_to] + _value >= balanceOf[_to]) {
 			balanceOf[msg.sender] -= _value;
 			balanceOf[_to] += _value;
 			Transfer(msg.sender, _to, _value);
@@ -24,7 +24,7 @@ contract StandardToken is Token {
 	}
 
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		if (allowance[_from][msg.sender] >= _value) {
+		if (allowance[_from][msg.sender] >= _value && balanceOf[_to] + _value >= balanceOf[_to]) {
 			allowance[_from][msg.sender] -= _value;
 			balanceOf[_to] += _value;
 			Transfer(_from, _to, _value);
