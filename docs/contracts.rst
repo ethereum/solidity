@@ -434,6 +434,14 @@ Ether (without data).  In such a context, there is very little gas available to
 the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as
 possible.
 
+In particular, the following operations will consume more gas than the stipend provided to a fallback function:
+
+- Writing to storage
+- Creating a contract
+- Calling an external function which consumes a large amount of gas
+
+Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
+
 ::
 
     contract Test {
