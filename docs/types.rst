@@ -661,13 +661,18 @@ Explicit Conversions
 --------------------
 
 If the compiler does not allow implicit conversion but you know what you are
-doing, an explicit type conversion is sometimes possible::
+doing, an explicit type conversion is sometimes possible. Note that this may
+give you some unexpected behaviour so be sure to test to ensure that the
+result is what you want! Take the following example where you are converting
+a negative ``int8`` to a ``uint``:
+
+::
 
     int8 y = -3;
     uint x = uint(y);
 
 At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
-characters), which is -3 in two's complement representation of 256 bits.
+characters), which is -3 in the two's complement representation of 256 bits.
 
 If a type is explicitly converted to a smaller type, higher-order bits are
 cut off::
