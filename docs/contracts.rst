@@ -194,17 +194,38 @@ return parameter list for functions.
         function setData(uint a) internal { data = a; }
         uint public data;
     }
+
+An other contract ``D`` can call ``c.getData()`` to retrieve the value of data in state
+storage and is not able to call ``f``. Contract ``E`` is derived from ``C`` and can call
+``compute``.
+
+::
+
+    contract C {
+        function f(uint a) private returns(uint b) { return a + 1; }
+        function setData(uint a) { data = a; }
+        function getData() public returns(uint) {return data;}
+        function compute(uint a, uint b) internal returns (uint) { return a+b;}
+        uint private data;
+    }
+
     contract D {
-        function readData(){
-            C c = new C();
-            uint local = c.data();
-            local = f(7); // error
+        function readData() {
+    	    C c = new C();
+    	    local = c.f(7); // error: member "f" is not visible
+	        c.setData(3);
+	        uint local = c.getData();
+	        local = c.compute(3,5); // error: member "compute" is not visible
+	    }
+    }
+
+    contract E is C {
+        function g() {
+    	    C c = new C();
+    	    uint val = compute(3,5);  // acces to internal member (from derivated to parent contract)
         }
     }
 
-An other contract ``D`` can call ``c.data()`` to retrieve the value of data in state
-storage, is not able to call ``f``. Contracts derived from ``C`` can call
-``setData`` to alter the value of ``data`` (but only in their own state).
 
 .. index:: ! accessor;function, ! function;accessor
 
@@ -218,6 +239,19 @@ arguments and returns a ``uint``, the value of the state
 variable ``data``. The initialization of state variables can
 be done at declaration.
 
+::
+
+    contract C {
+        uint public data = 42;
+    }
+    
+    contract Caller {
+    	C c = new C();
+    	function f() {
+    	    uint local = c.data();
+    	}
+    }
+
 The accessor functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
 it is evaluated as state variable and if it is accessed externally
@@ -225,8 +259,12 @@ it is evaluated as state variable and if it is accessed externally
 
 ::
 
-    contract Test {
-        uint public data = 42;
+    contract C {
+    	uint public data;
+    	function x() {
+    	    data = 3; // internal access
+    	    uint val = this.data(); // external access
+    	}
     }
 
 The next example is a bit more complex:
