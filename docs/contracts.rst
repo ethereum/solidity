@@ -211,18 +211,18 @@ storage and is not able to call ``f``. Contract ``E`` is derived from ``C`` and 
 
     contract D {
         function readData() {
-    	    C c = new C();
-    	    local = c.f(7); // error: member "f" is not visible
-	        c.setData(3);
-	        uint local = c.getData();
-	        local = c.compute(3,5); // error: member "compute" is not visible
-	    }
+            C c = new C();
+            local = c.f(7); // error: member "f" is not visible
+            c.setData(3);
+            uint local = c.getData();
+            local = c.compute(3,5); // error: member "compute" is not visible
+        }
     }
 
     contract E is C {
         function g() {
-    	    C c = new C();
-    	    uint val = compute(3,5);  // acces to internal member (from derivated to parent contract)
+            C c = new C();
+            uint val = compute(3,5);  // acces to internal member (from derivated to parent contract)
         }
     }
 
@@ -244,12 +244,12 @@ be done at declaration.
     contract C {
         uint public data = 42;
     }
-    
+
     contract Caller {
-    	C c = new C();
-    	function f() {
-    	    uint local = c.data();
-    	}
+        C c = new C();
+        function f() {
+            uint local = c.data();
+        }
     }
 
 The accessor functions have external visibility. If the
@@ -260,11 +260,11 @@ it is evaluated as state variable and if it is accessed externally
 ::
 
     contract C {
-    	uint public data;
-    	function x() {
-    	    data = 3; // internal access
-    	    uint val = this.data(); // external access
-    	}
+        uint public data;
+        function x() {
+            data = 3; // internal access
+            uint val = this.data(); // external access
+        }
     }
 
 The next example is a bit more complex:
