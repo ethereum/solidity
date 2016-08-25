@@ -195,37 +195,39 @@ return parameter list for functions.
         uint public data;
     }
 
-An other contract ``D`` can call ``c.getData()`` to retrieve the value of data in state
-storage and is not able to call ``f``. Contract ``E`` is derived from ``C`` and can call
-``compute``.
+In the following example, ``D``, can call ``c.getData()`` to retrieve the value of
+``data`` in state storage, but is not able to call ``f``. Contract ``E`` is derived from
+``C`` and, thus, can call ``compute``.
 
 ::
 
     contract C {
+        uint private data;
+
         function f(uint a) private returns(uint b) { return a + 1; }
         function setData(uint a) { data = a; }
-        function getData() public returns(uint) {return data;}
-        function compute(uint a, uint b) internal returns (uint) { return a+b;}
-        uint private data;
+        function getData() public returns(uint) { return data; }
+        function compute(uint a, uint b) internal returns (uint) { return a+b; }
     }
+
 
     contract D {
         function readData() {
             C c = new C();
-            local = c.f(7); // error: member "f" is not visible
+            uint local = c.f(7); // error: member "f" is not visible
             c.setData(3);
-            uint local = c.getData();
-            local = c.compute(3,5); // error: member "compute" is not visible
+            local = c.getData();
+            local = c.compute(3, 5); // error: member "compute" is not visible
         }
     }
+
 
     contract E is C {
         function g() {
             C c = new C();
-            uint val = compute(3,5);  // acces to internal member (from derivated to parent contract)
+            uint val = compute(3, 5);  // acces to internal member (from derivated to parent contract)
         }
     }
-
 
 .. index:: ! accessor;function, ! function;accessor
 
@@ -233,7 +235,7 @@ Accessor Functions
 ==================
 
 The compiler automatically creates accessor functions for
-all public state variables. For the contract given below the compiler will
+all public state variables. For the contract given below, the compiler will
 generate a function called ``data`` that does not take any
 arguments and returns a ``uint``, the value of the state
 variable ``data``. The initialization of state variables can
@@ -245,6 +247,7 @@ be done at declaration.
         uint public data = 42;
     }
 
+
     contract Caller {
         C c = new C();
         function f() {
@@ -254,8 +257,8 @@ be done at declaration.
 
 The accessor functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
-it is evaluated as state variable and if it is accessed externally
-(i.e. with ``this.``), it is evaluated as function.
+it is evaluated as a state variable and if it is accessed externally
+(i.e. with ``this.``), it is evaluated as a function.
 
 ::
 
