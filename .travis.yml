@@ -47,6 +47,13 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty
 
+        - os: linux
+          dist: trusty
+          sudo: required
+          compiler: clang
+          env:
+              - ZIP_SUFFIX=ubuntu-trusty-clang
+
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
         - os: linux
           dist: trusty
@@ -77,49 +84,50 @@ matrix:
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
         #
-        - os: osx
-          osx_image: beta-xcode6.2
-          env:
-              - ZIP_SUFFIX=osx-mavericks
+#        - os: osx
+#          osx_image: beta-xcode6.2
+#          env:
+#              - ZIP_SUFFIX=osx-mavericks
 
         # OS X Yosemite (10.10)
         # https://en.wikipedia.org/wiki/OS_X_Yosemite
         #
-        - os: osx
-          osx_image: xcode7.1
-          env:
-              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-yosemite
+#        - os: osx
+#          osx_image: xcode7.1
+#          env:
+#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+#              # https://github.com/ethereum/solidity/issues/894
+#              - TRAVIS_TESTS=Off
+#              - ZIP_SUFFIX=osx-yosemite
 
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
         #
-        - os: osx
-          osx_image: xcode7.3
-          env:
-              # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
-              # See https://github.com/ethereum/webthree-umbrella/issues/565
-              - TRAVIS_BUILD_TYPE=Debug
-              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-elcapitan
+#        - os: osx
+#          osx_image: xcode7.3
+#          env:
+#              # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
+#              # See https://github.com/ethereum/webthree-umbrella/issues/565
+#              - TRAVIS_BUILD_TYPE=Debug
+#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+#              # https://github.com/ethereum/solidity/issues/894
+#              - TRAVIS_TESTS=Off
+#              - ZIP_SUFFIX=osx-elcapitan
 
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
         #
-        - os: osx
-          osx_image: xcode8
-          env:
-              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
-              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
-              - TRAVIS_BUILD_TYPE=Debug
-              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=macos-sierra
+#       - os: osx
+#          osx_image: xcode8
+#          env:
+#              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
+#              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
+#              - TRAVIS_BUILD_TYPE=Debug
+#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
+#              # https://github.com/ethereum/solidity/issues/894
+#              - TRAVIS_TESTS=Off
+#              - ZIP_SUFFIX=macos-sierra
+
 git:
     depth: 2
 
