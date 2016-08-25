@@ -1,31 +1,31 @@
 .. index:: style, coding style
 
 #############
-Style Guide
+Coding Standards
 #############
 
 ************
 Introduction
 ************
 
-This guide is intended to provide coding conventions for writing solidity code.
-This guide should be thought of as an evolving document that will change over
+This standard is intended to provide coding conventions for writing solidity code.
+This standard should be thought of as an evolving document that will change over
 time as useful conventions are found and old conventions are rendered obsolete.
 
-Many projects will implement their own style guides.  In the event of
-conflicts, project specific style guides take precedence.
+Many projects will implement their own code standards.  In the event of
+conflicts, project specific code standards take precedence.
 
-The structure and many of the recommendations within this style guide were
+The structure and many of the recommendations within this code standard were
 taken from python's
 `pep8 style guide <https://www.python.org/dev/peps/pep-0008/>`_.
 
-The goal of this guide is *not* to be the right way or the best way to write
-solidity code.  The goal of this guide is *consistency*.  A quote from python's
+The goal of this standard is *not* to be the right way or the best way to write
+solidity code. The goal of this guide is *consistency*. A quote from python's
 `pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
 captures this concept well.
 
-    A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
-    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
+    A standard is about consistency. Consistency with this standard is important. Consistency within a project is more important. Consistency within one module or function is most important.
+    But most importantly: know when to be inconsistent -- sometimes the standard just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
