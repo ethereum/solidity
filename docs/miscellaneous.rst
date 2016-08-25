@@ -15,6 +15,23 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
 - If an elementary type does not fit the remaining part of a storage slot, it is moved to the next storage slot.
 - Structs and array data always start a new slot and occupy whole slots (but items inside a struct or array are packed tightly according to these rules).
 
+.. warning::
+    When using elements that are smaller than 32 bytes, your contract's gas usage may be higher.
+    This is because the EVM operates on 32 bytes a a time. Therefore, if the element is smaller than
+    that, the EVM must use more operations in order to reduce the size of the element from 32 bytes
+    to the desired size.
+
+    It is only beneficial to use reduced-size arguments if you are dealing with storage values
+    because the compiler will pack multiple elements into one storage slot. When dealing with
+    function arguments or memory values, there is no inherent benefit because the compiler does not
+    pack these values.
+
+    Finally, in order to allow the EVM to optimize for this, ensure that you try to order your
+    storage variables such that they can be packed tightly. For example, declaring your storage
+    variables in the order of ``uint128, uint128, uint256`` instead of ``uint128, uint256,
+    uint128``, as the former will only take up two slots of storage whereas the latter will take up
+    three.
+
 The elements of structs and arrays are stored after each other, just as if they were given explicitly.
 
 Due to their unpredictable size, mapping and dynamically-sized array types use a ``sha3``
