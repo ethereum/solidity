@@ -2053,6 +2053,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 {
 	char const* sourceCode = R"(
 		contract helper {
+			function() { } // can receive ether
 		}
 		contract test {
 			helper h;
@@ -5943,6 +5944,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
+			function () {}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "lib");

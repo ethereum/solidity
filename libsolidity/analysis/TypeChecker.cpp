@@ -92,6 +92,8 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			else
 			{
 				fallbackFunction = function;
+				if (_contract.isLibrary())
+					typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
 				if (!fallbackFunction->parameters().empty())
 					typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
