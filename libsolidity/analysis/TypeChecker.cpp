@@ -94,6 +94,8 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				fallbackFunction = function;
 				if (!fallbackFunction->parameters().empty())
 					typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
+				if (!fallbackFunction->returnParameters().empty())
+					typeError(fallbackFunction->returnParameterList()->location(), "Fallback function cannot return values.");
 			}
 		}
 		if (!function->isImplemented())
