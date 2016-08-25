@@ -81,6 +81,7 @@ matrix:
           osx_image: beta-xcode6.2
           env:
               - ZIP_SUFFIX=osx-mavericks
+              - TRAVIS_RUN_FOR_PRs=Off
 
         # OS X Yosemite (10.10)
         # https://en.wikipedia.org/wiki/OS_X_Yosemite
@@ -92,6 +93,7 @@ matrix:
               # https://github.com/ethereum/solidity/issues/894
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-yosemite
+              - TRAVIS_RUN_FOR_PRs=Off
 
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
@@ -106,6 +108,7 @@ matrix:
               # https://github.com/ethereum/solidity/issues/894
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-elcapitan
+              - TRAVIS_RUN_FOR_PRs=Off
 
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
@@ -120,6 +123,7 @@ matrix:
               # https://github.com/ethereum/solidity/issues/894
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
+
 git:
     depth: 2
 
@@ -132,17 +136,17 @@ cache:
         - jsoncpp
 
 install:
-    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - test ! \( \( $TRAVIS_PULL_REQUEST = false -o $TRAVIS_RUN_FOR_PRs=On \) -a $TRAVIS_INSTALL_DEPS = On \) || ./scripts/install_deps.sh
 before_script:
-    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || (mkdir -p build
+    - test ! \( \( $TRAVIS_PULL_REQUEST = false -o $TRAVIS_RUN_FOR_PRs=On \) -a $TRAVIS_EMSCRIPTEN = On \) || ./scripts/build_emscripten.sh
+    - test ! \( \( $TRAVIS_PULL_REQUEST = false -o $TRAVIS_RUN_FOR_PRs=On \) -a $TRAVIS_RELEASE = On \) || (mkdir -p build
       && cd build
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
       && ./scripts/release.sh $ZIP_SUFFIX )
 script:
-    - test $TRAVIS_DOCS != On || ./scripts/docs.sh
+    - test ! \( \( $TRAVIS_PULL_REQUEST = false -o $TRAVIS_RUN_FOR_PRs=On \) -a $TRAVIS_DOCS = On \) || ./scripts/docs.sh
 
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
     # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
@@ -154,7 +158,8 @@ script:
     # itself is broken from the failure messages which we are seeing.
     #
     # More details on known issues at https://github.com/ethereum/solidity/issues/769    
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
+    - test ! \( \( $TRAVIS_PULL_REQUEST = false -o $TRAVIS_RUN_FOR_PRs=On \) -a $TRAVIS_TESTS = On \) || (
+        cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
 env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
@@ -164,6 +169,7 @@ env:
         - TRAVIS_INSTALL_DEPS=On
         - TRAVIS_RELEASE=On
         - TRAVIS_TESTS=On
+        - TRAVIS_RUN_FOR_PRs=On
 
 deploy:
     # This is the deploy target for the Emscripten build.
