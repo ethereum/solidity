@@ -439,6 +439,7 @@ In particular, the following operations will consume more gas than the stipend p
 - Writing to storage
 - Creating a contract
 - Calling an external function which consumes a large amount of gas
+- Sending Ether
 
 Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
 
