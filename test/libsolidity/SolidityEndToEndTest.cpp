@@ -2529,13 +2529,13 @@ BOOST_AUTO_TEST_CASE(fallback_function)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function() returns (uint r) { data = 1; return 2; }
+			function() { data = 1; }
 			function getData() returns (uint r) { return data; }
 		}
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
-	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("") == encodeArgs());
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
 }
 
@@ -2544,14 +2544,14 @@ BOOST_AUTO_TEST_CASE(inherited_fallback_function)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function() returns (uint r) { data = 1; return 2; }
+			function() { data = 1; }
 			function getData() returns (uint r) { return data; }
 		}
 		contract B is A {}
 	)";
 	compileAndRun(sourceCode, 0, "B");
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
-	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("") == encodeArgs());
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
 }
 
@@ -3002,13 +3002,13 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function() returns (bytes32) {
+			function f() returns (bytes32) {
 				return sha3("abc", msg.data);
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
-	bytes calldata1 = bytes(61, 0x22) + bytes(12, 0x12);
+	bytes calldata1 = FixedHash<4>(dev::sha3("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
 	sendMessage(calldata1, false);
 	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata1)));
 }
@@ -3024,7 +3024,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 		contract sender {
 			function sender() { rec = new receiver(); }
 			function() { savedData = msg.data; }
-			function forward() returns (bool) { rec.call(savedData); return true; }
+			function forward() returns (bool) { !rec.call(savedData); return true; }
 			function clear() returns (bool) { delete savedData; return true; }
 			function val() returns (uint) { return rec.received(); }
 			receiver rec;
@@ -4342,12 +4342,12 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 				y = this.t1(C1(7));
 			}
 			function t1(C1 a) returns (C1) { return a; }
-			function() returns (C1) { return C1(9); }
+			function t2() returns (C1) { return C1(9); }
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(9), u256(7)));
-	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
+	BOOST_CHECK(callContractFunction("t2()") == encodeArgs(u256(9)));
 }
 
 BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)

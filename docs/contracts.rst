@@ -425,7 +425,8 @@ Fallback Function
 *****************
 
 A contract can have exactly one unnamed function. This function cannot have
-arguments and is executed on a call to the contract if none of the other
+arguments and cannot return anything.
+It is executed on a call to the contract if none of the other
 functions matches the given function identifier (or if no data was supplied at
 all).
 
