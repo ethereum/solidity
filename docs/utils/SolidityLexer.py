@@ -58,12 +58,14 @@ class SolidityLexer(RegexLexer):
              r'throw|try|catch|finally|new|delete|typeof|instanceof|void|'
              r'this|import|mapping|returns|private|public|external|internal|'
              r'constant|memory|storage)\b', Keyword, 'slashstartsregex'),
-            (r'(var|let|with|function|event|modifier|struct|enum|contract)\b', Keyword.Declaration, 'slashstartsregex'),
+            (r'(var|let|with|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
             (r'(bytes|string|address|uint|int|bool|byte|' +
              '|'.join(
                  ['uint%d' % (i + 8) for i in range(0, 256, 8)] +
                  ['int%d' % (i + 8) for i in range(0, 256, 8)] +
-                 ['bytes%d' % (i + 1) for i in range(0, 32)]
+                 ['bytes%d' % (i + 1) for i in range(0, 32)] +
+                 ['ufixed%dx%d' % ((i), (j + 8)) for i in range(0, 256, 8) for j in range(0, 256 - i, 8)] +
+                 ['fixed%dx%d' % ((i), (j + 8)) for i in range(0, 256, 8) for j in range(0, 256 - i, 8)]
              ) + r')\b', Keyword.Type, 'slashstartsregex'),
             (r'(abstract|boolean|byte|char|class|const|debugger|double|enum|export|'
              r'extends|final|float|goto|implements|int|interface|long|native|'
