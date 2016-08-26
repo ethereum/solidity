@@ -27,10 +27,10 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
     values, there is no inherent benefit because the compiler does not pack these values.
 
     Finally, in order to allow the EVM to optimize for this, ensure that you try to order your
-    storage variables such that they can be packed tightly. For example, declaring your storage
-    variables in the order of ``uint128, uint128, uint256`` instead of ``uint128, uint256,
-    uint128``, as the former will only take up two slots of storage whereas the latter will take up
-    three.
+    storage variables and ``struct`` members such that they can be packed tightly. For example,
+    declaring your storage variables in the order of ``uint128, uint128, uint256`` instead of
+    ``uint128, uint256, uint128``, as the former will only take up two slots of storage whereas the
+    latter will take up three.
 
 The elements of structs and arrays are stored after each other, just as if they were given explicitly.
 
