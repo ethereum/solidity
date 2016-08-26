@@ -1231,6 +1231,16 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_conversion_leading_zeroes_check)
 	BOOST_CHECK(!successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(payable_accessor)
+{
+	char const* text = R"(
+		contract test {
+			uint payable x;
+		}
+	)";
+	BOOST_CHECK(!successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

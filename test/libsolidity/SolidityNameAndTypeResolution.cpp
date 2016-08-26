@@ -3852,7 +3852,69 @@ BOOST_AUTO_TEST_CASE(modifier_without_underscore)
 			modifier m() {}
 		}
 	)";
-	BOOST_CHECK(expectError(text, true) == Error::Type::SyntaxError);
+	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
+}
+
+BOOST_AUTO_TEST_CASE(payable_in_library)
+{
+	char const* text = R"(
+		library test {
+			function f() payable {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(payable_internal)
+{
+	char const* text = R"(
+		contract test {
+			function f() payable internal {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_payable)
+{
+	char const* text = R"(
+		contract B { function f() payable {} }
+		contract C is B { function f() {} }
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
+{
+	char const* text = R"(
+		contract B { function f() {} }
+		contract C is B { function f() payable {} }
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(calling_payable)
+{
+	char const* text = R"(
+		contract receiver { function pay() payable {} }
+		contract test {
+			funciton f() { (new receiver()).pay.value(10)(); }
+			recevier r = new receiver();
+			function g() { r.pay.value(10)(); }
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(calling_nonpayable)
+{
+	char const* text = R"(
+		contract receiver { function nopay() {} }
+		contract test {
+			function_argument_mem_to_storage f() { (new receiver()).nopay.value(10)(); }
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)

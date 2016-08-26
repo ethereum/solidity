@@ -2085,11 +2085,11 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 			function sendAmount(uint amount) payable returns (uint256 bal) {
 				return h.getBalance.value(amount)();
 			}
-			function outOfGas() payable returns (bool ret) {
+			function outOfGas() returns (bool ret) {
 				h.setFlag.gas(2)(); // should fail due to OOG
 				return true;
 			}
-			function checkState() payable returns (bool flagAfter, uint myBal) {
+			function checkState() returns (bool flagAfter, uint myBal) {
 				flagAfter = h.getFlag();
 				myBal = this.balance;
 			}
@@ -2098,15 +2098,15 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	compileAndRun(sourceCode, 20);
 	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(5));
 	// call to helper should not succeed but amount should be transferred anyway
-	BOOST_REQUIRE(callContractFunction("outOfGas()", 5) == bytes());
-	BOOST_REQUIRE(callContractFunction("checkState()", 5) == encodeArgs(false, 20 - 5));
+	BOOST_REQUIRE(callContractFunction("outOfGas()") == bytes());
+	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
 }
 
 BOOST_AUTO_TEST_CASE(gas_for_builtin)
 {
 	char const* sourceCode = R"(
 		contract Contract {
-			function test(uint g) payable returns (bytes32 data, bool flag) {
+			function test(uint g) returns (bytes32 data, bool flag) {
 				data = ripemd160.gas(g)("abc");
 				flag = true;
 			}
@@ -2151,7 +2151,7 @@ BOOST_AUTO_TEST_CASE(value_insane)
 		contract test {
 			helper h;
 			function test() payable { h = new helper(); }
-			function sendAmount(uint amount) payable returns (uint256 bal) {
+			function sendAmount(uint amount) returns (uint256 bal) {
 				var x1 = h.getBalance.value;
 				var x2 = x1(amount).gas;
 				var x3 = x2(1000).value;
@@ -7090,18 +7090,17 @@ BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(7)));
 }
 
-BOOST_AUTO_TEST_CASE(payable_accept_explicit_constructor)
+BOOST_AUTO_TEST_CASE(payable_constructor)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function () payable { }
+			function C() payable { }
 		}
 	)";
 	compileAndRun(sourceCode, 27, "C");
 }
 
-
-BOOST_AUTO_TEST_CASE(payable_accept_explicit)
+BOOST_AUTO_TEST_CASE(payable_function)
 {
 	char const* sourceCode = R"(
 		contract C {
@@ -7122,10 +7121,19 @@ BOOST_AUTO_TEST_CASE(non_payable_throw_constructor)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function() { }
+			function C() { }
+		}
+		contract D {
+			function D() payable {}
+			function f() returns (uint) {
+				(new C).value(2)();
+				return 2;
+			}
 		}
 	)";
-	compileAndRun(sourceCode, 27, "C");
+	compileAndRun(sourceCode, 27, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27);
 }
 
 BOOST_AUTO_TEST_CASE(non_payable_throw)
@@ -7146,6 +7154,23 @@ BOOST_AUTO_TEST_CASE(non_payable_throw)
 	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs());
 	BOOST_CHECK(callContractFunctionWithValue("a()", 27) == encodeArgs());
 }
+
+BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier tryCircumvent {
+				if (false) _ // avoid the function, we should still not accept ether
+			}
+			function f() tryCircumvent returns (uint) {
+				return msg.value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs());
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

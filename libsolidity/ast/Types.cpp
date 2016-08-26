@@ -1890,20 +1890,23 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
-			members.push_back(MemberList::Member(
-				"value",
-				make_shared<FunctionType>(
-					parseElementaryTypeVector({"uint"}),
-					TypePointers{copyAndSetGasOrValue(false, true)},
-					strings(),
-					strings(),
-					Location::SetValue,
-					false,
-					nullptr,
-					m_gasSet,
-					m_valueSet
-				)
-			));
+		{
+			if (!m_declaration || m_isPayable) // If this is an actual function, it has to be payable
+				members.push_back(MemberList::Member(
+					"value",
+					make_shared<FunctionType>(
+						parseElementaryTypeVector({"uint"}),
+						TypePointers{copyAndSetGasOrValue(false, true)},
+						strings(),
+						strings(),
+						Location::SetValue,
+						false,
+						nullptr,
+						m_gasSet,
+						m_valueSet
+					)
+				));
+		}
 		if (m_location != Location::Creation)
 			members.push_back(MemberList::Member(
 				"gas",

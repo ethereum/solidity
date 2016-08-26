@@ -272,6 +272,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				if (
 					overriding->visibility() != function->visibility() ||
 					overriding->isDeclaredConst() != function->isDeclaredConst() ||
+					overriding->isPayable() != function->isPayable() ||
 					overridingType != functionType
 				)
 					typeError(overriding->location(), "Override changes extended function signature.");
@@ -416,6 +417,13 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*_function.scope()).isLibrary();
+	if (_function.isPayable())
+	{
+		if (isLibraryFunction)
+			typeError(_function.location(), "Library functions cannot be payable.");
+		if (!_function.isConstructor() && !_function.name().empty() && !_function.isPartOfExternalInterface())
+			typeError(_function.location(), "Internal functions cannot be payable.");
+	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
 		if (!type(*var)->canLiveOutsideStorage())
@@ -1328,14 +1336,16 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		fatalTypeError(
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not found or not visible "
-			"after argument-dependent lookup in " + exprType->toString()
+			"after argument-dependent lookup in " + exprType->toString() +
+			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
 		);
 	}
 	else if (possibleMembers.size() > 1)
 		fatalTypeError(
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not unique "
-			"after argument-dependent lookup in " + exprType->toString()
+			"after argument-dependent lookup in " + exprType->toString() +
+			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
 		);
 
 	auto& annotation = _memberAccess.annotation();
