@@ -8,8 +8,10 @@ Browser-Solidity
 If you just want to try Solidity for small contracts, you
 can try `browser-solidity <https://ethereum.github.io/browser-solidity>`_
 which does not need any installation. If you want to use it
-without connection to the Internet, you can also just save the page
-locally or clone http://github.com/ethereum/browser-solidity.
+without connection to the Internet, you can go to
+https://github.com/ethereum/browser-solidity/tree/gh-pages and
+download the .ZIP file as explained on that page.
+
 
 npm / Node.js
 =============
@@ -22,7 +24,7 @@ package available.
 
 To install it, simply use
 
-::
+.. code:: bash
 
     npm install solc
 
@@ -34,6 +36,36 @@ Binary Packages
 
 Binary packages of Solidity available at
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
+
+We also have PPAs for Ubuntu.  For the latest stable version.
+
+.. code:: bash
+
+    sudo add-apt-repository ppa:ethereum/ethereum
+    sudo apt-get update
+    sudo apt-get install solc
+
+If you want to use the cutting edge developer version:
+
+.. code:: bash
+
+    sudo add-apt-repository ppa:ethereum/ethereum
+    sudo add-apt-repository ppa:ethereum/ethereum-dev
+    sudo apt-get update
+    sudo apt-get install solc
+
+Homebrew is missing pre-built bottles at the time of writing,
+following a Jenkins to TravisCI migration, but Homebrew
+should still work just fine as a means to build-from-source.
+We will re-add the pre-built bottles soon.
+
+.. code:: bash
+
+    brew update
+    brew upgrade
+    brew tap ethereum/ethereum
+    brew install solidity
+    brew linkapps solidity
 
 
 Building from Source
