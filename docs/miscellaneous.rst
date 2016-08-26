@@ -22,9 +22,9 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
     bytes to the desired size.
 
     It is only beneficial to use reduced-size arguments if you are dealing with storage values
-    because the compiler will pack multiple elements into one storage slot. When dealing with
-    function arguments or memory values, there is no inherent benefit because the compiler does not
-    pack these values.
+    because the compiler will pack multiple elements into one storage slot, and thus, combine
+    multiple reads or writes into a single operation. When dealing with function arguments or memory
+    values, there is no inherent benefit because the compiler does not pack these values.
 
     Finally, in order to allow the EVM to optimize for this, ensure that you try to order your
     storage variables such that they can be packed tightly. For example, declaring your storage
