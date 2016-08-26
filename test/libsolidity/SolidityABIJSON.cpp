@@ -35,7 +35,7 @@ namespace test
 class JSONInterfaceChecker
 {
 public:
-	JSONInterfaceChecker(): m_compilerStack(false) {}
+	JSONInterfaceChecker(): m_compilerStack() {}
 
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{

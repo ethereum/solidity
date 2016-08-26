@@ -2469,21 +2469,6 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(4 | 2));
 }
 
-BOOST_AUTO_TEST_CASE(use_std_lib)
-{
-	char const* sourceCode = R"(
-		import "mortal";
-		contract Icarus is mortal { }
-	)";
-	m_addStandardSources = true;
-	u256 amount(130 * ether);
-	compileAndRun(sourceCode, amount, "Icarus");
-	u256 balanceBefore = balanceAt(m_sender);
-	BOOST_CHECK(callContractFunction("kill()") == bytes());
-	BOOST_CHECK(!addressHasCode(m_contractAddress));
-	BOOST_CHECK(balanceAt(m_sender) > balanceBefore);
-}
-
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 {
 	char const* sourceCode = R"(
