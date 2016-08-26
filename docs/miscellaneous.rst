@@ -17,9 +17,9 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
 
 .. warning::
     When using elements that are smaller than 32 bytes, your contract's gas usage may be higher.
-    This is because the EVM operates on 32 bytes a a time. Therefore, if the element is smaller than
-    that, the EVM must use more operations in order to reduce the size of the element from 32 bytes
-    to the desired size.
+    This is because the EVM operates on 32 bytes at a time. Therefore, if the element is smaller
+    than that, the EVM must use more operations in order to reduce the size of the element from 32
+    bytes to the desired size.
 
     It is only beneficial to use reduced-size arguments if you are dealing with storage values
     because the compiler will pack multiple elements into one storage slot. When dealing with
