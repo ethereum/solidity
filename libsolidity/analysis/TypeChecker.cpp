@@ -94,6 +94,8 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				fallbackFunction = function;
 				if (_contract.isLibrary())
 					typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
+				if (fallbackFunction->isDeclaredConst())
+					typeError(fallbackFunction->location(), "Fallback function cannot be declared constant.");
 				if (!fallbackFunction->parameters().empty())
 					typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
