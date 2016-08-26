@@ -12,7 +12,7 @@ Version Pragma
 
 Source files can (and should) be annotated with a so-called version pragma to reject
 being compiled with future compiler versions that might introduce incompatible
-changes. We try to keep such changes at an absolute minimum and especially
+changes. We try to keep such changes to an absolute minimum and especially
 introduce changes in a way that changes in semantics will also require changes
 in the syntax, but this is of course not always possible. Because of that, it is always
 a good idea to read through the changelog at least for releases that contain
