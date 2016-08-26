@@ -2541,6 +2541,19 @@ BOOST_AUTO_TEST_CASE(inherited_fallback_function)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(default_fallback_throws)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() returns (bool) {
+				return this.call();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(event)
 {
 	char const* sourceCode = R"(
