@@ -1653,6 +1653,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
+	m_isPayable(_function.isPayable()),
 	m_declaration(&_function)
 {
 	TypePointers params;
@@ -1889,20 +1890,23 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
-			members.push_back(MemberList::Member(
-				"value",
-				make_shared<FunctionType>(
-					parseElementaryTypeVector({"uint"}),
-					TypePointers{copyAndSetGasOrValue(false, true)},
-					strings(),
-					strings(),
-					Location::SetValue,
-					false,
-					nullptr,
-					m_gasSet,
-					m_valueSet
-				)
-			));
+		{
+			if (!m_declaration || m_isPayable) // If this is an actual function, it has to be payable
+				members.push_back(MemberList::Member(
+					"value",
+					make_shared<FunctionType>(
+						parseElementaryTypeVector({"uint"}),
+						TypePointers{copyAndSetGasOrValue(false, true)},
+						strings(),
+						strings(),
+						Location::SetValue,
+						false,
+						nullptr,
+						m_gasSet,
+						m_valueSet
+					)
+				));
+		}
 		if (m_location != Location::Creation)
 			members.push_back(MemberList::Member(
 				"gas",
