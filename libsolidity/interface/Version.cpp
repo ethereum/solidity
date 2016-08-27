@@ -35,10 +35,8 @@ char const* dev::solidity::VersionNumber = ETH_PROJECT_VERSION;
 
 string const dev::solidity::VersionString =
 	string(dev::solidity::VersionNumber) +
-	"-" +
-	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
-	(ETH_CLEAN_REPO ? "" : "*") +
-	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
+	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
+	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
 
 bytes dev::solidity::binaryVersion()
