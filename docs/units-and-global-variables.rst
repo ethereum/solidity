@@ -109,7 +109,7 @@ This means that the following are all identical::
 If padding is needed, explicit type conversions can be used: ``sha3("\x00\x12")`` is the
 same as ``sha3(uint16(0x12))``.
 
-Note that constants will packed using the minimum number of bytes required to store them.
+Note that constants will be packed using the minimum number of bytes required to store them.
 This means that, for example, ``sha3(0) == sha3(uint8(0))`` and
 ``sha3(0x12345678) == sha3(uint32(0x12345678))``.
 
