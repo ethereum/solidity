@@ -14,7 +14,6 @@ Solidity is still under development. So please do not hesitate and open an [issu
 See the [Solidity documentation](http://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source) for build instructions.
 
 ## How to Contribute
-This repository uses the same [coding style](https://github.com/ethereum/cpp-ethereum/blob/develop/CodingStandards.txt) as
-all of the cpp-ethereum projects. Please try to align with us in the Gitter channel before making larger changes.
+Please see our contribution guidelines in [the Solidity documentation](http://solidity.readthedocs.io/en/latest/contributing.html).
 
 Any contributions are welcome!
