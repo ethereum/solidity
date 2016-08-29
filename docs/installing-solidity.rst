@@ -87,7 +87,7 @@ you should fork Solidity and add your personal fork as a second remote:
 .. code:: bash
 
     cd solidity
-    git remote add personal git@github.com:\<username\>/solidity.git
+    git remote add personal git@github.com:[username]/solidity.git
 
 
 Prerequisites - macOS
