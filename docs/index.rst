@@ -113,4 +113,5 @@ Contents
    security-considerations.rst
    style-guide.rst
    common-patterns.rst
+   contributing.rst
    frequently-asked-questions.rst
