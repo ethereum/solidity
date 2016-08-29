@@ -41,8 +41,11 @@ If you need to pull in any changes from ``develop`` after making your fork (for
 example, to resolve potential merge conflicts), please avoid using ``git merge``
 and instead, ``git rebase`` your branch.
 
-Additionally, if you are writing a feature, please ensure you write appropriate
+Additionally, if you are writing a new feature, please ensure you write appropriate
 Boost test cases and place them under ``test/``.
+
+However, if you are making a larger change, please consult with the Gitter
+channel, first.
 
 Finally, please make sure you respect the `coding standards
 <https://raw.githubusercontent.com/ethereum/cpp-ethereum/develop/CodingStandards.txt>`_
