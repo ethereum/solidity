@@ -66,7 +66,7 @@ Discontinued:
 
 
 Solidity Tools
--------------------------------
+--------------
 
 * `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
     Try Solidity instantly with a command-line Solidity console.
