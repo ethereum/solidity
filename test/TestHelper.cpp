@@ -34,7 +34,7 @@ Options::Options()
 {
 	auto const& suite = boost::unit_test::framework::master_test_suite();
 	for (auto i = 0; i < suite.argc; i++)
-		if (string(suite.argv[i]) == "--ipc" && i + 1 < suite.argc)
+		if (string(suite.argv[i]) == "--ipcpath" && i + 1 < suite.argc)
 		{
 			ipcPath = suite.argv[i + 1];
 			i++;
