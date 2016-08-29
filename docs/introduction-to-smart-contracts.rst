@@ -220,7 +220,7 @@ only the person holding the keys to the account can transfer money from it.
 Blocks
 ======
 
-One major obstacle to overcome is what, in Bitcoin terms, is called "double-spend attack":
+One major obstacle to overcome is what, in Bitcoin terms, is called a "double-spend attack":
 What happens if two transactions exist in the network that both want to empty an account,
 a so-called conflict?
 
@@ -444,13 +444,13 @@ receives the address of the new contract on the stack.
 
 .. index:: selfdestruct
 
-Selfdestruct
-============
+``selfdestruct``
+================
 
 The only possibility that code is removed from the blockchain is
-when a contract at that address performs the ``SELFDESTRUCT`` operation.
+when a contract at that address performs the ``selfdestruct`` operation.
 The remaining Ether stored at that address is sent to a designated
 target and then the storage and code is removed.
 
-Note that even if a contract's code does not contain the ``SELFDESTRUCT``
-opcode, it can still perform that operation using delegatecall or callcode.
+Note that even if a contract's code does not contain a call to ``selfdestruct``,
+it can still perform that operation using ``delegatecall`` or ``callcode``.

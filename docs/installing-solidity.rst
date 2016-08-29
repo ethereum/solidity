@@ -93,18 +93,18 @@ you should fork Solidity and add your personal fork as a second remote:
 .. code:: bash
 
     cd solidity
-    git remote add personal git@github.com:[username]/solidity.git
+    git remote add personal git@github.com:\<username\>/solidity.git
 
 
 Prerequisites - macOS
-----------------------
+---------------------
 
 For macOS, ensure that you have the latest version of
-`xcode installed <https://developer.apple.com/xcode/download/>`_.
+`Xcode installed <https://developer.apple.com/xcode/download/>`_.
 This contains the `Clang C++ compiler <https://en.wikipedia.org/wiki/Clang>`_, the
-`xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
+`Xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
 tools which are required for building C++ applications on OS X.
-If you are installing xcode for the first time, or have just installed a new
+If you are installing Xcode for the first time, or have just installed a new
 version then you will need to agree to the license before you can do
 command-line builds:
 
@@ -120,7 +120,7 @@ if you ever want to start again from scratch.
 
 
 Prerequisites - Windows
-------------------------
+-----------------------
 
 You will need to install the following dependencies for Windows builds of Solidity:
 
@@ -152,7 +152,7 @@ manual process, but is now a one-liner:
 
 Or, on Windows:
 
-.. code:: bash
+.. code:: bat
 
     scripts\install_deps.bat
 
