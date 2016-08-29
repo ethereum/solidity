@@ -146,7 +146,7 @@ manual process, but is now a one-liner:
 
 Or, on Windows:
 
-.. code:: bash
+.. code:: bat
 
     scripts\install_deps.bat
 
