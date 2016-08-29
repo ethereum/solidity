@@ -52,14 +52,13 @@ mv solidity solc
 # Determine version
 cd solc
 version=`grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt`
-commithash=`git rev-parse --short HEAD`
 committimestamp=`git show --format=%ci HEAD | head -n 1`
 commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10`
 
-echo "$commithash" > commit_hash.txt
+echo "$TRAVIS_COMMIT" > commit_hash.txt
 if [ $branch = develop ]
 then
-    debversion="$version-nightly-$commitdate-$commithash"
+    debversion="$version-nightly-$commitdate-$TRAVIS_COMMIT"
 else
     debversion="$version"
     echo -n > prerelease.txt # proper release
@@ -199,7 +198,7 @@ chmod +x debian/rules
 
 versionsuffix=0ubuntu1~${distribution}
 # bump version / add entry to changelog
-EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithash}"
+EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${TRAVIS_COMMIT}"
 
 
 # build source package

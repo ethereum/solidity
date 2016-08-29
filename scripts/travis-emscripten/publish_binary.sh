@@ -33,7 +33,6 @@ set -e
 VER=$(cat CMakeLists.txt | grep 'set(PROJECT_VERSION' | sed -e 's/.*set(PROJECT_VERSION "\(.*\)".*/\1/')
 test -n "$VER"
 VER="v$VER"
-COMMIT=$(git rev-parse --short HEAD)
 DATE=$(date --date="$(git log -1 --date=iso --format=%ad HEAD)" --utc +%F)
 
 ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
@@ -52,14 +51,14 @@ git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
 # We only want one release per day and we do not want to push the same commit twice.
-if ls ./bin/soljson-"$VER-$DATE"-*.js || ls ./bin/soljson-*-"$COMMIT.js"
+if ls ./bin/soljson-"$VER-$DATE"-*.js || ls ./bin/soljson-*-"$TRAVIS_COMMIT.js"
 then
   echo "Not publishing, we already published this version today."
   exit 0
 fi
 
 # This file is assumed to be the product of the build_emscripten.sh script.
-cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
+cp ../soljson.js ./bin/"soljson-$VER-$DATE-$TRAVIS_COMMIT.js"
 node ./update
 cd bin
 LATEST=$(ls -r soljson-v* | head -n 1)
