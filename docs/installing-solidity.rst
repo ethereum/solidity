@@ -1,3 +1,7 @@
+.. index:: ! installing
+
+.. _installing-solidity:
+
 ###################
 Installing Solidity
 ###################
@@ -67,6 +71,8 @@ We will re-add the pre-built bottles soon.
     brew install solidity
     brew linkapps solidity
 
+
+.. _building-from-source:
 
 Building from Source
 ====================
