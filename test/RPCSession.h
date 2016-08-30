@@ -114,6 +114,7 @@ public:
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 	std::string const& accountCreateIfNotExists(size_t _id);
+	void setSleepTime(int _time) { m_sleepTime = _time; }
 
 private:
 	RPCSession(std::string const& _path);

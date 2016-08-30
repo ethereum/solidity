@@ -34,11 +34,18 @@ Options::Options()
 {
 	auto const& suite = boost::unit_test::framework::master_test_suite();
 	for (auto i = 0; i < suite.argc; i++)
+	{
 		if (string(suite.argv[i]) == "--ipc" && i + 1 < suite.argc)
 		{
 			ipcPath = suite.argv[i + 1];
 			i++;
 		}
+		else if (string(suite.argv[i]) == "--miningtimeout" && i + 1 < suite.argc)
+		{
+			miningTimeout = atoi(suite.argv[i + 1]);
+			i++;
+		}
+	}
 	if (ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;
