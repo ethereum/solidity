@@ -98,7 +98,7 @@ case $(uname -s) in
 
         brew update
         brew upgrade
-        
+
         brew install boost
         brew install cmake
         brew install jsoncpp
@@ -127,14 +127,14 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
 # Linux
 #------------------------------------------------------------------------------
-        
+
     Linux)
         case $(detect_linux_distro) in
 
 #------------------------------------------------------------------------------
 # Arch Linux
 #------------------------------------------------------------------------------
-        
+
             Arch)
                 #Arch
                 echo "Installing solidity dependencies on Arch Linux."
@@ -143,7 +143,7 @@ case $(uname -s) in
                 # See https://wiki.archlinux.org/index.php/Official_repositories
                 sudo pacman -Sy \
                     base-devel \
-                    boost \ 
+                    boost \
                     cmake \
                     git \
                 ;;
@@ -158,7 +158,7 @@ case $(uname -s) in
 
                 # All our dependencies can be found in the Alpine Linux official repositories.
                 # See https://pkgs.alpinelinux.org/
-                
+
                 apk update
                 apk add boost-dev build-base cmake jsoncpp-dev
 
@@ -231,7 +231,7 @@ case $(uname -s) in
                 # Install "normal packages"
                 # See https://fedoraproject.org/wiki/Package_management_system.
                 dnf install \
-                    autoconf \ 
+                    autoconf \
                     automake \
                     boost-devel \
                     cmake \
@@ -325,16 +325,6 @@ case $(uname -s) in
                 sudo add-apt-repository -y ppa:ethereum/ethereum-dev
                 sudo apt-get -y update
                 sudo apt-get -y install eth
-
-                # And install the English language package and reconfigure the locales.
-                # We really shouldn't need to do this, and should instead force our locales to "C"
-                # within our application runtimes, because this issue shows up on multiple Linux distros,
-                # and each will need fixing in the install steps, where we should really just fix it once
-                # in the code.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/169
-                sudo apt-get -y install language-pack-en-base
-                sudo dpkg-reconfigure locales
 
                 ;;
             *)

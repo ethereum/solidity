@@ -21,13 +21,24 @@
  */
 
 #include "CommandLineInterface.h"
+#include <clocale>
 #include <iostream>
 #include <boost/exception/all.hpp>
 
 using namespace std;
 
+void setEnv() {
+	std::setlocale(LC_ALL, "C");
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, "")) {
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 int main(int argc, char** argv)
 {
+	setEnv();
 	dev::solidity::CommandLineInterface cli;
 	if (!cli.parseArguments(argc, argv))
 		return 1;
