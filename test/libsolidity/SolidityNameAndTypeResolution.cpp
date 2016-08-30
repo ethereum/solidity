@@ -1102,6 +1102,16 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(fallback_function_in_library)
+{
+	char const* text = R"(
+		library C {
+			function() {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(fallback_function_with_return_parameters)
 {
 	char const* text = R"(

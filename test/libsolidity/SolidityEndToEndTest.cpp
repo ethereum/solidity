@@ -2053,6 +2053,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 {
 	char const* sourceCode = R"(
 		contract helper {
+			function() { } // can receive ether
 		}
 		contract test {
 			helper h;
@@ -2538,6 +2539,19 @@ BOOST_AUTO_TEST_CASE(inherited_fallback_function)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("") == encodeArgs());
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(default_fallback_throws)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() returns (bool) {
+				return this.call();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0));
 }
 
 BOOST_AUTO_TEST_CASE(event)
@@ -5943,6 +5957,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
+			function () {}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "lib");
