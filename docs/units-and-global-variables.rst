@@ -109,6 +109,10 @@ This means that the following are all identical::
 If padding is needed, explicit type conversions can be used: ``sha3("\x00\x12")`` is the
 same as ``sha3(uint16(0x12))``.
 
+Note that constants will be packed using the minimum number of bytes required to store them.
+This means that, for example, ``sha3(0) == sha3(uint8(0))`` and
+``sha3(0x12345678) == sha3(uint32(0x12345678))``.
+
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
 .. _address_related:
