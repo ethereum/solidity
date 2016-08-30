@@ -1,8 +1,43 @@
+### 0.4.0 (unreleased)
+
+This release deliberately breaks backwards compatibility mostly to
+enforce some safety features. The most important change is
+...
+
+Breaking Changes:
+
+ * Contracts that want to receive Ether have to implement a fallback
+   function (contracts now throw if no fallback function is defined
+   and no function matches the signature).
+ * Failing contract creation through "new" throws now.
+ * Throw on division / modulus by zero
+ * Function call throws if target contract does not have code
+ * Modifiers are required to contain ``_`` (use ``if (false) _`` as a workaround if needed).
+ * Modifiers: return does not skip part in modifier after ``_``
+ * ``ecrecover`` now returns zero if the input is malformed (it previously returned garbage)
+ * Removed ``--interface`` (Solidity interface) output option
+ * JSON AST: General cleanup, renamed many nodes to match their C++ names.
+ * Json Output: srcmap-runtime renamed to srcmapRuntime
+ * Moved (and reworked) standard library contracts from inside the compiler to github.com/ethereum/solidity/std
+   (``import "std";`` or ``import owned;`` do not work anymore).
+ * Confusing and undocumented keyword "after" was removed.
+ * New reserved words: hex, payable, abstract, static, interface
+
 Features:
 
- * Fixed point types (in progress)
+ * Hexadecimal string literals: ``hex"ab1248fe"``
+ * Internal: Inline assembly usable by the code generator.
+ * Commandline interface: Using ``-`` as filename allows reading from stdin.
+ * Interface Json: Fallback function is now part of the ABI.
+ * Interface: Version string now semver compatible.
 
 Bugfixes:
+
+ * JSON AST: nodes were added at wrong parent
+ * Why3 translator: crash fix for exponentiation
+ * Type Checker: Fallback function cannot return data anymore.
+
+Lots of changes to the documentation mainly by voluntary external contributors.
 
 ### 0.3.6 (2016-08-10)
 
