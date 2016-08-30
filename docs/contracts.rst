@@ -448,8 +448,9 @@ In particular, the following operations will consume more gas than the stipend p
 Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
 
 .. warning::
-    The default fallback function will throw an exception (this was different
-    before Solidity v0.4.0), so if you want your contract to receive Ether,
+    Contracts that receive Ether but do not define a fallback function
+    throw an exception, sending back the Ether (this was different
+    before Solidity v0.4.0). So if you want your contract to receive Ether,
     you have to implement a fallback function.
 
 ::
