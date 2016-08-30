@@ -106,6 +106,7 @@ namespace test
 struct Options: boost::noncopyable
 {
 	std::string ipcPath;
+	unsigned miningTimeout = 10;
 
 	static Options const& get();
 

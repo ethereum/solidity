@@ -48,6 +48,7 @@ ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
 	m_sender(m_rpc.account(0))
 {
+	m_rpc.setSleepTime(dev::test::Options::get().miningTimeout);
 	m_rpc.test_rewindToBlock(0);
 }
 
