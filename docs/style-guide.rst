@@ -273,17 +273,17 @@ No::
         }));
 
 For ``if`` blocks which have an ``else`` or ``else if`` clause, the ``else`` should be
-placed on it's own line following the previous closing parenthesis.  The
-parenthesis for the else block should follow the same rules as the other
-conditional control structures.
+placed on the same line as the ``if``'s closing brace. This is an exception compared
+to the rules of other block-like structures.
 
 Yes::
 
     if (x < 3) {
         x += 1;
-    }
-    else {
+    } else if (x > 7) {
         x -= 1;
+    } else {
+        x = 5;
     }
 
 
@@ -296,7 +296,8 @@ No::
 
     if (x < 3) {
         x += 1;
-    } else {
+    }
+    else {
         x -= 1;
     }
 

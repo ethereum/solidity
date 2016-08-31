@@ -2563,8 +2563,9 @@ BOOST_AUTO_TEST_CASE(event)
 				if (_manually) {
 					bytes32 s = 0x19dacbf83c5de6658e14cbf7bcae5c15eca2eedecf1c66fbca928e4d351bea0f;
 					log3(bytes32(msg.value), s, bytes32(msg.sender), _id);
-				} else
+				} else {
 					Deposit(msg.sender, _id, msg.value);
+				}
 			}
 		}
 	)";

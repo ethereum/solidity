@@ -45,8 +45,7 @@ become the new richest.
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }
@@ -58,8 +57,7 @@ become the new richest.
             pendingWithdrawals[msg.sender] = 0;
             if (msg.sender.send(amount)) {
                 return true;
-            }
-            else {
+            } else {
                 pendingWithdrawals[msg.sender] = amount;
                 return false;
             }
@@ -90,8 +88,7 @@ This is as opposed to the more intuitive sending pattern.
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }

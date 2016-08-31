@@ -17,8 +17,7 @@ contract StandardToken is Token {
 			balanceOf[_to] += _value;
 			Transfer(msg.sender, _to, _value);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -29,8 +28,7 @@ contract StandardToken is Token {
 			balanceOf[_to] += _value;
 			Transfer(_from, _to, _value);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
