@@ -53,7 +53,7 @@ $ETH_PATH --test -d /tmp/test &
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
 
 # And then run the Solidity unit-tests, pointing to that IPC endpoint.
-"$REPO_ROOT"/build/test/soltest -- --ipc /tmp/test/geth.ipc
+"$REPO_ROOT"/build/test/soltest -- --ipcpath /tmp/test/geth.ipc
 ERROR_CODE=$?
 pkill eth || true
 sleep 4
