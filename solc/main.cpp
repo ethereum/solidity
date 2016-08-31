@@ -28,7 +28,7 @@
 using namespace std;
 
 /*
-The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
+The equivalent of setlocale(LC_ALL, "C") is called before any user code is run.
 If the user has an invalid environment setting then it is possible for the call
 to set locale to fail, so there are only two possible actions, the first is to
 throw a runtime exception and cause the program to quit (default behaviour),
