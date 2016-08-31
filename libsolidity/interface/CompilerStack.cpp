@@ -555,7 +555,7 @@ string CompilerStack::absolutePath(string const& _path, string const& _reference
 			result = result.parent_path();
 		else if (*it != ".")
 			result /= *it;
-	return result.string();
+	return result.generic_string();
 }
 
 void CompilerStack::compileContract(
