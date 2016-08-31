@@ -46,7 +46,7 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		NULL);          // no template file
 
 	if (m_socket == INVALID_HANDLE_VALUE)
-		BOOST_FAIL("Error creating IPC socket object");
+		BOOST_FAIL("Error creating IPC socket object!");
 
 #else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
@@ -251,7 +251,7 @@ void RPCSession::test_mineBlocks(int _number)
 
 	unsigned sleepTime = m_sleepTime;
 	size_t polls = 0;
-	for (; polls < 10 && !mined; ++polls)
+	for (; polls < 14 && !mined; ++polls)
 	{
 		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
@@ -270,7 +270,8 @@ void RPCSession::test_mineBlocks(int _number)
 		if (m_successfulMineRuns > 5)
 		{
 			m_successfulMineRuns = 0;
-			m_sleepTime--;
+			if (m_sleepTime > 2)
+				m_sleepTime--;
 		}
 	}
 
