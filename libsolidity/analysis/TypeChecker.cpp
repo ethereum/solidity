@@ -349,7 +349,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 		typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
 	auto const& arguments = _inheritance.arguments();
-	TypePointers parameterTypes = ContractType(*base).constructorType()->parameterTypes();
+	TypePointers parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
 	{
 		typeError(
@@ -1264,15 +1264,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 				"Circular reference for contract creation (cannot create instance of derived or same contract)."
 			);
 
-		auto contractType = make_shared<ContractType>(*contract);
-		TypePointers parameterTypes = contractType->constructorType()->parameterTypes();
-		_newExpression.annotation().type = make_shared<FunctionType>(
-			parameterTypes,
-			TypePointers{contractType},
-			strings(),
-			strings(),
-			FunctionType::Location::Creation
-		);
+		_newExpression.annotation().type = FunctionType::newExpressionType(*contract);
 	}
 	else if (type->category() == Type::Category::Array)
 	{

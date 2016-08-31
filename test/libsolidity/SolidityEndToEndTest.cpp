@@ -1526,8 +1526,10 @@ BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_greater_size)
 			}
 		})";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("UintToBytes(uint16)", u256("0x6162")) ==
-                encodeArgs(string("\0\0\0\0\0\0ab", 8)));
+	BOOST_CHECK(
+		callContractFunction("UintToBytes(uint16)", u256("0x6162")) ==
+		encodeArgs(string("\0\0\0\0\0\0ab", 8))
+	);
 }
 
 BOOST_AUTO_TEST_CASE(send_ether)
@@ -2053,7 +2055,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 {
 	char const* sourceCode = R"(
 		contract helper {
-			function() { } // can receive ether
+			function() payable { } // can receive ether
 		}
 		contract test {
 			helper h;
@@ -2065,6 +2067,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 		}
 	)";
 	compileAndRun(sourceCode, 20);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 20 - 5);
 	BOOST_REQUIRE(callContractFunction("getBalance()") == encodeArgs(u256(20 - 5), u256(5)));
 }
 
@@ -2938,11 +2941,10 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				uint public received;
 				address public sender;
 				uint public value;
-				function sender() payable {}
 				function doSend(address rec) payable
 				{
 					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
-					rec.delegatecall(signature, 23);
+					if (rec.delegatecall(signature, 23)) {}
 				}
 			}
 	)**";
@@ -5961,7 +5963,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
-			function () {}
+			function () payable {}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "lib");
@@ -6879,7 +6881,7 @@ BOOST_AUTO_TEST_CASE(skip_dynamic_types_for_structs)
 BOOST_AUTO_TEST_CASE(failed_create)
 {
 	char const* sourceCode = R"(
-		contract D { }
+		contract D { function D() payable {} }
 		contract C {
 			uint public x;
 			function f(uint amount) returns (address) {
@@ -7029,7 +7031,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 				else
 					return fund.withdrawUnprotected(10);
 			}
-			function() {
+			function() payable {
 				callDepth++;
 				if (callDepth < 4)
 					attackInternal();
@@ -7104,55 +7106,47 @@ BOOST_AUTO_TEST_CASE(payable_function)
 {
 	char const* sourceCode = R"(
 		contract C {
+			uint public a;
 			function f() payable returns (uint) {
 				return msg.value;
 			}
-			function() payable returns (uint) {
-				return msg.value;
+			function() payable {
+				a = msg.value + 1;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs(u256(27)));
-	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs(u256(27)));
-}
-
-BOOST_AUTO_TEST_CASE(non_payable_throw_constructor)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function C() { }
-		}
-		contract D {
-			function D() payable {}
-			function f() returns (uint) {
-				(new C).value(2)();
-				return 2;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 27, "D");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27);
+	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27 + 27);
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(28)));
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27 + 27);
 }
 
 BOOST_AUTO_TEST_CASE(non_payable_throw)
 {
 	char const* sourceCode = R"(
 		contract C {
-			string public a;
+			uint public a;
 			function f() returns (uint) {
 				return msg.value;
 			}
-			function() returns (uint) {
-				return msg.value;
+			function() {
+				a = msg.value + 1;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
+	BOOST_CHECK(callContractFunction("") == encodeArgs());
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(1)));
 	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(1)));
 	BOOST_CHECK(callContractFunctionWithValue("a()", 27) == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
 }
 
 BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
@@ -7169,6 +7163,7 @@ BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs());
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
 }
 
 

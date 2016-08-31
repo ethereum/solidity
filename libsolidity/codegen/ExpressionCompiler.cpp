@@ -583,6 +583,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					Location::Bare,
 					false,
 					nullptr,
+					false,
+					false,
 					true,
 					true
 				),

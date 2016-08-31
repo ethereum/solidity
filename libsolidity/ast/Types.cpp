@@ -362,8 +362,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true, false, true)},
+			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true, false, true)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
 		};
@@ -1329,16 +1329,10 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 	return members;
 }
 
-shared_ptr<FunctionType const> const& ContractType::constructorType() const
+shared_ptr<FunctionType const> const& ContractType::newExpressionType() const
 {
 	if (!m_constructorType)
-	{
-		FunctionDefinition const* constructor = m_contract.constructor();
-		if (constructor)
-			m_constructorType = make_shared<FunctionType>(*constructor);
-		else
-			m_constructorType = make_shared<FunctionType>(TypePointers(), TypePointers());
-	}
+		m_constructorType = FunctionType::newExpressionType(m_contract);
 	return m_constructorType;
 }
 
@@ -1738,7 +1732,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	swap(retParamNames, m_returnParameterNames);
 }
 
-FunctionType::FunctionType(const EventDefinition& _event):
+FunctionType::FunctionType(EventDefinition const& _event):
 	m_location(Location::Event), m_isConstant(true), m_declaration(&_event)
 {
 	TypePointers params;
@@ -1752,6 +1746,35 @@ FunctionType::FunctionType(const EventDefinition& _event):
 	}
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
+}
+
+FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _contract)
+{
+	FunctionDefinition const* constructor = _contract.constructor();
+	TypePointers parameters;
+	strings parameterNames;
+	bool payable = false;
+
+	if (constructor)
+	{
+		for (ASTPointer<VariableDeclaration> const& var: constructor->parameters())
+		{
+			parameterNames.push_back(var->name());
+			parameters.push_back(var->annotation().type);
+		}
+		payable = constructor->isPayable();
+	}
+	return make_shared<FunctionType>(
+		parameters,
+		TypePointers{make_shared<ContractType>(_contract)},
+		parameterNames,
+		strings{""},
+		Location::Creation,
+		false,
+		nullptr,
+		false,
+		payable
+	);
 }
 
 vector<string> FunctionType::parameterNames() const
@@ -1872,7 +1895,12 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	if (variable && retParamTypes.empty())
 		return FunctionTypePointer();
 
-	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
+	return make_shared<FunctionType>(
+		paramTypes, retParamTypes,
+		m_parameterNames, m_returnParameterNames,
+		m_location, m_arbitraryParameters,
+		m_declaration, m_isConstant, m_isPayable
+	);
 }
 
 MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) const
@@ -1891,7 +1919,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 		MemberList::MemberMap members;
 		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
 		{
-			if (!m_declaration || m_isPayable) // If this is an actual function, it has to be payable
+			if (m_isPayable)
 				members.push_back(MemberList::Member(
 					"value",
 					make_shared<FunctionType>(
@@ -1902,6 +1930,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						Location::SetValue,
 						false,
 						nullptr,
+						false,
+						false,
 						m_gasSet,
 						m_valueSet
 					)
@@ -1918,6 +1948,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					Location::SetGas,
 					false,
 					nullptr,
+					false,
+					false,
 					m_gasSet,
 					m_valueSet
 				)
@@ -2023,6 +2055,8 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_location,
 		m_arbitraryParameters,
 		m_declaration,
+		m_isConstant,
+		m_isPayable,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
 		m_bound
@@ -2068,6 +2102,8 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		location,
 		m_arbitraryParameters,
 		m_declaration,
+		m_isConstant,
+		m_isPayable,
 		m_gasSet,
 		m_valueSet,
 		_bound

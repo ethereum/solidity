@@ -3911,7 +3911,23 @@ BOOST_AUTO_TEST_CASE(calling_nonpayable)
 	char const* text = R"(
 		contract receiver { function nopay() {} }
 		contract test {
-			function_argument_mem_to_storage f() { (new receiver()).nopay.value(10)(); }
+			function f() { (new receiver()).nopay.value(10)(); }
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(non_payable_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() { }
+		}
+		contract D {
+			function f() returns (uint) {
+				(new C).value(2)();
+				return 2;
+			}
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);

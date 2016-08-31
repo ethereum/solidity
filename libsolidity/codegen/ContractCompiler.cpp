@@ -242,6 +242,12 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context << notFound;
 	if (fallback)
 	{
+		if (!fallback->isPayable())
+		{
+			// Throw if function is not payable but call contained ether.
+			m_context << Instruction::CALLVALUE;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
+		}
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
