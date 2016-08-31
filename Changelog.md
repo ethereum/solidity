@@ -6,6 +6,9 @@ enforce some safety features. The most important change is
 
 Breaking Changes:
 
+ * Source files have to specify the compiler version they are
+   compatible with using e.g. `pragma solidity ^0.4.0;` or
+   `pragma solidity >=0.4.0 <0.4.8;`
  * Contracts that want to receive Ether have to implement a fallback
    function (contracts now throw if no fallback function is defined
    and no function matches the signature).
