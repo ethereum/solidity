@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(if_statement)
 {
 	char const* text = "contract test {\n"
 					   "  function fun(uint256 a) {\n"
-					   "    if (a >= 8) { return 2 }; else { var b = 7; }\n"
+					   "    if (a >= 8) { return 2; } else { var b = 7; }\n"
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK(successParse(text));
