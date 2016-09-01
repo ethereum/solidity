@@ -92,9 +92,10 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		Json::Value params(Json::arrayValue);
 		for (auto const& p: it->parameters())
 		{
+			solAssert(!!p->annotation().type->interfaceType(false), "");
 			Json::Value input;
 			input["name"] = p->name();
-			input["type"] = p->annotation().type->canonicalName(false);
+			input["type"] = p->annotation().type->interfaceType(false)->canonicalName(false);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}
