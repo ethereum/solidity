@@ -778,37 +778,38 @@ void CommandLineInterface::actOnInput()
 
 bool CommandLineInterface::link()
 {
+	map<string, h160> librariesReplacements;
+	for (auto const& library: m_libraries)
+	{
+		string const& name = library.first;
+		string replacement = "__";
+		for (size_t i = 0; i < 36; ++i)
+			replacement.push_back(i < name.size() ? name[i] : '_');
+		replacement += "__";
+		librariesReplacements[replacement] = library.second;
+	}
 	for (auto& src: m_sourceCodes)
 	{
 		auto end = src.second.end();
 		for (auto it = src.second.begin(); it != end;)
 		{
 			while (it != end && *it != '_') ++it;
-			auto insertStart = it;
-			while (it != end && *it == '_') ++it;
-			auto nameStart = it;
-			while (it != end && *it != '_') ++it;
-			auto nameEnd = it;
-			while (it != end && *it == '_') ++it;
-			auto insertEnd = it;
-
-			if (insertStart == end)
-				break;
-
-			if (insertEnd - insertStart != 40)
+			if (it == end) break;
+			if (end - it < 40)
 			{
-				cerr << "Error in binary object file " << src.first << " at position " << (insertStart - src.second.begin()) << endl;
+				cerr << "Error in binary object file " << src.first << " at position " << (end - src.second.begin()) << endl;
 				return false;
 			}
 
-			string name(nameStart, nameEnd);
-			if (m_libraries.count(name))
+			string name(it, it + 40);
+			if (librariesReplacements.count(name))
 			{
-				string hexStr(toHex(m_libraries.at(name).asBytes()));
-				copy(hexStr.begin(), hexStr.end(), insertStart);
+				string hexStr(toHex(librariesReplacements.at(name).asBytes()));
+				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
 				cerr << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+			it += 40;
 		}
 	}
 	return true;
