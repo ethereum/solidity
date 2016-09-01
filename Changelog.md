@@ -39,6 +39,7 @@ Bugfixes:
  * JSON AST: nodes were added at wrong parent
  * Why3 translator: crash fix for exponentiation
  * Type Checker: Fallback function cannot return data anymore.
+ * Code Generator: Fix crash when sha3() was used on unsupported types.
 
 Lots of changes to the documentation mainly by voluntary external contributors.
 
