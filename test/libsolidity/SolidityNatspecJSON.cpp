@@ -46,7 +46,7 @@ public:
 	)
 	{
 		std::string generatedDocumentationString;
-		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing failed");
 
 		if (_userDocumentation)
 			generatedDocumentationString = m_compilerStack.metadata("", DocumentationType::NatspecUser);

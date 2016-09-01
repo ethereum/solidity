@@ -54,6 +54,9 @@ static char const* walletCode = R"DELIMITER(
 // use modifiers onlyowner (just own owned) or onlymanyowners(hash), whereby the same hash must be provided by
 // some number (specified in constructor) of the set of owners (specified in the constructor, modifiable) before the
 // interior is executed.
+
+pragma solidity ^0.3.5;
+
 contract multiowned {
 
 	// TYPES

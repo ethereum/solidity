@@ -35,6 +35,7 @@ namespace solidity
 
 class ASTNode;
 class SourceUnit;
+class PragmaDirective;
 class ImportDirective;
 class Declaration;
 class ContractDefinition;

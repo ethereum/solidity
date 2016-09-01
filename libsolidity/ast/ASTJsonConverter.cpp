@@ -103,6 +103,15 @@ bool ASTJsonConverter::visit(SourceUnit const&)
 	return true;
 }
 
+bool ASTJsonConverter::visit(PragmaDirective const& _node)
+{
+	Json::Value literals(Json::arrayValue);
+	for (auto const& literal: _node.literals())
+		literals.append(literal);
+	addJsonNode(_node, "PragmaDirective", { make_pair("literals", literals) });
+	return true;
+}
+
 bool ASTJsonConverter::visit(ImportDirective const& _node)
 {
 	addJsonNode(_node, "ImportDirective", { make_pair("file", _node.path())});
@@ -399,6 +408,10 @@ bool ASTJsonConverter::visit(Literal const& _node)
 void ASTJsonConverter::endVisit(SourceUnit const&)
 {
 	goUp();
+}
+
+void ASTJsonConverter::endVisit(PragmaDirective const&)
+{
 }
 
 void ASTJsonConverter::endVisit(ImportDirective const&)

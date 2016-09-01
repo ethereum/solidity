@@ -39,7 +39,7 @@ namespace
 {
 
 static char const* registrarCode = R"DELIMITER(
-//sol
+pragma solidity ^0.3.5;
 
 contract NameRegister {
 	function addr(string _name) constant returns (address o_owner);
