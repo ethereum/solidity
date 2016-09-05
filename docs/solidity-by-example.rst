@@ -403,8 +403,8 @@ high or low invalid bids.
         /// functions. `onlyBefore` is applied to `bid` below:
         /// The new function body is the modifier's body where
         /// `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) { if (now >= _time) throw; _ }
-        modifier onlyAfter(uint _time) { if (now <= _time) throw; _ }
+        modifier onlyBefore(uint _time) { if (now >= _time) throw; _; }
+        modifier onlyAfter(uint _time) { if (now <= _time) throw; _; }
 
         function BlindAuction(
             uint _biddingTime,

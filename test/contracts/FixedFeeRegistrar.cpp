@@ -71,7 +71,7 @@ contract FixedFeeRegistrar is Registrar {
 		address owner;
 	}
 
-	modifier onlyrecordowner(string _name) { if (m_record(_name).owner == msg.sender) _ }
+	modifier onlyrecordowner(string _name) { if (m_record(_name).owner == msg.sender) _; }
 
 	function reserve(string _name) {
 		Record rec = m_record(_name);

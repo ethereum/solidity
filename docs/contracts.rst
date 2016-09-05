@@ -321,7 +321,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         modifier onlyOwner {
             if (msg.sender != owner)
                 throw;
-            _
+            _;
         }
     }
 
@@ -341,7 +341,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // Modifiers can receive arguments:
         modifier costs(uint price) {
             if (msg.value >= price) {
-                _
+                _;
             }
         }
     }
@@ -367,7 +367,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         modifier noReentrancy() {
             if (locked) throw;
             locked = true;
-            _
+            _;
             locked = false;
         }
 

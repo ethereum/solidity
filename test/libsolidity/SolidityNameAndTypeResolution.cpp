@@ -859,8 +859,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 	char const* text = R"(
 		contract B {
 			function f() mod1(2, true) mod2("0123456") { }
-			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(bytes7 a) { while (a == "1234567") _ }
+			modifier mod1(uint a, bool b) { if (b) _; }
+			modifier mod2(bytes7 a) { while (a == "1234567") _; }
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
 	char const* text = R"(
 		contract B {
 			function f() mod1(true) { }
-			modifier mod1(uint a) { if (a > 0) _ }
+			modifier mod1(uint a) { if (a > 0) _; }
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
@@ -882,8 +882,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
 	char const* text = R"(
 		contract B {
 			function f(uint8 a) mod1(a, true) mod2(r) returns (bytes7 r) { }
-			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(bytes7 a) { while (a == "1234567") _ }
+			modifier mod1(uint a, bool b) { if (b) _; }
+			modifier mod2(bytes7 a) { while (a == "1234567") _; }
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 	char const* text = R"(
 		contract B {
 			function f() mod(x) { uint x = 7; }
-			modifier mod(uint a) { if (a > 0) _ }
+			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -903,8 +903,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) { _ } }
-		contract B is A { modifier mod(uint a) { _ } }
+		contract A { modifier mod(uint a) { _; } }
+		contract B is A { modifier mod(uint a) { _; } }
 	)";
 	BOOST_CHECK(success(text));
 }
@@ -912,8 +912,8 @@ BOOST_AUTO_TEST_CASE(legal_modifier_override)
 BOOST_AUTO_TEST_CASE(illegal_modifier_override)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) { _ } }
-		contract B is A { modifier mod(uint8 a) { _ } }
+		contract A { modifier mod(uint a) { _; } }
+		contract B is A { modifier mod(uint8 a) { _; } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(illegal_modifier_override)
 BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 {
 	char const* text = R"(
-		contract A { modifier mod(uint a) { _ } }
+		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) { } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 {
 	char const* text = R"(
 		contract A { function mod(uint a) { } }
-		contract B is A { modifier mod(uint a) { _ } }
+		contract B is A { modifier mod(uint a) { _; } }
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
@@ -941,7 +941,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 	char const* text = R"(
 		contract A {
 			function f(uint a) mod(2) returns (uint r) { }
-			modifier mod(uint a) { _ return 7; }
+			modifier mod(uint a) { _; return 7; }
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);

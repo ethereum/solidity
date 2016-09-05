@@ -753,7 +753,7 @@ ASTPointer<Statement> Parser::parseStatement()
 		{
 			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
 			m_scanner->next();
-			return statement;
+			break;
 		}
 	// fall-through
 	default:
