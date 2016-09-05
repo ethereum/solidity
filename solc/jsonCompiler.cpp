@@ -203,51 +203,65 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 
 	if (success)
 	{
-		output["contracts"] = Json::Value(Json::objectValue);
-		for (string const& contractName: compiler.contractNames())
+		try
 		{
-			Json::Value contractData(Json::objectValue);
-			contractData["interface"] = compiler.interface(contractName);
-			contractData["bytecode"] = compiler.object(contractName).toHex();
-			contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
-			contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
-			contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
-			contractData["gasEstimates"] = estimateGas(compiler, contractName);
-			auto sourceMap = compiler.sourceMapping(contractName);
-			contractData["srcmap"] = sourceMap ? *sourceMap : "";
-			auto runtimeSourceMap = compiler.runtimeSourceMapping(contractName);
-			contractData["srcmapRuntime"] = runtimeSourceMap ? *runtimeSourceMap : "";
-			ostringstream unused;
-			contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
-			output["contracts"][contractName] = contractData;
-		}
+			output["contracts"] = Json::Value(Json::objectValue);
+			for (string const& contractName: compiler.contractNames())
+			{
+				Json::Value contractData(Json::objectValue);
+				contractData["interface"] = compiler.interface(contractName);
+				contractData["bytecode"] = compiler.object(contractName).toHex();
+				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
+				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
+				contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
+				contractData["gasEstimates"] = estimateGas(compiler, contractName);
+				auto sourceMap = compiler.sourceMapping(contractName);
+				contractData["srcmap"] = sourceMap ? *sourceMap : "";
+				auto runtimeSourceMap = compiler.runtimeSourceMapping(contractName);
+				contractData["srcmapRuntime"] = runtimeSourceMap ? *runtimeSourceMap : "";
+				ostringstream unused;
+				contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
+				output["contracts"][contractName] = contractData;
+			}
 
-		// Do not taint the internal error list
-		ErrorList formalErrors;
-		if (compiler.prepareFormalAnalysis(&formalErrors))
-			output["formal"]["why3"] = compiler.formalTranslation();
-		if (!formalErrors.empty())
+			// Do not taint the internal error list
+			ErrorList formalErrors;
+			if (compiler.prepareFormalAnalysis(&formalErrors))
+				output["formal"]["why3"] = compiler.formalTranslation();
+			if (!formalErrors.empty())
+			{
+				Json::Value errors(Json::arrayValue);
+				for (auto const& error: formalErrors)
+					errors.append(formatError(
+						*error,
+						(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+						scannerFromSourceName
+					));
+				output["formal"]["errors"] = errors;
+			}
+
+			// Indices into this array are used to abbreviate source names in source locations.
+			output["sourceList"] = Json::Value(Json::arrayValue);
+			for (auto const& source: compiler.sourceNames())
+				output["sourceList"].append(source);
+			output["sources"] = Json::Value(Json::objectValue);
+			for (auto const& source: compiler.sourceNames())
+				output["sources"][source]["AST"] = ASTJsonConverter(compiler.ast(source), compiler.sourceIndices()).json();
+		}
+		catch (...)
 		{
-			Json::Value errors(Json::arrayValue);
-			for (auto const& error: formalErrors)
-				errors.append(formatError(
-					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-					scannerFromSourceName
-				));
-			output["formal"]["errors"] = errors;
+			output["errors"].append("Unknown exception while generating compiler output.");
 		}
-
-		// Indices into this array are used to abbreviate source names in source locations.
-		output["sourceList"] = Json::Value(Json::arrayValue);
-		for (auto const& source: compiler.sourceNames())
-			output["sourceList"].append(source);
-		output["sources"] = Json::Value(Json::objectValue);
-		for (auto const& source: compiler.sourceNames())
-			output["sources"][source]["AST"] = ASTJsonConverter(compiler.ast(source), compiler.sourceIndices()).json();
 	}
 
-	return Json::FastWriter().write(output);
+	try
+	{
+		return Json::FastWriter().write(output);
+	}
+	catch (...)
+	{
+		return "{\"errors\":[\"Unknown error while generating JSON.\"]}";
+	}
 }
 
 string compileMulti(string const& _input, bool _optimize, CStyleReadFileCallback _readCallback = nullptr)
