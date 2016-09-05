@@ -4625,6 +4625,26 @@ BOOST_AUTO_TEST_CASE(failing_send)
 	BOOST_REQUIRE(callContractFunction("callHelper(address)", c_helperAddress) == encodeArgs(true, 20));
 }
 
+BOOST_AUTO_TEST_CASE(send_zero_ether)
+{
+	// Sending zero ether to a contract should still invoke the fallback function
+	// (it previously did not because the gas stipend was not provided by the EVM)
+	char const* sourceCode = R"(
+		contract Receiver {
+			function () payable {
+			}
+		}
+		contract Main {
+			function s() returns (bool) {
+				var r = new Receiver();
+				return r.send(0);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20, "Main");
+	BOOST_REQUIRE(callContractFunction("s()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_CASE(reusing_memory)
 {
 	// Invoke some features that use memory and test that they do not interfere with each other.

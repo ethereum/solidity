@@ -42,6 +42,7 @@ Bugfixes:
  * Why3 translator: crash fix for exponentiation
  * Type Checker: Fallback function cannot return data anymore.
  * Code Generator: Fix crash when sha3() was used on unsupported types.
+ * Code Generator: Manually set gas stipend for .send(0).
 
 Lots of changes to the documentation mainly by voluntary external contributors.
 
