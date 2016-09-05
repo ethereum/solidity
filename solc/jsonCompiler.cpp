@@ -223,7 +223,14 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 				contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
 				output["contracts"][contractName] = contractData;
 			}
+		}
+		catch (...)
+		{
+			output["errors"].append("Unknown exception while generating contract data output.");
+		}
 
+		try
+		{
 			// Do not taint the internal error list
 			ErrorList formalErrors;
 			if (compiler.prepareFormalAnalysis(&formalErrors))
@@ -239,7 +246,14 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 					));
 				output["formal"]["errors"] = errors;
 			}
+		}
+		catch (...)
+		{
+			output["errors"].append("Unknown exception while generating formal method output.");
+		}
 
+		try
+		{
 			// Indices into this array are used to abbreviate source names in source locations.
 			output["sourceList"] = Json::Value(Json::arrayValue);
 			for (auto const& source: compiler.sourceNames())
@@ -250,7 +264,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		}
 		catch (...)
 		{
-			output["errors"].append("Unknown exception while generating compiler output.");
+			output["errors"].append("Unknown exception while generating source name output.");
 		}
 	}
 
