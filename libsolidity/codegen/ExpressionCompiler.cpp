@@ -1524,11 +1524,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << u256(0);
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
+	bool existenceChecked = false;
 	// Check the the target contract exists (has code) for non-low-level calls.
 	if (funKind == FunctionKind::External || funKind == FunctionKind::CallCode || funKind == FunctionKind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(m_context.errorTag());
+		existenceChecked = true;
 	}
 
 	if (_functionType.gasSet())
@@ -1540,7 +1542,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		u256 gasNeededByCaller = eth::GasCosts::callGas + 10;
 		if (_functionType.valueSet())
 			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
-		if (!isCallCode && !isDelegateCall)
+		if (!isCallCode && !isDelegateCall && !existenceChecked)
 			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
 		m_context <<
 			gasNeededByCaller <<
