@@ -1124,6 +1124,17 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_return_parameters)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(fallback_function_with_constant_modifier)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function() constant { x = 2; }
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
 {
 	char const* text = R"(

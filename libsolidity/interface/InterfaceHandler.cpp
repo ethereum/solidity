@@ -80,7 +80,6 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "fallback";
-		method["constant"] = externalFunctionType->isConstant();
 		abi.append(method);
 	}
 	for (auto const& it: _contractDef.interfaceEvents())

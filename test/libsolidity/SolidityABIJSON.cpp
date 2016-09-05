@@ -628,7 +628,6 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 	char const* interface = R"(
 	[
 		{
-			"constant" : false,
 			"type" : "fallback"
 		}
 	]
