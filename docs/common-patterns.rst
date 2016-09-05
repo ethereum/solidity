@@ -148,10 +148,10 @@ restrictions highly readable.
         {
             if (msg.sender != _account)
                 throw;
-            // Do not forget the "_"! It will
+            // Do not forget the "_;"! It will
             // be replaced by the actual function
             // body when the modifier is invoked.
-            _
+            _;
         }
 
         /// Make `_newOwner` the new owner of this
@@ -164,7 +164,7 @@ restrictions highly readable.
 
         modifier onlyAfter(uint _time) {
             if (now < _time) throw;
-            _
+            _;
         }
 
         /// Erase ownership information.
@@ -187,7 +187,7 @@ restrictions highly readable.
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
-            _
+            _;
             if (msg.value > _amount)
                 msg.sender.send(msg.value - _amount);
         }
@@ -286,7 +286,7 @@ function finishes.
 
         modifier atStage(Stages _stage) {
             if (stage != _stage) throw;
-            _
+            _;
         }
 
         function nextStage() internal {
@@ -304,7 +304,7 @@ function finishes.
                     now >= creationTime + 12 days)
                 nextStage();
             // The other stages transition by transaction
-            _
+            _;
         }
 
         // Order of the modifiers matters here!
@@ -328,7 +328,7 @@ function finishes.
         // automatically.
         modifier transitionNext()
         {
-            _
+            _;
             nextStage();
         }
 

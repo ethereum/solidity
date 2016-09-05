@@ -17,6 +17,7 @@ Breaking Changes:
  * Function call throws if target contract does not have code
  * Modifiers are required to contain ``_`` (use ``if (false) _`` as a workaround if needed).
  * Modifiers: return does not skip part in modifier after ``_``
+ * Placeholder statement `_` in modifier now requires explicit `;`.
  * ``ecrecover`` now returns zero if the input is malformed (it previously returned garbage)
  * Removed ``--interface`` (Solidity interface) output option
  * JSON AST: General cleanup, renamed many nodes to match their C++ names.

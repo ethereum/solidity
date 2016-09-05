@@ -2353,7 +2353,7 @@ BOOST_AUTO_TEST_CASE(function_modifier)
 	char const* sourceCode = R"(
 		contract C {
 			function getOne() nonFree returns (uint r) { return 1; }
-			modifier nonFree { if (msg.value > 0) _ }
+			modifier nonFree { if (msg.value > 0) _; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -2365,8 +2365,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_local_variables)
 {
 	char const* sourceCode = R"(
 		contract C {
-			modifier mod1 { var a = 1; var b = 2; _ }
-			modifier mod2(bool a) { if (a) return; else _ }
+			modifier mod1 { var a = 1; var b = 2; _; }
+			modifier mod2(bool a) { if (a) return; else _; }
 			function f(bool a) mod1 mod2(a) returns (uint r) { return 3; }
 		}
 	)";
@@ -2379,7 +2379,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_loop)
 {
 	char const* sourceCode = R"(
 		contract C {
-			modifier repeat(uint count) { for (var i = 0; i < count; ++i) _ }
+			modifier repeat(uint count) { for (var i = 0; i < count; ++i) _; }
 			function f() repeat(10) returns (uint r) { r += 1; }
 		}
 	)";
@@ -2391,7 +2391,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_multi_invocation)
 {
 	char const* sourceCode = R"(
 		contract C {
-			modifier repeat(bool twice) { if (twice) _ _ }
+			modifier repeat(bool twice) { if (twice) _; _; }
 			function f(bool twice) repeat(twice) returns (uint r) { r += 1; }
 		}
 	)";
@@ -2406,7 +2406,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
 	// modifier code block.
 	char const* sourceCode = R"(
 		contract C {
-			modifier repeat(bool twice) { if (twice) _ _ }
+			modifier repeat(bool twice) { if (twice) _; _; }
 			function f(bool twice) repeat(twice) returns (uint r) { r += 1; return r; }
 		}
 	)";
@@ -2420,10 +2420,10 @@ BOOST_AUTO_TEST_CASE(function_modifier_overriding)
 	char const* sourceCode = R"(
 		contract A {
 			function f() mod returns (bool r) { return true; }
-			modifier mod { _ }
+			modifier mod { _; }
 		}
 		contract C is A {
-			modifier mod { if (false) _ }
+			modifier mod { if (false) _; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -2439,12 +2439,12 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 			function f1() mod2 { data |= 0x1; }
 			function f2() { data |= 0x20; }
 			function f3() { }
-			modifier mod1 { f2(); _ }
-			modifier mod2 { f3(); if (false) _ }
+			modifier mod1 { f2(); _; }
+			modifier mod2 { f3(); if (false) _; }
 			function getData() returns (uint r) { return data; }
 		}
 		contract C is A {
-			modifier mod1 { f4(); _ }
+			modifier mod1 { f4(); _; }
 			function f3() { data |= 0x300; }
 			function f4() { data |= 0x4000; }
 		}
@@ -2459,11 +2459,11 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 		contract A {
 			uint data;
 			function A() mod1 { data |= 2; }
-			modifier mod1 { data |= 1; _ }
+			modifier mod1 { data |= 1; _; }
 			function getData() returns (uint r) { return data; }
 		}
 		contract C is A {
-			modifier mod1 { data |= 4; _ }
+			modifier mod1 { data |= 4; _; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -6920,7 +6920,7 @@ BOOST_AUTO_TEST_CASE(return_does_not_skip_modifier)
 		contract C {
 			uint public x;
 			modifier setsx {
-				_
+				_;
 				x = 9;
 			}
 			function f() setsx returns (uint) {
@@ -6941,7 +6941,7 @@ BOOST_AUTO_TEST_CASE(break_in_modifier)
 			uint public x;
 			modifier run() {
 				for (uint i = 0; i < 10; i++) {
-					_
+					_;
 					break;
 				}
 			}
@@ -6963,7 +6963,7 @@ BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)
 			uint public x;
 			modifier run() {
 				for (uint i = 0; i < 10; i++) {
-					_
+					_;
 					break;
 				}
 			}
@@ -6986,7 +6986,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 			modifier protected {
 				if (locked) throw;
 				locked = true;
-				_
+				_;
 				locked = false;
 			}
 		}

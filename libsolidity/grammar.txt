@@ -41,8 +41,9 @@ ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
 StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
+Statement = IfStatement | WhileStatement | ForStatement | Block |
+            ( PlaceholderStatement | Continue | Break | Return |
+              Throw | SimpleStatement | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression | VariableDefinition
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?

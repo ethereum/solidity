@@ -86,14 +86,14 @@ contract multiowned {
 	// simple single-sig function modifier.
 	modifier onlyowner {
 		if (isOwner(msg.sender))
-			_
+			_;
 	}
 	// multi-sig function modifier: the operation must have an intrinsic hash in order
 	// that later attempts can be realised as the same underlying operation and
 	// thus count as confirmations.
 	modifier onlymanyowners(bytes32 _operation) {
 		if (confirmAndCheck(_operation))
-			_
+			_;
 	}
 
 	// METHODS
@@ -281,7 +281,7 @@ contract daylimit is multiowned {
 	// simple modifier for daily limit.
 	modifier limitedDaily(uint _value) {
 		if (underLimit(_value))
-			_
+			_;
 	}
 
 	// METHODS
