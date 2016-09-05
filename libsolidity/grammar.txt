@@ -43,13 +43,13 @@ StorageLocation = 'memory' | 'storage'
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block |
             ( PlaceholderStatement | Continue | Break | Return |
-              Throw | SimpleStatement | ExpressionStatement ) ';'
+              Throw | SimpleStatement ) ';'
 
 ExpressionStatement = Expression | VariableDefinition
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
-SimpleStatement = VariableDefinition | ExpressionStatement
+SimpleStatement = ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
 Continue = 'continue'
 Break = 'break'
@@ -59,7 +59,7 @@ VariableDefinition = VariableDeclaration ( '=' Expression )?
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression =
-  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | '(' Expression ')' )
+  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | NewExpression | ( TypeName? '(' Expression ')' ) )
   | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
@@ -79,7 +79,7 @@ Expression =
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 
-FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+FunctionCall = ( Identifier | MemberAccess ) '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
