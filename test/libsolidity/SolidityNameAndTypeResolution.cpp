@@ -3893,6 +3893,14 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(payable_constant_conflict)
+{
+	char const* text = R"(
+		contract C { function f() payable constant {} }
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(calling_payable)
 {
 	char const* text = R"(
