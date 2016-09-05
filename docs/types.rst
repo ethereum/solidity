@@ -241,6 +241,8 @@ to and from all integer types but implicit conversion is not allowed.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
         ActionChoices choice;
@@ -299,6 +301,8 @@ On the other hand, assignments from a memory stored reference type to another
 memory-stored reference type does not create a copy.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         uint[] x; // the data location of x is storage
@@ -378,6 +382,8 @@ the ``.length`` member.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function f(uint len) {
             uint[] memory a = new uint[](7);
@@ -397,6 +403,8 @@ assigned to a variable right away.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function f() {
             g([uint(1), 2, 3]);
@@ -415,6 +423,8 @@ be assigned to dynamically-sized memory arrays, i.e. the following is not
 possible:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         function f() {
@@ -451,6 +461,8 @@ Members
 
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -520,6 +532,8 @@ Solidity provides a way to define new types in the form of structs, which is
 shown in the following example:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract CrowdFunding {
         // Defines a new type with two fields.

@@ -51,6 +51,8 @@ complete contract):
 
 ::
 
+    pragma solidity ^0.4.0;
+
   // THIS CONTRACT CONTAINS A BUG - DO NOT USE
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -72,6 +74,8 @@ To avoid re-entrancy, you can use the Checks-Effects-Interactions pattern as
 outlined further below:
 
 ::
+
+    pragma solidity ^0.4.0;
 
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -149,6 +153,8 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract TxUserWallet {
         address owner;
 
@@ -165,6 +171,8 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract TxAttackWallet {
         address owner;
