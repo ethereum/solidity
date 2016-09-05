@@ -7154,7 +7154,7 @@ BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
 	char const* sourceCode = R"(
 		contract C {
 			modifier tryCircumvent {
-				if (false) _ // avoid the function, we should still not accept ether
+				if (false) _; // avoid the function, we should still not accept ether
 			}
 			function f() tryCircumvent returns (uint) {
 				return msg.value;
