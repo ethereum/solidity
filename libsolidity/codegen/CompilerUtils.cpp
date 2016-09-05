@@ -165,7 +165,7 @@ void CompilerUtils::encodeToMemory(
 			t->mobileType() &&
 			t->mobileType()->interfaceType(_encodeAsLibraryTypes) &&
 			t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType(),
-			"Encoding type " + t->toString() + " not yet implemented."
+			"Encoding type \"" + t->toString() + "\" not yet implemented."
 		);
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 	}
