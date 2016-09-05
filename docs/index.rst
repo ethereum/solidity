@@ -46,6 +46,9 @@ Available Solidity Integrations
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
+    
+* `Solium <https://github.com/duaraghav8/Solium/>`_
+    A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
 
 * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
     Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
