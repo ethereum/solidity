@@ -44,8 +44,12 @@ contract can be called internally.
 External Function Calls
 -----------------------
 
-The expression ``this.g(8);`` is also a valid function call, but this time, the function
+The expressions ``this.g(8);`` and ``c.g(2);`` (where ``g`` is a contract
+instance) are also valid function calls, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
+Please note that function calls on ``this`` cannot be used in the constructor, as the
+actual contract has not been created yet.
+
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
 
@@ -53,7 +57,7 @@ When calling functions
 of other contracts, the amount of Wei sent with the call and the gas can be specified::
 
     contract InfoFeed {
-        function info() returns (uint ret) { return 42; }
+        function info() payable returns (uint ret) { return 42; }
     }
 
 
@@ -63,9 +67,17 @@ of other contracts, the amount of Wei sent with the call and the gas can be spec
         function callFeed() { feed.info.value(10).gas(800)(); }
     }
 
+The modifier ``payable`` has to be used for ``info``, because otherwise,
+we would not be able to send Ether to it in the call ``feed.info.value(10).gas(800)()``.
+
 Note that the expression ``InfoFeed(addr)`` performs an explicit type conversion stating
 that "we know that the type of the contract at the given address is ``InfoFeed``" and
-this does not execute a constructor. We could also have used ``function setFeed(InfoFeed _feed) { feed = _feed; }`` directly.  Be careful about the fact that ``feed.info.value(10).gas(800)``
+this does not execute a constructor. Explicit type conversions have to be
+handled with extreme caution. Never call a function on a contract where you
+are not sure about its type.
+
+We could also have used ``function setFeed(InfoFeed _feed) { feed = _feed; }`` directly.
+Be careful about the fact that ``feed.info.value(10).gas(800)``
 only (locally) sets the value and amount of gas sent with the function call and only the
 parentheses at the end perform the actual call.
 
@@ -144,7 +156,7 @@ creation-dependencies are now possible.
 
     contract D {
         uint x;
-        function D(uint a) {
+        function D(uint a) payable {
             x = a;
         }
     }
@@ -241,6 +253,8 @@ This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
 As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
 
+    pragma solidity ^0.4.0;
+
     contract ScopingErrors {
         function scoping() {
             uint i = 0;
@@ -298,8 +312,10 @@ Catching exceptions is not yet possible.
 
 In the following example, we show how ``throw`` can be used to easily revert an Ether transfer and also how to check the return value of ``send``::
 
+    pragma solidity ^0.4.0;
+
     contract Sharer {
-        function sendHalf(address addr) returns (uint balance) {
+        function sendHalf(address addr) payable returns (uint balance) {
             if (!addr.send(msg.value / 2))
                 throw; // also reverts the transfer to Sharer
             return this.balance;
@@ -337,8 +353,9 @@ arising when writing manual assembly by the following features:
 We now want to describe the inline assembly language in detail.
 
 .. warning::
-    Inline assembly is still a relatively new feature and might change if it does not prove useful,
-    so please try to keep up to date.
+    Inline assembly is a way to access the Ethereum Virtual Machine
+    at a low level. This discards and allows you to bypass several safety
+    features of Solidity.
 
 Example
 -------

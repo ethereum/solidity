@@ -317,17 +317,12 @@ providing any data or if someone messed up the types so that they tried to
 call a function that does not exist.
 
 The default behaviour (if no fallback function is explicitly given) in
-these situations is to just accept the call and do nothing.
-This is desireable in many cases, but should only be used if there is
-a way to pull out Ether from a contract.
+these situations is to throw an exception.
 
-If the contract is not meant to receive Ether with simple transfers, you
+If the contract is meant to receive Ether with simple transfers, you
 should implement the fallback function as
 
-``function() { throw; }``
-
-this will cause all transactions to this contract that do not call an
-existing function to be reverted, so that all Ether is sent back.
+``function() payable { }``
 
 Another use of the fallback function is to e.g. register that your
 contract received ether by using an event.
@@ -488,6 +483,8 @@ What happens if you send ether along with a function call to a contract?
 ========================================================================
 
 It gets added to the total balance of the contract, just like when you send ether when creating a contract.
+You can only send ether along to a function that has the ``payable`` modifier,
+otherwise an exception is thrown.
 
 Is it possible to get a tx receipt for a transaction executed contract-to-contract?
 ===================================================================================

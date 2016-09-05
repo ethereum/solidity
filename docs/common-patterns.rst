@@ -36,12 +36,12 @@ become the new richest.
 
         mapping (address => uint) pendingWithdrawals;
 
-        function WithdrawalContract() {
+        function WithdrawalContract() payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
 
-        function becomeRichest() returns (bool) {
+        function becomeRichest() payable returns (bool) {
             if (msg.value > mostSent) {
                 pendingWithdrawals[richest] += msg.value;
                 richest = msg.sender;
@@ -66,7 +66,7 @@ become the new richest.
         }
     }
 
-This is as opposed to the more intuitive sending pattern.
+This is as opposed to the more intuitive sending pattern:
 
 ::
 
@@ -76,7 +76,7 @@ This is as opposed to the more intuitive sending pattern.
         address public richest;
         uint public mostSent;
 
-        function SendContract() {
+        function SendContract() payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -156,7 +156,7 @@ restrictions highly readable.
                 throw;
             // Do not forget the "_;"! It will
             // be replaced by the actual function
-            // body when the modifier is invoked.
+            // body when the modifier is used.
             _;
         }
 
@@ -187,9 +187,8 @@ restrictions highly readable.
         // fee being associated with a function call.
         // If the caller sent too much, he or she is
         // refunded, but only after the function body.
-        // This is dangerous, because if the function
-        // uses `return` explicitly, this will not be
-        // done! This behavior will be fixed in Version 0.4.0.
+        // This was dangerous before Solidity version 0.4.0,
+        // where it was possible to skip the part after `_;`.
         modifier costs(uint _amount) {
             if (msg.value < _amount)
                 throw;
@@ -204,10 +203,10 @@ restrictions highly readable.
             owner = _newOwner;
             // just some example condition
             if (uint(owner) & 0 == 1)
-                // in this case, overpaid fees will not
-                // be refunded
+                // This did not refund for Solidity
+                // before version 0.4.0.
                 return;
-            // otherwise, refund overpaid fees
+            // refund overpaid fees
         }
     }
 
@@ -265,13 +264,14 @@ function finishes.
 
 .. note::
     **Modifier May be Skipped**.
+    This only applies to Solidity before version 0.4.0:
     Since modifiers are applied by simply replacing
     code and not by using a function call,
     the code in the transitionNext modifier
     can be skipped if the function itself uses
     return. If you want to do that, make sure
-    to call nextStage manually from those functions. 
-    With version 0.4.0 (unreleased), modifier code 
+    to call nextStage manually from those functions.
+    Starting with version 0.4.0, modifier code
     will run even if the function explicitly returns.
 
 ::
@@ -317,6 +317,7 @@ function finishes.
 
         // Order of the modifiers matters here!
         function bid()
+            payable
             timedTransitions
             atStage(Stages.AcceptingBlindedBids)
         {
@@ -331,9 +332,6 @@ function finishes.
 
         // This modifier goes to the next stage
         // after the function is done.
-        // If you use `return` in the function,
-        // `nextStage` will not be called
-        // automatically.
         modifier transitionNext()
         {
             _;
@@ -345,8 +343,6 @@ function finishes.
             atStage(Stages.AnotherStage)
             transitionNext
         {
-            // If you want to use `return` here,
-            // you have to call `nextStage()` manually.
         }
 
         function h()

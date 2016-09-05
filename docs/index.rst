@@ -71,6 +71,9 @@ Discontinued:
 Solidity Tools
 --------------
 
+* `Dapple <https://github.com/nexusdev/dapple>`_
+    Package and deployment manager for Solidity.
+
 * `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
     Try Solidity instantly with a command-line Solidity console.
 

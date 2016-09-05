@@ -4,7 +4,7 @@
 Contracts
 ##########
 
-Contracts in Solidity are what classes are in object oriented languages. They
+Contracts in Solidity are similar to classes in object-oriented languages. They
 contain persistent data in state variables and functions that can modify these
 variables. Calling a function on a different contract (instance) will perform
 an EVM function call and thus switch the context such that state variables are
@@ -78,6 +78,11 @@ This means that cyclic creation dependencies are impossible.
         // This is the constructor which registers the
         // creator and the assigned name.
         function OwnedToken(bytes32 _name) {
+            // State variables are accessed via their name
+            // and not via e.g. this.owner. This also applies
+            // to functions and especially in the constructors,
+            // you can only call them like that ("internall"),
+            // because the contract itself does not exist yet.
             owner = msg.sender;
             // We do an explicit type conversion from `address`
             // to `TokenCreator` and assume that the type of
@@ -241,7 +246,7 @@ Accessor Functions
 ==================
 
 The compiler automatically creates accessor functions for
-all public state variables. For the contract given below, the compiler will
+all **public** state variables. For the contract given below, the compiler will
 generate a function called ``data`` that does not take any
 arguments and returns a ``uint``, the value of the state
 variable ``data``. The initialization of state variables can
@@ -328,7 +333,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // This contract only defines a modifier but does not use
         // it - it will be used in derived contracts.
         // The function body is inserted where the special symbol
-        // "_" in the definition of a modifier appears.
+        // "_;" in the definition of a modifier appears.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
@@ -367,7 +372,10 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
         function Register(uint initialPrice) { price = initialPrice; }
 
-        function register() costs(price) {
+        // It is important to also provide the
+        // "payable" keyword here, otherwise the function will
+        // automatically reject all Ether sent to it.
+        function register() payable costs(price) {
             registeredAddresses[msg.sender] = true;
         }
 
@@ -450,7 +458,7 @@ functions matches the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
-Ether (without data).  In such a context, there is very little gas available to
+Ether (without data).  In such a context, there is usually very little gas available to
 the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as
 possible.
 
@@ -474,26 +482,31 @@ Please ensure you test your fallback function thoroughly to ensure the execution
     pragma solidity ^0.4.0;
 
     contract Test {
+        // This function is called for all messages sent to
+        // this contract (there is no other function).
+        // Sending Ether to this contract will cause an exception,
+        // because the fallback function does not have the "payable"
+        // modifier.
         function() { x = 1; }
         uint x;
     }
 
 
-    // This contract rejects any Ether sent to it. It is good
-    // practise to include such a function for every contract
-    // in order not to lose Ether.
-    contract Rejector {
-        function() { throw; }
+    // This contract keeps all Ether sent to it with no way
+    // to get it back.
+    contract Sink {
+        function() payable { }
     }
 
 
     contract Caller {
-        function callTest(address testAddress) {
-            Test(testAddress).call(0xabcdef01); // hash does not exist
-            // results in Test(testAddress).x becoming == 1.
-            Rejector r = Rejector(0x123);
-            r.send(2 ether);
-            // results in r.balance == 0
+        function callTest(Test test) {
+            test.call(0xabcdef01); // hash does not exist
+            // results in test.x becoming == 1.
+
+            // The following call will fail, reject the
+            // Ether and return false:
+            test.send(2 ether);
         }
     }
 
@@ -538,6 +551,11 @@ declared the event with ``anonymous`` specifier. This means that it is
 not possible to filter for specific anonymous events by name.
 
 All non-indexed arguments will be stored in the data part of the log.
+
+.. note::
+    Indexed arguments will not be stored themselves, you can only
+    search for the values, but it is impossible to retrieve the
+    values themselves.
 
 ::
 
@@ -622,7 +640,7 @@ Inheritance
 Solidity supports multiple inheritance by copying code including polymorphism.
 
 All function calls are virtual, which means that the most derived function
-is called, except when the contract is explicitly given.
+is called, except when the contract name is explicitly given.
 
 Even if a contract inherits from multiple other contracts, only a single
 contract is created on the blockchain, the code from the base contracts
@@ -635,6 +653,8 @@ especially concerning multiple inheritance.
 Details are given in the following example.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract owned {
         function owned() { owner = msg.sender; }
@@ -709,6 +729,8 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
+    pragma solidity ^0.4.0;
+
     contract mortal is owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
@@ -733,6 +755,8 @@ A call to ``Final.kill()`` will call ``Base2.kill`` as the most
 derived override, but this function will bypass
 ``Base1.kill``, basically because it does not even know about
 ``Base1``.  The way around this is to use ``super``::
+
+    pragma solidity ^0.4.0;
 
     contract mortal is owned {
         function kill() {
@@ -772,6 +796,8 @@ Arguments for Base Constructors
 
 Derived contracts need to provide all arguments needed for
 the base constructors. This can be done at two places::
+
+    pragma solidity ^0.4.0;
 
     contract Base {
         uint x;
@@ -833,11 +859,15 @@ Abstract Contracts
 
 Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
 
+    pragma solidity ^0.4.0;
+
     contract Feline {
         function utterance() returns (bytes32);
     }
 
 Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
+
+    pragma solidity ^0.4.0;
 
     contract Cat is Feline {
         function utterance() returns (bytes32) { return "miaow"; }
@@ -1060,6 +1090,8 @@ available without having to add further code.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
+    pragma solidity ^0.4.0;
+
     // This is the same code as before, just without comments
     library Set {
       struct Data { mapping(uint => bool) flags; }
@@ -1105,6 +1137,8 @@ Let us rewrite the set example from the
     }
 
 It is also possible to extend elementary types in that way::
+
+    pragma solidity ^0.4.0;
 
     library Search {
         function indexOf(uint[] storage self, uint value) returns (uint) {

@@ -255,10 +255,12 @@ activate themselves.
         /// together with this transaction.
         /// The value will only be refunded if the
         /// auction is not won.
-        function bid() {
+        function bid() payable {
             // No arguments are necessary, all
             // information is already part of
-            // the transaction.
+            // the transaction. The keyword payable
+            // is required for the function to
+            // be able to receive Ether.
             if (now > auctionStart + biddingTime) {
                 // Revert the call if the bidding
                 // period is over.
@@ -329,16 +331,6 @@ activate themselves.
             // 3. Interaction
             if (!beneficiary.send(highestBid))
                 throw;
-        }
-
-        function () {
-            // This function gets executed if a
-            // transaction with invalid data is sent to
-            // the contract or just ether without data.
-            // We revert the send so that no-one
-            // accidentally loses money when using the
-            // contract.
-            throw;
         }
     }
 
@@ -433,6 +425,7 @@ high or low invalid bids.
         /// still make the required deposit. The same address can
         /// place multiple bids.
         function bid(bytes32 _blindedBid)
+            payable
             onlyBefore(biddingEnd)
         {
             bids[msg.sender].push(Bid({
@@ -535,10 +528,6 @@ high or low invalid bids.
             if (!beneficiary.send(this.balance))
                 throw;
         }
-
-        function () {
-            throw;
-        }
     }
 
 .. index:: purchase, remote purchase, escrow
@@ -558,7 +547,7 @@ Safe Remote Purchase
         enum State { Created, Locked, Inactive }
         State public state;
 
-        function Purchase() {
+        function Purchase() payable {
             seller = msg.sender;
             value = msg.value / 2;
             if (2 * value != msg.value) throw;
@@ -566,22 +555,22 @@ Safe Remote Purchase
 
         modifier require(bool _condition) {
             if (!_condition) throw;
-            _
+            _;
         }
 
         modifier onlyBuyer() {
             if (msg.sender != buyer) throw;
-            _
+            _;
         }
 
         modifier onlySeller() {
             if (msg.sender != seller) throw;
-            _
+            _;
         }
 
         modifier inState(State _state) {
             if (state != _state) throw;
-            _
+            _;
         }
 
         event aborted();
@@ -608,6 +597,7 @@ Safe Remote Purchase
         function confirmPurchase()
             inState(State.Created)
             require(msg.value == 2 * value)
+            payable
         {
             purchaseConfirmed();
             buyer = msg.sender;
@@ -629,10 +619,6 @@ Safe Remote Purchase
             // block the refund.
             if (!buyer.send(value) || !seller.send(this.balance))
                 throw;
-        }
-
-        function() {
-            throw;
         }
     }
 

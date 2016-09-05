@@ -212,7 +212,6 @@ Tips and Tricks
 * Make your state variables public - the compiler will create :ref:`getters <visibility-and-accessors>` for you for free.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
-* If you do **not** want your contracts to receive ether when called via ``send``, you can add a throwing fallback function ``function() { throw; }``.
 * Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
 
 **********
@@ -338,3 +337,4 @@ Modifiers
 - ``constant`` for functions: Disallows modification of state - this is not enforced yet.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
+- ``payable`` for functions: Allows them to receive Ether together with a call.

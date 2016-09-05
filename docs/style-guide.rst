@@ -615,7 +615,7 @@ indistinguishable from the numerals one and zero.
 Contract and Library Names
 ==========================
 
-Contracts should be named using the CapWords style.
+Contracts and libraries should be named using the CapWords style.
 
 
 Events
