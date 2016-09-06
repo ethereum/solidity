@@ -223,7 +223,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
 		if (Token::isShiftOp(target_op))
-			appendShiftOperatorCode(target_op, *_assignment.annotation().type);
+			appendShiftOperatorCode(target_op, *_assignment.annotation().type, *_assignment.annotation().type);
 		else
 			appendOrdinaryBinaryOperatorCode(target_op, *_assignment.annotation().type);
 		if (lvalueSize > 0)
@@ -391,7 +391,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
 		if (Token::isShiftOp(c_op))
-			appendShiftOperatorCode(c_op, commonType);
+			appendShiftOperatorCode(c_op, commonType, commonType);
 		else if (Token::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, commonType);
 		else
@@ -1394,17 +1394,21 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 	}
 }
 
-void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _type)
+void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _leftType, Type const& _rightType)
 {
 	// stack: rvalue lvalue
 
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
+	IntegerType const& leftType = dynamic_cast<IntegerType const&>(_leftType);
+	bool const c_leftSigned = leftType.isSigned();
+	IntegerType const& rightType = dynamic_cast<IntegerType const&>(_rightType);
+	bool const c_rightSigned = rightType.isSigned();
 
 	// shift with negative rvalue throws exception
-	// FIXME: include this only for signed rvalues
-	m_context << Instruction::DUP2 << (u256(1) << 255) << Instruction::AND << Instruction::ISZERO << Instruction::ISZERO;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	if (c_rightSigned)
+	{
+		m_context << Instruction::DUP2 << (u256(1) << 255) << Instruction::AND << Instruction::ISZERO << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 
 	switch (_operator)
 	{
@@ -1412,7 +1416,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_leftSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
 		// This is the >>> operator, which we disable here.
