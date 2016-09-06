@@ -65,6 +65,8 @@ This means that cyclic creation dependencies are impossible.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract OwnedToken {
         // TokenCreator is a contract type that is defined below.
         // It is fine to reference it as long as it is not used
@@ -189,6 +191,8 @@ return parameter list for functions.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function f(uint a) private returns (uint b) { return a + 1; }
         function setData(uint a) internal { data = a; }
@@ -200,6 +204,8 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 ``C`` and, thus, can call ``compute``.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         uint private data;
@@ -243,6 +249,8 @@ be done at declaration.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint public data = 42;
     }
@@ -262,6 +270,8 @@ it is evaluated as a state variable and if it is accessed externally
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint public data;
         function x() {
@@ -273,6 +283,8 @@ it is evaluated as a state variable and if it is accessed externally
 The next example is a bit more complex:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract Complex {
         struct Data {
@@ -306,6 +318,8 @@ to automatically check a condition prior to executing the function. They are
 inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract owned {
         function owned() { owner = msg.sender; }
@@ -408,6 +422,8 @@ for array and struct types and not possible for mapping types).
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint constant x = 32**22 + 8;
         string constant text = "abc";
@@ -454,6 +470,8 @@ Please ensure you test your fallback function thoroughly to ensure the execution
     you have to implement a fallback function.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract Test {
         function() { x = 1; }
@@ -522,6 +540,8 @@ not possible to filter for specific anonymous events by name.
 All non-indexed arguments will be stored in the data part of the log.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract ClientReceipt {
         event Deposit(
@@ -791,6 +811,8 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract X {}
     contract A is X {}
     contract C is A, X {}
@@ -861,6 +883,8 @@ more advanced example to implement a set).
 
 ::
 
+    pragma solidity ^0.4.0;
+
     library Set {
       // We define a new struct datatype that will be used to
       // hold its data in the calling contract.
@@ -930,6 +954,8 @@ internal functions in libraries in order to implement
 custom types without the overhead of external function calls:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     library BigInt {
         struct bigint {

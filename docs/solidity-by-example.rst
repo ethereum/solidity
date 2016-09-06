@@ -36,6 +36,8 @@ of votes.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     /// @title Voting with delegation.
     contract Ballot {
         // This declares a new complex type which will
@@ -208,6 +210,8 @@ activate themselves.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract SimpleAuction {
         // Parameters of the auction. Times are either
         // absolute unix timestamps (seconds since 1970-01-01)
@@ -377,6 +381,8 @@ high or low invalid bids.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract BlindAuction {
         struct Bid {
             bytes32 blindedBid;
@@ -542,6 +548,8 @@ Safe Remote Purchase
 ********************
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract Purchase {
         uint public value;

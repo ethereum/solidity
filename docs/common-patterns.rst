@@ -28,6 +28,8 @@ become the new richest.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract WithdrawalContract {
         address public richest;
         uint public mostSent;
@@ -67,6 +69,8 @@ become the new richest.
 This is as opposed to the more intuitive sending pattern.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract SendContract {
         address public richest;
@@ -130,6 +134,8 @@ The use of **function modifiers** makes these
 restrictions highly readable.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -269,6 +275,8 @@ function finishes.
     will run even if the function explicitly returns.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract StateMachine {
         enum Stages {

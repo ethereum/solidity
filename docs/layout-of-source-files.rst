@@ -192,6 +192,8 @@ for the two input parameters and two returned values.
 
 ::
 
+    pragma solidity ^0.4.0;
+
  /** @title Shape calculator.*/
  contract shapeCalculator{
      /**@dev Calculates a rectangle's surface and perimeter.

@@ -98,6 +98,8 @@ parameters from the function declaration, but can be in arbitrary order.
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function f(uint key, uint value) { ... }
 
@@ -114,6 +116,8 @@ The names of unused parameters (especially return parameters) can be omitted.
 Those names will still be present on the stack, but they are inaccessible.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         // omitted name for parameter
@@ -135,6 +139,8 @@ code of the contract being created has to be known and, thus, recursive
 creation-dependencies are now possible.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract D {
         uint x;
@@ -343,6 +349,8 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 .. code::
 
+    pragma solidity ^0.4.0;
+
     library GetCode {
         function at(address _addr) returns (bytes o_code) {
             assembly {
@@ -367,6 +375,8 @@ the compiler does not perform checks, so you should use it for complex things on
 you really know what you are doing.
 
 .. code::
+
+    pragma solidity ^0.4.0;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
@@ -623,6 +633,8 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint b;
         function f(uint x) returns (uint r) {
@@ -696,6 +708,8 @@ is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         function f(uint x) returns (uint b) {
