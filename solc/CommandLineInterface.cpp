@@ -778,12 +778,17 @@ void CommandLineInterface::actOnInput()
 
 bool CommandLineInterface::link()
 {
+	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
+	size_t const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_libraries)
 	{
 		string const& name = library.first;
+		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
+		// This leaves 36 characters for the library name, while too short library names are
+		// padded on the right with '_' and too long names are truncated.
 		string replacement = "__";
-		for (size_t i = 0; i < 36; ++i)
+		for (size_t i = 0; i < placeholderSize - 4; ++i)
 			replacement.push_back(i < name.size() ? name[i] : '_');
 		replacement += "__";
 		librariesReplacements[replacement] = library.second;
@@ -795,13 +800,13 @@ bool CommandLineInterface::link()
 		{
 			while (it != end && *it != '_') ++it;
 			if (it == end) break;
-			if (end - it < 40)
+			if (end - it < placeholderSize)
 			{
 				cerr << "Error in binary object file " << src.first << " at position " << (end - src.second.begin()) << endl;
 				return false;
 			}
 
-			string name(it, it + 40);
+			string name(it, it + placeholderSize);
 			if (librariesReplacements.count(name))
 			{
 				string hexStr(toHex(librariesReplacements.at(name).asBytes()));
@@ -809,7 +814,7 @@ bool CommandLineInterface::link()
 			}
 			else
 				cerr << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
-			it += 40;
+			it += placeholderSize;
 		}
 	}
 	return true;
