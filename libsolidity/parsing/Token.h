@@ -230,12 +230,14 @@ namespace solidity
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
+	K(Pure, "pure", 0)                                                 \
 	K(Relocatable, "relocatable", 0)                                   \
 	K(Static, "static", 0)                                             \
 	K(Switch, "switch", 0)                                             \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
+	K(View, "view", 0)                                                 \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
