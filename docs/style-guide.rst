@@ -355,7 +355,7 @@ No::
         selfdestruct(owner);
     }
 
-For long function declarations, it is recommended to drop each arguent onto
+For long function declarations, it is recommended to drop each argument onto
 it's own line at the same indentation level as the function body.  The closing
 parenthesis and opening bracket should be placed on their own line as well at
 the same indentation level as the function declaration.
