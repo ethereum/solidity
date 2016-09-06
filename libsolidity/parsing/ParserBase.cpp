@@ -47,7 +47,17 @@ void ParserBase::expectToken(Token::Value _value)
 	Token::Value tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
+		if (Token::isReservedKeyword(tok))
+		{
+			fatalParserError(
+				string("Expected token ") +
+				string(Token::name(_value)) +
+				string(" got reserved keyword '") +
+				string(Token::name(tok)) +
+				string("'")
+			);
+		}
+		else if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
 		{
 			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
