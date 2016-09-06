@@ -11,9 +11,10 @@ Breaking Changes:
    ``pragma solidity >=0.4.0 <0.4.8;``
  * Functions that want to receive Ether have to specify the
    new ``payable`` modifier (otherwise they throw).
- * Contracts that want to receive Ether have to implement a fallback
-   function with the payable modifier (contracts now throw if no fallback
-   function is defined and no function matches the signature).
+ * Contracts that want to receive Ether with a plain "send"
+   have to implement a fallback function with the ``payable``
+   modifier. Contracts now throw if no payable fallback
+   function is defined and no function matches the signature.
  * Failing contract creation through "new" throws.
  * Division / modulus by zero throws
  * Function call throws if target contract does not have code
