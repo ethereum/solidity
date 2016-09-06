@@ -79,12 +79,10 @@ Expression =
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 
-FunctionCall = ( MemberAccessFunctionCall | IndexAccessFunctionCall ) '(' Expression? ( ',' Expression )* ')'
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
-MemberAccessFunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( '.' ( PrimaryExpression | NewExpression | TypeName ) )*
 IndexAccess = Expression '[' Expression? ']'
-IndexAccessFunctionCall = ( PrimaryExpression | NewExpression | TypeName ) '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
