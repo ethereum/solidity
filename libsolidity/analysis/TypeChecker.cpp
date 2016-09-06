@@ -80,6 +80,8 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 		if (function->isDeclaredConst())
 			typeError(function->location(), "Constructor cannot be defined as constant.");
+		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
+			typeError(function->location(), "Constructor must be public or internal.");
 	}
 
 	FunctionDefinition const* fallbackFunction = nullptr;
