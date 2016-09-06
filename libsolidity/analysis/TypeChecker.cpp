@@ -75,8 +75,12 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	checkContractAbstractConstructors(_contract);
 
 	FunctionDefinition const* function = _contract.constructor();
-	if (function && !function->returnParameters().empty())
-		typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
+	if (function) {
+		if (!function->returnParameters().empty())
+			typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
+		if (function->isDeclaredConst())
+			typeError(function->location(), "Constructor cannot be defined as constant.");
+	}
 
 	FunctionDefinition const* fallbackFunction = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
