@@ -195,6 +195,22 @@ BOOST_AUTO_TEST_CASE(placeholder_statement)
 	BOOST_CHECK_EQUAL(placeholder["src"], "26:1:1");
 }
 
+BOOST_AUTO_TEST_CASE(non_utf8)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { function f() { var x = hex\"ff\"; } }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value literal = astJson["children"][0]["children"][0]["children"][2]["children"][0]["children"][1];
+	BOOST_CHECK_EQUAL(literal["name"], "Literal");
+	BOOST_CHECK_EQUAL(literal["attributes"]["hexvalue"], "ff");
+	BOOST_CHECK_EQUAL(literal["attributes"]["token"], Json::nullValue);
+	BOOST_CHECK_EQUAL(literal["attributes"]["value"], Json::nullValue);
+	BOOST_CHECK(literal["attributes"]["type"].asString().find("invalid") != string::npos);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

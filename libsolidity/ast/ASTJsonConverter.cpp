@@ -22,6 +22,7 @@
 
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <boost/algorithm/string/join.hpp>
+#include <libdevcore/UTF8.h>
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
@@ -397,9 +398,21 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 bool ASTJsonConverter::visit(Literal const& _node)
 {
 	char const* tokenString = Token::toString(_node.token());
+	size_t invalidPos = 0;
+	Json::Value value{_node.value()};
+	if (!dev::validate(_node.value(), invalidPos))
+		value = Json::nullValue;
+	Token::Value subdenomination = Token::Value(_node.subDenomination());
 	addJsonNode(_node, "Literal", {
-		make_pair("string", tokenString ? tokenString : Json::Value()),
-		make_pair("value", _node.value()),
+		make_pair("token", tokenString ? tokenString : Json::Value()),
+		make_pair("value", value),
+		make_pair("hexvalue", toHex(_node.value())),
+		make_pair(
+			"subdenomination",
+			subdenomination == Token::Illegal ?
+			Json::nullValue :
+			Json::Value{Token::toString(subdenomination)}
+		),
 		make_pair("type", type(_node))
 	});
 	return true;
