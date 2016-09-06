@@ -644,7 +644,6 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 	char const* interface = R"(
 	[
 		{
-			"constant" : false,
 			"payable": false,
 			"type" : "fallback"
 		}
@@ -696,7 +695,6 @@ BOOST_AUTO_TEST_CASE(payable_fallback_unction)
 	char const* interface = R"(
 	[
 		{
-			"constant" : false,
 			"payable": true,
 			"type" : "fallback"
 		}
