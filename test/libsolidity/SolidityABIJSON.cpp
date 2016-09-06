@@ -645,6 +645,7 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 	[
 		{
 			"constant" : false,
+			"payable": false,
 			"type" : "fallback"
 		}
 	]
@@ -684,6 +685,25 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(payable_fallback_unction)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function () payable {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"payable": true,
+			"type" : "fallback"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
