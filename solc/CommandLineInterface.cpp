@@ -780,7 +780,7 @@ bool CommandLineInterface::link()
 {
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
-	size_t const placeholderSize = 40; // 20 bytes or 40 hex characters
+	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_libraries)
 	{
 		string const& name = library.first;
