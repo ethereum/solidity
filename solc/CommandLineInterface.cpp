@@ -778,37 +778,43 @@ void CommandLineInterface::actOnInput()
 
 bool CommandLineInterface::link()
 {
+	// Map from how the libraries will be named inside the bytecode to their addresses.
+	map<string, h160> librariesReplacements;
+	int const placeholderSize = 40; // 20 bytes or 40 hex characters
+	for (auto const& library: m_libraries)
+	{
+		string const& name = library.first;
+		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
+		// This leaves 36 characters for the library name, while too short library names are
+		// padded on the right with '_' and too long names are truncated.
+		string replacement = "__";
+		for (size_t i = 0; i < placeholderSize - 4; ++i)
+			replacement.push_back(i < name.size() ? name[i] : '_');
+		replacement += "__";
+		librariesReplacements[replacement] = library.second;
+	}
 	for (auto& src: m_sourceCodes)
 	{
 		auto end = src.second.end();
 		for (auto it = src.second.begin(); it != end;)
 		{
 			while (it != end && *it != '_') ++it;
-			auto insertStart = it;
-			while (it != end && *it == '_') ++it;
-			auto nameStart = it;
-			while (it != end && *it != '_') ++it;
-			auto nameEnd = it;
-			while (it != end && *it == '_') ++it;
-			auto insertEnd = it;
-
-			if (insertStart == end)
-				break;
-
-			if (insertEnd - insertStart != 40)
+			if (it == end) break;
+			if (end - it < placeholderSize)
 			{
-				cerr << "Error in binary object file " << src.first << " at position " << (insertStart - src.second.begin()) << endl;
+				cerr << "Error in binary object file " << src.first << " at position " << (end - src.second.begin()) << endl;
 				return false;
 			}
 
-			string name(nameStart, nameEnd);
-			if (m_libraries.count(name))
+			string name(it, it + placeholderSize);
+			if (librariesReplacements.count(name))
 			{
-				string hexStr(toHex(m_libraries.at(name).asBytes()));
-				copy(hexStr.begin(), hexStr.end(), insertStart);
+				string hexStr(toHex(librariesReplacements.at(name).asBytes()));
+				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
 				cerr << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+			it += placeholderSize;
 		}
 	}
 	return true;
