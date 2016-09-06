@@ -3989,6 +3989,17 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version)
 	BOOST_CHECK(expectError(text, true) == Error::Type::SyntaxError);
 }
 
+BOOST_AUTO_TEST_CASE(constant_constructor)
+{
+	char const* text = R"(
+		contract test {
+			function test() constant {}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
