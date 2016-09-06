@@ -211,6 +211,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	Token::Value op = _assignment.assignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
+		Token::Value target_op = Token::AssignmentToBinaryOp(op);
 		solUnimplementedAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
@@ -221,7 +222,10 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			// value lvalue_ref value lvalue_ref
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
-		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.annotation().type);
+		if (Token::isShiftOp(target_op))
+			appendShiftOperatorCode(target_op, *_assignment.annotation().type);
+		else
+			appendOrdinaryBinaryOperatorCode(target_op, *_assignment.annotation().type);
 		if (lvalueSize > 0)
 		{
 			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
@@ -386,7 +390,9 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			leftExpression.accept(*this);
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
-		if (Token::isCompareOp(c_op))
+		if (Token::isShiftOp(c_op))
+			appendShiftOperatorCode(c_op, commonType);
+		else if (Token::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, commonType);
 		else
 			appendOrdinaryBinaryOperatorCode(c_op, commonType);
@@ -1326,8 +1332,6 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 		appendArithmeticOperatorCode(_operator, _type);
 	else if (Token::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
-	else if (Token::isShiftOp(_operator))
-		appendShiftOperatorCode(_operator, _type);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
 }
