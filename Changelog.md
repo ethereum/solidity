@@ -25,7 +25,7 @@ Breaking Changes:
  * Moved (and reworked) standard library contracts from inside the compiler to github.com/ethereum/solidity/std
    (``import "std";`` or ``import owned;`` do not work anymore).
  * Confusing and undocumented keyword "after" was removed.
- * New reserved words: hex, payable, abstract, static, interface
+ * New reserved words: abstract, hex, interface, payable, pure, static, view
 
 Features:
 
