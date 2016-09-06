@@ -43,9 +43,9 @@ StorageLocation = 'memory' | 'storage'
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block |
             ( PlaceholderStatement | Continue | Break | Return |
-              Throw | SimpleStatement | ExpressionStatement ) ';'
+              Throw | SimpleStatement ) ';'
 
-ExpressionStatement = Expression | VariableDefinition
+ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
@@ -79,7 +79,7 @@ Expression =
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 
-FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
