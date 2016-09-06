@@ -45,11 +45,11 @@ Statement = IfStatement | WhileStatement | ForStatement | Block |
             ( PlaceholderStatement | Continue | Break | Return |
               Throw | SimpleStatement ) ';'
 
-ExpressionStatement = Expression | VariableDefinition
+ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
-SimpleStatement = ExpressionStatement
+SimpleStatement = VariableDefinition | ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
 Continue = 'continue'
 Break = 'break'
@@ -59,7 +59,7 @@ VariableDefinition = VariableDeclaration ( '=' Expression )?
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression =
-  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | NewExpression | ( TypeName? '(' Expression ')' ) )
+  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | '(' Expression ')' )
   | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
@@ -79,10 +79,12 @@ Expression =
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 
-FunctionCall = ( Identifier | MemberAccess ) '(' Expression? ( ',' Expression )* ')'
+FunctionCall = ( MemberAccessFunctionCall | IndexAccessFunctionCall ) '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
+MemberAccessFunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( '.' ( PrimaryExpression | NewExpression | TypeName ) )*
 IndexAccess = Expression '[' Expression? ']'
+IndexAccessFunctionCall = ( PrimaryExpression | NewExpression | TypeName ) '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
