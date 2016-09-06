@@ -523,7 +523,8 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize))      |
 | insize, out, outsize)   |      | providing g gas and v wei and output area                       |
-|                         |      | mem[out..(out+outsize)) returning 1 on error (out of gas)       |
+|                         |      | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
+|                         |      | and 1 on success                                                |
 +-------------------------+------+-----------------------------------------------------------------+
 | callcode(g, a, v, in,   |      | identical to `call` but only use the code from a and stay       |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
