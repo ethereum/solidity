@@ -568,12 +568,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::Send:
 			_functionCall.expression().accept(*this);
-			m_context << u256(0); // do not send gas (there still is the stipend)
+			// Provide the gas stipend manually at first because we may send zero ether.
+			// Will be zeroed if we send more than zero ether.
+			m_context << u256(eth::GasCosts::callStipend);
 			arguments.front()->accept(*this);
 			utils().convertType(
 				*arguments.front()->annotation().type,
 				*function.parameterTypes().front(), true
 			);
+			// gas <- gas * !value
+			m_context << Instruction::SWAP1 << Instruction::DUP2;
+			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
 			appendExternalFunctionCall(
 				FunctionType(
 					TypePointers{},
