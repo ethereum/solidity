@@ -22,6 +22,7 @@ Breaking Changes:
  * Modifiers: return does not skip part in modifier after ``_``
  * Placeholder statement `_` in modifier now requires explicit `;`.
  * ``ecrecover`` now returns zero if the input is malformed (it previously returned garbage)
+ * The ``constant`` keyword cannot be used for constructors or the fallback function.
  * Removed ``--interface`` (Solidity interface) output option
  * JSON AST: General cleanup, renamed many nodes to match their C++ names.
  * Json Output: srcmap-runtime renamed to srcmapRuntime
