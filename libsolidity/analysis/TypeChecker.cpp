@@ -423,9 +423,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			typeError(_function.location(), "Library functions cannot be payable.");
 		if (!_function.isConstructor() && !_function.name().empty() && !_function.isPartOfExternalInterface())
 			typeError(_function.location(), "Internal functions cannot be payable.");
+		if (_function.isDeclaredConst())
+			typeError(_function.location(), "Functions cannot be constant and payable at the same time.");
 	}
-	if (_function.isPayable() && _function.isDeclaredConst())
-		typeError(_function.location(), "Functions cannot be constant and payable at the same time.");
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
 		if (!type(*var)->canLiveOutsideStorage())

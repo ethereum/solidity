@@ -3865,11 +3865,31 @@ BOOST_AUTO_TEST_CASE(payable_in_library)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(payable_external)
+{
+	char const* text = R"(
+		contract test {
+			function f() payable external {}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(payable_internal)
 {
 	char const* text = R"(
 		contract test {
 			function f() payable internal {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(payable_private)
+{
+	char const* text = R"(
+		contract test {
+			function f() payable private {}
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
