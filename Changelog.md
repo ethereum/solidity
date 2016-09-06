@@ -16,38 +16,38 @@ Breaking Changes:
    modifier. Contracts now throw if no payable fallback
    function is defined and no function matches the signature.
  * Failing contract creation through "new" throws.
- * Division / modulus by zero throws
+ * Division / modulus by zero throws.
  * Function call throws if target contract does not have code
  * Modifiers are required to contain ``_`` (use ``if (false) _`` as a workaround if needed).
- * Modifiers: return does not skip part in modifier after ``_``
+ * Modifiers: return does not skip part in modifier after ``_``.
  * Placeholder statement `_` in modifier now requires explicit `;`.
- * ``ecrecover`` now returns zero if the input is malformed (it previously returned garbage)
+ * ``ecrecover`` now returns zero if the input is malformed (it previously returned garbage).
  * The ``constant`` keyword cannot be used for constructors or the fallback function.
  * Removed ``--interface`` (Solidity interface) output option
  * JSON AST: General cleanup, renamed many nodes to match their C++ names.
- * Json Output: srcmap-runtime renamed to srcmapRuntime
+ * JSON output: ``srcmap-runtime`` renamed to ``srcmapRuntime``.
  * Moved (and reworked) standard library contracts from inside the compiler to github.com/ethereum/solidity/std
    (``import "std";`` or ``import owned;`` do not work anymore).
- * Confusing and undocumented keyword "after" was removed.
- * New reserved words: abstract, hex, interface, payable, pure, static, view
+ * Confusing and undocumented keyword ``after`` was removed.
+ * New reserved words: ``abstract``, ``hex``, ``interface``, ``payable``, ``pure``, ``static``, ``view``.
 
 Features:
 
  * Hexadecimal string literals: ``hex"ab1248fe"``
  * Internal: Inline assembly usable by the code generator.
  * Commandline interface: Using ``-`` as filename allows reading from stdin.
- * Interface Json: Fallback function is now part of the ABI.
- * Interface: Version string now semver compatible.
+ * Interface JSON: Fallback function is now part of the ABI.
+ * Interface: Version string now *semver* compatible.
  * Code generator: Do not provide "new account gas" if we know the called account exists.
 
 Bugfixes:
 
- * JSON AST: nodes were added at wrong parent
- * Why3 translator: crash fix for exponentiation
+ * JSON AST: Nodes were added at wrong parent
+ * Why3 translator: Crash fix for exponentiation
  * Commandline Interface: linking libraries with underscores in their name.
  * Type Checker: Fallback function cannot return data anymore.
- * Code Generator: Fix crash when sha3() was used on unsupported types.
- * Code Generator: Manually set gas stipend for .send(0).
+ * Code Generator: Fix crash when ``sha3()`` was used on unsupported types.
+ * Code Generator: Manually set gas stipend for ``.send(0)``.
 
 Lots of changes to the documentation mainly by voluntary external contributors.
 
