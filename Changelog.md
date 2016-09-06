@@ -34,6 +34,7 @@ Features:
  * Commandline interface: Using ``-`` as filename allows reading from stdin.
  * Interface Json: Fallback function is now part of the ABI.
  * Interface: Version string now semver compatible.
+ * Code generator: Do not provide "new account gas" if we know the called account exists.
 
 Bugfixes:
 
