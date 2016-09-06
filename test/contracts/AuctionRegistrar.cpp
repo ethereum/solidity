@@ -115,11 +115,6 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		// TODO: Populate with hall-of-fame.
 	}
 
-	function() {
-		// prevent people from just sending funds to the registrar
-		throw;
-	}
-
 	function onAuctionEnd(string _name) internal {
 		var auction = m_auctions[_name];
 		var record = m_toRecord[_name];
@@ -136,7 +131,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		}
 	}
 
-	function reserve(string _name) external {
+	function reserve(string _name) external payable {
 		if (bytes(_name).length == 0)
 			throw;
 		bool needAuction = requiresAuction(_name);

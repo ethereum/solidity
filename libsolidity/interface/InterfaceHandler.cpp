@@ -52,6 +52,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
+		method["payable"] = it.second->isPayable();
 		method["inputs"] = populateParameters(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypeNames(_contractDef.isLibrary())
@@ -81,6 +82,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		Json::Value method;
 		method["type"] = "fallback";
 		method["constant"] = externalFunctionType->isConstant();
+		method["payable"] = externalFunctionType->isPayable();
 		abi.append(method);
 	}
 	for (auto const& it: _contractDef.interfaceEvents())

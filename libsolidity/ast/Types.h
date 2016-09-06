@@ -640,9 +640,8 @@ public:
 	bool isSuper() const { return m_super; }
 	ContractDefinition const& contractDefinition() const { return m_contract; }
 
-	/// Returns the function type of the constructor. Note that the location part of the function type
-	/// is not used, as this type cannot be the type of a variable or expression.
-	FunctionTypePointer const& constructorType() const;
+	/// Returns the function type of the constructor modified to return an object of the contract's type.
+	FunctionTypePointer const& newExpressionType() const;
 
 	/// @returns the identifier of the function with the given name or Invalid256 if such a name does
 	/// not exist.
@@ -820,21 +819,32 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
+	/// Function type constructor to be used for a plain type (not derived from a declaration).
 	FunctionType(
 		strings const& _parameterTypes,
 		strings const& _returnParameterTypes,
 		Location _location = Location::Internal,
-		bool _arbitraryParameters = false
+		bool _arbitraryParameters = false,
+		bool _constant = false,
+		bool _payable = false
 	): FunctionType(
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
 		strings(),
 		strings(),
 		_location,
-		_arbitraryParameters
+		_arbitraryParameters,
+		nullptr,
+		_constant,
+		_payable
 	)
 	{
 	}
+
+	/// @returns the type of the "new Contract" function, i.e. basically the constructor.
+	static FunctionTypePointer newExpressionType(ContractDefinition const& _contract);
+
+	/// Detailed constructor, use with care.
 	FunctionType(
 		TypePointers const& _parameterTypes,
 		TypePointers const& _returnParameterTypes,
@@ -843,6 +853,8 @@ public:
 		Location _location = Location::Internal,
 		bool _arbitraryParameters = false,
 		Declaration const* _declaration = nullptr,
+		bool _isConstant = false,
+		bool _isPayable = false,
 		bool _gasSet = false,
 		bool _valueSet = false,
 		bool _bound = false
@@ -856,6 +868,8 @@ public:
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
 		m_bound(_bound),
+		m_isConstant(_isConstant),
+		m_isPayable(_isPayable),
 		m_declaration(_declaration)
 	{}
 
@@ -905,6 +919,7 @@ public:
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
 	bool isConstant() const { return m_isConstant; }
+	bool isPayable() const { return m_isPayable; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> documentation() const;
@@ -942,6 +957,7 @@ private:
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
 	bool m_isConstant = false;
+	bool m_isPayable = false;
 	Declaration const* m_declaration = nullptr;
 };
 

@@ -68,6 +68,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -107,6 +108,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -124,6 +126,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "g",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -153,6 +156,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -188,6 +192,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "c",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -205,6 +210,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -235,6 +241,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "foo",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -256,6 +263,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "boo",
 		"constant": true,
+		"payable" : false,
 		"type": "function",
 		"inputs": [{
 			"name": "a",
@@ -284,6 +292,7 @@ BOOST_AUTO_TEST_CASE(events)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -361,6 +370,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 	{
 		"name": "baseFunction",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs":
 		[{
@@ -376,6 +386,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 	{
 		"name": "derivedFunction",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs":
 		[{
@@ -429,6 +440,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -469,6 +481,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 	{
 		"name": "f",
 		"constant": false,
+		"payable" : false,
 		"type": "function",
 		"inputs": [
 		{
@@ -536,6 +549,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 	[
 		{
 			"constant" : false,
+			"payable" : false,
 			"inputs" : [],
 			"name" : "ret",
 			"outputs" : [
@@ -573,6 +587,7 @@ BOOST_AUTO_TEST_CASE(strings_and_arrays)
 	[
 		{
 			"constant" : false,
+			"payable" : false,
 			"name": "f",
 			"inputs": [
 				{ "name": "a", "type": "string" },
@@ -600,6 +615,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	[
 		{
 			"constant" : false,
+			"payable" : false,
 			"name": "f",
 			"inputs": [
 				{ "name": "b", "type": "test.StructType storage" },
@@ -629,6 +645,59 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 	[
 		{
 			"constant" : false,
+			"payable": false,
+			"type" : "fallback"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(payable_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() {}
+			function g() payable {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"payable": false,
+			"inputs": [],
+			"name": "f",
+			"outputs": [],
+			"type" : "function"
+		},
+		{
+			"constant" : false,
+			"payable": true,
+			"inputs": [],
+			"name": "g",
+			"outputs": [],
+			"type" : "function"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(payable_fallback_unction)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function () payable {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"payable": true,
 			"type" : "fallback"
 		}
 	]

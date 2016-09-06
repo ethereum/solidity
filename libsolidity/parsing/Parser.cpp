@@ -305,6 +305,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	options.allowLocationSpecifier = true;
 	ASTPointer<ParameterList> parameters(parseParameterList(options));
 	bool isDeclaredConst = false;
+	bool isPayable = false;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	vector<ASTPointer<ModifierInvocation>> modifiers;
 	while (true)
@@ -313,6 +314,11 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		if (token == Token::Const)
 		{
 			isDeclaredConst = true;
+			m_scanner->next();
+		}
+		else if (m_scanner->currentToken() == Token::Payable)
+		{
+			isPayable = true;
 			m_scanner->next();
 		}
 		else if (token == Token::Identifier)
@@ -354,6 +360,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		isDeclaredConst,
 		modifiers,
 		returnParameters,
+		isPayable,
 		block
 	);
 }
