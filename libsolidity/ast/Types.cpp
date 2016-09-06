@@ -2130,7 +2130,8 @@ vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocatio
 
 TypePointer FunctionType::selfType() const
 {
-	solAssert(bound(), "");
+	solAssert(bound(), "Function is not bound.");
+	solAssert(m_parameterTypes.size() > 0, "Function has no self type.");
 	return m_parameterTypes.at(0);
 }
 
