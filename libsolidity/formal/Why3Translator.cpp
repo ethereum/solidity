@@ -798,5 +798,14 @@ module UInt256
 		type t = uint256,
 		constant max = max_uint256
 end
+
+module Address
+	use import mach.int.Unsigned
+	type address
+	constant max_address: int = 0xffffffffffffffffffffffffffffffffffffffff (* 160 bit = 40 f's *)
+	clone export mach.int.Unsigned with
+		type t = address,
+		constant max = max_address
+end
    )", 0});
 }
