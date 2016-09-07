@@ -354,7 +354,7 @@ We now want to describe the inline assembly language in detail.
 
 .. warning::
     Inline assembly is a way to access the Ethereum Virtual Machine
-    at a low level. This discards and allows you to bypass several safety
+    at a low level. This discards several important safety
     features of Solidity.
 
 Example
