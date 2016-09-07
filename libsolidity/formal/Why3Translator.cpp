@@ -501,7 +501,7 @@ bool Why3Translator::visit(UnaryOperation const& _unaryOperation)
 	catch (NoFormalType &err)
 	{
 		string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
-		error(_unaryOperation, "Type \"" + (typeNamePtr ? *typeNamePtr : "") + "\" supported in unary operation.");
+		error(_unaryOperation, "Type \"" + (typeNamePtr ? *typeNamePtr : "") + "\" not supported in unary operation.");
 	}
 
 	switch (_unaryOperation.getOperator())
