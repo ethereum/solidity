@@ -108,7 +108,7 @@ private:
 	/// @returns a string representing an expression that is a copy of this.storage
 	std::string copyOfStorage() const;
 
-	/// Visits the givin statement and indents it unless it is a block
+	/// Visits the given statement and indents it unless it is a block
 	/// (which does its own indentation).
 	void visitIndentedUnlessBlock(Statement const& _statement);
 
