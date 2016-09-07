@@ -718,7 +718,9 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			value = m_value.numerator() * pow(bigint(2), exponent);
 			break;
 		}
-		case Token::SHR:
+		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
+		//       determines the resulting type and the type of shift (SAR or SHR).
+		case Token::SAR:
 		{
 			using boost::multiprecision::pow;
 			if (fractional)
