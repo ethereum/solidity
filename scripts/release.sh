@@ -29,6 +29,8 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 ZIP_SUFFIX=$1
 ZIP_TEMP_DIR=$(pwd)/build/zip/
 
@@ -84,9 +86,18 @@ fi
 # being for kernel-level dylibs.
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    python $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
+    python $REPO_ROOT/scripts/fix_absolute_paths_in_macos_zip.py $ZIP_TEMP_DIR
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.
 
 zip -j $REPO_ROOT/solidity-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+
+
+# For macOS we also publish binaries to Homebrew (https://brew.sh)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    $REPO_ROOT/scripts/homebrew/homebrew.sh --version 0.4.0 --number 492
+fi
+
+# TODO - And for Ubuntu we need to add PPA automation as well.
+# chriseth is running that manually at the moment.
