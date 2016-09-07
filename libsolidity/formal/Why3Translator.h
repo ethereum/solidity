@@ -36,7 +36,7 @@ class SourceUnit;
 /**
  * Simple translator from Solidity to Why3.
  *
- * @todo detect side effects in sub-expressions and limit them to one per statement.
+ * @todo detect side effects in sub-expressions and limit them to one per statement. #1043
  * @todo `x = y = z`
  * @todo implicit and explicit type conversion
  */
