@@ -60,9 +60,10 @@ private:
 	/// Appends imports and constants use throughout the formal code.
 	void appendPreface();
 
-	/// @returns a string representation of the corresponding formal type or the empty string
-	/// if the type is not supported.
+	/// @returns a string representation of the corresponding formal type or throws NoFormalType exception.
 	std::string toFormalType(Type const& _type) const;
+	using errinfo_noFormalTypeFrom = boost::error_info<struct tag_noFormalTypeFrom, std::string /* name of the type that cannot be translated */ >;
+	struct NoFormalType: virtual Exception {};
 
 	void indent() { newLine(); m_lines.back().indentation++; }
 	void unindent();

@@ -80,9 +80,9 @@ string Why3Translator::toFormalType(Type const& _type) const
 	{
 		if (!type->isByteArray() && type->isDynamicallySized() && type->dataStoredIn(DataLocation::Memory))
 		{
+			// Not catching NoFormalType exception.  Let the caller deal with it.
 			string base = toFormalType(*type->baseType());
-			if (!base.empty())
-				return "array " + base;
+			return "array " + base;
 		}
 	}
 	else if (auto mappingType = dynamic_cast<MappingType const*>(&_type))
@@ -92,13 +92,15 @@ string Why3Translator::toFormalType(Type const& _type) const
 		{
 			//@TODO Use the information from the key type and specify the length of the array as an invariant.
 			// Also the constructor need to specify the length of the array.
-			string valueType = toFormalType(*mappingType->valueType());
-			if (!valueType.empty())
-				return "array " + valueType;
+			solAssert(mappingType->valueType(), "A mappingType misses a valueType.");
+			// Not catching NoFormalType exception.  Let the caller deal with it.
+			string valueTypeFormal = toFormalType(*mappingType->valueType());
+			return "array " + valueTypeFormal;
 		}
 	}
 
-	return "";
+	BOOST_THROW_EXCEPTION(NoFormalType()
+		<< errinfo_noFormalTypeFrom(_type.toString(true)));
 }
 
 void Why3Translator::addLine(string const& _line)
@@ -156,9 +158,17 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 		m_currentContract.stateVariables = _contract.stateVariables();
 		for (VariableDeclaration const* variable: m_currentContract.stateVariables)
 		{
-			string varType = toFormalType(*variable->annotation().type);
-			if (varType.empty())
-				fatalError(*variable, "Type not supported for state variable.");
+			string varType;
+			try
+			{
+				varType = toFormalType(*variable->annotation().type);
+			}
+			catch (NoFormalType &err)
+			{
+				string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+				string typeName = typeNamePtr ? " \"" + *typeNamePtr + "\"" : "";
+				fatalError(*variable, "Type" + typeName + " not supported for state variable.");
+			}
 			addLine("mutable _" + variable->name() + ": " + varType);
 		}
 		unindent();
@@ -232,9 +242,16 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	add(" (this: account)");
 	for (auto const& param: _function.parameters())
 	{
-		string paramType = toFormalType(*param->annotation().type);
-		if (paramType.empty())
-			error(*param, "Parameter type not supported.");
+		string paramType;
+		try
+		{
+			paramType = toFormalType(*param->annotation().type);
+		}
+		catch (NoFormalType &err)
+		{
+			string const* typeName = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+			error(*param, "Parameter type \"" + (typeName ? *typeName : "") + "\" not supported.");
+		}
 		if (param->name().empty())
 			error(*param, "Anonymous function parameters not supported.");
 		add(" (arg_" + param->name() + ": " + paramType + ")");
@@ -246,9 +263,16 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	string retString = "(";
 	for (auto const& retParam: _function.returnParameters())
 	{
-		string paramType = toFormalType(*retParam->annotation().type);
-		if (paramType.empty())
-			error(*retParam, "Parameter type not supported.");
+		string paramType;
+		try
+		{
+			paramType = toFormalType(*retParam->annotation().type);
+		}
+		catch (NoFormalType &err)
+		{
+			string const* typeName = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+			error(*retParam, "Parameter type " + (typeName ? *typeName : "") + " not supported.");
+		}
 		if (retString.size() != 1)
 			retString += ", ";
 		retString += paramType;
@@ -278,14 +302,32 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	{
 		if (variable->name().empty())
 			error(*variable, "Unnamed return variables not yet supported.");
-		string varType = toFormalType(*variable->annotation().type);
+		string varType;
+		try
+		{
+			varType = toFormalType(*variable->annotation().type);
+		}
+		catch (NoFormalType &err)
+		{
+			string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+			error(*variable, "Type " + (typeNamePtr ? *typeNamePtr : "") + "in return parameter not yet supported.");
+		}
 		addLine("let _" + variable->name() + ": ref " + varType + " = ref (of_int 0) in");
 	}
 	for (VariableDeclaration const* variable: _function.localVariables())
 	{
 		if (variable->name().empty())
 			error(*variable, "Unnamed variables not yet supported.");
-		string varType = toFormalType(*variable->annotation().type);
+		string varType;
+		try
+		{
+			varType = toFormalType(*variable->annotation().type);
+		}
+		catch (NoFormalType &err)
+		{
+			string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+			error(*variable, "Type " + (typeNamePtr ? *typeNamePtr : "") + "in variable declaration not yet supported.");
+		}
 		addLine("let _" + variable->name() + ": ref " + varType + " = ref (of_int 0) in");
 	}
 	addLine("try");
@@ -448,8 +490,15 @@ bool Why3Translator::visit(TupleExpression const& _node)
 
 bool Why3Translator::visit(UnaryOperation const& _unaryOperation)
 {
-	if (toFormalType(*_unaryOperation.annotation().type).empty())
-		error(_unaryOperation, "Type not supported in unary operation.");
+	try
+	{
+		toFormalType(*_unaryOperation.annotation().type);
+	}
+	catch (NoFormalType &err)
+	{
+		string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
+		error(_unaryOperation, "Type not " + (typeNamePtr ? *typeNamePtr : "") + " supported in unary operation.");
+	}
 
 	switch (_unaryOperation.getOperator())
 	{
