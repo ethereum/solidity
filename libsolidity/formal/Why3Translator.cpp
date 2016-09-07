@@ -77,12 +77,26 @@ string Why3Translator::toFormalType(Type const& _type) const
 			return "uint256";
 	}
 	else if (auto type = dynamic_cast<ArrayType const*>(&_type))
+	{
 		if (!type->isByteArray() && type->isDynamicallySized() && type->dataStoredIn(DataLocation::Memory))
 		{
 			string base = toFormalType(*type->baseType());
 			if (!base.empty())
 				return "array " + base;
 		}
+	}
+	else if (auto mappingType = dynamic_cast<MappingType const*>(&_type))
+	{
+		solAssert(mappingType->keyType(), "A mappingType misses a keyType.");
+		if (dynamic_cast<IntegerType const*>(&*mappingType->keyType()))
+		{
+			//@TODO Use the information from the key type and specify the length of the array as an invariant.
+			// Also the constructor need to specify the length of the array.
+			string valueType = toFormalType(*mappingType->valueType());
+			if (!valueType.empty())
+				return "array " + valueType;
+		}
+	}
 
 	return "";
 }
