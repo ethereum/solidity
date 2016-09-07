@@ -559,7 +559,7 @@ shown in the following example:
             campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
         }
 
-        function contribute(uint campaignID) {
+        function contribute(uint campaignID) payable {
             Campaign c = campaigns[campaignID];
             // Creates a new temporary memory struct, initialised with the given values
             // and copies it over to storage.
@@ -572,9 +572,10 @@ shown in the following example:
             Campaign c = campaigns[campaignID];
             if (c.amount < c.fundingGoal)
                 return false;
-            if (!c.beneficiary.send(c.amount))
-                throw;
+            uint amount = c.amount;
             c.amount = 0;
+            if (!c.beneficiary.send(amount))
+                throw;
             return true;
         }
     }
@@ -635,6 +636,8 @@ delete
 It is important to note that ``delete a`` really behaves like an assignment to ``a``, i.e. it stores a new object in ``a``.
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract DeleteExample {
         uint data;

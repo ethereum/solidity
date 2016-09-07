@@ -51,7 +51,7 @@ complete contract):
 
 ::
 
-    pragma solidity ^0.4.0;
+  pragma solidity ^0.4.0;
 
   // THIS CONTRACT CONTAINS A BUG - DO NOT USE
   contract Fund {
@@ -75,7 +75,7 @@ outlined further below:
 
 ::
 
-    pragma solidity ^0.4.0;
+  pragma solidity ^0.4.0;
 
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -106,6 +106,11 @@ and stall those. Please be explicit about such cases in the documentation of you
 
 Sending and Receiving Ether
 ===========================
+
+- Neither contracts nor "external accounts" are currently able to prevent that someone sends them Ether.
+  Contracts can react on and reject a regular transfer, but there are ways
+  to move Ether without creating a message call. One way is to simply "mine to"
+  the contract address and the second way is using ``selfdestruct(x)``. 
 
 - If a contract receives Ether (without a function being called), the fallback function is executed.
   If it does not have a fallback function, the Ether will be rejected (by throwing an exception).
@@ -155,6 +160,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
     pragma solidity ^0.4.0;
 
+    // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
 
@@ -186,7 +192,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
         }
     }
 
-If your wallet had checked msg.sender for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking tx.origin, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
+If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
 
 
 Minor Details

@@ -25,17 +25,21 @@ To report an issue, please use the
 reporting issues, please mention the following details:
 
 * Which version of Solidity you are using
+* What was the source code (if applicable)
 * Which platform are you running on
 * How to reproduce the issue
 * What was the result of the issue
 * What the expected behaviour is
 
+Reducing the source code that caused the issue to a bare minimum is always
+very helpful and sometimes even clarifies a misunderstanding.
+
 Workflow for Pull Requests
 ==========================
 
 In order to contribute, please fork off of the ``develop`` branch and make your
-changes there. Your commit messages should detail *why* you made your change, as
-opposed to *what* you did.
+changes there. Your commit messages should detail *why* you made your change
+in addition to *what* you did (unless it is a tiny change).
 
 If you need to pull in any changes from ``develop`` after making your fork (for
 example, to resolve potential merge conflicts), please avoid using ``git merge``

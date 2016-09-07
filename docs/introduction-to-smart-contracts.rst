@@ -30,6 +30,11 @@ Storage
         }
     }
 
+The first line simply tells that the source code is written for
+Solidity version 0.4.0 or anything newer that does not break functionality
+(up to, but not including, version 0.5.0). This is to ensure that the
+contract does not suddenly behave differently with a new compiler version.
+
 A contract in the sense of Solidity is a collection of code (its functions) and
 data (its *state*) that resides at a specific address on the Ethereum
 blockchain. The line ``uint storedData;`` declares a state variable called ``storedData`` of
