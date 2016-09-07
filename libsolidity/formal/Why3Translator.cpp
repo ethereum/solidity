@@ -683,7 +683,7 @@ bool Why3Translator::visit(Literal const& _literal)
 		else
 			add("(of_int " + toString(type->literalValue(&_literal)) + ")");
 		break;
-	}	
+	}
 	default:
 		error(_literal, "Not supported.");
 	}
