@@ -2217,6 +2217,8 @@ string FunctionType::identifier() const
 	}
 	if (isConstant())
 		id += "_constant";
+	if (isPure())
+		id += "_pure";
 	if (isPayable())
 		id += "_payable";
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
@@ -2238,6 +2240,7 @@ bool FunctionType::operator==(Type const& _other) const
 	if (
 		m_kind != other.m_kind ||
 		isConstant() != other.isConstant() ||
+		isPure() != other.isPure() ||
 		isPayable() != other.isPayable() ||
 		m_parameterTypes.size() != other.m_parameterTypes.size() ||
 		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
@@ -2302,6 +2305,8 @@ string FunctionType::toString(bool _short) const
 	name += ")";
 	if (isConstant())
 		name += " constant";
+	if (isPure())
+		name += " pure";
 	if (isPayable())
 		name += " payable";
 	if (m_kind == Kind::External)
@@ -2569,6 +2574,7 @@ u256 FunctionType::externalIdentifier() const
 bool FunctionType::isPure() const
 {
 	return
+		m_isPure ||
 		m_kind == Kind::SHA3 ||
 		m_kind == Kind::ECRecover ||
 		m_kind == Kind::SHA256 ||

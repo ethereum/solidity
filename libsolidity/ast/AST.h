@@ -609,6 +609,7 @@ public:
 	bool isConstructor() const { return m_isConstructor; }
 	bool isFallback() const { return name().empty(); }
 	bool isDeclaredConst() const { return m_stateMutability == StateMutability::View; }
+	bool isPure() const { return m_stateMutability == StateMutability::Pure; }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
@@ -914,6 +915,7 @@ public:
 	}
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isDeclaredConst() const { return m_stateMutability == StateMutability::View; }
+	bool isPure() const { return m_stateMutability == StateMutability::Pure; }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 
 private:

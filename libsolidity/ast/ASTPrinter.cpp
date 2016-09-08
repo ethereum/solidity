@@ -105,7 +105,8 @@ bool ASTPrinter::visit(FunctionDefinition const& _node)
 {
 	writeLine("FunctionDefinition \"" + _node.name() + "\"" +
 			  (_node.isPublic() ? " - public" : "") +
-			  (_node.isDeclaredConst() ? " - const" : ""));
+			  (_node.isView() ? " - view" : "") +
+			  (_node.isPure() ? " - pure" : ""));
 	printSourcePart(_node);
 	return goDeeper();
 }
