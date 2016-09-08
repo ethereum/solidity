@@ -36,6 +36,10 @@ bool Why3Translator::process(SourceUnit const& _source)
 		appendPreface();
 		_source.accept(*this);
 	}
+	catch (NoFormalType&)
+	{
+		solAssert(false, "There is a call to toFormalType() that does not catch NoFormalType exceptions.");
+	}
 	catch (FatalError& /*_e*/)
 	{
 		solAssert(m_errorOccured, "");
