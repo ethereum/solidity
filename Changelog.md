@@ -1,8 +1,15 @@
-### 0.4.0 (unreleased)
+### 0.4.0 (2016-09-08)
 
 This release deliberately breaks backwards compatibility mostly to
-enforce some safety features. The most important change is
-...
+enforce some safety features. The most important change is that you have
+to explicitly specify if functions can receive ether via the ``payable``
+modifier. Furthermore, more situations cause exceptions to be thrown.
+
+Minimal changes to be made for upgrade:
+ - Add ``payable`` to all functions that want to receive Ether
+   (including the constructor and the fallback function).
+ - Change ``_`` to ``_;`` in modifiers.
+ - Add version pragma to each file: ``pragma solidity ^0.4.0;``
 
 Breaking Changes:
 
