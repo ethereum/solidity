@@ -993,7 +993,6 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	bool isConstant() const { return m_stateMutability == StateMutability::View; }
 	/// @returns true if the the result of this function only depends on its arguments
 	/// and it does not modify the state.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
