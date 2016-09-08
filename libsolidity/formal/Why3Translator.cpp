@@ -185,12 +185,12 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	addLine("storage: state");
 	unindent();
 	addLine("}");
+	addSourceFromDocStrings(m_currentContract.contract->annotation());
 
 	addLine("val external_call (this: account): bool");
 	indent();
 	addLine("ensures { result = false -> this = (old this) }");
 	addLine("writes { this }");
-	addSourceFromDocStrings(m_currentContract.contract->annotation());
 	unindent();
 
 	if (!_contract.baseContracts().empty())
