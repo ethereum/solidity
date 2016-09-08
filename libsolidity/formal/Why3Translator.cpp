@@ -77,6 +77,8 @@ string Why3Translator::toFormalType(Type const& _type) const
 		return "bool";
 	else if (auto type = dynamic_cast<IntegerType const*>(&_type))
 	{
+		if (type->isAddress())
+			return "Address.address";
 		if (!type->isAddress() && !type->isSigned() && type->numBits() == 256)
 			return "uint256";
 	}
@@ -150,6 +152,7 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	addLine("use import int.ComputerDivision");
 	addLine("use import mach.int.Unsigned");
 	addLine("use import UInt256");
+	addLine("use Address"); // `import` would cause name clashes with Uint256.
 	addLine("exception Revert");
 	addLine("exception Return");
 
