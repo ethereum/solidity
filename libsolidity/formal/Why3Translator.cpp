@@ -294,8 +294,6 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 
 	if (_function.isDeclaredConst())
 		addLine("ensures { (old this) = this }");
-	else
-		addLine("writes { this }");
 
 	addLine("=");
 
@@ -700,11 +698,6 @@ bool Why3Translator::visit(IndexAccess const& _node)
 		error(_node, "Index access only supported for arrays or mappings.");
 		return true;
 	}
-	if (_node.annotation().lValueRequested)
-	{
-		error(_node, "Assignment to array or mapping elements not supported.");
-		return true;
-	}
 	add("(");
 	_node.baseExpression().accept(*this);
 	auto indexIntegerType = dynamic_cast<IntegerType const*>(_node.indexExpression()->annotation().type.get());
@@ -720,6 +713,10 @@ bool Why3Translator::visit(IndexAccess const& _node)
 	_node.indexExpression()->accept(*this);
 	add("]");
 	add(")");
+	if (_node.annotation().lValueRequested)
+	{
+		m_currentLValueIsRef = false; /* because <- should be used. */
+	}
 
 	return false;
 }
