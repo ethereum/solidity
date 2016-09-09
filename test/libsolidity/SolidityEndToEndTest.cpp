@@ -5961,7 +5961,7 @@ BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
 	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
 	BOOST_CHECK(runtimeCode.size() >= 8);
 	BOOST_CHECK_EQUAL(runtimeCode[0], int(Instruction::PUSH6)); // might change once we switch to 1.x.x
-	BOOST_CHECK_EQUAL(runtimeCode[1], 3); // might change once we switch away from x.3.x
+	BOOST_CHECK_EQUAL(runtimeCode[1], 4); // might change once we switch away from x.4.x
 	BOOST_CHECK_EQUAL(runtimeCode[7], int(Instruction::POP));
 }
 
