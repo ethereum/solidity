@@ -55,7 +55,7 @@ static char const* walletCode = R"DELIMITER(
 // some number (specified in constructor) of the set of owners (specified in the constructor, modifiable) before the
 // interior is executed.
 
-pragma solidity ^0.3.5;
+pragma solidity ^0.4.0;
 
 contract multiowned {
 
