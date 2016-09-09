@@ -690,20 +690,33 @@ bool Why3Translator::visit(MemberAccess const& _node)
 
 bool Why3Translator::visit(IndexAccess const& _node)
 {
-	auto baseType = dynamic_cast<ArrayType const*>(_node.baseExpression().annotation().type.get());
-	if (!baseType)
+	auto baseTypeRaw = _node.baseExpression().annotation().type.get();
+
+	auto arrayType = dynamic_cast<ArrayType const*>(baseTypeRaw);
+	auto mappingType = dynamic_cast<MappingType const*>(baseTypeRaw);
+
+	if (!(arrayType || mappingType))
 	{
-		error(_node, "Index access only supported for arrays.");
+		error(_node, "Index access only supported for arrays or mappings.");
 		return true;
 	}
 	if (_node.annotation().lValueRequested)
 	{
-		error(_node, "Assignment to array elements not supported.");
+		error(_node, "Assignment to array or mapping elements not supported.");
 		return true;
 	}
 	add("(");
 	_node.baseExpression().accept(*this);
-	add("[to_int ");
+	auto indexIntegerType = dynamic_cast<IntegerType const*>(_node.indexExpression()->annotation().type.get());
+	if (!indexIntegerType)
+	{
+		error(_node, "Index access only supported for indices of IntegerType");
+		return true;
+	}
+	if (indexIntegerType->isAddress())
+		add("[Address.to_int ");
+	else
+		add("[to_int ");
 	_node.indexExpression()->accept(*this);
 	add("]");
 	add(")");
