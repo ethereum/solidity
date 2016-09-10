@@ -39,6 +39,7 @@ namespace dev
 {
 namespace solidity
 {
+	using rational = boost::rational<dev::bigint>;
 	/// An Ethereum address: 20 bytes.
 	/// @NOTE This is not endian-specific; it's just a bunch of bytes.
 	using Address = h160;
@@ -186,7 +187,12 @@ public:
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
-
+	static u256 fixed(dev::bigint _numerator, dev::bigint _denominator, int _fixedBits)
+	{
+		rational _value = rational(dev::bigint(_numerator), dev::bigint(_denominator));
+		rational value = _value * boost::multiprecision::pow(bigint(2), _fixedBits);
+		return u256(value.numerator()/value.denominator());
+	}
 	class ContractInterface
 	{
 	public:
