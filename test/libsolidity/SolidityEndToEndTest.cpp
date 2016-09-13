@@ -7079,6 +7079,26 @@ BOOST_AUTO_TEST_CASE(divisiod_by_zero)
 	BOOST_CHECK(callContractFunction("mod(uint256,uint256)", 7, 0) == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(sdiv_minint_by_negone)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function minInt() returns (int) {
+				return -2**255;
+			}
+			function div(int a, int b) returns (int) {
+				return a / b;
+			}
+			funciton main() returns (int) {
+				return div(minInt(), -1);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	// throws
+	BOOST_CHECK(callContractFunction("main()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(string_allocation_bug)
 {
 	char const* sourceCode = R"(
