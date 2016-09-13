@@ -7089,7 +7089,7 @@ BOOST_AUTO_TEST_CASE(sdiv_minint_by_negone)
 			function div(int a, int b) returns (int) {
 				return a / b;
 			}
-			funciton test() returns (int) {
+			function test() returns (int) {
 				return div(minInt(), -1);
 			}
 		}
