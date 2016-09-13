@@ -7089,14 +7089,14 @@ BOOST_AUTO_TEST_CASE(sdiv_minint_by_negone)
 			function div(int a, int b) returns (int) {
 				return a / b;
 			}
-			funciton main() returns (int) {
+			funciton test() returns (int) {
 				return div(minInt(), -1);
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
 	// throws
-	BOOST_CHECK(callContractFunction("main()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(string_allocation_bug)
