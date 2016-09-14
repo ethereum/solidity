@@ -338,32 +338,38 @@ case $(uname -s) in
 # needed, but some tweaking/improvements can definitely happen
 #------------------------------------------------------------------------------
             CentOS)
-                # Make Sure we have the EPEL repos
-                sudo yum -y install epel-release
-                # Get g++ 4.8
-                sudo rpm --import http://ftp.scientificlinux.org/linux/scientific/5x/x86_64/RPM-GPG-KEYs/RPM-GPG-KEY-cern
-                wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
-                sudo yum -y install devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
+                read -p "This script will heavily modify your system in order to allow for compilation of Solidity. Are you sure? [Y/N]" -n 1 -r
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    # Make Sure we have the EPEL repos
+                    sudo yum -y install epel-release
+                    # Get g++ 4.8
+                    sudo rpm --import http://ftp.scientificlinux.org/linux/scientific/5x/x86_64/RPM-GPG-KEYs/RPM-GPG-KEY-cern
+                    wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
+                    sudo yum -y install devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
 
-                # Enable the devtoolset2 usage so global gcc/g++ become the 4.8 one.
-                # As per https://gist.github.com/stephenturner/e3bc5cfacc2dc67eca8b, what you should do afterwards is
-                # to add this line:
-                # source /opt/rh/devtoolset-2/enable
-                # to your bashrc so that this happens automatically at login
-                scl enable devtoolset-2 bash
+                    # Enable the devtoolset2 usage so global gcc/g++ become the 4.8 one.
+                    # As per https://gist.github.com/stephenturner/e3bc5cfacc2dc67eca8b, what you should do afterwards is
+                    # to add this line:
+                    # source /opt/rh/devtoolset-2/enable
+                    # to your bashrc so that this happens automatically at login
+                    scl enable devtoolset-2 bash
 
-                # Get cmake
-                sudo yum -y remove cmake
-                sudo yum -y install cmake3
-                sudo ln -s /usr/bin/cmake3 /usr/bin/cmake
+                    # Get cmake
+                    sudo yum -y remove cmake
+                    sudo yum -y install cmake3
+                    sudo ln -s /usr/bin/cmake3 /usr/bin/cmake
 
-                # Get latest boost thanks to this guy: http://vicendominguez.blogspot.de/2014/04/boost-c-library-rpm-packages-for-centos.html
-                sudo yum -y remove boost-devel
-                sudo wget http://repo.enetres.net/enetres.repo -O /etc/yum.repos.d/enetres.repo
-                sudo yum install boost-devel
+                    # Get latest boost thanks to this guy: http://vicendominguez.blogspot.de/2014/04/boost-c-library-rpm-packages-for-centos.html
+                    sudo yum -y remove boost-devel
+                    sudo wget http://repo.enetres.net/enetres.repo -O /etc/yum.repos.d/enetres.repo
+                    sudo yum install boost-devel
 
-                # And finally jsoncpp
-                sudo yum -y install jsoncpp-devel
+                    # And finally jsoncpp
+                    sudo yum -y install jsoncpp-devel
+                else
+                    echo "Aborted CentOS Solidity Dependency Installation";
+                    exit 1
+                fi
 
                 ;;
 
