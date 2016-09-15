@@ -52,7 +52,7 @@ if (NOT SOL_COMMIT_HASH)
 	message(FATAL_ERROR "Unable to determine commit hash. Either compile from within git repository or "
 		"supply a file called commit_hash.txt")
 endif()
-if (NOT SOL_COMMIT_HASH MATCHES [a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9])
+if (NOT SOL_COMMIT_HASH MATCHES [a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9])
     message(FATAL_ERROR "Malformed commit hash \"${SOL_COMMIT_HASH}\". It has to consist of exactly 8 hex digits.")
 endif()
 
