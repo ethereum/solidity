@@ -263,7 +263,9 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		CompilerContext::LocationSetter locationSetter(m_context, functionType->declaration());
 
 		m_context << callDataUnpackerEntryPoints.at(it.first);
-		if (!functionType->isPayable())
+		// We have to allow this for libraries, because value of the previous
+		// call is still visible in the delegatecall.
+		if (!functionType->isPayable() && !_contract.isLibrary())
 		{
 			// Throw if function is not payable but call contained ether.
 			m_context << Instruction::CALLVALUE;
