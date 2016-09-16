@@ -7191,7 +7191,7 @@ BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
 	// This tests that memory resize for return values is not paid during the call, which would
 	// make the gas calculation overly complex. We access the end of the output area before
 	// the call is made.
-	// Tests that this also survivecs the optimizer.
+	// Tests that this also survives the optimizer.
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (uint[200]) {}
