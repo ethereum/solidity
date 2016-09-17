@@ -4009,6 +4009,16 @@ BOOST_AUTO_TEST_CASE(external_constructor)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
+{
+	char const* text = R"(
+		contract test {
+			struct S { uint x; }
+			function test(uint k)  { S[k]; }
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -1,3 +1,11 @@
+### 0.4.2
+
+ * Type Checker: Fixed a crash about invalid array types.
+
+### 0.4.1 (2016-09-09)
+
+ * Build System: Fixes to allow library compilation.
+
 ### 0.4.0 (2016-09-08)
 
 This release deliberately breaks backwards compatibility mostly to
