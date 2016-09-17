@@ -55,7 +55,7 @@ git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
 # We only want one release per day and we do not want to push the same commit twice.
-if ls ./bin/soljson-"$VER-nightly.$DATE"-*.js || ls ./bin/soljson-*"commit.$COMMIT.js"
+if ls ./bin/soljson-"$VER-nightly.$DATE"*.js || ls ./bin/soljson-*"commit.$COMMIT.js"
 then
   echo "Not publishing, we already published this version today."
   exit 0
