@@ -186,7 +186,9 @@ deploy:
       script: test $TRAVIS_EMSCRIPTEN != On || scripts/release_emscripten.sh
       skip_cleanup: true
       on:
-          branch: develop
+          branch:
+            - develop
+            - release
 
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that
