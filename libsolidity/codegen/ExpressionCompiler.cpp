@@ -1476,6 +1476,18 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeFreeMemoryPointer();
 	}
 
+	// Touch the end of the output area so that we do not pay for memory resize during the call
+	// (which we would have to subtract from the gas left)
+	// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
+	// would remove that, so we use MSTORE here.
+	if (!_functionType.gasSet() && retSize > 0)
+	{
+		m_context << u256(0);
+		utils().fetchFreeMemoryPointer();
+		// This touches too much, but that way we save some rounding arithmetics
+		m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+	}
+
 	// Copy function identifier to memory.
 	utils().fetchFreeMemoryPointer();
 	if (!_functionType.isBareCall() || manualFunctionId)
@@ -1551,10 +1563,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
 		if (!isCallCode && !isDelegateCall && !existenceChecked)
 			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
-		m_context <<
-			gasNeededByCaller <<
-			Instruction::GAS <<
-			Instruction::SUB;
+		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
 	if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
