@@ -1,3 +1,16 @@
+### 0.4.2 (2016-09-17)
+
+Bugfixes:
+
+ * Code Generator: Fix library functions being called from payable functions.
+ * Type Checker: Fixed a crash about invalid array types.
+ * Code Generator: Fixed a call gas bug that became visible after
+   version 0.4.0 for calls where the output is larger than the input.
+
+### 0.4.1 (2016-09-09)
+
+ * Build System: Fixes to allow library compilation.
+
 ### 0.4.0 (2016-09-08)
 
 This release deliberately breaks backwards compatibility mostly to

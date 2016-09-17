@@ -7144,6 +7144,23 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27 + 27);
 }
 
+BOOST_AUTO_TEST_CASE(payable_function_calls_library)
+{
+	char const* sourceCode = R"(
+		library L {
+			function f() returns (uint) { return 7; }
+		}
+		contract C {
+			function f() payable returns (uint) {
+				return L.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "L");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(non_payable_throw)
 {
 	char const* sourceCode = R"(
@@ -7186,6 +7203,33 @@ BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
 }
 
+BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
+{
+	// This tests that memory resize for return values is not paid during the call, which would
+	// make the gas calculation overly complex. We access the end of the output area before
+	// the call is made.
+	// Tests that this also survives the optimizer.
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint[200]) {}
+		}
+		contract D {
+			function f(C c) returns (uint) { c.f(); return 7; }
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	u160 cAddr = m_contractAddress;
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f(address)", cAddr) == encodeArgs(u256(7)));
+
+	m_optimize = true;
+
+	compileAndRun(sourceCode, 0, "C");
+	u160 cAddrOpt = m_contractAddress;
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f(address)", cAddrOpt) == encodeArgs(u256(7)));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

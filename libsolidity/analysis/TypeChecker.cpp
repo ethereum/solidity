@@ -1438,7 +1438,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 					length->literalValue(nullptr)
 				));
 			else
-				typeError(index->location(), "Integer constant expected.");
+				fatalTypeError(index->location(), "Integer constant expected.");
 		}
 		break;
 	}
