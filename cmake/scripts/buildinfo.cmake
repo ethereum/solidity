@@ -34,7 +34,7 @@ if (EXISTS ${ETH_SOURCE_DIR}/commit_hash.txt)
 	string(STRIP ${SOL_COMMIT_HASH} SOL_COMMIT_HASH)
 else()
 	execute_process(
-		COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} rev-parse HEAD
+		COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} rev-parse --short=8 HEAD
 		OUTPUT_VARIABLE SOL_COMMIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 	)
 	execute_process(
@@ -48,13 +48,16 @@ if (SOL_COMMIT_HASH)
 	string(SUBSTRING ${SOL_COMMIT_HASH} 0 8 SOL_COMMIT_HASH)
 endif()
 
-if (SOL_COMMIT_HASH AND SOL_LOCAL_CHANGES)
-	set(SOL_COMMIT_HASH "${SOL_COMMIT_HASH}.mod")
-endif()
-
 if (NOT SOL_COMMIT_HASH)
 	message(FATAL_ERROR "Unable to determine commit hash. Either compile from within git repository or "
 		"supply a file called commit_hash.txt")
+endif()
+if (NOT SOL_COMMIT_HASH MATCHES [a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9])
+    message(FATAL_ERROR "Malformed commit hash \"${SOL_COMMIT_HASH}\". It has to consist of exactly 8 hex digits.")
+endif()
+
+if (SOL_COMMIT_HASH AND SOL_LOCAL_CHANGES)
+	set(SOL_COMMIT_HASH "${SOL_COMMIT_HASH}.mod")
 endif()
 
 set(SOL_VERSION_BUILDINFO "commit.${SOL_COMMIT_HASH}.${ETH_BUILD_PLATFORM}")

@@ -33,7 +33,7 @@ set -e
 VER=$(cat CMakeLists.txt | grep 'set(PROJECT_VERSION' | sed -e 's/.*set(PROJECT_VERSION "\(.*\)".*/\1/')
 test -n "$VER"
 VER="v$VER"
-COMMIT=$(git rev-parse --short HEAD)
+COMMIT=$(git rev-parse --short=8 HEAD)
 DATE=$(date --date="$(git log -1 --date=iso --format=%ad HEAD)" --utc +%Y.%-m.%-d)
 
 # remove leading zeros in components - they are not semver-compatible
