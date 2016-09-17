@@ -1,5 +1,6 @@
 ### 0.4.2
 
+ * Code Generator: Fix library functions being called from payable functions.
  * Type Checker: Fixed a crash about invalid array types.
 
 ### 0.4.1 (2016-09-09)

@@ -7144,6 +7144,23 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 27 + 27);
 }
 
+BOOST_AUTO_TEST_CASE(payable_function_calls_library)
+{
+	char const* sourceCode = R"(
+		library L {
+			function f() returns (uint) { return 7; }
+		}
+		contract C {
+			function f() payable returns (uint) {
+				return L.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "L");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(non_payable_throw)
 {
 	char const* sourceCode = R"(
