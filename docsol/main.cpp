@@ -36,6 +36,14 @@ using namespace dev::solidity;
 using namespace boost::filesystem;
 using namespace boost::program_options;
 
+const string description =
+  "This tool browse the directories from include path\n"
+  "(-I is multiple use, e.g docsol -I /p/a -I /p/b),\n"
+  "read all .sol and push it to libsolidity parser.\n"
+  "After that AST pass to Markdown doc generator.\n\n"
+  "Notice: If your project contracts placed in one folder,\n"
+  "e.g. contracts, pass to -I flags base directory if this.";
+
 void find_packages(
         vector<path> &files,
         vector<string> const& dirs,
@@ -93,7 +101,9 @@ int main(int argc, char** argv)
 
     if (vm.count("help") || !vm.count("include-path"))
     {
-        cout << options << endl;
+        cout << "USAGE: " << argv[0] << " -I BASE_DIR -C [CONTRACT_NAME]" << endl;
+        cout << endl << description << endl;
+        cout << endl << options << endl;
         return 1;
     }
 
