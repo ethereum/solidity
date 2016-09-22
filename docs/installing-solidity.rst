@@ -204,7 +204,7 @@ patch level changes follow. When changes are merged, the version should be bumpe
 to semver and the severity of the change. Finally, a release is always made with the version
 of the current nightly build, but without the ``prerelease`` specifier.
 
-Example:
+Example: <br>
 - 0) the 0.4.0 release is made
 - 1) nightly build has a version of 0.4.1 from now on
 - 2) non-breaking changes are introduced - no change in version
