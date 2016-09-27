@@ -53,6 +53,18 @@ private:
 		bool allowLocationSpecifier = false;
 	};
 
+	/// This struct is shared for parsing a function header and a function type.
+	struct FunctionHeaderParserResult
+	{
+		ASTPointer<ASTString> name;
+		ASTPointer<ParameterList> parameters;
+		ASTPointer<ParameterList> returnParameters;
+		Declaration::Visibility visibility = Declaration::Visibility::Default;
+		bool isDeclaredConst = false;
+		bool isPayable = false;
+		std::vector<ASTPointer<ModifierInvocation>> modifiers;
+	};
+
 	///@{
 	///@name Parsing functions for the AST nodes
 	ASTPointer<PragmaDirective> parsePragmaDirective();
@@ -60,6 +72,7 @@ private:
 	ASTPointer<ContractDefinition> parseContractDefinition(bool _isLibrary);
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
+	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
@@ -75,6 +88,7 @@ private:
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
+	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
 		VarDeclParserOptions const& _options,

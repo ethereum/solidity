@@ -1805,6 +1805,23 @@ FunctionType::FunctionType(EventDefinition const& _event):
 	swap(paramNames, m_parameterNames);
 }
 
+FunctionType::FunctionType(FunctionTypeName const& _typeName):
+	m_location(_typeName.visibility() == VariableDeclaration::Visibility::External ? Location::External : Location::Internal),
+	m_isConstant(_typeName.isDeclaredConst()),
+	m_isPayable(_typeName.isPayable())
+{
+	for (auto const& t: _typeName.parameterTypes())
+	{
+		solAssert(t->annotation().type, "Type not set for parameter.");
+		m_parameterTypes.push_back(t->annotation().type);
+	}
+	for (auto const& t: _typeName.returnParameterTypes())
+	{
+		solAssert(t->annotation().type, "Type not set for return parameter.");
+		m_returnParameterTypes.push_back(t->annotation().type);
+	}
+}
+
 FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _contract)
 {
 	FunctionDefinition const* constructor = _contract.constructor();
@@ -1885,17 +1902,47 @@ string FunctionType::toString(bool _short) const
 	string name = "function (";
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
-	name += ") returns (";
+	name += ") ";
+	if (m_isConstant)
+		name += "constant ";
+	if (m_isPayable)
+		name += "payable ";
+	if (m_location == Location::External)
+		name += "external ";
+	name += "returns (";
 	for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
 	return name + ")";
 }
 
+unsigned FunctionType::calldataEncodedSize(bool _padded) const
+{
+	unsigned size = storageBytes();
+	if (_padded)
+		size = ((size + 31) / 32) * 32;
+	return size;
+}
+
 u256 FunctionType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable function type requested."));
+	if (m_location == Location::External || m_location == Location::Internal)
+		return 1;
+	else
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError()
+				<< errinfo_comment("Storage size of non-storable function type requested."));
+}
+
+unsigned FunctionType::storageBytes() const
+{
+	if (m_location == Location::External)
+		return 20 + 4;
+	else if (m_location == Location::Internal)
+		return 8; // it should really not be possible to create larger programs
+	else
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError()
+				<< errinfo_comment("Storage size of non-storable function type requested."));
 }
 
 unsigned FunctionType::sizeOnStack() const
@@ -2016,6 +2063,16 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	default:
 		return MemberList::MemberMap();
 	}
+}
+
+TypePointer FunctionType::interfaceType(bool _inLibrary) const
+{
+	if (m_location != Location::External && m_location != Location::Internal)
+		return TypePointer();
+	if (_inLibrary)
+		return shared_from_this();
+	else
+		return make_shared<FixedBytesType>(storageBytes());
 }
 
 bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const

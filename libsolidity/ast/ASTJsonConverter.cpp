@@ -226,6 +226,15 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(FunctionTypeName const& _node)
+{
+	addJsonNode(_node, "FunctionTypeName", {
+		make_pair("payable", _node.isPayable()),
+		make_pair("constant", _node.isDeclaredConst())
+	});
+	return true;
+}
+
 bool ASTJsonConverter::visit(Mapping const& _node)
 {
 	addJsonNode(_node, "Mapping", {}, true);
@@ -505,6 +514,11 @@ void ASTJsonConverter::endVisit(ElementaryTypeName const&)
 
 void ASTJsonConverter::endVisit(UserDefinedTypeName const&)
 {
+}
+
+void ASTJsonConverter::endVisit(FunctionTypeName const&)
+{
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Mapping const&)

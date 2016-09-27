@@ -7606,6 +7606,24 @@ BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
 	BOOST_CHECK(callContractFunction("f(address)", cAddrOpt) == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(pass_function_types_internally)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint x) returns (uint) {
+				return eval(g, x);
+			}
+			function eval(function(uint) returns (uint) x, uint a) returns (uint) {
+				return x(a);
+			}
+			function g(uint x) returns (uint) { return x + 1; }
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", 7) == encodeArgs(u256(8)));
+}
+
 BOOST_AUTO_TEST_CASE(shift_constant_left)
 {
 	char const* sourceCode = R"(

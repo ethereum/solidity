@@ -83,6 +83,23 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 }
 
+void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
+{
+	switch (_typeName.visibility())
+	{
+	case VariableDeclaration::Visibility::Default:
+	case VariableDeclaration::Visibility::Internal:
+	case VariableDeclaration::Visibility::External:
+		break;
+	default:
+		typeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+	}
+
+	// Do we allow storage references for external functions?
+
+	_typeName.annotation().type = make_shared<FunctionType>(_typeName);
+}
+
 void ReferencesResolver::endVisit(Mapping const& _typeName)
 {
 	TypePointer keyType = _typeName.keyType().annotation().type;

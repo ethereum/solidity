@@ -4132,6 +4132,55 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_parameter)
+{
+	char const* text = R"(
+		contract C {
+			function f(function(uint) returns (uint) g) returns (function(uint) returns (uint)) {
+				return g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(private_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) private returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(public_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) public returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 {
 	char const* text = R"(

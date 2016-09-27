@@ -821,6 +821,8 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
+	/// Creates the type of a function type name.
+	explicit FunctionType(FunctionTypeName const& _typeName);
 	/// Function type constructor to be used for a plain type (not derived from a declaration).
 	FunctionType(
 		strings const& _parameterTypes,
@@ -891,11 +893,15 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
-	virtual bool canBeStored() const override { return false; }
+	virtual unsigned calldataEncodedSize(bool _padded) const override;
+	virtual bool canBeStored() const override { return m_location == Location::Internal || m_location == Location::External; }
 	virtual u256 storageSize() const override;
-	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned storageBytes() const override;
+	virtual bool isValueType() const override { return true; }
+	virtual bool canLiveOutsideStorage() const override { return m_location == Location::Internal || m_location == Location::External; }
 	virtual unsigned sizeOnStack() const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
