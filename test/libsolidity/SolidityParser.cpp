@@ -1241,6 +1241,57 @@ BOOST_AUTO_TEST_CASE(payable_accessor)
 	BOOST_CHECK(!successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(function_type_in_expression)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint x, uint y) returns (uint a) {}
+			function g() {
+				function (uint, uint) internal returns (uint) f1 = f;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_as_storage_variable)
+{
+	// TODO disambiguate from fallback function
+	char const* text = R"(
+		contract test {
+			function f(uint x, uint y) returns (uint a) {}
+			function (uint, uint) internal returns (uint) f1 = f;
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_in_struct)
+{
+	char const* text = R"(
+		contract test {
+			struct S {
+				function (uint x, uint y) internal returns (uint a) f;
+				function (uint, uint) external returns (uint) g;
+				uint d;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_as_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(function(uint) external returns (uint) g) internal returns (uint a) {
+				return g(1);
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

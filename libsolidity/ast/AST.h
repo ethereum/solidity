@@ -822,6 +822,41 @@ private:
 };
 
 /**
+ * A literal function type. Its source form is "function (paramType1, paramType2) internal / external returns (retType1, retType2)"
+ */
+class FunctionTypeName: public TypeName
+{
+public:
+	FunctionTypeName(
+		SourceLocation const& _location,
+		ASTPointer<ParameterList> const& _parameterTypes,
+		ASTPointer<ParameterList> const& _returnTypes,
+		Declaration::Visibility _visibility,
+		bool _isDeclaredConst,
+		bool _isPayable
+	):
+		TypeName(_location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
+		m_visibility(_visibility), m_isDeclaredConst(_isDeclaredConst), m_isPayable(_isPayable)
+	{}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
+	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
+
+	Declaration::Visibility visibility() const { return m_visibility; }
+	bool isDeclaredConst() const { return m_isDeclaredConst; }
+	bool isPayable() const { return m_isPayable; }
+
+private:
+	ASTPointer<ParameterList> m_parameterTypes;
+	ASTPointer<ParameterList> m_returnTypes;
+	Declaration::Visibility m_visibility;
+	bool m_isDeclaredConst;
+	bool m_isPayable;
+};
+
+/**
  * A mapping type. Its source form is "mapping('keyType' => 'valueType')"
  */
 class Mapping: public TypeName

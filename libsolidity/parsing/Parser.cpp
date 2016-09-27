@@ -288,6 +288,52 @@ Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 	return visibility;
 }
 
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
+{
+	FunctionHeaderParserResult result;
+	expectToken(Token::Function);
+	if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
+		result.name = make_shared<ASTString>(); // anonymous function
+	else
+		result.name = expectIdentifierToken();
+	VarDeclParserOptions options;
+	options.allowLocationSpecifier = true;
+	result.parameters = parseParameterList(options);
+	while (true)
+	{
+		Token::Value token = m_scanner->currentToken();
+		if (token == Token::Const)
+		{
+			result.isDeclaredConst = true;
+			m_scanner->next();
+		}
+		else if (m_scanner->currentToken() == Token::Payable)
+		{
+			result.isPayable = true;
+			m_scanner->next();
+		}
+		else if (_allowModifiers && token == Token::Identifier)
+			result.modifiers.push_back(parseModifierInvocation());
+		else if (Token::isVisibilitySpecifier(token))
+		{
+			if (result.visibility != Declaration::Visibility::Default)
+				fatalParserError(string("Multiple visibility specifiers."));
+			result.visibility = parseVisibilitySpecifier(token);
+		}
+		else
+			break;
+	}
+	if (m_scanner->currentToken() == Token::Returns)
+	{
+		bool const permitEmptyParameterList = false;
+		m_scanner->next();
+		result.returnParameters = parseParameterList(options, permitEmptyParameterList);
+	}
+	else
+		result.returnParameters = createEmptyParameterList();
+	return result;
+}
+
 ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* _contractName)
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -295,52 +341,8 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	expectToken(Token::Function);
-	ASTPointer<ASTString> name;
-	if (m_scanner->currentToken() == Token::LParen)
-		name = make_shared<ASTString>(); // anonymous function
-	else
-		name = expectIdentifierToken();
-	VarDeclParserOptions options;
-	options.allowLocationSpecifier = true;
-	ASTPointer<ParameterList> parameters(parseParameterList(options));
-	bool isDeclaredConst = false;
-	bool isPayable = false;
-	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	vector<ASTPointer<ModifierInvocation>> modifiers;
-	while (true)
-	{
-		Token::Value token = m_scanner->currentToken();
-		if (token == Token::Const)
-		{
-			isDeclaredConst = true;
-			m_scanner->next();
-		}
-		else if (m_scanner->currentToken() == Token::Payable)
-		{
-			isPayable = true;
-			m_scanner->next();
-		}
-		else if (token == Token::Identifier)
-			modifiers.push_back(parseModifierInvocation());
-		else if (Token::isVisibilitySpecifier(token))
-		{
-			if (visibility != Declaration::Visibility::Default)
-				fatalParserError(string("Multiple visibility specifiers."));
-			visibility = parseVisibilitySpecifier(token);
-		}
-		else
-			break;
-	}
-	ASTPointer<ParameterList> returnParameters;
-	if (m_scanner->currentToken() == Token::Returns)
-	{
-		bool const permitEmptyParameterList = false;
-		m_scanner->next();
-		returnParameters = parseParameterList(options, permitEmptyParameterList);
-	}
-	else
-		returnParameters = createEmptyParameterList();
+	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
+
 	ASTPointer<Block> block = ASTPointer<Block>();
 	nodeFactory.markEndPosition();
 	if (m_scanner->currentToken() != Token::Semicolon)
@@ -350,17 +352,17 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	}
 	else
 		m_scanner->next(); // just consume the ';'
-	bool const c_isConstructor = (_contractName && *name == *_contractName);
+	bool const c_isConstructor = (_contractName && *header.name == *_contractName);
 	return nodeFactory.createNode<FunctionDefinition>(
-		name,
-		visibility,
+		header.name,
+		header.visibility,
 		c_isConstructor,
 		docstring,
-		parameters,
-		isDeclaredConst,
-		modifiers,
-		returnParameters,
-		isPayable,
+		header.parameters,
+		header.isDeclaredConst,
+		header.modifiers,
+		header.returnParameters,
+		header.isPayable,
 		block
 	);
 }
@@ -629,6 +631,8 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 			fatalParserError(string("Expected explicit type name."));
 		m_scanner->next();
 	}
+	else if (token == Token::Function)
+		type = parseFunctionType();
 	else if (token == Token::Mapping)
 		type = parseMapping();
 	else if (token == Token::Identifier)
@@ -649,6 +653,19 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 			type = nodeFactory.createNode<ArrayTypeName>(type, length);
 		}
 	return type;
+}
+
+ASTPointer<FunctionTypeName> Parser::parseFunctionType()
+{
+	ASTNodeFactory nodeFactory(*this);
+	FunctionHeaderParserResult header = parseFunctionHeader(true, false);
+	return nodeFactory.createNode<FunctionTypeName>(
+		header.parameters,
+		header.returnParameters,
+		header.visibility,
+		header.isDeclaredConst,
+		header.isPayable
+	);
 }
 
 ASTPointer<Mapping> Parser::parseMapping()
@@ -1259,7 +1276,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	Token::Value token(m_scanner->currentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
-	if (token == Token::Mapping || token == Token::Var)
+	if (token == Token::Mapping || token == Token::Function || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;
 	if (mightBeTypeName)
 	{
