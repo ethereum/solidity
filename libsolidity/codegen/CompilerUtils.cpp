@@ -133,6 +133,17 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 			m_context << u256(str->value().size());
 		m_context << Instruction::ADD;
 	}
+	else if (
+		_type.category() == Type::Category::Function &&
+		dynamic_cast<FunctionType const&>(_type).location() == FunctionType::Location::External
+	)
+	{
+		solAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
+		m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160) << Instruction::MUL << Instruction::SWAP1;
+		m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::OR;
+		m_context << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(_padToWordBoundaries ? 32 : 24) << Instruction::ADD;
+	}
 	else
 	{
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
@@ -206,7 +217,8 @@ void CompilerUtils::encodeToMemory(
 			else if (
 				_givenTypes[i]->dataStoredIn(DataLocation::Storage) ||
 				_givenTypes[i]->dataStoredIn(DataLocation::CallData) ||
-				_givenTypes[i]->category() == Type::Category::StringLiteral
+				_givenTypes[i]->category() == Type::Category::StringLiteral ||
+				_givenTypes[i]->category() == Type::Category::Function
 			)
 				type = _givenTypes[i]; // delay conversion
 			else
@@ -657,6 +669,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 
 void CompilerUtils::pushZeroValue(Type const& _type)
 {
+	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
+	{
+		if (funType->location() == FunctionType::Location::Internal)
+		{
+			m_context << m_context.errorTag();
+			return;
+		}
+	}
 	auto const* referenceType = dynamic_cast<ReferenceType const*>(&_type);
 	if (!referenceType || referenceType->location() == DataLocation::Storage)
 	{
@@ -815,6 +835,18 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 			m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
 			if (leftAligned)
 				m_context << shiftFactor << Instruction::MUL;
+		}
+	}
+
+	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
+	{
+		if (funType->location() == FunctionType::Location::External)
+		{
+			// We have to split the right-aligned <function identifier><address> into two stack slots:
+			// address (right aligned), function identifier (right aligned)
+			m_context << Instruction::DUP1 << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
+			m_context << (u256(1) << 160) << Instruction::SWAP1 << Instruction::DIV;
+			m_context << u256(0xffffffffUL) << Instruction::AND;
 		}
 	}
 
