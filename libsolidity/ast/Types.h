@@ -901,6 +901,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return m_location == Location::Internal || m_location == Location::External; }
 	virtual unsigned sizeOnStack() const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	virtual TypePointer encodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an

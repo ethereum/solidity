@@ -7606,6 +7606,29 @@ BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
 	BOOST_CHECK(callContractFunction("f(address)", cAddrOpt) == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(calling_uninitialized_function)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function intern() returns (uint) {
+				function (uint) internal returns (uint) x;
+				x();
+				return 7;
+			}
+			function extern() returns (uint) {
+				function (uint) external returns (uint) x;
+				x();
+				return 7;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	// This should throw exceptions
+	BOOST_CHECK(callContractFunction("intern()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("extern()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(pass_function_types_internally)
 {
 	char const* sourceCode = R"(
@@ -7613,7 +7636,7 @@ BOOST_AUTO_TEST_CASE(pass_function_types_internally)
 			function f(uint x) returns (uint) {
 				return eval(g, x);
 			}
-			function eval(function(uint) returns (uint) x, uint a) returns (uint) {
+			function eval(function(uint) returns (uint) x, uint a) internal returns (uint) {
 				return x(a);
 			}
 			function g(uint x) returns (uint) { return x + 1; }
@@ -7623,6 +7646,30 @@ BOOST_AUTO_TEST_CASE(pass_function_types_internally)
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f(uint256)", 7) == encodeArgs(u256(8)));
 }
+
+BOOST_AUTO_TEST_CASE(pass_function_types_externally)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint x) returns (uint) {
+				return this.eval(this.g, x);
+			}
+			function f2(uint x) returns (uint) {
+				return eval(this.g, x);
+			}
+			function eval(function(uint) external returns (uint) x, uint a) returns (uint) {
+				return x(a);
+			}
+			function g(uint x) returns (uint) { return x + 1; }
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", 7) == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("f2(uint256)", 7) == encodeArgs(u256(8)));
+}
+
+// TODO: storage, arrays
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
 {

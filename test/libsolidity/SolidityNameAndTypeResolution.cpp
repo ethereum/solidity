@@ -4180,6 +4180,39 @@ BOOST_AUTO_TEST_CASE(public_function_type)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
+{
+	// It should not be possible to give internal functions
+	// as parameters to external functions.
+	char const* text = R"(
+		contract C {
+			function f(function(uint) returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal)
+{
+	char const* text = R"(
+		library L {
+			function f(function(uint) returns (uint) x) internal {
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external)
+{
+	char const* text = R"(
+		library L {
+			function f(function(uint) returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 {

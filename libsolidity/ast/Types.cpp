@@ -2065,6 +2065,16 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	}
 }
 
+TypePointer FunctionType::encodingType() const
+{
+	// Only external functions can be encoded, internal functions cannot leave code boundaries.
+	if (m_location == Location::External)
+		// This looks like bytes24, but bytes24 is stored differently on the stack.
+		return shared_from_this();
+	else
+		return TypePointer();
+}
+
 TypePointer FunctionType::interfaceType(bool _inLibrary) const
 {
 	if (m_location != Location::External && m_location != Location::Internal)
@@ -2072,7 +2082,7 @@ TypePointer FunctionType::interfaceType(bool _inLibrary) const
 	if (_inLibrary)
 		return shared_from_this();
 	else
-		return make_shared<FixedBytesType>(storageBytes());
+		return make_shared<IntegerType>(8 * storageBytes());
 }
 
 bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const
