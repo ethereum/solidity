@@ -86,5 +86,5 @@ node ./update
 cd bin
 git add .
 git add ../soljson.js
-git commit -m "Added compiler version $VER"
+git commit -m "Added compiler version $FULLVERSION"
 git push origin gh-pages
