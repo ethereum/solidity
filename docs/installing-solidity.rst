@@ -205,10 +205,11 @@ to semver and the severity of the change. Finally, a release is always made with
 of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
-- 0) the 0.4.0 release is made
-- 1) nightly build has a version of 0.4.1 from now on
-- 2) non-breaking changes are introduced - no change in version
-- 3) a breaking change is introduced - version is bumped to 0.5.0
-- 4) the 0.5.0 release is made
+
+0. the 0.4.0 release is made
+1. nightly build has a version of 0.4.1 from now on
+2. non-breaking changes are introduced - no change in version
+3. a breaking change is introduced - version is bumped to 0.5.0
+4. the 0.5.0 release is made
 
 This behaviour works well with the version pragma.
