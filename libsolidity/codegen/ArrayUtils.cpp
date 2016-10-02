@@ -97,6 +97,10 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack: target_ref source_ref source_length target_length target_data_pos
 	m_context << Instruction::SWAP1;
 	convertLengthToSize(_targetType);
+	// stack: target_ref source_ref source_length target_data_pos target_size
+	// if target_size is 1, then set to 0 before adding to target_data_pos
+	m_context << Instruction::DUP1 << u256(1) << Instruction::XOR;
+	m_context << Instruction::ISZERO << Instruction::SWAP1 << Instruction::SUB;
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	// stack: target_ref source_ref source_length target_data_pos target_data_end
 	m_context << Instruction::SWAP3;
