@@ -123,7 +123,7 @@ Sending and Receiving Ether
   ``addr.call.value(x)()``. This is essentially the same as ``addr.send(x)``,
   only that it forwards all remaining gas and opens up the ability for the
   recipient to perform more expensive actions. This might include calling back
-  into the sending contract or other state changes you might not have though of.
+  into the sending contract or other state changes you might not have thought of.
   So it allows for great flexibility for honest users but also for malicious actors.
 
 - If you want to send Ether using ``address.send``, there are certain details to be aware of:
