@@ -67,6 +67,7 @@ then
     fi
     FULLVERSION="$VER+commit.$COMMIT"
 elif [ "$TRAVIS_BRANCH" = develop ]
+then
     # We only want one release per day and we do not want to push the same commit twice.
     if ls ./bin/soljson-"$VER-nightly.$DATE"*.js || ls ./bin/soljson-*"commit.$COMMIT.js"
     then
@@ -75,8 +76,8 @@ elif [ "$TRAVIS_BRANCH" = develop ]
     fi
     FULLVERSION="$VER-nightly.$DATE+commit.$COMMIT"
 else
-      echo "Not publishing, wrong branch."
-      exit 0
+    echo "Not publishing, wrong branch."
+    exit 0
 fi
 
 
