@@ -186,7 +186,7 @@ the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary
 approximated.
 
 Any operator that can be applied to integers can also be applied to literal expressions as
-long as the operators are integers. If any of the two is fractional, bit operations are disallowed
+long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
