@@ -1260,7 +1260,7 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("name()") == encodeArgs("Celina"));
-	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(bytes(1, 0x7b))));
+	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::keccak256(bytes(1, 0x7b))));
 	BOOST_CHECK(callContractFunction("an_address()") == encodeArgs(toBigEndian(u160(0x1337))));
 	BOOST_CHECK(callContractFunction("super_secret_data()") == bytes());
 }
@@ -1342,7 +1342,7 @@ BOOST_AUTO_TEST_CASE(msg_sig)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("foo(uint256)") == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
+	BOOST_CHECK(callContractFunction("foo(uint256)") == encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
@@ -1358,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("foo(uint256)") == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
+	BOOST_CHECK(callContractFunction("foo(uint256)") == encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(now)
@@ -1686,7 +1686,7 @@ BOOST_AUTO_TEST_CASE(sha3)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> u256
 	{
-		return dev::sha3(toBigEndian(_x));
+		return dev::keccak256(toBigEndian(_x));
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -2582,7 +2582,7 @@ BOOST_AUTO_TEST_CASE(event)
 		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 		BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
 		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
-		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,bytes32,uint256)")));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256)")));
 		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender, h256::AlignRight));
 		BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
 	}
@@ -2604,7 +2604,7 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data.empty());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit()")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
 }
 
 BOOST_AUTO_TEST_CASE(event_anonymous)
@@ -2664,7 +2664,7 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs((u160)m_sender, id, value, true));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,bytes32,uint256,bool)")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256,bool)")));
 }
 
 BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
@@ -2681,9 +2681,9 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 4) + FixedHash<4>(dev::sha3("deposit()")).asBytes());
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 4) + FixedHash<4>(dev::keccak256("deposit()")).asBytes());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(uint256,bytes,uint256)")));
 }
 
 BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
@@ -2707,7 +2707,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 3, string("ABC")));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(uint256,bytes,uint256)")));
 }
 
 BOOST_AUTO_TEST_CASE(event_indexed_string)
@@ -2738,11 +2738,11 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 		dynx[i] = i;
 	BOOST_CHECK(m_logs[0].data == bytes());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::sha3(dynx));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[2], dev::sha3(
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(dynx));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[2], dev::keccak256(
 		encodeArgs(u256(4), u256(5), u256(6), u256(7))
 	));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("E(string,uint256[4])")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E(string,uint256[4])")));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
@@ -2784,7 +2784,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 	compileAndRun(sourceCode);
 
 	BOOST_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13) == encodeArgs(
-					dev::sha3(
+					dev::keccak256(
 						toBigEndian(u256(10)) +
 						toBigEndian(u256(12)) +
 						toBigEndian(u256(13)))));
@@ -2802,7 +2802,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_numeric_literals)
 	compileAndRun(sourceCode);
 
 	BOOST_CHECK(callContractFunction("foo(uint256,uint16)", 10, 12) == encodeArgs(
-					dev::sha3(
+					dev::keccak256(
 						toBigEndian(u256(10)) +
 						bytes{0x0, 0xc} +
 						bytes(1, 0x91))));
@@ -2823,10 +2823,10 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 		})";
 	compileAndRun(sourceCode);
 
-	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(dev::sha3("foo")));
+	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(dev::keccak256("foo")));
 
 	BOOST_CHECK(callContractFunction("bar(uint256,uint16)", 10, 12) == encodeArgs(
-					dev::sha3(
+					dev::keccak256(
 						toBigEndian(u256(10)) +
 						bytes{0x0, 0xc} +
 						bytes(1, 0x91) +
@@ -2868,7 +2868,7 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(
-		u256(dev::sha3(bytes{'b'} + dev::sha3("xyz").asBytes() + bytes{'a'}))
+		u256(dev::keccak256(bytes{'b'} + dev::keccak256("xyz").asBytes() + bytes{'a'}))
 	));
 }
 
@@ -3013,9 +3013,9 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 		}
 	)";
 	compileAndRun(sourceCode);
-	bytes calldata1 = FixedHash<4>(dev::sha3("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
+	bytes calldata1 = FixedHash<4>(dev::keccak256("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
 	sendMessage(calldata1, false);
-	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata1)));
+	BOOST_CHECK(m_output == encodeArgs(dev::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
 }
 
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
@@ -3389,8 +3389,8 @@ BOOST_AUTO_TEST_CASE(bytes_in_arguments)
 	)";
 	compileAndRun(sourceCode);
 
-	string innercalldata1 = asString(FixedHash<4>(dev::sha3("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
-	string innercalldata2 = asString(FixedHash<4>(dev::sha3("g(uint256)")).asBytes() + encodeArgs(3));
+	string innercalldata1 = asString(FixedHash<4>(dev::keccak256("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
+	string innercalldata2 = asString(FixedHash<4>(dev::keccak256("g(uint256)")).asBytes() + encodeArgs(3));
 	bytes calldata = encodeArgs(
 		12, 32 * 4, u256(32 * 4 + 32 + (innercalldata1.length() + 31) / 32 * 32), 13,
 		u256(innercalldata1.length()), innercalldata1,
@@ -4668,7 +4668,7 @@ BOOST_AUTO_TEST_CASE(reusing_memory)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("f(uint256)", 0x34) == encodeArgs(dev::sha3(dev::toBigEndian(u256(0x34)))));
+	BOOST_REQUIRE(callContractFunction("f(uint256)", 0x34) == encodeArgs(dev::keccak256(dev::toBigEndian(u256(0x34)))));
 }
 
 BOOST_AUTO_TEST_CASE(return_string)

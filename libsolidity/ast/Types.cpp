@@ -2033,7 +2033,7 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return FixedHash<4>::Arith(FixedHash<4>(dev::sha3(externalSignature())));
+	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)

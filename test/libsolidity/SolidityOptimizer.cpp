@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE(cse_empty_sha3)
 		Instruction::SHA3
 	};
 	checkCSE(input, {
-		u256(sha3(bytesConstRef()))
+		u256(dev::keccak256(bytesConstRef()))
 	});
 }
 
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(cse_partial_sha3)
 		u256(0xabcd) << (256 - 16),
 		u256(0),
 		Instruction::MSTORE,
-		u256(sha3(bytes{0xab, 0xcd}))
+		u256(dev::keccak256(bytes{0xab, 0xcd}))
 	});
 }
 

@@ -302,7 +302,7 @@ dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 	if (obj.bytecode.empty() || !obj.linkReferences.empty())
 		return dev::h256();
 	else
-		return dev::sha3(obj.bytecode);
+		return dev::keccak256(obj.bytecode);
 }
 
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
