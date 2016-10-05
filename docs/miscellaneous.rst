@@ -56,6 +56,22 @@ So for the following contract snippet::
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
 
+********************
+When Solidity Throws
+********************
+
+Solidity contract throws an exception for unhealthy operations such as
+
+- division by zero
+- modulo by zero
+- out-of-bounds access on a fixed bytes value
+- out-of-bounds access on an array
+- a positive value seen by a function without ``payable`` mofifier except when the function is a library function
+- execution of ``throw;``
+- a contract invocation with no matching interface function or a fallback function
+- an external call in an exceptional state, for instance, out of gas, invalid jump destination, and so on (however, low level ``call``, ``send``, ``delegatecall`` and ``callcode`` just return zero for such cases).
+
+
 *****************
 Esoteric Features
 *****************
