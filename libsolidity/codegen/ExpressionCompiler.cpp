@@ -1454,8 +1454,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		if (c_isSigned && _operator == Token::Div)
 		{
 			m_context << Instruction::DUP1 // x
-				<< u256(255) << u256(2) << Instruction::EXP // 2 ** 255
-				<< Instruction::EQ;
+				<< (u256(1) << 255) << Instruction::EQ;
 			// y, x, (x == 2 ** 255)
 			m_context << Instruction::DUP3 << Instruction::NOT //y
 				<< Instruction::ISZERO;
