@@ -156,12 +156,15 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	case Token::Identifier:
 	case Token::Return:
 	case Token::Byte:
+	case Token::Address:
 	{
 		string literal;
 		if (m_scanner->currentToken() == Token::Return)
 			literal = "return";
 		else if (m_scanner->currentToken() == Token::Byte)
 			literal = "byte";
+		else if (m_scanner->currentToken() == Token::Address)
+			literal = "address";
 		else
 			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.
