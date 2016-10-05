@@ -21,8 +21,10 @@
  * Full-stack compiler that converts a source code string to bytecode.
  */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <libsolidity/interface/CompilerStack.h>
+
+#include <libsolidity/interface/Version.h>
+#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -32,11 +34,14 @@
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
-#include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/InterfaceHandler.h>
 #include <libsolidity/formal/Why3Translator.h>
 
 #include <libdevcore/SHA3.h>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 
 using namespace std;
 using namespace dev;
@@ -99,6 +104,13 @@ bool CompilerStack::parse()
 	//reset
 	m_errors.clear();
 	m_parseSuccessful = false;
+
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+	{
+		auto err = make_shared<Error>(Error::Type::Warning);
+		*err << errinfo_comment("This is a pre-release compiler version, please do not use it in production.");
+		m_errors.push_back(err);
+	}
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
