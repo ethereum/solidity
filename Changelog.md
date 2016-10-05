@@ -1,5 +1,9 @@
 ### 0.4.3 (unreleased)
 
+Features:
+ * Inline assembly: support both `sucide` and `selfdestruct` opcodes
+   (note: `suicide` is deprecated)
+
 ### 0.4.2 (2016-09-17)
 
 Bugfixes:
