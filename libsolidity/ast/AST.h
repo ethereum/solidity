@@ -623,7 +623,7 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
-	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(scope()); }
+	bool isLocalVariable() const { return !!dynamic_cast<CallableDeclaration const*>(scope()); }
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
