@@ -471,7 +471,7 @@ Allowed options)",
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
-		cmdLineParser.options(allOptions).positional(filesPositions).allow_unregistered();
+		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
 	catch (po::error const& _exception)
