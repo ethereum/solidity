@@ -106,7 +106,7 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 
     address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
     nameReg.call("register", "MyName");
-    nameReg.call(bytes4(sha3("fun(uint256)")), a);
+    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
 
 ``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
@@ -610,7 +610,7 @@ can actually be any type, including mappings.
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
 all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
-in a mapping, only its ``sha3`` hash used to look up the value.
+in a mapping, only its ``keccak256`` hash used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or value being "set".
 

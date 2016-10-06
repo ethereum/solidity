@@ -136,7 +136,7 @@ This means that cyclic creation dependencies are impossible.
         ) returns (bool ok) {
             // Check some arbitrary condition.
             address tokenAddress = msg.sender;
-            return (sha3(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
+            return (keccak256(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
         }
     }
 
@@ -544,7 +544,7 @@ to be searched for: It is possible to filter for specific values of
 indexed arguments in the user interface.
 
 If arrays (including ``string`` and ``bytes``) are used as indexed arguments, the
-sha3-hash of it is stored as topic instead.
+Keccak-256 hash of it is stored as topic instead.
 
 The hash of the signature of the event is one of the topics except if you
 declared the event with ``anonymous`` specifier. This means that it is
@@ -622,7 +622,7 @@ as topics. The event call above can be performed in the same way as
     );
 
 where the long hexadecimal number is equal to
-``sha3("Deposit(address,hash256,uint256)")``, the signature of the event.
+``keccak256("Deposit(address,hash256,uint256)")``, the signature of the event.
 
 Additional Resources for Understanding Events
 ==============================================
