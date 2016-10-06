@@ -207,14 +207,11 @@ defsha3(512)
 
 }
 
-unsigned g_keccak256Counter = 0;
-
 bool keccak256(bytesConstRef _input, bytesRef o_output)
 {
 	// FIXME: What with unaligned memory?
 	if (o_output.size() != 32)
 		return false;
-	++g_keccak256Counter;
 	keccak::sha3_256(o_output.data(), 32, _input.data(), _input.size());
 //	keccak::keccak(ret.data(), 32, (uint64_t const*)_input.data(), _input.size());
 	return true;

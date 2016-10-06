@@ -54,6 +54,4 @@ inline std::string keccak256(std::string const& _input, bool _isNibbles) { retur
 /// Calculate SHA3-256 MAC
 inline void keccak256mac(bytesConstRef _secret, bytesConstRef _plain, bytesRef _output) { keccak256(_secret.toBytes() + _plain.toBytes()).ref().populate(_output); }
 
-extern unsigned g_keccak256Counter;
-
 }
