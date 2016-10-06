@@ -60,13 +60,13 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 When Solidity Throws
 ********************
 
-Solidity contract throws an exception for unhealthy operations such as
+A Solidity contract throws an exception for unhealthy operations such as
 
 - division by zero
 - modulo by zero
-- out-of-bounds access on a fixed bytes value
-- out-of-bounds access on an array
-- a positive value seen by a function without ``payable`` mofifier except when the function is a library function
+- out-of-bounds index access on an array
+- out-of-bounds index access on a fixed length bytes
+- a Ether transfer seen by a function without ``payable`` mofifier except when the function is a library function
 - execution of ``throw;``
 - a contract invocation with no matching interface function or a fallback function
 - an external call in an exceptional state, for instance, out of gas, invalid jump destination, and so on (however, low level ``call``, ``send``, ``delegatecall`` and ``callcode`` just return zero for such cases).
