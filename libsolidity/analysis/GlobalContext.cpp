@@ -48,6 +48,8 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{make_shared<
 						make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Location::MulMod)),
 					make_shared<MagicVariableDeclaration>("sha3",
 							make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Location::SHA3, true)),
+					make_shared<MagicVariableDeclaration>("keccak256",
+							make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Location::SHA3, true)),
 					make_shared<MagicVariableDeclaration>("log0",
 							make_shared<FunctionType>(strings{"bytes32"}, strings{}, FunctionType::Location::Log0)),
 					make_shared<MagicVariableDeclaration>("log1",

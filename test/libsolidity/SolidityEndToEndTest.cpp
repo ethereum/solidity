@@ -2872,6 +2872,24 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function foo(uint a, uint b, uint c) returns (bytes32 d)
+			{
+				d = keccak256(a, b, c);
+			}
+		})";
+	compileAndRun(sourceCode);
+
+	BOOST_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13) == encodeArgs(
+					dev::sha3(
+						toBigEndian(u256(10)) +
+						toBigEndian(u256(12)) +
+						toBigEndian(u256(13)))));
+}
+
 BOOST_AUTO_TEST_CASE(generic_call)
 {
 	char const* sourceCode = R"**(
