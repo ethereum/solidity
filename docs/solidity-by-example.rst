@@ -415,7 +415,7 @@ high or low invalid bids.
             revealEnd = biddingEnd + _revealTime;
         }
 
-        /// Place a blinded bid with `_blindedBid` = sha3(value,
+        /// Place a blinded bid with `_blindedBid` = keccak256(value,
         /// fake, secret).
         /// The sent ether is only refunded if the bid is correctly
         /// revealed in the revealing phase. The bid is valid if the
@@ -459,7 +459,7 @@ high or low invalid bids.
                 var bid = bids[msg.sender][i];
                 var (value, fake, secret) =
                         (_values[i], _fake[i], _secret[i]);
-                if (bid.blindedBid != sha3(value, fake, secret)) {
+                if (bid.blindedBid != keccak256(value, fake, secret)) {
                     // Bid was not actually revealed.
                     // Do not refund deposit.
                     continue;
