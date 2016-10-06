@@ -133,6 +133,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	// Allowed instructions, lowercase names.
 	static map<string, dev::solidity::Instruction> s_instructions;
 	if (s_instructions.empty())
+	{
 		for (auto const& instruction: solidity::c_instructions)
 		{
 			if (
@@ -141,11 +142,13 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			)
 				continue;
 			string name = instruction.first;
-			if (instruction.second == solidity::Instruction::SUICIDE)
-				name = "selfdestruct";
 			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 			s_instructions[name] = instruction.second;
 		}
+
+		// add alias for selfdestruct
+		s_instructions["selfdestruct"] = solidity::Instruction::SUICIDE;
+	}
 
 	Statement ret;
 	switch (m_scanner->currentToken())
