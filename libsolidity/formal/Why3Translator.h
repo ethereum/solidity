@@ -94,6 +94,7 @@ private:
 	virtual bool visit(IndexAccess const& _node) override;
 	virtual bool visit(Identifier const& _node) override;
 	virtual bool visit(Literal const& _node) override;
+	virtual bool visit(PragmaDirective const& _node) override;
 
 	virtual bool visitNode(ASTNode const& _node) override
 	{

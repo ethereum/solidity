@@ -757,6 +757,11 @@ bool Why3Translator::visit(Literal const& _literal)
 	return false;
 }
 
+bool Why3Translator::visit(PragmaDirective const&)
+{
+	return false;
+}
+
 bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
 {
 	return contains(m_currentContract.stateVariables, _var);
