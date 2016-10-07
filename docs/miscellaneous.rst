@@ -339,3 +339,11 @@ Modifiers
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
+
+Reserved Keywords
+=================
+
+These keywords are reserved in Solidity. They might become part of the syntax in the future:
+
+``abstract``, ``after``, ``case``, ``catch``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``,
+``of``, ``pure``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``, ``view``.
