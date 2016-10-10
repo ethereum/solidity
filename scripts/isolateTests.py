@@ -3,7 +3,8 @@
 # This script reads C++ source files and writes all
 # multi-line strings into individual files.
 # This can be used to extract the Solidity test cases
-# into files for e.g. fuzz testing.
+# into files for e.g. fuzz testing as
+# scripts/isolateTests.py tests/libsolidity/SolidityEndToEndTest.cpp
 
 import sys
 lines = sys.stdin.read().split('\n')
