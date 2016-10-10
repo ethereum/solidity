@@ -1256,7 +1256,26 @@ BOOST_AUTO_TEST_CASE(function_type_in_expression)
 
 BOOST_AUTO_TEST_CASE(function_type_as_storage_variable)
 {
-	// TODO disambiguate from fallback function
+	char const* text = R"(
+		contract test {
+			function (uint, uint) internal returns (uint) f1;
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_modifiers)
+{
+	char const* text = R"(
+		contract test {
+			function (uint, uint) modifier1() returns (uint) f1;
+		}
+	)";
+	BOOST_CHECK(!successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_assignment)
+{
 	char const* text = R"(
 		contract test {
 			function f(uint x, uint y) returns (uint a) {}

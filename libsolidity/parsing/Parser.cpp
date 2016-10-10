@@ -217,7 +217,9 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
-			subNodes.push_back(parseFunctionDefinition(name.get()));
+			// This can be a function or a state variable of function type (especially
+			// complicated to distinguish fallback function from function type state variable)
+			subNodes.push_back(parseFunctionDefinitionOrFunctionTypeStateVariable(name.get()));
 		else if (currentTokenValue == Token::Struct)
 			subNodes.push_back(parseStructDefinition());
 		else if (currentTokenValue == Token::Enum)
@@ -334,7 +336,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	return result;
 }
 
-ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* _contractName)
+ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(ASTString const* _contractName)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
@@ -343,28 +345,55 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 
 	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
 
-	ASTPointer<Block> block = ASTPointer<Block>();
-	nodeFactory.markEndPosition();
-	if (m_scanner->currentToken() != Token::Semicolon)
+	if (
+		!header.modifiers.empty() ||
+		!header.name->empty() ||
+		m_scanner->currentToken() == Token::Semicolon ||
+		m_scanner->currentToken() == Token::LBrace
+	)
 	{
-		block = parseBlock();
-		nodeFactory.setEndPositionFromNode(block);
+		// this has to be a function
+		ASTPointer<Block> block = ASTPointer<Block>();
+		nodeFactory.markEndPosition();
+		if (m_scanner->currentToken() != Token::Semicolon)
+		{
+			block = parseBlock();
+			nodeFactory.setEndPositionFromNode(block);
+		}
+		else
+			m_scanner->next(); // just consume the ';'
+		bool const c_isConstructor = (_contractName && *header.name == *_contractName);
+		return nodeFactory.createNode<FunctionDefinition>(
+			header.name,
+			header.visibility,
+			c_isConstructor,
+			docstring,
+			header.parameters,
+			header.isDeclaredConst,
+			header.modifiers,
+			header.returnParameters,
+			header.isPayable,
+			block
+		);
 	}
 	else
-		m_scanner->next(); // just consume the ';'
-	bool const c_isConstructor = (_contractName && *header.name == *_contractName);
-	return nodeFactory.createNode<FunctionDefinition>(
-		header.name,
-		header.visibility,
-		c_isConstructor,
-		docstring,
-		header.parameters,
-		header.isDeclaredConst,
-		header.modifiers,
-		header.returnParameters,
-		header.isPayable,
-		block
-	);
+	{
+		// this has to be a state variable
+		ASTPointer<TypeName> type = nodeFactory.createNode<FunctionTypeName>(
+			header.parameters,
+			header.returnParameters,
+			header.visibility,
+			header.isDeclaredConst,
+			header.isPayable
+		);
+		type = parseTypeNameSuffix(type, nodeFactory);
+		VarDeclParserOptions options;
+		options.isStateVariable = true;
+		options.allowInitialValue = true;
+		auto node = parseVariableDeclaration(options, type);
+		expectToken(Token::Semicolon);
+		return node;
+	}
 }
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
@@ -611,6 +640,21 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 }
 
+ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory)
+{
+	while (m_scanner->currentToken() == Token::LBrack)
+	{
+		m_scanner->next();
+		ASTPointer<Expression> length;
+		if (m_scanner->currentToken() != Token::RBrack)
+			length = parseExpression();
+		nodeFactory.markEndPosition();
+		expectToken(Token::RBrack);
+		type = nodeFactory.createNode<ArrayTypeName>(type, length);
+	}
+	return type;
+}
+
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -642,16 +686,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 
 	if (type)
 		// Parse "[...]" postfixes for arrays.
-		while (m_scanner->currentToken() == Token::LBrack)
-		{
-			m_scanner->next();
-			ASTPointer<Expression> length;
-			if (m_scanner->currentToken() != Token::RBrack)
-				length = parseExpression();
-			nodeFactory.markEndPosition();
-			expectToken(Token::RBrack);
-			type = nodeFactory.createNode<ArrayTypeName>(type, length);
-		}
+		type = parseTypeNameSuffix(type, nodeFactory);
 	return type;
 }
 
