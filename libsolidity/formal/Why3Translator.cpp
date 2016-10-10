@@ -757,8 +757,17 @@ bool Why3Translator::visit(Literal const& _literal)
 	return false;
 }
 
-bool Why3Translator::visit(PragmaDirective const&)
+bool Why3Translator::visit(PragmaDirective const& _pragma)
 {
+	if (_pragma.tokens().empty())
+		error(_pragma, "Not supported");
+	else if (_pragma.literals().empty())
+		error(_pragma, "Not supported");
+	else if (_pragma.literals()[0] != "solidity")
+		error(_pragma, "Not supported");
+	else if (_pragma.tokens()[0] != Token::Identifier)
+		error(_pragma, "A literal 'solidity' is not an identifier.  Strange");
+
 	return false;
 }
 
