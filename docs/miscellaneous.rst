@@ -65,11 +65,12 @@ A Solidity contract throws an exception for unhealthy operations such as
 - division by zero
 - modulo by zero
 - out-of-bounds index access on an array
-- out-of-bounds index access on a fixed length bytes
-- a Ether transfer seen by a function without ``payable`` mofifier except when the function is a library function
+- out-of-bounds index access on a fixed-length bytes
+- an Ether transfer through an interface function that is not specified as ``payable``
 - execution of ``throw;``
-- a contract invocation with no matching interface function or a fallback function
-- an external call in an exceptional state, for instance, out of gas, invalid jump destination, and so on (however, low level ``call``, ``send``, ``delegatecall`` and ``callcode`` just return zero for such cases).
+- a contract invocation with no matching interface or fallback function
+- an external call in an exceptional state, for instance, out of gas, invalid jump destination, and so on (however, low level ``call``, ``send``, ``delegatecall`` and ``callcode`` just return zero for such cases)
+- an external call on a Solidity contract that throws (again, if the external call is made through a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` the caller does not throw an exception but just sees a zero return value by default)
 
 
 *****************
