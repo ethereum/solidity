@@ -154,7 +154,7 @@ static FunctionTypePointer retrieveFunctionBySignature(
 	std::string const& _signature
 )
 {
-	FixedHash<4> hash(dev::sha3(_signature));
+	FixedHash<4> hash(dev::keccak256(_signature));
 	return _contract->interfaceFunctions()[hash];
 }
 

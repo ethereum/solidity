@@ -296,7 +296,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 
 AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
 {
-	h256 h(dev::sha3(_identifier));
+	h256 h(dev::keccak256(_identifier));
 	m_libraries[h] = _identifier;
 	return AssemblyItem(PushLibraryAddress, h);
 }
