@@ -592,10 +592,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			unsigned pushes = 0;
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
 				pushes = 1;
-			else if (dynamic_cast<MagicVariableDeclaration const*>(declaration))
-			{
-				return false;
-			}
 			else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
 				if (var->isConstant())
@@ -613,6 +609,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					return false;
 				pushes = 1;
 			}
+			else
+				return false;
 			for (unsigned i = 0; i < pushes; ++i)
 				_assembly.append(u256(0)); // just to verify the stack height
 		}
