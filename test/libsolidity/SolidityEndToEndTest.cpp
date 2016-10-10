@@ -7669,7 +7669,33 @@ BOOST_AUTO_TEST_CASE(pass_function_types_externally)
 	BOOST_CHECK(callContractFunction("f2(uint256)", 7) == encodeArgs(u256(8)));
 }
 
-// TODO: storage, arrays
+BOOST_AUTO_TEST_CASE(store_function)
+{
+	char const* sourceCode = R"(
+		contract Other {
+			function addTwo(uint x) returns (uint) { return x + 2; }
+		}
+		contract C {
+			function (unction (uint) external returns (uint)) returns (uint) ev = eval;
+			function (uint) external returns (uint) x;
+			function store(function(uint) external returns (uint) y) {
+				x = y;
+			}
+			function eval(function(uint) external returns (uint) y) returns (uint) {
+				return y(7);
+			}
+			function t() returns (uint) {
+				this.store((new Other()).addTwo);
+				return ev(x);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(9)));
+}
+
+// TODO: public function state variables, arrays
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
 {
