@@ -2884,10 +2884,12 @@ BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
 	compileAndRun(sourceCode);
 
 	BOOST_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13) == encodeArgs(
-					dev::sha3(
-						toBigEndian(u256(10)) +
-						toBigEndian(u256(12)) +
-						toBigEndian(u256(13)))));
+		dev::keccak256(
+			toBigEndian(u256(10)) +
+			toBigEndian(u256(12)) +
+			toBigEndian(u256(13))
+		)
+	));
 }
 
 BOOST_AUTO_TEST_CASE(generic_call)
