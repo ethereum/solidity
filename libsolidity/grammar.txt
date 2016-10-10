@@ -73,7 +73,7 @@ Expression =
   | Expression? (',' Expression)
   | PrimaryExpression
 
-PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
+PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
 
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
@@ -84,8 +84,8 @@ BooleanLiteral = 'true' | 'false'
 NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
+HexLiteral = 'hex' ('"' [0-9a-fA-F]{8} '"' | '\'' [0-9a-fA-F]{8} '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
-
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
 
 ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
