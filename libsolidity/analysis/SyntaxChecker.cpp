@@ -67,7 +67,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 {
 	solAssert(!_pragma.tokens().empty(), "");
 	solAssert(_pragma.tokens().size() == _pragma.literals().size(), "");
-	if (_pragma.tokens()[0] != Token::Identifier && _pragma.literals()[0] != "solidity")
+	if (_pragma.tokens()[0] != Token::Identifier || _pragma.literals()[0] != "solidity")
 		syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
 	else
 	{
