@@ -64,7 +64,12 @@ Solidity reserves three 256-bit slots:
 -  0 - 64: scratch space for hashing methods
 - 64 - 96: currently allocated memory size (aka. free memory pointer)
 
-Solidity always places new objects at the free memory pointer and memory is never freed.
+Scratch space can be used between statements (ie. within inline assembly).
+
+Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
+
+.. warning::
+  There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
 
 .. index: memory layout
 
