@@ -56,6 +56,20 @@ So for the following contract snippet::
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
 
+****************
+Layout in Memory
+****************
+
+EVM memory is linear. Reading is limited to 256-bit width, but both 8-bit and 256-bit writes are allowed. Memory size is 0 at the beginning of execution. Memory is expanded by accessing (either reading or writing) a previously untouched memory offset. At the time of expansion, the cost in gas must be paid.
+
+Solidity reserves three 256-bit slots:
+-  0 - 64: scratch space for hashing methods
+- 64 - 96: currently allocated memory size (aka. free memory pointer)
+
+Solidity always places new objects at the free memory pointer and memory is never freed.
+
+.. index: memory layout
+
 *****************
 Esoteric Features
 *****************
