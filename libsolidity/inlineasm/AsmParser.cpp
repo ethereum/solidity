@@ -95,7 +95,9 @@ assembly::Statement Parser::parseStatement()
 			fatalParserError("Label name / variable name must precede \":\".");
 		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(statement);
 		m_scanner->next();
-		if (m_scanner->currentToken() == Token::Assign)
+		// identifier:=: should be parsed as identifier: =: (i.e. a label),
+		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
+		if (m_scanner->currentToken() == Token::Assign && m_scanner->peekNextToken() != Token::Colon)
 		{
 			// functional assignment
 			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
