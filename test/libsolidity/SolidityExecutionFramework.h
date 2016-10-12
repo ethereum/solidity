@@ -156,6 +156,14 @@ public:
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	/// @returns the fixed-point encoding of a rational number with a given
+	/// number of fractional bits.
+	static bytes encode(std::pair<rational, int> const& _valueAndPrecision)
+	{
+		rational const& value = _valueAndPrecision.first;
+		int fractionalBits = _valueAndPrecision.second;
+		return encode(u256((value.numerator() << fractionalBits) / value.denominator()));
+	}
 	static bytes encode(h256 const& _value) { return _value.asBytes(); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
@@ -186,12 +194,6 @@ public:
 	static bytes encodeDyn(Arg const& _arg)
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
-	}
-	static u256 fixed(dev::bigint _numerator, dev::bigint _denominator, int _fixedBits)
-	{
-		rational _value = rational(dev::bigint(_numerator), dev::bigint(_denominator));
-		rational value = _value * boost::multiprecision::pow(bigint(2), _fixedBits);
-		return u256(value.numerator()/value.denominator());
 	}
 	class ContractInterface
 	{
