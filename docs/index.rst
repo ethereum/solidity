@@ -16,7 +16,7 @@ Useful links
 
 * `Ethereum <https://ethereum.org>`_
 
-* `Changelog <https://github.com/ethereum/wiki/wiki/Solidity-Changelog>`_
+* `Changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
 
 * `Story Backlog <https://www.pivotaltracker.com/n/projects/1189488>`_
 
