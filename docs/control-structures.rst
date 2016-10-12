@@ -389,6 +389,7 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 #. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. If you divide the smallest 256-bit signed integer by -1.
 #. If you shift by a negative amount.
 #. If you convert a value too big or negative into an enum type.
 #. If you perform an external function call targeting a contract that contains no code.
