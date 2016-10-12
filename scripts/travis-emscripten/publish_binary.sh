@@ -85,5 +85,5 @@ fi
 cp ../soljson.js ./bin/"soljson-$FULLVERSION.js"
 node ./update
 git add ./bin/"soljson-$FULLVERSION.js"
-git commit -m "Added compiler version $FULLVERSION" -a
+git commit -a -m "Added compiler version $FULLVERSION"
 git push origin gh-pages
