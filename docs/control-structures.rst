@@ -324,8 +324,8 @@ In the following example, we show how ``throw`` can be used to easily revert an 
 
 Currently, there are six situations, where exceptions happen automatically in Solidity:
 
-1. If you access an array on or beyond its length (i.e. ``x[i]`` where ``i >= x.length``) or below zero.
-2. If you access a fixed-length bytes on or beyond its length, or below zero.
+1. If you access an array on a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+2. If you access a fixed-length bytes on a too large or negative index.
 3. If a function called via a message call does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.
 4. If a non-existent function on a library is called or Ether is sent to a library.
 5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
