@@ -4148,7 +4148,19 @@ BOOST_AUTO_TEST_CASE(function_type_parameter)
 {
 	char const* text = R"(
 		contract C {
-			function f(function(uint) returns (uint) g) returns (function(uint) returns (uint)) {
+			function f(function(uint) external returns (uint) g) returns (function(uint) external returns (uint)) {
+				return g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_returned)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (function(uint) external returns (uint) g) {
 				return g;
 			}
 		}
@@ -4186,7 +4198,19 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
 	// as parameters to external functions.
 	char const* text = R"(
 		contract C {
-			function f(function(uint) returns (uint) x) {
+			function f(function(uint) internal returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_returned_from_public_function)
+{
+	// It should not be possible to return internal functions from external functions.
+	char const* text = R"(
+		contract C {
+			function f() returns (function(uint) internal returns (uint) x) {
 			}
 		}
 	)";
@@ -4197,7 +4221,7 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal
 {
 	char const* text = R"(
 		library L {
-			function f(function(uint) returns (uint) x) internal {
+			function f(function(uint) internal returns (uint) x) internal {
 			}
 		}
 	)";
@@ -4207,7 +4231,7 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external
 {
 	char const* text = R"(
 		library L {
-			function f(function(uint) returns (uint) x) {
+			function f(function(uint) internal returns (uint) x) {
 			}
 		}
 	)";
