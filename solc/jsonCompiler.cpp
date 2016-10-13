@@ -129,6 +129,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 {
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
+	Json::Value warnings(Json::arrayValue);
 	CompilerStack::ReadFileCallback readCallback;
 	if (_readCallback)
 	{
@@ -169,11 +170,18 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		for (auto const& error: compiler.errors())
 		{
 			auto err = dynamic_pointer_cast<Error const>(error);
-			errors.append(formatError(
-				*error,
-				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
-			));
+			if (err->type() == Error::Type::Warning)
+				warnings.append(formatError(
+					*error,
+					"Warning",
+					scannerFromSourceName
+				));
+			else
+				errors.append(formatError(
+					*error,
+					"Error",
+					scannerFromSourceName
+				));
 		}
 		success = succ; // keep success false on exception
 	}
@@ -200,6 +208,8 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 
 	if (errors.size() > 0)
 		output["errors"] = errors;
+	if (warnings.size() > 0)
+		output["warnings"] = warnings;
 
 	if (success)
 	{
