@@ -15,7 +15,9 @@ In particular, we need help in the following areas:
   <http://ethereum.stackexchange.com/>`_ and the `Solidity Gitter
   <https://gitter.im/ethereum/solidity>`_
 * Fixing and responding to `Solidity's GitHub issues
-  <https://github.com/ethereum/solidity/issues>`_
+  <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
+  `up-for-grabs <https://github.com/ethereum/solidity/issues?q=is%3Aopen+is%3Aissue+label%3Aup-for-grabs>`_ which are
+  meant as introductory issues for external contributors.
 
 How to Report Issues
 ====================
