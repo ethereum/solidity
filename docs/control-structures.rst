@@ -326,12 +326,12 @@ Currently, there are situations, where exceptions happen automatically in Solidi
 
 1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 2. If you access a fixed-length ``bytesN`` at a too large or negative index.
-3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by return values being ``false``.
-4. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-5. If you perform an external function call targeting a contract that contains no code.
-6. If you call a contract-creation using the ``new`` keyword but it does not finish properly.
-7. If your contract receives Ether on a public function without ``payable`` modifier (including the constructor and the fallback function).
-8. If your contract receives Ether on a public variable access.
+3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+4. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
+5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+6. If you perform an external function call targeting a contract that contains no code.
+7. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+8. If your contract receives Ether via a public accessor function.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 
