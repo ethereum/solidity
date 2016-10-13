@@ -7257,12 +7257,12 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function)
 		contract C {
 			function intern() returns (uint) {
 				function (uint) internal returns (uint) x;
-				x();
+				x(2);
 				return 7;
 			}
 			function extern() returns (uint) {
 				function (uint) external returns (uint) x;
-				x();
+				x(2);
 				return 7;
 			}
 		}
@@ -7321,7 +7321,7 @@ BOOST_AUTO_TEST_CASE(store_function)
 			function addTwo(uint x) returns (uint) { return x + 2; }
 		}
 		contract C {
-			function (unction (uint) external returns (uint)) returns (uint) ev = eval;
+			function (function (uint) external returns (uint)) returns (uint) ev = eval;
 			function (uint) external returns (uint) x;
 			function store(function(uint) external returns (uint) y) {
 				x = y;
@@ -7340,7 +7340,7 @@ BOOST_AUTO_TEST_CASE(store_function)
 	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(9)));
 }
 
-// TODO: public function state variables, arrays
+// TODO: arrays, libraries
 
 BOOST_AUTO_TEST_SUITE_END()
 
