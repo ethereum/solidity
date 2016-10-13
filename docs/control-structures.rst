@@ -324,8 +324,8 @@ In the following example, we show how ``throw`` can be used to easily revert an 
 
 Currently, there are situations, where exceptions happen automatically in Solidity:
 
-1. If you access an array on a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-2. If you access a fixed-length ``bytesN`` on a too large or negative index.
+1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+2. If you access a fixed-length ``bytesN`` at a too large or negative index.
 3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by return values being ``false``.
 4. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
 5. If you perform an external function call targeting a contract that contains no code.
