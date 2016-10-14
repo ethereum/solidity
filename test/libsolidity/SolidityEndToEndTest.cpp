@@ -7721,6 +7721,36 @@ BOOST_AUTO_TEST_CASE(function_type_library_internal)
 }
 
 
+BOOST_AUTO_TEST_CASE(call_function_returning_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f0() returns (uint) {
+				return 2;
+			}
+			function f1() returns (function() returns (uint)) {
+				returns f0;
+			}
+			function f2() returns (function() returns (function () returns (uint))) {
+				returns f1;
+			}
+			function f3() returns (function() returns (function () returns (function () returns (uint))))
+			{
+				returns f2;
+			}
+			function f() returns (uint) {
+				function() returns(function() returns(function() returns(function() returns(uint)))) x;
+				x = f3;
+				return x()()()();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+
 // TODO: arrays, libraries with external functions
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
