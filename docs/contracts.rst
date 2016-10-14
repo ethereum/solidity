@@ -885,7 +885,6 @@ Libraries
 
 Libraries are similar to contracts, but their purpose is that they are deployed
 only once at a specific address and their code is reused using the ``DELEGATECALL``
-(``CALLCODE`` until Homestead)
 feature of the EVM. This means that if library functions are called, their code
 is executed in the context of the calling contract, i.e. ``this`` points to the
 calling contract, and especially the storage from the calling contract can be
@@ -976,8 +975,7 @@ are all compiled as calls (``DELEGATECALL``) to an external
 contract/library. If you use libraries, take care that an
 actual external function call is performed.
 ``msg.sender``, ``msg.value`` and ``this`` will retain their values
-in this call, though (prior to Homestead, ``msg.sender`` and
-``msg.value`` changed, though).
+in this call, though.
 
 The following example shows how to use memory types and
 internal functions in libraries in order to implement
