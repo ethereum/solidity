@@ -1325,6 +1325,16 @@ BOOST_AUTO_TEST_CASE(calling_function)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(array_of_functions)
+{
+	char const* text = R"(
+		contract test {
+			mapping (address => function() internal returns ()) stages;
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
