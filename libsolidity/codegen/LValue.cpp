@@ -153,7 +153,8 @@ StorageItem::StorageItem(CompilerContext& _compilerContext, Type const& _type):
 {
 	if (m_dataType->isValueType())
 	{
-		solAssert(m_dataType->storageSize() == m_dataType->sizeOnStack(), "");
+		if (m_dataType->category() != Type::Category::Function)
+			solAssert(m_dataType->storageSize() == m_dataType->sizeOnStack(), "");
 		solAssert(m_dataType->storageSize() == 1, "Invalid storage size.");
 	}
 }
@@ -189,8 +190,16 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
+		else if (
+			m_dataType->category() == Type::Category::Function &&
+			dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
+		)
+			CompilerUtils(m_context).splitExternalFunctionType();
 		else
+		{
+			solAssert(m_dataType->sizeOnStack() == 1, "");
 			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
+		}
 	}
 }
 
@@ -204,6 +213,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		solAssert(m_dataType->storageBytes() > 0, "Invalid storage bytes size.");
 		if (m_dataType->storageBytes() == 32)
 		{
+			solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size.");
 			// offset should be zero
 			m_context << Instruction::POP;
 			if (!_move)
@@ -222,12 +232,17 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			m_context
 				<< Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
 				<< Instruction::MUL;
-			m_context << Instruction::NOT << Instruction::AND;
-			// stack: value storage_ref multiplier cleared_value
-			m_context
-				<< Instruction::SWAP1 << Instruction::DUP4;
+			m_context << Instruction::NOT << Instruction::AND << Instruction::SWAP1;
+			// stack: value storage_ref cleared_value multiplier
+			utils.copyToStackTop(4, m_dataType->sizeOnStack());
 			// stack: value storage_ref cleared_value multiplier value
-			if (m_dataType->category() == Type::Category::FixedBytes)
+			if (
+				m_dataType->category() == Type::Category::Function &&
+				dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
+			)
+				// Combine the two-item function type into a single stack slot.
+				utils.combineExternalFunctionType();
+			else if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< Instruction::SWAP1 << Instruction::DIV;
@@ -245,11 +260,13 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			else if (m_dataType->category() == Type::Category::FixedPoint)
 				// implementation should be very similar to the integer case.
 				solAssert(false, "Not yet implemented - FixedPointType.");
+			else
+				solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size for opaque type.");
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)
-				m_context << Instruction::POP;
+				utils.popStackElement(*m_dataType);
 		}
 	}
 	else

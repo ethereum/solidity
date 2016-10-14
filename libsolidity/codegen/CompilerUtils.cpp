@@ -139,8 +139,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	)
 	{
 		solAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
-		m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160) << Instruction::MUL << Instruction::SWAP1;
-		m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::OR;
+		combineExternalFunctionType();
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(_padToWordBoundaries ? 32 : 24) << Instruction::ADD;
 	}
@@ -314,6 +313,21 @@ void CompilerUtils::memoryCopy()
 	m_context << u256(c_identityGas) << Instruction::ADD;
 	m_context << Instruction::CALL;
 	m_context << Instruction::POP; // ignore return value
+}
+
+void CompilerUtils::splitExternalFunctionType()
+{
+	// We have to split the right-aligned <function identifier><address> into two stack slots:
+	// address (right aligned), function identifier (right aligned)
+	m_context << Instruction::DUP1 << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
+	m_context << (u256(1) << 160) << Instruction::SWAP1 << Instruction::DIV;
+	m_context << u256(0xffffffffUL) << Instruction::AND;
+}
+
+void CompilerUtils::combineExternalFunctionType()
+{
+	m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160) << Instruction::MUL << Instruction::SWAP1;
+	m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::OR;
 }
 
 void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -839,16 +853,8 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	}
 
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
-	{
 		if (funType->location() == FunctionType::Location::External)
-		{
-			// We have to split the right-aligned <function identifier><address> into two stack slots:
-			// address (right aligned), function identifier (right aligned)
-			m_context << Instruction::DUP1 << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
-			m_context << (u256(1) << 160) << Instruction::SWAP1 << Instruction::DIV;
-			m_context << u256(0xffffffffUL) << Instruction::AND;
-		}
-	}
+			splitExternalFunctionType();
 
 	return numBytes;
 }
