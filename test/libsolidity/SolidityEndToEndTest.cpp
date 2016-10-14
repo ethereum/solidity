@@ -7750,6 +7750,45 @@ BOOST_AUTO_TEST_CASE(call_function_returning_function)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
+BOOST_AUTO_TEST_CASE(array_of_functions)
+{
+	char const* sourceCode = R"(
+		contract Flow {
+			bool success;
+			function checkSuccess() returns(bool) {
+				return success;
+			}
+
+			mapping (address => function () internal returns()) stages;
+
+			function stage0() internal {
+					stages[msg.sender] = stage1;
+			}
+
+			function stage1() internal {
+					stages[msg.sender] = stage2;
+			}
+
+			function stage2() internal {
+				success = true;
+			}
+
+			function f () {
+				if (0 == steps[msg.sender])
+					stages[msg.sender] = stage0;
+				stages[msg.sender]();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
+	callContractFunction("f()");
+	callContractFunction("f()");
+	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
+	callContractFunction("f()");
+	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(true));
+}
 
 // TODO: arrays, libraries with external functions
 
