@@ -554,12 +554,6 @@ The correct way to do this is the following::
         }
     }
 
-Can a regular (i.e. non-contract) ethereum account be closed permanently like a contract can?
-=============================================================================================
-
-No. Non-contract accounts "exist" as long as the private key is known by
-someone or can be generated in some way.
-
 What is the difference between ``bytes`` and ``byte[]``?
 ========================================================
 

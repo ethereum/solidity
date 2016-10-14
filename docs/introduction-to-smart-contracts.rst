@@ -469,3 +469,5 @@ target and then the storage and code is removed from the state.
 .. note:: The pruning of old contracts may or may not be implemented by Ethereum
   clients. Additionally, archive nodes could choose to keep the contract storage
   and code indefinitely.
+
+.. note:: Currently **external accounts** cannot be removed from the state.
