@@ -9,16 +9,8 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-What is Solidity?
+Example contracts
 =================
-
-Solidity is the DEV-created (i.e. Ethereum Foundation-created),
-Javascript-inspired language that can be used to create smart contracts
-on the Ethereum blockchain. There are other
-languages you can use as well (LLL, Serpent, etc). The main points in
-favour of Solidity is that it is statically typed and offers many
-advanced features like inheritance, libraries, complex
-user-defined types and a bytecode optimizer.
 
 There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
 there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
