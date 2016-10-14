@@ -7695,7 +7695,33 @@ BOOST_AUTO_TEST_CASE(store_function)
 	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(9)));
 }
 
-// TODO: arrays, libraries
+BOOST_AUTO_TEST_CASE(function_type_library_internal)
+{
+	char const* sourceCode = R"(
+		library Utils {
+			function reduce(uint[] memory array, function(uint, uint) returns (uint) f, uint init) internal returns (uint) {
+				for (uint i = 0; i < array.length; i++) {
+					init = f(array[i], init);
+				}
+				return init;
+			}
+			function sum(uint a, uint b) internal returns (uint) {
+				return a + b;
+			}
+		}
+		contract C {
+			function f(uint[] x) returns (uint) {
+				return Utils.reduce(x, Utils.sum, 0);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256[])", 0x20, 3, u256(1), u256(7), u256(3)) == encodeArgs(u256(11)));
+}
+
+
+// TODO: arrays, libraries with external functions
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
 {

@@ -114,6 +114,13 @@ public:
 	/// Stack post:
 	void memoryCopy();
 
+	/// Converts the combined and right-aligned external function type
+	/// <function identifier><address> into two stack slots:
+	/// address (right aligned), function identifier (right aligned)
+	void splitExternalFunctionType();
+	/// Performs the opposite operation of splitExternalFunctionType()
+	void combineExternalFunctionType();
+
 	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
 	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory
 	/// if a reference type is converted from calldata or storage to memory.
