@@ -20,21 +20,8 @@ favour of Solidity is that it is statically typed and offers many
 advanced features like inheritance, libraries, complex
 user-defined types and a bytecode optimizer.
 
-Solidity contracts can be compiled a few different ways (see below) and the
-resulting output can be cut/pasted into a geth console to deploy them to the
-Ethereum blockchain.
-
 There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
 there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
-
-How do I compile contracts?
-===========================
-
-Probably the fastest way is the `online compiler <https://ethereum.github.io/browser-solidity/>`_.
-
-You can also use the ``solc`` binary which comes with cpp-ethereum to compile
-contracts or an emerging option is to use Mix, the IDE.
-
 
 Create and publish the most basic contract possible
 ===================================================
