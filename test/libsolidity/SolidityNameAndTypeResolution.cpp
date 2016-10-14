@@ -4020,6 +4020,25 @@ BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
+{
+	char const* text = R"(
+		library B {
+			function b() {}
+		}
+
+		contract A {
+			using B for bytes;
+
+			function a() {
+				bytes memory x;
+				x.b();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
