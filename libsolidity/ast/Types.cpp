@@ -241,7 +241,8 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				FunctionType funType(*function, false);
 				if (auto fun = funType.asMemberFunction(true, true))
-					members.push_back(MemberList::Member(function->name(), fun, function));
+					if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+						members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
