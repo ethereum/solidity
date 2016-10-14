@@ -71,13 +71,6 @@ several blockchain explorers.
 Contracts on the blockchain should have their original source
 code published if they are to be used by third parties.
 
-Does ``selfdestruct()`` free up space in the blockchain?
-========================================================
-
-It removes the contract bytecode and storage from the current block
-into the future, but since the blockchain stores every single block (i.e.
-all history), this will not actually free up space on full/archive nodes.
-
 Create a contract that can be killed and return funds
 =====================================================
 
