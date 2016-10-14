@@ -574,7 +574,11 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
 		if (!isFractional())
-			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		{
+			if (integerType())
+				return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+			return false;
+		}
 		else
 			return false;
 	}
