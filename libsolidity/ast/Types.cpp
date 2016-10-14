@@ -2069,6 +2069,9 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 
 FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound) const
 {
+	if (_bound && m_parameterTypes.empty())
+		return FunctionTypePointer();
+
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
 	{
