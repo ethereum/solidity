@@ -1311,6 +1311,21 @@ BOOST_AUTO_TEST_CASE(function_type_as_parameter)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(calling_function)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				function() returns(function() returns(function() returns(function() returns(uint)))) x;
+				uint y;
+				y = x()()()();
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
