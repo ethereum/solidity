@@ -343,14 +343,6 @@ Examples::
         C c = new C();
     }
 
-What is the ``modifier`` keyword?
-=================================
-
-Modifiers are a way to prepend or append code to a function in order
-to add guards, initialisation or cleanup functionality in a concise way.
-
-For examples, see the `features.sol <https://github.com/ethereum/dapp-bin/blob/master/library/features.sol>`_.
-
 How do structs work?
 ====================
 
