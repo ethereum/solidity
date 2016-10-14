@@ -505,7 +505,7 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | pc                      |      | current position in code                                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| pop                     | `*`  | remove topmost stack slot                                       |
+| pop(x)                  | `-`  | remove the element pushed by x                                  |
 +-------------------------+------+-----------------------------------------------------------------+
 | dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -561,9 +561,9 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 | delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
-| return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| selfdestruct(a)         | `*`  | end execution, destroy current contract and send funds to a     |
+| selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
 +-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+
