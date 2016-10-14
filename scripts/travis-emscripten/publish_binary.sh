@@ -81,9 +81,16 @@ else
 fi
 
 
+# Prepare for update script
+npm install
+
 # This file is assumed to be the product of the build_emscripten.sh script.
 cp ../soljson.js ./bin/"soljson-$FULLVERSION.js"
-node ./update
+
+# Run update script
+npm run update
+
+# Publish updates
 git add ./bin/"soljson-$FULLVERSION.js"
 git commit -a -m "Added compiler version $FULLVERSION"
 git push origin gh-pages
