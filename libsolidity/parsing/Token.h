@@ -221,6 +221,7 @@ namespace solidity
 	/* Keywords reserved for future use. */                            \
 	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
+	K(Assert, "assert", 0)                                             \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
 	K(Final, "final", 0)                                               \

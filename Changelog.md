@@ -1,3 +1,8 @@
+### 0.5.0 (unreleased)
+
+Breaking Changes:
+ * New reserved word: ``assert``
+
 ### 0.4.3 (unreleased)
 
 Features:
