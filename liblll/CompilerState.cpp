@@ -69,6 +69,10 @@ void CompilerState::populateStandard()
 	"(def 'ripemd160 (data datasize) (msg allgas 3 0 data datasize))"
 	"(def 'sha256 (val) { [0]:val (sha256 0 32) })"
 	"(def 'ripemd160 (val) { [0]:val (ripemd160 0 32) })"
+	"(def 'wei 1)"
+	"(def 'szabo 1000000000000)"
+	"(def 'finney 1000000000000000)"
+	"(def 'ether 1000000000000000000)"
 	"}";
 	CodeFragment::compile(s, *this);
 }
