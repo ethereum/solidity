@@ -617,6 +617,33 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
+It is possible to mark mappings ``public`` and have Solidity create an accessor.
+The ``_KeyType`` will become a required parameter for the accessor and it will
+return ``_ValueType``.
+
+::
+
+    pragma solidity ^0.4.0;
+
+    contract MappingExample {
+        mapping(address => uint) public balances;
+
+        function update(uint newBalance) {
+            balances[msg.sender] = newBalance;
+        }
+    }
+
+    contract MappingUser {
+        function f() returns (uint) {
+            return MappingExample(<address>).balances(this);
+        }
+    }
+
+
+.. note::
+  Mappings are not iterable, but it is possible to implement a data structure on top of them.
+  For an example, see `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
+
 .. index:: assignment, ! delete, lvalue
 
 Operators Involving LValues

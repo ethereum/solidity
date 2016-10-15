@@ -104,52 +104,6 @@ This example demonstrates how to send funds from a contract to an address.
 
 See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
-What is a ``mapping`` and how do we use them?
-=============================================
-
-A mapping is very similar to a K->V hashmap.
-If you have a state variable of type ``mapping (string -> uint) x;``, then you can
-access the value by ``x["somekeystring"]``.
-
-How can I get the length of a ``mapping``?
-==========================================
-
-Mappings are a rather low-level data structure. It does not store the keys
-and it is not possible to know which or how many values are "set". Actually,
-all values to all possible keys are set by default, they are just
-initialised with the zero value.
-
-In this sense, the attribute ``length`` for a mapping does not really apply.
-
-If you want to have a "sized mapping", you can use the iterable mapping
-(see below) or just a dynamically-sized array of structs.
-
-Are ``mapping``'s iterable?
-===========================
-
-Mappings themselves are not iterable, but you can use a higher-level
-datastructure on top of it, for example the `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
-
-Can I put arrays inside of a ``mapping``? How do I make a ``mapping`` of a ``mapping``?
-=======================================================================================
-
-Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping.
-
-An example of this would be::
-
-    contract C {
-        struct myStruct {
-            uint someNumber;
-            string someString;
-        }
-
-        mapping(uint => mapping(string => myStruct)) myDynamicMapping;
-
-        function storeInMapping() {
-            myDynamicMapping[1]["Foo"] = myStruct(2, "Bar");
-        }
-    }
-
 Can you return an array or a ``string`` from a solidity function call?
 ======================================================================
 
