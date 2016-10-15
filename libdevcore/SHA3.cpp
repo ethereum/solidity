@@ -24,7 +24,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "picosha2.h"
+
 using namespace std;
 using namespace dev;
 
