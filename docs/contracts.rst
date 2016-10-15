@@ -20,6 +20,9 @@ Contracts can be created "from outside" or from Solidity contracts.
 When a contract is created, its constructor (a function with the same
 name as the contract) is executed once.
 
+A constructor is optional. Only one constructor is allowed and this means
+overloading is not supported.
+
 From ``web3.js``, i.e. the JavaScript
 API, this is done as follows::
 

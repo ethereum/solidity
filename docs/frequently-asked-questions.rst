@@ -144,29 +144,6 @@ from web3 (inside geth or a web application). The main advantage of events
 is that they are stored in a special way on the blockchain so that it
 is very easy to search for them.
 
-Do contract constructors have to be publicly visible?
-=====================================================
-
-You can use the visibility specifiers, but they do not yet have any effect.
-The constructor is removed from the contract code once it is deployed,
-
-Can a contract have multiple constructors?
-==========================================
-
-No, a contract can have only one constructor.
-
-More specifically, it can only have one function whose name matches
-that of the constructor.
-
-Having multiple constructors with different number of arguments
-or argument types, as it is possible in other languages
-is not allowed in Solidity.
-
-Is a constructor required?
-==========================
-
-No. If there is no constructor, a generic one without arguments and no actions will be used.
-
 Are timestamps (``now,`` ``block.timestamp``) reliable?
 =======================================================
 
