@@ -997,7 +997,7 @@ are all compiled as calls (``DELEGATECALL``) to an external
 contract/library. If you use libraries, take care that an
 actual external function call is performed.
 ``msg.sender``, ``msg.value`` and ``this`` will retain their values
-in this call, though (prior to Homestead, ``msg.sender`` and
+in this call, though (prior to Homestead, because of the use of `CALLCODE`, ``msg.sender`` and
 ``msg.value`` changed, though).
 
 The following example shows how to use memory types and
