@@ -539,16 +539,6 @@ Use the constructor. Anything inside it will be executed when the contract is fi
 
 See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
 
-Can a contract create another contract?
-=======================================
-
-Yes, see `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
-
-Note that the full code of the created contract has to be included in the creator contract.
-This also means that cyclic creations are not possible (because the contract would have
-to contain its own code) - at least not in a general way.
-
-
 How do you create 2-dimensional arrays?
 =======================================
 
