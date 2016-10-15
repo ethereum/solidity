@@ -143,7 +143,8 @@ void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	auto ret = s.cbegin();
 	qi::phrase_parse(ret, s.cend(), element, space, qi::skip_flag::dont_postskip, o_out);
 	for (auto i = ret; i != s.cend(); ++i)
-		if (!isspace(*i))
-			BOOST_THROW_EXCEPTION(std::exception());
+		if (!isspace(*i)) {
+			BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment("Non-whitespace left in parser"));
+		}
 }
 
