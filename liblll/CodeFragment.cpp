@@ -52,17 +52,18 @@ void CodeFragment::finalise(CompilerState const& _cs)
 
 CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
 {
-/*	cdebug << "CodeFragment. Locals:";
+/*
+	std::cout << "CodeFragment. Locals:";
 	for (auto const& i: _s.defs)
-		cdebug << i.first << ":" << toHex(i.second.m_code);
-	cdebug << "Args:";
+		std::cout << i.first << ":" << i.second.m_asm.out();
+	std::cout << "Args:";
 	for (auto const& i: _s.args)
-		cdebug << i.first << ":" << toHex(i.second.m_code);
-	cdebug << "Outers:";
+		std::cout << i.first << ":" << i.second.m_asm.out();
+	std::cout << "Outers:";
 	for (auto const& i: _s.outers)
-		cdebug << i.first << ":" << toHex(i.second.m_code);
-	debugOutAST(cout, _t);
-	cout << endl << flush;
+		std::cout << i.first << ":" << i.second.m_asm.out();
+	debugOutAST(std::cout, _t);
+	std::cout << endl << flush;
 */
 	switch (_t.which())
 	{
