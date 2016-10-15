@@ -144,29 +144,6 @@ from web3 (inside geth or a web application). The main advantage of events
 is that they are stored in a special way on the blockchain so that it
 is very easy to search for them.
 
-What are the different function visibilities?
-=============================================
-
-The visibility specifiers do not only change the visibility but also
-the way functions can be called. In general, functions in the
-same contract can also be called internally (which is cheaper
-and allows for memory types to be passed by reference). This
-is done if you just use ``f(1,2)``. If you use ``this.f(1,2)``
-or ``otherContract.f(1,2)``, the function is called externally.
-
-Internal function calls have the advantage that you can use
-all Solidity types as parameters, but you have to stick to the
-simpler ABI types for external calls.
-
-* ``external``: all, only externally
-
-* ``public``: all (this is the default), externally and internally
-
-* ``internal``: only this contract and contracts deriving from it, only internally
-
-* ``private``: only this contract, only internally
-
-
 Do contract constructors have to be publicly visible?
 =====================================================
 
