@@ -242,7 +242,8 @@ case $(uname -s) in
                     gcc \
                     gcc-c++ \
                     git \
-                    libtool
+                    libtool \
+                    jsoncpp-devel
 
                 ;;
 
