@@ -97,20 +97,6 @@ Its type is the type of the contract. Since any contract type basically inherits
 ``address`` type, ``this`` is always convertible to ``address`` and in this case contains
 its own address.
 
-What is the difference between a function marked ``constant`` and one that is not?
-==================================================================================
-
-``constant`` functions can perform some action and return a value, but cannot
-change state (this is not yet enforced by the compiler). In other words, a
-constant function cannot save or update any variables within the contract or wider
-blockchain. These functions are called using ``c.someFunction(...)`` from
-geth or any other web3.js environment.
-
-"non-constant" functions (those lacking the ``constant`` specifier) must be called
-with ``c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});``
-That is, because they can change state, they have to have a gas
-payment sent along to get the work done.
-
 Get a contract to return its funds to you (not using ``selfdestruct(...)``).
 ============================================================================
 
