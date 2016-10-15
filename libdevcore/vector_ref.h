@@ -69,26 +69,6 @@ public:
 	void copyTo(vector_ref<typename std::remove_const<_T>::type> _t) const { if (overlapsWith(_t)) memmove(_t.data(), m_data, std::min(_t.size(), m_count) * sizeof(_T)); else memcpy(_t.data(), m_data, std::min(_t.size(), m_count) * sizeof(_T)); }
 	/// Copies the contents of this vector_ref to the contents of @a _t, and zeros further trailing elements in @a _t.
 	void populate(vector_ref<typename std::remove_const<_T>::type> _t) const { copyTo(_t); memset(_t.data() + m_count, 0, std::max(_t.size(), m_count) - m_count); }
-	/// Securely overwrite the memory.
-	/// @note adapted from OpenSSL's implementation.
-	void cleanse()
-	{
-		static unsigned char s_cleanseCounter = 0;
-		uint8_t* p = (uint8_t*)begin();
-		size_t const len = (uint8_t*)end() - p;
-		size_t loop = len;
-		size_t count = s_cleanseCounter;
-		while (loop--)
-		{
-			*(p++) = (uint8_t)count;
-			count += (17 + ((size_t)p & 0xf));
-		}
-		p = (uint8_t*)memchr((uint8_t*)begin(), (uint8_t)count, len);
-		if (p)
-			count += (63 + (size_t)p);
-		s_cleanseCounter = (uint8_t)count;
-		memset((uint8_t*)begin(), 0, len);
-	}
 
 	_T* begin() { return m_data; }
 	_T* end() { return m_data + m_count; }
