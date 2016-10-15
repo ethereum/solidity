@@ -85,18 +85,6 @@ Use a non-constant function (req ``sendTransaction``) to increment a variable in
 
 See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/20_value_incrementer.sol>`_.
 
-Get contract address in Solidity
-================================
-
-Short answer: The global variable ``this`` is the contract address.
-
-See `basic_info_getter <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/15_basic_info_getter.sol>`_.
-
-Long answer: ``this`` is a variable representing the current contract.
-Its type is the type of the contract. Since any contract type basically inherits from the
-``address`` type, ``this`` is always convertible to ``address`` and in this case contains
-its own address.
-
 Get a contract to return its funds to you (not using ``selfdestruct(...)``).
 ============================================================================
 
