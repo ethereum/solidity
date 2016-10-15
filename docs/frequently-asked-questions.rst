@@ -135,15 +135,6 @@ Example::
         }
     }
 
-What are ``event``'s and why do we need them?
-=============================================
-
-Let us suppose that you need a contract to alert the outside world when
-something happens. The contract can fire an event, which can be listened to
-from web3 (inside geth or a web application). The main advantage of events
-is that they are stored in a special way on the blockchain so that it
-is very easy to search for them.
-
 Are timestamps (``now,`` ``block.timestamp``) reliable?
 =======================================================
 
