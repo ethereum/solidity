@@ -39,6 +39,7 @@ class InvalidName: public CompilerException {};
 class InvalidMacroArgs: public CompilerException {};
 class InvalidLiteral: public CompilerException {};
 class BareSymbol: public CompilerException {};
+class ParserException: public CompilerException {};
 
 }
 }
