@@ -1324,7 +1324,14 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
-		for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
+		auto bases = m_contract.annotation().linearizedBaseContracts;
+		if (bases.size() < 1)
+			BOOST_THROW_EXCEPTION(
+				InternalCompilerError() <<
+				errinfo_comment("linearizedBaseContracts should at least contain the most derived contract.")
+			);
+		bases.erase(bases.begin()); // Remove the most derived contract, which should not be searchable from `super`.
+		for (ContractDefinition const* base: bases)
 			for (FunctionDefinition const* function: base->definedFunctions())
 			{
 				if (!function->isVisibleInDerivedContracts())
