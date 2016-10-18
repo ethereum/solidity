@@ -2792,6 +2792,47 @@ BOOST_AUTO_TEST_CASE(event_access_through_base_name)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("x()")));
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit;
+			event Deposit(address _addr);
+			event Deposit(address _addr, uint _amount);
+			function deposit() {
+				Deposit();
+			}
+			function deposit(address _addr) {
+				Deposit(_addr);
+			}
+			function deposit(address _addr, uint _amount) {
+				Deposit(_addr, _amount);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+
+	callContractFunction("deposit(0xabcdeabcdeabcdeabcde)");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[1].address, m_contractAddress);
+	BOOST_CHECK(m_logs[1].data == encodeArgs(0));
+	BOOST_REQUIRE_EQUAL(m_logs[1].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[1].topics[0], dev::keccak256(string("Deposit(address)")));
+
+	callContractFunction("deposit(0xabcdeabcdeabcdeabcde, 100)");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 3);
+	BOOST_CHECK_EQUAL(m_logs[2].address, m_contractAddress);
+	BOOST_CHECK(m_logs[2].data == encodeArgs(0,100));
+	BOOST_REQUIRE_EQUAL(m_logs[2].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[2].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+}
+
 BOOST_AUTO_TEST_CASE(event_anonymous)
 {
 	char const* sourceCode = R"(
