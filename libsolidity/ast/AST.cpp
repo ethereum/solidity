@@ -204,6 +204,9 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 
 		for (StructDefinition const* s: definedStructs())
 			addInheritableMember(s);
+
+		for (EnumDefinition const* e: definedEnums())
+			addInheritableMember(e);
 	}
 	return *m_inheritableMembers;
 }
