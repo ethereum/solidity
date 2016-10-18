@@ -1500,6 +1500,23 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_name_resolution_under_current_contract_name)
+{
+	char const* text = R"(
+		contract A {
+			enum Foo {
+				First,
+				Second
+			}
+
+			function a() {
+				A.Foo;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(private_visibility)
 {
 	char const* sourceCode = R"(
