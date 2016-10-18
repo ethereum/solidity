@@ -2513,6 +2513,15 @@ BOOST_AUTO_TEST_CASE(super_in_constructor)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
 }
 
+BOOST_AUTO_TEST_CASE(super_alone)
+{
+	char const* sourceCode = R"(
+		contract A { function f() { super; } }
+	)";
+	compileAndRun(sourceCode, 0, "A");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(fallback_function)
 {
 	char const* sourceCode = R"(
