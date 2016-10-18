@@ -26,6 +26,7 @@ Features:
  * Code generator: Inject the Swarm hash of a metadata file into the bytecode.
  * Code generator: Replace expensive memcpy precompile by simple assembly loop.
  * Optimizer: Some dead code elimination.
+ * Type checker: Allow multiple events of the same name (but with different arities or argument types)
 
 Bugfixes:
  * Code generator: throw if calling the identity precompile failed during memory (array) copying.
