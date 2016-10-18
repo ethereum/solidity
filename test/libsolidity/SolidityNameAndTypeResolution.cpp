@@ -854,6 +854,23 @@ BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(super_excludes_current_contract)
+{
+	char const* text = R"(
+		contract A {
+			function b() {}
+		}
+
+		contract B is A {
+			function f() {
+				super.f();
+			}
+		}
+	)";
+
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 {
 	char const* text = R"(
