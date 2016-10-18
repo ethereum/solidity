@@ -1365,6 +1365,17 @@ BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name)
+{
+	char const* text = R"(
+		contract TestIt {
+			event A();
+			event A(uint i);
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
