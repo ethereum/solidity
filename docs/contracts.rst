@@ -20,6 +20,9 @@ Contracts can be created "from outside" or from Solidity contracts.
 When a contract is created, its constructor (a function with the same
 name as the contract) is executed once.
 
+A constructor is optional. Only one constructor is allowed and this means
+overloading is not supported.
+
 From ``web3.js``, i.e. the JavaScript
 API, this is done as follows::
 
@@ -421,9 +424,9 @@ change by overriding).
 
 .. index:: ! constant
 
-**********
-Constants
-**********
+************************
+Constant State Variables
+************************
 
 State variables can be declared as constant (this is not yet implemented
 for array and struct types and not possible for mapping types).
@@ -442,6 +445,27 @@ for these variables and every occurrence is replaced by their constant value.
 
 The value expression can only contain integer arithmetics.
 
+******************
+Constant Functions
+******************
+
+Functions can be declared constant. These functions promise not to modify the state.
+
+::
+
+    pragma solidity ^0.4.0;
+
+    contract C {
+        function f(uint a, uint b) constant returns (uint) {
+            return a * (b + 42);
+        }
+    }
+
+.. note::
+  Accessor methods are marked constant.
+
+.. warning::
+  The compiler does not enforce yet that a constant method is not modifying state.
 
 .. index:: ! fallback function, function;fallback
 
@@ -976,7 +1000,7 @@ are all compiled as calls (``DELEGATECALL``) to an external
 contract/library. If you use libraries, take care that an
 actual external function call is performed.
 ``msg.sender``, ``msg.value`` and ``this`` will retain their values
-in this call, though (prior to Homestead, ``msg.sender`` and
+in this call, though (prior to Homestead, because of the use of `CALLCODE`, ``msg.sender`` and
 ``msg.value`` changed, though).
 
 The following example shows how to use memory types and

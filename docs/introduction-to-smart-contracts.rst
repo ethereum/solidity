@@ -455,13 +455,19 @@ receives the address of the new contract on the stack.
 
 .. index:: selfdestruct
 
-``selfdestruct``
-================
+Self-destruct
+=============
 
 The only possibility that code is removed from the blockchain is
 when a contract at that address performs the ``selfdestruct`` operation.
 The remaining Ether stored at that address is sent to a designated
-target and then the storage and code is removed.
+target and then the storage and code is removed from the state.
 
-Note that even if a contract's code does not contain a call to ``selfdestruct``,
-it can still perform that operation using ``delegatecall`` or ``callcode``.
+.. warning:: Even if a contract's code does not contain a call to ``selfdestruct``,
+  it can still perform that operation using ``delegatecall`` or ``callcode``.
+
+.. note:: The pruning of old contracts may or may not be implemented by Ethereum
+  clients. Additionally, archive nodes could choose to keep the contract storage
+  and code indefinitely.
+
+.. note:: Currently **external accounts** cannot be removed from the state.

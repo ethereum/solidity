@@ -9,7 +9,7 @@ Installing Solidity
 Versioning
 ==========
 
-Solidity versions follow `semantic versioning <https://semver.org>` and in addition to
+Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
 releases, **nightly development builds** are also made available.  The nightly builds
 are not guaranteed to be working and despite best efforts they might contain undocumented
 and/or broken changes. We recommend to use the latest release. Package installers below

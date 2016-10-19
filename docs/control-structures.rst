@@ -7,7 +7,7 @@ Expressions and Control Structures
 Control Structures
 ===================
 
-Most of the control structures from C/JavaScript are available in Solidity
+Most of the control structures from C or JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
 there is: ``if``, ``else``, ``while``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
@@ -785,7 +785,7 @@ Conventions in Solidity
 
 In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
 e.g. ``uint24``. In order to make them more efficient, most arithmetic operations just
-treat them as 256 bit numbers and the higher-order bits are only cleaned at the
+treat them as 256-bit numbers and the higher-order bits are only cleaned at the
 point where it is necessary, i.e. just shortly before they are written to memory
 or before comparisons are performed. This means that if you access such a variable
 from within inline assembly, you might have to manually clean the higher order bits

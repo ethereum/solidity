@@ -61,6 +61,7 @@ Layout in Memory
 ****************
 
 Solidity reserves three 256-bit slots:
+
 -  0 - 64: scratch space for hashing methods
 - 64 - 96: currently allocated memory size (aka. free memory pointer)
 

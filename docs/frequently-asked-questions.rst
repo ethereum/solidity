@@ -9,32 +9,11 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-What is Solidity?
+Example contracts
 =================
-
-Solidity is the DEV-created (i.e. Ethereum Foundation-created),
-Javascript-inspired language that can be used to create smart contracts
-on the Ethereum blockchain. There are other
-languages you can use as well (LLL, Serpent, etc). The main points in
-favour of Solidity is that it is statically typed and offers many
-advanced features like inheritance, libraries, complex
-user-defined types and a bytecode optimizer.
-
-Solidity contracts can be compiled a few different ways (see below) and the
-resulting output can be cut/pasted into a geth console to deploy them to the
-Ethereum blockchain.
 
 There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
 there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
-
-How do I compile contracts?
-===========================
-
-Probably the fastest way is the `online compiler <https://ethereum.github.io/browser-solidity/>`_.
-
-You can also use the ``solc`` binary which comes with cpp-ethereum to compile
-contracts or an emerging option is to use Mix, the IDE.
-
 
 Create and publish the most basic contract possible
 ===================================================
@@ -71,13 +50,6 @@ several blockchain explorers.
 Contracts on the blockchain should have their original source
 code published if they are to be used by third parties.
 
-Does ``selfdestruct()`` free up space in the blockchain?
-========================================================
-
-It removes the contract bytecode and storage from the current block
-into the future, but since the blockchain stores every single block (i.e.
-all history), this will not actually free up space on full/archive nodes.
-
 Create a contract that can be killed and return funds
 =====================================================
 
@@ -113,84 +85,12 @@ Use a non-constant function (req ``sendTransaction``) to increment a variable in
 
 See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/20_value_incrementer.sol>`_.
 
-Get contract address in Solidity
-================================
-
-Short answer: The global variable ``this`` is the contract address.
-
-See `basic_info_getter <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/15_basic_info_getter.sol>`_.
-
-Long answer: ``this`` is a variable representing the current contract.
-Its type is the type of the contract. Since any contract type basically inherits from the
-``address`` type, ``this`` is always convertible to ``address`` and in this case contains
-its own address.
-
-What is the difference between a function marked ``constant`` and one that is not?
-==================================================================================
-
-``constant`` functions can perform some action and return a value, but cannot
-change state (this is not yet enforced by the compiler). In other words, a
-constant function cannot save or update any variables within the contract or wider
-blockchain. These functions are called using ``c.someFunction(...)`` from
-geth or any other web3.js environment.
-
-"non-constant" functions (those lacking the ``constant`` specifier) must be called
-with ``c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});``
-That is, because they can change state, they have to have a gas
-payment sent along to get the work done.
-
 Get a contract to return its funds to you (not using ``selfdestruct(...)``).
 ============================================================================
 
 This example demonstrates how to send funds from a contract to an address.
 
 See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
-
-What is a ``mapping`` and how do we use them?
-=============================================
-
-A mapping is very similar to a K->V hashmap.
-If you have a state variable of type ``mapping (string -> uint) x;``, then you can
-access the value by ``x["somekeystring"]``.
-
-How can I get the length of a ``mapping``?
-==========================================
-
-Mappings are a rather low-level data structure. It does not store the keys
-and it is not possible to know which or how many values are "set". Actually,
-all values to all possible keys are set by default, they are just
-initialised with the zero value.
-
-In this sense, the attribute ``length`` for a mapping does not really apply.
-
-If you want to have a "sized mapping", you can use the iterable mapping
-(see below) or just a dynamically-sized array of structs.
-
-Are ``mapping``'s iterable?
-===========================
-
-Mappings themselves are not iterable, but you can use a higher-level
-datastructure on top of it, for example the `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
-
-Can I put arrays inside of a ``mapping``? How do I make a ``mapping`` of a ``mapping``?
-=======================================================================================
-
-Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping.
-
-An example of this would be::
-
-    contract C {
-        struct myStruct {
-            uint someNumber;
-            string someString;
-        }
-
-        mapping(uint => mapping(string => myStruct)) myDynamicMapping;
-
-        function storeInMapping() {
-            myDynamicMapping[1]["Foo"] = myStruct(2, "Bar");
-        }
-    }
 
 Can you return an array or a ``string`` from a solidity function call?
 ======================================================================
@@ -222,61 +122,6 @@ Example::
             return ([1, 2, 3, 4, 5]);
         }
     }
-
-What are ``event``'s and why do we need them?
-=============================================
-
-Let us suppose that you need a contract to alert the outside world when
-something happens. The contract can fire an event, which can be listened to
-from web3 (inside geth or a web application). The main advantage of events
-is that they are stored in a special way on the blockchain so that it
-is very easy to search for them.
-
-What are the different function visibilities?
-=============================================
-
-The visibility specifiers do not only change the visibility but also
-the way functions can be called. In general, functions in the
-same contract can also be called internally (which is cheaper
-and allows for memory types to be passed by reference). This
-is done if you just use ``f(1,2)``. If you use ``this.f(1,2)``
-or ``otherContract.f(1,2)``, the function is called externally.
-
-Internal function calls have the advantage that you can use
-all Solidity types as parameters, but you have to stick to the
-simpler ABI types for external calls.
-
-* ``external``: all, only externally
-
-* ``public``: all (this is the default), externally and internally
-
-* ``internal``: only this contract and contracts deriving from it, only internally
-
-* ``private``: only this contract, only internally
-
-
-Do contract constructors have to be publicly visible?
-=====================================================
-
-You can use the visibility specifiers, but they do not yet have any effect.
-The constructor is removed from the contract code once it is deployed,
-
-Can a contract have multiple constructors?
-==========================================
-
-No, a contract can have only one constructor.
-
-More specifically, it can only have one function whose name matches
-that of the constructor.
-
-Having multiple constructors with different number of arguments
-or argument types, as it is possible in other languages
-is not allowed in Solidity.
-
-Is a constructor required?
-==========================
-
-No. If there is no constructor, a generic one without arguments and no actions will be used.
 
 Are timestamps (``now,`` ``block.timestamp``) reliable?
 =======================================================
@@ -362,14 +207,6 @@ Examples::
     contract D {
         C c = new C();
     }
-
-What is the ``modifier`` keyword?
-=================================
-
-Modifiers are a way to prepend or append code to a function in order
-to add guards, initialisation or cleanup functionality in a concise way.
-
-For examples, see the `features.sol <https://github.com/ethereum/dapp-bin/blob/master/library/features.sol>`_.
 
 How do structs work?
 ====================
@@ -590,12 +427,6 @@ The correct way to do this is the following::
         }
     }
 
-Can a regular (i.e. non-contract) ethereum account be closed permanently like a contract can?
-=============================================================================================
-
-No. Non-contract accounts "exist" as long as the private key is known by
-someone or can be generated in some way.
-
 What is the difference between ``bytes`` and ``byte[]``?
 ========================================================
 
@@ -640,16 +471,6 @@ Get contract to do something when it is first mined
 Use the constructor. Anything inside it will be executed when the contract is first mined.
 
 See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
-
-Can a contract create another contract?
-=======================================
-
-Yes, see `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
-
-Note that the full code of the created contract has to be included in the creator contract.
-This also means that cyclic creations are not possible (because the contract would have
-to contain its own code) - at least not in a general way.
-
 
 How do you create 2-dimensional arrays?
 =======================================
