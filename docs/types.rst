@@ -234,7 +234,7 @@ Hexademical Literals behave like String Literals and have the same convertibilit
 .. _enums:
 
 Enums
-=====
+-----
 
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
 to and from all integer types but implicit conversion is not allowed.  The explicit conversions
@@ -266,6 +266,46 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
             return uint(defaultChoice);
         }
     }
+
+.. index:: ! function type, ! type; function
+
+.. _function_types:
+
+Function Types
+--------------
+
+Functions can be assigned to variables and passed on together with function calls.
+These types come in two flavours: *internal* and *external* functions.
+
+Internal functions can only be used inside the current contract (more specifically,
+inside the current code unit, which also includes internal library functions)
+because they cannot be executed outside of the
+context of the current function. Calling an internal function is realized
+by jumping to its entry label, just like when calling an function of the current
+contract internally.
+
+External functions consist of an address and a function signature and they can
+be passed via and returned from external function calls.
+
+Function types are notated as follows:
+
+    function (<argument types>) internal / external returns (<return types>)
+
+As always, the ``returns (<return types>)`` is optional.
+
+By default, function types are internal, so the ``internal`` keyword can be
+omitted.
+
+If a function type variable is not initialized, calling it will result
+in an exception.
+
+If external function types are used outside of the context of Solidity,
+they are converted into the ``bytes24`` type.
+
+Example usage:
+
+    library ArrayUtils {
+    
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
