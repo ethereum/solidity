@@ -112,7 +112,7 @@ public:
 	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:
-	void memoryCopy();
+	void memoryCopy(bool _useIdentityPrecompile = true);
 
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
 	/// external function type <address><function identifier> into two stack slots:

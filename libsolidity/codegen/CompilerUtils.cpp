@@ -298,9 +298,16 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
-void CompilerUtils::memoryCopy()
+void CompilerUtils::memoryCopy(bool _useIdentityPrecompile)
 {
 	// Stack here: size target source
+
+	if (!_useIdentityPrecompile)
+	{
+		// FIXME
+		return;
+	}
+
 	// stack for call: outsize target size source value contract gas
 	//@TODO do not use ::CALL if less than 32 bytes?
 	m_context << Instruction::DUP3 << Instruction::SWAP1;
