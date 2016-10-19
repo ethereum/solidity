@@ -8,6 +8,7 @@ Features:
 
 Bugfixes:
  * Disallow unknown options in `solc`
+ * Code Generator: expect zero stack increase after `super` as an expression
  * Inline assembly: support the `address` opcode
  * Inline assembly: fix parsing of assignment after a label.
 
