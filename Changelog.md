@@ -5,6 +5,7 @@ Features:
  * Inline assembly: support both ``suicide`` and ``selfdestruct`` opcodes
    (note: ``suicide`` is deprecated).
  * Include ``keccak256()`` as an alias to ``sha3()``.
+ * Support shifting constant numbers.
 
 Bugfixes:
  * Disallow unknown options in ``solc``.
