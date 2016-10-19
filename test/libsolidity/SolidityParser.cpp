@@ -1325,11 +1325,14 @@ BOOST_AUTO_TEST_CASE(calling_function)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(array_of_functions)
+BOOST_AUTO_TEST_CASE(mapping_and_array_of_functions)
 {
 	char const* text = R"(
 		contract test {
-			mapping (address => function() internal returns ()) stages;
+			mapping (address => function() internal returns (uint)) a;
+			mapping (address => function() external) b;
+			mapping (address => function() external[]) c;
+			function() external[] d;
 		}
 	)";
 	BOOST_CHECK(successParse(text));

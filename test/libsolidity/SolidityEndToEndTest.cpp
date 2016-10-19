@@ -7669,6 +7669,42 @@ BOOST_AUTO_TEST_CASE(pass_function_types_externally)
 	BOOST_CHECK(callContractFunction("f2(uint256)", 7) == encodeArgs(u256(8)));
 }
 
+BOOST_AUTO_TEST_CASE(receive_external_function_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function g() returns (uint) { return 7; }
+			function f(function() external returns (uint) g) returns (uint) {
+				return g();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction(
+		"f(bytes24)",
+		FixedHash<4>(dev::keccak256("g()")).asBytes() + m_contractAddress.asBytes() + bytes(32 - 4 - 20, 0)
+	) == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(return_external_function_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function g() {}
+			function f() returns (function() external) {
+				return this.g;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(
+		callContractFunction("f()") ==
+		FixedHash<4>(dev::keccak256("g()")).asBytes() + m_contractAddress.asBytes() + bytes(32 - 4 - 20, 0)
+	);
+}
+
 BOOST_AUTO_TEST_CASE(store_function)
 {
 	char const* sourceCode = R"(
@@ -7676,7 +7712,7 @@ BOOST_AUTO_TEST_CASE(store_function)
 			function addTwo(uint x) returns (uint) { return x + 2; }
 		}
 		contract C {
-			function (function (uint) external returns (uint)) returns (uint) ev = eval;
+			function (function (uint) external returns (uint)) returns (uint) ev;
 			function (uint) external returns (uint) x;
 			function store(function(uint) external returns (uint) y) {
 				x = y;
@@ -7685,6 +7721,7 @@ BOOST_AUTO_TEST_CASE(store_function)
 				return y(7);
 			}
 			function t() returns (uint) {
+				ev = eval;
 				this.store((new Other()).addTwo);
 				return ev(x);
 			}
@@ -7728,15 +7765,15 @@ BOOST_AUTO_TEST_CASE(call_function_returning_function)
 			function f0() returns (uint) {
 				return 2;
 			}
-			function f1() returns (function() returns (uint)) {
-				returns f0;
+			function f1() internal returns (function() returns (uint)) {
+				return f0;
 			}
-			function f2() returns (function() returns (function () returns (uint))) {
-				returns f1;
+			function f2() internal returns (function() returns (function () returns (uint))) {
+				return f1;
 			}
-			function f3() returns (function() returns (function () returns (function () returns (uint))))
+			function f3() internal returns (function() returns (function () returns (function () returns (uint))))
 			{
-				returns f2;
+				return f2;
 			}
 			function f() returns (uint) {
 				function() returns(function() returns(function() returns(function() returns(uint)))) x;
@@ -7746,51 +7783,164 @@ BOOST_AUTO_TEST_CASE(call_function_returning_function)
 		}
 	)";
 
-	compileAndRun(sourceCode, 0, "C");
+	compileAndRun(sourceCode, 0, "test");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(array_of_functions)
+BOOST_AUTO_TEST_CASE(mapping_of_functions)
 {
 	char const* sourceCode = R"(
 		contract Flow {
-			bool success;
-			function checkSuccess() returns(bool) {
-				return success;
-			}
+			bool public success;
 
-			mapping (address => function () internal returns()) stages;
+			mapping (address => function () internal) stages;
 
 			function stage0() internal {
-					stages[msg.sender] = stage1;
+				stages[msg.sender] = stage1;
 			}
 
 			function stage1() internal {
-					stages[msg.sender] = stage2;
+				stages[msg.sender] = stage2;
 			}
 
 			function stage2() internal {
 				success = true;
 			}
 
-			function f () {
-				if (0 == steps[msg.sender])
-					stages[msg.sender] = stage0;
+			function Flow() {
+				stages[msg.sender] = stage0;
+			}
+
+			function f() {
 				stages[msg.sender]();
 			}
 		}
 	)";
 
-	compileAndRun(sourceCode, 0, "C");
+	compileAndRun(sourceCode, 0, "Flow");
 	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
-	callContractFunction("f()");
-	callContractFunction("f()");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
-	callContractFunction("f()");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(true));
 }
 
-// TODO: arrays, libraries with external functions
+BOOST_AUTO_TEST_CASE(packed_functions)
+{
+	char const* sourceCode = R"(
+		contract C {
+			// these should take the same slot
+			function() returns (uint) a;
+			function() external returns (uint) b;
+			uint8 public x;
+
+			function set() {
+				x = 2;
+				a = g;
+				b = h;
+			}
+			function t1() returns (uint) {
+				return a();
+			}
+			function t2() returns (uint) {
+				return b();
+			}
+			function g() returns (uint) {
+				return 7;
+			}
+			function h() returns (uint) {
+				return 8;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("set()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("t1()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("t2()") == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(function_memory_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function a(uint x) returns (uint) { return x + 1; }
+			function b(uint x) returns (uint) { return x + 2; }
+			function c(uint x) returns (uint) { return x + 3; }
+			function d(uint x) returns (uint) { return x + 5; }
+			function e(uint x) returns (uint) { return x + 8; }
+			function test(uint x, uint i) returns (uint) {
+				function(uint) internal returns (uint)[] arr =
+					new function(uint) internal returns (uint)[](10);
+				arr[0] = a;
+				arr[1] = b;
+				arr[2] = c;
+				arr[3] = d;
+				arr[4] = e;
+				return arr[i](x);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(0)) == encodeArgs(u256(11)));
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(1)) == encodeArgs(u256(12)));
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(2)) == encodeArgs(u256(13)));
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(3)) == encodeArgs(u256(15)));
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(4)) == encodeArgs(u256(18)));
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(5)) == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(function_delete)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function a() returns (uint) { return 7; }
+			function() internal returns (uint) y;
+			function set() returns (uint) {
+				y = a;
+				return y();
+			}
+			funciton d() returns (uint) {
+				delete y;
+				return 1;
+			}
+			function ca() returns (uint) {
+				return y();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("set()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("ca()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("d()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("ca()") == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(copy_function_storage_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function() internal returns (uint)[] x;
+			function() internal returns (uint)[] y;
+			function test() returns (uint) {
+				x.length = 10;
+				x[9] = a;
+				y = x;
+				return y[9]();
+			}
+			function a() returns (uint) {
+				return 7;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(7)));
+}
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
 {

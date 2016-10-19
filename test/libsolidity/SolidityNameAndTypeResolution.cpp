@@ -4227,6 +4227,7 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal
 	)";
 	BOOST_CHECK(success(text));
 }
+
 BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external)
 {
 	char const* text = R"(
@@ -4236,6 +4237,23 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_type_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) external returns (uint)[] public x;
+			function(uint) internal returns (uint)[10] y;
+			function f() {
+				function(uint) returns (uint)[10] memory a;
+				function(uint) returns (uint)[10] storage b = y;
+				function(uint) external returns (uint)[] memory c;
+				c = new function(uint) external returns (uint)[](200);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
