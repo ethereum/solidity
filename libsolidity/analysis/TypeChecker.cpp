@@ -609,6 +609,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					return false;
 				pushes = 1;
 			}
+			else
+				return false;
 			for (unsigned i = 0; i < pushes; ++i)
 				_assembly.append(u256(0)); // just to verify the stack height
 		}

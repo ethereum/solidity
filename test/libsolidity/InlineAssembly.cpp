@@ -162,6 +162,13 @@ BOOST_AUTO_TEST_CASE(assignment_after_tag)
 	BOOST_CHECK(successParse("{ let x := 1 { tag: =: x } }"));
 }
 
+BOOST_AUTO_TEST_CASE(magic_variables)
+{
+	BOOST_CHECK(!successAssemble("{ this }"));
+	BOOST_CHECK(!successAssemble("{ ecrecover }"));
+	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
