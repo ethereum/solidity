@@ -371,6 +371,9 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
+It is possible to mark arrays ``public`` and have Solidity create an accessor.
+The numeric index will become a required parameter for the accessor.
+
 .. index:: ! array;allocating, new
 
 Allocating Memory Arrays
