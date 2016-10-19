@@ -624,6 +624,9 @@ It is possible to mark mappings ``public`` and have Solidity create an accessor.
 The ``_KeyType`` will become a required parameter for the accessor and it will
 return ``_ValueType``.
 
+The ``_ValueType`` can be a mapping too. The accessor will have one parameter
+for each ``_KeyType``, recursively.
+
 ::
 
     pragma solidity ^0.4.0;
