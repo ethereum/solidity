@@ -228,8 +228,13 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 
 bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 {
+	string visibility = "internal";
+	if (_node.visibility() == Declaration::Visibility::External)
+		visibility = "external";
+
 	addJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
+		make_pair("visibility", visibility),
 		make_pair("constant", _node.isDeclaredConst())
 	});
 	return true;
