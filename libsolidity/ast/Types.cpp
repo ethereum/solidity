@@ -2078,7 +2078,7 @@ TypePointer FunctionType::encodingType() const
 TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
 {
 	if (m_location == Location::External)
-		return make_shared<IntegerType>(8 * storageBytes());
+		return make_shared<FixedBytesType>(storageBytes());
 	else
 		return TypePointer();
 }

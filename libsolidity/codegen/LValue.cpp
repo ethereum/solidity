@@ -194,7 +194,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			m_dataType->category() == Type::Category::Function &&
 			dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
 		)
-			CompilerUtils(m_context).splitExternalFunctionType();
+			CompilerUtils(m_context).splitExternalFunctionType(false);
 		else
 		{
 			solAssert(m_dataType->sizeOnStack() == 1, "");
@@ -241,7 +241,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
 			)
 				// Combine the two-item function type into a single stack slot.
-				utils.combineExternalFunctionType();
+				utils.combineExternalFunctionType(false);
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))

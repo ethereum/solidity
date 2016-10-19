@@ -139,7 +139,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	)
 	{
 		solAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
-		combineExternalFunctionType();
+		combineExternalFunctionType(true);
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(_padToWordBoundaries ? 32 : 24) << Instruction::ADD;
 	}
@@ -315,19 +315,29 @@ void CompilerUtils::memoryCopy()
 	m_context << Instruction::POP; // ignore return value
 }
 
-void CompilerUtils::splitExternalFunctionType()
+void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
 {
-	// We have to split the right-aligned <function identifier><address> into two stack slots:
+	// We have to split the left-aligned <function identifier><address> into two stack slots:
 	// address (right aligned), function identifier (right aligned)
+	if (_leftAligned)
+		m_context << (u256(1) << 64) << Instruction::SWAP1 << Instruction::DIV;
 	m_context << Instruction::DUP1 << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
 	m_context << (u256(1) << 160) << Instruction::SWAP1 << Instruction::DIV;
-	m_context << u256(0xffffffffUL) << Instruction::AND;
+	if (!_leftAligned)
+		m_context << u256(0xffffffffUL) << Instruction::AND;
 }
 
-void CompilerUtils::combineExternalFunctionType()
+void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 {
-	m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160) << Instruction::MUL << Instruction::SWAP1;
-	m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::OR;
+	if (_leftAligned)
+		m_context << (u256(1) << 224);
+	else
+		m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160);
+	m_context << Instruction::MUL << Instruction::SWAP1;
+	m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+	if (_leftAligned)
+		m_context << (u256(1) << 64) << Instruction::MUL;
+	m_context << Instruction::OR;
 }
 
 void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -856,26 +866,28 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
 {
 	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
-	bool leftAligned = _type.category() == Type::Category::FixedBytes;
-	if (numBytes == 0)
-		m_context << Instruction::POP << u256(0);
-	else
-	{
-		solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
-		m_context << (_fromCalldata ? Instruction::CALLDATALOAD : Instruction::MLOAD);
-		if (numBytes != 32)
-		{
-			// add leading or trailing zeros by dividing/multiplying depending on alignment
-			u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
-			m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
-			if (leftAligned)
-				m_context << shiftFactor << Instruction::MUL;
-		}
-	}
-
+	bool isExternalFunctionType = false;
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 		if (funType->location() == FunctionType::Location::External)
-			splitExternalFunctionType();
+			isExternalFunctionType = true;
+	if (numBytes == 0)
+	{
+		m_context << Instruction::POP << u256(0);
+		return numBytes;
+	}
+	solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
+	m_context << (_fromCalldata ? Instruction::CALLDATALOAD : Instruction::MLOAD);
+	if (isExternalFunctionType)
+		splitExternalFunctionType(true);
+	else if (numBytes != 32)
+	{
+		bool leftAligned = _type.category() == Type::Category::FixedBytes;
+		// add leading or trailing zeros by dividing/multiplying depending on alignment
+		u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
+		m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
+		if (leftAligned)
+			m_context << shiftFactor << Instruction::MUL;
+	}
 
 	return numBytes;
 }

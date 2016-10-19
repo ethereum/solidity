@@ -114,12 +114,12 @@ public:
 	/// Stack post:
 	void memoryCopy();
 
-	/// Converts the combined and right-aligned external function type
-	/// <function identifier><address> into two stack slots:
+	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
+	/// external function type <function identifier><address> into two stack slots:
 	/// address (right aligned), function identifier (right aligned)
-	void splitExternalFunctionType();
-	/// Performs the opposite operation of splitExternalFunctionType()
-	void combineExternalFunctionType();
+	void splitExternalFunctionType(bool _rightAligned);
+	/// Performs the opposite operation of splitExternalFunctionType(_rightAligned)
+	void combineExternalFunctionType(bool _rightAligned);
 
 	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
 	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory
