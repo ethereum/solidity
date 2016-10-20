@@ -23,6 +23,7 @@
 #include <libsolidity/ast/Types.h>
 #include <limits>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/sliced.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
@@ -1325,13 +1326,9 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 	{
 		// add the most derived of all functions which are visible in derived contracts
 		auto bases = m_contract.annotation().linearizedBaseContracts;
-		if (bases.size() < 1)
-			BOOST_THROW_EXCEPTION(
-				InternalCompilerError() <<
-				errinfo_comment("linearizedBaseContracts should at least contain the most derived contract.")
-			);
-		bases.erase(bases.begin()); // Remove the most derived contract, which should not be searchable from `super`.
-		for (ContractDefinition const* base: bases)
+		solAssert(bases.size() >= 1, "linearizedBaseContracts should at least contain the most derived contract.");
+		// `sliced(1, ...)` ignores the most derived contract, which should not be searchable from `super`.
+		for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
 			for (FunctionDefinition const* function: base->definedFunctions())
 			{
 				if (!function->isVisibleInDerivedContracts())
