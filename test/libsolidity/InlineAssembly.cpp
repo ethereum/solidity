@@ -51,7 +51,7 @@ bool successParse(std::string const& _source, bool _assemble = false)
 		if (_assemble)
 		{
 			stack.assemble();
-			if (!stack.errors().empty())
+			if (!stack.errors().empty() && !Error::containsOnlyWarnings(stack.errors()))
 				return false;
 		}
 	}
