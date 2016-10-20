@@ -105,7 +105,6 @@ case $(uname -s) in
 
         brew install boost
         brew install cmake
-        brew install jsoncpp
 
         # We should really 'brew install' our eth client here, but at the time of writing
         # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
@@ -164,7 +163,7 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
 
                 apk update
-                apk add boost-dev build-base cmake jsoncpp-dev
+                apk add boost-dev build-base cmake
 
                 ;;
 
@@ -219,7 +218,6 @@ case $(uname -s) in
                     gcc \
                     git \
                     libboost-all-dev \
-                    libjsoncpp-dev \
                     unzip
 
                 ;;
@@ -321,8 +319,7 @@ case $(uname -s) in
                     build-essential \
                     cmake \
                     git \
-                    libboost-all-dev \
-                    libjsoncpp-dev
+                    libboost-all-dev
 
                 # Install 'eth', for use in the Solidity Tests-over-IPC.
                 sudo add-apt-repository -y ppa:ethereum/ethereum
@@ -363,9 +360,6 @@ case $(uname -s) in
                     sudo yum -y remove boost-devel
                     sudo wget http://repo.enetres.net/enetres.repo -O /etc/yum.repos.d/enetres.repo
                     sudo yum install boost-devel
-
-                    # And finally jsoncpp
-                    sudo yum -y install jsoncpp-devel
                 else
                     echo "Aborted CentOS Solidity Dependency Installation";
                     exit 1
