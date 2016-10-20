@@ -4039,6 +4039,46 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 << -8;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_negative_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> -8;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_left_excessive_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 << 0x100000000;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> 0x100000000;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

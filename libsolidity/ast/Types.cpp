@@ -705,6 +705,34 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				value = rational(denominator, numerator);
 			break;
 		}
+		case Token::SHL:
+		{
+			using boost::multiprecision::pow;
+			if (fractional)
+				return TypePointer();
+			else if (other.m_value < 0)
+				return TypePointer();
+			else if (other.m_value > numeric_limits<uint32_t>::max())
+				return TypePointer();
+			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+			value = m_value.numerator() * pow(bigint(2), exponent);
+			break;
+		}
+		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
+		//       determines the resulting type and the type of shift (SAR or SHR).
+		case Token::SAR:
+		{
+			using boost::multiprecision::pow;
+			if (fractional)
+				return TypePointer();
+			else if (other.m_value < 0)
+				return TypePointer();
+			else if (other.m_value > numeric_limits<uint32_t>::max())
+				return TypePointer();
+			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+			value = rational(m_value.numerator() / pow(bigint(2), exponent), 1);
+			break;
+		}
 		default:
 			return TypePointer();
 		}
