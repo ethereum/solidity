@@ -29,7 +29,7 @@ E.g., using `pacman`:
 
 Or, respectively:
 
-    sudo pacman -U solidity-git-0.4.3.git.9d30450-1-x86_64.pkg.tar.xz
+    sudo pacman -U solidity-git-0.4.3.git.20161020.073dfad-1-x86_64.pkg.tar.xz
 
 ## Arch user repository
 
