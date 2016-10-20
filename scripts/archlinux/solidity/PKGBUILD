@@ -23,7 +23,7 @@ makedepends=(
 )
 groups=('ethereum')
 url="https://github.com/ethereum/solidity"
-license=('GPL')
+license=('GPL3')
 source=("https://github.com/ethereum/${pkgname}/archive/v${pkgver}.tar.gz")
 sha256sums=('0dd176919cab5492aecb27d1d8de39182b5e880979d5082fca6d7a01ebce28f1')
 provides=(
