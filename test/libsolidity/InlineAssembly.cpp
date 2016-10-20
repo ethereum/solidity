@@ -177,6 +177,11 @@ BOOST_AUTO_TEST_CASE(imbalanced_stack)
 	BOOST_CHECK(successAssemble("{ let x := 4 7 add }", false));
 }
 
+BOOST_AUTO_TEST_CASE(error_tag)
+{
+	BOOST_CHECK(successAssemble("{ ErrorTag }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
