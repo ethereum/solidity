@@ -10,6 +10,7 @@ Features:
 Bugfixes:
  * Disallow unknown options in ``solc``.
  * Proper type checking for bound functions.
+ * Type Checker: ``super.x`` does not look up ``x`` in the current contract.
  * Code Generator: expect zero stack increase after `super` as an expression.
  * Inline assembly: support the ``address`` opcode.
  * Inline assembly: fix parsing of assignment after a label.
