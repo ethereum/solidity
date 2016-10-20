@@ -483,7 +483,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
 				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
 			)
-				throw;
+				return make_tuple(false, rational(0));
 			//Only decimal notation allowed here, leading zeros would switch to octal.
 			auto fractionalBegin = find_if_not(
 				radixPoint + 1, 
