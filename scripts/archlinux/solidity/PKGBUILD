@@ -10,8 +10,6 @@ arch=('i686' 'x86_64')
 depends=(
   'boost'
   'boost-libs'
-  'crypto++'
-  'jsoncpp'
   'glibc'
 )
 makedepends=(
@@ -21,7 +19,6 @@ makedepends=(
   'gcc'
   'gcc-libs'
   'libtool'
-  'yasm'
   'git'
 )
 groups=('ethereum')
