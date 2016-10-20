@@ -718,11 +718,10 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
-				auto err = make_shared<Error>(Error::Type::Warning);
-				*err <<
-					errinfo_sourceLocation(varDecl.location()) <<
-					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?");
-				m_errors.push_back(err);
+				warning(
+					varDecl.location(),
+					"Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?"
+				);
 			}
 		}
 		varDecl.accept(*this);

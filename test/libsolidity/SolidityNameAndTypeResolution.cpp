@@ -4079,6 +4079,34 @@ BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				assembly {
+					1
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				assembly {
+					pop
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
