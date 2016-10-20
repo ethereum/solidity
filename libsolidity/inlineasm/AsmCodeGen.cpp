@@ -23,6 +23,7 @@
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <memory>
 #include <functional>
+#include <libdevcore/CommonIO.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
@@ -213,10 +214,31 @@ public:
 	void operator()(assembly::Block const& _block)
 	{
 		size_t numVariables = m_state.variables.size();
+		int deposit = m_state.assembly.deposit();
 		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-		// pop variables
-		// we deliberately do not check stack height
+		deposit = m_state.assembly.deposit() - deposit;
+
 		m_state.assembly.setSourceLocation(_block.location);
+
+		// issue warnings for stack height discrepancies
+		if (deposit < 0)
+		{
+			m_state.addError(
+				Error::Type::Warning,
+				"Inline assembly block is not balanced. It takes " + toString(-deposit) + " item(s) from the stack.",
+				_block.location
+			);
+		}
+		else if (deposit > 0)
+		{
+			m_state.addError(
+				Error::Type::Warning,
+				"Inline assembly block is not balanced. It leaves " + toString(deposit) + " item(s) on the stack.",
+				_block.location
+			);
+		}
+
+		// pop variables
 		while (m_state.variables.size() > numVariables)
 		{
 			m_state.assembly.append(solidity::Instruction::POP);
