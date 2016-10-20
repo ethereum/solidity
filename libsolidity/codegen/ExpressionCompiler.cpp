@@ -223,7 +223,8 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
 		if (Token::isShiftOp(target_op))
-			appendShiftOperatorCode(target_op, *_assignment.annotation().type, *_assignment.annotation().type);
+			// shift only cares about the signedness of both sides
+			appendShiftOperatorCode(target_op, *_assignment.leftHandSide().annotation().type, *_assignment.rightHandSide().annotation().type);
 		else
 			appendOrdinaryBinaryOperatorCode(target_op, *_assignment.annotation().type);
 		if (lvalueSize > 0)
@@ -391,7 +392,8 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
 		if (Token::isShiftOp(c_op))
-			appendShiftOperatorCode(c_op, commonType, commonType);
+			// shift only cares about the signedness of both sides
+			appendShiftOperatorCode(c_op, *leftExpression.annotation().type, *rightExpression.annotation().type);
 		else if (Token::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, commonType);
 		else
