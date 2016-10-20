@@ -81,7 +81,11 @@ struct GeneratorState
 class LabelOrganizer: public boost::static_visitor<>
 {
 public:
-	LabelOrganizer(GeneratorState& _state): m_state(_state) {}
+	LabelOrganizer(GeneratorState& _state): m_state(_state)
+	{
+		// Make the Solidity ErrorTag available to inline assembly
+		m_state.labels.insert(make_pair("ErrorTag", m_state.assembly.errorTag()));
+	}
 
 	template <class T>
 	void operator()(T const& /*_item*/) { }
