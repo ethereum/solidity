@@ -38,7 +38,7 @@ provides=(
 
 pkgver() {
   cd ${pkgname%-git}
-  echo "`grep -m1 "PROJECT\_VERSION" CMakeLists.txt | tr -cd '[[:digit:]].'`.git.`date +%Y%m%d`.`git log --pretty=format:%h -n 1`"
+  echo "`grep -m1 "PROJECT\_VERSION" CMakeLists.txt | tr -cd '[[:digit:]].'`.`date +%Y%m%d`.`git log --pretty=format:%h -n 1`"
 }
 
 build() {
