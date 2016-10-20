@@ -2,7 +2,7 @@
 # Available from AUR: https://aur.archlinux.org/packages/solidity-git/
 
 pkgname=solidity-git
-pkgver=0.4.3.git.9d30450
+pkgver=0.4.3.git.20161020.9d30450
 pkgrel=1
 pkgdesc="The Solidity Contract-Oriented Programming Language (Including solc, lllc; from latest unstable git version)"
 arch=('i686' 'x86_64')
