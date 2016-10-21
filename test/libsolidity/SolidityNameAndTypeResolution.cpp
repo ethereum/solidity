@@ -1439,6 +1439,21 @@ BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_invalid_direct_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = Sit;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
+}
+
 BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 {
 	char const* text = R"(
