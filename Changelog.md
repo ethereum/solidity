@@ -12,6 +12,7 @@ Bugfixes:
  * Disallow unknown options in ``solc``.
  * Proper type checking for bound functions.
  * Code Generator: expect zero stack increase after `super` as an expression.
+ * Allow inheritance of ``enum`` definitions.
  * Inline assembly: support the ``address`` opcode.
  * Inline assembly: fix parsing of assignment after a label.
  * Inline assembly: external variables of unsupported type (such as ``this``, ``super``, etc.)

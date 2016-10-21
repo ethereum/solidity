@@ -3314,6 +3314,57 @@ BOOST_AUTO_TEST_CASE(using_enums)
 	BOOST_CHECK(callContractFunction("getChoice()") == encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(using_contract_enums_with_explicit_contract_name)
+{
+	char const* sourceCode = R"(
+			contract test {
+				enum Choice { A, B, C }
+				function answer () returns (test.Choice _ret)
+				{
+					_ret = test.Choice.B;
+				}
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("answer()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(using_inherited_enum)
+{
+	char const* sourceCode = R"(
+			contract base {
+				enum Choice { A, B, C }
+			}
+
+			contract test is base {
+				function answer () returns (Choice _ret)
+				{
+					_ret = Choice.B;
+				}
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("answer()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(using_inherited_enum_excplicitly)
+{
+	char const* sourceCode = R"(
+			contract base {
+				enum Choice { A, B, C }
+			}
+
+			contract test is base {
+				function answer () returns (base.Choice _ret)
+				{
+					_ret = base.Choice.B;
+				}
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("answer()") == encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
 {
 	char const* sourceCode = R"(
