@@ -1402,8 +1402,19 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 
 	IntegerType const& leftType = dynamic_cast<IntegerType const&>(_leftType);
 	bool const c_leftSigned = leftType.isSigned();
-	IntegerType const& rightType = dynamic_cast<IntegerType const&>(_rightType);
-	bool const c_rightSigned = rightType.isSigned();
+
+	// The RValue can be a RationalNumberType too.
+	bool c_rightSigned = false;
+	if (_rightType.category() == Type::Category::RationalNumber)
+	{
+		RationalNumberType const& rightType = dynamic_cast<RationalNumberType const&>(_rightType);
+		c_rightSigned = rightType.integerType()->isSigned();
+	}
+	else
+	{
+		IntegerType const& rightType = dynamic_cast<IntegerType const&>(_rightType);
+		c_rightSigned = rightType.isSigned();
+	}
 
 	// shift with negative rvalue throws exception
 	if (c_rightSigned)
