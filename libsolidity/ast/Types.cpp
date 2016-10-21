@@ -345,7 +345,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 
 	// All integer types can be compared
-	if (Token::isCompareOp(_operator))
+	if (Token::isCompareOp(_operator) || Token::isShiftOp(_operator))
 		return commonType;
 	if (Token::isBooleanOp(_operator))
 		return TypePointer();
