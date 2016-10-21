@@ -880,6 +880,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 	TypePointer trueType = type(_conditional.trueExpression())->mobileType();
 	TypePointer falseType = type(_conditional.falseExpression())->mobileType();
+	if (!trueType)
+		fatalTypeError(_conditional.trueExpression().location(), "Invalid mobile type.");
+	if (!falseType)
+		fatalTypeError(_conditional.falseExpression().location(), "Invalid mobile type.");
 
 	TypePointer commonType = Type::commonType(trueType, falseType);
 	if (!commonType)
@@ -986,10 +990,16 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*components[i]));
 				if (_tuple.isInlineArray())
 					solAssert(!!types[i], "Inline array cannot have empty components");
-				if (i == 0 && _tuple.isInlineArray())
-					inlineArrayType = types[i]->mobileType();
-				else if (_tuple.isInlineArray() && inlineArrayType)
-					inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+				if (_tuple.isInlineArray())
+				{
+					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
+						fatalTypeError(components[i]->location(), "Invalid mobile type.");
+
+					if (i == 0)
+						inlineArrayType = types[i]->mobileType();
+					else if (inlineArrayType)
+						inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+				}
 			}
 			else
 				types.push_back(TypePointer());

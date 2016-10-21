@@ -198,7 +198,9 @@ TypePointer Type::forLiteral(Literal const& _literal)
 
 TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 {
-	if (_b->isImplicitlyConvertibleTo(*_a))
+	if (!_a || !_b)
+		return TypePointer();
+	else if (_b->isImplicitlyConvertibleTo(*_a))
 		return _a;
 	else if (_a->isImplicitlyConvertibleTo(*_b))
 		return _b;
@@ -1661,7 +1663,17 @@ TypePointer TupleType::mobileType() const
 {
 	TypePointers mobiles;
 	for (auto const& c: components())
-		mobiles.push_back(c ? c->mobileType() : TypePointer());
+	{
+		if (c)
+		{
+			auto mt = c->mobileType();
+			if (!mt)
+				return TypePointer();
+			mobiles.push_back(mt);
+		}
+		else
+			mobiles.push_back(TypePointer());
+	}
 	return make_shared<TupleType>(mobiles);
 }
 

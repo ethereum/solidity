@@ -368,8 +368,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			m_context << (u256(1) << (256 - targetBytesType.numBytes() * 8)) << Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
+		{
+			solAssert(_typeOnStack.mobileType(), "");
 			// just clean
 			convertType(_typeOnStack, *_typeOnStack.mobileType(), true);
+		}
 		else if (targetTypeCategory == Type::Category::FixedPoint)
 		{
 			solAssert(

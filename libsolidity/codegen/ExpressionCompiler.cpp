@@ -56,8 +56,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
 	{
 		// reference type, only convert value to mobile type and do final conversion in storeValue.
-		utils().convertType(*type, *type->mobileType());
-		type = type->mobileType();
+		auto mt = type->mobileType();
+		solAssert(mt, "");
+		utils().convertType(*type, *mt);
+		type = mt;
 	}
 	else
 	{
@@ -1437,11 +1439,17 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Evaluate arguments.
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
-	bool manualFunctionId =
+	bool manualFunctionId = false;
+	if (
 		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode || funKind == FunctionKind::BareDelegateCall) &&
-		!_arguments.empty() &&
-		_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
+		!_arguments.empty()
+	)
+	{
+		solAssert(_arguments.front()->annotation().type->mobileType(), "");
+		manualFunctionId =
+			_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
 			CompilerUtils::dataStartOffset;
+	}
 	if (manualFunctionId)
 	{
 		// If we have a Bare* and the first type has exactly 4 bytes, use it as
