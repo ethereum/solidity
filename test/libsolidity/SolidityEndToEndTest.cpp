@@ -7304,6 +7304,28 @@ BOOST_AUTO_TEST_CASE(shift_negative_constant_right)
 	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(-0x42)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier m {
+				uint a = 1;
+				assembly {
+					a := 2
+				}
+				if (a != 2)
+					throw;
+				_;
+			}
+			function f() m returns (bool) {
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

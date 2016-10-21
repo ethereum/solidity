@@ -4107,6 +4107,57 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
 	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
+{
+	char const* text = R"(
+		contract test {
+			modifier m {
+				uint a = 1;
+				assembly {
+				    a := 2
+				}
+				_;
+			}
+			function f() m {
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage)
+{
+	char const* text = R"(
+		contract test {
+			uint x = 1;
+			function f() {
+				assembly {
+				    x := 2
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
+{
+	char const* text = R"(
+		contract test {
+			uint x = 1;
+			modifier m {
+				assembly {
+				    x := 2
+				}
+				_;
+			}
+			function f() m {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::DeclarationError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
