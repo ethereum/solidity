@@ -888,6 +888,18 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				// no-op
 			}
+			else if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+			{
+				// TODO duplicate code should be unified
+
+				if (!variable->isConstant())
+					setLValueFromDeclaration(*_memberAccess.annotation().referencedDeclaration, _memberAccess);
+				else
+				{
+					variable->value()->accept(*this);
+					utils().convertType(*variable->value()->annotation().type, *variable->annotation().type);
+				}
+			}
 			else
 				_memberAccess.expression().accept(*this);
 		}
