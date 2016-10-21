@@ -9,6 +9,7 @@ Features:
  * Support shifting constant numbers.
 
 Bugfixes:
+ * Optimizer: fix related to stale knowledge about SHA3 operations
  * Disallow unknown options in ``solc``.
  * Proper type checking for bound functions.
  * Code Generator: expect zero stack increase after `super` as an expression.

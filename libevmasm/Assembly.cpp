@@ -327,8 +327,10 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 			AssemblyItems optimisedItems;
 			for (BasicBlock const& block: cfg.optimisedBlocks())
 			{
-				assertThrow(!!block.startState, OptimizerException, "");
-				CommonSubexpressionEliminator eliminator(*block.startState);
+				// We used to start with the block's initial state but it caused
+				// too many inconsistencies.
+				KnownState emptyState;
+				CommonSubexpressionEliminator eliminator(emptyState);
 				auto iter = m_items.begin() + block.begin;
 				auto const end = m_items.begin() + block.end;
 				while (iter < end)
