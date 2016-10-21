@@ -14,6 +14,7 @@ Bugfixes:
  * Type checker: Proper type checking for bound functions.
  * Type checker: fix crash related to invalid fixed point constants
  * Code generator: expect zero stack increase after ``super`` as an expression.
+ * Code Generator: fixed an internal compiler error for ``L.Foo`` for ``enum Foo`` defined in library ``L``.
  * Inline assembly: support the ``address`` opcode.
  * Inline assembly: fix parsing of assignment after a label.
  * Inline assembly: external variables of unsupported type (such as ``this``, ``super``, etc.)
