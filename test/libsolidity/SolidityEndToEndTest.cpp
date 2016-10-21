@@ -5666,6 +5666,21 @@ BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
 		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(555)));
 }
 
+BOOST_AUTO_TEST_CASE(state_variable_under_contract_name)
+{
+	char const* text = R"(
+		contract Scope {
+			uint stateVar = 42;
+
+			function getStateVar() constant returns (uint stateVar) {
+				stateVar = Scope.stateVar;
+			}
+		}
+	)";
+	compileAndRun(text);
+	BOOST_CHECK(callContractFunction("getStateVar()") == encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_CASE(constant_string_literal)
 {
 	char const* sourceCode = R"(
