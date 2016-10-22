@@ -135,6 +135,7 @@ static set<string> const g_combinedJsonArgs{
 	g_strBinaryRuntime,
 	g_strCloneBinary,
 	g_strInterface,
+	g_strMutate,
 	g_strNatspecUser,
 	g_strNatspecDev,
 	g_strOpcodes,
@@ -722,6 +723,8 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strNatspecDev] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
 		if (requests.count(g_strNatspecUser))
 			contractData[g_strNatspecUser] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
+		if (requests.count(g_argMutate))
+			contractData[g_argMutate] = "Unimplemented";
 		output[g_strContracts][contractName] = contractData;
 	}
 
