@@ -66,82 +66,82 @@ namespace solidity
 {
 
 static string const g_strAbi = "abi";
-static string const g_strSignatureHashes = "hashes";
-static string const g_strGas = "gas";
+static string const g_strAddStandard = "add-std";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
+static string const g_strAssemble = "assemble";
 static string const g_strAst = "ast";
 static string const g_strAstJson = "ast-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCloneBinary = "clone-bin";
-static string const g_strOpcodes = "opcodes";
+static string const g_strCombinedJson = "combined-json";
+static string const g_strContracts = "contracts";
+static string const g_strFormal = "formal";
+static string const g_strGas = "gas";
+static string const g_strHelp = "help";
+static string const g_strInputFile = "input-file";
+static string const g_strInterface = "interface";
+static string const g_strLibraries = "libraries";
+static string const g_strLink = "link";
+static string const g_strMetadata = "metadata";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
-static string const g_strMetadata = "metadata";
-static string const g_strAddStandard = "add-std";
-static string const g_strSrcMap = "srcmap";
-static string const g_strSrcMapRuntime = "srcmap-runtime";
-static string const g_strInterface = "interface";
-static string const g_strFormal = "formal";
-static string const g_strOutputDir = "output-dir";
-static string const g_strInputFile = "input-file";
-static string const g_strHelp = "help";
-static string const g_strVersion = "version";
+static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
-static string const g_strLibraries = "libraries";
-static string const g_strCombinedJson = "combined-json";
-static string const g_strAssemble = "assemble";
-static string const g_strLink = "link";
-static string const g_strContracts = "contracts";
+static string const g_strOutputDir = "output-dir";
+static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
+static string const g_strSrcMap = "srcmap";
+static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
 
 static string const g_argAbi = g_strAbi;
-static string const g_argSignatureHashes = g_strSignatureHashes;
-static string const g_argGas = g_strGas;
+static string const g_argAddStandard = g_strAddStandard;
 static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
+static string const g_argAssemble = g_strAssemble;
 static string const g_argAst = g_strAst;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCloneBinary = g_strCloneBinary;
+static string const g_argCombinedJson = g_strCombinedJson;
+static string const g_argFormal = g_strFormal;
+static string const g_argGas = g_strGas;
+static string const g_argHelp = g_strHelp;
+static string const g_argInputFile = g_strInputFile;
+static string const g_argLibraries = g_strLibraries;
+static string const g_argLink = g_strLink;
 static string const g_argMetadata = g_strMetadata;
-static string const g_argOpcodes = g_strOpcodes;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
-static string const g_argAddStandard = g_strAddStandard;
-static string const g_argFormal = g_strFormal;
-static string const g_argOutputDir = g_strOutputDir;
-static string const g_argInputFile = g_strInputFile;
-static string const g_argHelp = g_strHelp;
-static string const g_argVersion = g_strVersion;
+static string const g_argOpcodes = g_strOpcodes;
 static string const g_argOptimize = g_strOptimize;
 static string const g_argOptimizeRuns = g_strOptimizeRuns;
-static string const g_argLibraries = g_strLibraries;
-static string const g_argCombinedJson = g_strCombinedJson;
-static string const g_argAssemble = g_strAssemble;
-static string const g_argLink = g_strLink;
+static string const g_argOutputDir = g_strOutputDir;
+static string const g_argSignatureHashes = g_strSignatureHashes;
+static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
+	g_strAbi,
+	g_strAsm,
+	g_strAst,
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCloneBinary,
-	g_strSrcMap,
-	g_strSrcMapRuntime,
-	g_strOpcodes,
-	g_strAbi,
 	g_strInterface,
 	g_strMetadata,
-	g_strAsm,
-	g_strAst,
 	g_strNatspecUser,
-	g_strNatspecDev
+	g_strNatspecDev,
+	g_strOpcodes,
+	g_strSrcMap,
+	g_strSrcMapRuntime
 };
 
 static void version()
@@ -163,18 +163,18 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		return false;
 	for (string const& arg: {
 		g_argAbi,
-		g_argSignatureHashes,
-		g_argMetadata,
-		g_argNatspecUser,
-		g_argAstJson,
-		g_argNatspecDev,
 		g_argAsm,
 		g_argAsmJson,
-		g_argOpcodes,
+		g_argAstJson,
 		g_argBinary,
 		g_argBinaryRuntime,
 		g_argCloneBinary,
-		g_argFormal
+		g_argFormal,
+		g_argMetadata,
+		g_argNatspecUser,
+		g_argNatspecDev,
+		g_argOpcodes,
+		g_argSignatureHashes
 	})
 		if (_args.count(arg))
 			return true;
