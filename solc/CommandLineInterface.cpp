@@ -83,6 +83,7 @@ static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
+static string const g_strMutate = "mutate";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
 static string const g_strOpcodes = "opcodes";
@@ -114,6 +115,7 @@ static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
+static string const g_argMutate = g_strMutate;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
 static string const g_argOpcodes = g_strOpcodes;
@@ -500,6 +502,7 @@ Allowed options)",
 		(g_argBinary.c_str(), "Binary of the contracts in hex.")
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argCloneBinary.c_str(), "Binary of the clone contracts in hex.")
+		(g_argMutate.c_str(), "Binary of the contracts in hex and their mutations.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
@@ -613,6 +616,8 @@ bool CommandLineInterface::processInput()
 	{
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+		if (m_args.count(g_argMutate))
+			m_compiler->setMutate(true);
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested

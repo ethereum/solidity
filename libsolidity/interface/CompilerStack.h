@@ -90,6 +90,12 @@ public:
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
 
+	/// Sets m_mutate
+	void setMutate(bool mutate)
+	{
+		m_mutate = mutate;
+	}
+
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	void reset(bool _keepSources = false);
 
@@ -262,6 +268,9 @@ private:
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;
 	ErrorList m_errors;
+
+	/// true if compiler should mutate contracts
+	bool m_mutate;
 };
 
 }
