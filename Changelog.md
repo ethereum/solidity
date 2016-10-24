@@ -9,17 +9,17 @@ Features:
  * Support shifting constant numbers.
 
 Bugfixes:
- * Optimizer: fix related to stale knowledge about SHA3 operations
- * Disallow unknown options in ``solc``.
- * Proper type checking for bound functions.
- * Type Checker: ``super.x`` does not look up ``x`` in the current contract.
- * Code Generator: expect zero stack increase after `super` as an expression.
- * Allow inheritance of ``enum`` definitions.
+ * Commandline interface: Disallow unknown options in ``solc``.
+ * Name resolver: Allow inheritance of ``enum`` definitions.
+ * Type checker: Proper type checking for bound functions.
+ * Type checker: fix crash related to invalid fixed point constants
+ * Code generator: expect zero stack increase after ``super`` as an expression.
  * Inline assembly: support the ``address`` opcode.
  * Inline assembly: fix parsing of assignment after a label.
  * Inline assembly: external variables of unsupported type (such as ``this``, ``super``, etc.)
    are properly detected as unusable.
  * Inline assembly: support variables within modifiers.
+ * Optimizer: fix related to stale knowledge about SHA3 operations
 
 ### 0.4.2 (2016-09-17)
 

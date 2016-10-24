@@ -4088,6 +4088,18 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
+{
+	char const* text = R"(
+		contract A {
+			function a() {
+				.8E0;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
 {
 	char const* text = R"(
