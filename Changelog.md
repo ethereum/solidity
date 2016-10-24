@@ -12,7 +12,8 @@ Bugfixes:
  * Commandline interface: Disallow unknown options in ``solc``.
  * Name resolver: Allow inheritance of ``enum`` definitions.
  * Type checker: Proper type checking for bound functions.
- * Type checker: fix crash related to invalid fixed point constants
+ * Type checker: fixed crash related to invalid fixed point constants
+ * Type checker: fixed crash related to invalid literal numbers.
  * Code generator: expect zero stack increase after ``super`` as an expression.
  * Code Generator: fixed an internal compiler error for ``L.Foo`` for ``enum Foo`` defined in library ``L``.
  * Inline assembly: support the ``address`` opcode.

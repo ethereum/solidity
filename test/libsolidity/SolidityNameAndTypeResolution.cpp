@@ -4175,7 +4175,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
 			modifier m {
 				uint a = 1;
 				assembly {
-				    a := 2
+					a := 2
 				}
 				_;
 			}
@@ -4193,7 +4193,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 			uint x = 1;
 			function f() {
 				assembly {
-				    x := 2
+					x := 2
 				}
 			}
 		}
@@ -4208,7 +4208,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 			uint x = 1;
 			modifier m {
 				assembly {
-				    x := 2
+					x := 2
 				}
 				_;
 			}
@@ -4217,6 +4217,19 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 		}
 	)";
 	BOOST_CHECK(expectError(text, false) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_mobile_type)
+{
+	char const* text = R"(
+			contract C {
+				function f() {
+					// Invalid number
+					[1, 78901234567890123456789012345678901234567890123456789345678901234567890012345678012345678901234567];
+				}
+			}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
