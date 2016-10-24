@@ -3,6 +3,7 @@
 Features:
 
 Bugfixes:
+ * Type checker: forbid signed exponential that led to an incorrect use of EXP opcode.
 
 ### 0.4.3 (2016-10-25)
 
