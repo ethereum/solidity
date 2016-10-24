@@ -861,11 +861,12 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		}
 
 	// Special processing for TypeType because we do not want to visit the library itself
-	// for internal functions.
+	// for internal functions, or enum/struct definitions.
 	if (TypeType const* type = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type.get()))
 	{
 		if (dynamic_cast<ContractType const*>(type->actualType().get()))
 		{
+			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
 			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
 				if (funType->location() != FunctionType::Location::Internal)
@@ -882,6 +883,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					solAssert(!!function, "Function not found in member access");
 					m_context << m_context.functionEntryLabel(*function).pushTag();
 				}
+			}
+			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
+			{
+				// no-op
 			}
 			else
 				_memberAccess.expression().accept(*this);

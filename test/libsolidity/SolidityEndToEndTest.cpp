@@ -5905,6 +5905,48 @@ BOOST_AUTO_TEST_CASE(using_library_structs)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7), u256(8)));
 }
 
+BOOST_AUTO_TEST_CASE(library_struct_as_an_expression)
+{
+	char const* sourceCode = R"(
+		library Arst {
+			struct Foo {
+				int Things;
+				int Stuff;
+			}
+		}
+
+		contract Tsra {
+			function f() returns(uint) {
+				Arst.Foo;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Tsra");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(library_enum_as_an_expression)
+{
+	char const* sourceCode = R"(
+		library Arst {
+			enum Foo {
+				Things,
+				Stuff
+			}
+		}
+
+		contract Tsra {
+			function f() returns(uint) {
+				Arst.Foo;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Tsra");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(short_strings)
 {
 	// This test verifies that the byte array encoding that combines length and data works
