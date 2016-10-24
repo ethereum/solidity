@@ -14,6 +14,7 @@ Bugfixes:
  * Type checker: Proper type checking for bound functions.
  * Type checker: fixed crash related to invalid fixed point constants
  * Type checker: fixed crash related to invalid literal numbers.
+ * Type Checker: ``super.x`` does not look up ``x`` in the current contract.
  * Code generator: expect zero stack increase after ``super`` as an expression.
  * Code Generator: fixed an internal compiler error for ``L.Foo`` for ``enum Foo`` defined in library ``L``.
  * Inline assembly: support the ``address`` opcode.
