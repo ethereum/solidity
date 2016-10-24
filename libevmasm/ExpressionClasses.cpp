@@ -257,6 +257,7 @@ Rules::Rules()
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }},
 		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
+		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; } },
 		// operations involving an expression and itself
 		{{Instruction::AND, {X, X}}, [=]{ return X; }},
 		{{Instruction::OR, {X, X}}, [=]{ return X; }},
