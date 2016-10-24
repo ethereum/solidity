@@ -12,6 +12,7 @@ Bugfixes:
  * Optimizer: fix related to stale knowledge about SHA3 operations
  * Disallow unknown options in ``solc``.
  * Proper type checking for bound functions.
+ * Type Checker: ``super.x`` does not look up ``x`` in the current contract.
  * Code Generator: expect zero stack increase after `super` as an expression.
  * Allow inheritance of ``enum`` definitions.
  * Inline assembly: support the ``address`` opcode.
