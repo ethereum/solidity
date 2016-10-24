@@ -2098,6 +2098,22 @@ BOOST_AUTO_TEST_CASE(integer_boolean_operators)
 	BOOST_CHECK(expectError(sourceCode3) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(exp_signed_variable)
+{
+	char const* sourceCode1 = R"(
+		contract test { function() { uint x = 3; int y = -4; x ** y; } }
+	)";
+	BOOST_CHECK(expectError(sourceCode1) == Error::Type::TypeError);
+	char const* sourceCode2 = R"(
+		contract test { function() { uint x = 3; int y = -4; y ** x; } }
+	)";
+	BOOST_CHECK(expectError(sourceCode2) == Error::Type::TypeError);
+	char const* sourceCode3 = R"(
+		contract test { function() { int x = -3; int y = -4; x ** y; } }
+	)";
+	BOOST_CHECK(expectError(sourceCode3) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(reference_compare_operators)
 {
 	char const* sourceCode1 = R"(
