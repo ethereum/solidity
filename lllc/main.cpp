@@ -99,8 +99,8 @@ int main(int argc, char** argv)
 			mode = Assembly;
 		else if (arg == "-t" || arg == "--parse-tree")
 			mode = ParseTree;
-		else if ((arg == "-o" || arg == "--optimise") && argc > i + 1)
-			optimise = atoi(argv[++i]);
+		else if (arg == "-o" || arg == "--optimise")
+			optimise = 1;
 		else if (arg == "-d" || arg == "--disassemble")
 			mode = Disassemble;
 		else if (arg == "-V" || arg == "--version")
