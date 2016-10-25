@@ -40,6 +40,12 @@ struct SemVerVersion
 	std::string prerelease;
 	std::string build;
 
+	unsigned major() const { return numbers[0]; }
+	unsigned minor() const { return numbers[1]; }
+	unsigned patch() const { return numbers[2]; }
+
+	bool isPrerelease() const { return !prerelease.empty(); }
+
 	explicit SemVerVersion(std::string const& _versionString = "0.0.0");
 };
 
