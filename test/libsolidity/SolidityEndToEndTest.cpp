@@ -5666,6 +5666,120 @@ BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
 		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(555)));
 }
 
+BOOST_AUTO_TEST_CASE(state_variable_under_contract_name)
+{
+	char const* text = R"(
+		contract Scope {
+			uint stateVar = 42;
+
+			function getStateVar() constant returns (uint stateVar) {
+				stateVar = Scope.stateVar;
+			}
+		}
+	)";
+	compileAndRun(text);
+	BOOST_CHECK(callContractFunction("getStateVar()") == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_local_variable_mixture)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint x = 1;
+			uint y = 2;
+			function a() returns (uint x) {
+				x = A.y;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function) {
+	char const* sourceCode = R"(
+		contract A { function f() internal returns (uint) { return 1; } }
+		contract B is A {
+			function f() internal returns (uint) { return 2; }
+			function g() returns (uint) {
+				return A.f();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function_from_a_library) {
+	char const* sourceCode = R"(
+		library A { function f() internal returns (uint) { return 1; } }
+		contract B {
+			function f() internal returns (uint) { return 2; }
+			function g() returns (uint) {
+				return A.f();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_constant_state_var)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint constant x = 7;
+		}
+		contract B is A {
+			function f() returns (uint) {
+				return A.x;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_inherited_state_vars)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint x = 7;
+		}
+		contract B {
+			uint x = 9;
+		}
+		contract C is A, B {
+			function a() returns (uint) {
+				return A.x;
+			}
+			function b() returns (uint) {
+				return B.x;
+			}
+			function a_set(uint _x) returns (uint) {
+				A.x = _x;
+				return 1;
+			}
+			function b_set(uint _x) returns (uint) {
+				B.x = _x;
+				return 1;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("b()") == encodeArgs(u256(9)));
+	BOOST_CHECK(callContractFunction("a_set(uint256)", u256(1)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("b_set(uint256)", u256(3)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("b()") == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_CASE(constant_string_literal)
 {
 	char const* sourceCode = R"(

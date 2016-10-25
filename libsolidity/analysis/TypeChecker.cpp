@@ -1386,6 +1386,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	}
 	else if (exprType->category() == Type::Category::FixedBytes)
 		annotation.isLValue = false;
+	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType.get()))
+	{
+		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType().get()))
+			annotation.isLValue = annotation.referencedDeclaration->isLValue();
+	}
 
 	return false;
 }

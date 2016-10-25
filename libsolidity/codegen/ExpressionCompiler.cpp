@@ -890,6 +890,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				// no-op
 			}
+			else if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+				appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
 			else
 				_memberAccess.expression().accept(*this);
 		}
@@ -1203,15 +1205,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.virtualFunctionEntryLabel(*functionDef).pushTag();
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
-	{
-		if (!variable->isConstant())
-			setLValueFromDeclaration(*declaration, _identifier);
-		else
-		{
-			variable->value()->accept(*this);
-			utils().convertType(*variable->value()->annotation().type, *variable->annotation().type);
-		}
-	}
+		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		if (contract->isLibrary())
@@ -1644,6 +1638,17 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 	_expression.accept(*this);
 	utils().convertType(*_expression.annotation().type, _expectedType, true);
 	utils().storeInMemoryDynamic(_expectedType);
+}
+
+void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Expression const& _expression)
+{
+	if (!_variable.isConstant())
+		setLValueFromDeclaration(_variable, _expression);
+	else
+	{
+		_variable.value()->accept(*this);
+		utils().convertType(*_variable.value()->annotation().type, *_variable.annotation().type);
+	}
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
