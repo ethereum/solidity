@@ -1,6 +1,7 @@
 ### 0.4.7 (unreleased)
 
 Features:
+ * Support shifting variables. This is implemented via ``EXP`` and ``MUL`` / ``(S)DIV``.
  * Optimizer: Some dead code elimination.
 
 Bugfixes:
