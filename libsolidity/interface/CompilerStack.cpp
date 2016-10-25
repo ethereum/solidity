@@ -239,9 +239,9 @@ void CompilerStack::link(const std::map<string, h160>& _libraries)
 {
 	for (auto& contract: m_contracts)
 	{
-		contract.second.object.link(_libraries);
-		contract.second.runtimeObject.link(_libraries);
-		contract.second.cloneObject.link(_libraries);
+		contract.second.mutation.link(_libraries);
+		contract.second.runtimeMutation.link(_libraries);
+		contract.second.cloneMutation.link(_libraries);
 	}
 }
 
@@ -293,28 +293,43 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	return c.runtimeSourceMapping.get();
 }
 
-eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
+bytes CompilerStack::bytecode(enum Object _objectType, std::string const& _contractName) const
 {
-	return contract(_contractName).object;
+	switch (_objectType) 
+	{
+		case ASSEMBLED: return contract(_contractName).mutation.bytecodeOrdinary();
+		case RUNTIME:   return contract(_contractName).runtimeMutation.bytecodeOrdinary();
+		case CLONE:     return contract(_contractName).cloneMutation.bytecodeOrdinary();
+	}
+} 
+
+string CompilerStack::hex(enum Object _objectType, string const& _contractName) const
+{
+	switch (_objectType) 
+	{
+		case ASSEMBLED: return contract(_contractName).mutation.hexOrdinary();
+		case RUNTIME:   return contract(_contractName).runtimeMutation.hexOrdinary();
+		case CLONE:     return contract(_contractName).cloneMutation.hexOrdinary();
+	}
 }
 
-eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractName) const
+map<size_t, string> CompilerStack::linkReferences(enum Object _objectType, string const& _contractName) const
 {
-	return contract(_contractName).runtimeObject;
-}
-
-eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName) const
-{
-	return contract(_contractName).cloneObject;
+	switch (_objectType) 
+	{
+		case ASSEMBLED: return contract(_contractName).mutation.linkReferencesOrdinary();
+		case RUNTIME:   return contract(_contractName).runtimeMutation.linkReferencesOrdinary();
+		case CLONE:     return contract(_contractName).cloneMutation.linkReferencesOrdinary();
+	}
 }
 
 dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 {
-	auto const& obj = runtimeObject(_contractName);
-	if (obj.bytecode.empty() || !obj.linkReferences.empty())
+	bytes code = bytecode(RUNTIME, _contractName);
+	if (code.empty() || !linkReferences(RUNTIME, _contractName).empty())
 		return dev::h256();
 	else
-		return dev::keccak256(obj.bytecode);
+		return dev::keccak256(code);
 }
 
 string CompilerStack::mutation(string const& _contractName) const
@@ -591,13 +606,13 @@ void CompilerStack::compileContract(
 	compiler->compileContract(_contract, _compiledContracts);
 	Contract& compiledContract = m_contracts.at(_contract.name());
 	compiledContract.compiler = compiler;
-	compiledContract.object = compiler->assembledObject();
-	compiledContract.runtimeObject = compiler->runtimeObject();
+	compiledContract.mutation.setOrdinary(compiler->assembledObject());
+	compiledContract.runtimeMutation.setOrdinary(compiler->runtimeObject());
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	Compiler cloneCompiler(_optimize, _runs);
 	cloneCompiler.compileClone(_contract, _compiledContracts);
-	compiledContract.cloneObject = cloneCompiler.assembledObject();
+	compiledContract.cloneMutation.setOrdinary(cloneCompiler.assembledObject());
 }
 
 std::string CompilerStack::defaultContractName() const

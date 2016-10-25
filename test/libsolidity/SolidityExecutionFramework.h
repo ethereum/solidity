@@ -83,10 +83,9 @@ public:
 				);
 			BOOST_ERROR("Compiling contract failed");
 		}
-		eth::LinkerObject obj = m_compiler.object(_contractName);
-		obj.link(_libraryAddresses);
-		BOOST_REQUIRE(obj.linkReferences.empty());
-		sendMessage(obj.bytecode + _arguments, true, _value);
+		m_compiler.link(_libraryAddresses);
+		BOOST_REQUIRE(m_compiler.linkReferences(ASSEMBLED, _contractName).empty());
+		sendMessage(m_compiler.bytecode(ASSEMBLED, _contractName) + _arguments, true, _value);
 		return m_output;
 	}
 

@@ -185,31 +185,31 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin", m_compiler->object(_contract).toHex());
+			createFile(_contract + ".bin", m_compiler->hex(ASSEMBLED, _contract));
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << m_compiler->object(_contract).toHex() << endl;
+			cout << m_compiler->hex(ASSEMBLED, _contract) << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
+			createFile(_contract + ".clone_bin", m_compiler->hex(CLONE, _contract));
 		else
 		{
 			cout << "Clone Binary: " << endl;
-			cout << m_compiler->cloneObject(_contract).toHex() << endl;
+			cout << m_compiler->hex(CLONE, _contract) << endl;
 		}
 	}
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
+			createFile(_contract + ".bin-runtime", m_compiler->hex(RUNTIME, _contract));
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
-			cout << m_compiler->runtimeObject(_contract).toHex() << endl;
+			cout << m_compiler->hex(RUNTIME, _contract) << endl;
 		}
 	}
 }
@@ -217,11 +217,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->bytecode(ASSEMBLED, _contract)));
 	else
 	{
 		cout << "Opcodes: " << endl;
-		cout << solidity::disassemble(m_compiler->object(_contract).bytecode);
+		cout << solidity::disassemble(m_compiler->bytecode(ASSEMBLED, _contract));
 		cout << endl;
 	}
 }
@@ -298,7 +298,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
+		u256 bytecodeSize(m_compiler->bytecode(RUNTIME, _contract).size());
 		cout << "construction:" << endl;
 		cout << "   " << gas << " + " << (bytecodeSize * eth::GasCosts::createDataGas) << " = ";
 		gas += bytecodeSize * eth::GasCosts::createDataGas;
@@ -709,13 +709,13 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strAbi))
 			contractData[g_strAbi] = m_compiler->interface(contractName);
 		if (requests.count(g_strBinary))
-			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
+			contractData[g_strBinary] = m_compiler->hex(ASSEMBLED, contractName);
 		if (requests.count(g_strBinaryRuntime))
-			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
+			contractData[g_strBinaryRuntime] = m_compiler->hex(RUNTIME, contractName);
 		if (requests.count(g_strCloneBinary))
-			contractData[g_strCloneBinary] = m_compiler->cloneObject(contractName).toHex();
+			contractData[g_strCloneBinary] = m_compiler->hex(CLONE, contractName);
 		if (requests.count(g_strOpcodes))
-			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->bytecode(ASSEMBLED, contractName));
 		if (requests.count(g_strAsm))
 		{
 			ostringstream unused;

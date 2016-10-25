@@ -35,6 +35,7 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/Mutation.h>
 
 namespace dev
 {
@@ -58,6 +59,11 @@ class Compiler;
 class GlobalContext;
 class InterfaceHandler;
 class Error;
+
+enum Object
+{
+	ASSEMBLED, RUNTIME, CLONE
+};
 
 enum class DocumentationType: uint8_t
 {
@@ -133,15 +139,15 @@ public:
 	bool prepareFormalAnalysis(ErrorList* _errors = nullptr);
 	std::string const& formalTranslation() const { return m_formalTranslation; }
 
-	/// @returns the assembled object for a contract.
-	eth::LinkerObject const& object(std::string const& _contractName = "") const;
-	/// @returns the runtime object for the contract.
-	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
-	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
-	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
-	/// substituted by the actual address. Note that this sequence starts end ends in three X
-	/// characters but can contain anything in between.
-	eth::LinkerObject const& cloneObject(std::string const& _contractName = "") const;
+	/// @returns a bytecode of the  _object corresponding to contract with _contractName.
+	bytes bytecode(enum Object _objectType, std::string const& _contractName = "") const;
+	/// @returns a hex representation of the bytecode of the _object, replacing unlinked
+	/// addresses by placeholders,  corresponding to contract with _contractName.
+	std::string hex(enum Object _objectType, std::string const& _contractName = "") const;
+	/// Links the given libraries by replacing their uses in the code and removes them from the references.
+	void link(enum Object _objectType, std::string const& _contractName, std::map<std::string, h160> const& _libraryAddresses);
+	/// @returns Map from offsets in bytecode to library identifiers.
+	std::map<size_t, std::string> linkReferences(enum Object _objectType, std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
@@ -218,9 +224,9 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		eth::LinkerObject object;
-		eth::LinkerObject runtimeObject;
-		eth::LinkerObject cloneObject;
+		Mutation mutation;
+		Mutation runtimeMutation;
+		Mutation cloneMutation;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;

@@ -66,11 +66,11 @@ public:
 		auto state = make_shared<KnownState>();
 		PathGasMeter meter(*m_compiler.assemblyItems());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
-		u256 bytecodeSize(m_compiler.runtimeObject().bytecode.size());
+		u256 bytecodeSize(m_compiler.bytecode(RUNTIME).size());
 		// costs for deployment
 		gas += bytecodeSize * schedule.createDataGas;
 		// costs for transaction
-		gas += gasForTransaction(m_compiler.object().bytecode, true);
+		gas += gasForTransaction(m_compiler.bytecode(ASSEMBLED), true);
 
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
