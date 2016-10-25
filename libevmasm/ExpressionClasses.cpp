@@ -245,17 +245,18 @@ Rules::Rules()
 
 		// invariants involving known constants
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }},
+		{{Instruction::SUB, {X, 0}}, [=]{ return X; }},
 		{{Instruction::MUL, {X, 1}}, [=]{ return X; }},
 		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
 		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
 		{{Instruction::OR, {X, 0}}, [=]{ return X; }},
 		{{Instruction::XOR, {X, 0}}, [=]{ return X; }},
 		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
+		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }},
-		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; } },
 		// operations involving an expression and itself
