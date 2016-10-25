@@ -378,7 +378,7 @@ KnownState::Id KnownState::applySha3(
 		for (Id a: arguments)
 			data += toBigEndian(*m_expressionClasses->knownConstant(a));
 		data.resize(size_t(*l));
-		v = m_expressionClasses->find(AssemblyItem(u256(sha3(data)), _location));
+		v = m_expressionClasses->find(AssemblyItem(u256(dev::keccak256(data)), _location));
 	}
 	else
 		v = m_expressionClasses->find(sha3Item, {_start, _length}, true, m_sequenceNumber);

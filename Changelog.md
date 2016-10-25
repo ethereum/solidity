@@ -1,3 +1,30 @@
+### 0.4.3 (2016-10-25)
+
+Features:
+
+ * Inline assembly: support both ``suicide`` and ``selfdestruct`` opcodes
+   (note: ``suicide`` is deprecated).
+ * Inline assembly: issue warning if stack is not balanced after block.
+ * Include ``keccak256()`` as an alias to ``sha3()``.
+ * Support shifting constant numbers.
+
+Bugfixes:
+ * Commandline interface: Disallow unknown options in ``solc``.
+ * Name resolver: Allow inheritance of ``enum`` definitions.
+ * Type checker: Proper type checking for bound functions.
+ * Type checker: fixed crash related to invalid fixed point constants
+ * Type checker: fixed crash related to invalid literal numbers.
+ * Type checker: ``super.x`` does not look up ``x`` in the current contract.
+ * Code generator: expect zero stack increase after ``super`` as an expression.
+ * Code generator: fix an internal compiler error for ``L.Foo`` for ``enum Foo`` defined in library ``L``.
+ * Code generator: allow inheritance of ``enum`` definitions.
+ * Inline assembly: support the ``address`` opcode.
+ * Inline assembly: fix parsing of assignment after a label.
+ * Inline assembly: external variables of unsupported type (such as ``this``, ``super``, etc.)
+   are properly detected as unusable.
+ * Inline assembly: support variables within modifiers.
+ * Optimizer: fix related to stale knowledge about SHA3 operations
+
 ### 0.4.2 (2016-09-17)
 
 Bugfixes:

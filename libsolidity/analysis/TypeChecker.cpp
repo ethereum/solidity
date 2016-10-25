@@ -609,6 +609,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					return false;
 				pushes = 1;
 			}
+			else
+				return false;
 			for (unsigned i = 0; i < pushes; ++i)
 				_assembly.append(u256(0)); // just to verify the stack height
 		}
@@ -716,11 +718,10 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
-				auto err = make_shared<Error>(Error::Type::Warning);
-				*err <<
-					errinfo_sourceLocation(varDecl.location()) <<
-					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?");
-				m_errors.push_back(err);
+				warning(
+					varDecl.location(),
+					"Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?"
+				);
 			}
 		}
 		varDecl.accept(*this);
@@ -879,6 +880,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 	TypePointer trueType = type(_conditional.trueExpression())->mobileType();
 	TypePointer falseType = type(_conditional.falseExpression())->mobileType();
+	if (!trueType)
+		fatalTypeError(_conditional.trueExpression().location(), "Invalid mobile type.");
+	if (!falseType)
+		fatalTypeError(_conditional.falseExpression().location(), "Invalid mobile type.");
 
 	TypePointer commonType = Type::commonType(trueType, falseType);
 	if (!commonType)
@@ -985,10 +990,16 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*components[i]));
 				if (_tuple.isInlineArray())
 					solAssert(!!types[i], "Inline array cannot have empty components");
-				if (i == 0 && _tuple.isInlineArray())
-					inlineArrayType = types[i]->mobileType();
-				else if (_tuple.isInlineArray() && inlineArrayType)
-					inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+				if (_tuple.isInlineArray())
+				{
+					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
+						fatalTypeError(components[i]->location(), "Invalid mobile type.");
+
+					if (i == 0)
+						inlineArrayType = types[i]->mobileType();
+					else if (inlineArrayType)
+						inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+				}
 			}
 			else
 				types.push_back(TypePointer());
@@ -1375,6 +1386,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	}
 	else if (exprType->category() == Type::Category::FixedBytes)
 		annotation.isLValue = false;
+	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType.get()))
+	{
+		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType().get()))
+			annotation.isLValue = annotation.referencedDeclaration->isLValue();
+	}
 
 	return false;
 }

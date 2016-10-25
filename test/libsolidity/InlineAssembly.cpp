@@ -51,7 +51,7 @@ bool successParse(std::string const& _source, bool _assemble = false)
 		if (_assemble)
 		{
 			stack.assemble();
-			if (!stack.errors().empty())
+			if (!stack.errors().empty() && !Error::containsOnlyWarnings(stack.errors()))
 				return false;
 		}
 	}
@@ -87,9 +87,14 @@ BOOST_AUTO_TEST_CASE(simple_instructions)
 	BOOST_CHECK(successParse("{ dup1 dup1 mul dup1 sub }"));
 }
 
+BOOST_AUTO_TEST_CASE(suicide_selfdestruct)
+{
+	BOOST_CHECK(successParse("{ suicide selfdestruct }"));
+}
+
 BOOST_AUTO_TEST_CASE(keywords)
 {
-	BOOST_CHECK(successParse("{ byte return }"));
+	BOOST_CHECK(successParse("{ byte return address }"));
 }
 
 BOOST_AUTO_TEST_CASE(constants)
@@ -150,6 +155,18 @@ BOOST_AUTO_TEST_CASE(string_literals)
 BOOST_AUTO_TEST_CASE(oversize_string_literals)
 {
 	BOOST_CHECK(!successAssemble("{ let x := \"123456789012345678901234567890123\" }"));
+}
+
+BOOST_AUTO_TEST_CASE(assignment_after_tag)
+{
+	BOOST_CHECK(successParse("{ let x := 1 { tag: =: x } }"));
+}
+
+BOOST_AUTO_TEST_CASE(magic_variables)
+{
+	BOOST_CHECK(!successAssemble("{ this }"));
+	BOOST_CHECK(!successAssemble("{ ecrecover }"));
+	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

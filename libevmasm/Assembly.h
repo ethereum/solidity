@@ -45,11 +45,11 @@ public:
 
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
-	AssemblyItem newData(bytes const& _data) { h256 h(sha3(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	AssemblyItem newSub(Assembly const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return m_subs.at(_sub); }
-	AssemblyItem newPushString(std::string const& _data) { h256 h(sha3(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+	AssemblyItem newPushString(std::string const& _data) { h256 h(dev::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 

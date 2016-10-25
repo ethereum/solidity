@@ -59,7 +59,7 @@ commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0
 echo "$commithash" > commit_hash.txt
 if [ $branch = develop ]
 then
-    debversion="$version-nightly-$commitdate-$commithash"
+    debversion="$version-develop-$commitdate-$commithash"
 else
     debversion="$version"
     echo -n > prerelease.txt # proper release

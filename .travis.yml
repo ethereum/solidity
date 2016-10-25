@@ -84,10 +84,11 @@ matrix:
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
         #
-        - os: osx
-          osx_image: beta-xcode6.2
-          env:
-              - ZIP_SUFFIX=osx-mavericks
+# Disabled because of problems on travis.
+#        - os: osx
+#          osx_image: beta-xcode6.2
+#          env:
+#              - ZIP_SUFFIX=osx-mavericks
 
         # OS X Yosemite (10.10)
         # https://en.wikipedia.org/wiki/OS_X_Yosemite
@@ -186,7 +187,9 @@ deploy:
       script: test $TRAVIS_EMSCRIPTEN != On || scripts/release_emscripten.sh
       skip_cleanup: true
       on:
-          branch: develop
+          branch:
+            - develop
+            - release
 
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that

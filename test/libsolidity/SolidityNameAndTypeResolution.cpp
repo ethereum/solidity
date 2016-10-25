@@ -154,7 +154,7 @@ static FunctionTypePointer retrieveFunctionBySignature(
 	std::string const& _signature
 )
 {
-	FixedHash<4> hash(dev::sha3(_signature));
+	FixedHash<4> hash(dev::keccak256(_signature));
 	return _contract->interfaceFunctions()[hash];
 }
 
@@ -854,6 +854,23 @@ BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(super_excludes_current_contract)
+{
+	char const* text = R"(
+		contract A {
+			function b() {}
+		}
+
+		contract B is A {
+			function f() {
+				super.f();
+			}
+		}
+	)";
+
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 {
 	char const* text = R"(
@@ -1018,6 +1035,19 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	function = retrieveFunctionBySignature(contract, "bar()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
+
+BOOST_AUTO_TEST_CASE(missing_state_variable)
+{
+	char const* text = R"(
+		contract Scope {
+			function getStateVar() constant returns (uint stateVar) {
+				stateVar = Scope.stateVar; // should fail.
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 
 BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 {
@@ -1439,6 +1469,21 @@ BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_invalid_direct_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = Sit;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
+}
+
 BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 {
 	char const* text = R"(
@@ -1498,6 +1543,23 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 			}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_name_resolution_under_current_contract_name)
+{
+	char const* text = R"(
+		contract A {
+			enum Foo {
+				First,
+				Second
+			}
+
+			function a() {
+				A.Foo;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_CASE(private_visibility)
@@ -4016,6 +4078,169 @@ BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
 			struct S { uint x; }
 			function test(uint k)  { S[k]; }
 		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
+{
+	char const* text = R"(
+		library B {
+			function b() {}
+		}
+
+		contract A {
+			using B for bytes;
+
+			function a() {
+				bytes memory x;
+				x.b();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
+{
+	char const* text = R"(
+		contract A {
+			function a() {
+				.8E0;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 << -8;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_negative_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> -8;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_left_excessive_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 << 0x100000000;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> 0x100000000;
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				assembly {
+					1
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				assembly {
+					pop
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
+{
+	char const* text = R"(
+		contract test {
+			modifier m {
+				uint a = 1;
+				assembly {
+					a := 2
+				}
+				_;
+			}
+			function f() m {
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage)
+{
+	char const* text = R"(
+		contract test {
+			uint x = 1;
+			function f() {
+				assembly {
+					x := 2
+				}
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
+{
+	char const* text = R"(
+		contract test {
+			uint x = 1;
+			modifier m {
+				assembly {
+					x := 2
+				}
+				_;
+			}
+			function f() m {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_mobile_type)
+{
+	char const* text = R"(
+			contract C {
+				function f() {
+					// Invalid number
+					[1, 78901234567890123456789012345678901234567890123456789345678901234567890012345678012345678901234567];
+				}
+			}
 	)";
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }

@@ -34,17 +34,17 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
 
 The elements of structs and arrays are stored after each other, just as if they were given explicitly.
 
-Due to their unpredictable size, mapping and dynamically-sized array types use a ``sha3``
+Due to their unpredictable size, mapping and dynamically-sized array types use a Keccak-256 hash
 computation to find the starting position of the value or the array data. These starting positions are always full stack slots.
 
 The mapping or the dynamic array itself
 occupies an (unfilled) slot in storage at some position ``p`` according to the above rule (or by
 recursively applying this rule for mappings to mappings or arrays of arrays). For a dynamic array, this slot stores the number of elements in the array (byte arrays and strings are an exception here, see below). For a mapping, the slot is unused (but it is needed so that two equal mappings after each other will use a different hash distribution).
-Array data is located at ``sha3(p)`` and the value corresponding to a mapping key
-``k`` is located at ``sha3(k . p)`` where ``.`` is concatenation. If the value is again a
-non-elementary type, the positions are found by adding an offset of ``sha3(k . p)``.
+Array data is located at ``keccak256(p)`` and the value corresponding to a mapping key
+``k`` is located at ``keccak256(k . p)`` where ``.`` is concatenation. If the value is again a
+non-elementary type, the positions are found by adding an offset of ``keccak256(k . p)``.
 
-``bytes`` and ``string`` store their data in the same slot where also the length is stored if they are short. In particular: If the data is at most ``31`` bytes long, it is stored in the higher-order bytes (left aligned) and the lowest-order byte stores ``length * 2``. If it is longer, the main slot stores ``length * 2 + 1`` and the data is stored as usual in ``sha3(slot)``.
+``bytes`` and ``string`` store their data in the same slot where also the length is stored if they are short. In particular: If the data is at most ``31`` bytes long, it is stored in the higher-order bytes (left aligned) and the lowest-order byte stores ``length * 2``. If it is longer, the main slot stores ``length * 2 + 1`` and the data is stored as usual in ``keccak256(slot)``.
 
 So for the following contract snippet::
 
@@ -54,7 +54,25 @@ So for the following contract snippet::
       mapping(uint => mapping(uint => s)) data;
     }
 
-The position of ``data[4][9].b`` is at ``sha3(uint256(9) . sha3(uint256(4) . uint256(1))) + 1``.
+The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
+
+****************
+Layout in Memory
+****************
+
+Solidity reserves three 256-bit slots:
+
+-  0 - 64: scratch space for hashing methods
+- 64 - 96: currently allocated memory size (aka. free memory pointer)
+
+Scratch space can be used between statements (ie. within inline assembly).
+
+Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
+
+.. warning::
+  There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
+
+.. index: memory layout
 
 *****************
 Esoteric Features
@@ -281,7 +299,7 @@ The following is the order of precedence for operators, listed in order of evalu
 | *16*       | Comma operator                      | ``,``                                      |
 +------------+-------------------------------------+--------------------------------------------+
 
-.. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, sha3, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
 Global Variables
 ================
@@ -299,7 +317,8 @@ Global Variables
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
-- ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
+- ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
+- ``sha3(...) returns (bytes32)``: an alias to `keccak256()`
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
 - ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the (tightly packed) arguments
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
@@ -338,3 +357,16 @@ Modifiers
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
+
+Reserved Keywords
+=================
+
+These keywords are reserved in Solidity. They might become part of the syntax in the future:
+
+``abstract``, ``after``, ``case``, ``catch``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``,
+``of``, ``pure``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``, ``view``.
+
+Language Grammar
+================
+
+The entire language grammar is `available here <https://github.com/ethereum/solidity/blob/release/libsolidity/grammar.txt>`_.

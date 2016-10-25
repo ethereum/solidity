@@ -23,6 +23,7 @@
 #include <libsolidity/ast/Types.h>
 #include <limits>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/sliced.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
@@ -197,7 +198,9 @@ TypePointer Type::forLiteral(Literal const& _literal)
 
 TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 {
-	if (_b->isImplicitlyConvertibleTo(*_a))
+	if (!_a || !_b)
+		return TypePointer();
+	else if (_b->isImplicitlyConvertibleTo(*_a))
 		return _a;
 	else if (_a->isImplicitlyConvertibleTo(*_b))
 		return _b;
@@ -241,7 +244,8 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				FunctionType funType(*function, false);
 				if (auto fun = funType.asMemberFunction(true, true))
-					members.push_back(MemberList::Member(function->name(), fun, function));
+					if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+						members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
@@ -481,7 +485,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
 				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
 			)
-				throw;
+				return make_tuple(false, rational(0));
 			//Only decimal notation allowed here, leading zeros would switch to octal.
 			auto fractionalBegin = find_if_not(
 				radixPoint + 1, 
@@ -574,7 +578,11 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
 		if (!isFractional())
-			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		{
+			if (integerType())
+				return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+			return false;
+		}
 		else
 			return false;
 	}
@@ -698,6 +706,34 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			else
 				// invert
 				value = rational(denominator, numerator);
+			break;
+		}
+		case Token::SHL:
+		{
+			using boost::multiprecision::pow;
+			if (fractional)
+				return TypePointer();
+			else if (other.m_value < 0)
+				return TypePointer();
+			else if (other.m_value > numeric_limits<uint32_t>::max())
+				return TypePointer();
+			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+			value = m_value.numerator() * pow(bigint(2), exponent);
+			break;
+		}
+		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
+		//       determines the resulting type and the type of shift (SAR or SHR).
+		case Token::SAR:
+		{
+			using boost::multiprecision::pow;
+			if (fractional)
+				return TypePointer();
+			else if (other.m_value < 0)
+				return TypePointer();
+			else if (other.m_value > numeric_limits<uint32_t>::max())
+				return TypePointer();
+			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+			value = rational(m_value.numerator() / pow(bigint(2), exponent), 1);
 			break;
 		}
 		default:
@@ -1291,7 +1327,10 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
-		for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
+		auto bases = m_contract.annotation().linearizedBaseContracts;
+		solAssert(bases.size() >= 1, "linearizedBaseContracts should at least contain the most derived contract.");
+		// `sliced(1, ...)` ignores the most derived contract, which should not be searchable from `super`.
+		for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
 			for (FunctionDefinition const* function: base->definedFunctions())
 			{
 				if (!function->isVisibleInDerivedContracts())
@@ -1624,7 +1663,17 @@ TypePointer TupleType::mobileType() const
 {
 	TypePointers mobiles;
 	for (auto const& c: components())
-		mobiles.push_back(c ? c->mobileType() : TypePointer());
+	{
+		if (c)
+		{
+			auto mt = c->mobileType();
+			if (!mt)
+				return TypePointer();
+			mobiles.push_back(mt);
+		}
+		else
+			mobiles.push_back(TypePointer());
+	}
 	return make_shared<TupleType>(mobiles);
 }
 
@@ -2033,7 +2082,7 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return FixedHash<4>::Arith(FixedHash<4>(dev::sha3(externalSignature())));
+	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -2065,6 +2114,9 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 
 FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound) const
 {
+	if (_bound && m_parameterTypes.empty())
+		return FunctionTypePointer();
+
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
 	{

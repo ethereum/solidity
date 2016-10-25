@@ -401,7 +401,10 @@ Usage: solc [options] [input_file...]
 Compiles the given Solidity input files (or the standard input if none given or
 "-" is used as a file name) and outputs the components specified in the options
 at standard output or in files in the output directory, if specified.
-Example: solc --bin -o /tmp/solcoutput contract.sol
+Imports are automatically read from the filesystem, but it is also possible to
+remap paths using the context:prefix=path syntax.
+Example:
+    solc --bin -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
 Allowed options)",
 		po::options_description::m_default_line_length,
@@ -471,7 +474,7 @@ Allowed options)",
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
-		cmdLineParser.options(allOptions).positional(filesPositions).allow_unregistered();
+		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
 	catch (po::error const& _exception)

@@ -106,7 +106,7 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 
     address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
     nameReg.call("register", "MyName");
-    nameReg.call(bytes4(sha3("fun(uint256)")), a);
+    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
 
 ``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
@@ -186,7 +186,7 @@ the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary
 approximated.
 
 Any operator that can be applied to integers can also be applied to literal expressions as
-long as the operators are integers. If any of the two is fractional, bit operations are disallowed
+long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
@@ -370,6 +370,9 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
+
+It is possible to mark arrays ``public`` and have Solidity create an accessor.
+The numeric index will become a required parameter for the accessor.
 
 .. index:: ! array;allocating, new
 
@@ -610,12 +613,42 @@ can actually be any type, including mappings.
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
 all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
-in a mapping, only its ``sha3`` hash used to look up the value.
+in a mapping, only its ``keccak256`` hash used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or value being "set".
 
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
+
+It is possible to mark mappings ``public`` and have Solidity create an accessor.
+The ``_KeyType`` will become a required parameter for the accessor and it will
+return ``_ValueType``.
+
+The ``_ValueType`` can be a mapping too. The accessor will have one parameter
+for each ``_KeyType``, recursively.
+
+::
+
+    pragma solidity ^0.4.0;
+
+    contract MappingExample {
+        mapping(address => uint) public balances;
+
+        function update(uint newBalance) {
+            balances[msg.sender] = newBalance;
+        }
+    }
+
+    contract MappingUser {
+        function f() returns (uint) {
+            return MappingExample(<address>).balances(this);
+        }
+    }
+
+
+.. note::
+  Mappings are not iterable, but it is possible to implement a data structure on top of them.
+  For an example, see `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
 
 .. index:: assignment, ! delete, lvalue
 

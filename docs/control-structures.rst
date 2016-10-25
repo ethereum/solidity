@@ -7,7 +7,7 @@ Expressions and Control Structures
 Control Structures
 ===================
 
-Most of the control structures from C/JavaScript are available in Solidity
+Most of the control structures from C or JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
 there is: ``if``, ``else``, ``while``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
@@ -322,14 +322,16 @@ In the following example, we show how ``throw`` can be used to easily revert an 
         }
     }
 
-Currently, there are six situations, where exceptions happen automatically in Solidity:
+Currently, there are situations, where exceptions happen automatically in Solidity:
 
-1. If you access an array beyond its length (i.e. ``x[i]`` where ``i >= x.length``).
-2. If a function called via a message call does not finish properly (i.e. it runs out of gas or throws an exception itself).
-3. If a non-existent function on a library is called or Ether is sent to a library.
-4. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-5. If you perform an external function call targeting a contract that contains no code.
-6. If a contract-creation call using the ``new`` keyword fails.
+1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+2. If you access a fixed-length ``bytesN`` at a too large or negative index.
+3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+4. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
+5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+6. If you perform an external function call targeting a contract that contains no code.
+7. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+8. If your contract receives Ether via a public accessor function.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 
@@ -503,7 +505,7 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | pc                      |      | current position in code                                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| pop                     | `*`  | remove topmost stack slot                                       |
+| pop(x)                  | `-`  | remove the element pushed by x                                  |
 +-------------------------+------+-----------------------------------------------------------------+
 | dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -559,9 +561,9 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 | delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
-| return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| selfdestruct(a)         | `*`  | end execution, destroy current contract and send funds to a     |
+| selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
 +-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -783,7 +785,7 @@ Conventions in Solidity
 
 In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
 e.g. ``uint24``. In order to make them more efficient, most arithmetic operations just
-treat them as 256 bit numbers and the higher-order bits are only cleaned at the
+treat them as 256-bit numbers and the higher-order bits are only cleaned at the
 point where it is necessary, i.e. just shortly before they are written to memory
 or before comparisons are performed. This means that if you access such a variable
 from within inline assembly, you might have to manually clean the higher order bits

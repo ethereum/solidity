@@ -82,7 +82,7 @@ public:
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
-		FixedHash<4> hash(dev::sha3(_sig));
+		FixedHash<4> hash(dev::keccak256(_sig));
 		for (bytes const& arguments: _argumentVariants)
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);

@@ -95,7 +95,9 @@ assembly::Statement Parser::parseStatement()
 			fatalParserError("Label name / variable name must precede \":\".");
 		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(statement);
 		m_scanner->next();
-		if (m_scanner->currentToken() == Token::Assign)
+		// identifier:=: should be parsed as identifier: =: (i.e. a label),
+		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
+		if (m_scanner->currentToken() == Token::Assign && m_scanner->peekNextToken() != Token::Colon)
 		{
 			// functional assignment
 			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
@@ -133,6 +135,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	// Allowed instructions, lowercase names.
 	static map<string, dev::solidity::Instruction> s_instructions;
 	if (s_instructions.empty())
+	{
 		for (auto const& instruction: solidity::c_instructions)
 		{
 			if (
@@ -141,11 +144,13 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			)
 				continue;
 			string name = instruction.first;
-			if (instruction.second == solidity::Instruction::SUICIDE)
-				name = "selfdestruct";
 			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 			s_instructions[name] = instruction.second;
 		}
+
+		// add alias for selfdestruct
+		s_instructions["selfdestruct"] = solidity::Instruction::SUICIDE;
+	}
 
 	Statement ret;
 	switch (m_scanner->currentToken())
@@ -153,12 +158,15 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	case Token::Identifier:
 	case Token::Return:
 	case Token::Byte:
+	case Token::Address:
 	{
 		string literal;
 		if (m_scanner->currentToken() == Token::Return)
 			literal = "return";
 		else if (m_scanner->currentToken() == Token::Byte)
 			literal = "byte";
+		else if (m_scanner->currentToken() == Token::Address)
+			literal = "address";
 		else
 			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.

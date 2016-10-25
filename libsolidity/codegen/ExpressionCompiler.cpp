@@ -56,8 +56,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
 	{
 		// reference type, only convert value to mobile type and do final conversion in storeValue.
-		utils().convertType(*type, *type->mobileType());
-		type = type->mobileType();
+		auto mt = type->mobileType();
+		solAssert(mt, "");
+		utils().convertType(*type, *mt);
+		type = mt;
 	}
 	else
 	{
@@ -670,7 +672,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				}
 			if (!event.isAnonymous())
 			{
-				m_context << u256(h256::Arith(dev::sha3(function.externalSignature())));
+				m_context << u256(h256::Arith(dev::keccak256(function.externalSignature())));
 				++numIndexed;
 			}
 			solAssert(numIndexed <= 4, "Too many indexed arguments.");
@@ -861,11 +863,12 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		}
 
 	// Special processing for TypeType because we do not want to visit the library itself
-	// for internal functions.
+	// for internal functions, or enum/struct definitions.
 	if (TypeType const* type = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type.get()))
 	{
 		if (dynamic_cast<ContractType const*>(type->actualType().get()))
 		{
+			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
 			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
 				if (funType->location() != FunctionType::Location::Internal)
@@ -883,6 +886,12 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					m_context << m_context.functionEntryLabel(*function).pushTag();
 				}
 			}
+			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
+			{
+				// no-op
+			}
+			else if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+				appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
 			else
 				_memberAccess.expression().accept(*this);
 		}
@@ -1196,15 +1205,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.virtualFunctionEntryLabel(*functionDef).pushTag();
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
-	{
-		if (!variable->isConstant())
-			setLValueFromDeclaration(*declaration, _identifier);
-		else
-		{
-			variable->value()->accept(*this);
-			utils().convertType(*variable->value()->annotation().type, *variable->annotation().type);
-		}
-	}
+		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		if (contract->isLibrary())
@@ -1432,11 +1433,17 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Evaluate arguments.
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
-	bool manualFunctionId =
+	bool manualFunctionId = false;
+	if (
 		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode || funKind == FunctionKind::BareDelegateCall) &&
-		!_arguments.empty() &&
-		_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
+		!_arguments.empty()
+	)
+	{
+		solAssert(_arguments.front()->annotation().type->mobileType(), "");
+		manualFunctionId =
+			_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
 			CompilerUtils::dataStartOffset;
+	}
 	if (manualFunctionId)
 	{
 		// If we have a Bare* and the first type has exactly 4 bytes, use it as
@@ -1631,6 +1638,17 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 	_expression.accept(*this);
 	utils().convertType(*_expression.annotation().type, _expectedType, true);
 	utils().storeInMemoryDynamic(_expectedType);
+}
+
+void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Expression const& _expression)
+{
+	if (!_variable.isConstant())
+		setLValueFromDeclaration(_variable, _expression);
+	else
+	{
+		_variable.value()->accept(*this);
+		utils().convertType(*_variable.value()->annotation().type, *_variable.annotation().type);
+	}
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)

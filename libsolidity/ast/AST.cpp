@@ -151,7 +151,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					signaturesSeen.insert(functionSignature);
-					FixedHash<4> hash(dev::sha3(functionSignature));
+					FixedHash<4> hash(dev::keccak256(functionSignature));
 					m_interfaceFunctionList->push_back(make_pair(hash, fun));
 				}
 			}
@@ -189,6 +189,7 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 		m_inheritableMembers.reset(new vector<Declaration const*>());
 		auto addInheritableMember = [&](Declaration const* _decl)
 		{
+			solAssert(_decl, "addInheritableMember got a nullpointer.");
 			if (memberSeen.count(_decl->name()) == 0 && _decl->isVisibleInDerivedContracts())
 			{
 				memberSeen.insert(_decl->name());
@@ -204,6 +205,9 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 
 		for (StructDefinition const* s: definedStructs())
 			addInheritableMember(s);
+
+		for (EnumDefinition const* e: definedEnums())
+			addInheritableMember(e);
 	}
 	return *m_inheritableMembers;
 }

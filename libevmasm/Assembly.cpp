@@ -296,7 +296,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 
 AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
 {
-	h256 h(dev::sha3(_identifier));
+	h256 h(dev::keccak256(_identifier));
 	m_libraries[h] = _identifier;
 	return AssemblyItem(PushLibraryAddress, h);
 }
@@ -327,8 +327,10 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 			AssemblyItems optimisedItems;
 			for (BasicBlock const& block: cfg.optimisedBlocks())
 			{
-				assertThrow(!!block.startState, OptimizerException, "");
-				CommonSubexpressionEliminator eliminator(*block.startState);
+				// We used to start with the block's initial state but it caused
+				// too many inconsistencies.
+				KnownState emptyState;
+				CommonSubexpressionEliminator eliminator(emptyState);
 				auto iter = m_items.begin() + block.begin;
 				auto const end = m_items.begin() + block.end;
 				while (iter < end)

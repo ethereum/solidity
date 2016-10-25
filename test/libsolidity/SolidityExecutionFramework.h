@@ -39,6 +39,7 @@ namespace dev
 {
 namespace solidity
 {
+	using rational = boost::rational<dev::bigint>;
 	/// An Ethereum address: 20 bytes.
 	/// @NOTE This is not endian-specific; it's just a bunch of bytes.
 	using Address = h160;
@@ -105,7 +106,7 @@ public:
 	template <class... Args>
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
-		FixedHash<4> hash(dev::sha3(_sig));
+		FixedHash<4> hash(dev::keccak256(_sig));
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
 	}
@@ -155,6 +156,14 @@ public:
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	/// @returns the fixed-point encoding of a rational number with a given
+	/// number of fractional bits.
+	static bytes encode(std::pair<rational, int> const& _valueAndPrecision)
+	{
+		rational const& value = _valueAndPrecision.first;
+		int fractionalBits = _valueAndPrecision.second;
+		return encode(u256((value.numerator() << fractionalBits) / value.denominator()));
+	}
 	static bytes encode(h256 const& _value) { return _value.asBytes(); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
@@ -186,7 +195,6 @@ public:
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
-
 	class ContractInterface
 	{
 	public:

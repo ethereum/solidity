@@ -9,7 +9,7 @@ Installing Solidity
 Versioning
 ==========
 
-Solidity versions follow `semantic versioning <https://semver.org>` and in addition to
+Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
 releases, **nightly development builds** are also made available.  The nightly builds
 are not guaranteed to be working and despite best efforts they might contain undocumented
 and/or broken changes. We recommend to use the latest release. Package installers below
@@ -205,10 +205,11 @@ to semver and the severity of the change. Finally, a release is always made with
 of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
-- 0) the 0.4.0 release is made
-- 1) nightly build has a version of 0.4.1 from now on
-- 2) non-breaking changes are introduced - no change in version
-- 3) a breaking change is introduced - version is bumped to 0.5.0
-- 4) the 0.5.0 release is made
+
+0. the 0.4.0 release is made
+1. nightly build has a version of 0.4.1 from now on
+2. non-breaking changes are introduced - no change in version
+3. a breaking change is introduced - version is bumped to 0.5.0
+4. the 0.5.0 release is made
 
 This behaviour works well with the version pragma.

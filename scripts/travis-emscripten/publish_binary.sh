@@ -54,21 +54,45 @@ git config user.name "travis"
 git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
-# We only want one release per day and we do not want to push the same commit twice.
-if ls ./bin/soljson-"$VER-nightly.$DATE"-*.js || ls ./bin/soljson-*"commit.$COMMIT.js"
+
+
+FULLVERSION=INVALID
+if [ "$TRAVIS_BRANCH" = release ]
 then
-  echo "Not publishing, we already published this version today."
-  exit 0
+    # We only want one file with this version
+    if ls ./bin/soljson-"$VER+"*.js
+    then
+      echo "Not publishing, we already published this version."
+      exit 0
+    fi
+    FULLVERSION="$VER+commit.$COMMIT"
+elif [ "$TRAVIS_BRANCH" = develop ]
+then
+    # We only want one release per day and we do not want to push the same commit twice.
+    if ls ./bin/soljson-"$VER-nightly.$DATE"*.js || ls ./bin/soljson-*"commit.$COMMIT.js"
+    then
+      echo "Not publishing, we already published this version today."
+      exit 0
+    fi
+    FULLVERSION="$VER-nightly.$DATE+commit.$COMMIT"
+else
+    echo "Not publishing, wrong branch."
+    exit 0
 fi
 
+
+NEWFILE=./bin/"soljson-$FULLVERSION.js"
+
+# Prepare for update script
+npm install
+
 # This file is assumed to be the product of the build_emscripten.sh script.
-cp ../soljson.js ./bin/"soljson-$VER-nightly.$DATE+commit.$COMMIT.js"
-node ./update
-cd bin
-LATEST=$(ls -r soljson-v* | head -n 1)
-cp "$LATEST" soljson-latest.js
-cp soljson-latest.js ../soljson.js
-git add .
-git add ../soljson.js
-git commit -m "Added compiler version $LATEST"
+cp ../soljson.js "$NEWFILE"
+
+# Run update script
+npm run update
+
+# Publish updates
+git add "$NEWFILE"
+git commit -a -m "Added compiler version $FULLVERSION"
 git push origin gh-pages

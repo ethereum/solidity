@@ -623,6 +623,7 @@ public:
 	}
 	virtual unsigned storageBytes() const override { return 20; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
@@ -871,7 +872,12 @@ public:
 		m_isConstant(_isConstant),
 		m_isPayable(_isPayable),
 		m_declaration(_declaration)
-	{}
+	{
+		solAssert(
+			!m_bound || !m_parameterTypes.empty(),
+			"Attempted construction of bound function without self type"
+		);
+	}
 
 	TypePointers parameterTypes() const;
 	std::vector<std::string> parameterNames() const;
@@ -939,8 +945,9 @@ public:
 	/// removed and the location of reference types is changed from CallData to Memory.
 	/// This is needed if external functions are called on other contracts, as they cannot return
 	/// dynamic values.
+	/// Returns empty shared pointer on a failure. Namely, if a bound function has no parameters.
 	/// @param _inLibrary if true, uses DelegateCall as location.
-	/// @param _bound if true, the argumenst are placed as `arg1.functionName(arg2, ..., argn)`.
+	/// @param _bound if true, the arguments are placed as `arg1.functionName(arg2, ..., argn)`.
 	FunctionTypePointer asMemberFunction(bool _inLibrary, bool _bound = false) const;
 
 private:

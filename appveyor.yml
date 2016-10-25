@@ -27,6 +27,10 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+branches:
+  only:
+    - master
+    - develop
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo

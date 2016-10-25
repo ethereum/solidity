@@ -136,7 +136,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		ExpressionClasses& classes = state->expressionClasses();
 		using Id = ExpressionClasses::Id;
 		using Ids = vector<Id>;
-		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::sha3(_signature)))));
+		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(_signature)))));
 		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
 		classes.forceEqual(hashValue, Instruction::DIV, Ids{
 			calldata,

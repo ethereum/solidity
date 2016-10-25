@@ -1,8 +1,12 @@
 Solidity
 ========
 
-Solidity is a high-level language whose syntax is similar to that of JavaScript
-and it is designed to compile to code for the Ethereum Virtual Machine.
+Solidity is a contract-oriented, high-level language whose syntax is similar to that of JavaScript
+and it is designed to target the Ethereum Virtual Machine.
+
+Solidity is statically typed, supports inheritance, libraries and complex
+user-defines types among other features.
+
 As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
@@ -16,7 +20,7 @@ Useful links
 
 * `Ethereum <https://ethereum.org>`_
 
-* `Changelog <https://github.com/ethereum/wiki/wiki/Solidity-Changelog>`_
+* `Changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
 
 * `Story Backlog <https://www.pivotaltracker.com/n/projects/1189488>`_
 
