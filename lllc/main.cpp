@@ -41,6 +41,7 @@ void help()
 		<< "    -x,--hex  Parse, compile and assemble; output byte code in hex." << endl
 		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
 		<< "    -t,--parse-tree  Only parse; show parse tree." << endl
+		<< "    -o,--optimise  Turn on/off the optimiser; off by default." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
 		<< "    -V,--version  Show the version and exit." << endl;
         exit(0);
@@ -81,7 +82,7 @@ enum Mode { Binary, Hex, Assembly, ParseTree, Disassemble };
 int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
-	unsigned optimise = 1;
+	unsigned optimise = 0;
 	string infile;
 	Mode mode = Hex;
 
@@ -98,8 +99,8 @@ int main(int argc, char** argv)
 			mode = Assembly;
 		else if (arg == "-t" || arg == "--parse-tree")
 			mode = ParseTree;
-		else if ((arg == "-o" || arg == "--optimise") && argc > i + 1)
-			optimise = atoi(argv[++i]);
+		else if (arg == "-o" || arg == "--optimise")
+			optimise = 1;
 		else if (arg == "-d" || arg == "--disassemble")
 			mode = Disassemble;
 		else if (arg == "-V" || arg == "--version")
