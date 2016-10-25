@@ -317,6 +317,11 @@ dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 		return dev::keccak256(obj.bytecode);
 }
 
+string CompilerStack::mutation(string const& _contractName) const
+{
+	return "Mutation for " + _contractName + " is not implemented";
+}
+
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
 {
 	Contract const& currentContract = contract(_contractName);

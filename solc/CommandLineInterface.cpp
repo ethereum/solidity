@@ -169,6 +169,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argBinaryRuntime,
 		g_argCloneBinary,
 		g_argFormal,
+		g_argMutate,
 		g_argNatspecUser,
 		g_argNatspecDev,
 		g_argOpcodes,
@@ -335,6 +336,17 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 			cout << "):\t" << gas << endl;
 		}
 	}
+}
+
+void CommandLineInterface::handleMutate(string const& _contract)
+{
+	if (!m_args.count(g_argMutate))
+		return;
+
+	if (m_args.count(g_argOutputDir))
+		createFile(_contract + ".mutation", m_compiler->mutation(_contract));
+	else
+		cout << "Mutation:" << endl << m_compiler->mutation(_contract) << endl;
 }
 
 void CommandLineInterface::handleFormal()
@@ -724,7 +736,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strNatspecUser))
 			contractData[g_strNatspecUser] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
 		if (requests.count(g_argMutate))
-			contractData[g_argMutate] = "Unimplemented";
+			contractData[g_argMutate] = m_compiler->mutation(contractName);
 		output[g_strContracts][contractName] = contractData;
 	}
 
@@ -956,6 +968,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleGasEstimation(contract);
 
 		handleBytecode(contract);
+		handleMutate(contract);
 		handleSignatureHashes(contract);
 		handleMeta(DocumentationType::ABIInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);

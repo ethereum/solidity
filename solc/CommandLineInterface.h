@@ -65,6 +65,7 @@ private:
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMeta(DocumentationType _type, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
+	void handleMutate(std::string const& _contract);
 	void handleFormal();
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
