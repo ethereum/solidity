@@ -41,6 +41,7 @@ void help()
 		<< "    -x,--hex  Parse, compile and assemble; output byte code in hex." << endl
 		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
 		<< "    -t,--parse-tree  Only parse; show parse tree." << endl
+		<< "    -o,--optimise  Turn on/off the optimiser; on by default." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
 		<< "    -V,--version  Show the version and exit." << endl;
         exit(0);
