@@ -33,9 +33,8 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 #include <libevmasm/SourceLocation.h>
-#include <libevmasm/LinkerObject.h>
+#include <libevmasm/LinkerMutation.h>
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/Mutation.h>
 
 namespace dev
 {
@@ -224,9 +223,9 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		Mutation mutation;
-		Mutation runtimeMutation;
-		Mutation cloneMutation;
+		eth::LinkerMutation mutation;
+		eth::LinkerMutation runtimeMutation;
+		eth::LinkerMutation cloneMutation;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;

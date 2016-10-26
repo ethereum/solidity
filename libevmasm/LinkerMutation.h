@@ -27,10 +27,10 @@
 namespace dev
 {
 
-namespace solidity
+namespace eth
 {
 
-class Mutation
+class LinkerMutation
 {
 public:
     /// @returns bytecode of ordinary contract

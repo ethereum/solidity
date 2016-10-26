@@ -14,38 +14,38 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Mutation.cpp
+/** @file LinkerMutation.cpp
  * @author Danil Nemirovsky <danil.nemirovsky@gmail.com>
  * @date 2016
  */
 
-#include <libsolidity/interface/Mutation.h>
+#include <libevmasm/LinkerMutation.h>
 
-using namespace std;
 using namespace dev;
-using namespace dev::solidity;
+using namespace dev::eth;
+using namespace std;
 
-bytes Mutation::bytecodeOrdinary() const
+bytes LinkerMutation::bytecodeOrdinary() const
 {
 	return m_ordinary.bytecode;
 }
 
-string Mutation::hexOrdinary() const
+string LinkerMutation::hexOrdinary() const
 {
     return m_ordinary.toHex();
 } 
 
-void Mutation::link(map<string, h160> const& _libraryAddresses)
+void LinkerMutation::link(map<string, h160> const& _libraryAddresses)
 {
     m_ordinary.link(_libraryAddresses);
 }
 
-map<size_t, string> Mutation::linkReferencesOrdinary() const
+map<size_t, string> LinkerMutation::linkReferencesOrdinary() const
 {
     return m_ordinary.linkReferences;
 }
 
-void Mutation::setOrdinary(eth::LinkerObject _object)
+void LinkerMutation::setOrdinary(eth::LinkerObject _object)
 {
     m_ordinary = _object;
 }
