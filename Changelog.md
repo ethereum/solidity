@@ -1,5 +1,8 @@
 ### 0.4.8 (unreleased)
 
+BugFixes:
+ * Type checker, code generator: enable access to events of base contracts' names.
+
 ### 0.4.7 (2016-12-15)
 
 Features:
