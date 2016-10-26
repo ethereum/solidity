@@ -330,9 +330,32 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		if (nonStandard)
 			return;
 
-		std::map<std::string, Instruction> const c_arith = { { "+", Instruction::ADD }, { "-", Instruction::SUB }, { "*", Instruction::MUL }, { "/", Instruction::DIV }, { "%", Instruction::MOD }, { "&", Instruction::AND }, { "|", Instruction::OR }, { "^", Instruction::XOR } };
-		std::map<std::string, pair<Instruction, bool>> const c_binary = { { "<", { Instruction::LT, false } }, { "<=", { Instruction::GT, true } }, { ">", { Instruction::GT, false } }, { ">=", { Instruction::LT, true } }, { "S<", { Instruction::SLT, false } }, { "S<=", { Instruction::SGT, true } }, { "S>", { Instruction::SGT, false } }, { "S>=", { Instruction::SLT, true } }, { "=", { Instruction::EQ, false } }, { "!=", { Instruction::EQ, true } } };
-		std::map<std::string, Instruction> const c_unary = { { "!", Instruction::ISZERO } };
+		std::map<std::string, Instruction> const c_arith = {
+			{ "+", Instruction::ADD },
+			{ "-", Instruction::SUB },
+			{ "*", Instruction::MUL },
+			{ "/", Instruction::DIV },
+			{ "%", Instruction::MOD },
+			{ "&", Instruction::AND },
+			{ "|", Instruction::OR },
+			{ "^", Instruction::XOR }
+		};
+		std::map<std::string, pair<Instruction, bool>> const c_binary = {
+			{ "<", { Instruction::LT, false } },
+			{ "<=", { Instruction::GT, true } },
+			{ ">", { Instruction::GT, false } },
+			{ ">=", { Instruction::LT, true } },
+			{ "S<", { Instruction::SLT, false } },
+			{ "S<=", { Instruction::SGT, true } },
+			{ "S>", { Instruction::SGT, false } },
+			{ "S>=", { Instruction::SLT, true } },
+			{ "=", { Instruction::EQ, false } },
+			{ "!=", { Instruction::EQ, true } }
+		};
+		std::map<std::string, Instruction> const c_unary = {
+			{ "!", Instruction::ISZERO },
+			{ "~", Instruction::NOT }
+		};
 
 		vector<CodeFragment> code;
 		CompilerState ns = _s;
@@ -540,17 +563,6 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 			// At end now.
 			m_asm.append(end);
-		}
-		else if (us == "~")
-		{
-			requireSize(1);
-			requireDeposit(0, 1);
-
-			m_asm.append(code[0].m_asm, 1);
-			m_asm.append((u256)1);
-			m_asm.append((u256)0);
-			m_asm.append(Instruction::SUB);
-			m_asm.append(Instruction::SUB);
 		}
 		else if (us == "SEQ")
 		{
