@@ -2522,3 +2522,13 @@ string MagicType::toString(bool) const
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
 	}
 }
+
+bool FunctionType::locationIsEvent(Location _location)
+{
+	return _location == Location::Log0
+		|| _location == Location::Log1
+		|| _location == Location::Log2
+		|| _location == Location::Log3
+		|| _location == Location::Log4
+		|| _location == Location::Event;
+}

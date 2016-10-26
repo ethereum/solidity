@@ -880,7 +880,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
 			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
-				if (funType->location() != FunctionType::Location::Internal)
+				if (funType->location() != FunctionType::Location::Internal && !FunctionType::locationIsEvent(funType->location()))
 				{
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
@@ -890,9 +890,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing
 					// us to link against it although we actually do not need it.
-					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-					solAssert(!!function, "Function not found in member access");
-					utils().pushCombinedFunctionEntryLabel(*function);
+					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						utils().pushCombinedFunctionEntryLabel(*function);
+					else if (dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+					{
+						// no-op because the parent node (which should be a FunctionCall node) does the job
+					}
+					else
+						solAssert(false, "Neither a function nor an event found in member access");
 				}
 			}
 			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
