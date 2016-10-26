@@ -6353,6 +6353,20 @@ BOOST_AUTO_TEST_CASE(decayed_tuple)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_tuple_with_rational_numbers)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f() returns (int8) {
+				int8[5] memory foo3 = [int8(1), -1, 0, 0, 0];
+				return foo3[0];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(destructuring_assignment)
 {
 	char const* sourceCode = R"(
