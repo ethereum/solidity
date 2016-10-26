@@ -35,9 +35,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-namespace qi = boost::spirit::qi;
-namespace px = boost::phoenix;
-namespace sp = boost::spirit;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
