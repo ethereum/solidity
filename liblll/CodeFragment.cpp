@@ -472,14 +472,15 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm << end.tag();
 			m_asm.donePaths();
 		}
-		else if (us == "WHILE")
+		else if (us == "WHILE" || us == "UNTIL")
 		{
 			requireSize(2);
 			requireDeposit(0, 1);
 
 			auto begin = m_asm.append();
 			m_asm.append(code[0].m_asm);
-			m_asm.append(Instruction::ISZERO);
+			if (us == "WHILE")
+				m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
 			m_asm.append(code[1].m_asm, 0);
 			m_asm.appendJump(begin);
