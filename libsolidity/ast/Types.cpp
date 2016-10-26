@@ -349,10 +349,13 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return commonType;
 	if (Token::isBooleanOp(_operator))
 		return TypePointer();
-	// Nothing else can be done with addresses
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
+		// Nothing else can be done with addresses
 		if (intType->isAddress())
+			return TypePointer();
+		// Signed EXP is not allowed
+		if (Token::Exp == _operator && intType->isSigned())
 			return TypePointer();
 	}
 	else if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
