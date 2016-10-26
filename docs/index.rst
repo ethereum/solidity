@@ -5,7 +5,7 @@ Solidity is a contract-oriented, high-level language whose syntax is similar to 
 and it is designed to target the Ethereum Virtual Machine.
 
 Solidity is statically typed, supports inheritance, libraries and complex
-user-defines types among other features.
+user-defined types among other features.
 
 As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
