@@ -234,7 +234,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				<< Instruction::MUL;
 			m_context << Instruction::NOT << Instruction::AND << Instruction::SWAP1;
 			// stack: value storage_ref cleared_value multiplier
-			utils.copyToStackTop(4, m_dataType->sizeOnStack());
+			utils.copyToStackTop(3 + m_dataType->sizeOnStack(), m_dataType->sizeOnStack());
 			// stack: value storage_ref cleared_value multiplier value
 			if (
 				m_dataType->category() == Type::Category::Function &&
