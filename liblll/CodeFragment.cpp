@@ -330,9 +330,32 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		if (nonStandard)
 			return;
 
-		std::map<std::string, Instruction> const c_arith = { { "+", Instruction::ADD }, { "-", Instruction::SUB }, { "*", Instruction::MUL }, { "/", Instruction::DIV }, { "%", Instruction::MOD }, { "&", Instruction::AND }, { "|", Instruction::OR }, { "^", Instruction::XOR } };
-		std::map<std::string, pair<Instruction, bool>> const c_binary = { { "<", { Instruction::LT, false } }, { "<=", { Instruction::GT, true } }, { ">", { Instruction::GT, false } }, { ">=", { Instruction::LT, true } }, { "S<", { Instruction::SLT, false } }, { "S<=", { Instruction::SGT, true } }, { "S>", { Instruction::SGT, false } }, { "S>=", { Instruction::SLT, true } }, { "=", { Instruction::EQ, false } }, { "!=", { Instruction::EQ, true } } };
-		std::map<std::string, Instruction> const c_unary = { { "!", Instruction::ISZERO } };
+		std::map<std::string, Instruction> const c_arith = {
+			{ "+", Instruction::ADD },
+			{ "-", Instruction::SUB },
+			{ "*", Instruction::MUL },
+			{ "/", Instruction::DIV },
+			{ "%", Instruction::MOD },
+			{ "&", Instruction::AND },
+			{ "|", Instruction::OR },
+			{ "^", Instruction::XOR }
+		};
+		std::map<std::string, pair<Instruction, bool>> const c_binary = {
+			{ "<", { Instruction::LT, false } },
+			{ "<=", { Instruction::GT, true } },
+			{ ">", { Instruction::GT, false } },
+			{ ">=", { Instruction::LT, true } },
+			{ "S<", { Instruction::SLT, false } },
+			{ "S<=", { Instruction::SGT, true } },
+			{ "S>", { Instruction::SGT, false } },
+			{ "S>=", { Instruction::SLT, true } },
+			{ "=", { Instruction::EQ, false } },
+			{ "!=", { Instruction::EQ, true } }
+		};
+		std::map<std::string, Instruction> const c_unary = {
+			{ "!", Instruction::ISZERO },
+			{ "~", Instruction::NOT }
+		};
 
 		vector<CodeFragment> code;
 		CompilerState ns = _s;
@@ -449,14 +472,15 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm << end.tag();
 			m_asm.donePaths();
 		}
-		else if (us == "WHILE")
+		else if (us == "WHILE" || us == "UNTIL")
 		{
 			requireSize(2);
 			requireDeposit(0, 1);
 
 			auto begin = m_asm.append();
 			m_asm.append(code[0].m_asm);
-			m_asm.append(Instruction::ISZERO);
+			if (us == "WHILE")
+				m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
 			m_asm.append(code[1].m_asm, 0);
 			m_asm.appendJump(begin);
@@ -541,17 +565,6 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			// At end now.
 			m_asm.append(end);
 		}
-		else if (us == "~")
-		{
-			requireSize(1);
-			requireDeposit(0, 1);
-
-			m_asm.append(code[0].m_asm, 1);
-			m_asm.append((u256)1);
-			m_asm.append((u256)0);
-			m_asm.append(Instruction::SUB);
-			m_asm.append(Instruction::SUB);
-		}
 		else if (us == "SEQ")
 		{
 			unsigned ii = 0;
@@ -566,6 +579,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			for (auto const& i: code)
 				m_asm.append(i.m_asm);
 			m_asm.popTo(1);
+		}
+		else if (us == "PANIC")
+		{
+			m_asm.appendJump(m_asm.errorTag());
 		}
 		else if (us.find_first_of("1234567890") != 0 && us.find_first_not_of("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_") == string::npos)
 			m_asm.append((u256)varAddress(s));
