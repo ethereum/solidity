@@ -7533,6 +7533,26 @@ BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(packed_storage_overflow)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint16 x = 0x1234;
+			uint16 a = 0xffff;
+			uint16 b;
+			function f() returns (uint, uint, uint, uint) {
+				a++;
+				uint c = b;
+				delete b;
+				a -= 2;
+				return (x, c, b, a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x1234), u256(0), u256(0), u256(0xfffe)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
