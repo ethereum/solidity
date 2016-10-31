@@ -1,6 +1,4 @@
-### 0.4.4 (unreleased)
-
-Features:
+### 0.4.4 (2016-10-31)
 
 Bugfixes:
  * Type checker: forbid signed exponential that led to an incorrect use of EXP opcode.
