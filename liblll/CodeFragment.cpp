@@ -287,10 +287,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					if (pos.m_asm.deposit() != 1)
 						error<InvalidDeposit>();
 				}
-				else if (ii == 2 && !i.tag() && i.which() == sp::utree_type::string_type)
+				else if (ii >= 2 && !i.tag() && i.which() == sp::utree_type::string_type)
 				{
 					auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-					data = bytes((byte const*)sr.begin(), (byte const*)sr.end());
+					data.insert(data.end(), (byte const *)sr.begin(), (byte const*)sr.end());
 				}
 				else if (ii >= 2 && !i.tag() && i.which() == sp::utree_type::any_type)
 				{
