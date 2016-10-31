@@ -297,21 +297,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					bigint bi = *i.get<bigint*>();
 					if (bi < 0)
 						error<IntegerOutOfRange>();
-					else if (bi > bigint(u256(0) - 1))
-					{
-						if (ii == 2 && _t.size() == 3)
-						{
-							// One big int - allow it as hex.
-							data.resize(bytesRequired(bi));
-							toBigEndian(bi, data);
-						}
-						else
-							error<IntegerOutOfRange>();
-					}
 					else
 					{
-						data.resize(data.size() + 32);
-						*(h256*)(&data.back() - 31) = (u256)bi;
+						bytes tmp = toCompactBigEndian(bi);
+						data.insert(data.end(), tmp.begin(), tmp.end());
 					}
 				}
 				else if (ii)
