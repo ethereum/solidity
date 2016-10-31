@@ -4,6 +4,7 @@ Features:
 
 Bugfixes:
  * Type checker: forbid signed exponential that led to an incorrect use of EXP opcode.
+ * Code generator: properly clean higher order bytes before storing in storage.
 
 ### 0.4.3 (2016-10-25)
 

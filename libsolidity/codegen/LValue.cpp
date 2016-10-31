@@ -231,10 +231,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< Instruction::SWAP1 << Instruction::DIV;
-			else if (
-				m_dataType->category() == Type::Category::Integer &&
-				dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
-			)
+			else
 				// remove the higher order bits
 				m_context
 					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
@@ -242,9 +239,6 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					<< Instruction::DUP2
 					<< Instruction::MUL
 					<< Instruction::DIV;
-			else if (m_dataType->category() == Type::Category::FixedPoint)
-				// implementation should be very similar to the integer case.
-				solAssert(false, "Not yet implemented - FixedPointType.");
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
