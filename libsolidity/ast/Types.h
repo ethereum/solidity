@@ -119,6 +119,8 @@ public:
 	/// @returns the number of storage slots occupied by the members.
 	u256 const& storageSize() const;
 
+	bool checkForStorageCorruption() const;
+
 	MemberMap::const_iterator begin() const { return m_memberTypes.begin(); }
 	MemberMap::const_iterator end() const { return m_memberTypes.end(); }
 

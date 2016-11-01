@@ -36,6 +36,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/InterfaceHandler.h>
 #include <libsolidity/formal/Why3Translator.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 
 #include <libdevcore/SHA3.h>
 
@@ -196,6 +197,8 @@ bool CompilerStack::parse()
 				m_contracts[contract->name()].contract = contract;
 			}
 	m_parseSuccessful = noErrors;
+	if (noErrors)
+		checkForStorageCorruption();
 	return m_parseSuccessful;
 }
 
@@ -424,6 +427,39 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	tie(endLine, endColumn) = scanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.end);
 
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
+}
+
+void CompilerStack::checkForStorageCorruption()
+{
+	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return scanner(_sourceName); };
+	for (Source const* source: m_sourceOrder)
+		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			{
+				auto vars = ContractType(*contract).stateVariables();
+				for (size_t i = 0; i + 1 < vars.size(); ++i)
+				{
+					if (get<1>(vars[i]) == get<1>(vars[i + 1]))
+					{
+						TypePointer t = get<0>(vars[i])->annotation().type;
+						if (t->category() == Type::Category::FixedBytes)
+							continue;
+						if (auto it = dynamic_cast<IntegerType const*>(t.get()))
+							if (it->isSigned())
+								continue;
+						cout << "Problematic Variable:" << endl;
+						SourceReferenceFormatter::printSourceLocation(cout, &get<0>(vars[i])->location(), scannerFromSourceName);
+					}
+				}
+				for (auto const& str: contract->definedStructs())
+				{
+					if (StructType(*str).members(contract).checkForStorageCorruption())
+					{
+						cout << "Problematic Struct:" << endl;
+						SourceReferenceFormatter::printSourceLocation(cout, &str->location(), scannerFromSourceName);
+					}
+				}
+			}
 }
 
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)

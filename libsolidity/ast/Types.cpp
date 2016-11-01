@@ -117,6 +117,28 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
+bool MemberList::checkForStorageCorruption() const
+{
+	TypePointers memberTypes;
+	for (auto const& member: m_memberTypes)
+		memberTypes.push_back(member.type);
+	StorageOffsets off;
+	off.computeOffsets(memberTypes);
+	for (size_t i = 0; i + 1 < m_memberTypes.size(); i++)
+	{
+		if (off.offset(i)->first != off.offset(i + 1)->first)
+			continue;
+		TypePointer t = m_memberTypes[i].type;
+		if (t->category() == Type::Category::FixedBytes)
+			continue;
+		if (auto it = dynamic_cast<IntegerType const*>(t.get()))
+			if (it->isSigned())
+				continue;
+		return true;
+	}
+	return false;
+}
+
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	solAssert(Token::isElementaryTypeName(_type.token()),

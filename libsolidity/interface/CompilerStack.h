@@ -220,6 +220,8 @@ private:
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
 
+	void checkForStorageCorruption();
+
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
