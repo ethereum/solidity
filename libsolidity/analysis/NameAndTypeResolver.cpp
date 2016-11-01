@@ -290,30 +290,34 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
 				if (!m_currentScope->registerDeclaration(*declaration))
-				{
-					SourceLocation firstDeclarationLocation;
-					SourceLocation secondDeclarationLocation;
-					Declaration const* conflictingDeclaration = m_currentScope->conflictingDeclaration(*declaration);
-					solAssert(conflictingDeclaration, "");
+					reportConflict(m_currentScope, *declaration, m_errors);
+}
 
-					if (declaration->location().start < conflictingDeclaration->location().start)
-					{
-						firstDeclarationLocation = declaration->location();
-						secondDeclarationLocation = conflictingDeclaration->location();
-					}
-					else
-					{
-						firstDeclarationLocation = conflictingDeclaration->location();
-						secondDeclarationLocation = declaration->location();
-					}
+void NameAndTypeResolver::reportConflict(DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
+{
+	SourceLocation firstDeclarationLocation;
+	SourceLocation secondDeclarationLocation;
+	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_declaration);
+	solAssert(conflictingDeclaration, "");
 
-					reportDeclarationError(
-						secondDeclarationLocation,
-						"Identifier already declared.",
-						firstDeclarationLocation,
-						"The previous declaration is here:"
-					);
-				}
+	if (_declaration.location().start < conflictingDeclaration->location().start)
+	{
+		firstDeclarationLocation = _declaration.location();
+		secondDeclarationLocation = conflictingDeclaration->location();
+	}
+	else
+	{
+		firstDeclarationLocation = conflictingDeclaration->location();
+		secondDeclarationLocation = _declaration.location();
+	}
+
+	reportDeclarationError(
+		secondDeclarationLocation,
+		"Identifier already declared.",
+		firstDeclarationLocation,
+		"The previous declaration is here:",
+		_errors
+	);
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
@@ -398,7 +402,8 @@ void NameAndTypeResolver::reportDeclarationError(
 	SourceLocation _sourceLoction,
 	string const& _description,
 	SourceLocation _secondarySourceLocation,
-	string const& _secondaryDescription
+	string const& _secondaryDescription,
+	ErrorList& _errors
 )
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
@@ -409,7 +414,7 @@ void NameAndTypeResolver::reportDeclarationError(
 			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
 		);
 
-	m_errors.push_back(err);
+	_errors.push_back(err);
 }
 
 void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLocation, string const& _description)
@@ -578,30 +583,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
-	{
-		SourceLocation firstDeclarationLocation;
-		SourceLocation secondDeclarationLocation;
-		Declaration const* conflictingDeclaration = m_scopes[m_currentScope]->conflictingDeclaration(_declaration);
-		solAssert(conflictingDeclaration, "");
-
-		if (_declaration.location().start < conflictingDeclaration->location().start)
-		{
-			firstDeclarationLocation = _declaration.location();
-			secondDeclarationLocation = conflictingDeclaration->location();
-		}
-		else
-		{
-			firstDeclarationLocation = conflictingDeclaration->location();
-			secondDeclarationLocation = _declaration.location();
-		}
-
-		declarationError(
-			secondDeclarationLocation,
-			"Identifier already declared.",
-			firstDeclarationLocation,
-			"The previous declaration is here:"
-		);
-	}
+		NameAndTypeResolver::reportConflict(m_scopes[m_currentScope].get(), _declaration, m_errors);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)

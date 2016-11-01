@@ -76,6 +76,9 @@ public:
 		std::vector<Declaration const*> const& _declarations
 	);
 
+	// reports a conflict of two declarations sharing a name
+	static void reportConflict(DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors);
+
 private:
 	void reset();
 
@@ -91,11 +94,12 @@ private:
 	static std::vector<_T const*> cThreeMerge(std::list<std::list<_T const*>>& _toMerge);
 
 	// creates the Declaration error and adds it in the errors list
-	void reportDeclarationError(
+	static void reportDeclarationError(
 		SourceLocation _sourceLoction,
 		std::string const& _description,
 		SourceLocation _secondarySourceLocation,
-		std::string const& _secondaryDescription
+		std::string const& _secondaryDescription,
+		ErrorList &_errors
 	);
 	// creates the Declaration error and adds it in the errors list
 	void reportDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
