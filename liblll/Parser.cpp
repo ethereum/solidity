@@ -101,8 +101,8 @@ void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	qi::rule<it, string()> strsh = '\'' > qi::lexeme[+(~qi::char_(std::string(" ;$@()[]{}:\n\t") + '\0'))];
 	qi::rule<it, symbol_type()> symbol = qi::lexeme[+(~qi::char_(std::string(" $@[]{}:();\"\x01-\x1f\x7f") + '\0'))];
 	qi::rule<it, string()> intstr = qi::lexeme[ qi::no_case["0x"][qi::_val = "0x"] >> *qi::char_("0-9a-fA-F")[qi::_val += qi::_1]] | qi::lexeme[+qi::char_("0-9")[qi::_val += qi::_1]];
-	qi::rule<it, bigint()> integer = intstr;
-	qi::rule<it, space_type, sp::utree()> atom = integer[qi::_val = px::construct<sp::any_ptr>(px::new_<bigint>(qi::_1))] | (str | strsh)[qi::_val = qi::_1] | symbol[qi::_val = qi::_1];
+	qi::rule<it, sp::utree()> integer = intstr[qi::_val = px::construct<sp::any_ptr>(px::new_<bigint>(qi::_1))];
+	qi::rule<it, space_type, sp::utree()> atom = integer[qi::_val = qi::_1] | (str | strsh)[qi::_val = qi::_1] | symbol[qi::_val = qi::_1];
 	qi::rule<it, space_type, sp::utree::list_type()> seq = '{' > *element > '}';
 	qi::rule<it, space_type, sp::utree::list_type()> mload = '@' > element;
 	qi::rule<it, space_type, sp::utree::list_type()> sload = qi::lit("@@") > element;
@@ -135,10 +135,19 @@ void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 			s.push_back(i);
 	}
 	auto ret = s.cbegin();
-	qi::phrase_parse(ret, s.cend(), element, space, qi::skip_flag::dont_postskip, o_out);
+	try
+	{
+		qi::phrase_parse(ret, s.cend(), element, space, qi::skip_flag::dont_postskip, o_out);
+	}
+	catch (qi::expectation_failure<it> const& e)
+	{
+		std::string fragment(e.first, e.last);
+		std::string loc = std::to_string(std::distance(s.cbegin(), e.first) - 1);
+		std::string reason("Lexer failure at " + loc + ": '" + fragment + "'");
+		BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment(reason));
+	}
 	for (auto i = ret; i != s.cend(); ++i)
 		if (!isspace(*i)) {
 			BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment("Non-whitespace left in parser"));
 		}
 }
-

@@ -34,8 +34,7 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		auto f = CodeFragment::compile(_src, cs);
-		bytes ret = f.assembly(cs).optimise(_opt).assemble().bytecode;
+		bytes ret = CodeFragment::compile(_src, cs).assembly(cs).optimise(_opt).assemble().bytecode;
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
@@ -59,7 +58,7 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 	catch (...)
 	{
 		if (_errors)
-			_errors->push_back("Internal parse exception.");
+			_errors->push_back("Internal compiler exception.");
 	}
 	return bytes();
 }
@@ -93,7 +92,7 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 	catch (...)
 	{
 		if (_errors)
-			_errors->push_back("Internal parse exception.");
+			_errors->push_back("Internal compiler exception.");
 	}
 	return string();
 }
