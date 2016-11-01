@@ -289,7 +289,31 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
-				m_currentScope->registerDeclaration(*declaration);
+				if (!m_currentScope->registerDeclaration(*declaration))
+				{
+					SourceLocation firstDeclarationLocation;
+					SourceLocation secondDeclarationLocation;
+					Declaration const* conflictingDeclaration = m_currentScope->conflictingDeclaration(*declaration);
+					solAssert(conflictingDeclaration, "");
+
+					if (declaration->location().start < conflictingDeclaration->location().start)
+					{
+						firstDeclarationLocation = declaration->location();
+						secondDeclarationLocation = conflictingDeclaration->location();
+					}
+					else
+					{
+						firstDeclarationLocation = conflictingDeclaration->location();
+						secondDeclarationLocation = declaration->location();
+					}
+
+					reportDeclarationError(
+						secondDeclarationLocation,
+						"Identifier already declared.",
+						firstDeclarationLocation,
+						"The previous declaration is here:"
+					);
+				}
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
