@@ -91,15 +91,11 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		{
 			auto it = _s.vars.find(s);
 			if (it == _s.vars.end())
-			{
-				bool ok;
-				tie(it, ok) = _s.vars.insert(make_pair(s, make_pair(_s.stackSize, 32)));
-				_s.stackSize += 32;
-			}
+				error<InvalidName>(std::string("Symbol not found: ") + s);
 			m_asm.append((u256)it->second.first);
 		}
 		else
-			error<BareSymbol>();
+			error<BareSymbol>(s);
 
 		break;
 	}
@@ -111,7 +107,9 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		m_asm.append((u256)i);
 		break;
 	}
-	default: break;
+	default:
+		error<CompilerException>("Unexpected fragment type");
+		break;
 	}
 }
 
@@ -177,11 +175,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			auto it = _s.vars.find(n);
 			if (it == _s.vars.end())
-			{
-				bool ok;
-				tie(it, ok) = _s.vars.insert(make_pair(n, make_pair(_s.stackSize, 32)));
-				_s.stackSize += 32;
-			}
+				error<InvalidName>(std::string("Symbol not found: ") + s);
 			return it->second.first;
 		};
 
