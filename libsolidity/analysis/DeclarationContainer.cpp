@@ -64,6 +64,13 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 			if (!dynamic_cast<VariableDeclaration const*>(declaration))
 				return declaration;
 	}
+	else if (dynamic_cast<ModifierDefinition const*>(&_declaration))
+	{
+		// Check that all other declarations with the same name are variables.
+		for (Declaration const* declaration: declarations)
+			if (!dynamic_cast<ModifierDefinition const*>(declaration))
+				return declaration;
+	}
 	else if (declarations.size() == 1 && declarations.front() == &_declaration)
 		return nullptr;
 	else if (!declarations.empty())
