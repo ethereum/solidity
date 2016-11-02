@@ -77,7 +77,7 @@ public:
 	);
 
 	// reports a conflict of two declarations sharing a name
-	static void reportConflict(DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors);
+	static void reportConflict(bool _inheriting, DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors);
 
 private:
 	void reset();

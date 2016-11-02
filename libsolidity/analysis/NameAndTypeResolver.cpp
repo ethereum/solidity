@@ -261,6 +261,8 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	{
 		solAssert(*it, "");
 		// the declaration is functionDefinition while declarations > 1
+		solAssert(dynamic_cast<FunctionDefinition const*>(*it), "Found overloading of non-functions");
+
 		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
 		FunctionType functionType(functionDefinition);
 		for (auto parameter: functionType.parameterTypes() + functionType.returnParameterTypes())
@@ -289,15 +291,15 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
-				if (!m_currentScope->registerDeclaration(*declaration))
-					reportConflict(m_currentScope, *declaration, m_errors);
+				if (!m_currentScope->registerDeclaration(*declaration, nullptr, false, dynamic_cast<VariableDeclaration const*>(declaration), true))
+					reportConflict(true, m_currentScope, *declaration, m_errors);
 }
 
-void NameAndTypeResolver::reportConflict(DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
+void NameAndTypeResolver::reportConflict(bool _inheriting, DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
 {
 	SourceLocation firstDeclarationLocation;
 	SourceLocation secondDeclarationLocation;
-	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_declaration);
+	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_inheriting, _declaration);
 	solAssert(conflictingDeclaration, "");
 
 	if (_declaration.location().start < conflictingDeclaration->location().start)
@@ -583,7 +585,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
-		NameAndTypeResolver::reportConflict(m_scopes[m_currentScope].get(), _declaration, m_errors);
+		NameAndTypeResolver::reportConflict(false, m_scopes[m_currentScope].get(), _declaration, m_errors);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
