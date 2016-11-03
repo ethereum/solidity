@@ -171,20 +171,13 @@ of votes.
             }
         }
         
+        //Calls winningProposal() function to get the index
+        //of the winner contained in the proposals array and then
+        //returns the name of the winner
         function winnerName() constant
                 returns (bytes32 winnerName)
         {
-            //Init a for loop that compares all the votes
-            //one at a time. If a higher count is found, the
-            //value is updated. p represents position of the
-            //proposed person's name in the array
-            uint winningVoteCount = 0;
-            for (uint p = 0; p < proposals.length; p++) {
-                if (proposals[p].voteCount > winningVoteCount) {
-                    winningVoteCount = proposals[p].voteCount;
-                    winnerName = proposals[p].name;
-                }
-            }
+            winnerName = proposals[winningProposal()].name;
         }
     }
 
