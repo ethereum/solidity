@@ -1283,6 +1283,23 @@ BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(multiple_event_iniheritrance)
+{
+	// This should throw an error until #1245 is implemented
+	char const* text = R"(
+		contract A
+		{
+			event E;
+		}
+		contract B
+		{
+			event E(uint a);
+		}
+		contract C is A, B {
+		}
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
+}
 BOOST_AUTO_TEST_CASE(event_function_clash)
 {
 	char const* text = R"(
