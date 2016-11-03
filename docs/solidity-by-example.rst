@@ -171,9 +171,9 @@ of votes.
             }
         }
         
-        //Calls winningProposal() function to get the index
-        //of the winner contained in the proposals array and then
-        //returns the name of the winner
+        // Calls winningProposal() function to get the index
+        // of the winner contained in the proposals array and then
+        // returns the name of the winner
         function winnerName() constant
                 returns (bytes32 winnerName)
         {
