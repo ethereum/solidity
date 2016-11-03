@@ -51,14 +51,7 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 			if (!dynamic_cast<FunctionDefinition const*>(declaration))
 				return declaration;
 	}
-	else if (_inheriting && dynamic_cast<EventDefinition const*>(&_declaration))
-	{
-		// Check that all other declarations with the same name are events.
-		// It is a deliberate choice that functions and events cannot share one name.
-		for (Declaration const* declaration: declarations)
-			if (!dynamic_cast<EventDefinition const*>(declaration))
-				return declaration;
-	}
+	// Until we implement #1245, there are no special cases for events
 	else if (_inheriting && dynamic_cast<VariableDeclaration const*>(&_declaration))
 	{
 		// Check that all other declarations with the same name are variables or functions.
