@@ -26,7 +26,7 @@
 #include <functional>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerContext.h>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 
 namespace dev {
 namespace solidity {
@@ -47,21 +47,21 @@ public:
 
 	void compileContract(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 	);
 	/// Compiles the constructor part of the contract.
 	/// @returns the identifier of the runtime sub-assembly.
 	size_t compileConstructor(
 		CompilerContext const& _runtimeContext,
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 	);
 	/// Compiles a contract that uses DELEGATECALL to call into a pre-deployed version of the given
 	/// contract at runtime, but contains the full creation-time code.
 	/// @returns the identifier of the runtime sub-assembly.
 	size_t compileClone(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 	);
 
 private:
@@ -69,7 +69,7 @@ private:
 	/// information about the contract like the AST annotations.
 	void initializeContext(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _compiledContracts
 	);
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
 	/// with a new and initialized context. Adds the constructor code.
@@ -114,7 +114,7 @@ private:
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	/// @returns the runtime assembly for clone contracts.
-	static eth::Assembly cloneRuntime();
+	static eth::AssemblyMutation cloneRuntime();
 
 	bool const m_optimise;
 	CompilerContext& m_context;

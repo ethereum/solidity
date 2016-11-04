@@ -25,27 +25,17 @@ using namespace dev;
 using namespace dev::eth;
 using namespace std;
 
-bytes LinkerMutation::bytecodeOrdinary() const
-{
-	return m_ordinary.bytecode;
-}
-
-string LinkerMutation::hexOrdinary() const
-{
-    return m_ordinary.toHex();
-} 
-
 void LinkerMutation::link(map<string, h160> const& _libraryAddresses)
 {
     m_ordinary.link(_libraryAddresses);
 }
 
-map<size_t, string> LinkerMutation::linkReferencesOrdinary() const
-{
-    return m_ordinary.linkReferences;
-}
-
-void LinkerMutation::setOrdinary(eth::LinkerObject _object)
+void LinkerMutation::ordinary(eth::LinkerObject const& _object)
 {
     m_ordinary = _object;
+}
+
+eth::LinkerObject const& LinkerMutation::ordinary() const
+{
+	return m_ordinary;
 }

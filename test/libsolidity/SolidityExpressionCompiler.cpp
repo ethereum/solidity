@@ -153,7 +153,7 @@ bytes compileFirstExpression(
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));
-			bytes instructions = context.assembledObject().bytecode;
+			bytes instructions = context.assembledObject().ordinary().bytecode;
 			// debug
 			// cout << eth::disassemble(instructions) << endl;
 			return instructions;

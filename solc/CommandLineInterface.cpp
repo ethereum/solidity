@@ -557,8 +557,8 @@ Allowed options)",
 
 	if (m_args.count(g_argCombinedJson))
 	{
-		vector<string> requests;
-		for (string const& item: boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(",")))
+		boost::split(m_requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(","));
+		for (string const& item: vector<string>(m_requests.begin(), m_requests.end()))
 			if (!g_combinedJsonArgs.count(item))
 			{
 				cerr << "Invalid option to --combined-json: " << item << endl;
@@ -629,8 +629,8 @@ bool CommandLineInterface::processInput()
 	{
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
-		if (m_args.count(g_argMutate))
-			m_compiler->setMutate(true);
+		if (m_args.count(g_argMutate) || m_requests.count(g_strMutate))
+			m_compiler->mutate(true);
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested
@@ -697,8 +697,7 @@ void CommandLineInterface::handleCombinedJSON()
 	Json::Value output(Json::objectValue);
 
 	output[g_strVersion] = ::dev::solidity::VersionString;
-	set<string> requests;
-	boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(","));
+
 	vector<string> contracts = m_compiler->contractNames();
 
 	if (!contracts.empty())
@@ -706,41 +705,41 @@ void CommandLineInterface::handleCombinedJSON()
 	for (string const& contractName: contracts)
 	{
 		Json::Value contractData(Json::objectValue);
-		if (requests.count(g_strAbi))
+		if (m_requests.count(g_strAbi))
 			contractData[g_strAbi] = m_compiler->interface(contractName);
-		if (requests.count(g_strBinary))
+		if (m_requests.count(g_strBinary))
 			contractData[g_strBinary] = m_compiler->hex(ASSEMBLED, contractName);
-		if (requests.count(g_strBinaryRuntime))
+		if (m_requests.count(g_strBinaryRuntime))
 			contractData[g_strBinaryRuntime] = m_compiler->hex(RUNTIME, contractName);
-		if (requests.count(g_strCloneBinary))
+		if (m_requests.count(g_strCloneBinary))
 			contractData[g_strCloneBinary] = m_compiler->hex(CLONE, contractName);
-		if (requests.count(g_strOpcodes))
+		if (m_requests.count(g_strOpcodes))
 			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->bytecode(ASSEMBLED, contractName));
-		if (requests.count(g_strAsm))
+		if (m_requests.count(g_strAsm))
 		{
 			ostringstream unused;
 			contractData[g_strAsm] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
 		}
-		if (requests.count(g_strSrcMap))
+		if (m_requests.count(g_strSrcMap))
 		{
 			auto map = m_compiler->sourceMapping(contractName);
 			contractData[g_strSrcMap] = map ? *map : "";
 		}
-		if (requests.count(g_strSrcMapRuntime))
+		if (m_requests.count(g_strSrcMapRuntime))
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
-		if (requests.count(g_strNatspecDev))
+		if (m_requests.count(g_strNatspecDev))
 			contractData[g_strNatspecDev] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
-		if (requests.count(g_strNatspecUser))
+		if (m_requests.count(g_strNatspecUser))
 			contractData[g_strNatspecUser] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
-		if (requests.count(g_argMutate))
+		if (m_requests.count(g_argMutate))
 			contractData[g_argMutate] = m_compiler->mutation(contractName);
 		output[g_strContracts][contractName] = contractData;
 	}
 
-	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
+	bool needsSourceList = m_requests.count(g_strAst) || m_requests.count(g_strSrcMap) || m_requests.count(g_strSrcMapRuntime);
 	if (needsSourceList)
 	{
 		// Indices into this array are used to abbreviate source names in source locations.
@@ -750,7 +749,7 @@ void CommandLineInterface::handleCombinedJSON()
 			output[g_strSourceList].append(source);
 	}
 
-	if (requests.count(g_strAst))
+	if (m_requests.count(g_strAst))
 	{
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
@@ -928,8 +927,8 @@ void CommandLineInterface::outputAssembly()
 	for (auto const& src: m_sourceCodes)
 	{
 		cout << endl << "======= " << src.first << " =======" << endl;
-		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
-		cout << assembly.assemble().toHex() << endl;
+		eth::AssemblyMutation assembly = m_assemblyStacks[src.first].assemble();
+		cout << assembly.assemble().ordinary().toHex() << endl;
 		assembly.stream(cout, "", m_sourceCodes);
 	}
 }

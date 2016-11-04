@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmasm/Instruction.h>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
@@ -50,7 +50,7 @@ private:
 
 void ContractCompiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	std::map<const ContractDefinition*, eth::AssemblyMutation const*> const& _contracts
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -62,7 +62,7 @@ void ContractCompiler::compileContract(
 size_t ContractCompiler::compileConstructor(
 	CompilerContext const& _runtimeContext,
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	std::map<const ContractDefinition*, eth::AssemblyMutation const*> const& _contracts
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -72,7 +72,7 @@ size_t ContractCompiler::compileConstructor(
 
 size_t ContractCompiler::compileClone(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+	map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 )
 {
 	initializeContext(_contract, _contracts);
@@ -80,7 +80,7 @@ size_t ContractCompiler::compileClone(
 	appendInitAndConstructorCode(_contract);
 
 	//@todo determine largest return size of all runtime functions
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime());
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime().ordinary());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
@@ -94,7 +94,7 @@ size_t ContractCompiler::compileClone(
 
 void ContractCompiler::initializeContext(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
+	map<ContractDefinition const*, eth::AssemblyMutation const*> const& _compiledContracts
 )
 {
 	m_context.setCompiledContracts(_compiledContracts);
@@ -145,7 +145,9 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 {
 	appendInitAndConstructorCode(_contract);
 
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.assembly());
+	/// AssemblyType runtimeSub contains the size of the assembly as a subroutine
+	/// Since the does not depend on mutation, we can use ordinary 
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.assembly().ordinary());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
@@ -505,7 +507,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	unsigned startStackHeight = m_context.stackHeight();
 	codeGen.assemble(
 		m_context.nonConstAssembly(),
-		[&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
+		[&](assembly::Identifier const& _identifier, eth::AssemblyMutation& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
 			auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 			if (ref == _inlineAssembly.annotation().externalReferences.end())
 				return false;
@@ -858,9 +860,9 @@ void ContractCompiler::compileExpression(Expression const& _expression, TypePoin
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);
 }
 
-eth::Assembly ContractCompiler::cloneRuntime()
+eth::AssemblyMutation ContractCompiler::cloneRuntime()
 {
-	eth::Assembly a;
+	eth::AssemblyMutation a;
 	a << Instruction::CALLDATASIZE;
 	a << u256(0) << Instruction::DUP1 << Instruction::CALLDATACOPY;
 	//@todo adjust for larger return values, make this dynamic.

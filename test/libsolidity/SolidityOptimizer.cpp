@@ -28,7 +28,6 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
-#include <libevmasm/Assembly.h>
 #include <libevmasm/BlockDeduplicator.h>
 
 using namespace std;

@@ -33,18 +33,12 @@ namespace eth
 class LinkerMutation
 {
 public:
-    /// @returns bytecode of ordinary contract
-    bytes bytecodeOrdinary() const;
-    /// @returns a hex representation of the bytecode of the given object, replacing unlinked
-	/// addresses by placeholders.
-	std::string hexOrdinary() const;
 	/// Links the given libraries by replacing their uses in the code and removes them from the references.
 	void link(std::map<std::string, h160> const& _libraryAddresses);
-    /// @returns Map from offsets in bytecode to library identifiers. The addresses starting at those offsets
-	/// need to be replaced by the actual addresses by the linker.
-	std::map<size_t, std::string> linkReferencesOrdinary() const;
     /// set ordinary contract
-    void setOrdinary(eth::LinkerObject _object);
+    void ordinary(eth::LinkerObject const& _object);
+	/// get ordinary contract
+	eth::LinkerObject const& ordinary() const;
 private:
     eth::LinkerObject m_ordinary;
     std::map<std::string const, eth::LinkerObject> m_mutants;

@@ -32,6 +32,7 @@
 #include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerMutation.h>
 #include <libsolidity/interface/Exceptions.h>
@@ -41,7 +42,6 @@ namespace dev
 
 namespace eth
 {
-class Assembly;
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
@@ -96,9 +96,9 @@ public:
 	void setRemappings(std::vector<std::string> const& _remappings);
 
 	/// Sets m_mutate
-	void setMutate(bool mutate)
+	void mutate(bool _mutate)
 	{
-		m_mutate = mutate;
+		m_mutate = _mutate;
 	}
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
@@ -249,7 +249,7 @@ private:
 		bool _optimize,
 		unsigned _runs,
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*>& _compiledContracts
 	);
 
 	Contract const& contract(std::string const& _contractName = "") const;

@@ -31,7 +31,7 @@ namespace dev
 {
 namespace eth
 {
-class Assembly;
+class AssemblyMutation;
 }
 namespace solidity
 {
@@ -46,12 +46,12 @@ public:
 	/// Parse the given inline assembly chunk starting with `{` and ending with the corresponding `}`.
 	/// @return false or error.
 	bool parse(std::shared_ptr<Scanner> const& _scanner);
-	eth::Assembly assemble();
+	eth::AssemblyMutation assemble();
 
 	/// Parse and assemble a string in one run - for use in Solidity code generation itself.
 	bool parseAndAssemble(
 		std::string const& _input,
-		eth::Assembly& _assembly,
+		eth::AssemblyMutation& _assembly,
 		CodeGenerator::IdentifierAccess const& _identifierAccess = CodeGenerator::IdentifierAccess()
 	);
 

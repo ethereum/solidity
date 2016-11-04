@@ -84,6 +84,8 @@ private:
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
+	/// Compiler combined JSON requested_size
+	std::set<std::string> m_requests;
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
 	/// list of allowed directories to read files from

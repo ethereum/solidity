@@ -27,7 +27,6 @@
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/noncopyable.hpp>
-#include <libevmasm/Assembly.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 
 using namespace std;

@@ -222,7 +222,7 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs)
 		if (!parse())
 			return false;
 
-	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
+	map<ContractDefinition const*, eth::AssemblyMutation const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
@@ -297,9 +297,9 @@ bytes CompilerStack::bytecode(enum Object _objectType, std::string const& _contr
 {
 	switch (_objectType) 
 	{
-		case ASSEMBLED: return contract(_contractName).mutation.bytecodeOrdinary();
-		case RUNTIME:   return contract(_contractName).runtimeMutation.bytecodeOrdinary();
-		case CLONE:     return contract(_contractName).cloneMutation.bytecodeOrdinary();
+		case ASSEMBLED: return contract(_contractName).mutation.ordinary().bytecode;
+		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().bytecode;
+		case CLONE:     return contract(_contractName).cloneMutation.ordinary().bytecode;
 	}
 } 
 
@@ -307,9 +307,9 @@ string CompilerStack::hex(enum Object _objectType, string const& _contractName) 
 {
 	switch (_objectType) 
 	{
-		case ASSEMBLED: return contract(_contractName).mutation.hexOrdinary();
-		case RUNTIME:   return contract(_contractName).runtimeMutation.hexOrdinary();
-		case CLONE:     return contract(_contractName).cloneMutation.hexOrdinary();
+		case ASSEMBLED: return contract(_contractName).mutation.ordinary().toHex();
+		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().toHex();
+		case CLONE:     return contract(_contractName).cloneMutation.ordinary().toHex();
 	}
 }
 
@@ -317,9 +317,9 @@ map<size_t, string> CompilerStack::linkReferences(enum Object _objectType, strin
 {
 	switch (_objectType) 
 	{
-		case ASSEMBLED: return contract(_contractName).mutation.linkReferencesOrdinary();
-		case RUNTIME:   return contract(_contractName).runtimeMutation.linkReferencesOrdinary();
-		case CLONE:     return contract(_contractName).cloneMutation.linkReferencesOrdinary();
+		case ASSEMBLED: return contract(_contractName).mutation.ordinary().linkReferences;
+		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().linkReferences;
+		case CLONE:     return contract(_contractName).cloneMutation.ordinary().linkReferences;
 	}
 }
 
@@ -334,7 +334,16 @@ dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 
 string CompilerStack::mutation(string const& _contractName) const
 {
-	return "Mutation for " + _contractName + " is not implemented";
+	if (!m_mutate) 
+	{
+		return "";
+	}
+
+	// TOOD: return ordinary contract in hex and its mutations as json.
+	Contract const& currentContract = contract(_contractName);
+	eth::LinkerMutation mutation = currentContract.mutation;
+	eth::LinkerObject object = mutation.ordinary();
+	return "Ordinary hex: " + object.toHex();
 }
 
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
@@ -594,7 +603,7 @@ void CompilerStack::compileContract(
 	bool _optimize,
 	unsigned _runs,
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+	map<ContractDefinition const*, eth::AssemblyMutation const*>& _compiledContracts
 )
 {
 	if (_compiledContracts.count(&_contract) || !_contract.annotation().isFullyImplemented)
@@ -606,13 +615,13 @@ void CompilerStack::compileContract(
 	compiler->compileContract(_contract, _compiledContracts);
 	Contract& compiledContract = m_contracts.at(_contract.name());
 	compiledContract.compiler = compiler;
-	compiledContract.mutation.setOrdinary(compiler->assembledObject());
-	compiledContract.runtimeMutation.setOrdinary(compiler->runtimeObject());
+	compiledContract.mutation = compiler->assembledObject();
+	compiledContract.runtimeMutation = compiler->runtimeObject();
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	Compiler cloneCompiler(_optimize, _runs);
 	cloneCompiler.compileClone(_contract, _compiledContracts);
-	compiledContract.cloneMutation.setOrdinary(cloneCompiler.assembledObject());
+	compiledContract.cloneMutation = cloneCompiler.assembledObject();
 }
 
 std::string CompilerStack::defaultContractName() const

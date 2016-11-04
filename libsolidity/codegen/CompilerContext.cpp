@@ -70,7 +70,7 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 	m_localVariables.erase(&_declaration);
 }
 
-eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
+eth::AssemblyMutation const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);
 	solAssert(ret != m_compiledContracts.end(), "Compiled contract not found.");
@@ -194,7 +194,7 @@ void CompilerContext::appendInlineAssembly(
 	unsigned startStackHeight = stackHeight();
 	auto identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
+		eth::AssemblyMutation& _assembly,
 		assembly::CodeGenerator::IdentifierContext _context
 	) {
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
@@ -222,9 +222,7 @@ void CompilerContext::appendInlineAssembly(
 
 void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 {
-	eth::Assembly& sub = m_asm.sub(_subIndex);
-	sub.injectStart(Instruction::POP);
-	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
+	m_asm.injectVersionStampIntoSub(_subIndex, binaryVersion());
 }
 
 eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(

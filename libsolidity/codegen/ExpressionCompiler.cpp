@@ -519,10 +519,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ContractDefinition const& contract =
 				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
 			// copy the contract's code into memory
-			eth::Assembly const& assembly = m_context.compiledContract(contract);
+			eth::AssemblyMutation const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
 			// pushes size
-			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
+			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly.ordinary());
 			m_context << Instruction::DUP1 << subroutine;
 			m_context << Instruction::DUP4 << Instruction::CODECOPY;
 

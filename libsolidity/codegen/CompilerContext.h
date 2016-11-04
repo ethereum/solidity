@@ -28,6 +28,7 @@
 #include <utility>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
@@ -49,8 +50,8 @@ public:
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
 
-	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
-	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
+	void setCompiledContracts(std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts) { m_compiledContracts = _contracts; }
+	eth::AssemblyMutation const& compiledContract(ContractDefinition const& _contract) const;
 
 	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
@@ -146,10 +147,10 @@ public:
 
 	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
 
-	eth::Assembly const& assembly() const { return m_asm; }
+	eth::AssemblyMutation const& assembly() const { return m_asm; }
 	/// @returns non-const reference to the underlying assembly. Should be avoided in favour of
 	/// wrappers in this class.
-	eth::Assembly& nonConstAssembly() { return m_asm; }
+	eth::AssemblyMutation& nonConstAssembly() { return m_asm; }
 
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFormat shows whether the out should be in Json format
@@ -158,8 +159,8 @@ public:
 		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	eth::LinkerObject const& assembledObject() { return m_asm.assemble(); }
-	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) { return m_asm.sub(_subIndex).assemble(); }
+	eth::LinkerMutation const& assembledObject() { return m_asm.assemble(); }
+	eth::LinkerMutation const& assembledRuntimeObject(size_t _subIndex) { return m_asm.sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -215,11 +216,11 @@ private:
 		mutable std::queue<Declaration const*> m_functionsToCompile;
 	} m_functionCompilationQueue;
 
-	eth::Assembly m_asm;
+	eth::AssemblyMutation m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
-	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
+	std::map<ContractDefinition const*, eth::AssemblyMutation const*> m_compiledContracts;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
