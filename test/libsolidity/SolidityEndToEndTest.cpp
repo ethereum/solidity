@@ -7732,6 +7732,52 @@ BOOST_AUTO_TEST_CASE(store_function)
 	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(9)));
 }
 
+BOOST_AUTO_TEST_CASE(store_function_in_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint result_in_constructor;
+			function (uint) internal returns (uint) x;
+			function C () {
+				x = double;
+				result_in_constructor = use(2);
+			}
+			function double(uint _arg) returns (uint _ret) {
+				_ret = _arg * 2;
+			}
+			function use(uint _arg) returns (uint) {
+				return x(_arg);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("use(uint256)", encodeArgs(u256(3))) == encodeArgs(u256(6)));
+	BOOST_CHECK(callContractFunction("result_in_constructor()") == encodeArgs(u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public initial;
+			function C() {
+				initial = double(2);
+			}
+			function double(uint _arg) returns (uint _ret) {
+				_ret = _arg * 2;
+			}
+			function runtime(uint _arg) returns (uint) {
+				return double(_arg);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("runtime(uint256)", encodeArgs(u256(3))) == encodeArgs(u256(6)));
+	BOOST_CHECK(callContractFunction("initial()") == encodeArgs(u256(4)));
+}
+
 BOOST_AUTO_TEST_CASE(function_type_library_internal)
 {
 	char const* sourceCode = R"(
