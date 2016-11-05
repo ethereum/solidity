@@ -1419,7 +1419,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 	// shift with negative rvalue throws exception
 	if (c_rightSigned)
 	{
-		m_context << Instruction::DUP2 << (u256(1) << 255) << Instruction::AND << Instruction::ISZERO << Instruction::ISZERO;
+		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 	}
 
