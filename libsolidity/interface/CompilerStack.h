@@ -162,7 +162,7 @@ public:
 	/// does not have runtime code.
 	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
 	/// @returns the contract and its mutations
-	std::string mutation(std::string const& _contractName = "") const;
+	Json::Value mutation(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings

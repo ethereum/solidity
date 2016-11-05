@@ -45,6 +45,9 @@ namespace solidity {
 class CompilerContext
 {
 public:
+	CompilerContext() : CompilerContext(false) {}
+	CompilerContext(bool _mutate) : m_mutate(_mutate), m_asm(_mutate) {}
+
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
@@ -172,6 +175,8 @@ public:
 			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); }) { _compilerContext.pushVisitedNodes(&_node); }
 	};
 
+	bool mutate() const;
+
 private:
 	/// @returns the entry label of the given function - searches the inheritance hierarchy
 	/// startig from the given point towards the base.
@@ -216,6 +221,7 @@ private:
 		mutable std::queue<Declaration const*> m_functionsToCompile;
 	} m_functionCompilationQueue;
 
+	bool m_mutate;
 	eth::AssemblyMutation m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;

@@ -39,6 +39,10 @@ public:
     void ordinary(eth::LinkerObject const& _object);
 	/// get ordinary contract
 	eth::LinkerObject const& ordinary() const;
+	/// add mutant
+	void addMutant(std::string const& _key, eth::LinkerObject const& _mutant);
+	/// get mutants
+	std::map<std::string const, eth::LinkerObject> const& mutants() const;
 private:
     eth::LinkerObject m_ordinary;
     std::map<std::string const, eth::LinkerObject> m_mutants;

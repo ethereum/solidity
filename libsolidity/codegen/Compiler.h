@@ -33,9 +33,11 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
+	explicit Compiler(bool _optimize = false, unsigned _runs = 200, bool _mutate = false):
 		m_optimize(_optimize),
-		m_optimizeRuns(_runs)
+		m_optimizeRuns(_runs),
+		m_context(_mutate),
+		m_runtimeContext(_mutate)
 	{ }
 
 	void compileContract(

@@ -332,18 +332,38 @@ dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 		return dev::keccak256(code);
 }
 
-string CompilerStack::mutation(string const& _contractName) const
+Json::Value CompilerStack::mutation(string const& _contractName) const
 {
 	if (!m_mutate) 
 	{
-		return "";
+		return Json::Value();
 	}
 
-	// TOOD: return ordinary contract in hex and its mutations as json.
+	Json::Value root;
+
 	Contract const& currentContract = contract(_contractName);
 	eth::LinkerMutation mutation = currentContract.mutation;
-	eth::LinkerObject object = mutation.ordinary();
-	return "Ordinary hex: " + object.toHex();
+
+	eth::LinkerObject ordinary = mutation.ordinary();
+
+	root["ordinary"] = ordinary.toHex();
+
+	map<string const, eth::LinkerObject> const& mutants = mutation.mutants();
+
+	int i = 0;
+	Json::Value collection(Json::arrayValue);
+	for (auto const& pair : mutants)
+	{
+		Json::Value value;
+		value["name"] = "mutant_" + to_string(i++);
+		value["gen"] = pair.first;
+		value["hex"] = pair.second.toHex();
+		collection.append(value);
+	}
+
+	root["mutants"] = collection;
+
+	return root;
 }
 
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
@@ -611,7 +631,7 @@ void CompilerStack::compileContract(
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(_optimize, _runs, *dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs, m_mutate);
 	compiler->compileContract(_contract, _compiledContracts);
 	Contract& compiledContract = m_contracts.at(_contract.name());
 	compiledContract.compiler = compiler;

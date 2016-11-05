@@ -343,10 +343,12 @@ void CommandLineInterface::handleMutate(string const& _contract)
 	if (!m_args.count(g_argMutate))
 		return;
 
-	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".mutation", m_compiler->mutation(_contract));
+	string data = Json::FastWriter().write(m_compiler->mutation(_contract));
+
+	if (m_args.count(g_argOutputDir)) 
+		createFile(_contract + ".mutation", data);
 	else
-		cout << "Mutation:" << endl << m_compiler->mutation(_contract) << endl;
+		cout << "Mutation:" << endl << data << endl;
 }
 
 void CommandLineInterface::handleFormal()

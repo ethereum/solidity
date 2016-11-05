@@ -33,7 +33,7 @@ namespace solidity {
 
 /**
  * Code generator at the contract level. Can be used to generate code for exactly one contract
- * either either in "runtime mode" or "creation mode".
+ * either in "runtime mode" or "creation mode".
  */
 class ContractCompiler: private ASTConstVisitor
 {
@@ -42,7 +42,7 @@ public:
 		m_optimise(_optimise),
 		m_context(_context)
 	{
-		m_context = CompilerContext();
+		m_context = CompilerContext(_context.mutate());
 	}
 
 	void compileContract(

@@ -30,12 +30,22 @@ void LinkerMutation::link(map<string, h160> const& _libraryAddresses)
     m_ordinary.link(_libraryAddresses);
 }
 
-void LinkerMutation::ordinary(eth::LinkerObject const& _object)
+void LinkerMutation::ordinary(LinkerObject const& _object)
 {
     m_ordinary = _object;
 }
 
-eth::LinkerObject const& LinkerMutation::ordinary() const
+LinkerObject const& LinkerMutation::ordinary() const
 {
 	return m_ordinary;
+}
+
+void LinkerMutation::addMutant(string const& _key, LinkerObject const& _mutant)
+{
+	m_mutants[_key] = _mutant;
+}
+
+map<string const, LinkerObject> const& LinkerMutation::mutants() const
+{
+	return m_mutants;
 }

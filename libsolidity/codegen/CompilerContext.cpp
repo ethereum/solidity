@@ -301,5 +301,10 @@ void CompilerContext::FunctionCompilationQueue::startFunction(Declaration const&
 	m_alreadyCompiledFunctions.insert(&_function);
 }
 
+bool CompilerContext::mutate() const
+{
+	return m_mutate;
+}
+
 }
 }

@@ -34,7 +34,8 @@ namespace eth
 class AssemblyMutation
 {
 public:
-	AssemblyMutation() {}
+	AssemblyMutation() : AssemblyMutation(false) {}
+	AssemblyMutation(bool _mutate) : m_mutate(_mutate) {}
 
 	AssemblyItem newTag();
 	AssemblyItem newPushTag();
@@ -79,12 +80,15 @@ public:
 
 	eth::Assembly const& ordinary() const;
 	void ordinary(eth::Assembly const& _ordinary);
-
 private:
+	bool m_mutate;
 	eth::Assembly m_ordinary;
 	std::map<std::string const, eth::Assembly> m_mutants;
 
 	mutable LinkerMutation m_assembledMutation;
+
+	void sub(eth::Assembly& _assembly, size_t _subIndex, bytes _version) const;
+	void addMutant(std::string const& _key, eth::Assembly const& _mutant);
 };
 
 }
