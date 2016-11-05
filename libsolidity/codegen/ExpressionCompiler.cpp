@@ -1405,16 +1405,10 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 
 	// The RValue can be a RationalNumberType too.
 	bool c_rightSigned = false;
-	if (_rightType.category() == Type::Category::RationalNumber)
-	{
-		RationalNumberType const& rightType = dynamic_cast<RationalNumberType const&>(_rightType);
-		c_rightSigned = rightType.integerType()->isSigned();
-	}
-	else
-	{
-		IntegerType const& rightType = dynamic_cast<IntegerType const&>(_rightType);
-		c_rightSigned = rightType.isSigned();
-	}
+	if (auto rightType = dynamic_cast<RationalNumberType const*>(&_rightType))
+		c_rightSigned = rightType->integerType()->isSigned();
+	else if (auto rightType = dynamic_cast<IntegerType const*>(&_rightType))
+		c_rightSigned = rightType->isSigned();
 
 	// shift with negative rvalue throws exception
 	if (c_rightSigned)
