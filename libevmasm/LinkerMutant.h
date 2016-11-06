@@ -17,12 +17,13 @@
 /**
  * @author Danil Nemirovsky <danil.nemirovsky@gmail.com>
  * @date 2016
- * Contains bytecode for contract and its mutants.
+ * Contains bytecode for contract mutant.
  */
 
 #pragma once
 
-#include <libevmasm/LinkerMutant.h>
+#include <libevmasm/LinkerObject.h>
+#include <libevmasm/SourceLocation.h>
 
 namespace dev
 {
@@ -30,22 +31,21 @@ namespace dev
 namespace eth
 {
 
-class LinkerMutation
+class LinkerMutant : public LinkerObject
 {
 public:
-	/// Links the given libraries by replacing their uses in the code and removes them from the references.
-	void link(std::map<std::string, h160> const& _libraryAddresses);
-	/// set ordinary contract
-	void ordinary(eth::LinkerObject const& _object);
-	/// get ordinary contract
-	eth::LinkerObject const& ordinary() const;
-	/// add mutant
-	void addMutant(eth::LinkerMutant const& _mutant);
-	/// get mutants
-	std::vector<eth::LinkerMutant> const& mutants() const;
+	LinkerMutant(
+			eth::LinkerObject const& _object, 
+			std::string const& _description, 
+			SourceLocation const& _gen) :
+		LinkerObject(_object), m_description(_description), m_gen(_gen) 
+	{}
+
+	std::string const& description() const { return m_description; }
+	SourceLocation const& gen() const { return m_gen; }
 private:
-	eth::LinkerObject m_ordinary;
-	std::vector<eth::LinkerMutant> m_mutants;
+	std::string m_description;
+	SourceLocation m_gen;
 };
 
 }

@@ -17,11 +17,12 @@
 /**
  * @author Danil Nemirovsky <danil.nemirovsky@gmail.com>
  * @date 2016
- * Contains bytecode for contract and its mutants.
+ * Contains code for mutant, its description and location.
  */
 
 #pragma once
 
+#include <libevmasm/Assembly.h>
 #include <libevmasm/LinkerMutant.h>
 
 namespace dev
@@ -30,22 +31,25 @@ namespace dev
 namespace eth
 {
 
-class LinkerMutation
+class AssemblyMutant : public Assembly
 {
 public:
-	/// Links the given libraries by replacing their uses in the code and removes them from the references.
-	void link(std::map<std::string, h160> const& _libraryAddresses);
-	/// set ordinary contract
-	void ordinary(eth::LinkerObject const& _object);
-	/// get ordinary contract
-	eth::LinkerObject const& ordinary() const;
-	/// add mutant
-	void addMutant(eth::LinkerMutant const& _mutant);
-	/// get mutants
-	std::vector<eth::LinkerMutant> const& mutants() const;
+	AssemblyMutant(
+			eth::Assembly const& _assembly, 
+			std::string const& _description, 
+			SourceLocation const& _genLocation) :
+		Assembly(_assembly), m_description(_description), m_genLocation(_genLocation) 
+	{}
+
+	AssemblyMutant const& subMutant(size_t _sub) const;
+
+	LinkerMutant const& assembleMutant() const;
+
+	std::string const& description() const { return m_description; }
+	SourceLocation const& genLocation() const { return m_genLocation; }
 private:
-	eth::LinkerObject m_ordinary;
-	std::vector<eth::LinkerMutant> m_mutants;
+	std::string m_description;
+	SourceLocation m_genLocation;
 };
 
 }

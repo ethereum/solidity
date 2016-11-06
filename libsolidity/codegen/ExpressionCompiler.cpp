@@ -387,7 +387,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
 		if (Token::isCompareOp(c_op))
-			appendCompareOperatorCode(c_op, commonType);
+			m_context.mutateCompareOperatorCode(_binaryOperation);
 		else
 			appendOrdinaryBinaryOperatorCode(c_op, commonType);
 	}
@@ -522,7 +522,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			eth::AssemblyMutation const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
 			// pushes size
-			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly.ordinary());
+			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
 			m_context << Instruction::DUP1 << subroutine;
 			m_context << Instruction::DUP4 << Instruction::CODECOPY;
 
@@ -1260,44 +1260,6 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	m_context << Instruction::POP;
 	_binaryOperation.rightExpression().accept(*this);
 	m_context << endLabel;
-}
-
-void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type const& _type)
-{
-	if (_operator == Token::Equal || _operator == Token::NotEqual)
-	{
-		m_context << Instruction::EQ;
-		if (_operator == Token::NotEqual)
-			m_context << Instruction::ISZERO;
-	}
-	else
-	{
-		bool isSigned = false;
-		if (auto type = dynamic_cast<IntegerType const*>(&_type))
-			isSigned = type->isSigned();
-
-		switch (_operator)
-		{
-		case Token::GreaterThanOrEqual:
-			m_context <<
-				(isSigned ? Instruction::SLT : Instruction::LT) <<
-				Instruction::ISZERO;
-			break;
-		case Token::LessThanOrEqual:
-			m_context <<
-				(isSigned ? Instruction::SGT : Instruction::GT) <<
-				Instruction::ISZERO;
-			break;
-		case Token::GreaterThan:
-			m_context << (isSigned ? Instruction::SGT : Instruction::GT);
-			break;
-		case Token::LessThan:
-			m_context << (isSigned ? Instruction::SLT : Instruction::LT);
-			break;
-		default:
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
-		}
-	}
 }
 
 void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type)

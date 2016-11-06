@@ -14,39 +14,23 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
+/** @file AssemblyMutant.cpp
  * @author Danil Nemirovsky <danil.nemirovsky@gmail.com>
  * @date 2016
- * Contains bytecode for contract and its mutants.
  */
 
-#pragma once
+#include <libevmasm/AssemblyMutant.h>
 
-#include <libevmasm/LinkerMutant.h>
+using namespace dev;
+using namespace dev::eth;
+using namespace std;
 
-namespace dev
+AssemblyMutant const& AssemblyMutant::subMutant(size_t _sub) const
 {
-
-namespace eth
-{
-
-class LinkerMutation
-{
-public:
-	/// Links the given libraries by replacing their uses in the code and removes them from the references.
-	void link(std::map<std::string, h160> const& _libraryAddresses);
-	/// set ordinary contract
-	void ordinary(eth::LinkerObject const& _object);
-	/// get ordinary contract
-	eth::LinkerObject const& ordinary() const;
-	/// add mutant
-	void addMutant(eth::LinkerMutant const& _mutant);
-	/// get mutants
-	std::vector<eth::LinkerMutant> const& mutants() const;
-private:
-	eth::LinkerObject m_ordinary;
-	std::vector<eth::LinkerMutant> m_mutants;
-};
-
+	return * new AssemblyMutant(sub(_sub),m_description, m_genLocation);
 }
+
+LinkerMutant const& AssemblyMutant::assembleMutant() const
+{
+	return * new LinkerMutant(assemble(), m_description, m_genLocation);
 }

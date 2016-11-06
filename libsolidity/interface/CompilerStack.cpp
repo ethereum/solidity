@@ -346,18 +346,30 @@ Json::Value CompilerStack::mutation(string const& _contractName) const
 
 	eth::LinkerObject ordinary = mutation.ordinary();
 
-	root["ordinary"] = ordinary.toHex();
+	Json::Value ordinaryValue;
+	ordinaryValue["bin"] = ordinary.toHex(); 
+	
+	root["ordinary"] = ordinaryValue;
 
-	map<string const, eth::LinkerObject> const& mutants = mutation.mutants();
+	vector<eth::LinkerMutant> const& mutants = mutation.mutants();
 
 	int i = 0;
 	Json::Value collection(Json::arrayValue);
-	for (auto const& pair : mutants)
+	for (auto const& mutant : mutants)
 	{
 		Json::Value value;
 		value["name"] = "mutant_" + to_string(i++);
-		value["gen"] = pair.first;
-		value["hex"] = pair.second.toHex();
+		value["mutation"] = mutant.description();
+
+		SourceLocation const& sourceLocation = mutant.gen();
+		
+		Json::Value location;
+		location["start"] = sourceLocation.start;
+		location["end"] = sourceLocation.end;
+
+		value["location"] = location;
+		value["source"] = *sourceLocation.sourceName;
+		value["bin"] = mutant.toHex();
 		collection.append(value);
 	}
 

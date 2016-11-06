@@ -86,7 +86,6 @@ private:
 	///@{
 	///@name Append code for various operator types
 	void appendAndOrOperatorCode(BinaryOperation const& _binaryOperation);
-	void appendCompareOperatorCode(Token::Value _operator, Type const& _type);
 	void appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type);
 
 	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);

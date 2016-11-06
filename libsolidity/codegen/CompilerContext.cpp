@@ -175,6 +175,62 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	updateSourceLocation();
 }
 
+void CompilerContext::mutateCompareOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Type const& commonType = *_binaryOperation.annotation().commonType;
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	if (c_op == Token::Equal || c_op == Token::NotEqual)
+	{
+		*this << Instruction::EQ;
+		if (c_op == Token::NotEqual)
+			*this << Instruction::ISZERO;
+	}
+	else
+	{
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(&commonType))
+			isSigned = type->isSigned();
+
+		if (!m_mutate) 
+		{
+			// don't want to do anything specific for mutation if it is not required.
+			appendCompareOperatorCode(_binaryOperation);
+			return;
+		}
+
+		eth::Assembly bud = m_asm.ordinary();
+		appendCompareOperatorCode(_binaryOperation);
+
+		SourceLocation location = _binaryOperation.location();
+
+		switch (c_op)
+		{
+		case Token::GreaterThanOrEqual:
+			bud << (isSigned ? Instruction::SGT : Instruction::GT) 
+				<< Instruction::ISZERO;
+			addMutant(Token::GreaterThanOrEqual, Token::LessThanOrEqual, bud, location);
+			break;
+		case Token::LessThanOrEqual:
+			bud <<
+				(isSigned ? Instruction::SLT : Instruction::LT) <<
+				Instruction::ISZERO;
+			addMutant(Token::LessThanOrEqual, Token::GreaterThanOrEqual, bud, location);	
+			break;
+		case Token::GreaterThan:
+			bud << (isSigned ? Instruction::SLT : Instruction::LT);
+			addMutant(Token::GreaterThan, Token::LessThan, bud, location);
+			break;
+		case Token::LessThan:
+			bud << (isSigned ? Instruction::SGT : Instruction::GT);
+			addMutant(Token::LessThan, Token::GreaterThan, bud, location);
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
+		}
+	}
+}
+
 void CompilerContext::appendInlineAssembly(
 	string const& _assembly,
 	vector<string> const& _localVariables,
@@ -304,6 +360,54 @@ void CompilerContext::FunctionCompilationQueue::startFunction(Declaration const&
 bool CompilerContext::mutate() const
 {
 	return m_mutate;
+}
+
+void CompilerContext::appendCompareOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Type const& commonType = *_binaryOperation.annotation().commonType;
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	bool isSigned = false;
+	if (auto type = dynamic_cast<IntegerType const*>(&commonType))
+		isSigned = type->isSigned();
+
+	switch (c_op)
+	{
+	case Token::GreaterThanOrEqual:
+		*this <<
+			(isSigned ? Instruction::SLT : Instruction::LT) <<
+			Instruction::ISZERO;
+		break;
+	case Token::LessThanOrEqual:
+		*this <<
+			(isSigned ? Instruction::SGT : Instruction::GT) <<
+			Instruction::ISZERO;
+		break;
+	case Token::GreaterThan:
+		*this << (isSigned ? Instruction::SGT : Instruction::GT);
+		break;
+	case Token::LessThan:
+		*this << (isSigned ? Instruction::SLT : Instruction::LT);
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
+	}
+}
+
+void CompilerContext::addMutant(
+	Token::Value _original, 
+	Token::Value _mutated, 
+	eth::Assembly const& _bud, 
+	SourceLocation const& _location)
+{
+	stringstream description;
+	description
+		<<  Token::toString(_original)
+		<< " -> "
+		<< Token::toString(_mutated);
+
+	eth::AssemblyMutant* mutant = new eth::AssemblyMutant(_bud, description.str(), _location);
+	m_asm.addMutant(*mutant);
 }
 
 }

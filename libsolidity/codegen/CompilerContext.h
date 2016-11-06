@@ -27,7 +27,6 @@
 #include <queue>
 #include <utility>
 #include <libevmasm/Instruction.h>
-#include <libevmasm/Assembly.h>
 #include <libevmasm/AssemblyMutation.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
@@ -116,7 +115,7 @@ public:
 	eth::AssemblyItem newTag() { return m_asm.newTag(); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
-	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
+	eth::AssemblyItem addSubroutine(eth::AssemblyMutation const& _assembly) { return m_asm.appendSubSize(_assembly); }
 	/// Pushes the size of the final program
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
@@ -129,6 +128,8 @@ public:
 	void popVisitedNodes() { m_visitedNodes.pop(); updateSourceLocation(); }
 	/// Pushes an ASTNode to the stack of visited nodes
 	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
+
+	void mutateCompareOperatorCode(BinaryOperation const& _binaryOperation);
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
@@ -188,6 +189,10 @@ private:
 	std::vector<ContractDefinition const*>::const_iterator superContract(const ContractDefinition &_contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
+	/// append compare operations
+	void appendCompareOperatorCode(BinaryOperation const& _binaryOperation);
+	/// create and add mutant
+	void addMutant(Token::Value original, Token::Value mutated, eth::Assembly const& bud, SourceLocation const& location);
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are

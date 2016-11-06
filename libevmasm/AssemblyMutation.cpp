@@ -27,204 +27,218 @@ using namespace std;
 
 AssemblyItem AssemblyMutation::newTag()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.newTag();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.newTag();
 
-    return m_ordinary.newTag();
+	return m_ordinary.newTag();
 }
 
 AssemblyItem AssemblyMutation::newPushTag()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.newPushTag();
-    
-    return m_ordinary.newPushTag();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.newPushTag();
+
+	return m_ordinary.newPushTag();
 }
 
 AssemblyItem AssemblyMutation::newData(bytes const& _data)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.newData(_data);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.newData(_data);
 
-    return m_ordinary.newData(_data);
+	return m_ordinary.newData(_data);
 }
 
 AssemblyMutation const& AssemblyMutation::sub(size_t _sub) const
 {
-    AssemblyMutation* assembly = new AssemblyMutation(m_mutate);
+	AssemblyMutation* mutation = new AssemblyMutation(m_mutate);
 
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            assembly->addMutant(pair.first, pair.second.sub(_sub));
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutation->addMutant(mutant.subMutant(_sub));
 
-    assembly->ordinary(m_ordinary.sub(_sub));
-    return *assembly;
+	mutation->ordinary(m_ordinary.sub(_sub));
+	return *mutation;
 }
 
 AssemblyItem const& AssemblyMutation::append(AssemblyItem const& _i)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.append(_i);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.append(_i);
 
-    return m_ordinary.append(_i);
+	return m_ordinary.append(_i);
 }
 
 AssemblyItem const& AssemblyMutation::append(string const& _data)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.append(_data);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.append(_data);
 
-    return m_ordinary.append(_data);
+	return m_ordinary.append(_data);
 }
 
 AssemblyItem const& AssemblyMutation::append(bytes const& _data)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.append(_data);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.append(_data);
 
-    return m_ordinary.append(_data);
+	return m_ordinary.append(_data);
 }
 
-AssemblyItem AssemblyMutation::appendSubSize(Assembly const& _a)
+AssemblyItem AssemblyMutation::appendSubSize(AssemblyMutation const& _a)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendSubSize(_a);
+	Assembly const& ordinarySubroutine = _a.ordinary();
 
-    return m_ordinary.appendSubSize(_a);
+	if (m_mutate) {
+		for (auto& mutant : m_mutants)
+			mutant.appendSubSize(ordinarySubroutine);
+
+		for (auto& mutant : _a.m_mutants)
+		{
+			Assembly bud = m_ordinary;
+			bud.appendSubSize(mutant);
+
+			AssemblyMutant* updated
+				= new AssemblyMutant(bud, mutant.description(), mutant.genLocation());
+
+			addMutant(*updated);
+		}
+	}
+
+	// return AsseblyItem from ordinary since our mutations do not affect offset.
+	return m_ordinary.appendSubSize(ordinarySubroutine);
 }
 
 void AssemblyMutation::appendProgramSize()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendProgramSize();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendProgramSize();
 
-    m_ordinary.appendProgramSize();
+	m_ordinary.appendProgramSize();
 }
 
 void AssemblyMutation::appendLibraryAddress(string const& _identifier)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendLibraryAddress(_identifier);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendLibraryAddress(_identifier);
 
-    m_ordinary.appendLibraryAddress(_identifier);
+	m_ordinary.appendLibraryAddress(_identifier);
 }
 
 AssemblyItem AssemblyMutation::appendJump()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendJump();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendJump();
 
-    return m_ordinary.appendJump();
+	return m_ordinary.appendJump();
 }
 
-AssemblyItem AssemblyMutation::appendJumpI() 
+AssemblyItem AssemblyMutation::appendJumpI()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendJumpI();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendJumpI();
 
-    return m_ordinary.appendJumpI();
+	return m_ordinary.appendJumpI();
 }
 
 AssemblyItem AssemblyMutation::appendJump(AssemblyItem const& _tag)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendJump(_tag);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendJump(_tag);
 
-    return m_ordinary.appendJump(_tag);
+	return m_ordinary.appendJump(_tag);
 }
 
 AssemblyItem AssemblyMutation::appendJumpI(AssemblyItem const& _tag)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.appendJumpI(_tag);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.appendJumpI(_tag);
 
-    return m_ordinary.appendJumpI(_tag);
+	return m_ordinary.appendJumpI(_tag);
 }
 
-AssemblyItem AssemblyMutation::errorTag() 
+AssemblyItem AssemblyMutation::errorTag()
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.errorTag();
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.errorTag();
 
-    return m_ordinary.errorTag();
+	return m_ordinary.errorTag();
 }
 
 AssemblyItems const& AssemblyMutation::items() const
 {
-    // Returns items only from ordinary since it used only on gas estimation
-    // and source mapping. Mutation should not influence it.
-    return m_ordinary.items();
+	// Returns items only from ordinary since it used only on gas estimation
+	// and source mapping. Mutation should not influence it.
+	return m_ordinary.items();
 }
 
 int AssemblyMutation::deposit() const
 {
-    // Returns desposit from ordinary since mutation should not influence it.
-    return m_ordinary.deposit();
+	// Returns desposit from ordinary since mutation should not influence it.
+	return m_ordinary.deposit();
 }
 
 void AssemblyMutation::adjustDeposit(int _adjustment)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.adjustDeposit(_adjustment);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.adjustDeposit(_adjustment);
 
-    m_ordinary.adjustDeposit(_adjustment);
+	m_ordinary.adjustDeposit(_adjustment);
 }
 
-void AssemblyMutation::setDeposit(int _deposit) 
+void AssemblyMutation::setDeposit(int _deposit)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.setDeposit(_deposit);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.setDeposit(_deposit);
 
-    m_ordinary.setDeposit(_deposit);
+	m_ordinary.setDeposit(_deposit);
 }
 
 void AssemblyMutation::setSourceLocation(SourceLocation const& _location)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.setSourceLocation(_location);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.setSourceLocation(_location);
 
-    m_ordinary.setSourceLocation(_location);
+	m_ordinary.setSourceLocation(_location);
 }
 
 LinkerMutation const& AssemblyMutation::assemble() const
 {
-    LinkerMutation& mutation = m_assembledMutation;
+	LinkerMutation* mutation = new LinkerMutation();
 
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            mutation.addMutant(pair.first, pair.second.assemble());
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutation->addMutant(mutant.assembleMutant());
 
-    mutation.ordinary(m_ordinary.assemble());
-
-    return mutation;
+	mutation->ordinary(m_ordinary.assemble());
+	return *mutation;
 }
 
 AssemblyMutation& AssemblyMutation::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            pair.second.optimise(_enable, _isCreation, _runs);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			mutant.optimise(_enable, _isCreation, _runs);
 
-    m_ordinary.optimise(_enable, _isCreation, _runs);
+	m_ordinary.optimise(_enable, _isCreation, _runs);
 
-    return *this;
+	return *this;
 }
 
 Json::Value AssemblyMutation::stream(
@@ -234,37 +248,37 @@ Json::Value AssemblyMutation::stream(
 		bool _inJsonFormat
 	) const
 {
-    // We stream only ordinary to preserve current behaviour.
-    return m_ordinary.stream(_out, _prefix, _sourceCodes, _inJsonFormat);   
+	// We stream only ordinary to preserve current behaviour.
+	return m_ordinary.stream(_out, _prefix, _sourceCodes, _inJsonFormat);
 }
 
 void AssemblyMutation::injectVersionStampIntoSub(size_t _subIndex, bytes _version)
 {
-    if (m_mutate)
-        for (auto& pair : m_mutants)
-            sub(pair.second, _subIndex, _version);
+	if (m_mutate)
+		for (auto& mutant : m_mutants)
+			sub(mutant, _subIndex, _version);
 
-    sub(m_ordinary, _subIndex, _version);
+	sub(m_ordinary, _subIndex, _version);
 }
 
 Assembly const& AssemblyMutation::ordinary() const
-{   
-    return m_ordinary;
+{
+	return m_ordinary;
 }
 
 void AssemblyMutation::ordinary(eth::Assembly const& _ordinary)
 {
-    m_ordinary = _ordinary;
+	m_ordinary = _ordinary;
 }
 
-void AssemblyMutation::addMutant(std::string const& _key, eth::Assembly const& _mutant)
+void AssemblyMutation::addMutant(eth::AssemblyMutant const& _mutant)
 {
-    m_mutants[_key] = _mutant;
+	m_mutants.push_back(_mutant);
 }
 
 void AssemblyMutation::sub(eth::Assembly& _assembly, size_t _subIndex, bytes _version) const
 {
-    eth::Assembly& sub = _assembly.sub(_subIndex);
+	eth::Assembly& sub = _assembly.sub(_subIndex);
 	sub.injectStart(Instruction::POP);
 	sub.injectStart(fromBigEndian<u256>(_version));
 }

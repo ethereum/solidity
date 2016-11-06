@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutant.h>
 #include <libevmasm/LinkerMutation.h>
 
 namespace dev
@@ -46,7 +47,7 @@ public:
 	AssemblyItem const& append(AssemblyItem const& _i);
 	AssemblyItem const& append(std::string const& _data);
 	AssemblyItem const& append(bytes const& _data);
-	AssemblyItem appendSubSize(Assembly const& _a);
+	AssemblyItem appendSubSize(AssemblyMutation const& _a);
 	void appendProgramSize();
 	void appendLibraryAddress(std::string const& _identifier);
 
@@ -80,15 +81,14 @@ public:
 
 	eth::Assembly const& ordinary() const;
 	void ordinary(eth::Assembly const& _ordinary);
+
+	void addMutant(eth::AssemblyMutant const& _mutant);
 private:
 	bool m_mutate;
 	eth::Assembly m_ordinary;
-	std::map<std::string const, eth::Assembly> m_mutants;
-
-	mutable LinkerMutation m_assembledMutation;
+	std::vector<eth::AssemblyMutant> m_mutants;
 
 	void sub(eth::Assembly& _assembly, size_t _subIndex, bytes _version) const;
-	void addMutant(std::string const& _key, eth::Assembly const& _mutant);
 };
 
 }

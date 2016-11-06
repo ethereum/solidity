@@ -80,7 +80,7 @@ size_t ContractCompiler::compileClone(
 	appendInitAndConstructorCode(_contract);
 
 	//@todo determine largest return size of all runtime functions
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime().ordinary());
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
@@ -145,9 +145,8 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 {
 	appendInitAndConstructorCode(_contract);
 
-	/// AssemblyType runtimeSub contains the size of the assembly as a subroutine
-	/// Since the does not depend on mutation, we can use ordinary 
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.assembly().ordinary());
+	/// AssemblyType runtimeSub contains the size of the assembly as a subroutine 
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.assembly());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
