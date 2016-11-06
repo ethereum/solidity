@@ -389,7 +389,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		if (Token::isCompareOp(c_op))
 			m_context.mutateCompareOperatorCode(_binaryOperation);
 		else
-			appendOrdinaryBinaryOperatorCode(c_op, commonType);
+			appendOrdinaryBinaryOperatorCode(_binaryOperation);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
@@ -1262,56 +1262,30 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	m_context << endLabel;
 }
 
+void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	if (Token::isArithmeticOp(c_op))
+		m_context.mutateArithmeticOperatorCode(_binaryOperation);
+	else if (Token::isBitOp(c_op))
+		appendBitOperatorCode(c_op);
+	else if (Token::isShiftOp(c_op))
+		appendShiftOperatorCode(c_op);
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
+}
+
 void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type)
 {
 	if (Token::isArithmeticOp(_operator))
-		appendArithmeticOperatorCode(_operator, _type);
+		m_context.appendArithmeticOperatorCode(_operator, _type);
 	else if (Token::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
 	else if (Token::isShiftOp(_operator))
 		appendShiftOperatorCode(_operator);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
-}
-
-void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
-{
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
-
-	if (_type.category() == Type::Category::FixedPoint)
-		solAssert(false, "Not yet implemented - FixedPointType.");
-
-	switch (_operator)
-	{
-	case Token::Add:
-		m_context << Instruction::ADD;
-		break;
-	case Token::Sub:
-		m_context << Instruction::SUB;
-		break;
-	case Token::Mul:
-		m_context << Instruction::MUL;
-		break;
-	case Token::Div:
-	case Token::Mod:
-	{
-		// Test for division by zero
-		m_context << Instruction::DUP2 << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
-
-		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-		else
-			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
-		break;
-	}
-	case Token::Exp:
-		m_context << Instruction::EXP;
-		break;
-	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
-	}
 }
 
 void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)

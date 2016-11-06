@@ -130,6 +130,8 @@ public:
 	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
 
 	void mutateCompareOperatorCode(BinaryOperation const& _binaryOperation);
+	void mutateArithmeticOperatorCode(BinaryOperation const& _binaryOperation);
+	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
@@ -191,8 +193,13 @@ private:
 	void updateSourceLocation();
 	/// append compare operations
 	void appendCompareOperatorCode(BinaryOperation const& _binaryOperation);
+	void mutateAdd(eth::Assembly const& _ordinary, SourceLocation const& _location);
+	void mutateSub(eth::Assembly const& _ordinary, SourceLocation const& _location);
+	void mutateMul(eth::Assembly const& _ordinary, SourceLocation const& _location);
+	void mutateExp(eth::Assembly const& _ordinary, SourceLocation const& _location);
+	void mutate(Token::Value _original, std::map<Token::Value, Instruction> const& _mutations, eth::Assembly const& _ordinary, SourceLocation const& _location);
 	/// create and add mutant
-	void addMutant(Token::Value original, Token::Value mutated, eth::Assembly const& bud, SourceLocation const& location);
+	void addMutant(Token::Value _original, Token::Value _mutated, eth::Assembly const& _bud, SourceLocation const& _location);
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are
