@@ -3,6 +3,7 @@ cmake_policy(SET CMP0015 NEW)
 aux_source_directory(. SRC_LIST)
 aux_source_directory(contracts SRC_LIST)
 aux_source_directory(libsolidity SRC_LIST)
+aux_source_directory(libevmasm SRC_LIST)
 
 get_filename_component(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
