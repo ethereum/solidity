@@ -7629,6 +7629,29 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function)
 	BOOST_CHECK(callContractFunction("extern()") == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(calling_uninitialized_function_in_detail)
+{
+	// Storage default value of zero would be correct jump dest, this tests that
+	// that is properly handled.
+	char const* sourceCode = R"(
+		contract C {
+			function() internal returns (uint) x;
+			int mutex;
+			function t() returns (uint) {
+				if (mutex > 0)
+					return 7;
+				mutex = 1;
+				// If this test fails, it will jump to "0" and re-execute this function.
+				x();
+				return 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("t()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(pass_function_types_internally)
 {
 	char const* sourceCode = R"(
@@ -7949,7 +7972,7 @@ BOOST_AUTO_TEST_CASE(function_delete)
 				y = a;
 				return y();
 			}
-			funciton d() returns (uint) {
+			function d() returns (uint) {
 				delete y;
 				return 1;
 			}
@@ -7986,6 +8009,35 @@ BOOST_AUTO_TEST_CASE(copy_function_storage_array)
 
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
+{
+	// This has to apply NOT to the functions because encoding in storage
+	// is different than encoding in memory.
+	char const* sourceCode = R"(
+		contract C {
+			function() internal returns (uint)[20] x;
+			int mutex;
+			function one() returns (uint) {
+				function() internal returns (uint)[20] xmem;
+				x = xmem;
+				return 3;
+			}
+			function two() returns (uint) {
+				if (mutex > 0)
+					return 7;
+				mutex = 1;
+				// If this test fails, it will jump to "0" and re-execute this function.
+				x[0]();
+				return 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("one()") == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("two()") == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_left)
