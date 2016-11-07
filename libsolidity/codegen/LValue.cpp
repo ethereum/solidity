@@ -190,11 +190,11 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
-		else if (
-			m_dataType->category() == Type::Category::Function &&
-			dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
-		)
-			CompilerUtils(m_context).splitExternalFunctionType(false);
+		else if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
+		{
+			if (fun->location() == FunctionType::Location::External)
+				CompilerUtils(m_context).splitExternalFunctionType(false);
+		}
 		else
 		{
 			solAssert(m_dataType->sizeOnStack() == 1, "");
@@ -236,12 +236,16 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier
 			utils.copyToStackTop(3 + m_dataType->sizeOnStack(), m_dataType->sizeOnStack());
 			// stack: value storage_ref cleared_value multiplier value
-			if (
-				m_dataType->category() == Type::Category::Function &&
-				dynamic_cast<FunctionType const&>(*m_dataType).location() == FunctionType::Location::External
-			)
-				// Combine the two-item function type into a single stack slot.
-				utils.combineExternalFunctionType(false);
+			if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
+			{
+				if (fun->location() == FunctionType::Location::External)
+					// Combine the two-item function type into a single stack slot.
+					utils.combineExternalFunctionType(false);
+				else
+					m_context <<
+						((u256(1) << (8 * m_dataType->storageBytes())) - 1) <<
+						Instruction::AND;
+			}
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))

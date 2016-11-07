@@ -485,6 +485,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Tag:
 			tagPos[(unsigned)i.data()] = ret.bytecode.size();
+			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(i.data() != 0, AssemblyException, "");
 			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
 			break;

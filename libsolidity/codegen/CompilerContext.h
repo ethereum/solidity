@@ -44,6 +44,8 @@ namespace solidity {
 class CompilerContext
 {
 public:
+	bool isCreationPhase() const { return m_mode == CompilationMode::Creation; }
+
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);

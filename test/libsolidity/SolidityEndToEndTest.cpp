@@ -7631,8 +7631,6 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function)
 
 BOOST_AUTO_TEST_CASE(calling_uninitialized_function_in_detail)
 {
-	// Storage default value of zero would be correct jump dest, this tests that
-	// that is properly handled.
 	char const* sourceCode = R"(
 		contract C {
 			function() internal returns (uint) x;
@@ -7641,7 +7639,7 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function_in_detail)
 				if (mutex > 0)
 					return 7;
 				mutex = 1;
-				// If this test fails, it will jump to "0" and re-execute this function.
+				// Avoid re-executing this function if we jump somewhere.
 				x();
 				return 2;
 			}
