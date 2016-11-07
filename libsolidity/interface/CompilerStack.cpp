@@ -300,6 +300,7 @@ bytes CompilerStack::bytecode(enum Object _objectType, std::string const& _contr
 		case ASSEMBLED: return contract(_contractName).mutation.ordinary().bytecode;
 		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().bytecode;
 		case CLONE:     return contract(_contractName).cloneMutation.ordinary().bytecode;
+		default: BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal object code type."));
 	}
 } 
 
@@ -310,6 +311,7 @@ string CompilerStack::hex(enum Object _objectType, string const& _contractName) 
 		case ASSEMBLED: return contract(_contractName).mutation.ordinary().toHex();
 		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().toHex();
 		case CLONE:     return contract(_contractName).cloneMutation.ordinary().toHex();
+		default: BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal object code type."));
 	}
 }
 
@@ -320,6 +322,7 @@ map<size_t, string> CompilerStack::linkReferences(enum Object _objectType, strin
 		case ASSEMBLED: return contract(_contractName).mutation.ordinary().linkReferences;
 		case RUNTIME:   return contract(_contractName).runtimeMutation.ordinary().linkReferences;
 		case CLONE:     return contract(_contractName).cloneMutation.ordinary().linkReferences;
+		default: BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal object code type."));
 	}
 }
 
