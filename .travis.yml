@@ -135,7 +135,6 @@ git:
 cache:
     ccache: true
     directories:
-        - cryptopp
         - boost_1_57_0
         - build
 

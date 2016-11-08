@@ -84,7 +84,6 @@ Section: science
 Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
 Build-Depends: debhelper (>= 9.0.0),
-               libcryptopp-dev,
                cmake,
                g++-4.8,
                git,
