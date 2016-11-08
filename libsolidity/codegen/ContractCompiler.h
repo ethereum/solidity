@@ -38,11 +38,11 @@ namespace solidity {
 class ContractCompiler: private ASTConstVisitor
 {
 public:
-	explicit ContractCompiler(CompilerContext& _context, bool _optimise):
+	explicit ContractCompiler(CompilationMode _mode, CompilerContext* _runtimeContext, CompilerContext& _context, bool _optimise):
 		m_optimise(_optimise),
 		m_context(_context)
 	{
-		m_context = CompilerContext();
+		m_context = CompilerContext(_mode, _runtimeContext);
 	}
 
 	void compileContract(

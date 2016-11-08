@@ -33,10 +33,10 @@ void Compiler::compileContract(
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler runtimeCompiler(m_runtimeContext, m_optimize);
+	ContractCompiler runtimeCompiler(CompilationMode::Runtime, nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
 
-	ContractCompiler creationCompiler(m_context, m_optimize);
+	ContractCompiler creationCompiler(CompilationMode::Creation, &m_runtimeContext, m_context, m_optimize);
 	m_runtimeSub = creationCompiler.compileConstructor(m_runtimeContext, _contract, _contracts);
 
 	if (m_optimize)
@@ -54,7 +54,7 @@ void Compiler::compileClone(
 	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler cloneCompiler(m_context, m_optimize);
+	ContractCompiler cloneCompiler(CompilationMode::Creation, &m_runtimeContext, m_context, m_optimize);
 	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
 
 	if (m_optimize)

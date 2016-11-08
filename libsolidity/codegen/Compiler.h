@@ -35,7 +35,9 @@ class Compiler
 public:
 	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
-		m_optimizeRuns(_runs)
+		m_optimizeRuns(_runs),
+		m_context(CompilationMode::Creation, &m_runtimeContext),
+		m_runtimeContext(CompilationMode::Runtime)
 	{ }
 
 	void compileContract(
