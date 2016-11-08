@@ -31,13 +31,16 @@ EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
 IndexedParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
 ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName
+TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName | FunctionTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
+FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' )*
+                   ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
