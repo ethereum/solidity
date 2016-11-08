@@ -49,6 +49,10 @@ cd $distribution
 git clone --recursive https://github.com/ethereum/solidity.git -b "$branch"
 mv solidity solc
 
+# Fetch jsoncpp dependency
+mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
+wget -O ./solc/deps/downloads/jsoncpp-1.7.7.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.7.7.tar.gz
+
 # Determine version
 cd solc
 version=`grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt`
