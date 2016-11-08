@@ -656,6 +656,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 		break;
 	}
+
+	// Check the conversion result fits in a range.
+	if (targetTypeCategory == Type::Category::Enum)
+	{
+		EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
+		m_context << u256(enumType.numberOfMembers()) << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 }
 
 void CompilerUtils::pushZeroValue(Type const& _type)
