@@ -1704,7 +1704,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
-	m_isPayable(_function.isPayable()),
+	m_isPayable(_isInternal ? false : _function.isPayable()),
 	m_declaration(&_function)
 {
 	TypePointers params;
@@ -1810,6 +1810,8 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_isConstant(_typeName.isDeclaredConst()),
 	m_isPayable(_typeName.isPayable())
 {
+	if (_typeName.isPayable())
+		solAssert(m_location == Location::External, "Internal payable function type used.");
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");

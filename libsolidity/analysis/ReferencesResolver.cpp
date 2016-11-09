@@ -95,7 +95,8 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 		typeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
 	}
 
-	// Do we allow storage references for external functions?
+	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
+			fatalTypeError(_typeName.location(), "Only external function types can be payable.");
 
 	_typeName.annotation().type = make_shared<FunctionType>(_typeName);
 }

@@ -4192,6 +4192,42 @@ BOOST_AUTO_TEST_CASE(public_function_type)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(payable_internal_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) internal payable returns (uint) x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) external returns (uint) x;
+			function f() {
+				x.value(2)();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(call_value_on_payable_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) external payable returns (uint) x;
+			function f() {
+				x.value(2)(1);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
 {
 	// It should not be possible to give internal functions
