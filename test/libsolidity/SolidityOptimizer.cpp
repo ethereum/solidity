@@ -1304,6 +1304,28 @@ BOOST_AUTO_TEST_CASE(invalid_state_at_control_flow_join)
 	compareVersions("test()");
 }
 
+BOOST_AUTO_TEST_CASE(cse_sub_zero)
+{
+	checkCSE({
+		u256(0),
+		u256(5),
+		Instruction::SUB
+	}, {
+		u256(5)
+	});
+
+	checkCSE({
+		u256(5),
+		u256(0),
+		Instruction::SUB
+	}, {
+		u256(5),
+		u256(0),
+		Instruction::SUB
+	});
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
