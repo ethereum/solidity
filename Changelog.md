@@ -5,6 +5,10 @@ Features:
  * Type checker: now more eagerly searches for a common type of an inline array with mixed types
  * Code generator: generates a runtime error when an out-of-range value is converted into an enum type.
 
+Bugfixes:
+
+ * Parser: disallow empty enum definitions.
+
 ### 0.4.4 (2016-10-31)
 
 Bugfixes:
