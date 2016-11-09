@@ -8006,7 +8006,7 @@ BOOST_AUTO_TEST_CASE(function_delete_stack)
 		contract C {
 			function a() returns (uint) { return 7; }
 			function test() returns (uint) {
-				y = a;
+				var y = a;
 				delete y;
 				y();
 			}

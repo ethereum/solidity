@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(payable_fallback_unction)
+BOOST_AUTO_TEST_CASE(payable_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
