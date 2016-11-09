@@ -3360,6 +3360,11 @@ BOOST_AUTO_TEST_CASE(enum_explicit_overflow)
 					choice = ActionChoices(x);
 					d = uint256(choice);
 				}
+				function getChoiceFromNegativeLiteral() returns (uint d)
+				{
+					choice = ActionChoices(-1);
+					d = uint256(choice);
+				}
 				ActionChoices choice;
 			}
 	)";
@@ -3367,6 +3372,7 @@ BOOST_AUTO_TEST_CASE(enum_explicit_overflow)
 	// These should throw
 	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 3) == encodeArgs());
 	BOOST_CHECK(callContractFunction("getChoiceFromSigned(int256)", -1) == encodeArgs());
+	BOOST_CHECK(callContractFunction("getChoiceFromNegativeLiteral()") == encodeArgs());
 	// These should work
 	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 2) == encodeArgs(2));
 	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 0) == encodeArgs(0));
