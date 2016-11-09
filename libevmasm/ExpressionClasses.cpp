@@ -262,6 +262,7 @@ Rules::Rules()
 		// operations involving an expression and itself
 		{{Instruction::AND, {X, X}}, [=]{ return X; }},
 		{{Instruction::OR, {X, X}}, [=]{ return X; }},
+		{{Instruction::XOR, {X, X}}, [=]{ return u256(0); }},
 		{{Instruction::SUB, {X, X}}, [=]{ return u256(0); }},
 		{{Instruction::EQ, {X, X}}, [=]{ return u256(1); }},
 		{{Instruction::LT, {X, X}}, [=]{ return u256(0); }},
