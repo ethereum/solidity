@@ -7878,19 +7878,20 @@ BOOST_AUTO_TEST_CASE(mapping_of_functions)
 				stages[msg.sender] = stage0;
 			}
 
-			function f() {
+			function f() returns (uint) {
 				stages[msg.sender]();
+				return 7;
 			}
 		}
 	)";
 
 	compileAndRun(sourceCode, 0, "Flow");
-	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
-	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(false));
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
-	BOOST_CHECK(callContractFunction("checkSuccess()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("success()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("success()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("success()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(packed_functions)
@@ -7900,17 +7901,27 @@ BOOST_AUTO_TEST_CASE(packed_functions)
 			// these should take the same slot
 			function() returns (uint) a;
 			function() external returns (uint) b;
+			function() external returns (uint) c;
+			function() returns (uint) d;
 			uint8 public x;
 
 			function set() {
 				x = 2;
+				d = g;
+				c = this.h;
+				b = this.h;
 				a = g;
-				b = h;
 			}
 			function t1() returns (uint) {
 				return a();
 			}
 			function t2() returns (uint) {
+				return b();
+			}
+			function t3() returns (uint) {
+				return a();
+			}
+			function t4() returns (uint) {
 				return b();
 			}
 			function g() returns (uint) {
@@ -7926,6 +7937,8 @@ BOOST_AUTO_TEST_CASE(packed_functions)
 	BOOST_CHECK(callContractFunction("set()") == encodeArgs());
 	BOOST_CHECK(callContractFunction("t1()") == encodeArgs(u256(7)));
 	BOOST_CHECK(callContractFunction("t2()") == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("t3()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("t4()") == encodeArgs(u256(8)));
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(2)));
 }
 
@@ -7939,7 +7952,7 @@ BOOST_AUTO_TEST_CASE(function_memory_array)
 			function d(uint x) returns (uint) { return x + 5; }
 			function e(uint x) returns (uint) { return x + 8; }
 			function test(uint x, uint i) returns (uint) {
-				function(uint) internal returns (uint)[] arr =
+				function(uint) internal returns (uint)[] memory arr =
 					new function(uint) internal returns (uint)[](10);
 				arr[0] = a;
 				arr[1] = b;

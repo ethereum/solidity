@@ -177,6 +177,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		m_context << Instruction::POP << Instruction::SLOAD;
 	else
 	{
+		bool cleaned = false;
 		m_context
 			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
@@ -184,18 +185,27 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			// implementation should be very similar to the integer case.
 			solUnimplemented("Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
+		{
 			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
+			cleaned = true;
+		}
 		else if (
 			m_dataType->category() == Type::Category::Integer &&
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
+		{
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
+			cleaned = true;
+		}
 		else if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
 		{
 			if (fun->location() == FunctionType::Location::External)
+			{
 				CompilerUtils(m_context).splitExternalFunctionType(false);
+				cleaned = true;
+			}
 		}
-		else
+		if (!cleaned)
 		{
 			solAssert(m_dataType->sizeOnStack() == 1, "");
 			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
