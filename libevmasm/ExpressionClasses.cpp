@@ -288,6 +288,10 @@ Rules::Rules()
 		{Instruction::ISZERO, {{Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}}},
 		[=]() -> Pattern { return {Instruction::ISZERO, {X}}; }
 	});
+	m_rules.push_back({
+		{Instruction::ISZERO, {{Instruction::XOR, {X, Y}}}},
+		[=]() -> Pattern { return { Instruction::EQ, {X, Y} }; }
+	});
 	// Associative operations
 	for (auto const& opFun: vector<pair<Instruction,function<u256(u256 const&,u256 const&)>>>{
 		{Instruction::ADD, plus<u256>()},
