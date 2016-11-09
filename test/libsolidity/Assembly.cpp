@@ -91,8 +91,10 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 		BOOST_CHECK_MESSAGE(
 			_items[i].location() == _locations[i],
 			"Location mismatch for assembly item " + to_string(i) + ". Found: " +
+					(_items[i].location().sourceName ? *_items[i].location().sourceName + ":" : "(null source name)") +
 					to_string(_items[i].location().start) + "-" +
 					to_string(_items[i].location().end) + ", expected: " +
+					(_locations[i].sourceName ? *_locations[i].sourceName + ":" : "(null source name)") +
 					to_string(_locations[i].start) + "-" +
 					to_string(_locations[i].end));
 	}
@@ -111,7 +113,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 		}
 	}
 	)";
-	shared_ptr<string const> n = make_shared<string>("source");
+	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
 		vector<SourceLocation>(18, SourceLocation(2, 75, n)) +
