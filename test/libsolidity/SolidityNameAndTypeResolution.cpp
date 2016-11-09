@@ -57,7 +57,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 	{
 		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(source)));
 		if(!sourceUnit)
-			return make_pair(sourceUnit, nullptr);
+			BOOST_FAIL("Parsing failed in type checker test.");
 
 		SyntaxChecker syntaxChecker(errors);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
