@@ -1897,6 +1897,13 @@ bool FunctionType::operator==(Type const& _other) const
 	return true;
 }
 
+TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator == Token::Value::Delete)
+		return make_shared<TupleType>();
+	return TypePointer();
+}
+
 string FunctionType::toString(bool _short) const
 {
 	string name = "function (";

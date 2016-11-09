@@ -892,6 +892,7 @@ public:
 	TypePointer selfType() const;
 
 	virtual bool operator==(Type const& _other) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual std::string toString(bool _short) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool canBeStored() const override { return m_location == Location::Internal || m_location == Location::External; }

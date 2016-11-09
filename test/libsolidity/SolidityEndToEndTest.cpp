@@ -7960,7 +7960,7 @@ BOOST_AUTO_TEST_CASE(function_memory_array)
 	BOOST_CHECK(callContractFunction("test(uint256,uint256)", u256(10), u256(5)) == encodeArgs());
 }
 
-BOOST_AUTO_TEST_CASE(function_delete)
+BOOST_AUTO_TEST_CASE(function_delete_storage)
 {
 	char const* sourceCode = R"(
 		contract C {
@@ -7985,6 +7985,23 @@ BOOST_AUTO_TEST_CASE(function_delete)
 	BOOST_CHECK(callContractFunction("ca()") == encodeArgs(u256(7)));
 	BOOST_CHECK(callContractFunction("d()") == encodeArgs(u256(1)));
 	BOOST_CHECK(callContractFunction("ca()") == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(function_delete_stack)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function a() returns (uint) { return 7; }
+			function test() returns (uint) {
+				y = a;
+				delete y;
+				y();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(copy_function_storage_array)

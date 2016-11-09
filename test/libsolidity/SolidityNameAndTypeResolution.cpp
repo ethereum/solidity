@@ -4256,6 +4256,51 @@ BOOST_AUTO_TEST_CASE(function_type_arrays)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(delete_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) external returns (uint) x;
+			function(uint) internal returns (uint) y;
+			function f() {
+				delete x;
+				var a = y;
+				delete a;
+				delete y;
+				var c = f;
+				delete c;
+				function(uint) internal returns (uint) g;
+				delete g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(delete_function_type_invalid)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				delete f;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				delete this.f;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 {
 	char const* text = R"(
