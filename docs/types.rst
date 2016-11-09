@@ -291,7 +291,7 @@ be passed via and returned from external function calls.
 
 Function types are notated as follows:
 
-    function (<parameter types>) {internal|external} [constant] [returns (<return types>)]
+    function (<parameter types>) {internal|external} [constant] [payable] [returns (<return types>)]
 
 In contrast to the parameter types, the return types cannot be empty - if the
 function type should not return anything, the whole ``returns (<return types>)``
@@ -300,8 +300,13 @@ part has to be omitted.
 By default, function types are internal, so the ``internal`` keyword can be
 omitted.
 
+There are two ways to access a function in the current contract: Either directly
+by its name, ``f``, or using ``this.f``. The former will result in an internal
+function, the latter in an external function.
+
 If a function type variable is not initialized, calling it will result
-in an exception.
+in an exception. The same happens if you call a function after using ``delete``
+on it.
 
 If external function types are used outside of the context of Solidity,
 they are converted into the ``bytes24`` type.

@@ -22,7 +22,7 @@ StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
+                     ( FunctionCall | Identifier | 'constant' |' payable' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? Block
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
@@ -39,7 +39,7 @@ VariableDeclaration = TypeName Identifier
 TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName | FunctionTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
-FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' )*
+FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
 
