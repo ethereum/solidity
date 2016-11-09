@@ -329,9 +329,10 @@ Currently, there are situations, where exceptions happen automatically in Solidi
 3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 4. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
 5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-6. If you perform an external function call targeting a contract that contains no code.
-7. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-8. If your contract receives Ether via a public accessor function.
+6. If you convert a value too big or negative into an enum type.
+7. If you perform an external function call targeting a contract that contains no code.
+8. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+9. If your contract receives Ether via a public accessor function.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 
