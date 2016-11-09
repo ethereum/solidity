@@ -8039,10 +8039,47 @@ BOOST_AUTO_TEST_CASE(copy_function_storage_array)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(function_array_cross_calls)
+{
+	char const* sourceCode = R"(
+		contract D {
+			function f(function() external returns (function() external returns (uint))[] x)
+				returns (function() external returns (uint)[3] r)
+			{
+				r[0] = x[0]();
+				r[1] = x[1]();
+				r[2] = x[2]();
+			}
+		}
+		contract C {
+			function test() returns (uint, uint, uint) {
+				function() external returns (function() external returns (uint))[] memory x =
+					new function() external returns (function() external returns (uint))[](10);
+				for (uint i = 0; i < x.length; i ++)
+					x[i] = this.h;
+				x[0] = this.htwo;
+				var y = (new D()).f(x);
+				return (y[0](), y[1](), y[2]());
+			}
+			function e() returns (uint) { return 5; }
+			function f() returns (uint) { return 6; }
+			function g() returns (uint) { return 7; }
+			uint counter;
+			function h() returns (function() external returns (uint)) {
+				return counter++ == 0 ? this.f : this.g;
+			}
+			function htwo() returns (function() external returns (uint)) {
+				return this.e;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(5), u256(6), u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
 {
-	// This has to apply NOT to the functions because encoding in storage
-	// is different than encoding in memory.
 	char const* sourceCode = R"(
 		contract C {
 			function() internal returns (uint)[20] x;
@@ -8056,7 +8093,7 @@ BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
 				if (mutex > 0)
 					return 7;
 				mutex = 1;
-				// If this test fails, it will jump to "0" and re-execute this function.
+				// If this test fails, it might re-execute this function.
 				x[0]();
 				return 2;
 			}
