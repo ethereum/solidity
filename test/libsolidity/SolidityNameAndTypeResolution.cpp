@@ -57,7 +57,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 	{
 		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(source)));
 		if(!sourceUnit)
-			return make_pair(sourceUnit, nullptr);
+			BOOST_FAIL("Parsing failed in type checker test.");
 
 		SyntaxChecker syntaxChecker(errors);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
@@ -4015,8 +4015,8 @@ BOOST_AUTO_TEST_CASE(calling_payable)
 	char const* text = R"(
 		contract receiver { function pay() payable {} }
 		contract test {
-			funciton f() { (new receiver()).pay.value(10)(); }
-			recevier r = new receiver();
+			function f() { (new receiver()).pay.value(10)(); }
+			receiver r = new receiver();
 			function g() { r.pay.value(10)(); }
 		}
 	)";
