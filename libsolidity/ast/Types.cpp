@@ -1585,7 +1585,7 @@ size_t EnumType::numberOfMembers() const
 
 bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
+	return _convertTo == *this || _convertTo.category() == Category::Integer;
 }
 
 unsigned EnumType::memberValue(ASTString const& _member) const

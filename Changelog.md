@@ -8,6 +8,7 @@ Features:
 Bugfixes:
 
  * Parser: disallow empty enum definitions.
+ * Type checker: disallow conversion between different enum types.
 
 ### 0.4.4 (2016-10-31)
 

@@ -348,7 +348,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 		break;
 	case Type::Category::Enum:
-		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
+		solAssert(_targetType == _typeOnStack || targetTypeCategory == Type::Category::Integer, "");
 		break;
 	case Type::Category::FixedPoint:
 		solAssert(false, "Not yet implemented - FixedPointType.");
