@@ -611,11 +611,24 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	m_breakTags.push_back(loopEnd);
 
 	m_context << loopStart;
-	compileExpression(_whileStatement.condition());
-	m_context << Instruction::ISZERO;
-	m_context.appendConditionalJumpTo(loopEnd);
+
+	// While loops have the condition prepended
+	if (!_whileStatement.isDoWhile())
+	{
+		compileExpression(_whileStatement.condition());
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(loopEnd);
+	}
 
 	_whileStatement.body().accept(*this);
+
+	// Do-while loops have the condition appended
+	if (_whileStatement.isDoWhile())
+	{
+		compileExpression(_whileStatement.condition());
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(loopEnd);
+	}
 
 	m_context.appendJumpTo(loopStart);
 	m_context << loopEnd;

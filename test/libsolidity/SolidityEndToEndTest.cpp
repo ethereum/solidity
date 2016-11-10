@@ -353,6 +353,34 @@ BOOST_AUTO_TEST_CASE(while_loop)
 	testSolidityAgainstCppOnRange("f(uint256)", while_loop_cpp, 0, 5);
 }
 
+
+BOOST_AUTO_TEST_CASE(do_while_loop)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint n) returns(uint nfac) {\n"
+							 "    nfac = 1;\n"
+							 "    var i = 2;\n"
+							 "    do { nfac *= i++; } while (i <= n);\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto do_while_loop_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		u256 i = 2;
+		do
+		{
+			nfac *= i++;
+		}
+		while (i <= n);
+
+		return nfac;
+	};
+
+	testSolidityAgainstCppOnRange("f(uint256)", do_while_loop_cpp, 0, 5);
+}
+
 BOOST_AUTO_TEST_CASE(nested_loops)
 {
 	// tests that break and continue statements in nested loops jump to the correct place

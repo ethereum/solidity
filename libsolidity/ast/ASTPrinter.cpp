@@ -208,7 +208,7 @@ bool ASTPrinter::visit(IfStatement const& _node)
 
 bool ASTPrinter::visit(WhileStatement const& _node)
 {
-	writeLine("WhileStatement");
+	writeLine(_node.isDoWhile() ? "DoWhileStatement" : "WhileStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }

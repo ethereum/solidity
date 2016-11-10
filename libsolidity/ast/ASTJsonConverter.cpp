@@ -264,7 +264,11 @@ bool ASTJsonConverter::visit(IfStatement const& _node)
 
 bool ASTJsonConverter::visit(WhileStatement const& _node)
 {
-	addJsonNode(_node, "WhileStatement", {}, true);
+	addJsonNode(
+		_node,
+		_node.isDoWhile() ? "DoWhileStatement" : "WhileStatement",
+		{},
+		true);
 	return true;
 }
 

@@ -1005,18 +1005,22 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
-		ASTPointer<Statement> const& _body
+		ASTPointer<Statement> const& _body,
+		bool _isDoWhile
 	):
-		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body) {}
+		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body),
+		m_isDoWhile(_isDoWhile) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& condition() const { return *m_condition; }
 	Statement const& body() const { return *m_body; }
+	bool isDoWhile() const { return m_isDoWhile; }
 
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_body;
+	bool m_isDoWhile;
 };
 
 /**
