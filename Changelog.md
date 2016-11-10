@@ -5,6 +5,7 @@ Features:
 
 Bugfixes:
  * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
+ * Code generator: higher bits in a boolean argument are ignored.
 
 ### 0.4.6 (2016-11-22)
 

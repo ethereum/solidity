@@ -925,6 +925,8 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		if (leftAligned)
 			m_context << shiftFactor << Instruction::MUL;
 	}
+	if (_fromCalldata && _type.category() == Type::Category::Bool)
+		m_context << Instruction::ISZERO << Instruction::ISZERO;
 
 	return numBytes;
 }
