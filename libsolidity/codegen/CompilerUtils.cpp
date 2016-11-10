@@ -950,6 +950,8 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBou
 	else
 	{
 		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
+		if (_type.category() == Type::Category::Bool)
+			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
 			// shift the value accordingly before storing
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << Instruction::MUL;
