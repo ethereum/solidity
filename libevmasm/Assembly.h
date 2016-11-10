@@ -53,7 +53,6 @@ public:
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
-	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
 	AssemblyItem const& append(AssemblyItem const& _i);
@@ -110,6 +109,10 @@ public:
 	) const;
 
 protected:
+	/// Does the same operations as @a optimise, but should only be applied to a sub and
+	/// returns the replaced tags.
+	std::map<u256, u256> optimiseInternal(bool _isCreation, size_t _runs);
+
 	std::string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
@@ -129,6 +132,7 @@ protected:
 	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 
 	mutable LinkerObject m_assembledObject;
+	mutable std::vector<size_t> m_tagPositionsInBytecode;
 
 	int m_deposit = 0;
 	int m_baseDeposit = 0;

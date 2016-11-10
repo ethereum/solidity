@@ -488,6 +488,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				parameterSize += function.selfType()->sizeOnStack();
 			}
 
+			if (m_context.runtimeContext())
+				// We have a runtime context, so we need the creation part.
+				m_context << (u256(1) << 32) << Instruction::SWAP1 << Instruction::DIV;
+			else
+				// Extract the runtime part.
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+
 			m_context.appendJump(eth::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 
@@ -845,9 +852,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			if (funType->location() == FunctionType::Location::Internal)
 			{
-				m_context << m_context.functionEntryLabel(
-					dynamic_cast<FunctionDefinition const&>(funType->declaration())
-				).pushTag();
+				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
+				utils().pushCombinedFunctionEntryLabel(funDef);
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
 			}
 			else
@@ -883,7 +889,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					// us to link against it although we actually do not need it.
 					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
 					solAssert(!!function, "Function not found in member access");
-					m_context << m_context.functionEntryLabel(*function).pushTag();
+					utils().pushCombinedFunctionEntryLabel(*function);
 				}
 			}
 			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
@@ -915,10 +921,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (type.isSuper())
 		{
 			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-			m_context << m_context.superFunctionEntryLabel(
+			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
 				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
 				type.contractDefinition()
-			).pushTag();
+			));
 		}
 		else
 		{
@@ -1203,7 +1209,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		m_context << m_context.virtualFunctionEntryLabel(*functionDef).pushTag();
+		utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
@@ -1266,6 +1272,17 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 {
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
+		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
+		{
+			if (funType->location() == FunctionType::Location::Internal)
+			{
+				// We have to remove the upper bits (construction time value) because they might
+				// be "unknown" in one of the operands and not in the other.
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+				m_context << Instruction::SWAP1;
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			}
+		}
 		m_context << Instruction::EQ;
 		if (_operator == Token::NotEqual)
 			m_context << Instruction::ISZERO;

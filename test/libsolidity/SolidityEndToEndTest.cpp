@@ -7777,6 +7777,48 @@ BOOST_AUTO_TEST_CASE(store_function_in_constructor)
 	BOOST_CHECK(callContractFunction("result_in_constructor()") == encodeArgs(u256(4)));
 }
 
+// TODO: store bound internal library functions
+
+BOOST_AUTO_TEST_CASE(store_internal_unused_function_in_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function () internal returns (uint) x;
+			function C () {
+				x = unused;
+			}
+			function unused() internal returns (uint) {
+				return 7;
+			}
+			function t() returns (uint) {
+				return x();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(store_internal_unused_library_function_in_constructor)
+{
+	char const* sourceCode = R"(
+		library L { function x() internal returns (uint) { return 7; } }
+		contract C {
+			function () internal returns (uint) x;
+			function C () {
+				x = L.x;
+			}
+			function t() returns (uint) {
+				return x();
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("t()") == encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime)
 {
 	char const* sourceCode = R"(
@@ -7797,6 +7839,27 @@ BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime)
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("runtime(uint256)", encodeArgs(u256(3))) == encodeArgs(u256(6)));
 	BOOST_CHECK(callContractFunction("initial()") == encodeArgs(u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(same_function_in_construction_and_runtime_equality_check)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function (uint) internal returns (uint) x;
+			function C() {
+				x = double;
+			}
+			function test() returns (bool) {
+				return x == double;
+			}
+			function double(uint _arg) returns (uint _ret) {
+				_ret = _arg * 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(function_type_library_internal)

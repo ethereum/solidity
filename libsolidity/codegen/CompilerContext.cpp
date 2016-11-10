@@ -92,22 +92,22 @@ eth::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration const&
 	return m_functionCompilationQueue.entryLabelIfExists(_declaration);
 }
 
-eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(FunctionDefinition const& _function)
+FunctionDefinition const& CompilerContext::resolveVirtualFunction(FunctionDefinition const& _function)
 {
 	// Libraries do not allow inheritance and their functions can be inlined, so we should not
 	// search the inheritance hierarchy (which will be the wrong one in case the function
 	// is inlined).
 	if (auto scope = dynamic_cast<ContractDefinition const*>(_function.scope()))
 		if (scope->isLibrary())
-			return functionEntryLabel(_function);
+			return _function;
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	return virtualFunctionEntryLabel(_function, m_inheritanceHierarchy.begin());
+	return resolveVirtualFunction(_function, m_inheritanceHierarchy.begin());
 }
 
-eth::AssemblyItem CompilerContext::superFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base)
+FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition const& _function, ContractDefinition const& _base)
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	return virtualFunctionEntryLabel(_function, superContract(_base));
+	return resolveVirtualFunction(_function, superContract(_base));
 }
 
 FunctionDefinition const* CompilerContext::nextConstructor(ContractDefinition const& _contract) const
@@ -227,7 +227,7 @@ void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
 }
 
-eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(
+FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 	FunctionDefinition const& _function,
 	vector<ContractDefinition const*>::const_iterator _searchStart
 )
@@ -242,9 +242,9 @@ eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(
 				!function->isConstructor() &&
 				FunctionType(*function).hasEqualArgumentTypes(functionType)
 			)
-				return functionEntryLabel(*function);
+				return *function;
 	solAssert(false, "Super function " + name + " not found.");
-	return m_asm.newTag(); // not reached
+	return _function; // not reached
 }
 
 vector<ContractDefinition const*>::const_iterator CompilerContext::superContract(ContractDefinition const& _contract) const

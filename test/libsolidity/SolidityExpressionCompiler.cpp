@@ -136,7 +136,7 @@ bytes compileFirstExpression(
 			FirstExpressionExtractor extractor(*contract);
 			BOOST_REQUIRE(extractor.expression() != nullptr);
 
-			CompilerContext context { CompilationMode::Runtime /* probably simpler */  };
+			CompilerContext context;
 			context.resetVisitedNodes(contract);
 			context.setInheritanceHierarchy(inheritanceHierarchy);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack

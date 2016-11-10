@@ -340,6 +340,19 @@ void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 	m_context << Instruction::OR;
 }
 
+void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
+{
+	m_context << m_context.functionEntryLabel(_function).pushTag();
+	// If there is a runtime context, we have to merge both labels into the same
+	// stack slot in case we store it in storage.
+	if (CompilerContext* rtc = m_context.runtimeContext())
+		m_context <<
+			(u256(1) << 32) <<
+			Instruction::MUL <<
+			rtc->functionEntryLabel(_function).toSubAssemblyTag(m_context.runtimeSub()) <<
+			Instruction::OR;
+}
+
 void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
 {
 	// For a type extension, we need to remove all higher-order bits that we might have ignored in

@@ -308,9 +308,20 @@ void Assembly::injectStart(AssemblyItem const& _i)
 
 Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
-	if (!_enable)
-		return *this;
+	if (_enable)
+		optimiseInternal(_isCreation, _runs);
+	return *this;
+}
 
+map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
+{
+	for (size_t subId = 0; subId < m_subs.size(); ++subId)
+	{
+		map<u256, u256> subTagReplacements = m_subs[subId].optimiseInternal(false, _runs);
+		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+	}
+
+	map<u256, u256> tagReplacements;
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
@@ -319,30 +330,39 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		// This only modifies PushTags, we have to run again to actually remove code.
 		BlockDeduplicator dedup(m_items);
 		if (dedup.deduplicate())
+		{
+			tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
 			count++;
+		}
 
 		{
-			// Control flow graph that resets knowledge at path joins.
-			ControlFlowGraph cfg(m_items, false);
+			// Control flow graph optimization has been here before but is disabled because it
+			// assumes we only jump to tags that are pushed. This is not the case anymore with
+			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
-			for (BasicBlock const& block: cfg.optimisedBlocks())
+
+			auto iter = m_items.begin();
+			while (iter != m_items.end())
 			{
-				// We used to start with the block's initial state but it caused
-				// too many inconsistencies.
+				auto end = iter;
+				while (end != m_items.end())
+					if (SemanticInformation::altersControlFlow(*end++))
+						break;
+
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator(emptyState);
-				auto iter = m_items.begin() + block.begin;
-				auto const end = m_items.begin() + block.end;
-				while (iter < end)
+				auto blockIter = iter;
+				auto const blockEnd = end;
+				while (blockIter < blockEnd)
 				{
-					auto orig = iter;
-					iter = eliminator.feedItems(iter, end);
+					auto orig = blockIter;
+					blockIter = eliminator.feedItems(blockIter, blockEnd);
 					bool shouldReplace = false;
 					AssemblyItems optimisedChunk;
 					try
 					{
 						optimisedChunk = eliminator.getOptimizedItems();
-						shouldReplace = (optimisedChunk.size() < size_t(iter - orig));
+						shouldReplace = (optimisedChunk.size() < size_t(blockIter - orig));
 					}
 					catch (StackTooDeepException const&)
 					{
@@ -361,15 +381,11 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 						optimisedItems += optimisedChunk;
 					}
 					else
-						copy(orig, iter, back_inserter(optimisedItems));
+						copy(orig, blockIter, back_inserter(optimisedItems));
 				}
+				iter = end;
 			}
 
-			if (optimisedItems.size() < m_items.size())
-			{
-				m_items = move(optimisedItems);
-				count++;
-			}
 		}
 	}
 
@@ -380,10 +396,7 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		m_items
 	);
 
-	for (auto& sub: m_subs)
-	  sub.optimise(true, false, _runs);
-
-	return *this;
+	return tagReplacements;
 }
 
 LinkerObject const& Assembly::assemble() const
@@ -394,8 +407,8 @@ LinkerObject const& Assembly::assemble() const
 	LinkerObject& ret = m_assembledObject;
 
 	unsigned totalBytes = bytesRequired();
-	vector<unsigned> tagPos(m_usedTags);
-	map<unsigned, unsigned> tagRef;
+	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
+	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
@@ -413,8 +426,8 @@ LinkerObject const& Assembly::assemble() const
 	for (AssemblyItem const& i: m_items)
 	{
 		// store position of the invalid jump destination
-		if (i.type() != Tag && tagPos[0] == 0)
-			tagPos[0] = ret.bytecode.size();
+		if (i.type() != Tag && m_tagPositionsInBytecode[0] == size_t(-1))
+			m_tagPositionsInBytecode[0] = ret.bytecode.size();
 
 		switch (i.type())
 		{
@@ -446,7 +459,7 @@ LinkerObject const& Assembly::assemble() const
 		case PushTag:
 		{
 			ret.bytecode.push_back(tagPush);
-			tagRef[ret.bytecode.size()] = (unsigned)i.data();
+			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
 			break;
 		}
@@ -484,25 +497,15 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
-			tagPos[(unsigned)i.data()] = ret.bytecode.size();
-			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(i.data() != 0, AssemblyException, "");
+			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
+			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
+			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
 			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-	}
-	for (auto const& i: tagRef)
-	{
-		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
-		auto tag = i.second;
-		if (tag >= tagPos.size())
-			tag = 0;
-		if (tag == 0)
-			assertThrow(tagPos[tag] != 0, AssemblyException, "");
-
-		toBigEndian(tagPos[tag], r);
 	}
 
 	if (!dataRef.empty() && !subRef.empty())
@@ -518,6 +521,23 @@ LinkerObject const& Assembly::assemble() const
 			toBigEndian(ret.bytecode.size(), r);
 		}
 		ret.append(m_subs[i].assemble());
+	}
+	for (auto const& i: tagRef)
+	{
+		size_t subId;
+		size_t tagId;
+		tie(subId, tagId) = i.second;
+		assertThrow(subId == size_t(-1) || subId < m_subs.size(), AssemblyException, "Invalid sub id");
+		std::vector<size_t> const& tagPositions =
+			subId == size_t(-1) ?
+			m_tagPositionsInBytecode :
+			m_subs[subId].m_tagPositionsInBytecode;
+		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
+		size_t pos = tagPositions[tagId];
+		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");
+		assertThrow(dev::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
+		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
+		toBigEndian(pos, r);
 	}
 	for (auto const& dataItem: m_data)
 	{
