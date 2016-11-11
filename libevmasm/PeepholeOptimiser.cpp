@@ -81,6 +81,8 @@ struct JumpToNext
 			_in[0].data() == _in[2].data()
 		)
 		{
+			if (_in[1] == Instruction::JUMPI)
+				*_out = AssemblyItem(Instruction::POP, _in[1].location());
 			*_out = _in[2];
 			return true;
 		}
