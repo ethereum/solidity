@@ -46,7 +46,7 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
-	setData(_tag + ((u256(_subId) + 1) << 64));
+	setData(_tag + (u256(_subId + 1) << 64));
 }
 
 unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
