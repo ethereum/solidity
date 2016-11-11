@@ -7757,7 +7757,7 @@ BOOST_AUTO_TEST_CASE(store_function_in_constructor)
 {
 	char const* sourceCode = R"(
 		contract C {
-			uint result_in_constructor;
+			uint public result_in_constructor;
 			function (uint) internal returns (uint) x;
 			function C () {
 				x = double;

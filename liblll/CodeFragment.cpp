@@ -520,7 +520,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			auto subPush = m_asm.appendSubSize(code[0].assembly(ns));
+			auto subPush = m_asm.newSub(make_shared<Assembly>(code[0].assembly(ns)));
+			m_asm.append(m_asm.newPushSubSize(subPush.data()));
 			m_asm.append(Instruction::DUP1);
 			if (code.size() == 3)
 			{

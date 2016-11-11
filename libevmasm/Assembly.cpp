@@ -75,17 +75,17 @@ string Assembly::out() const
 	return ret.str();
 }
 
-unsigned Assembly::bytesRequired() const
+unsigned Assembly::bytesRequired(unsigned subTagSize) const
 {
-	for (unsigned br = 1;; ++br)
+	for (unsigned tagSize = subTagSize;; ++tagSize)
 	{
 		unsigned ret = 1;
 		for (auto const& i: m_data)
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(br);
-		if (dev::bytesRequired(ret) <= br)
+			ret += i.bytesRequired(tagSize);
+		if (dev::bytesRequired(ret) <= tagSize)
 			return ret;
 	}
 }
@@ -132,13 +132,19 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 			if (i.data() == 0)
 				_out << "  PUSH [ErrorTag]";
 			else
-				_out << "  PUSH [tag" << dec << i.data() << "]";
+			{
+				size_t subId = i.splitForeignPushTag().first;
+				if (subId == size_t(-1))
+					_out << "  PUSH [tag" << dec << i.splitForeignPushTag().second << "]";
+				else
+					_out << "  PUSH [tag" << dec << subId << ":" << i.splitForeignPushTag().second << "]";
+			}
 			break;
 		case PushSub:
-			_out << "  PUSH [$" << h256(i.data()).abridgedMiddle() << "]";
+			_out << "  PUSH [$" << size_t(i.data()) << "]";
 			break;
 		case PushSubSize:
-			_out << "  PUSH #[$" << h256(i.data()).abridgedMiddle() << "]";
+			_out << "  PUSH #[$" << size_t(i.data()) << "]";
 			break;
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
@@ -167,7 +173,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << _prefix << "  " << hex << i << ": " << endl;
-			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes);
+			m_subs[i]->stream(_out, _prefix + "  ", _sourceCodes);
 		}
 	}
 	return _out;
@@ -266,7 +272,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i].stream(_out, "", _sourceCodes, true);
+			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
 		}
 		root[".data"] = data;
 		_out << root;
@@ -317,7 +323,7 @@ map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
 {
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
-		map<u256, u256> subTagReplacements = m_subs[subId].optimiseInternal(false, _runs);
+		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(false, _runs);
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
 
@@ -385,7 +391,11 @@ map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
 				}
 				iter = end;
 			}
-
+			if (optimisedItems.size() < m_items.size())
+			{
+				m_items = move(optimisedItems);
+				count++;
+			}
 		}
 	}
 
@@ -404,20 +414,28 @@ LinkerObject const& Assembly::assemble() const
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
 
+	size_t subTagSize = 1;
+	for (auto const& sub: m_subs)
+	{
+		sub->assemble();
+		if (!sub->m_tagPositionsInBytecode.empty())
+			subTagSize = max(subTagSize, *max_element(sub->m_tagPositionsInBytecode.begin(), sub->m_tagPositionsInBytecode.end()));
+	}
+
 	LinkerObject& ret = m_assembledObject;
 
-	unsigned totalBytes = bytesRequired();
+	size_t bytesRequiredForCode = bytesRequired(subTagSize);
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
+	unsigned bytesPerTag = dev::bytesRequired(bytesRequiredForCode);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
-	unsigned bytesRequiredIncludingData = bytesRequired();
+	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1;
 	for (auto const& sub: m_subs)
-		bytesRequiredIncludingData += sub.assemble().bytecode.size();
+		bytesRequiredIncludingData += sub->assemble().bytecode.size();
 
 	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
 	byte dataRefPush = (byte)Instruction::PUSH1 - 1 + bytesPerDataRef;
@@ -475,7 +493,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushSubSize:
 		{
-			auto s = m_subs.at(size_t(i.data())).assemble().bytecode.size();
+			auto s = m_subs.at(size_t(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			byte b = max<unsigned>(1, dev::bytesRequired(s));
 			ret.bytecode.push_back((byte)Instruction::PUSH1 - 1 + b);
@@ -520,7 +538,7 @@ LinkerObject const& Assembly::assemble() const
 			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
 			toBigEndian(ret.bytecode.size(), r);
 		}
-		ret.append(m_subs[i].assemble());
+		ret.append(m_subs[i]->assemble());
 	}
 	for (auto const& i: tagRef)
 	{
@@ -531,7 +549,7 @@ LinkerObject const& Assembly::assemble() const
 		std::vector<size_t> const& tagPositions =
 			subId == size_t(-1) ?
 			m_tagPositionsInBytecode :
-			m_subs[subId].m_tagPositionsInBytecode;
+			m_subs[subId]->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");

@@ -528,8 +528,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// copy the contract's code into memory
 			eth::Assembly const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
+			// TODO we create a copy here, which is actually what we want.
+			// This should be revisited at the point where we fix
+			// https://github.com/ethereum/solidity/issues/1092
 			// pushes size
-			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
+			auto subroutine = m_context.addSubroutine(make_shared<eth::Assembly>(assembly));
 			m_context << Instruction::DUP1 << subroutine;
 			m_context << Instruction::DUP4 << Instruction::CODECOPY;
 

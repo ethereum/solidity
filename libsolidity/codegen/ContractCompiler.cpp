@@ -79,7 +79,7 @@ size_t ContractCompiler::compileClone(
 	appendInitAndConstructorCode(_contract);
 
 	//@todo determine largest return size of all runtime functions
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime());
+	auto runtimeSub = m_context.addSubroutine(cloneRuntime());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
@@ -87,7 +87,6 @@ size_t ContractCompiler::compileClone(
 
 	appendMissingFunctions();
 
-	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
 	return size_t(runtimeSub.data());
 }
 
@@ -158,10 +157,10 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	m_context << deployRoutine;
 
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
-	m_context.appendSubroutineSize(m_context.runtimeSub());
-
-	// stack contains sub size
-	m_context << Instruction::DUP1 << m_context.runtimeSub() << u256(0) << Instruction::CODECOPY;
+	m_context.pushSubroutineSize(m_context.runtimeSub());
+	m_context << Instruction::DUP1;
+	m_context.pushSubroutineOffset(m_context.runtimeSub());
+	m_context << u256(0) << Instruction::CODECOPY;
 	m_context << u256(0) << Instruction::RETURN;
 
 	return m_context.runtimeSub();
@@ -893,7 +892,7 @@ void ContractCompiler::compileExpression(Expression const& _expression, TypePoin
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);
 }
 
-eth::Assembly ContractCompiler::cloneRuntime()
+eth::AssemblyPointer ContractCompiler::cloneRuntime()
 {
 	eth::Assembly a;
 	a << Instruction::CALLDATASIZE;
@@ -911,5 +910,5 @@ eth::Assembly ContractCompiler::cloneRuntime()
 	a.appendJumpI(a.errorTag());
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;
-	return a;
+	return make_shared<eth::Assembly>(a);
 }

@@ -1238,6 +1238,24 @@ BOOST_AUTO_TEST_CASE(inconsistency)
 	compareVersions("trigger()");
 }
 
+BOOST_AUTO_TEST_CASE(dead_code_elimination_across_assemblies)
+{
+	// This tests that a runtime-function that is stored in storage in the constructor
+	// is not removed as part of dead code elimination.
+	char const* sourceCode = R"(
+		contract DCE {
+			function () internal returns (uint) stored;
+			function DCE() {
+				stored = f;
+			}
+			function f() internal returns (uint) { return 7; }
+			function test() returns (uint) { return stored(); }
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("test()");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

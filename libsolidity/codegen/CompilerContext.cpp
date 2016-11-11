@@ -60,8 +60,8 @@ void CompilerContext::startFunction(Declaration const& _function)
 void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 								  unsigned _offsetToCurrent)
 {
-	solAssert(m_asm.deposit() >= 0 && unsigned(m_asm.deposit()) >= _offsetToCurrent, "");
-	m_localVariables[&_declaration] = unsigned(m_asm.deposit()) - _offsetToCurrent;
+	solAssert(m_asm->deposit() >= 0 && unsigned(m_asm->deposit()) >= _offsetToCurrent, "");
+	m_localVariables[&_declaration] = unsigned(m_asm->deposit()) - _offsetToCurrent;
 }
 
 void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
@@ -145,12 +145,12 @@ unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declarat
 
 unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
 {
-	return m_asm.deposit() - _baseOffset - 1;
+	return m_asm->deposit() - _baseOffset - 1;
 }
 
 unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 {
-	return m_asm.deposit() - _offset - 1;
+	return m_asm->deposit() - _offset - 1;
 }
 
 pair<u256, unsigned> CompilerContext::storageLocationOfVariable(const Declaration& _declaration) const
@@ -217,12 +217,12 @@ void CompilerContext::appendInlineAssembly(
 		return true;
 	};
 
-	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, m_asm, identifierAccess), "");
+	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "");
 }
 
 void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 {
-	eth::Assembly& sub = m_asm.sub(_subIndex);
+	eth::Assembly& sub = m_asm->sub(_subIndex);
 	sub.injectStart(Instruction::POP);
 	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
 }
@@ -257,7 +257,7 @@ vector<ContractDefinition const*>::const_iterator CompilerContext::superContract
 
 void CompilerContext::updateSourceLocation()
 {
-	m_asm.setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location());
+	m_asm->setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location());
 }
 
 eth::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
