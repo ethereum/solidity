@@ -4215,6 +4215,26 @@ BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(external_function_type_returning_internal)
+{
+	char const* text = R"(
+		contract C {
+			function() external returns (function () internal) x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_taking_internal)
+{
+	char const* text = R"(
+		contract C {
+			function(function () internal) external x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(call_value_on_payable_function_type)
 {
 	char const* text = R"(
