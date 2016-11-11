@@ -41,8 +41,7 @@ void Compiler::compileContract(
 	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
-	if (m_optimize)
-		m_context.optimise(m_optimizeRuns);
+	m_context.optimise(m_optimize, m_optimizeRuns);
 
 	if (_contract.isLibrary())
 	{
@@ -60,8 +59,7 @@ void Compiler::compileClone(
 	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimize);
 	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
 
-	if (m_optimize)
-		m_context.optimise(m_optimizeRuns);
+	m_context.optimise(m_optimize, m_optimizeRuns);
 }
 
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const

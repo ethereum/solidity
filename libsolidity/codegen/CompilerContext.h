@@ -155,7 +155,7 @@ public:
 	/// Prepends "PUSH <compiler version number> POP"
 	void injectVersionStampIntoSub(size_t _subIndex);
 
-	void optimise(unsigned _runs = 200) { m_asm->optimise(true, true, _runs); }
+	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, true, _runs); }
 
 	/// @returns the runtime context if in creation mode and runtime context is set, nullptr otherwise.
 	CompilerContext* runtimeContext() { return m_runtimeContext; }

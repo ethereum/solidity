@@ -20,13 +20,17 @@
  */
 
 #include "Assembly.h"
-#include <fstream>
+
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
+#include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
+
+#include <fstream>
 #include <json/json.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -314,16 +318,15 @@ void Assembly::injectStart(AssemblyItem const& _i)
 
 Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
-	if (_enable)
-		optimiseInternal(_isCreation, _runs);
+	optimiseInternal(_enable, _isCreation, _runs);
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
+map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_t _runs)
 {
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(false, _runs);
+		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(_enable, false, _runs);
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
 
@@ -332,6 +335,13 @@ map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
+
+		PeepholeOptimiser peepOpt(m_items);
+		if (peepOpt.optimise())
+			count++;
+
+		if (!_enable)
+			continue;
 
 		// This only modifies PushTags, we have to run again to actually remove code.
 		BlockDeduplicator dedup(m_items);
@@ -399,12 +409,13 @@ map<u256, u256> Assembly::optimiseInternal(bool _isCreation, size_t _runs)
 		}
 	}
 
-	total += ConstantOptimisationMethod::optimiseConstants(
-		_isCreation,
-		_isCreation ? 1 : _runs,
-		*this,
-		m_items
-	);
+	if (_enable)
+		total += ConstantOptimisationMethod::optimiseConstants(
+			_isCreation,
+			_isCreation ? 1 : _runs,
+			*this,
+			m_items
+		);
 
 	return tagReplacements;
 }
