@@ -365,16 +365,6 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 //	BOOST_CHECK_EQUAL(2, numSHA3s);
 }
 
-BOOST_AUTO_TEST_CASE(successor_not_found_bug)
-{
-	// This bug was caused because MSVC chose to use the u256->bool conversion
-	// instead of u256->unsigned
-	char const* sourceCode = R"(
-		contract greeter { function greeter() { uint x = 2; x ++; } }
-	)";
-	compileBothVersions(sourceCode);
-}
-
 BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
 {
 	// This bug appeared because a sha3 operation with too low sequence number was used,
