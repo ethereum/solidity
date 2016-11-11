@@ -41,8 +41,8 @@ ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
 StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | DoWhileStatement | ForStatement | Block |
-            ( PlaceholderStatement | Continue | Break | Return |
+Statement = IfStatement | WhileStatement | ForStatement | Block |
+            ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
               Throw | SimpleStatement ) ';'
 
 ExpressionStatement = Expression
@@ -51,7 +51,7 @@ WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
-DoWhileStatement = 'do' Statement 'while' '(' Expression ')' ';'
+DoWhileStatement = 'do' Statement 'while' '(' Expression ')'
 Continue = 'continue'
 Break = 'break'
 Return = 'return' Expression?
