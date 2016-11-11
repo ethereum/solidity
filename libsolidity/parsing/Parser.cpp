@@ -315,7 +315,18 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 			m_scanner->next();
 		}
 		else if (_allowModifiers && token == Token::Identifier)
-			result.modifiers.push_back(parseModifierInvocation());
+		{
+			// This can either be a modifier (function declaration) or the name of the
+			// variable (function type name plus variable).
+			if (
+				m_scanner->peekNextToken() == Token::Semicolon ||
+				m_scanner->peekNextToken() == Token::Assign
+			)
+				// Variable declaration, break here.
+				break;
+			else
+				result.modifiers.push_back(parseModifierInvocation());
+		}
 		else if (Token::isVisibilitySpecifier(token))
 		{
 			if (result.visibility != Declaration::Visibility::Default)

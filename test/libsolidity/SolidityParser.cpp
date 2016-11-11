@@ -1338,6 +1338,17 @@ BOOST_AUTO_TEST_CASE(mapping_and_array_of_functions)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(function_type_state_variable)
+{
+	char const* text = R"(
+		contract test {
+			function() x;
+			function() y = x;
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
