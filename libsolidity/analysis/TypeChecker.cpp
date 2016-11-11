@@ -996,9 +996,9 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 						fatalTypeError(components[i]->location(), "Invalid mobile type.");
 
 					if (i == 0)
-						inlineArrayType = types[i]->mobileType();
+						inlineArrayType = types[i];
 					else if (inlineArrayType)
-						inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 				}
 			}
 			else

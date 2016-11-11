@@ -200,10 +200,10 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 {
 	if (!_a || !_b)
 		return TypePointer();
-	else if (_b->isImplicitlyConvertibleTo(*_a))
-		return _a;
-	else if (_a->isImplicitlyConvertibleTo(*_b))
-		return _b;
+	else if (_b->isImplicitlyConvertibleTo(*_a->mobileType()))
+		return _a->mobileType();
+	else if (_a->isImplicitlyConvertibleTo(*_b->mobileType()))
+		return _b->mobileType();
 	else
 		return TypePointer();
 }

@@ -2,6 +2,7 @@
 
 Features:
  * Do-while loops: support for a C-style do{<block>}while(<expr>); control structure
+ * Type checker: now more eagerly searches for a common type of an inline array with mixed types
 
 ### 0.4.4 (2016-10-31)
 
