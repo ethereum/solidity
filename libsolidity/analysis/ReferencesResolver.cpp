@@ -96,7 +96,14 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
-			fatalTypeError(_typeName.location(), "Only external function types can be payable.");
+		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
+	if (_typeName.visibility() == VariableDeclaration::Visibility::External)
+		for (auto const& t: _typeName.parameterTypes() + _typeName.returnParameterTypes())
+		{
+			solAssert(t->annotation().type, "Type not set for parameter.");
+			if (!t->annotation().type->canBeUsedExternally(false))
+				fatalTypeError(t->location(), "Internal type cannot be used for external function type.");
+		}
 
 	_typeName.annotation().type = make_shared<FunctionType>(_typeName);
 }

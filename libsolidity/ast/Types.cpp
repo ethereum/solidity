@@ -1265,6 +1265,7 @@ TypePointer ArrayType::decodingType() const
 
 TypePointer ArrayType::interfaceType(bool _inLibrary) const
 {
+	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
 	if (_inLibrary && location() == DataLocation::Storage)
 		return shared_from_this();
 
@@ -1280,6 +1281,21 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 		return make_shared<ArrayType>(DataLocation::Memory, baseExt);
 	else
 		return make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
+}
+
+bool ArrayType::canBeUsedExternally(bool _inLibrary) const
+{
+	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
+	if (_inLibrary && location() == DataLocation::Storage)
+		return true;
+	else if (m_arrayKind != ArrayKind::Ordinary)
+		return true;
+	else if (!m_baseType->canBeUsedExternally(_inLibrary))
+		return false;
+	else if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
+		return false;
+	else
+		return true;
 }
 
 u256 ArrayType::memorySize() const
@@ -1815,11 +1831,19 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
+		solAssert(
+			m_location != Location::External || t->annotation().type->canBeUsedExternally(false),
+			"Internal type used as parameter for external function."
+		);
 		m_parameterTypes.push_back(t->annotation().type);
 	}
 	for (auto const& t: _typeName.returnParameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for return parameter.");
+		solAssert(
+			m_location != Location::External || t->annotation().type->canBeUsedExternally(false),
+			"Internal type used as return parameter for external function."
+		);
 		m_returnParameterTypes.push_back(t->annotation().type);
 	}
 }

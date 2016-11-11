@@ -254,6 +254,9 @@ public:
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
 	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
+	/// @returns true iff this type can be passed on via calls (to libraries if _inLibrary is true),
+	/// should be have identical to !!interfaceType(_inLibrary) but might do optimizations.
+	virtual bool canBeUsedExternally(bool _inLibrary) const { return !!interfaceType(_inLibrary); }
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
@@ -580,6 +583,7 @@ public:
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
+	virtual bool canBeUsedExternally(bool _inLibrary) const override;
 
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
