@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(successor_not_found_bug)
 	// This bug was caused because MSVC chose to use the u256->bool conversion
 	// instead of u256->unsigned
 	char const* sourceCode = R"(
-		contract greeter { function greeter() {} }
+		contract greeter { function greeter() { uint x = 2; x ++; } }
 	)";
 	compileBothVersions(sourceCode);
 }
