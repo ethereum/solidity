@@ -65,7 +65,7 @@ Expression =
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
   | Expression ('+' | '-') Expression
-  | Expression ('<<' | '>>' | '>>>')
+  | Expression ('<<' | '>>')
   | Expression '&' Expression
   | Expression '^' Expression
   | Expression '|' Expression
