@@ -1451,7 +1451,7 @@ u256 StructType::storageSize() const
 
 string StructType::toString(bool _short) const
 {
-	string ret = "struct " + m_struct.name();
+	string ret = "struct " + m_struct.annotation().canonicalName;
 	if (!_short)
 		ret += " " + stringForReferencePart();
 	return ret;
@@ -1570,7 +1570,7 @@ unsigned EnumType::storageBytes() const
 
 string EnumType::toString(bool) const
 {
-	return string("enum ") + m_enum.name();
+	return string("enum ") + m_enum.annotation().canonicalName;
 }
 
 string EnumType::canonicalName(bool) const
