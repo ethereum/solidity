@@ -311,7 +311,7 @@ on it.
 If external function types are used outside of the context of Solidity,
 they are converted into the ``bytes24`` type.
 
-Example that shows how to use internal function types:
+Example that shows how to use internal function types::
 
     library ArrayUtils {
       // internal functions can be used in internal library functions because
@@ -356,7 +356,7 @@ Example that shows how to use internal function types:
       }
     }
 
-Another example that uses external function types:
+Another example that uses external function types::
 
     contract Oracle {
       struct Request {
