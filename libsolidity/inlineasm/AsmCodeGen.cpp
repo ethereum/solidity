@@ -24,7 +24,7 @@
 #include <memory>
 #include <functional>
 #include <libdevcore/CommonIO.h>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 #include <libsolidity/inlineasm/AsmParser.h>
@@ -37,7 +37,7 @@ using namespace dev::solidity::assembly;
 
 struct GeneratorState
 {
-	GeneratorState(ErrorList& _errors, eth::Assembly& _assembly):
+	GeneratorState(ErrorList& _errors, eth::AssemblyMutation& _assembly):
 		errors(_errors), assembly(_assembly) {}
 
 	void addError(Error::Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation())
@@ -71,7 +71,7 @@ struct GeneratorState
 	map<string, eth::AssemblyItem> labels;
 	vector<pair<string, int>> variables; ///< name plus stack height
 	ErrorList& errors;
-	eth::Assembly& assembly;
+	eth::AssemblyMutation& assembly;
 };
 
 /**
@@ -120,7 +120,7 @@ public:
 		if (_identifierAccess)
 			m_identifierAccess = _identifierAccess;
 		else
-			m_identifierAccess = [](assembly::Identifier const&, eth::Assembly&, CodeGenerator::IdentifierContext) { return false; };
+			m_identifierAccess = [](assembly::Identifier const&, eth::AssemblyMutation&, CodeGenerator::IdentifierContext) { return false; };
 	}
 
 	void operator()(assembly::Instruction const& _instruction)
@@ -290,23 +290,23 @@ private:
 bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
 	size_t initialErrorLen = m_errors.size();
-	eth::Assembly assembly;
+	eth::AssemblyMutation assembly;
 	GeneratorState state(m_errors, assembly);
 	(LabelOrganizer(state))(m_parsedData);
 	(CodeTransform(state, _identifierAccess))(m_parsedData);
 	return m_errors.size() == initialErrorLen;
 }
 
-eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+eth::AssemblyMutation assembly::CodeGenerator::assemble(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
-	eth::Assembly assembly;
+	eth::AssemblyMutation assembly;
 	GeneratorState state(m_errors, assembly);
 	(LabelOrganizer(state))(m_parsedData);
 	(CodeTransform(state, _identifierAccess))(m_parsedData);
 	return assembly;
 }
 
-void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+void assembly::CodeGenerator::assemble(eth::AssemblyMutation& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
 	GeneratorState state(m_errors, _assembly);
 	(LabelOrganizer(state))(m_parsedData);

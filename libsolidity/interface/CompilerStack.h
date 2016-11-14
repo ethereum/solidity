@@ -32,8 +32,9 @@
 #include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libevmasm/SourceLocation.h>
-#include <libevmasm/LinkerObject.h>
+#include <libevmasm/LinkerMutation.h>
 #include <libsolidity/interface/Exceptions.h>
 
 namespace dev
@@ -41,7 +42,6 @@ namespace dev
 
 namespace eth
 {
-class Assembly;
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
@@ -58,6 +58,11 @@ class Compiler;
 class GlobalContext;
 class InterfaceHandler;
 class Error;
+
+enum Object
+{
+	ASSEMBLED, RUNTIME, CLONE
+};
 
 enum class DocumentationType: uint8_t
 {
@@ -89,6 +94,12 @@ public:
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
+
+	/// Sets m_mutate
+	void mutate(bool _mutate)
+	{
+		m_mutate = _mutate;
+	}
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	void reset(bool _keepSources = false);
@@ -127,15 +138,15 @@ public:
 	bool prepareFormalAnalysis(ErrorList* _errors = nullptr);
 	std::string const& formalTranslation() const { return m_formalTranslation; }
 
-	/// @returns the assembled object for a contract.
-	eth::LinkerObject const& object(std::string const& _contractName = "") const;
-	/// @returns the runtime object for the contract.
-	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
-	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
-	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
-	/// substituted by the actual address. Note that this sequence starts end ends in three X
-	/// characters but can contain anything in between.
-	eth::LinkerObject const& cloneObject(std::string const& _contractName = "") const;
+	/// @returns a bytecode of the  _object corresponding to contract with _contractName.
+	bytes bytecode(enum Object _objectType, std::string const& _contractName = "") const;
+	/// @returns a hex representation of the bytecode of the _object, replacing unlinked
+	/// addresses by placeholders,  corresponding to contract with _contractName.
+	std::string hex(enum Object _objectType, std::string const& _contractName = "") const;
+	/// Links the given libraries by replacing their uses in the code and removes them from the references.
+	void link(enum Object _objectType, std::string const& _contractName, std::map<std::string, h160> const& _libraryAddresses);
+	/// @returns Map from offsets in bytecode to library identifiers.
+	std::map<size_t, std::string> linkReferences(enum Object _objectType, std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
@@ -150,6 +161,8 @@ public:
 	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
 	/// does not have runtime code.
 	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
+	/// @returns the contract and its mutations
+	Json::Value mutation(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -210,9 +223,9 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		eth::LinkerObject object;
-		eth::LinkerObject runtimeObject;
-		eth::LinkerObject cloneObject;
+		eth::LinkerMutation mutation;
+		eth::LinkerMutation runtimeMutation;
+		eth::LinkerMutation cloneMutation;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
@@ -236,7 +249,7 @@ private:
 		bool _optimize,
 		unsigned _runs,
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*>& _compiledContracts
 	);
 
 	Contract const& contract(std::string const& _contractName = "") const;
@@ -262,6 +275,9 @@ private:
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;
 	ErrorList m_errors;
+
+	/// true if compiler should mutate contracts
+	bool m_mutate;
 };
 
 }

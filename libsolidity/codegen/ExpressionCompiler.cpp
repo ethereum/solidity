@@ -387,9 +387,9 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
 		if (Token::isCompareOp(c_op))
-			appendCompareOperatorCode(c_op, commonType);
+			m_context.mutateCompareOperatorCode(_binaryOperation);
 		else
-			appendOrdinaryBinaryOperatorCode(c_op, commonType);
+			appendOrdinaryBinaryOperatorCode(_binaryOperation);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
@@ -519,7 +519,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ContractDefinition const& contract =
 				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
 			// copy the contract's code into memory
-			eth::Assembly const& assembly = m_context.compiledContract(contract);
+			eth::AssemblyMutation const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
 			// pushes size
 			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
@@ -1262,94 +1262,30 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	m_context << endLabel;
 }
 
-void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type const& _type)
+void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(BinaryOperation const& _binaryOperation)
 {
-	if (_operator == Token::Equal || _operator == Token::NotEqual)
-	{
-		m_context << Instruction::EQ;
-		if (_operator == Token::NotEqual)
-			m_context << Instruction::ISZERO;
-	}
-	else
-	{
-		bool isSigned = false;
-		if (auto type = dynamic_cast<IntegerType const*>(&_type))
-			isSigned = type->isSigned();
+	Token::Value const c_op = _binaryOperation.getOperator();
 
-		switch (_operator)
-		{
-		case Token::GreaterThanOrEqual:
-			m_context <<
-				(isSigned ? Instruction::SLT : Instruction::LT) <<
-				Instruction::ISZERO;
-			break;
-		case Token::LessThanOrEqual:
-			m_context <<
-				(isSigned ? Instruction::SGT : Instruction::GT) <<
-				Instruction::ISZERO;
-			break;
-		case Token::GreaterThan:
-			m_context << (isSigned ? Instruction::SGT : Instruction::GT);
-			break;
-		case Token::LessThan:
-			m_context << (isSigned ? Instruction::SLT : Instruction::LT);
-			break;
-		default:
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
-		}
-	}
+	if (Token::isArithmeticOp(c_op))
+		m_context.mutateArithmeticOperatorCode(_binaryOperation);
+	else if (Token::isBitOp(c_op))
+		appendBitOperatorCode(c_op);
+	else if (Token::isShiftOp(c_op))
+		appendShiftOperatorCode(c_op);
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
 }
 
 void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type)
 {
 	if (Token::isArithmeticOp(_operator))
-		appendArithmeticOperatorCode(_operator, _type);
+		m_context.appendArithmeticOperatorCode(_operator, _type);
 	else if (Token::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
 	else if (Token::isShiftOp(_operator))
 		appendShiftOperatorCode(_operator);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
-}
-
-void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
-{
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
-
-	if (_type.category() == Type::Category::FixedPoint)
-		solAssert(false, "Not yet implemented - FixedPointType.");
-
-	switch (_operator)
-	{
-	case Token::Add:
-		m_context << Instruction::ADD;
-		break;
-	case Token::Sub:
-		m_context << Instruction::SUB;
-		break;
-	case Token::Mul:
-		m_context << Instruction::MUL;
-		break;
-	case Token::Div:
-	case Token::Mod:
-	{
-		// Test for division by zero
-		m_context << Instruction::DUP2 << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
-
-		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-		else
-			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
-		break;
-	}
-	case Token::Exp:
-		m_context << Instruction::EXP;
-		break;
-	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
-	}
 }
 
 void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)

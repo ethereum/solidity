@@ -70,7 +70,7 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 	m_localVariables.erase(&_declaration);
 }
 
-eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
+eth::AssemblyMutation const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);
 	solAssert(ret != m_compiledContracts.end(), "Compiled contract not found.");
@@ -175,6 +175,161 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	updateSourceLocation();
 }
 
+void CompilerContext::mutateCompareOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Type const& commonType = *_binaryOperation.annotation().commonType;
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	if (c_op == Token::Equal || c_op == Token::NotEqual)
+	{
+		*this << Instruction::EQ;
+		if (c_op == Token::NotEqual)
+			*this << Instruction::ISZERO;
+	}
+	else
+	{
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(&commonType))
+			isSigned = type->isSigned();
+
+		if (!m_mutate) 
+		{
+			// don't want to do anything specific for mutation if it is not required.
+			appendCompareOperatorCode(_binaryOperation);
+			return;
+		}
+
+		eth::Assembly bud = m_asm.ordinary();
+		appendCompareOperatorCode(_binaryOperation);
+
+		SourceLocation location = _binaryOperation.location();
+
+		switch (c_op)
+		{
+		case Token::GreaterThanOrEqual:
+			bud << (isSigned ? Instruction::SGT : Instruction::GT) 
+				<< Instruction::ISZERO;
+			addMutant(Token::GreaterThanOrEqual, Token::LessThanOrEqual, bud, location);
+			break;
+		case Token::LessThanOrEqual:
+			bud <<
+				(isSigned ? Instruction::SLT : Instruction::LT) <<
+				Instruction::ISZERO;
+			addMutant(Token::LessThanOrEqual, Token::GreaterThanOrEqual, bud, location);	
+			break;
+		case Token::GreaterThan:
+			bud << (isSigned ? Instruction::SLT : Instruction::LT);
+			addMutant(Token::GreaterThan, Token::LessThan, bud, location);
+			break;
+		case Token::LessThan:
+			bud << (isSigned ? Instruction::SGT : Instruction::GT);
+			addMutant(Token::LessThan, Token::GreaterThan, bud, location);
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
+		}
+	}
+}
+
+void CompilerContext::mutateArithmeticOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Type const& commonType = *_binaryOperation.annotation().commonType;
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	if (!m_mutate) 
+	{
+		// don't want to do anything specific for mutation if it is not required.
+		appendArithmeticOperatorCode(c_op, commonType);
+		return;
+	}
+
+	IntegerType const& type = dynamic_cast<IntegerType const&>(commonType);
+	bool const c_isSigned = type.isSigned();
+
+	eth::Assembly ordinary = m_asm.ordinary();
+	appendArithmeticOperatorCode(c_op, commonType);
+
+	SourceLocation const& location = _binaryOperation.location();
+
+	switch (c_op)
+	{
+	case Token::Add:
+		mutateAdd(ordinary, location);
+		break;
+	case Token::Sub:
+		mutateSub(ordinary, location);
+		break;
+	case Token::Mul:
+		mutateMul(ordinary, location);
+		break;
+	case Token::Div:
+	case Token::Mod:
+	{
+		eth::Assembly bud = ordinary;
+		bud << Instruction::DUP2 << Instruction::ISZERO;
+		bud.appendJumpI(errorTag());
+
+		if (c_op == Token::Div)
+		{
+			bud << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+			addMutant(Token::Div, Token::Mod, bud, location);
+		}
+		else
+		{
+			bud << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+			addMutant(Token::Mod, Token::Div, bud, location);
+		}
+
+		break;
+	}
+	case Token::Exp:
+		mutateExp(ordinary, location);
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
+	}
+}
+
+void CompilerContext::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
+{
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+	bool const c_isSigned = type.isSigned();
+
+	if (_type.category() == Type::Category::FixedPoint)
+		solAssert(false, "Not yet implemented - FixedPointType.");
+
+	switch (_operator)
+	{
+	case Token::Add:
+		*this << Instruction::ADD;
+		break;
+	case Token::Sub:
+		*this << Instruction::SUB;
+		break;
+	case Token::Mul:
+		*this << Instruction::MUL;
+		break;
+	case Token::Div:
+	case Token::Mod:
+	{
+		// Test for division by zero
+		*this << Instruction::DUP2 << Instruction::ISZERO;
+		appendConditionalJumpTo(errorTag());
+
+		if (_operator == Token::Div)
+			*this << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		else
+			*this << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+		break;
+	}
+	case Token::Exp:
+		*this << Instruction::EXP;
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
+	}
+}
+
 void CompilerContext::appendInlineAssembly(
 	string const& _assembly,
 	vector<string> const& _localVariables,
@@ -194,7 +349,7 @@ void CompilerContext::appendInlineAssembly(
 	unsigned startStackHeight = stackHeight();
 	auto identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
+		eth::AssemblyMutation& _assembly,
 		assembly::CodeGenerator::IdentifierContext _context
 	) {
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
@@ -222,9 +377,7 @@ void CompilerContext::appendInlineAssembly(
 
 void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 {
-	eth::Assembly& sub = m_asm.sub(_subIndex);
-	sub.injectStart(Instruction::POP);
-	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
+	m_asm.injectVersionStampIntoSub(_subIndex, binaryVersion());
 }
 
 eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(
@@ -301,6 +454,108 @@ void CompilerContext::FunctionCompilationQueue::startFunction(Declaration const&
 	if (!m_functionsToCompile.empty() && m_functionsToCompile.front() == &_function)
 		m_functionsToCompile.pop();
 	m_alreadyCompiledFunctions.insert(&_function);
+}
+
+bool CompilerContext::mutate() const
+{
+	return m_mutate;
+}
+
+void CompilerContext::appendCompareOperatorCode(BinaryOperation const& _binaryOperation)
+{
+	Type const& commonType = *_binaryOperation.annotation().commonType;
+	Token::Value const c_op = _binaryOperation.getOperator();
+
+	bool isSigned = false;
+	if (auto type = dynamic_cast<IntegerType const*>(&commonType))
+		isSigned = type->isSigned();
+
+	switch (c_op)
+	{
+	case Token::GreaterThanOrEqual:
+		*this <<
+			(isSigned ? Instruction::SLT : Instruction::LT) <<
+			Instruction::ISZERO;
+		break;
+	case Token::LessThanOrEqual:
+		*this <<
+			(isSigned ? Instruction::SGT : Instruction::GT) <<
+			Instruction::ISZERO;
+		break;
+	case Token::GreaterThan:
+		*this << (isSigned ? Instruction::SGT : Instruction::GT);
+		break;
+	case Token::LessThan:
+		*this << (isSigned ? Instruction::SLT : Instruction::LT);
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
+	}
+}
+
+void CompilerContext::mutateAdd(eth::Assembly const& _ordinary, SourceLocation const& _location)
+{
+	map<Token::Value, Instruction> mutations;
+	mutations[Token::Sub] = Instruction::SUB;
+	mutations[Token::Mul] = Instruction::MUL;
+	mutations[Token::Exp] = Instruction::EXP;
+
+	mutate(Token::Add, mutations, _ordinary, _location);
+}
+
+void CompilerContext::mutateSub(eth::Assembly const& _ordinary, SourceLocation const& _location)
+{
+	map<Token::Value, Instruction> mutations;
+	mutations[Token::Add] = Instruction::ADD;
+	mutations[Token::Mul] = Instruction::MUL;
+	mutations[Token::Exp] = Instruction::EXP;
+
+	mutate(Token::Sub, mutations, _ordinary, _location);
+}
+
+void CompilerContext::mutateMul(eth::Assembly const& _ordinary, SourceLocation const& _location)
+{
+	map<Token::Value, Instruction> mutations;
+	mutations[Token::Add] = Instruction::ADD;
+	mutations[Token::Sub] = Instruction::SUB;
+	mutations[Token::Exp] = Instruction::EXP;
+
+	mutate(Token::Mul, mutations, _ordinary, _location);
+}
+
+void CompilerContext::mutateExp(eth::Assembly const& _ordinary, SourceLocation const& _location)
+{
+	map<Token::Value, Instruction> mutations;
+	mutations[Token::Add] = Instruction::ADD;
+	mutations[Token::Sub] = Instruction::SUB;
+	mutations[Token::Mul] = Instruction::MUL;
+
+	mutate(Token::Exp, mutations, _ordinary, _location);
+}
+
+void CompilerContext::mutate(Token::Value _original, map<Token::Value, Instruction> const& _mutations, eth::Assembly const& _ordinary, SourceLocation const& _location)
+{
+	for (auto const& pair : _mutations) {
+		eth::Assembly bud = _ordinary;
+		bud << pair.second;
+		addMutant(_original, pair.first, bud, _location);
+	}
+}
+
+void CompilerContext::addMutant(
+	Token::Value _original, 
+	Token::Value _mutated, 
+	eth::Assembly const& _bud, 
+	SourceLocation const& _location)
+{
+	stringstream description;
+	description
+		<<  Token::toString(_original)
+		<< " -> "
+		<< Token::toString(_mutated);
+
+	eth::AssemblyMutant* mutant = new eth::AssemblyMutant(_bud, description.str(), _location);
+	m_asm.addMutant(*mutant);
 }
 
 }

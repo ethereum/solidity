@@ -121,7 +121,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// the type and size of external identifiers, which would result in false errors.
 	ErrorList errorsIgnored;
 	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), errorsIgnored);
-	codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly&, assembly::CodeGenerator::IdentifierContext) {
+	codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::AssemblyMutation&, assembly::CodeGenerator::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
 		if (declarations.size() != 1)
 			return false;

@@ -22,7 +22,7 @@
 
 #include <string>
 #include <memory>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmStack.h>
 #include <libsolidity/interface/Exceptions.h>

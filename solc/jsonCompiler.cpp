@@ -85,7 +85,7 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	if (eth::AssemblyItems const* items = _compiler.assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(_compiler.runtimeObject(_contract).bytecode.size());
+		u256 bytecodeSize(_compiler.bytecode(RUNTIME, _contract).size());
 		Json::Value creationGas(Json::arrayValue);
 		creationGas[0] = gasToJson(gas);
 		creationGas[1] = gasToJson(bytecodeSize * eth::GasCosts::createDataGas);
@@ -210,9 +210,9 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			{
 				Json::Value contractData(Json::objectValue);
 				contractData["interface"] = compiler.interface(contractName);
-				contractData["bytecode"] = compiler.object(contractName).toHex();
-				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
-				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
+				contractData["bytecode"] = compiler.hex(ASSEMBLED, contractName);
+				contractData["runtimeBytecode"] = compiler.hex(RUNTIME, contractName);
+				contractData["opcodes"] = solidity::disassemble(compiler.bytecode(ASSEMBLED, contractName));
 				contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 				contractData["gasEstimates"] = estimateGas(compiler, contractName);
 				auto sourceMap = compiler.sourceMapping(contractName);

@@ -26,7 +26,6 @@
 #include <map>
 #include <array>
 #include <libevmasm/GasMeter.h>
-#include <libevmasm/Assembly.h>
 
 namespace dev
 {

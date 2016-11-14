@@ -22,7 +22,7 @@
 
 #include <libsolidity/inlineasm/AsmStack.h>
 #include <memory>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
@@ -44,7 +44,7 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 	return true;
 }
 
-eth::Assembly InlineAssemblyStack::assemble()
+eth::AssemblyMutation InlineAssemblyStack::assemble()
 {
 	CodeGenerator codeGen(*m_parserResult, m_errors);
 	return codeGen.assemble();
@@ -52,7 +52,7 @@ eth::Assembly InlineAssemblyStack::assemble()
 
 bool InlineAssemblyStack::parseAndAssemble(
 	string const& _input,
-	eth::Assembly& _assembly,
+	eth::AssemblyMutation& _assembly,
 	CodeGenerator::IdentifierAccess const& _identifierAccess
 )
 {

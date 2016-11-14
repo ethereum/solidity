@@ -25,7 +25,7 @@
 #include <ostream>
 #include <functional>
 #include <libsolidity/codegen/CompilerContext.h>
-#include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyMutation.h>
 
 namespace dev {
 namespace solidity {
@@ -33,24 +33,26 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
+	explicit Compiler(bool _optimize = false, unsigned _runs = 200, bool _mutate = false):
 		m_optimize(_optimize),
-		m_optimizeRuns(_runs)
+		m_optimizeRuns(_runs),
+		m_context(_mutate),
+		m_runtimeContext(_mutate)
 	{ }
 
 	void compileContract(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 	);
 	/// Compiles a contract that uses DELEGATECALL to call into a pre-deployed version of the given
 	/// contract at runtime, but contains the full creation-time code.
 	void compileClone(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, eth::AssemblyMutation const*> const& _contracts
 	);
-	eth::Assembly const& assembly() { return m_context.assembly(); }
-	eth::LinkerObject assembledObject() { return m_context.assembledObject(); }
-	eth::LinkerObject runtimeObject() { return m_context.assembledRuntimeObject(m_runtimeSub); }
+	eth::AssemblyMutation const& assembly() { return m_context.assembly(); }
+	eth::LinkerMutation assembledObject() { return m_context.assembledObject(); }
+	eth::LinkerMutation runtimeObject() { return m_context.assembledRuntimeObject(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFromat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const

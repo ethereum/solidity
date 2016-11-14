@@ -65,6 +65,7 @@ private:
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMeta(DocumentationType _type, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
+	void handleMutate(std::string const& _contract);
 	void handleFormal();
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
@@ -83,6 +84,8 @@ private:
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
+	/// Compiler combined JSON requested_size
+	std::set<std::string> m_requests;
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
 	/// list of allowed directories to read files from
