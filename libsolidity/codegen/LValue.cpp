@@ -120,7 +120,7 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 	}
 	else
 	{
-		solAssert(_sourceType == *m_dataType, "Conversion not implemented for assignment to memory.");
+		solUnimplementedAssert(_sourceType == *m_dataType, "Conversion not implemented for assignment to memory.");
 
 		solAssert(m_dataType->sizeOnStack() == 1, "");
 		if (!_move)
@@ -181,7 +181,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
 		if (m_dataType->category() == Type::Category::FixedPoint)
 			// implementation should be very similar to the integer case.
-			solAssert(false, "Not yet implemented - FixedPointType.");
+			solUnimplemented("Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
 			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
 		else if (

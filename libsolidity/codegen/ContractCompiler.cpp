@@ -296,10 +296,10 @@ void ContractCompiler::appendCalldataUnpacker(TypePointers const& _typeParameter
 		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
-			solAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (_fromMemory)
 			{
-				solAssert(
+				solUnimplementedAssert(
 					arrayType.baseType()->isValueType(),
 					"Nested memory arrays not yet implemented here."
 				);
