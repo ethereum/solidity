@@ -604,6 +604,12 @@ bool CommandLineInterface::processInput()
 			 << boost::diagnostic_information(_exception);
 		return false;
 	}
+	catch (UnimplementedFeatureError const& _exception)
+	{
+		cerr << "Unimplemented feature:" << endl
+			 << boost::diagnostic_information(_exception);
+		return false;
+	}
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)

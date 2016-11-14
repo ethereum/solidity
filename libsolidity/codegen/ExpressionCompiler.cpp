@@ -99,7 +99,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			solAssert(
+			solUnimplementedAssert(
 				!paramTypes[i]->isDynamicallySized(),
 				"Accessors for mapping with dynamically-sized keys not yet implemented."
 			);
@@ -211,7 +211,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	Token::Value op = _assignment.assignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
-		solAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
+		solUnimplementedAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
 		if (lvalueSize > 0)
@@ -312,7 +312,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		if (!_unaryOperation.isPrefixOperation())
 		{
 			// store value for later
-			solAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
+			solUnimplementedAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
 			m_context << Instruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
@@ -1141,7 +1141,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			break;
 		case DataLocation::CallData:
 			//@todo if we implement this, the value in calldata has to be added to the base offset
-			solAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (arrayType.baseType()->isValueType())
 				CompilerUtils(m_context).loadFromMemoryDynamic(
 					*arrayType.baseType(),
@@ -1318,7 +1318,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	bool const c_isSigned = type.isSigned();
 
 	if (_type.category() == Type::Category::FixedPoint)
-		solAssert(false, "Not yet implemented - FixedPointType.");
+		solUnimplemented("Not yet implemented - FixedPointType.");
 
 	switch (_operator)
 	{
@@ -1372,7 +1372,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 
 void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 {
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Shift operators not yet implemented."));
+	BOOST_THROW_EXCEPTION(UnimplementedFeatureError() << errinfo_comment("Shift operators not yet implemented."));
 	switch (_operator)
 	{
 	case Token::SHL:
@@ -1634,7 +1634,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression)
 {
-	solAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
+	solUnimplementedAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
 	_expression.accept(*this);
 	utils().convertType(*_expression.annotation().type, _expectedType, true);
 	utils().storeInMemoryDynamic(_expectedType);

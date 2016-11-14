@@ -30,6 +30,7 @@ namespace dev
 namespace solidity
 {
 struct InternalCompilerError;
+struct UnimplementedFeatureError;
 }
 }
 
@@ -37,3 +38,8 @@ struct InternalCompilerError;
 #define solAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
 
+#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
+	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
+
+#define solUnimplemented(DESCRIPTION) \
+	solUnimplementedAssert(false, DESCRIPTION)

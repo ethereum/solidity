@@ -138,7 +138,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
 		if (numBytes > 0)
 		{
-			solAssert(
+			solUnimplementedAssert(
 				_type.sizeOnStack() == 1,
 				"Memory store of types with stack size != 1 not implemented."
 			);
@@ -161,7 +161,7 @@ void CompilerUtils::encodeToMemory(
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)
 	{
-		solAssert(
+		solUnimplementedAssert(
 			t->mobileType() &&
 			t->mobileType()->interfaceType(_encodeAsLibraryTypes) &&
 			t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType(),
@@ -361,7 +361,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		}
 		break;
 	case Type::Category::FixedPoint:
-		solAssert(false, "Not yet implemented - FixedPointType.");
+		solUnimplemented("Not yet implemented - FixedPointType.");
 	case Type::Category::Integer:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
@@ -401,7 +401,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 				if (targetFixedPointType.integerBits() > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			solAssert(false, "Not yet implemented - FixedPointType.");
+			solUnimplemented("Not yet implemented - FixedPointType.");
 		}
 		else
 		{
@@ -414,7 +414,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
-				solAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
+				solUnimplementedAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
 					cleanHigherOrderBits(targetType);
 			}
