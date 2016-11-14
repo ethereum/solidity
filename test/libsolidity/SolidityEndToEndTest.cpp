@@ -4533,6 +4533,33 @@ BOOST_AUTO_TEST_CASE(invalid_enum_as_external_ret)
 	BOOST_CHECK(callContractFunction("test_assignment()") == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(invalid_enum_as_external_arg)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+
+			function tested (X x) returns (uint) {
+				return 1;
+			}
+
+			function test() returns (uint) {
+				X garbled;
+
+				assembly {
+					garbled := 5
+				}
+
+				return this.tested(garbled);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// should throw
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs());
+}
+
+
 BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
 {
 	// bug #1798
