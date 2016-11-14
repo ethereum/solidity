@@ -309,7 +309,8 @@ in an exception. The same happens if you call a function after using ``delete``
 on it.
 
 If external function types are used outside of the context of Solidity,
-they are converted into the ``bytes24`` type.
+they are treated as the ``function`` type, which encodes the address
+followed by the function identifier together in a single ``bytes24`` type.
 
 Example that shows how to use internal function types::
 
