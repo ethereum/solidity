@@ -315,7 +315,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
 
-	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum);
+	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
 
 	switch (stackTypeCategory)
 	{
@@ -353,7 +353,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		solAssert(_targetType == _typeOnStack || targetTypeCategory == Type::Category::Integer, "");
 		if (enumOverflowCheckPending)
 		{
-			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
+			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_typeOnStack);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
 			m_context.appendConditionalJumpTo(m_context.errorTag());
