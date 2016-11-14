@@ -205,10 +205,16 @@ BOOST_AUTO_TEST_CASE(function_type)
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	Json::Value event = astJson["children"][0]["children"][0];
-	BOOST_CHECK_EQUAL(event["name"], "EventDefinition");
-	BOOST_CHECK_EQUAL(event["attributes"]["name"], "E");
-	BOOST_CHECK_EQUAL(event["src"], "13:10:1");
+	Json::Value fun = astJson["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(fun["name"], "FunctionDefinition");
+	Json::Value argument = fun["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(argument["name"], "VariableDeclaration");
+	BOOST_CHECK_EQUAL(argument["attributes"]["name"], "x");
+	BOOST_CHECK_EQUAL(argument["attributes"]["type"], "function () constant payable external returns (uint256)");
+	Json::Value funType = argument["children"][0];
+	BOOST_CHECK_EQUAL(funType["attributes"]["constant"], true);
+	BOOST_CHECK_EQUAL(funType["attributes"]["payable"], true);
+	BOOST_CHECK_EQUAL(funType["attributes"]["visibility"], "external");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

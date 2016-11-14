@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function g(function(uint) external returns (uint)) {}
+			function g(function(uint) external returns (uint) x) {}
 		}
 	)";
 
@@ -715,8 +715,11 @@ BOOST_AUTO_TEST_CASE(function_type)
 	[
 	{
 		"constant" : false,
-		"payable": true,
-		"inputs": ["function"],
+		"payable": false,
+		"inputs": [{
+			"name": "x",
+			"type": "function"
+		}],
 		"name": "g",
 		"outputs": [],
 		"type" : "function"
