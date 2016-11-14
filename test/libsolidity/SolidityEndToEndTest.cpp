@@ -4499,6 +4499,40 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 	BOOST_CHECK(callContractFunction("t2()") == encodeArgs(u256(9)));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_enum_as_external_ret)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+
+			function test_return() returns (X) {
+				X garbled;
+				assembly {
+					garbled := 5
+				}
+				return garbled;
+			}
+			function test_inline_assignment() returns (X _ret) {
+				assembly {
+					_ret := 5
+				}
+			}
+			function test_assignment() returns (X _ret) {
+				X tmp;
+				assembly {
+					tmp := 5
+				}
+				_ret = tmp;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// both should throw
+	BOOST_CHECK(callContractFunction("test_return()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test_inline_assignment()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test_assignment()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
 {
 	// bug #1798
