@@ -197,6 +197,20 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 	BOOST_CHECK(literal["attributes"]["type"].asString().find("invalid") != string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	CompilerStack c;
+	c.addSource("a", "contract C { function f(function() external payable constant returns (uint) x) {} }");
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value event = astJson["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(event["name"], "EventDefinition");
+	BOOST_CHECK_EQUAL(event["attributes"]["name"], "E");
+	BOOST_CHECK_EQUAL(event["src"], "13:10:1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

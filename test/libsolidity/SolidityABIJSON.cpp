@@ -703,6 +703,29 @@ BOOST_AUTO_TEST_CASE(payable_fallback_function)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function g(function(uint) external returns (uint)) {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+	{
+		"constant" : false,
+		"payable": true,
+		"inputs": ["function"],
+		"name": "g",
+		"outputs": [],
+		"type" : "function"
+	}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
