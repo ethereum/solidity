@@ -1243,7 +1243,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		BOOST_THROW_EXCEPTION(UnimplementedFeatureError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
 	}
 }
 
@@ -1382,7 +1382,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 	case Token::SHR:
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(UnimplementedFeatureError() << errinfo_comment("Unknown shift operator."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}
 }
 

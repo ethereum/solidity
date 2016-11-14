@@ -189,6 +189,10 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	{
 		errors.append(formatError(exception, "Internal compiler error", scannerFromSourceName));
 	}
+	catch (UnimplementedFeatureError const& exception)
+	{
+		errors.append(formatError(exception, "Unimplemented feature", scannerFromSourceName));
+	}
 	catch (Exception const& exception)
 	{
 		errors.append("Exception during compilation: " + boost::diagnostic_information(exception));
