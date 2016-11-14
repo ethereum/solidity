@@ -824,7 +824,7 @@ BOOST_AUTO_TEST_CASE(empty_enum_declaration)
 		contract c {
 			enum foo { }
 		})";
-	BOOST_CHECK(successParse(text));
+	BOOST_CHECK(!successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(malformed_enum_declaration)

@@ -738,6 +738,7 @@ public:
 	EnumDefinition const& enumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
 	unsigned int memberValue(ASTString const& _member) const;
+	size_t numberOfMembers() const;
 
 private:
 	EnumDefinition const& m_enum;

@@ -315,6 +315,8 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
 
+	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum);
+
 	switch (stackTypeCategory)
 	{
 	case Type::Category::FixedBytes:
@@ -348,7 +350,15 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 		break;
 	case Type::Category::Enum:
-		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
+		solAssert(_targetType == _typeOnStack || targetTypeCategory == Type::Category::Integer, "");
+		if (enumOverflowCheckPending)
+		{
+			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
+			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
+			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
+			enumOverflowCheckPending = false;
+		}
 		break;
 	case Type::Category::FixedPoint:
 		solAssert(false, "Not yet implemented - FixedPointType.");
@@ -372,6 +382,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			solAssert(_typeOnStack.mobileType(), "");
 			// just clean
 			convertType(_typeOnStack, *_typeOnStack.mobileType(), true);
+			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
+			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
+			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
+			enumOverflowCheckPending = false;
 		}
 		else if (targetTypeCategory == Type::Category::FixedPoint)
 		{
@@ -656,6 +671,8 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 		break;
 	}
+
+	solAssert(!enumOverflowCheckPending, "enum overflow checking missing.");
 }
 
 void CompilerUtils::pushZeroValue(Type const& _type)

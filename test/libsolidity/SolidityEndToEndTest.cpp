@@ -3342,6 +3342,42 @@ BOOST_AUTO_TEST_CASE(using_enums)
 	BOOST_CHECK(callContractFunction("getChoice()") == encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(enum_explicit_overflow)
+{
+	char const* sourceCode = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight }
+				function test()
+				{
+				}
+				function getChoiceExp(uint x) returns (uint d)
+				{
+					choice = ActionChoices(x);
+					d = uint256(choice);
+				}
+				function getChoiceFromSigned(int x) returns (uint d)
+				{
+					choice = ActionChoices(x);
+					d = uint256(choice);
+				}
+				function getChoiceFromNegativeLiteral() returns (uint d)
+				{
+					choice = ActionChoices(-1);
+					d = uint256(choice);
+				}
+				ActionChoices choice;
+			}
+	)";
+	compileAndRun(sourceCode);
+	// These should throw
+	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 3) == encodeArgs());
+	BOOST_CHECK(callContractFunction("getChoiceFromSigned(int256)", -1) == encodeArgs());
+	BOOST_CHECK(callContractFunction("getChoiceFromNegativeLiteral()") == encodeArgs());
+	// These should work
+	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 2) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 0) == encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(using_contract_enums_with_explicit_contract_name)
 {
 	char const* sourceCode = R"(

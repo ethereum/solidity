@@ -1535,6 +1535,21 @@ BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_to_enum_conversion_is_not_okay)
+{
+	char const* text = R"(
+		contract test {
+			enum Paper { Up, Down, Left, Right }
+			enum Ground { North, South, West, East }
+			function test()
+			{
+				Ground(Paper.Up);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 {
 	char const* text = R"(

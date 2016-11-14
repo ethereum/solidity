@@ -1561,7 +1561,7 @@ bool EnumType::operator==(Type const& _other) const
 
 unsigned EnumType::storageBytes() const
 {
-	size_t elements = m_enum.members().size();
+	size_t elements = numberOfMembers();
 	if (elements <= 1)
 		return 1;
 	else
@@ -1578,9 +1578,14 @@ string EnumType::canonicalName(bool) const
 	return m_enum.annotation().canonicalName;
 }
 
+size_t EnumType::numberOfMembers() const
+{
+	return m_enum.members().size();
+};
+
 bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
+	return _convertTo == *this || _convertTo.category() == Category::Integer;
 }
 
 unsigned EnumType::memberValue(ASTString const& _member) const
