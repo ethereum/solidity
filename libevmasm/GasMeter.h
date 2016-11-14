@@ -102,7 +102,8 @@ public:
 
 	/// @returns an upper bound on the gas consumed by the given instruction and updates
 	/// the state.
-	GasConsumption estimateMax(AssemblyItem const& _item);
+	/// @param _inculdeExternalCosts if true, include costs caused by other contracts in calls.
+	GasConsumption estimateMax(AssemblyItem const& _item, bool _includeExternalCosts = true);
 
 	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
