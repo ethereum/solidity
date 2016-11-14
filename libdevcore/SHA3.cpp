@@ -238,4 +238,47 @@ bool keccak256(bytesConstRef _input, bytesRef o_output)
 	return true;
 }
 
+bytes toLittleEndian(size_t _size)
+{
+	bytes encoded(8);
+	for (size_t i = 0; i < 8; ++i)
+		encoded[i] = (_size >> (8 * i)) & 0xff;
+	return encoded;
+}
+
+h256 swarmHashSimple(bytesConstRef _data, size_t _size)
+{
+	return keccak256(toLittleEndian(_size) + _data.toBytes());
+}
+
+h256 swarmHash(bytes const& _input)
+{
+	bytes data = _input;
+	size_t lastChunkSize = 0;
+	size_t level = 0;
+	do
+	{
+		bytes innerNodes;
+		size_t i = 0;
+		do
+		{
+			size_t bytes = std::min<size_t>(0x1000, data.size() - i);
+			size_t size = bytes << (7 * level);
+			if (i + 0x1000 >= data.size())
+			{
+				// last node
+				size = level == 0 ? bytes : ((bytes - 32) << (7 * level)) + lastChunkSize;
+				lastChunkSize = size;
+			}
+			innerNodes += swarmHashSimple(bytesConstRef(_input.data() + i, bytes), size).asBytes();
+			i += 0x1000;
+		}
+		while (i < data.size());
+		data = std::move(innerNodes);
+		level++;
+	}
+	while (data.size() > 32);
+	return h256(data);
+}
+
 }
