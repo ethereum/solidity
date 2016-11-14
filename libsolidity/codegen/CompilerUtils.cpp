@@ -317,27 +317,32 @@ void CompilerUtils::memoryCopy()
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
 {
-	// We have to split the left-aligned <function identifier><address> into two stack slots:
+	// We have to split the left-aligned <address><function identifier> into two stack slots:
 	// address (right aligned), function identifier (right aligned)
 	if (_leftAligned)
-		m_context << (u256(1) << 64) << Instruction::SWAP1 << Instruction::DIV;
-	m_context << Instruction::DUP1 << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
-	m_context << (u256(1) << 160) << Instruction::SWAP1 << Instruction::DIV;
-	if (!_leftAligned)
-		m_context << u256(0xffffffffUL) << Instruction::AND;
+	{
+		m_context << Instruction::DUP1 << (u256(1) << (64 + 32)) << Instruction::SWAP1 << Instruction::DIV;
+		// <input> <address>
+		m_context << Instruction::SWAP1 << (u256(1) << 64) << Instruction::SWAP1 << Instruction::DIV;
+	}
+	else
+	{
+		m_context << Instruction::DUP1 << (u256(1) << 32) << Instruction::SWAP1 << Instruction::DIV;
+		m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
+	}
+	m_context << u256(0xffffffffUL) << Instruction::AND;
 }
 
 void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 {
-	if (_leftAligned)
-		m_context << (u256(1) << 224);
-	else
-		m_context << u256(0xffffffffUL) << Instruction::AND << (u256(1) << 160);
-	m_context << Instruction::MUL << Instruction::SWAP1;
-	m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+	// <address> <function_id>
+	m_context << u256(0xffffffffUL) << Instruction::AND << Instruction::SWAP1;
+	if (!_leftAligned)
+		m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+	m_context << (u256(1) << 32) << Instruction::MUL;
+	m_context << Instruction::OR;
 	if (_leftAligned)
 		m_context << (u256(1) << 64) << Instruction::MUL;
-	m_context << Instruction::OR;
 }
 
 void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)

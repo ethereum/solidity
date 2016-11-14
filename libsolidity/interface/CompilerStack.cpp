@@ -597,7 +597,7 @@ void CompilerStack::compileContract(
 		cloneCompiler.compileClone(_contract, _compiledContracts);
 		compiledContract.cloneObject = cloneCompiler.assembledObject();
 	}
-	catch (eth::AssemblyException const& _e)
+	catch (eth::AssemblyException const&)
 	{
 		// In some cases (if the constructor requests a runtime function), it is not
 		// possible to compile the clone.

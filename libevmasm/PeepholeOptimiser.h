@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <cstddef>
+#include <iterator>
 
 namespace dev
 {

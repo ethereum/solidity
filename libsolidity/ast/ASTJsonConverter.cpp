@@ -236,7 +236,7 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", visibility),
 		make_pair("constant", _node.isDeclaredConst())
-	});
+	}, true);
 	return true;
 }
 

@@ -115,7 +115,7 @@ public:
 	void memoryCopy();
 
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
-	/// external function type <function identifier><address> into two stack slots:
+	/// external function type <address><function identifier> into two stack slots:
 	/// address (right aligned), function identifier (right aligned)
 	void splitExternalFunctionType(bool _rightAligned);
 	/// Performs the opposite operation of splitExternalFunctionType(_rightAligned)

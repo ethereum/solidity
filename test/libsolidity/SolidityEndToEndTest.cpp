@@ -7703,8 +7703,8 @@ BOOST_AUTO_TEST_CASE(receive_external_function_type)
 
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction(
-		"f(bytes24)",
-		FixedHash<4>(dev::keccak256("g()")).asBytes() + m_contractAddress.asBytes() + bytes(32 - 4 - 20, 0)
+		"f(function)",
+		m_contractAddress.asBytes() + FixedHash<4>(dev::keccak256("g()")).asBytes() + bytes(32 - 4 - 20, 0)
 	) == encodeArgs(u256(7)));
 }
 
@@ -7722,7 +7722,7 @@ BOOST_AUTO_TEST_CASE(return_external_function_type)
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(
 		callContractFunction("f()") ==
-		FixedHash<4>(dev::keccak256("g()")).asBytes() + m_contractAddress.asBytes() + bytes(32 - 4 - 20, 0)
+		m_contractAddress.asBytes() + FixedHash<4>(dev::keccak256("g()")).asBytes() + bytes(32 - 4 - 20, 0)
 	);
 }
 
