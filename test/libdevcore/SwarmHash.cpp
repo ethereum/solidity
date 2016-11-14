@@ -18,7 +18,7 @@
  * Unit tests for the swarm hash computation routine.
  */
 
-#include <libdevcore/SHA3.h>
+#include <libdevcore/SwarmHash.h>
 
 #include "../TestHelper.h"
 
