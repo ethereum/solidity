@@ -606,7 +606,7 @@ bool CommandLineInterface::processInput()
 	}
 	catch (UnimplementedFeatureError const& _exception)
 	{
-		cerr << "Unimplemented compliler feature:" << endl
+		cerr << "Unimplemented feature:" << endl
 			 << boost::diagnostic_information(_exception);
 		return false;
 	}
