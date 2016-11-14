@@ -38,6 +38,7 @@ do
     set +e
     output=$("$REPO_ROOT"/build/solc/solc "$f" 2>&1)
     failed=$?
+    # Remove the pre-release warning from the compiler output
     output=$(echo "$output" | grep -v 'pre-release')
     echo "$output"
     set -e
