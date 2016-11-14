@@ -128,24 +128,28 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 		case Instruction::CALLCODE:
 		case Instruction::DELEGATECALL:
 		{
-			gas = GasCosts::callGas;
-			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(0)))
-				gas += (*value);
-			else
-				gas = GasConsumption::infinite();
-			if (_item.instruction() == Instruction::CALL)
-				gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
-			int valueSize = _item.instruction() == Instruction::DELEGATECALL ? 0 : 1;
-			if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
-				gas += GasCosts::callValueTransferGas;
-			gas += memoryGas(-2 - valueSize, -3 - valueSize);
-			gas += memoryGas(-4 - valueSize, -5 - valueSize);
+//			We assume that we do not know the target contract and thus, the consumption is infinite.
+			gas = GasConsumption::infinite();
+//			gas = GasCosts::callGas;
+//			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(0)))
+//				gas += (*value);
+//			else
+//				gas = GasConsumption::infinite();
+//			if (_item.instruction() == Instruction::CALL)
+//				gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
+//			int valueSize = _item.instruction() == Instruction::DELEGATECALL ? 0 : 1;
+//			if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
+//				gas += GasCosts::callValueTransferGas;
+//			gas += memoryGas(-2 - valueSize, -3 - valueSize);
+//			gas += memoryGas(-4 - valueSize, -5 - valueSize);
 			break;
 		}
 		case Instruction::CREATE:
-			gas = GasCosts::createGas;
-			gas += memoryGas(-1, -2);
-			break;
+//			We assume that we do not know the target contract and thus, the consumption is infinite.
+//			gas = GasConsumption::infinite();
+//			gas = GasCosts::createGas;
+//			gas += memoryGas(-1, -2);
+//			break;
 		case Instruction::EXP:
 			gas = GasCosts::expGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
