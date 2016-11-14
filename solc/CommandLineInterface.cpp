@@ -78,6 +78,7 @@ static string const g_argCloneBinaryStr = "clone-bin";
 static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "devdoc";
 static string const g_argNatspecUserStr = "userdoc";
+static string const g_argMetadata = "metadata";
 static string const g_argAddStandard = "add-std";
 static string const g_stdinFileName = "<stdin>";
 
@@ -91,6 +92,7 @@ static set<string> const g_combinedJsonArgs{
 	"opcodes",
 	"abi",
 	"interface",
+	"metadata",
 	"asm",
 	"ast",
 	"userdoc",
@@ -117,6 +119,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	for (string const& arg: {
 		g_argAbiStr,
 		g_argSignatureHashes,
+		g_argMetadata,
 		g_argNatspecUserStr,
 		g_argAstJson,
 		g_argNatspecDevStr,
@@ -200,6 +203,18 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		createFile(_contract + ".signatures", out);
 	else
 		cout << "Function signatures: " << endl << out;
+}
+
+void CommandLineInterface::handleOnChainMetadata(string const& _contract)
+{
+	if (!m_args.count(g_argMetadata))
+		return;
+
+	string data = m_compiler->onChainMetadata(_contract);
+	if (m_args.count("output-dir"))
+		createFile(_contract + ".meta", data);
+	else
+		cout << "Metadata: " << endl << data << endl;
 }
 
 void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
@@ -467,6 +482,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
+		(g_argMetadata.c_str(), "Combined metadata JSON whose swarm hash is stored on-chain.")
 		("formal", "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
 
@@ -581,9 +597,7 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count("optimize") > 0;
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
-		bool successful = m_compiler->compile(optimize, runs);
-		if (successful)
-			m_compiler->link(m_libraries);
+		bool successful = m_compiler->compile(optimize, runs, m_libraries);
 
 		if (successful && m_args.count("formal"))
 			if (!m_compiler->prepareFormalAnalysis())
@@ -659,6 +673,8 @@ void CommandLineInterface::handleCombinedJSON()
 		Json::Value contractData(Json::objectValue);
 		if (requests.count("abi"))
 			contractData["abi"] = dev::jsonCompactPrint(m_compiler->interface(contractName));
+		if (requests.count("metadata"))
+			contractData["metadata"] = m_compiler->onChainMetadata(contractName);
 		if (requests.count("bin"))
 			contractData["bin"] = m_compiler->object(contractName).toHex();
 		if (requests.count("bin-runtime"))
@@ -918,6 +934,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleSignatureHashes(contract);
+		handleOnChainMetadata(contract);
 		handleMeta(DocumentationType::ABIInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);
 		handleMeta(DocumentationType::NatspecUser, contract);

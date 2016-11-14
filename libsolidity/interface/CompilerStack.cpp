@@ -38,7 +38,10 @@
 #include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Exceptions.h>
-#include <libdevcore/SHA3.h>
+
+#include <libdevcore/SwarmHash.h>
+
+#include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -79,6 +82,8 @@ void CompilerStack::reset(bool _keepSources)
 	{
 		m_sources.clear();
 	}
+	m_optimize = false;
+	m_optimizeRuns = 200;
 	m_globalContext.reset();
 	m_sourceOrder.clear();
 	m_contracts.clear();
@@ -217,17 +222,22 @@ vector<string> CompilerStack::contractNames() const
 }
 
 
-bool CompilerStack::compile(bool _optimize, unsigned _runs)
+bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> const& _libraries)
 {
 	if (!m_parseSuccessful)
 		if (!parse())
 			return false;
 
+	m_optimize = _optimize;
+	m_optimizeRuns = _runs;
+	m_libraries = _libraries;
+
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				compileContract(_optimize, _runs, *contract, compiledContracts);
+				compileContract(*contract, compiledContracts);
+	this->link();
 	return true;
 }
 
@@ -236,13 +246,13 @@ bool CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return parse(_sourceCode) && compile(_optimize);
 }
 
-void CompilerStack::link(const std::map<string, h160>& _libraries)
+void CompilerStack::link()
 {
 	for (auto& contract: m_contracts)
 	{
-		contract.second.object.link(_libraries);
-		contract.second.runtimeObject.link(_libraries);
-		contract.second.cloneObject.link(_libraries);
+		contract.second.object.link(m_libraries);
+		contract.second.runtimeObject.link(m_libraries);
+		contract.second.cloneObject.link(m_libraries);
 	}
 }
 
@@ -356,20 +366,27 @@ Json::Value const& CompilerStack::metadata(string const& _contractName, Document
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
+	return metadata(contract(_contractName), _type);
+}
+
+Json::Value const& CompilerStack::metadata(Contract const& _contract, DocumentationType _type) const
+{
+	if (!m_parseSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
 	std::unique_ptr<Json::Value const>* doc;
-	Contract const& currentContract = contract(_contractName);
 
 	// checks wheather we already have the documentation
 	switch (_type)
 	{
 	case DocumentationType::NatspecUser:
-		doc = &currentContract.userDocumentation;
+		doc = &_contract.userDocumentation;
 		break;
 	case DocumentationType::NatspecDev:
-		doc = &currentContract.devDocumentation;
+		doc = &_contract.devDocumentation;
 		break;
 	case DocumentationType::ABIInterface:
-		doc = &currentContract.interface;
+		doc = &_contract.interface;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
@@ -377,9 +394,17 @@ Json::Value const& CompilerStack::metadata(string const& _contractName, Document
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new Json::Value(InterfaceHandler::documentation(*currentContract.contract, _type)));
+		doc->reset(new Json::Value(InterfaceHandler::documentation(*_contract.contract, _type)));
 
 	return *(*doc);
+}
+
+string const& CompilerStack::onChainMetadata(string const& _contractName) const
+{
+	if (!m_parseSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	return contract(_contractName).onChainMetadata;
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
@@ -572,8 +597,6 @@ string CompilerStack::absolutePath(string const& _path, string const& _reference
 }
 
 void CompilerStack::compileContract(
-	bool _optimize,
-	unsigned _runs,
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 )
@@ -581,19 +604,21 @@ void CompilerStack::compileContract(
 	if (_compiledContracts.count(&_contract) || !_contract.annotation().isFullyImplemented)
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
-		compileContract(_optimize, _runs, *dependency, _compiledContracts);
+		compileContract(*dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
-	compiler->compileContract(_contract, _compiledContracts);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.name());
+	string onChainMetadata = createOnChainMetadata(compiledContract);
+	compiler->compileContract(_contract, _compiledContracts, dev::swarmHash(onChainMetadata));
 	compiledContract.compiler = compiler;
 	compiledContract.object = compiler->assembledObject();
 	compiledContract.runtimeObject = compiler->runtimeObject();
+	compiledContract.onChainMetadata = onChainMetadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	try
 	{
-		Compiler cloneCompiler(_optimize, _runs);
+		Compiler cloneCompiler(m_optimize, m_optimizeRuns);
 		cloneCompiler.compileClone(_contract, _compiledContracts);
 		compiledContract.cloneObject = cloneCompiler.assembledObject();
 	}
@@ -635,6 +660,43 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
 
 	return it->second;
+}
+
+string CompilerStack::createOnChainMetadata(Contract const& _contract) const
+{
+	Json::Value meta;
+	meta["version"] = 1;
+	meta["language"] = "Solidity";
+	meta["compiler"]["version"] = VersionString;
+	meta["compilationTarget"] =
+		_contract.contract->sourceUnitName() +
+		":" +
+		_contract.contract->annotation().canonicalName;
+
+	for (auto const& s: m_sources)
+	{
+		solAssert(s.second.scanner, "Scanner not available");
+		meta["sources"][s.first]["swarm"] =
+			"0x" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes());
+	}
+	meta["settings"]["optimizer"]["enabled"] = m_optimize;
+	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
+
+	set<string> remappings;
+	for (auto const& r: m_remappings)
+		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
+	for (auto const& r: remappings)
+		meta["settings"]["remappings"].append(r);
+
+	for (auto const& library: m_libraries)
+		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
+
+	meta["output"]["abi"] = metadata(_contract, DocumentationType::ABIInterface);
+	meta["output"]["natspec"] = metadata(_contract, DocumentationType::NatspecUser);
+
+	Json::FastWriter writer;
+	writer.omitEndingLineFeed();
+	return writer.write(meta);
 }
 
 string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) const

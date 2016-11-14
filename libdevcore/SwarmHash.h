@@ -20,12 +20,13 @@
 #pragma once
 
 #include <libdevcore/FixedHash.h>
-#include <libdevcore/Common.h>
+
+#include <string>
 
 namespace dev
 {
 
 /// Compute the "swarm hash" of @a _data
-h256 swarmHash(bytes const& _data);
+h256 swarmHash(std::string const& _data);
 
 }

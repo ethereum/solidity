@@ -80,6 +80,8 @@ public:
 
 	void reset() { m_position = 0; }
 
+	std::string const& source() const { return m_source; }
+
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
@@ -101,6 +103,8 @@ class Scanner
 public:
 
 	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
+
+	std::string source() const { return m_source.source(); }
 
 	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
 	void reset(CharStream const& _source, std::string const& _sourceName);

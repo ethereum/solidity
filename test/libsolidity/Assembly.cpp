@@ -75,7 +75,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler;
-			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{});
+			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, h256());
 
 			return compiler.runtimeAssemblyItems();
 		}

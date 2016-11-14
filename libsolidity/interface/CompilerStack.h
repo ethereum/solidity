@@ -113,13 +113,14 @@ public:
 
 	/// Compiles the source units that were previously added and parsed.
 	/// @returns false on error.
-	bool compile(bool _optimize = false, unsigned _runs = 200);
+	bool compile(
+		bool _optimize = false,
+		unsigned _runs = 200,
+		std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{}
+	);
 	/// Parses and compiles the given source code.
 	/// @returns false on error.
 	bool compile(std::string const& _sourceCode, bool _optimize = false);
-
-	/// Inserts the given addresses into the linker objects of all compiled contracts.
-	void link(std::map<std::string, h160> const& _libraries);
 
 	/// Tries to translate all source files into a language suitable for formal analysis.
 	/// @param _errors list to store errors - defaults to the internal error list.
@@ -170,6 +171,7 @@ public:
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
 	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
+	std::string const& onChainMetadata(std::string const& _contractName) const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
@@ -213,6 +215,7 @@ private:
 		eth::LinkerObject object;
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
+		std::string onChainMetadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> interface;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
@@ -233,16 +236,18 @@ private:
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
 	/// Compile a single contract and put the result in @a _compiledContracts.
 	void compileContract(
-		bool _optimize,
-		unsigned _runs,
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 	);
 
+	void link();
+
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
 
+	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
+	Json::Value const& metadata(Contract const&, DocumentationType _type) const;
 
 	struct Remapping
 	{
@@ -252,6 +257,9 @@ private:
 	};
 
 	ReadFileCallback m_readFile;
+	bool m_optimize = false;
+	size_t m_optimizeRuns = 200;
+	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
