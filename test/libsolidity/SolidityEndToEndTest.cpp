@@ -2961,24 +2961,24 @@ BOOST_AUTO_TEST_CASE(generic_call)
 BOOST_AUTO_TEST_CASE(generic_callcode)
 {
 	char const* sourceCode = R"**(
-			contract receiver {
+			contract Receiver {
 				uint public received;
 				function receive(uint256 x) payable { received = x; }
 			}
-			contract sender {
+			contract Sender {
 				uint public received;
-				function sender() payable { }
+				function Sender() payable { }
 				function doSend(address rec) returns (uint d)
 				{
 					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
 					rec.callcode.value(2)(signature, 23);
-					return receiver(rec).received();
+					return Receiver(rec).received();
 				}
 			}
 	)**";
-	compileAndRun(sourceCode, 0, "receiver");
+	compileAndRun(sourceCode, 0, "Receiver");
 	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "sender");
+	compileAndRun(sourceCode, 50, "Sender");
 	u160 const c_senderAddress = m_contractAddress;
 	BOOST_CHECK(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
@@ -2993,18 +2993,18 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 BOOST_AUTO_TEST_CASE(generic_delegatecall)
 {
 	char const* sourceCode = R"**(
-			contract receiver {
+			contract Receiver {
 				uint public received;
 				address public sender;
 				uint public value;
-				function receiver() payable {}
+				function Receiver() payable {}
 				function receive(uint256 x) payable { received = x; sender = msg.sender; value = msg.value; }
 			}
-			contract sender {
+			contract Sender {
 				uint public received;
 				address public sender;
 				uint public value;
-				function sender() payable {}
+				function Sender() payable {}
 				function doSend(address rec) payable
 				{
 					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
@@ -3012,9 +3012,9 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				}
 			}
 	)**";
-	compileAndRun(sourceCode, 0, "receiver");
+	compileAndRun(sourceCode, 0, "Receiver");
 	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "sender");
+	compileAndRun(sourceCode, 50, "Sender");
 	u160 const c_senderAddress = m_contractAddress;
 	BOOST_CHECK(m_sender != c_senderAddress); // just for sanity
 	BOOST_CHECK(callContractFunctionWithValue("doSend(address)", 11, c_receiverAddress) == encodeArgs());
