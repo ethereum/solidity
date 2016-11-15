@@ -10,6 +10,7 @@ Features:
 Bugfixes:
 
  * Inline assembly: calculate stack height warning correctly even when local variables are used.
+ * Support the ``payable`` keyword on constructors.
  * Parser: disallow empty enum definitions.
  * Type checker: disallow conversion between different enum types.
  * Interface JSON: do not include trailing new line.
