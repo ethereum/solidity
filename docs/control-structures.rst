@@ -716,6 +716,10 @@ will have a wrong impression about the stack height at label ``two``:
         three:
     }
 
+.. note::
+
+    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
+    result in an invalid jump, effectively aborting execution of the code.
 
 Declaring Assembly-Local Variables
 ----------------------------------
