@@ -216,9 +216,17 @@ public:
 		size_t numVariables = m_state.variables.size();
 		int deposit = m_state.assembly.deposit();
 		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-		deposit = m_state.assembly.deposit() - deposit;
+
+		// pop variables
+		while (m_state.variables.size() > numVariables)
+		{
+			m_state.assembly.append(solidity::Instruction::POP);
+			m_state.variables.pop_back();
+		}
 
 		m_state.assembly.setSourceLocation(_block.location);
+
+		deposit = m_state.assembly.deposit() - deposit;
 
 		// issue warnings for stack height discrepancies
 		if (deposit < 0)
@@ -238,12 +246,6 @@ public:
 			);
 		}
 
-		// pop variables
-		while (m_state.variables.size() > numVariables)
-		{
-			m_state.assembly.append(solidity::Instruction::POP);
-			m_state.variables.pop_back();
-		}
 	}
 
 private:
