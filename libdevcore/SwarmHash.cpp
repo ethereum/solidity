@@ -38,32 +38,26 @@ h256 swarmHashSimple(bytesConstRef _data, size_t _size)
 	return keccak256(toLittleEndian(_size) + _data.toBytes());
 }
 
-h256 dev::swarmHash(bytes const& _input)
+h256 swarmHashIntermediate(bytes const& _input, size_t _offset, size_t _length)
 {
-	bytes data = _input;
-	size_t lastChunkSize = 0;
-	size_t level = 0;
-	do
+	if (_length <= 0x1000)
+		return swarmHashSimple(bytesConstRef(_input.data() + _offset, _length), _length);
+	else
 	{
 		bytes innerNodes;
-		size_t i = 0;
-		do
+		size_t maxRepresentedSize = 0x1000;
+		while (maxRepresentedSize * (0x1000 / 32) < _length)
+			maxRepresentedSize *= (0x1000 / 32);
+		for (size_t i = 0; i < _length; i += maxRepresentedSize)
 		{
-			size_t bytes = std::min<size_t>(0x1000, data.size() - i);
-			size_t size = bytes << (7 * level);
-			if (i + 0x1000 >= data.size())
-			{
-				// last node
-				size = level == 0 ? bytes : ((bytes - 32) << (7 * level)) + lastChunkSize;
-				lastChunkSize = size;
-			}
-			innerNodes += swarmHashSimple(bytesConstRef(_input.data() + i, bytes), size).asBytes();
-			i += 0x1000;
+			size_t size = std::min(maxRepresentedSize, _length - i);
+			innerNodes += swarmHashIntermediate(_input, _offset + i, size).asBytes();
 		}
-		while (i < data.size());
-		data = std::move(innerNodes);
-		level++;
+		return swarmHashSimple(bytesConstRef(&innerNodes), _length);
 	}
-	while (data.size() > 32);
-	return h256(data);
+}
+
+h256 dev::swarmHash(bytes const& _input)
+{
+	return swarmHashIntermediate(_input, 0, _input.size());
 }
