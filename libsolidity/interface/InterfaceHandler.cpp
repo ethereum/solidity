@@ -8,7 +8,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-string InterfaceHandler::documentation(
+Json::Value InterfaceHandler::documentation(
 	ContractDefinition const& _contractDef,
 	DocumentationType _type
 )
@@ -24,10 +24,9 @@ string InterfaceHandler::documentation(
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
-	return "";
 }
 
-string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 
@@ -104,12 +103,10 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		abi.append(event);
 	}
 
-	Json::FastWriter writer;
-	writer.omitEndingLineFeed();
-	return writer.write(abi);
+	return abi;
 }
 
-string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -129,10 +126,10 @@ string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDe
 			}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return doc;
 }
 
-string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -178,7 +175,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 	}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return doc;
 }
 
 string InterfaceHandler::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)

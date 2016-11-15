@@ -107,6 +107,18 @@ static void version()
 	exit(0);
 }
 
+string jsonPrettyPrint(Json::Value const& input)
+{
+	return Json::StyledWriter().write(input);
+}
+
+string jsonCompactPrint(Json::Value const& input)
+{
+        Json::FastWriter writer;
+        writer.omitEndingLineFeed();
+        return writer.write(input);
+}
+
 static bool needsHumanTargetedStdout(po::variables_map const& _args)
 {
 	if (_args.count(g_argGas))
@@ -230,12 +242,18 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 	if (m_args.count(argName))
 	{
+		std::string output;
+		if (_type == DocumentationType::ABIInterface)
+			output = jsonCompactPrint(m_compiler->metadata(_contract, _type));
+		else
+			output = jsonPrettyPrint(m_compiler->metadata(_contract, _type));
+
 		if (m_args.count("output-dir"))
-			createFile(_contract + suffix, m_compiler->metadata(_contract, _type));
+			createFile(_contract + suffix, output);
 		else
 		{
 			cout << title << endl;
-			cout << m_compiler->metadata(_contract, _type) << endl;
+			cout << output << endl;
 		}
 
 	}
@@ -651,7 +669,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value contractData(Json::objectValue);
 		if (requests.count("abi"))
-			contractData["abi"] = m_compiler->interface(contractName);
+			contractData["abi"] = jsonCompactPrint(m_compiler->interface(contractName));
 		if (requests.count("bin"))
 			contractData["bin"] = m_compiler->object(contractName).toHex();
 		if (requests.count("bin-runtime"))
@@ -676,9 +694,9 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData["srcmap-runtime"] = map ? *map : "";
 		}
 		if (requests.count("devdoc"))
-			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
+			contractData["devdoc"] = jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecDev));
 		if (requests.count("userdoc"))
-			contractData["userdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
+			contractData["userdoc"] = jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecUser));
 		output["contracts"][contractName] = contractData;
 	}
 
@@ -702,7 +720,7 @@ void CommandLineInterface::handleCombinedJSON()
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}
 	}
-	cout << Json::FastWriter().write(output) << endl;
+	cout << jsonCompactPrint(output) << endl;
 }
 
 void CommandLineInterface::handleAst(string const& _argStr)

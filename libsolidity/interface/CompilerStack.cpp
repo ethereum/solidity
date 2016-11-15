@@ -345,17 +345,17 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-string const& CompilerStack::interface(string const& _contractName) const
+Json::Value const& CompilerStack::interface(string const& _contractName) const
 {
 	return metadata(_contractName, DocumentationType::ABIInterface);
 }
 
-string const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	std::unique_ptr<string const>* doc;
+	std::unique_ptr<Json::Value const>* doc;
 	Contract const& currentContract = contract(_contractName);
 
 	// checks wheather we already have the documentation
@@ -376,7 +376,7 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new string(InterfaceHandler::documentation(*currentContract.contract, _type)));
+		doc->reset(new Json::Value(InterfaceHandler::documentation(*currentContract.contract, _type)));
 
 	return *(*doc);
 }

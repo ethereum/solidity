@@ -64,24 +64,24 @@ public:
 	/// @param _contractDef The contract definition
 	/// @param _type        The type of the documentation. Can be one of the
 	///                     types provided by @c DocumentationType
-	/// @return             A string with the json representation of provided type
-	static std::string documentation(
+	/// @return             A JSON representation of provided type
+	static Json::Value documentation(
 		ContractDefinition const& _contractDef,
 		DocumentationType _type
 	);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
-	/// @return             A string with the json representation of the contract's ABI Interface
-	static std::string abiInterface(ContractDefinition const& _contractDef);
+	/// @return             A JSONrepresentation of the contract's ABI Interface
+	static Json::Value abiInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
-	/// @return             A string with the json representation of the contract's user documentation
-	static std::string userDocumentation(ContractDefinition const& _contractDef);
+	/// @return             A JSON representation of the contract's user documentation
+	static Json::Value userDocumentation(ContractDefinition const& _contractDef);
 	/// Genereates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
-	/// @return             A string with the json representation
+	/// @return             A JSON representation
 	///                     of the contract's developer documentation
-	static std::string devDocumentation(ContractDefinition const& _contractDef);
+	static Json::Value devDocumentation(ContractDefinition const& _contractDef);
 
 private:
 	/// @returns concatenation of all content under the given tag name.

@@ -162,14 +162,14 @@ public:
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
-	/// @returns a string representing the contract interface in JSON.
+	/// @returns a JSON representing the contract interface.
 	/// Prerequisite: Successful call to parse or compile.
-	std::string const& interface(std::string const& _contractName = "") const;
-	/// @returns a string representing the contract's documentation in JSON.
+	Json::Value const& interface(std::string const& _contractName = "") const;
+	/// @returns a JSON representing the contract's documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
-	std::string const& metadata(std::string const& _contractName, DocumentationType _type) const;
+	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
@@ -213,9 +213,9 @@ private:
 		eth::LinkerObject object;
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
-		mutable std::unique_ptr<std::string const> interface;
-		mutable std::unique_ptr<std::string const> userDocumentation;
-		mutable std::unique_ptr<std::string const> devDocumentation;
+		mutable std::unique_ptr<Json::Value const> interface;
+		mutable std::unique_ptr<Json::Value const> userDocumentation;
+		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
