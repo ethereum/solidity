@@ -35,6 +35,7 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <json/json.h>
 
 namespace dev
 {
@@ -343,11 +344,11 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 
-	std::string const& userDocumentation() const;
-	void setUserDocumentation(std::string const& _userDocumentation);
+	Json::Value const& userDocumentation() const;
+	void setUserDocumentation(Json::Value const& _userDocumentation);
 
-	std::string const& devDocumentation() const;
-	void setDevDocumentation(std::string const& _devDocumentation);
+	Json::Value const& devDocumentation() const;
+	void setDevDocumentation(Json::Value const& _devDocumentation);
 
 	virtual TypePointer type() const override;
 
@@ -359,8 +360,8 @@ private:
 	bool m_isLibrary;
 
 	// parsed Natspec documentation of the contract.
-	std::string m_userDocumentation;
-	std::string m_devDocumentation;
+	Json::Value m_userDocumentation;
+	Json::Value m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;

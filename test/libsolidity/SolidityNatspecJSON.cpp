@@ -45,21 +45,19 @@ public:
 		bool _userDocumentation
 	)
 	{
-		std::string generatedDocumentationString;
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing failed");
 
-		if (_userDocumentation)
-			generatedDocumentationString = m_compilerStack.metadata("", DocumentationType::NatspecUser);
-		else
-			generatedDocumentationString = m_compilerStack.metadata("", DocumentationType::NatspecDev);
 		Json::Value generatedDocumentation;
-		m_reader.parse(generatedDocumentationString, generatedDocumentation);
+		if (_userDocumentation)
+			generatedDocumentation = m_compilerStack.metadata("", DocumentationType::NatspecUser);
+		else
+			generatedDocumentation = m_compilerStack.metadata("", DocumentationType::NatspecDev);
 		Json::Value expectedDocumentation;
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected " << _expectedDocumentationString <<
-			"\n but got:\n" << generatedDocumentationString
+			"Expected " << expectedDocumentation.toStyledString() <<
+			"\n but got:\n" << generatedDocumentation.toStyledString()
 		);
 	}
 

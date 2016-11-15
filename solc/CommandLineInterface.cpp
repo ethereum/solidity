@@ -41,6 +41,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolidity/interface/Version.h>
@@ -230,12 +231,18 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 	if (m_args.count(argName))
 	{
+		std::string output;
+		if (_type == DocumentationType::ABIInterface)
+			output = dev::jsonCompactPrint(m_compiler->metadata(_contract, _type));
+		else
+			output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
+
 		if (m_args.count("output-dir"))
-			createFile(_contract + suffix, m_compiler->metadata(_contract, _type));
+			createFile(_contract + suffix, output);
 		else
 		{
 			cout << title << endl;
-			cout << m_compiler->metadata(_contract, _type) << endl;
+			cout << output << endl;
 		}
 
 	}
@@ -651,7 +658,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value contractData(Json::objectValue);
 		if (requests.count("abi"))
-			contractData["abi"] = m_compiler->interface(contractName);
+			contractData["abi"] = dev::jsonCompactPrint(m_compiler->interface(contractName));
 		if (requests.count("bin"))
 			contractData["bin"] = m_compiler->object(contractName).toHex();
 		if (requests.count("bin-runtime"))
@@ -676,9 +683,9 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData["srcmap-runtime"] = map ? *map : "";
 		}
 		if (requests.count("devdoc"))
-			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
+			contractData["devdoc"] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecDev));
 		if (requests.count("userdoc"))
-			contractData["userdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
+			contractData["userdoc"] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecUser));
 		output["contracts"][contractName] = contractData;
 	}
 
@@ -702,7 +709,7 @@ void CommandLineInterface::handleCombinedJSON()
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}
 	}
-	cout << Json::FastWriter().write(output) << endl;
+	cout << dev::jsonCompactPrint(output) << endl;
 }
 
 void CommandLineInterface::handleAst(string const& _argStr)
