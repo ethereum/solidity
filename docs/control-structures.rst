@@ -718,7 +718,7 @@ will have a wrong impression about the stack height at label ``two``:
 
 .. note::
 
-    ``ErrorTag`` is a pre-defined label. Jumping to this location will always
+    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
     result in an invalid jump, effectively aborting execution of the code.
 
 Declaring Assembly-Local Variables

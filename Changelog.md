@@ -2,7 +2,7 @@
 
 Features:
  * Do-while loops: support for a C-style do{<block>}while(<expr>); control structure
- * Inline assembly: support ``ErrorTag`` as a jump label.
+ * Inline assembly: support ``invalidJumpLabel`` as a jump label.
  * Type checker: now more eagerly searches for a common type of an inline array with mixed types
  * Code generator: generates a runtime error when an out-of-range value is converted into an enum type.
 

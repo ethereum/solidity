@@ -84,7 +84,7 @@ public:
 	LabelOrganizer(GeneratorState& _state): m_state(_state)
 	{
 		// Make the Solidity ErrorTag available to inline assembly
-		m_state.labels.insert(make_pair("ErrorTag", m_state.assembly.errorTag()));
+		m_state.labels.insert(make_pair("invalidJumpLabel", m_state.assembly.errorTag()));
 	}
 
 	template <class T>
