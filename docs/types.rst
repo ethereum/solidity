@@ -274,10 +274,10 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
 Function Types
 --------------
 
-Function types can be used to assign functions to variables and passing them
-to or return them from function calls. Such variables and parameters have
-to have function types. These types come in two flavours: *internal* and *external*
-functions.
+Function types are the types of functions. Variables of function type
+can be assigned from functions and function parameters of function type
+can be used to pass functions to and return functions from function calls.
+Function types come in two flavours - *internal* and *external* functions:
 
 Internal functions can only be used inside the current contract (more specifically,
 inside the current code unit, which also includes internal library functions
@@ -289,7 +289,7 @@ contract internally.
 External functions consist of an address and a function signature and they can
 be passed via and returned from external function calls.
 
-Function types are notated as follows:
+Function types are notated as follows::
 
     function (<parameter types>) {internal|external} [constant] [payable] [returns (<return types>)]
 
