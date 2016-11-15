@@ -4573,6 +4573,35 @@ BOOST_AUTO_TEST_CASE(invalid_enum_logged)
 	BOOST_CHECK(callContractFunction("test_log()") == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(invalid_enum_stored)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+			X public x;
+
+			function test_store() returns (uint) {
+				X garbled = X.A;
+				assembly {
+					garbled := 5
+				}
+				x = garbled;
+				return 1;
+			}
+			function test_store_ok() returns (uint) {
+				x = X.A;
+				return 1;
+			}
+		}
+		)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test_store_ok()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+
+	// should throw
+	BOOST_CHECK(callContractFunction("test_store()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(invalid_enum_as_external_ret)
 {
 	char const* sourceCode = R"(
