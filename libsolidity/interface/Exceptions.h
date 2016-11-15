@@ -23,6 +23,7 @@
 #pragma once
 
 #include <string>
+#include <regex>
 #include <utility>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/SourceLocation.h>
@@ -57,6 +58,14 @@ public:
 
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
+	template <typename T>
+	bool regex_search(T&& _reg) const
+	{
+		if (std::string const* str = boost::get_error_info<errinfo_comment>(*this))
+			return std::regex_search(*str, std::regex(std::forward<T>(_reg)));
+		else
+			return false;
+	}
 
 	/// helper functions
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
