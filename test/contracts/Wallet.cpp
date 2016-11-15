@@ -368,7 +368,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// constructor - just pass on the owner array to the multiowned and
 	// the limit to daylimit
-	function Wallet(address[] _owners, uint _required, uint _daylimit)
+	function Wallet(address[] _owners, uint _required, uint _daylimit) payable
 			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
