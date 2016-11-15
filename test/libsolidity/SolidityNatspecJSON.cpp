@@ -26,6 +26,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/JSON.h>
 
 namespace dev
 {
@@ -57,7 +58,7 @@ public:
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
 			"Expected " << _expectedDocumentationString <<
-			"\n but got:\n" << Json::StyledWriter().write(generatedDocumentation)
+			"\n but got:\n" << dev::jsonPrettyPrint(generatedDocumentation)
 		);
 	}
 

@@ -27,6 +27,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolidity/parsing/Scanner.h>
@@ -125,13 +126,6 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	return gasEstimates;
 }
 
-string jsonCompactPrint(Json::Value const& input)
-{
-	Json::FastWriter writer;
-	writer.omitEndingLineFeed();
-	return writer.write(input);
-}
-
 string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback _readCallback)
 {
 	Json::Value output(Json::objectValue);
@@ -220,7 +214,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			for (string const& contractName: compiler.contractNames())
 			{
 				Json::Value contractData(Json::objectValue);
-				contractData["interface"] = jsonCompactPrint(compiler.interface(contractName));
+				contractData["interface"] = dev::jsonCompactPrint(compiler.interface(contractName));
 				contractData["bytecode"] = compiler.object(contractName).toHex();
 				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
@@ -281,7 +275,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 
 	try
 	{
-		return jsonCompactPrint(output);
+		return dev::jsonCompactPrint(output);
 	}
 	catch (...)
 	{
@@ -299,7 +293,7 @@ string compileMulti(string const& _input, bool _optimize, CStyleReadFileCallback
 		errors.append("Error parsing input JSON: " + reader.getFormattedErrorMessages());
 		Json::Value output(Json::objectValue);
 		output["errors"] = errors;
-		return jsonCompactPrint(output);
+		return dev::jsonCompactPrint(output);
 	}
 	else
 	{
