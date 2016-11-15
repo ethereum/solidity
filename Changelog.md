@@ -9,6 +9,7 @@ Bugfixes:
 
  * Parser: disallow empty enum definitions.
  * Type checker: disallow conversion between different enum types.
+ * Interface JSON: do not include trailing new line.
 
 ### 0.4.4 (2016-10-31)
 
