@@ -221,6 +221,11 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	{
 		solAssert(m_dataType->storageBytes() <= 32, "Invalid storage bytes size.");
 		solAssert(m_dataType->storageBytes() > 0, "Invalid storage bytes size.");
+
+		m_context << Instruction::SWAP2;
+		CompilerUtils(m_context).convertType(*m_dataType, *m_dataType, true);
+		m_context << Instruction::SWAP2;
+
 		if (m_dataType->storageBytes() == 32)
 		{
 			solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size.");
