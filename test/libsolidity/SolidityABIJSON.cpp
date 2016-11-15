@@ -40,12 +40,14 @@ public:
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing contract failed");
+
 		Json::Value generatedInterface = m_compilerStack.metadata("", DocumentationType::ABIInterface);
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
-			"Expected:\n" << expectedInterface.toStyledString() << "\n but got:\n" << generatedInterface.toStyledString()
+			"Expected:\n" << expectedInterface.toStyledString() <<
+			"\n but got:\n" << generatedInterface.toStyledString()
 		);
 	}
 

@@ -26,7 +26,6 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libdevcore/Exceptions.h>
-#include <libdevcore/JSON.h>
 
 namespace dev
 {
@@ -46,9 +45,9 @@ public:
 		bool _userDocumentation
 	)
 	{
-		Json::Value generatedDocumentation;
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing failed");
 
+		Json::Value generatedDocumentation;
 		if (_userDocumentation)
 			generatedDocumentation = m_compilerStack.metadata("", DocumentationType::NatspecUser);
 		else
@@ -57,8 +56,8 @@ public:
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected " << _expectedDocumentationString <<
-			"\n but got:\n" << dev::jsonPrettyPrint(generatedDocumentation)
+			"Expected " << expectedDocumentation.toStyledString() <<
+			"\n but got:\n" << generatedDocumentation.toStyledString()
 		);
 	}
 
