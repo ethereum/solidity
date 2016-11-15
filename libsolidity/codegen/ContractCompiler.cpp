@@ -137,6 +137,12 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 		appendConstructor(*constructor);
 	else if (auto c = m_context.nextConstructor(_contract))
 		appendBaseConstructor(*c);
+	else
+	{
+		// Throw if function is not payable but call contained ether.
+		m_context << Instruction::CALLVALUE;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 }
 
 size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
@@ -184,6 +190,12 @@ void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _construc
 void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _constructor);
+	if (!_constructor.isPayable())
+	{
+		// Throw if function is not payable but call contained ether.
+		m_context << Instruction::CALLVALUE;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	if (!_constructor.parameters().empty())
 	{
