@@ -68,6 +68,7 @@ Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDe
 		method["type"] = "constructor";
 		auto externalFunction = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
+		method["payable"] = externalFunction->isPayable();
 		method["inputs"] = populateParameters(
 			externalFunction->parameterNames(),
 			externalFunction->parameterTypeNames(_contractDef.isLibrary())
