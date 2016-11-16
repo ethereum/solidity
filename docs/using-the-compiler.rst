@@ -204,12 +204,15 @@ that can be used to query a location of the binary (and whether the version is
         version: "soljson-2313-2016-12-12",
         keccak: "0x123..."
       },
+      // This is a subset of the regular compiler input
       sources:
       {
         "abc": {keccak: "0x456..."}, // here, sources are always given by hash
         "def": {keccak: "0x123..."},
-        "dir/file.sol": {keccax: "0xabc..."}
+        "dir/file.sol": {keccax: "0xabc..."},
+        "xkcd": {swarm: "0x456..."}
       },
+      // This is a subset of the regular compiler input
       settings:
       {
         remappings: [":g/dir"],
@@ -219,9 +222,12 @@ that can be used to query a location of the binary (and whether the version is
           "def:MyLib": "0x123123..."
         }
       },
+      // This is a subset of the regular compiler output
       output:
       {
         abi: [ /* abi definition */ ],
+        userdoc: [],
+        devdoc: [],
         natspec: [ /* user documentation comments */ ]
       }
     }
