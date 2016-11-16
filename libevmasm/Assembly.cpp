@@ -81,7 +81,7 @@ string Assembly::out() const
 
 unsigned Assembly::bytesRequired(unsigned subTagSize) const
 {
-	for (unsigned tagSize = subTagSize;; ++tagSize)
+	for (unsigned tagSize = subTagSize; true; ++tagSize)
 	{
 		unsigned ret = 1;
 		for (auto const& i: m_data)

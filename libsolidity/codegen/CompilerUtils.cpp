@@ -138,7 +138,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		dynamic_cast<FunctionType const&>(_type).location() == FunctionType::Location::External
 	)
 	{
-		solAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
+		solUnimplementedAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
 		combineExternalFunctionType(true);
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(_padToWordBoundaries ? 32 : 24) << Instruction::ADD;

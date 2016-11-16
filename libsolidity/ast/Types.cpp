@@ -1827,23 +1827,28 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_isPayable(_typeName.isPayable())
 {
 	if (_typeName.isPayable())
+	{
 		solAssert(m_location == Location::External, "Internal payable function type used.");
+		solAssert(!m_isConstant, "Payable constant function");
+	}
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
-		solAssert(
-			m_location != Location::External || t->annotation().type->canBeUsedExternally(false),
-			"Internal type used as parameter for external function."
-		);
+		if (m_location == Location::External)
+			solAssert(
+				t->annotation().type->canBeUsedExternally(false),
+				"Internal type used as parameter for external function."
+			);
 		m_parameterTypes.push_back(t->annotation().type);
 	}
 	for (auto const& t: _typeName.returnParameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for return parameter.");
-		solAssert(
-			m_location != Location::External || t->annotation().type->canBeUsedExternally(false),
-			"Internal type used as return parameter for external function."
-		);
+		if (m_location == Location::External)
+			solAssert(
+				t->annotation().type->canBeUsedExternally(false),
+				"Internal type used as return parameter for external function."
+			);
 		m_returnParameterTypes.push_back(t->annotation().type);
 	}
 }
@@ -1941,17 +1946,21 @@ string FunctionType::toString(bool _short) const
 	string name = "function (";
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
-	name += ") ";
+	name += ")";
 	if (m_isConstant)
-		name += "constant ";
+		name += " constant";
 	if (m_isPayable)
-		name += "payable ";
+		name += " payable";
 	if (m_location == Location::External)
-		name += "external ";
-	name += "returns (";
-	for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
-		name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
-	return name + ")";
+		name += " external";
+	if (!m_returnParameterTypes.empty())
+	{
+		name += " returns (";
+		for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
+			name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
+		name += ")";
+	}
+	return name;
 }
 
 unsigned FunctionType::calldataEncodedSize(bool _padded) const
