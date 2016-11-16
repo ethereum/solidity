@@ -30,10 +30,10 @@
 #include <termios.h>
 #endif
 #include <boost/filesystem.hpp>
-#include "Exceptions.h"
+#include "Assertions.h"
+
 using namespace std;
 using namespace dev;
-
 
 template <typename _T>
 inline _T contentsGeneric(std::string const& _file)
@@ -83,8 +83,7 @@ void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDe
 
 		ofstream s(_file, ios::trunc | ios::binary);
 		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
-		if (!s)
-			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file));
+		assertThrow(s, FileError, "Could not write to file: " + _file);
 		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));
 	}
 }
