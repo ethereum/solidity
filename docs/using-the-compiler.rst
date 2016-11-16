@@ -140,7 +140,9 @@ Regular Output
       ]
       contracts: {
         "sourceFile.sol:ContractName": {
-          abi:
+          // The Ethereum Contract ABI. If empty, it is represented as an empty array.
+          // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
+          abi: [],
           evm: {
               assembly:
               bytecode:
