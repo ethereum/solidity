@@ -167,7 +167,10 @@ Regular Output
           ewasm: {
               wast: // S-expression format
               wasm: //
-          }
+          },
+          userdoc: // Obsolete
+          devdoc: // Obsolete
+          natspec: // Combined dev+userdoc
         }
       },
       formal: {
