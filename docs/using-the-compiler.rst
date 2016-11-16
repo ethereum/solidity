@@ -40,20 +40,9 @@ Standardized Input Description and Metadata Output
 In order to ease source code verification of complex contracts that are spread across several files,
 there is a standardized way for describing the relations between those files.
 Furthermore, the compiler can generate a json file while compiling that includes
-the source, natspec comments and other metadata whose hash is included in the
+the (hash of the) source, natspec comments and other metadata whose hash is included in the
 actual bytecode. Specifically, the creation data for a contract has to begin with
 `push32 <metadata hash> pop`.
-
-There is some overlap between the input description and the metadata output
-and due to the fact that some fields are optional, the metadata can be used as
-input to the compiler. In order to verify the metadata, you actually take it,
-re-run the compiler on the metadata and check that it again produces the same
-metadata.
-
-If the compiler is invoked in a different way, not using the input
-description (for example by using a file content retrieval callback),
-the compiler can still generate the metadata alongside the bytecode of each
-contract.
 
 The metadata standard is versioned. Future versions are only required to provide the "version" field,
 the "language" field and the two keys inside the "compiler" field.
@@ -68,30 +57,124 @@ Comments are of course not permitted and used here only for explanatory purposes
 Input Description
 -----------------
 
+QUESTION: How to specific file-reading callback? - probably not as part of json input
+
 The input description is language-specific and could change with each compiler version, but it
 should be backwards compatible if possible.
 
     {
       sources:
       {
-        "abc": "contract b{}",
+        // the keys here are the "global" names of the source files, imports can use other files via remappings (see below)
+        "abc": "contract b{}", // specify source directly
+        // (axic) I think 'keccak' on its on is not enough. I would go perhaps with swarm: "0x12.." and ipfs: "Qma..." for simplicity
+        // (chriseth) Where the content is stored is a second component, but yes, we could give an indication there.
         "def": {keccak: "0x123..."}, // source has to be retrieved by its hash
+        "ghi": {file: "/tmp/path/to/file.sol"}, // file on filesystem
+        // (axic) I'm inclined to think the source _must_ be provided in the JSON,
+
         "dir/file.sol": "contract a {}"
       },
       settings:
       {
-        remappings: [":g/dir"],
+        remappings: [":g/dir"], // just as it used to be
+        // (axic) what is remapping doing exactly?
         optimizer: {enabled: true, runs: 500},
-        compilationTarget: "myFile.sol:MyContract", // Can also be an array
-        // To be backwards compatible, use the full name of the contract in the output
-        // only if there are name clashes.
-        // If the full name was given as "compilationTargets", use the full name.
+        // if given, only compiles this contract, can also be an array. If only a contract name is given, tries to find it if unique.
+        compilationTarget: "myFile.sol:MyContract",
+        // addresses of the libraries. If not all libraries are given here, it can result in unlinked objects whose output data is different
         libraries: {
           "def:MyLib": "0x123123..."
         },
         // The following can be used to restrict the fields the compiler will output.
+        // (axic)
+        outputSelection: [
+            "abi", "evm.assembly", "evm.bytecode", ..., "why3", "ewasm.wasm"
+        ]
         outputSelection: {
+        abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc
+
+ --ast                 AST of all source files.
+  --ast-json            AST of all source files in JSON format.
+  --asm                 EVM assembly of the contracts.
+  --asm-json            EVM assembly of the contracts in JSON format.
+  --opcodes             Opcodes of the contracts.
+  --bin                 Binary of the contracts in hex.
+  --bin-runtime         Binary of the runtime part of the contracts in hex.
+  --clone-bin           Binary of the clone contracts in hex.
+  --abi                 ABI specification of the contracts.
+  --interface           Solidity interface of the contracts.
+  --hashes              Function signature hashes of the contracts.
+  --userdoc             Natspec user documentation of all contracts.
+  --devdoc              Natspec developer documentation of all contracts.
+  --formal              Translated source suitable for formal analysis.
+
           // to be defined
+        }
+      }
+    }
+
+
+Regular Output
+--------------
+
+
+    {
+      errors: ["error1", "error2"], // we might structure them
+      errors: [
+          {
+              // (axic)
+              file: "sourceFile.sol", // optional?
+              contract: "contractName", // optional
+              line: 100, // optional - currently, we always have a byte range in the source file
+              // Errors/warnings originate in several components, most of them are not
+              // backend-specific. Currently, why3 errors are part of the why3 output.
+              // I think it is better to put code-generator-specific errors into the code-generator output
+              // area, and warnings and errors that are code-generator-agnostic into this general area,
+              // so that it is easier to determine whether some source code is invalid or only
+              // triggers errors/warnings in some backend that might only implement some part of solidity.
+              type: "evm" or "why3" or "ewasm" // maybe a better field name would be needed
+              severity: "warning" or "error" // mandatory
+              message: "Invalid keyword" // mandatory
+          }
+      ]
+      contracts: {
+        "sourceFile.sol:ContractName": {
+          abi:
+          evm: {
+              assembly:
+              bytecode:
+              runtimeBytecode:
+              opcodes:
+              annotatedOpcodes: // (axic) see https://github.com/ethereum/solidity/issues/1178
+              gasEstimates:
+              sourceMap:
+              runtimeSourceMap:
+              // If given, this is an unlinked object (cannot be filtered out explicitly, might be
+              // filtered if both bytecode, runtimeBytecode, opcodes and others are filtered out)
+              linkReferences: {
+                "sourceFile.sol:Library1": [1, 200, 80] // byte offsets into bytecode. Linking replaces the 20 bytes there.
+              }
+              // the same for runtimeBytecode - I'm not sure it is a good idea to allow to link libraries differently for the runtime bytecode.
+              // furthermore, runtime bytecode is always a substring of the bytecode anyway.
+              runtimeLinkReferences: {
+              }
+          },
+          functionHashes:
+          metadata: // see below
+          ewasm: {
+              wast: // S-expression format
+              wasm: //
+          }
+        }
+      },
+      formal: {
+        "why3": "..."
+      },
+      sourceList: ["source1.sol", "source2.sol"], // this is important for source references both in the ast as well as in the srcmap in the contract
+      sources: {
+        "source1.sol": {
+          "AST": { ... }
         }
       }
     }
@@ -118,18 +201,15 @@ that can be used to query a location of the binary (and whether the version is
       },
       sources:
       {
-        "abc": "contract b{}",
-        "def": {keccak: "0x123..."}, // source has to be retrieved by its hash
-        "dir/file.sol": "contract a {}"
+        "abc": {keccak: "0x456..."}, // here, sources are always given by hash
+        "def": {keccak: "0x123..."},
+        "dir/file.sol": {keccax: "0xabc..."}
       },
       settings:
       {
         remappings: [":g/dir"],
         optimizer: {enabled: true, runs: 500},
         compilationTarget: "myFile.sol:MyContract",
-        // To be backwards compatible, use the full name of the contract in the output
-        // only if there are name clashes.
-        // If the full name was given as "compilationTargets", use the full name.
         libraries: {
           "def:MyLib": "0x123123..."
         }
@@ -137,8 +217,22 @@ that can be used to query a location of the binary (and whether the version is
       output:
       {
         abi: [ /* abi definition */ ],
-        userDocumentation: [ /* user documentation comments */ ],
-        developerDocumentation: [ /* developer documentation comments */ ],
-        natspec: [ /* natspec comments */ ]
+        natspec: [ /* user documentation comments */ ]
       }
     }
+
+This is used in the following way: A component that wants to interact
+with a contract (e.g. mist) retrieves the creation transaction of the contract
+and from that the first 33 bytes. If the first byte decodes into a PUSH32
+instruction, the other 32 bytes are interpreted as the keccak-hash of
+a file which is retrieved via a content-addressable storage like swarm.
+That file is JSON-decoded into a structure like above. Sources are
+retrieved in the same way and combined with the structure into a proper
+compiler input description, which selects only the bytecode as output.
+
+The compiler of the correct version (which is checked to be part of the "official" compilers)
+is invoked on that input. The resulting
+bytecode is compared (excess bytecode in the creation transaction
+is constructor input data) which automatically verifies the metadata since
+its hash is part of the bytecode. The constructor input data is decoded
+according to the interface and presented to the user.
