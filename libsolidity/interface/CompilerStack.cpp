@@ -40,6 +40,7 @@
 #include <libevmasm/Exceptions.h>
 
 #include <libdevcore/SwarmHash.h>
+#include <libdevcore/JSON.h>
 
 #include <json/json.h>
 
@@ -668,19 +669,19 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	meta["version"] = 1;
 	meta["language"] = "Solidity";
 	meta["compiler"]["version"] = VersionString;
-	meta["compilationTarget"] =
-		_contract.contract->sourceUnitName() +
-		":" +
-		_contract.contract->annotation().canonicalName;
 
 	for (auto const& s: m_sources)
 	{
 		solAssert(s.second.scanner, "Scanner not available");
-		meta["sources"][s.first]["swarm"] =
-			"0x" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes());
+		meta["sources"][s.first]["keccak256"] =
+			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
+		meta["sources"][s.first]["url"] =
+			"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes());
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
+	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
+		_contract.contract->annotation().canonicalName;
 
 	set<string> remappings;
 	for (auto const& r: m_remappings)
@@ -692,11 +693,10 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = metadata(_contract, DocumentationType::ABIInterface);
-	meta["output"]["natspec"] = metadata(_contract, DocumentationType::NatspecUser);
+	meta["output"]["userdoc"] = metadata(_contract, DocumentationType::NatspecUser);
+	meta["output"]["devdoc"] = metadata(_contract, DocumentationType::NatspecDev);
 
-	Json::FastWriter writer;
-	writer.omitEndingLineFeed();
-	return writer.write(meta);
+	return jsonCompactPrint(meta);
 }
 
 string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) const
