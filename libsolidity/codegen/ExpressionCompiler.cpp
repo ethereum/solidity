@@ -1350,11 +1350,28 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
+	bool isSigned = false;
+	bool isFractional = false;
+	u256 fractionShift = u256(1);
+	u256 halfShift = u256(1);
+	int fractionalBits = 0;
 
-	if (_type.category() == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
+	if (_type.category() == Type::Category::Integer)
+	{
+		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+		isSigned = type.isSigned();
+	}
+	else if (_type.category() == Type::Category::FixedPoint)
+	{
+		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
+		isSigned = type.isSigned();		
+		isFractional = true;
+		fractionalBits = type.fractionalBits();
+		fractionShift = (u256(1) << (fractionalBits));
+		halfShift = (u256(1) << (fractionalBits / 2));
+	}
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Expected numeric type."));
 
 	switch (_operator)
 	{
@@ -1365,6 +1382,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::SUB;
 		break;
 	case Token::Mul:
+		if (isFractional)
+			solAssert(false, "Multiplication not yet implemented - FixedPointType.");
 		m_context << Instruction::MUL;
 		break;
 	case Token::Div:
@@ -1375,9 +1394,23 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 
 		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		{
+			if (isFractional)
+			{
+				//divide, then shift left...this is your integer.
+				m_context << (isSigned ? Instruction::SDIV : Instruction::DIV) << fractionShift << Instruction::MUL;
+				//now redo the process...
+				m_context << Instruction::DUP2 << Instruction::DUP4;
+				//but this time, get the fraction portion.
+				m_context << fractionShift << Instruction::SWAP1 << Instruction::MUL << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				//add
+				m_context << Instruction::ADD;
+			}
+ 			else
+				m_context << (isSigned ? Instruction::SDIV : Instruction::DIV);
+		}
 		else
-			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+			m_context << (isSigned ? Instruction::SMOD : Instruction::MOD);
 		break;
 	}
 	case Token::Exp:
