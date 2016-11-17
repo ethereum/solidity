@@ -1252,7 +1252,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
+		solUnimplemented("Only integer, boolean and string literals implemented for now.");
 	}
 }
 
@@ -1392,7 +1392,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 
 void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 {
-	BOOST_THROW_EXCEPTION(UnimplementedFeatureError() << errinfo_comment("Shift operators not yet implemented."));
+	solUnimplemented("Shift operators not yet implemented.");
 	switch (_operator)
 	{
 	case Token::SHL:
