@@ -8649,6 +8649,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_division)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
+	cout << callContractFunction("f()") << endl;
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(337, 4), 128)));
 }
 
@@ -8688,6 +8689,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 	vector<uint8_t> fullFracBytes = {45,130,216,45,130,216,45,130,216,45,130,216,45,130,216,44,159,73,244,159,73,244,159,73,244,159,73,244,159,73,244,160};
 	vector<uint8_t> largeFracBytes = {0,0,0,0,0,0,0,29,42,170,170,170,170,170,170,170,170,170,170,170,127,255,255,255,255,255,255,255,255,255,255,0};
 	BOOST_CHECK(callContractFunction("full()") == encodeArgs(make_pair(rational(999, 8), 128)));
+	cout << callContractFunction("full()") << endl;
 	BOOST_CHECK(callContractFunction("fullFractionSide()") == fullFracBytes);
 	BOOST_CHECK(callContractFunction("largerFractionSide()") == largeFracBytes);
 	BOOST_CHECK(callContractFunction("largerIntSide()") == encodeArgs(make_pair(rational(96028001, 16), 32)));
