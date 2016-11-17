@@ -37,6 +37,7 @@
 #include <libsolidity/interface/InterfaceHandler.h>
 #include <libsolidity/formal/Why3Translator.h>
 
+#include <libevmasm/Exceptions.h>
 #include <libdevcore/SHA3.h>
 
 #include <boost/algorithm/string.hpp>
@@ -590,9 +591,19 @@ void CompilerStack::compileContract(
 	compiledContract.runtimeObject = compiler->runtimeObject();
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
-	Compiler cloneCompiler(_optimize, _runs);
-	cloneCompiler.compileClone(_contract, _compiledContracts);
-	compiledContract.cloneObject = cloneCompiler.assembledObject();
+	try
+	{
+		Compiler cloneCompiler(_optimize, _runs);
+		cloneCompiler.compileClone(_contract, _compiledContracts);
+		compiledContract.cloneObject = cloneCompiler.assembledObject();
+	}
+	catch (eth::AssemblyException const&)
+	{
+		// In some cases (if the constructor requests a runtime function), it is not
+		// possible to compile the clone.
+
+		// TODO: Report error / warning
+	}
 }
 
 std::string CompilerStack::defaultContractName() const

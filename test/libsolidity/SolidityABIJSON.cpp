@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(payable_fallback_unction)
+BOOST_AUTO_TEST_CASE(payable_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -698,6 +698,32 @@ BOOST_AUTO_TEST_CASE(payable_fallback_unction)
 			"payable": true,
 			"type" : "fallback"
 		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+	{
+		"constant" : false,
+		"payable": false,
+		"inputs": [{
+			"name": "x",
+			"type": "function"
+		}],
+		"name": "g",
+		"outputs": [],
+		"type" : "function"
+	}
 	]
 	)";
 	checkInterface(sourceCode, interface);

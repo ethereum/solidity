@@ -69,6 +69,14 @@ public:
 
 	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(Tag, m_data); }
 	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(PushTag, m_data); }
+	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
+	/// @param _subId the identifier of the subassembly the tag is taken from.
+	AssemblyItem toSubAssemblyTag(size_t _subId) const;
+	/// @returns splits the data of the push tag into sub assembly id and actual tag id.
+	/// The sub assembly id of non-foreign push tags is -1.
+	std::pair<size_t, size_t> splitForeignPushTag() const;
+	/// Sets sub-assembly part and tag for a push tag.
+	void setPushTagSubIdAndTag(size_t _subId, size_t _tag);
 
 	AssemblyItemType type() const { return m_type; }
 	u256 const& data() const { return m_data; }

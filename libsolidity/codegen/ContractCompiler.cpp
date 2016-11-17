@@ -60,14 +60,13 @@ void ContractCompiler::compileContract(
 }
 
 size_t ContractCompiler::compileConstructor(
-	CompilerContext const& _runtimeContext,
 	ContractDefinition const& _contract,
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 	initializeContext(_contract, _contracts);
-	return packIntoContractCreator(_contract, _runtimeContext);
+	return packIntoContractCreator(_contract);
 }
 
 size_t ContractCompiler::compileClone(
@@ -80,7 +79,7 @@ size_t ContractCompiler::compileClone(
 	appendInitAndConstructorCode(_contract);
 
 	//@todo determine largest return size of all runtime functions
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(cloneRuntime());
+	auto runtimeSub = m_context.addSubroutine(cloneRuntime());
 
 	// stack contains sub size
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
@@ -88,7 +87,6 @@ size_t ContractCompiler::compileClone(
 
 	appendMissingFunctions();
 
-	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
 	return size_t(runtimeSub.data());
 }
 
@@ -141,21 +139,31 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 		appendBaseConstructor(*c);
 }
 
-size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
+size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
 {
+	solAssert(!!m_runtimeCompiler, "");
+
 	appendInitAndConstructorCode(_contract);
 
-	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.assembly());
+	// We jump to the deploy routine because we first have to append all missing functions,
+	// which can cause further functions to be added to the runtime context.
+	eth::AssemblyItem deployRoutine = m_context.appendJumpToNew();
 
-	// stack contains sub size
-	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
+	// We have to include copies of functions in the construction time and runtime context
+	// because of absolute jumps.
+	appendMissingFunctions();
+	m_runtimeCompiler->appendMissingFunctions();
+
+	m_context << deployRoutine;
+
+	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
+	m_context.pushSubroutineSize(m_context.runtimeSub());
+	m_context << Instruction::DUP1;
+	m_context.pushSubroutineOffset(m_context.runtimeSub());
+	m_context << u256(0) << Instruction::CODECOPY;
 	m_context << u256(0) << Instruction::RETURN;
 
-	// note that we have to include the functions again because of absolute jump labels
-	appendMissingFunctions();
-
-	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
-	return size_t(runtimeSub.data());
+	return m_context.runtimeSub();
 }
 
 void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _constructor)
@@ -293,6 +301,7 @@ void ContractCompiler::appendCalldataUnpacker(TypePointers const& _typeParameter
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
 		TypePointer type = parameterType->decodingType();
+		solAssert(type, "No decoding type found.");
 		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
@@ -515,7 +524,19 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			{
 				solAssert(!!decl->type(), "Type of declaration required but not yet determined.");
 				if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
-					_assembly.append(m_context.virtualFunctionEntryLabel(*functionDef).pushTag());
+				{
+					functionDef = &m_context.resolveVirtualFunction(*functionDef);
+					_assembly.append(m_context.functionEntryLabel(*functionDef).pushTag());
+					// If there is a runtime context, we have to merge both labels into the same
+					// stack slot in case we store it in storage.
+					if (CompilerContext* rtc = m_context.runtimeContext())
+					{
+						_assembly.append(u256(1) << 32);
+						_assembly.append(Instruction::MUL);
+						_assembly.append(rtc->functionEntryLabel(*functionDef).toSubAssemblyTag(m_context.runtimeSub()));
+						_assembly.append(Instruction::OR);
+					}
+				}
 				else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
 				{
 					solAssert(!variable->isConstant(), "");
@@ -871,7 +892,7 @@ void ContractCompiler::compileExpression(Expression const& _expression, TypePoin
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);
 }
 
-eth::Assembly ContractCompiler::cloneRuntime()
+eth::AssemblyPointer ContractCompiler::cloneRuntime()
 {
 	eth::Assembly a;
 	a << Instruction::CALLDATASIZE;
@@ -889,5 +910,5 @@ eth::Assembly ContractCompiler::cloneRuntime()
 	a.appendJumpI(a.errorTag());
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;
-	return a;
+	return make_shared<eth::Assembly>(a);
 }

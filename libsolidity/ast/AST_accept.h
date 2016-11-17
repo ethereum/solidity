@@ -327,6 +327,26 @@ void UserDefinedTypeName::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void FunctionTypeName::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_parameterTypes->accept(_visitor);
+		m_returnTypes->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void FunctionTypeName::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_parameterTypes->accept(_visitor);
+		m_returnTypes->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void Mapping::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

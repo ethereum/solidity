@@ -54,6 +54,7 @@ class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;
 class UserDefinedTypeName;
+class FunctionTypeName;
 class Mapping;
 class ArrayTypeName;
 class Statement;

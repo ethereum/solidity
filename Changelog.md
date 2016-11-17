@@ -1,6 +1,7 @@
 ### 0.4.5 (unreleased)
 
 Features:
+ * Function types
  * Do-while loops: support for a C-style do{<block>}while(<expr>); control structure
  * Inline assembly: support ``invalidJumpLabel`` as a jump label.
  * Type checker: now more eagerly searches for a common type of an inline array with mixed types

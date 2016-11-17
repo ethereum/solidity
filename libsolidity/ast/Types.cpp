@@ -1265,6 +1265,7 @@ TypePointer ArrayType::decodingType() const
 
 TypePointer ArrayType::interfaceType(bool _inLibrary) const
 {
+	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
 	if (_inLibrary && location() == DataLocation::Storage)
 		return shared_from_this();
 
@@ -1280,6 +1281,21 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 		return make_shared<ArrayType>(DataLocation::Memory, baseExt);
 	else
 		return make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
+}
+
+bool ArrayType::canBeUsedExternally(bool _inLibrary) const
+{
+	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
+	if (_inLibrary && location() == DataLocation::Storage)
+		return true;
+	else if (m_arrayKind != ArrayKind::Ordinary)
+		return true;
+	else if (!m_baseType->canBeUsedExternally(_inLibrary))
+		return false;
+	else if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
+		return false;
+	else
+		return true;
 }
 
 u256 ArrayType::memorySize() const
@@ -1704,7 +1720,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
-	m_isPayable(_function.isPayable()),
+	m_isPayable(_isInternal ? false : _function.isPayable()),
 	m_declaration(&_function)
 {
 	TypePointers params;
@@ -1805,6 +1821,38 @@ FunctionType::FunctionType(EventDefinition const& _event):
 	swap(paramNames, m_parameterNames);
 }
 
+FunctionType::FunctionType(FunctionTypeName const& _typeName):
+	m_location(_typeName.visibility() == VariableDeclaration::Visibility::External ? Location::External : Location::Internal),
+	m_isConstant(_typeName.isDeclaredConst()),
+	m_isPayable(_typeName.isPayable())
+{
+	if (_typeName.isPayable())
+	{
+		solAssert(m_location == Location::External, "Internal payable function type used.");
+		solAssert(!m_isConstant, "Payable constant function");
+	}
+	for (auto const& t: _typeName.parameterTypes())
+	{
+		solAssert(t->annotation().type, "Type not set for parameter.");
+		if (m_location == Location::External)
+			solAssert(
+				t->annotation().type->canBeUsedExternally(false),
+				"Internal type used as parameter for external function."
+			);
+		m_parameterTypes.push_back(t->annotation().type);
+	}
+	for (auto const& t: _typeName.returnParameterTypes())
+	{
+		solAssert(t->annotation().type, "Type not set for return parameter.");
+		if (m_location == Location::External)
+			solAssert(
+				t->annotation().type->canBeUsedExternally(false),
+				"Internal type used as return parameter for external function."
+			);
+		m_returnParameterTypes.push_back(t->annotation().type);
+	}
+}
+
 FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _contract)
 {
 	FunctionDefinition const* constructor = _contract.constructor();
@@ -1880,22 +1928,69 @@ bool FunctionType::operator==(Type const& _other) const
 	return true;
 }
 
+TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator == Token::Value::Delete)
+		return make_shared<TupleType>();
+	return TypePointer();
+}
+
+string FunctionType::canonicalName(bool) const
+{
+	solAssert(m_location == Location::External, "");
+	return "function";
+}
+
 string FunctionType::toString(bool _short) const
 {
 	string name = "function (";
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
-	name += ") returns (";
-	for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
-		name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
-	return name + ")";
+	name += ")";
+	if (m_isConstant)
+		name += " constant";
+	if (m_isPayable)
+		name += " payable";
+	if (m_location == Location::External)
+		name += " external";
+	if (!m_returnParameterTypes.empty())
+	{
+		name += " returns (";
+		for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
+			name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
+		name += ")";
+	}
+	return name;
+}
+
+unsigned FunctionType::calldataEncodedSize(bool _padded) const
+{
+	unsigned size = storageBytes();
+	if (_padded)
+		size = ((size + 31) / 32) * 32;
+	return size;
 }
 
 u256 FunctionType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable function type requested."));
+	if (m_location == Location::External || m_location == Location::Internal)
+		return 1;
+	else
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError()
+				<< errinfo_comment("Storage size of non-storable function type requested."));
+}
+
+unsigned FunctionType::storageBytes() const
+{
+	if (m_location == Location::External)
+		return 20 + 4;
+	else if (m_location == Location::Internal)
+		return 8; // it should really not be possible to create larger programs
+	else
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError()
+				<< errinfo_comment("Storage size of non-storable function type requested."));
 }
 
 unsigned FunctionType::sizeOnStack() const
@@ -2016,6 +2111,23 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	default:
 		return MemberList::MemberMap();
 	}
+}
+
+TypePointer FunctionType::encodingType() const
+{
+	// Only external functions can be encoded, internal functions cannot leave code boundaries.
+	if (m_location == Location::External)
+		return shared_from_this();
+	else
+		return TypePointer();
+}
+
+TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
+{
+	if (m_location == Location::External)
+		return shared_from_this();
+	else
+		return TypePointer();
 }
 
 bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const

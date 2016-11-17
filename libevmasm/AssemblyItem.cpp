@@ -26,6 +26,29 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
+{
+	assertThrow(m_data < (u256(1) << 64), Exception, "Tag already has subassembly set.");
+
+	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	AssemblyItem r = *this;
+	r.m_type = PushTag;
+	r.setPushTagSubIdAndTag(_subId, size_t(m_data));
+	return r;
+}
+
+pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
+{
+	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	return make_pair(size_t(m_data / (u256(1) << 64)) - 1, size_t(m_data));
+}
+
+void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
+{
+	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	setData(_tag + (u256(_subId + 1) << 64));
+}
+
 unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 {
 	switch (m_type)
@@ -104,8 +127,14 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PushString"  << hex << (unsigned)_item.data();
 		break;
 	case PushTag:
-		_out << " PushTag " << _item.data();
+	{
+		size_t subId = _item.splitForeignPushTag().first;
+		if (subId == size_t(-1))
+			_out << " PushTag " << _item.splitForeignPushTag().second;
+		else
+			_out << " PushTag " << subId << ":" << _item.splitForeignPushTag().second;
 		break;
+	}
 	case Tag:
 		_out << " Tag " << _item.data();
 		break;
@@ -113,10 +142,10 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PushData " << hex << (unsigned)_item.data();
 		break;
 	case PushSub:
-		_out << " PushSub " << hex << h256(_item.data()).abridgedMiddle();
+		_out << " PushSub " << hex << size_t(_item.data());
 		break;
 	case PushSubSize:
-		_out << " PushSubSize " << hex << h256(_item.data()).abridgedMiddle();
+		_out << " PushSubSize " << hex << size_t(_item.data());
 		break;
 	case PushProgramSize:
 		_out << " PushProgramSize";

@@ -474,7 +474,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireSize(2);
 			requireDeposit(0, 1);
 
-			auto begin = m_asm.append();
+			auto begin = m_asm.append(m_asm.newTag());
 			m_asm.append(code[0].m_asm);
 			if (us == "WHILE")
 				m_asm.append(Instruction::ISZERO);
@@ -489,7 +489,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireDeposit(1, 1);
 
 			m_asm.append(code[0].m_asm, 0);
-			auto begin = m_asm.append();
+			auto begin = m_asm.append(m_asm.newTag());
 			m_asm.append(code[1].m_asm);
 			m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
@@ -520,7 +520,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			auto subPush = m_asm.appendSubSize(code[0].assembly(ns));
+			auto subPush = m_asm.newSub(make_shared<Assembly>(code[0].assembly(ns)));
+			m_asm.append(m_asm.newPushSubSize(subPush.data()));
 			m_asm.append(Instruction::DUP1);
 			if (code.size() == 3)
 			{

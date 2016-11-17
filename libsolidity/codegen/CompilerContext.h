@@ -44,6 +44,14 @@ namespace solidity {
 class CompilerContext
 {
 public:
+	CompilerContext(CompilerContext* _runtimeContext = nullptr):
+		m_asm(std::make_shared<eth::Assembly>()),
+		m_runtimeContext(_runtimeContext)
+	{
+		if (m_runtimeContext)
+			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
+	}
+
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
@@ -52,9 +60,9 @@ public:
 	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
 	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
 
-	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
-	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
-	unsigned stackHeight() const { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
+	void setStackOffset(int _offset) { m_asm->setDeposit(_offset); }
+	void adjustStackOffset(int _adjustment) { m_asm->adjustDeposit(_adjustment); }
+	unsigned stackHeight() const { solAssert(m_asm->deposit() >= 0, ""); return unsigned(m_asm->deposit()); }
 
 	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
@@ -67,10 +75,10 @@ public:
 	eth::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
-	eth::AssemblyItem virtualFunctionEntryLabel(FunctionDefinition const& _function);
-	/// @returns the entry label of a function that overrides the given declaration from the most derived class just
+	FunctionDefinition const& resolveVirtualFunction(FunctionDefinition const& _function);
+	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
-	eth::AssemblyItem superFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base);
+	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
 
 	/// @returns the next function in the queue of functions that are still to be compiled
@@ -95,30 +103,33 @@ public:
 	std::pair<u256, unsigned> storageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
-	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
+	eth::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }
 	/// Appends a JUMPI instruction to @a _tag
-	CompilerContext& appendConditionalJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJumpI(_tag); return *this; }
+	CompilerContext& appendConditionalJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJumpI(_tag); return *this; }
 	/// Appends a JUMP to a new tag and @returns the tag
-	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
+	eth::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
 	/// Returns an "ErrorTag"
-	eth::AssemblyItem errorTag() { return m_asm.errorTag(); }
+	eth::AssemblyItem errorTag() { return m_asm->errorTag(); }
 	/// Appends a JUMP to a specific tag
-	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
+	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
-	eth::AssemblyItem pushNewTag() { return m_asm.append(m_asm.newPushTag()).tag(); }
+	eth::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
-	eth::AssemblyItem newTag() { return m_asm.newTag(); }
+	eth::AssemblyItem newTag() { return m_asm->newTag(); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
-	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
-	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
+	/// on the stack. @returns the pushsub assembly item.
+	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { auto sub = m_asm->newSub(_assembly); m_asm->append(m_asm->newPushSubSize(size_t(sub.data()))); return sub; }
+	void pushSubroutineSize(size_t _subRoutine) { m_asm->append(m_asm->newPushSubSize(_subRoutine)); }
+	/// Pushes the offset of the subroutine.
+	void pushSubroutineOffset(size_t _subRoutine) { m_asm->append(eth::AssemblyItem(eth::PushSub, _subRoutine)); }
 	/// Pushes the size of the final program
-	void appendProgramSize() { return m_asm.appendProgramSize(); }
+	void appendProgramSize() { m_asm->appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
-	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	eth::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
-	void appendLibraryAddress(std::string const& _identifier) { m_asm.appendLibraryAddress(_identifier); }
+	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
@@ -127,10 +138,10 @@ public:
 	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
-	CompilerContext& operator<<(Instruction _instruction) { m_asm.append(_instruction); return *this; }
-	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
-	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
+	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
+	CompilerContext& operator<<(Instruction _instruction) { m_asm->append(_instruction); return *this; }
+	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
+	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
 	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
 	/// prior to parsing the inline assembly.
@@ -144,22 +155,27 @@ public:
 	/// Prepends "PUSH <compiler version number> POP"
 	void injectVersionStampIntoSub(size_t _subIndex);
 
-	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
+	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, true, _runs); }
 
-	eth::Assembly const& assembly() const { return m_asm; }
+	/// @returns the runtime context if in creation mode and runtime context is set, nullptr otherwise.
+	CompilerContext* runtimeContext() { return m_runtimeContext; }
+	/// @returns the identifier of the runtime subroutine.
+	size_t runtimeSub() const { return m_runtimeSub; }
+
+	eth::Assembly const& assembly() const { return *m_asm; }
 	/// @returns non-const reference to the underlying assembly. Should be avoided in favour of
 	/// wrappers in this class.
-	eth::Assembly& nonConstAssembly() { return m_asm; }
+	eth::Assembly& nonConstAssembly() { return *m_asm; }
 
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFormat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
 	{
-		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
+		return m_asm->stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	eth::LinkerObject const& assembledObject() { return m_asm.assemble(); }
-	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) { return m_asm.sub(_subIndex).assemble(); }
+	eth::LinkerObject const& assembledObject() { return m_asm->assemble(); }
+	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -172,9 +188,9 @@ public:
 	};
 
 private:
-	/// @returns the entry label of the given function - searches the inheritance hierarchy
-	/// startig from the given point towards the base.
-	eth::AssemblyItem virtualFunctionEntryLabel(
+	/// Searches the inheritance hierarchy towards the base starting from @a _searchStart and returns
+	/// the first function definition that is overwritten by _function.
+	FunctionDefinition const& resolveVirtualFunction(
 		FunctionDefinition const& _function,
 		std::vector<ContractDefinition const*>::const_iterator _searchStart
 	);
@@ -215,7 +231,7 @@ private:
 		mutable std::queue<Declaration const*> m_functionsToCompile;
 	} m_functionCompilationQueue;
 
-	eth::Assembly m_asm;
+	eth::AssemblyPointer m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
@@ -228,6 +244,10 @@ private:
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	/// Stack of current visited AST nodes, used for location attachment
 	std::stack<ASTNode const*> m_visitedNodes;
+	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.
+	CompilerContext *m_runtimeContext;
+	/// The index of the runtime subroutine.
+	size_t m_runtimeSub = -1;
 };
 
 }

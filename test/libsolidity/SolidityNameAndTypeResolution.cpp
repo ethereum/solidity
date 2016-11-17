@@ -4132,6 +4132,231 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_parameter)
+{
+	char const* text = R"(
+		contract C {
+			function f(function(uint) external returns (uint) g) returns (function(uint) external returns (uint)) {
+				return g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_type_returned)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (function(uint) external returns (uint) g) {
+				return g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(private_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) private returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(public_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				function(uint) public returns (uint) x;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(payable_internal_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) internal payable returns (uint) x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) external returns (uint) x;
+			function f() {
+				x.value(2)();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_returning_internal)
+{
+	char const* text = R"(
+		contract C {
+			function() external returns (function () internal) x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_taking_internal)
+{
+	char const* text = R"(
+		contract C {
+			function(function () internal) external x;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(call_value_on_payable_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) external payable returns (uint) x;
+			function f() {
+				x.value(2)(1);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
+{
+	// It should not be possible to give internal functions
+	// as parameters to external functions.
+	char const* text = R"(
+		contract C {
+			function f(function(uint) internal returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_returned_from_public_function)
+{
+	// It should not be possible to return internal functions from external functions.
+	char const* text = R"(
+		contract C {
+			function f() returns (function(uint) internal returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal)
+{
+	char const* text = R"(
+		library L {
+			function f(function(uint) internal returns (uint) x) internal {
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external)
+{
+	char const* text = R"(
+		library L {
+			function f(function(uint) internal returns (uint) x) {
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_type_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) external returns (uint)[] public x;
+			function(uint) internal returns (uint)[10] y;
+			function f() {
+				function(uint) returns (uint)[10] memory a;
+				function(uint) returns (uint)[10] storage b = y;
+				function(uint) external returns (uint)[] memory c;
+				c = new function(uint) external returns (uint)[](200);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(delete_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) external returns (uint) x;
+			function(uint) internal returns (uint) y;
+			function f() {
+				delete x;
+				var a = y;
+				delete a;
+				delete y;
+				var c = f;
+				delete c;
+				function(uint) internal returns (uint) g;
+				delete g;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(delete_function_type_invalid)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				delete f;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				delete this.f;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, false) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 {
 	char const* text = R"(

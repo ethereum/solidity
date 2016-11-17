@@ -61,6 +61,7 @@ public:
 	virtual bool visit(TypeName& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(UserDefinedTypeName& _node) { return visitNode(_node); }
+	virtual bool visit(FunctionTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(Mapping& _node) { return visitNode(_node); }
 	virtual bool visit(ArrayTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(InlineAssembly& _node) { return visitNode(_node); }
@@ -106,6 +107,7 @@ public:
 	virtual void endVisit(TypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(UserDefinedTypeName& _node) { endVisitNode(_node); }
+	virtual void endVisit(FunctionTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(Mapping& _node) { endVisitNode(_node); }
 	virtual void endVisit(ArrayTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(InlineAssembly& _node) { endVisitNode(_node); }
@@ -163,6 +165,7 @@ public:
 	virtual bool visit(TypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(UserDefinedTypeName const& _node) { return visitNode(_node); }
+	virtual bool visit(FunctionTypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(Mapping const& _node) { return visitNode(_node); }
 	virtual bool visit(ArrayTypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(Block const& _node) { return visitNode(_node); }
@@ -208,6 +211,7 @@ public:
 	virtual void endVisit(TypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(UserDefinedTypeName const& _node) { endVisitNode(_node); }
+	virtual void endVisit(FunctionTypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Mapping const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ArrayTypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Block const& _node) { endVisitNode(_node); }

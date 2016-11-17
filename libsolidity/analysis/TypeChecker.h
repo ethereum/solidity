@@ -87,6 +87,7 @@ private:
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
 	virtual bool visit(EventDefinition const& _eventDef) override;
+	virtual void endVisit(FunctionTypeName const& _funType) override;
 	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
 	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
