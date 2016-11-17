@@ -1382,9 +1382,126 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::SUB;
 		break;
 	case Token::Mul:
-		if (isFractional)
-			solUnimplementedAssert(false, "Multiplication not yet implemented - FixedPointType.");
-		m_context << Instruction::MUL;
+		if (isFractional) //fixed point handling
+		{
+			if (numBits - fractionalBits == 0)
+			{
+				//take two numbers, cut them in half, multiply them, simple as that.
+				m_context.appendInlineAssembly(R"(
+					{
+						let runningTotal := mul($div(firstNum, $halfShift), $div(secondNum, $halfShift))
+					}
+				)", {"secondNum", "firstNum"}, map<string, string> {
+						{"$div", (isSigned ? "sdiv" : "div")},
+						{"$halfShift", toString(halfShift)}
+				});
+
+				/*m_context << halfShift << Instruction::DUP1 << Instruction::SWAP2 << (isSigned ? Instruction::SDIV : Instruction::DIV); 
+				m_context << Instruction::SWAP2 << (isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				*/
+			}
+			else if (numBits > 128)
+			{
+				//time to get schwifty in here...
+				//split both numbers into their representative fractional and decimal parts
+				//this takes the form A.B * C.D
+				//then we utilize this formula:
+				//D*B/shift + C*A*shift + D*A + C*B 
+				//m_context << Instruction::DUP1 << Instruction::DUP3;
+				//D*B/shift
+				//m_context << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SMOD : Instruction::MOD);
+				//m_context << Instruction::SWAP1 << fractionShift <<  Instruction::SWAP1 << (isSigned ? Instruction::SMOD : Instruction::MOD);
+				if (fractionalBits > intBits)
+				{
+					//we need this here because otherwise we will have an overflow with our fractional bits
+
+					m_context.appendInlineAssembly(R"(
+						{
+							let A := $div(firstNum, $fractionShift)
+							let B := $mod(firstNum, $fractionShift)
+							let C := $div(secondNum, $fractionShift)
+							let D := $mod(secondNum, $fractionShift)
+						//D*B/shift
+							let runningTotal := mul($div(B, $halfShift), $div(D, $halfShift))
+						//C*A*shift
+							runningTotal := add(runningTotal, mul($fractionShift, mul(A, C)))
+						//D*A
+							runningTotal := add(runningTotal, mul(D, A))
+						//C*B
+							runningTotal := add(runningTotal, mul(C, B))
+						}
+					)", {"secondNum", "firstNum"}, map<string, string> {
+							{"$div", (isSigned ? "sdiv" : "div")},
+							{"$halfShift", toString(halfShift)},
+							{"$fractionShift", toString(fractionShift)},
+							{"$mod", (isSigned ? "smod" : "mod")}
+					});
+					//m_context << halfShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+					//m_context << Instruction::SWAP1 << halfShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				}
+				else
+				{
+					m_context.appendInlineAssembly(R"(
+						{
+							let A := $div(firstNum, $fractionShift)
+							let B := $mod(firstNum, $fractionShift)
+							let C := $div(secondNum, $fractionShift)
+							let D := $mod(secondNum, $fractionShift)
+						//D*B/shift
+							let runningTotal := $div(mul(B, D), $fractionShift)
+						//C*A*shift
+							runningTotal := add(runningTotal, mul($fractionShift, mul(A, C)))
+						//D*A
+							runningTotal := add(runningTotal, mul(D, A))
+						//C*B
+							runningTotal := add(runningTotal, mul(C, B))
+						}
+					)", {"secondNum", "firstNum"}, map<string, string> {
+							{"$fractionShift", toString(fractionShift)},
+							{"$mod", (isSigned ? "smod" : "mod")},
+							{"$div", (isSigned ? "sdiv" : "div")}
+					});
+					//m_context << Instruction::MUL << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				}
+				//C*A*shift
+				/*m_context << Instruction::DUP2 << Instruction::DUP4;
+				m_context << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << Instruction::SWAP1 << fractionShift <<  Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << Instruction::MUL << fractionShift << Instruction::MUL << Instruction::ADD;
+				//D*A
+				m_context << Instruction::DUP2 << Instruction::DUP4;
+				m_context << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SMOD : Instruction::MOD);		
+				m_context << Instruction::SWAP1 << fractionShift <<  Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << Instruction::MUL << Instruction::ADD;
+				//C*B
+				m_context << Instruction::SWAP2 << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << Instruction::SWAP1 << fractionShift <<  Instruction::SWAP1 << (isSigned ? Instruction::SMOD : Instruction::MOD);
+				m_context << Instruction::MUL << Instruction::ADD;*/
+			}
+			else
+			{
+				m_context.appendInlineAssembly(R"(
+					{
+						let fraction := $div(mul(firstNum, secondNum), $fractionShift)
+						let integer := mul(div(secondNum, $fractionShift), firstNum)
+						let runningTotal := add(integer, fraction)
+					}
+				)", {"secondNum", "firstNum"}, map<string, string> {
+						{"$div", (isSigned ? "sdiv" : "div")},
+						{"$fractionShift", toString(fractionShift)},
+				});
+				/*//multiply, then shift right...this is your fraction.
+				m_context << Instruction::MUL << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				//now redo the process...
+				m_context << Instruction::DUP2 << Instruction::DUP4;
+				//but this time, get the integer portion.
+				m_context << fractionShift << Instruction::SWAP1 << (isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				//add
+				m_context << Instruction::ADD;*/
+			}
+		}
+		else
+			m_context << Instruction::MUL;
 		break;
 	case Token::Div:
 	case Token::Mod:

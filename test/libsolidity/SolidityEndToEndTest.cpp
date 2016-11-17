@@ -8652,6 +8652,48 @@ BOOST_AUTO_TEST_CASE(fixed_type_division)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(337, 4), 128)));
 }
 
+BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function full() returns (ufixed) {
+				ufixed a = 55.5;
+				ufixed b = 2.25;
+				return (a * b);
+			}
+			function fullFractionSide() returns (ufixed0x256) {
+				ufixed0x256 a = ufixed0x256(2/9);
+				ufixed0x256 b = ufixed0x256(4/5);
+				return a * b;
+			}
+			function largerFractionSide() returns (ufixed32x192) {
+				ufixed32x192 a = ufixed24x184(8 + 1/3);
+				ufixed32x192 b = 3.5;
+				return a * b;
+			}
+			function largerIntSide() returns (ufixed184x32) {
+				ufixed184x24 a = 3000.125;
+				ufixed176x24 b = 2000.5;
+				return a * b;
+			}
+			function small() returns (ufixed16x32) {
+				ufixed0x8 a = 0.5;
+				ufixed16x32 b = 35.4609375;
+				return (a * b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	//because we don't have a decent rounding system implemented yet, this will have to do.
+	vector<uint8_t> fullFracBytes = {45,130,216,45,130,216,45,130,216,45,130,216,45,130,216,44,159,73,244,159,73,244,159,73,244,159,73,244,159,73,244,160};
+	vector<uint8_t> largeFracBytes = {0,0,0,0,0,0,0,29,42,170,170,170,170,170,170,170,170,170,170,170,127,255,255,255,255,255,255,255,255,255,255,0};
+	BOOST_CHECK(callContractFunction("full()") == encodeArgs(make_pair(rational(999, 8), 128)));
+	BOOST_CHECK(callContractFunction("fullFractionSide()") == fullFracBytes);
+	BOOST_CHECK(callContractFunction("largerFractionSide()") == largeFracBytes);
+	BOOST_CHECK(callContractFunction("largerIntSide()") == encodeArgs(make_pair(rational(96028001, 16), 32)));
+	BOOST_CHECK(callContractFunction("small()") == encodeArgs(make_pair(rational(4539, 256), 32)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
