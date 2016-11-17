@@ -3702,6 +3702,27 @@ BOOST_AUTO_TEST_CASE(enum_explicit_overflow)
 	BOOST_CHECK(callContractFunction("getChoiceExp(uint256)", 0) == encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(storing_invalid_boolean)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bool public perm;
+			function set() returns(uint) {
+				bool tmp;
+				assembly {
+					tmp := 5
+				}
+				perm = tmp;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set()") == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("perm()") == encodeArgs(1));
+}
+
+
 BOOST_AUTO_TEST_CASE(using_contract_enums_with_explicit_contract_name)
 {
 	char const* sourceCode = R"(
