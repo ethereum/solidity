@@ -421,7 +421,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		}
 		break;
 	case Type::Category::FixedPoint:
-		solUnimplemented("Not yet implemented - FixedPointType.");
 	case Type::Category::Integer:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
@@ -456,12 +455,34 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
 			);
-			//shift all integer bits onto the left side of the fixed type
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
-			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetFixedPointType.integerBits() > typeOnStack->numBits())
-					cleanHigherOrderBits(*typeOnStack);
-			solUnimplemented("Not yet implemented - FixedPointType.");
+			if (auto intType = dynamic_cast<IntegerType const*>(&_typeOnStack))
+ 			{
+				if (targetFixedPointType.integerBits() > intType->numBits())
+					cleanHigherOrderBits(_typeOnStack);
+				u256 shiftFactor = u256(1) << (targetFixedPointType.fractionalBits());
+				m_context << shiftFactor << Instruction::MUL;
+			}
+			else if (auto rationalType = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
+			{
+				bool isValidType = (
+					targetFixedPointType.integerBits() > rationalType->fixedPointType()->integerBits() || 
+					targetFixedPointType.fractionalBits() > rationalType->fixedPointType()->fractionalBits()
+				);
+				if (isValidType && _cleanupNeeded)
+					cleanHigherOrderBits(_typeOnStack);
+				convertFixedPointNumber(*rationalType->fixedPointType(), targetFixedPointType);
+			}
+			else 
+			{
+				FixedPointType const& stackFixedType = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				if (
+					targetFixedPointType.integerBits() > stackFixedType.integerBits() || 
+					targetFixedPointType.fractionalBits() > stackFixedType.fractionalBits()
+				)
+					cleanHigherOrderBits(_typeOnStack);
+				convertFixedPointNumber(stackFixedType, targetFixedPointType);
+			}
 		}
 		else
 		{
@@ -474,7 +495,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
-				solUnimplementedAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
+				solAssert(!constType.isFractional(), "Invalid Rational to Integer conversion.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
 					cleanHigherOrderBits(targetType);
 			}
@@ -929,14 +950,40 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	return numBytes;
 }
 
-void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
+void CompilerUtils::cleanHigherOrderBits(Type const& _typeOnStack)
 {
-	if (_typeOnStack.numBits() == 256)
-		return;
-	else if (_typeOnStack.isSigned())
-		m_context << u256(_typeOnStack.numBits() / 8 - 1) << Instruction::SIGNEXTEND;
+	auto cleanBits = [this](int const numBits, bool const isSigned) {
+		if (numBits == 256)
+			return;
+		else if (isSigned)
+			m_context << u256(numBits / 8 - 1) << Instruction::SIGNEXTEND;
+		else
+			m_context << ((u256(1) << numBits) - 1) << Instruction::AND;
+	};
+
+	if (auto intType = dynamic_cast<IntegerType const*>(&_typeOnStack)) 
+		cleanBits(intType->numBits(), intType->isSigned());
+	else if (auto fixedType = dynamic_cast<FixedPointType const*>(&_typeOnStack)) 
+		cleanBits(fixedType->numBits(), fixedType->isSigned());
 	else
-		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
+		solAssert("", "Invalid type passed in to have higher bits cleaned.");
+}
+
+void CompilerUtils::convertFixedPointNumber(FixedPointType const& _stackType, FixedPointType const& _targetType)
+{
+	u256 shiftFactor;
+	int difference = _stackType.fractionalBits() - _targetType.fractionalBits();
+
+	if (difference > 0)
+	{
+		shiftFactor = (u256(1) << (difference));
+		m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
+	}
+	else if (difference < 0)
+	{
+		shiftFactor = (u256(1) << (abs(difference)));
+		m_context << shiftFactor << Instruction::MUL;
+	}
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
