@@ -197,29 +197,43 @@ that can be used to query a location of the binary (and whether the version is
 "official") at a registry contract.
 
     {
+      // The version of the metadata format (required field)
       version: "1",
+      // Required field
       language: "Solidity",
+      // Required field, the contents are specific to the language
       compiler: {
-        commit: "55db20e32c97098d13230ab7500758e8e3b31d64",
-        version: "soljson-2313-2016-12-12",
-        keccak: "0x123..."
+        name: "solc",
+        version: "0.4.5-nightly.2016.11.15+commit.c1b1efaf.Emscripten.clang",
+        // Optional hash of the compiler binary which produced this output
+        keccak256: "0x123..."
       },
       // This is a subset of the regular compiler input
       sources:
       {
-        "abc": {keccak: "0x456..."}, // here, sources are always given by hash
-        "def": {keccak: "0x123..."},
-        "dir/file.sol": {keccax: "0xabc..."},
-        "xkcd": {swarm: "0x456..."}
+        "myFile.sol": {
+          "keccak256": "0x123...",
+          "url": "bzzr://0x56..."
+        },
+        "Token": {
+          "keccak256": "0x456...",
+          "url": "https://raw.githubusercontent.com/ethereum/solidity/develop/std/Token.sol"
+        },
+        "mortal": {
+          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+        }
       },
       // This is a subset of the regular compiler input
+      // Its content is specific to the compiler (determined by the language and compiler fields)
       settings:
       {
         remappings: [":g/dir"],
         optimizer: {enabled: true, runs: 500},
-        compilationTarget: "myFile.sol:MyContract",
+        compilationTarget: {
+          "myFile.sol": MyContract"
+        },
         libraries: {
-          "def:MyLib": "0x123123..."
+          "MyLib": "0x123123..."
         }
       },
       // This is a subset of the regular compiler output
@@ -228,7 +242,6 @@ that can be used to query a location of the binary (and whether the version is
         abi: [ /* abi definition */ ],
         userdoc: [],
         devdoc: [],
-        natspec: [ /* user documentation comments */ ]
       }
     }
 
