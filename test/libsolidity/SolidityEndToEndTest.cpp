@@ -8553,6 +8553,119 @@ BOOST_AUTO_TEST_CASE(inline_array_rationals_return)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(7,2),8), make_pair(rational(33,8),8), make_pair(rational(5,2),8), make_pair(rational(4,1),8)));
 }
 
+BOOST_AUTO_TEST_CASE(fixed_type_incrementing_decrementing)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function incPre() returns (ufixed) {
+				ufixed a = 1.25;
+				return ++a;
+			}
+			function decPre() returns (ufixed) {
+				ufixed a = 4.5;
+				return --a;
+			}
+			function incPost() returns (ufixed a) {
+				a = 1.25;
+				a++;
+				return a;
+			}
+			function decPost() returns (ufixed a) {
+				a = 4.5;
+				a--;
+				return a;
+			}
+			function daWhile() returns (ufixed8x8) {
+				var i = 3.25;
+				while ( i < 5.5) {
+					i++;
+				}
+				return i;
+			}
+			function daFor() returns (ufixed8x8) {
+				for (var i = 3.25; i < 5.5; i++) {
+					var j = i;
+				}
+				return j;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("incPre()") == encodeArgs(make_pair(rational(9, 4), 128)));
+	BOOST_CHECK(callContractFunction("decPre()") == encodeArgs(make_pair(rational(7, 2), 128)));
+	BOOST_CHECK(callContractFunction("incPost()") == encodeArgs(make_pair(rational(9, 4), 128)));
+	BOOST_CHECK(callContractFunction("decPost()") == encodeArgs(make_pair(rational(7, 2), 128)));
+	BOOST_CHECK(callContractFunction("daWhile()") == encodeArgs(make_pair(rational(25, 4), 8)));
+	BOOST_CHECK(callContractFunction("daFor()") == encodeArgs(make_pair(rational(21, 4), 8)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_addition)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function simpleAdd() returns (fixed) {
+				fixed a = 3.125;
+				fixed b = 2.5;
+				return (a + b);
+			}
+
+			function complexAdd() returns (fixed) {
+				fixed a = 3.125;
+				ufixed0x8 b = 0.5;
+				ufixed32x32 c = 35.25;
+				return (a + b + c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("simpleAdd()") == encodeArgs(make_pair(rational(45, 8), 128)));
+	BOOST_CHECK(callContractFunction("complexAdd()") == encodeArgs(make_pair(rational(311, 8), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_modulus)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (ufixed) {
+				ufixed a = 2 % 1.25;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(3, 4), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_subtraction)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 3.5;
+				fixed b = 32.25;
+				return (a - b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(-115, 4), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_division)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 42.125;
+				fixed b = 0.5;
+				return (a / b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(337, 4), 128)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
