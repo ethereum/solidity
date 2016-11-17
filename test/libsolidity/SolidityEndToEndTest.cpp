@@ -3715,11 +3715,19 @@ BOOST_AUTO_TEST_CASE(storing_invalid_boolean)
 				perm = tmp;
 				return 1;
 			}
+			function ret() returns(bool) {
+				bool tmp;
+				assembly {
+					tmp := 5
+				}
+				return tmp;
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("set()") == encodeArgs(1));
 	BOOST_CHECK(callContractFunction("perm()") == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("ret()") == encodeArgs(1));
 }
 
 
