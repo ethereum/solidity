@@ -1355,6 +1355,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	u256 fractionShift = u256(1);
 	u256 halfShift = u256(1);
 	int fractionalBits = 0;
+	int intBits = 0;
+	int numBits = 0;
 
 	if (_type.category() == Type::Category::Integer)
 	{
@@ -1366,6 +1368,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
 		isSigned = type.isSigned();		
 		isFractional = true;
+		numBits = type.numBits();
+		intBits = type.integerBits();
 		fractionalBits = type.fractionalBits();
 		fractionShift = (u256(1) << (fractionalBits));
 		halfShift = (u256(1) << (fractionalBits / 2));
