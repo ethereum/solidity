@@ -180,6 +180,15 @@ bool CompilerStack::parse()
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract)) return false;
+				if (m_contracts.find(contract->name()) != m_contracts.end())
+				{
+					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
+          if (contract != existingContract)
+						BOOST_THROW_EXCEPTION(CompilerError() <<
+							errinfo_sourceLocation(contract->location()) <<
+							errinfo_comment(contract->name() + " conflicts with contract at "
+								+ *(existingContract->location().sourceName)));
+				}
 				m_contracts[contract->name()].contract = contract;
 			}
 
@@ -200,6 +209,16 @@ bool CompilerStack::parse()
 				}
 				else
 					noErrors = false;
+
+				if (m_contracts.find(contract->name()) != m_contracts.end())
+				{
+					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
+					if (contract != existingContract)
+						BOOST_THROW_EXCEPTION(CompilerError() <<
+							errinfo_sourceLocation(contract->location()) <<
+							errinfo_comment(contract->name() + " conflicts with!!! contract at "
+								+ *(existingContract->location().sourceName)));
+				}
 
 				m_contracts[contract->name()].contract = contract;
 			}
