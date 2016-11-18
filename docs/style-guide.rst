@@ -150,6 +150,74 @@ No::
         ...
     }
 
+Order of Functions
+==================
+
+Ordering helps readers identify which functions they can call, and to find the "specials" (constructor and fallback function).
+
+Functions should be grouped according to their visibility and ordered:
+
+- constructor
+- fallback function (if exists)
+- external
+- public
+- internal
+- private
+
+Within a grouping, place the `constant` functions last.
+
+Yes::
+
+    contract A {
+        function A() {
+            ...
+        }
+        
+        function () payable {
+            ...
+        }
+        
+        // External functions
+        // ...
+        
+        // External functions that are constant
+        // ...
+        
+        // Public functions
+        // ...
+        
+        // Internal functions
+        // ...
+        
+        // Private functions
+        // ...
+    }
+
+No::
+
+    contract A {
+        
+        // External functions
+        // ...
+
+        // Private functions
+        // ...
+
+        // Public functions
+        // ...
+
+        function A() {
+            ...
+        }
+        
+        function () payable {
+            ...
+        }
+
+        // Internal functions
+        // ...       
+    }
+
 Whitespace in Expressions
 =========================
 
