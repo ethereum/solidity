@@ -1392,10 +1392,11 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			{
 				//take two numbers, cut them in half, multiply them, simple as that.
 				m_context.appendInlineAssembly(R"(
-					{
-						let runningTotal := mul($div(firstNum, $halfShift), $div(secondNum, $halfShift))
+					{	let A := $div(firstNum, $halfShift)
+						let B := $div(secondNum, $halfShift)
+						finalAnswer := mul(firstNum, secondNum)
 					}
-				)", {"secondNum", "firstNum"}, map<string, string> {
+				)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
 						{"$div", (isSigned ? "sdiv" : "div")},
 						{"$halfShift", toString(halfShift)}
 				});
@@ -1433,8 +1434,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 							runningTotal := add(runningTotal, mul(D, A))
 						//C*B
 							runningTotal := add(runningTotal, mul(C, B))
+							finalAnswer := runningTotal
 						}
-					)", {"secondNum", "firstNum"}, map<string, string> {
+					)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
 							{"$div", (isSigned ? "sdiv" : "div")},
 							{"$halfShift", toString(halfShift)},
 							{"$fractionShift", toString(fractionShift)},
@@ -1459,8 +1461,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 							runningTotal := add(runningTotal, mul(D, A))
 						//C*B
 							runningTotal := add(runningTotal, mul(C, B))
+							finalAnswer := runningTotal
 						}
-					)", {"secondNum", "firstNum"}, map<string, string> {
+					)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
 							{"$fractionShift", toString(fractionShift)},
 							{"$mod", (isSigned ? "smod" : "mod")},
 							{"$div", (isSigned ? "sdiv" : "div")}
@@ -1489,8 +1492,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 						let fraction := $div(mul(firstNum, secondNum), $fractionShift)
 						let integer := mul(div(secondNum, $fractionShift), firstNum)
 						let runningTotal := add(integer, fraction)
+						finalAnswer := runningTotal
 					}
-				)", {"secondNum", "firstNum"}, map<string, string> {
+				)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
 						{"$div", (isSigned ? "sdiv" : "div")},
 						{"$fractionShift", toString(fractionShift)},
 				});

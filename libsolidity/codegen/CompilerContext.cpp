@@ -212,9 +212,13 @@ void CompilerContext::appendInlineAssembly(
 				errinfo_comment("Stack too deep, try removing local variables.")
 			);
 		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		{
+			cout << "hitting dup instruction" << endl;
 			_assembly.append(dupInstruction(stackDiff));
+		}
 		else
 		{
+			cout << "hitting swap and pop instruction" << endl;
 			_assembly.append(swapInstruction(stackDiff));
 			_assembly.append(Instruction::POP);
 		}
