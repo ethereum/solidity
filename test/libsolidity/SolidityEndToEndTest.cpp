@@ -8462,6 +8462,20 @@ BOOST_AUTO_TEST_CASE(int_to_fixed_type)
 	BOOST_CHECK(callContractFunction("f(uint128)", u256(3)) == encodeArgs(make_pair(rational(3, 1), 128)));
 }
 
+BOOST_AUTO_TEST_CASE(fixed_to_int_type_explicit_conversion)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(ufixed a) returns (uint b) {
+				b = uint(a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(ufixed128x128)", make_pair(rational(7, 2), 128)) == encodeArgs(u256(3)));
+}
+
+
 BOOST_AUTO_TEST_CASE(boolean_operations_on_fixed_point){
 	char const* sourceCode = R"(
 		contract C {
