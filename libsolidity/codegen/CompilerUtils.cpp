@@ -457,14 +457,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				u256 shiftFactor = u256(1) << (targetFixedPointType.fractionalBits());
 				m_context << shiftFactor << Instruction::MUL;
 			}
-			else if (auto rationalType = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
+			else if (auto const& rationalType = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
 			{
-				bool isValidType = (
-					targetFixedPointType.integerBits() > rationalType->fixedPointType()->integerBits() || 
-					targetFixedPointType.fractionalBits() > rationalType->fixedPointType()->fractionalBits()
-				);
-				if (isValidType && _cleanupNeeded)
-					cleanHigherOrderBits(_typeOnStack);
+				// We know that the stack is clean, we only have to clean for a narrowing conversion
+				// where cleanup is forced.
+				if (targetFixedPointType.numBits() < rationalType->fixedPointType()->numBits() && _cleanupNeeded)
+					cleanHigherOrderBits(_targetType);
 				convertFixedPointNumber(*rationalType->fixedPointType(), targetFixedPointType);
 			}
 			else 
@@ -492,6 +490,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				solAssert(!constType.isFractional(), "Invalid Rational to Integer conversion.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
 					cleanHigherOrderBits(targetType);
+			}
+			else if (stackTypeCategory == Type::Category::FixedPoint)
+			{
+				FixedPointType const& fixedType = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				if (targetType.numBits() > fixedType.integerBits())
+					cleanHigherOrderBits(_typeOnStack);
+				u256 shiftFactor = u256(1) << (fixedType.fractionalBits());
+				m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
 			}
 			else
 			{

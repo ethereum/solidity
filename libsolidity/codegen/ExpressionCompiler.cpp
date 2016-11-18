@@ -1266,7 +1266,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, rational, boolean and string literals implemented for now."));
+		solUnimplemented("Only integer, rational, boolean and string literals implemented for now.");
 	}
 }
 
