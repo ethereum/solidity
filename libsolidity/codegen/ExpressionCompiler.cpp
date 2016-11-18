@@ -307,6 +307,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		break;
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
+	{
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->retrieveValue(_unaryOperation.location());
 		if (!_unaryOperation.isPrefixOperation())
@@ -318,7 +319,15 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
 					m_context << swapInstruction(i);
 		}
-		m_context << u256(1);
+		u256 oneValue;
+		if (_unaryOperation.annotation().type->category() == Type::Category::FixedPoint)
+		{
+			FixedPointType const& fixedType = dynamic_cast<FixedPointType const&>(*_unaryOperation.subExpression().annotation().type);
+			oneValue = u256(1) << fixedType.fractionalBits();		
+		}	
+		else
+			oneValue = u256(1);
+		m_context << oneValue;
 		if (_unaryOperation.getOperator() == Token::Inc)
 			m_context << Instruction::ADD;
 		else
@@ -332,6 +341,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			!_unaryOperation.isPrefixOperation());
 		m_currentLValue.reset();
 		break;
+	}
 	case Token::Add: // +
 		// unary add, so basically no-op
 		break;
@@ -363,7 +373,11 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool cleanupNeeded = false;
 		if (Token::isCompareOp(c_op))
 			cleanupNeeded = true;
-		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
+		if (
+			(commonType.category() == Type::Category::Integer && 
+			(c_op == Token::Div || c_op == Token::Mod)) ||
+			commonType.category() == Type::Category::FixedPoint
+		)
 			cleanupNeeded = true;
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
@@ -1252,7 +1266,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
+		solUnimplemented("Only integer, rational, boolean and string literals implemented for now.");
 	}
 }
 
@@ -1295,6 +1309,8 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
 			isSigned = type->isSigned();
+		else if (auto type = dynamic_cast<FixedPointType const*>(&_type))
+			isSigned = type->isSigned();
 
 		switch (_operator)
 		{
@@ -1334,11 +1350,28 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
+	bool isSigned = false;
+	bool isFractional = false;
+	u256 fractionShift = u256(1);
+	u256 halfShift = u256(1);
+	int fractionalBits = 0;
 
-	if (_type.category() == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
+	if (_type.category() == Type::Category::Integer)
+	{
+		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+		isSigned = type.isSigned();
+	}
+	else if (_type.category() == Type::Category::FixedPoint)
+	{
+		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
+		isSigned = type.isSigned();		
+		isFractional = true;
+		fractionalBits = type.fractionalBits();
+		fractionShift = (u256(1) << (fractionalBits));
+		halfShift = (u256(1) << (fractionalBits / 2));
+	}
+	else
+		solAssert(false, "Expected numeric type.");
 
 	switch (_operator)
 	{
@@ -1349,6 +1382,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::SUB;
 		break;
 	case Token::Mul:
+		if (isFractional)
+			solUnimplementedAssert(false, "Multiplication not yet implemented - FixedPointType.");
 		m_context << Instruction::MUL;
 		break;
 	case Token::Div:
@@ -1359,9 +1394,23 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 
 		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		{
+			//divide...this is your integer.
+			m_context << (isSigned ? Instruction::SDIV : Instruction::DIV);
+			if (isFractional)
+			{
+				//shift left...
+				m_context << fractionShift << Instruction::MUL;
+				//now redo the process...
+				m_context << Instruction::DUP2 << Instruction::DUP4;
+				//but this time, get the fraction portion.
+				m_context << fractionShift << Instruction::SWAP1 << Instruction::MUL << (isSigned ? Instruction::SDIV : Instruction::DIV);
+				//add
+				m_context << Instruction::ADD;
+			}
+		}
 		else
-			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+			m_context << (isSigned ? Instruction::SMOD : Instruction::MOD);
 		break;
 	}
 	case Token::Exp:

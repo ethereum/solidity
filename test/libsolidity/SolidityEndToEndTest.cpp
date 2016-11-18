@@ -8269,6 +8269,403 @@ BOOST_AUTO_TEST_CASE(inline_assembly_invalidjumplabel)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(fixed_type_explicit_conversion_shifting)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function A() returns (fixed a) {
+				a = fixed(1/3);
+			}
+			function B() returns (fixed0x248 b) {
+				b = fixed0x248(1/3);
+			}
+			function C() returns (fixed248x8 c) {
+				c = fixed248x8(1/3);
+			}
+			function D() returns (fixed8x248 d) {
+				d = fixed8x248(-0.125);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("A()") == encodeArgs(make_pair(rational(1, 3), 128)));
+	BOOST_CHECK(callContractFunction("B()") == encodeArgs(make_pair(rational(1, 3), 248)));
+	BOOST_CHECK(callContractFunction("C()") == encodeArgs(make_pair(rational(1, 3), 8)));
+	BOOST_CHECK(callContractFunction("D()") == encodeArgs(make_pair(rational(-1, 8), 248)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_function_multi_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed a, fixed b, fixed c) {
+				(a, b, c) = (325.5, 450.25, 23924029.9375);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(
+		callContractFunction("f()") == encodeArgs(
+			make_pair(rational(651, 2), 128), 
+			make_pair(rational(1801, 4), 128), 
+			make_pair(rational(382784479, 16), 128)
+		)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_arguments)
+{
+	char const* sourceCode = R"(
+		contract B {
+			function callFixed(fixed a, fixed b) returns (fixed, fixed) {
+				return (a, b);
+			}
+		}
+
+		contract C {
+			B b = new B();
+			function f(fixed a, fixed b) returns (fixed, fixed) {
+				return (a, b);
+			}
+
+			function callFmem() returns (fixed a, fixed b) {
+				(a, b) = f(.25, .5);
+			}
+
+			function callDataloadB() returns (fixed a) {
+				(a, ) = b.callFixed(.5, .25);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(fixed128x128,fixed128x128)", make_pair(rational(1, 3), 128), make_pair(rational(1, 2), 128)) == encodeArgs(make_pair(rational(1, 3), 128), make_pair(rational(1, 2), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(int_to_fixed_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint128 a) returns (ufixed b) {
+				b = a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint128)", u256(3)) == encodeArgs(make_pair(rational(3, 1), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_to_int_type_explicit_conversion)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(ufixed a) returns (uint b) {
+				b = uint(a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(ufixed128x128)", make_pair(rational(7, 2), 128)) == encodeArgs(u256(3)));
+}
+
+
+BOOST_AUTO_TEST_CASE(boolean_operations_on_fixed_point){
+	char const* sourceCode = R"(
+		contract C {
+			function greaterInts() returns (bool) {
+				ufixed a = 4.5;
+				uint128 b = 4;
+				if (a > b) {
+					return true;
+				}
+				return false;
+			}
+			function equalInts() returns (bool) {
+				ufixed a = 4;
+				uint128 b = 4;
+				if (b == a) {
+					return true;
+				}
+				return false;
+			}
+			function lessThanInts() returns (bool) {
+				ufixed a = 3.5;
+				uint128 b = 4;
+				if (a < b) {
+					return true;
+				}
+				return false;
+			}
+			function equalUFixedShort() returns (bool) {
+				ufixed a = 3.5;
+				ufixed8x8 b = 3.5;
+				ufixed16x16 c = 3.5;
+				if (a == b && b == c) {
+					return true;
+				}
+				return false;
+			}
+			function greaterUFixedShort() returns (bool) {
+				ufixed a = 2.5;
+				ufixed8x8 b = 3.5;
+				ufixed16x16 c = 1.5;
+				if (b > a && a > c) {
+					return true;
+				}
+				return false;
+			}
+			function lessThanUFixedShort() returns (bool) {
+				ufixed a = 2.5;
+				ufixed8x8 b = 3.5;
+				ufixed16x16 c = 1.5;
+				if (a < b && c < a) {
+					return true;
+				}
+				return false;
+			}
+			function equalFixedShort() returns (bool) {
+				fixed a = fixed(3.5);
+				fixed8x8 b = fixed8x8(3.5);
+				fixed16x16 c = fixed16x16(3.5);
+				if (a == b && b == c) {
+					return true;
+				}
+				return false;
+			}
+			function greaterFixedShort() returns (bool) {
+				fixed a = fixed(2.5);
+				fixed8x8 b = fixed8x8(3.5);
+				fixed16x16 c = fixed16x16(1.5);
+				if (b > a && a > c) {
+					return true;
+				}
+				return false;
+			}
+			function lessThanFixedShort() returns (bool) {
+				fixed a = fixed(2.5);
+				fixed8x8 b = fixed8x8(3.5);
+				fixed16x16 c = fixed16x16(1.5);
+				if (a < b && c < a) {
+					return true;
+				}
+				return false;
+			}
+			function equalUFixedLong() returns (bool) {
+				ufixed a = 3.5;
+				ufixed240x16 b = 3.5;
+				ufixed16x240 c = 3.5;
+				if (ufixed240x16(a) == b && ufixed16x240(b) == c) {
+					return true;
+				}
+				return false;
+			}
+			function greaterUFixedLong() returns (bool) {
+				ufixed a = 2.5;
+				ufixed240x16 b = 3.5;
+				ufixed16x240 c = 1.5;
+				if (b > ufixed240x16(a) && ufixed16x240(b) > c) {
+					return true;
+				}
+				return false;
+			}
+			function lessThanUFixedLong() returns (bool) {
+				ufixed a = 2.5;
+				ufixed240x16 b = 3.5;
+				ufixed16x240 c = 1.5;
+				if (ufixed240x16(a) < b && c < ufixed16x240(b)) {
+					return true;
+				}
+				return false;
+			}
+			function equalFixedLong() returns (bool) {
+				fixed a = fixed(3.5);
+				fixed240x16 b = fixed240x16(3.5);
+				fixed16x240 c = fixed16x240(3.5);
+				if (fixed240x16(a) == b && fixed16x240(b) == c) {
+					return true;
+				}
+				return false;
+			}
+			function greaterFixedLong() returns (bool) {
+				fixed a = fixed(2.5);
+				fixed240x16 b = fixed240x16(-3.5);
+				fixed16x240 c = fixed16x240(1.5);
+				if (fixed240x16(a) > b && c > fixed16x240(b)) {
+					return true;
+				}
+				return false;
+			}
+			function lessThanFixedLong() returns (bool) {
+				fixed a = fixed(2.5);
+				fixed240x16 b = fixed240x16(-3.5);
+				fixed16x240 c = fixed16x240(1.5);
+				if (b < fixed240x16(a) && fixed16x240(b) < c) {
+					return true;
+				}
+				return false;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("greaterInts()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equalInts()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThanInts()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("greaterUFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equalUFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThanUFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("greaterFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equalFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThanFixedShort()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("greaterUFixedLong()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equalUFixedLong()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThanUFixedLong()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("greaterFixedLong()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equalFixedLong()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThanFixedLong()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(var_and_fixed_one_third_equivalent)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bool) {
+				var a = 1/3;
+				ufixed0x256 b = ufixed0x256(1/3);
+				return (a == b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_rationals_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (ufixed8x8[4]) {
+				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(7,2),8), make_pair(rational(33,8),8), make_pair(rational(5,2),8), make_pair(rational(4,1),8)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_incrementing_decrementing)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function incPre() returns (ufixed) {
+				ufixed a = 1.25;
+				return ++a;
+			}
+			function decPre() returns (ufixed) {
+				ufixed a = 4.5;
+				return --a;
+			}
+			function incPost() returns (ufixed a) {
+				a = 1.25;
+				a++;
+				return a;
+			}
+			function decPost() returns (ufixed a) {
+				a = 4.5;
+				a--;
+				return a;
+			}
+			function daWhile() returns (ufixed8x8) {
+				var i = 3.25;
+				while ( i < 5.5) {
+					i++;
+				}
+				return i;
+			}
+			function daFor() returns (ufixed8x8) {
+				for (var i = 3.25; i < 5.5; i++) {
+					var j = i;
+				}
+				return j;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("incPre()") == encodeArgs(make_pair(rational(9, 4), 128)));
+	BOOST_CHECK(callContractFunction("decPre()") == encodeArgs(make_pair(rational(7, 2), 128)));
+	BOOST_CHECK(callContractFunction("incPost()") == encodeArgs(make_pair(rational(9, 4), 128)));
+	BOOST_CHECK(callContractFunction("decPost()") == encodeArgs(make_pair(rational(7, 2), 128)));
+	BOOST_CHECK(callContractFunction("daWhile()") == encodeArgs(make_pair(rational(25, 4), 8)));
+	BOOST_CHECK(callContractFunction("daFor()") == encodeArgs(make_pair(rational(21, 4), 8)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_addition)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function simpleAdd() returns (fixed) {
+				fixed a = 3.125;
+				fixed b = 2.5;
+				return (a + b);
+			}
+
+			function complexAdd() returns (fixed) {
+				fixed a = 3.125;
+				ufixed0x8 b = 0.5;
+				ufixed32x32 c = 35.25;
+				return (a + b + c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("simpleAdd()") == encodeArgs(make_pair(rational(45, 8), 128)));
+	BOOST_CHECK(callContractFunction("complexAdd()") == encodeArgs(make_pair(rational(311, 8), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_modulus)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (ufixed) {
+				ufixed a = 2 % 1.25;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(3, 4), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_subtraction)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 3.5;
+				fixed b = 32.25;
+				return (a - b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(-115, 4), 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_division)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 42.125;
+				fixed b = 0.5;
+				return (a / b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(make_pair(rational(337, 4), 128)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
