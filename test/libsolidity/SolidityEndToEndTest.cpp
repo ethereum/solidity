@@ -6525,7 +6525,7 @@ BOOST_AUTO_TEST_CASE(state_variable_under_contract_name)
 		contract Scope {
 			uint stateVar = 42;
 
-			function getStateVar() constant returns (uint stateVar) {
+			function getStateVar() view returns (uint stateVar) {
 				stateVar = Scope.stateVar;
 			}
 		}
@@ -6791,7 +6791,7 @@ BOOST_AUTO_TEST_CASE(fixed_arrays_as_return_type)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function f(uint16 input) constant returns (uint16[5] arr)
+			function f(uint16 input) pure returns (uint16[5] arr)
 			{
 				arr[0] = input;
 				arr[1] = ++input;
@@ -6820,7 +6820,7 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 {
 	char const* sourceCode = R"(
 		library Lib {
-			function find(uint16[] storage _haystack, uint16 _needle) constant returns (uint)
+			function find(uint16[] storage _haystack, uint16 _needle) pure returns (uint)
 			{
 				for (uint i = 0; i < _haystack.length; ++i)
 					if (_haystack[i] == _needle)
