@@ -198,8 +198,12 @@ void CompilerContext::appendInlineAssembly(
 		assembly::CodeGenerator::IdentifierContext _context
 	) {
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
+		cout << "trying to find stack vars: " << *it << endl;
 		if (it == _localVariables.end())
+		{
+			cout << "uh oh, we couldn't find it" << endl;
 			return false;
+		}
 		unsigned stackDepth = _localVariables.end() - it;
 		int stackDiff = _assembly.deposit() - startStackHeight + stackDepth;
 		if (stackDiff < 1 || stackDiff > 16)
@@ -208,9 +212,13 @@ void CompilerContext::appendInlineAssembly(
 				errinfo_comment("Stack too deep, try removing local variables.")
 			);
 		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		{
+			cout << "hitting dup instruction" << endl;
 			_assembly.append(dupInstruction(stackDiff));
+		}
 		else
 		{
+			cout << "hitting swap and pop instruction" << endl;
 			_assembly.append(swapInstruction(stackDiff));
 			_assembly.append(Instruction::POP);
 		}

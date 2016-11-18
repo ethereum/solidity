@@ -181,17 +181,14 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		m_context
 			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
-		if (m_dataType->category() == Type::Category::FixedPoint)
-			// implementation should be very similar to the integer case.
-			solUnimplemented("Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
 		{
 			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
 			cleaned = true;
 		}
 		else if (
-			m_dataType->category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
+			(m_dataType->category() == Type::Category::Integer && dynamic_cast<IntegerType const&>(*m_dataType).isSigned()) ||
+			(m_dataType->category() == Type::Category::FixedPoint && dynamic_cast<FixedPointType const&>(*m_dataType).isSigned())
 		)
 		{
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
