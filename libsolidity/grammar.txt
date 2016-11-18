@@ -1,7 +1,7 @@
 SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
 
 // Pragma actually parses anything up to the trailing ';' to be fully forward-compatible.
-PragmaDirective = 'pragma' Identifier Expression ';'
+PragmaDirective = 'pragma' Identifier ([^;]+) ';'
 
 ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
