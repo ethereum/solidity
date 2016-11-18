@@ -135,6 +135,16 @@ inline u256 s2u(s256 _u)
 		return u256(c_end + _u);
 }
 
+inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
+{
+	std::ostringstream ss;
+	std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
+	std::string result = ss.str();
+	result.pop_back();
+	os << "[" + result + "]";
+	return os;
+}
+
 template <size_t n> inline u256 exp10()
 {
 	return exp10<n - 1>() * u256(10);
