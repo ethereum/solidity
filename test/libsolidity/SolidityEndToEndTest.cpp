@@ -8693,8 +8693,11 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 	BOOST_CHECK(callContractFunction("fullFractionSide()") == fullFracBytes);
 	cout << callContractFunction("fullFractionSide()") << endl;
 	BOOST_CHECK(callContractFunction("largerFractionSide()") == largeFracBytes);
+	cout << callContractFunction("largerFractionSide()") << endl;
 	BOOST_CHECK(callContractFunction("largerIntSide()") == encodeArgs(make_pair(rational(96028001, 16), 32)));
+	cout << callContractFunction("largerIntSide()") << endl;
 	BOOST_CHECK(callContractFunction("small()") == encodeArgs(make_pair(rational(4539, 256), 32)));
+	cout << callContractFunction("small()") << endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

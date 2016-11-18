@@ -1392,18 +1392,16 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			{
 				//take two numbers, cut them in half, multiply them, simple as that.
 				m_context.appendInlineAssembly(R"(
-					{	let A := $div(firstNum, $halfShift)
-						let B := $div(secondNum, $halfShift)
-						finalAnswer := mul(firstNum, secondNum)
+					{
+						firstNum := $div(firstNum, $halfShift)
+						secondNum := $div(secondNum, $halfShift)
 					}
-				)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
+				)", {"secondNum", "firstNum"}, map<string, string> {
 						{"$div", (isSigned ? "sdiv" : "div")},
 						{"$halfShift", toString(halfShift)}
 				});
 
-				/*m_context << halfShift << Instruction::DUP1 << Instruction::SWAP2 << (isSigned ? Instruction::SDIV : Instruction::DIV); 
-				m_context << Instruction::SWAP2 << (isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
-				*/
+				m_context << Instruction::MUL;
 			}
 			else if (numBits > 128)
 			{
@@ -1436,7 +1434,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 							runningTotal := add(runningTotal, mul(C, B))
 							finalAnswer := runningTotal
 						}
-					)", {"finalAnswer", "secondNum", "firstNum"}, map<string, string> {
+					)", {"secondNum", "firstNum"}, map<string, string> {
 							{"$div", (isSigned ? "sdiv" : "div")},
 							{"$halfShift", toString(halfShift)},
 							{"$fractionShift", toString(fractionShift)},
