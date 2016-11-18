@@ -966,7 +966,7 @@ void CompilerUtils::cleanHigherOrderBits(Type const& _typeOnStack)
 	else if (auto fixedType = dynamic_cast<FixedPointType const*>(&_typeOnStack)) 
 		cleanBits(fixedType->numBits(), fixedType->isSigned());
 	else
-		solAssert("", "Invalid type passed in to have higher bits cleaned.");
+		solAssert(false, "Invalid type passed in to have higher bits cleaned.");
 }
 
 void CompilerUtils::convertFixedPointNumber(FixedPointType const& _stackType, FixedPointType const& _targetType)
