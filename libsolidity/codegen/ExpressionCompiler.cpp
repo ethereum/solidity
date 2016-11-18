@@ -1371,7 +1371,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		halfShift = (u256(1) << (fractionalBits / 2));
 	}
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Expected numeric type."));
+		solAssert(false, "Expected numeric type.");
 
 	switch (_operator)
 	{
@@ -1383,7 +1383,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		break;
 	case Token::Mul:
 		if (isFractional)
-			solAssert(false, "Multiplication not yet implemented - FixedPointType.");
+			solUnimplementedAssert(false, "Multiplication not yet implemented - FixedPointType.");
 		m_context << Instruction::MUL;
 		break;
 	case Token::Div:
@@ -1395,10 +1395,10 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 
 		if (_operator == Token::Div)
 		{
+			//divide...this is your integer.
+			m_context << (isSigned ? Instruction::SDIV : Instruction::DIV);
 			if (isFractional)
 			{
-				//divide, then shift left...this is your integer.
-				m_context << (isSigned ? Instruction::SDIV : Instruction::DIV) << fractionShift << Instruction::MUL;
 				//now redo the process...
 				m_context << Instruction::DUP2 << Instruction::DUP4;
 				//but this time, get the fraction portion.
@@ -1406,8 +1406,6 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				//add
 				m_context << Instruction::ADD;
 			}
- 			else
-				m_context << (isSigned ? Instruction::SDIV : Instruction::DIV);
 		}
 		else
 			m_context << (isSigned ? Instruction::SMOD : Instruction::MOD);
