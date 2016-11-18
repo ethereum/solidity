@@ -1399,6 +1399,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			m_context << (isSigned ? Instruction::SDIV : Instruction::DIV);
 			if (isFractional)
 			{
+				//shift left...
+				m_context << fractionShift << Instruction::MUL;
 				//now redo the process...
 				m_context << Instruction::DUP2 << Instruction::DUP4;
 				//but this time, get the fraction portion.
