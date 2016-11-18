@@ -262,6 +262,19 @@ No::
     y             = 2;
     long_variable = 3;
 
+Don't include a whitespace in the fallback function:
+
+Yes::
+
+    function() {
+        ...
+    }
+
+No::
+   
+    function () {
+        ...
+    }
 
 Control Structures
 ==================
