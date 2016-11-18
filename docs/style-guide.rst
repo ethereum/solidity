@@ -173,7 +173,7 @@ Yes::
             ...
         }
         
-        function () payable {
+        function() payable {
             ...
         }
         
@@ -210,7 +210,7 @@ No::
             ...
         }
         
-        function () payable {
+        function() payable {
             ...
         }
 
