@@ -183,10 +183,10 @@ bool CompilerStack::parse()
 				if (m_contracts.find(contract->name()) != m_contracts.end())
 				{
 					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
-          if (contract != existingContract)
+					if (contract != existingContract)
 						BOOST_THROW_EXCEPTION(CompilerError() <<
 							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(contract->name() + " conflicts with contract at "
+							errinfo_comment(contract->name() + " is already defined at "
 								+ *(existingContract->location().sourceName)));
 				}
 				m_contracts[contract->name()].contract = contract;
@@ -216,7 +216,7 @@ bool CompilerStack::parse()
 					if (contract != existingContract)
 						BOOST_THROW_EXCEPTION(CompilerError() <<
 							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(contract->name() + " conflicts with!!! contract at "
+							errinfo_comment(contract->name() + " is already defined at "
 								+ *(existingContract->location().sourceName)));
 				}
 
