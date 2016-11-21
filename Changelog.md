@@ -1,8 +1,8 @@
-### 0.4.5 (unreleased)
+### 0.4.5 (2016-11-21)
 
 Features:
  * Function types
- * Do-while loops: support for a C-style do{<block>}while(<expr>); control structure
+ * Do-while loops: support for a ``do <block> while (<expr>);`` control structure
  * Inline assembly: support ``invalidJumpLabel`` as a jump label.
  * Type checker: now more eagerly searches for a common type of an inline array with mixed types
  * Code generator: generates a runtime error when an out-of-range value is converted into an enum type.
@@ -10,7 +10,7 @@ Features:
 Bugfixes:
 
  * Inline assembly: calculate stack height warning correctly even when local variables are used.
- * Support the ``payable`` keyword on constructors.
+ * Code generator: check for value transfer in non-payable constructors.
  * Parser: disallow empty enum definitions.
  * Type checker: disallow conversion between different enum types.
  * Interface JSON: do not include trailing new line.
