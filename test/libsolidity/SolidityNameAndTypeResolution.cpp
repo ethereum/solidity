@@ -62,7 +62,11 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 
 		SyntaxChecker syntaxChecker(errors);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
+		{
+			if (errors.size() > 1)
+				BOOST_FAIL("Multiple errors found after checking syntax.");
 			return make_pair(sourceUnit, errors.at(0));
+		}
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(globalContext->declarations(), errors);
@@ -89,8 +93,12 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					TypeChecker typeChecker(errors);
 					bool success = typeChecker.checkTypeRequirements(*contract);
 					BOOST_CHECK(success || !errors.empty());
+					if (errors.size() > 1)
+						BOOST_FAIL("Multiple errors found after checking type requirements");
 
 				}
+		if (errors.size() > 1)
+			BOOST_FAIL("Multiple errors found");
 		for (auto const& currentError: errors)
 		{
 			if (
