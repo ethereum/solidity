@@ -176,6 +176,12 @@ public:
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
 	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
+	/// Helper function to shift top value on the stack to the left.
+	void leftShiftNumberOnStack(u256 _shiftFactor);
+
+	/// Helper function to shift top value on the stack to the right.
+	void rightShiftNumberOnStack(u256 _shiftFactor, bool _isSigned = false);
+
 	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 

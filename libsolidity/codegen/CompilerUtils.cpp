@@ -1007,6 +1007,16 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
 }
 
+void CompilerUtils::leftShiftNumberOnStack(u256 _shiftFactor)
+{
+	m_context << _shiftFactor << Instruction::MUL;
+}
+
+void CompilerUtils::rightShiftNumberOnStack(u256 _shiftFactor, bool _isSigned)
+{
+	m_context << _shiftFactor << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
+}
+
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 {
 	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
