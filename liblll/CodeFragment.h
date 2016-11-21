@@ -51,6 +51,11 @@ private:
 	void finalise(CompilerState const& _cs);
 
 	template <class T> void error() const { BOOST_THROW_EXCEPTION(T() ); }
+	template <class T> void error(std::string const& reason) const {
+		auto err = T();
+		err << errinfo_comment(reason);
+		BOOST_THROW_EXCEPTION(err);
+	}
 	void constructOperation(sp::utree const& _t, CompilerState& _s);
 
 	bool m_finalised = false;

@@ -94,20 +94,6 @@ BOOST_AUTO_TEST_CASE(using_for_directive)
 	BOOST_CHECK_EQUAL(usingFor["children"][1]["attributes"]["name"], "uint");    
 }
 
-BOOST_AUTO_TEST_CASE(enum_definition)
-{
-	CompilerStack c;
-	c.addSource("a", "contract C { enum E {} }");
-	c.parse();
-	map<string, unsigned> sourceIndices;
-	sourceIndices["a"] = 1;
-	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	Json::Value enumDefinition = astJson["children"][0]["children"][0];
-	BOOST_CHECK_EQUAL(enumDefinition["name"], "EnumDefinition");
-	BOOST_CHECK_EQUAL(enumDefinition["attributes"]["name"], "E");
-	BOOST_CHECK_EQUAL(enumDefinition["src"], "13:9:1");
-}
-
 BOOST_AUTO_TEST_CASE(enum_value)
 {
 	CompilerStack c;
@@ -209,6 +195,37 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 	BOOST_CHECK_EQUAL(literal["attributes"]["token"], Json::nullValue);
 	BOOST_CHECK_EQUAL(literal["attributes"]["value"], Json::nullValue);
 	BOOST_CHECK(literal["attributes"]["type"].asString().find("invalid") != string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	CompilerStack c;
+	c.addSource("a",
+		"contract C { function f(function() external payable returns (uint) x) "
+		"returns (function() external constant returns (uint)) {} }"
+	);
+	c.parse();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value fun = astJson["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(fun["name"], "FunctionDefinition");
+	Json::Value argument = fun["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(argument["name"], "VariableDeclaration");
+	BOOST_CHECK_EQUAL(argument["attributes"]["name"], "x");
+	BOOST_CHECK_EQUAL(argument["attributes"]["type"], "function () payable external returns (uint256)");
+	Json::Value funType = argument["children"][0];
+	BOOST_CHECK_EQUAL(funType["attributes"]["constant"], false);
+	BOOST_CHECK_EQUAL(funType["attributes"]["payable"], true);
+	BOOST_CHECK_EQUAL(funType["attributes"]["visibility"], "external");
+	Json::Value retval = fun["children"][1]["children"][0];
+	BOOST_CHECK_EQUAL(retval["name"], "VariableDeclaration");
+	BOOST_CHECK_EQUAL(retval["attributes"]["name"], "");
+	BOOST_CHECK_EQUAL(retval["attributes"]["type"], "function () constant external returns (uint256)");
+	funType = retval["children"][0];
+	BOOST_CHECK_EQUAL(funType["attributes"]["constant"], true);
+	BOOST_CHECK_EQUAL(funType["attributes"]["payable"], false);
+	BOOST_CHECK_EQUAL(funType["attributes"]["visibility"], "external");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -35,7 +35,9 @@ class Compiler
 public:
 	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
-		m_optimizeRuns(_runs)
+		m_optimizeRuns(_runs),
+		m_runtimeContext(),
+		m_context(&m_runtimeContext)
 	{ }
 
 	void compileContract(
@@ -69,9 +71,9 @@ public:
 private:
 	bool const m_optimize;
 	unsigned const m_optimizeRuns;
-	CompilerContext m_context;
-	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_runtimeContext;
+	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
+	CompilerContext m_context;
 };
 
 }

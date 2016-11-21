@@ -89,6 +89,11 @@ struct BasicBlock
 
 using BasicBlocks = std::vector<BasicBlock>;
 
+/**
+ * Control flow graph optimizer.
+ * ASSUMES THAT WE ONLY JUMP TO TAGS THAT WERE PREVIOUSLY PUSHED. THIS IS NOT TRUE ANYMORE
+ * NOW THAT FUNCTION TAGS CAN BE STORED IN STORAGE.
+ */
 class ControlFlowGraph
 {
 public:

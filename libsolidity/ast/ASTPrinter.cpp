@@ -164,6 +164,13 @@ bool ASTPrinter::visit(UserDefinedTypeName const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(FunctionTypeName const& _node)
+{
+	writeLine("FunctionTypeName");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(Mapping const& _node)
 {
 	writeLine("Mapping");
@@ -208,7 +215,7 @@ bool ASTPrinter::visit(IfStatement const& _node)
 
 bool ASTPrinter::visit(WhileStatement const& _node)
 {
-	writeLine("WhileStatement");
+	writeLine(_node.isDoWhile() ? "DoWhileStatement" : "WhileStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -438,6 +445,11 @@ void ASTPrinter::endVisit(ElementaryTypeName const&)
 }
 
 void ASTPrinter::endVisit(UserDefinedTypeName const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(FunctionTypeName const&)
 {
 	m_indentation--;
 }

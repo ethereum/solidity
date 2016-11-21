@@ -40,32 +40,6 @@ apt-get -y install git-core
 
 export WORKSPACE=/src
 
-# CryptoPP
-echo -en 'travis_fold:start:compiling_cryptopp\\r'
-cd "$WORKSPACE/cryptopp"
-# if .git exists, it is a fresh checkout, otherwise it comes from the cache
-# and is already compiled
-test -e .git && (
-emcmake cmake -DCRYPTOPP_LIBRARY_TYPE=STATIC -DCRYPTOPP_RUNTIME_TYPE=STATIC && emmake make -j 4
-ln -s . src/cryptopp || true
-rm -rf .git
-)
-echo -en 'travis_fold:end:compiling_cryptopp\\r'
-
-# Json-CPP
-echo -en 'travis_fold:start:compiling_jsoncpp\\r'
-cd "$WORKSPACE/jsoncpp"
-# if .git exists, it is a fresh checkout, otherwise it comes from the cache
-# and is already compiled
-test -e .git && (
-emcmake cmake -DJSONCPP_LIB_BUILD_STATIC=ON -DJSONCPP_LIB_BUILD_SHARED=OFF \
-              -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF \
-              -G "Unix Makefiles" .
-emmake make -j 4
-rm -rf .git
-)
-echo -en 'travis_fold:end:compiling_jsoncpp\\r'
-
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
 cd "$WORKSPACE"/boost_1_57_0
@@ -112,10 +86,6 @@ emcmake cmake \
   -DBoost_THREAD_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_thread.a \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
-  -DJSONCPP_LIBRARY="$WORKSPACE"/jsoncpp/src/lib_json/libjsoncpp.a \
-  -DJSONCPP_INCLUDE_DIR="$WORKSPACE"/jsoncpp/include/ \
-  -DCRYPTOPP_LIBRARY="$WORKSPACE"/cryptopp/src/libcryptlib.a \
-  -DCRYPTOPP_INCLUDE_DIR="$WORKSPACE"/cryptopp/src/ \
   -DDev_DEVCORE_LIBRARY="$WORKSPACE"/solidity/build/libdevcore/libsoldevcore.a \
   -DEth_EVMASM_LIBRARY="$WORKSPACE"/solidity/build/libevmasm/libsolevmasm.a \
   -DETH_STATIC=1 -DTESTS=0 \

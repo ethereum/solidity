@@ -27,10 +27,17 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmasm/Instruction.h>
+#include <solidity/BuildInfo.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::eth;
+
+static string const VersionString =
+        string(ETH_PROJECT_VERSION) +
+        (string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
+        (string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
 void help()
 {
@@ -50,7 +57,7 @@ void help()
 void version()
 {
 	cout << "LLLC, the Lovely Little Language Compiler " << endl;
-	cout << "  By Gav Wood, (c) 2014." << endl;
+	cout << "Version: " << VersionString << endl;
 	exit(0);
 }
 

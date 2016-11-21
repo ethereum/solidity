@@ -234,10 +234,11 @@ Hexademical Literals behave like String Literals and have the same convertibilit
 .. _enums:
 
 Enums
-=====
+-----
 
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.
+to and from all integer types but implicit conversion is not allowed.  The explicit conversions
+check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
 
 ::
 
@@ -265,6 +266,128 @@ to and from all integer types but implicit conversion is not allowed.
             return uint(defaultChoice);
         }
     }
+
+.. index:: ! function type, ! type; function
+
+.. _function_types:
+
+Function Types
+--------------
+
+Function types are the types of functions. Variables of function type
+can be assigned from functions and function parameters of function type
+can be used to pass functions to and return functions from function calls.
+Function types come in two flavours - *internal* and *external* functions:
+
+Internal functions can only be used inside the current contract (more specifically,
+inside the current code unit, which also includes internal library functions
+and inherited functions) because they cannot be executed outside of the
+context of the current contract. Calling an internal function is realized
+by jumping to its entry label, just like when calling a function of the current
+contract internally.
+
+External functions consist of an address and a function signature and they can
+be passed via and returned from external function calls.
+
+Function types are notated as follows::
+
+    function (<parameter types>) {internal|external} [constant] [payable] [returns (<return types>)]
+
+In contrast to the parameter types, the return types cannot be empty - if the
+function type should not return anything, the whole ``returns (<return types>)``
+part has to be omitted.
+
+By default, function types are internal, so the ``internal`` keyword can be
+omitted.
+
+There are two ways to access a function in the current contract: Either directly
+by its name, ``f``, or using ``this.f``. The former will result in an internal
+function, the latter in an external function.
+
+If a function type variable is not initialized, calling it will result
+in an exception. The same happens if you call a function after using ``delete``
+on it.
+
+If external function types are used outside of the context of Solidity,
+they are treated as the ``function`` type, which encodes the address
+followed by the function identifier together in a single ``bytes24`` type.
+
+Example that shows how to use internal function types::
+
+    library ArrayUtils {
+      // internal functions can be used in internal library functions because
+      // they will be part of the same code context
+      function map(uint[] memory self, function (uint) returns (uint) f)
+        returns (uint[] memory r)
+      {
+        r = new uint[](self.length);
+        for (uint i = 0; i < self.length; i++) {
+          r[i] = f(self[i]);
+        }
+      }
+      function reduce(
+        uint[] memory self,
+        function (uint) returns (uint) f
+      )
+        returns (uint r)
+      {
+        r = self[0];
+        for (uint i = 1; i < self.length; i++) {
+          r = f(r, self[i]);
+        }
+      }
+      function range(uint length) returns (uint[] memory r) {
+        r = new uint[](length);
+        for (uint i = 0; i < r.length; i++) {
+          r[i] = i;
+        }
+      }
+    }
+    
+    contract Pyramid {
+      using ArrayUtils for *;
+      function pyramid(uint l) return (uint) {
+        return ArrayUtils.range(l).map(square).reduce(sum);
+      }
+      function square(uint x) internal returns (uint) {
+        return x * x;
+      }
+      function sum(uint x, uint y) internal returns (uint) {
+        return x + y;
+      }
+    }
+
+Another example that uses external function types::
+
+    contract Oracle {
+      struct Request {
+        bytes data;
+        function(bytes) external callback;
+      }
+      Request[] requests;
+      event NewRequest(uint);
+      function query(bytes data, function(bytes) external callback) {
+        requests.push(Request(data, callback));
+        NewRequest(requests.length - 1);
+      }
+      function reply(uint requestID, bytes response) {
+        // Here goes the check that the reply comes from a trusted source
+        requests[requestID].callback(response);
+      }
+    }
+
+    contract OracleUser {
+      Oracle constant oracle = 0x1234567; // known contract
+      function buySomething() {
+        oracle.query("USD", oracleResponse);
+      }
+      function oracleResponse(bytes response) {
+        if (msg.sender != oracle) throw;
+        // Use the data
+      }
+    }
+
+Note that lambda or inline functions are planned but not yet supported.
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 

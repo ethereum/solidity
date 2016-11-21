@@ -254,6 +254,9 @@ public:
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
 	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
+	/// @returns true iff this type can be passed on via calls (to libraries if _inLibrary is true),
+	/// should be have identical to !!interfaceType(_inLibrary) but might do optimizations.
+	virtual bool canBeUsedExternally(bool _inLibrary) const { return !!interfaceType(_inLibrary); }
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
@@ -580,6 +583,7 @@ public:
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
+	virtual bool canBeUsedExternally(bool _inLibrary) const override;
 
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
@@ -738,6 +742,7 @@ public:
 	EnumDefinition const& enumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
 	unsigned int memberValue(ASTString const& _member) const;
+	size_t numberOfMembers() const;
 
 private:
 	EnumDefinition const& m_enum;
@@ -820,6 +825,8 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
+	/// Creates the type of a function type name.
+	explicit FunctionType(FunctionTypeName const& _typeName);
 	/// Function type constructor to be used for a plain type (not derived from a declaration).
 	FunctionType(
 		strings const& _parameterTypes,
@@ -889,12 +896,19 @@ public:
 	TypePointer selfType() const;
 
 	virtual bool operator==(Type const& _other) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
 	virtual std::string toString(bool _short) const override;
-	virtual bool canBeStored() const override { return false; }
+	virtual unsigned calldataEncodedSize(bool _padded) const override;
+	virtual bool canBeStored() const override { return m_location == Location::Internal || m_location == Location::External; }
 	virtual u256 storageSize() const override;
-	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned storageBytes() const override;
+	virtual bool isValueType() const override { return true; }
+	virtual bool canLiveOutsideStorage() const override { return m_location == Location::Internal || m_location == Location::External; }
 	virtual unsigned sizeOnStack() const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	virtual TypePointer encodingType() const override;
+	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of

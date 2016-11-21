@@ -29,7 +29,7 @@
 
 branches:
   only:
-    - master
+    - release
     - develop
 os: Visual Studio 2015
 configuration:
@@ -83,14 +83,13 @@ artifacts:
 # below.
 
 deploy:
-    description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
-    prerelease: true
     provider: GitHub
     auth_token:
         secure: HPjiugbDSCsEFTphj/qwHuSw80/BV1xWoSvj95CPmtb16Ukh2VQbLVB7iFtZSans
     artifact: solidity-windows-zip
     on:
         branch: release
+        appveyor_repo_tag: true
 
 notifications:
     - provider: GitHubPullRequest

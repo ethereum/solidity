@@ -81,7 +81,11 @@ struct GeneratorState
 class LabelOrganizer: public boost::static_visitor<>
 {
 public:
-	LabelOrganizer(GeneratorState& _state): m_state(_state) {}
+	LabelOrganizer(GeneratorState& _state): m_state(_state)
+	{
+		// Make the Solidity ErrorTag available to inline assembly
+		m_state.labels.insert(make_pair("invalidJumpLabel", m_state.assembly.errorTag()));
+	}
 
 	template <class T>
 	void operator()(T const& /*_item*/) { }
@@ -216,9 +220,17 @@ public:
 		size_t numVariables = m_state.variables.size();
 		int deposit = m_state.assembly.deposit();
 		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-		deposit = m_state.assembly.deposit() - deposit;
+
+		// pop variables
+		while (m_state.variables.size() > numVariables)
+		{
+			m_state.assembly.append(solidity::Instruction::POP);
+			m_state.variables.pop_back();
+		}
 
 		m_state.assembly.setSourceLocation(_block.location);
+
+		deposit = m_state.assembly.deposit() - deposit;
 
 		// issue warnings for stack height discrepancies
 		if (deposit < 0)
@@ -238,12 +250,6 @@ public:
 			);
 		}
 
-		// pop variables
-		while (m_state.variables.size() > numVariables)
-		{
-			m_state.assembly.append(solidity::Instruction::POP);
-			m_state.variables.pop_back();
-		}
 	}
 
 private:

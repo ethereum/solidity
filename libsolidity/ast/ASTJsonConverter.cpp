@@ -174,7 +174,8 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 	addJsonNode(_node, "FunctionDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("public", _node.isPublic()),
-		make_pair("constant", _node.isDeclaredConst())
+		make_pair("constant", _node.isDeclaredConst()),
+		make_pair("payable", _node.isPayable())
 	}, true);
 	return true;
 }
@@ -225,6 +226,20 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(FunctionTypeName const& _node)
+{
+	string visibility = "internal";
+	if (_node.visibility() == Declaration::Visibility::External)
+		visibility = "external";
+
+	addJsonNode(_node, "FunctionTypeName", {
+		make_pair("payable", _node.isPayable()),
+		make_pair("visibility", visibility),
+		make_pair("constant", _node.isDeclaredConst())
+	}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(Mapping const& _node)
 {
 	addJsonNode(_node, "Mapping", {}, true);
@@ -263,7 +278,11 @@ bool ASTJsonConverter::visit(IfStatement const& _node)
 
 bool ASTJsonConverter::visit(WhileStatement const& _node)
 {
-	addJsonNode(_node, "WhileStatement", {}, true);
+	addJsonNode(
+		_node,
+		_node.isDoWhile() ? "DoWhileStatement" : "WhileStatement",
+		{},
+		true);
 	return true;
 }
 
@@ -500,6 +519,11 @@ void ASTJsonConverter::endVisit(ElementaryTypeName const&)
 
 void ASTJsonConverter::endVisit(UserDefinedTypeName const&)
 {
+}
+
+void ASTJsonConverter::endVisit(FunctionTypeName const&)
+{
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Mapping const&)

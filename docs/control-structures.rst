@@ -2,14 +2,14 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: if, else, while, for, break, continue, return, switch, goto
+.. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
 Control Structures
 ===================
 
 Most of the control structures from C or JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
-there is: ``if``, ``else``, ``while``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
+there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
 
 Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
@@ -329,9 +329,10 @@ Currently, there are situations, where exceptions happen automatically in Solidi
 3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 4. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
 5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-6. If you perform an external function call targeting a contract that contains no code.
-7. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-8. If your contract receives Ether via a public accessor function.
+6. If you convert a value too big or negative into an enum type.
+7. If you perform an external function call targeting a contract that contains no code.
+8. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+9. If your contract receives Ether via a public accessor function.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 
@@ -426,7 +427,7 @@ these curly braces, the following can be used (see the later sections for more d
 
  - literals, e.g. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcodes in functional style, e.g. ``add(1, mlod(0))``
+ - opcodes in functional style, e.g. ``add(1, mload(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
  - identifiers (externals, labels or assembly-local variables), e.g. ``jump(name)``, ``3 x add``
@@ -715,6 +716,10 @@ will have a wrong impression about the stack height at label ``two``:
         three:
     }
 
+.. note::
+
+    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
+    result in an invalid jump, effectively aborting execution of the code.
 
 Declaring Assembly-Local Variables
 ----------------------------------

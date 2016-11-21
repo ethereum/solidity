@@ -20,9 +20,6 @@
  */
 
 #include "CommonData.h"
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
 #include "Exceptions.h"
 using namespace std;
 using namespace dev;

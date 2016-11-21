@@ -37,6 +37,7 @@
 #include <libsolidity/interface/InterfaceHandler.h>
 #include <libsolidity/formal/Why3Translator.h>
 
+#include <libevmasm/Exceptions.h>
 #include <libdevcore/SHA3.h>
 
 #include <boost/algorithm/string.hpp>
@@ -345,17 +346,17 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-string const& CompilerStack::interface(string const& _contractName) const
+Json::Value const& CompilerStack::interface(string const& _contractName) const
 {
 	return metadata(_contractName, DocumentationType::ABIInterface);
 }
 
-string const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	std::unique_ptr<string const>* doc;
+	std::unique_ptr<Json::Value const>* doc;
 	Contract const& currentContract = contract(_contractName);
 
 	// checks wheather we already have the documentation
@@ -376,7 +377,7 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new string(InterfaceHandler::documentation(*currentContract.contract, _type)));
+		doc->reset(new Json::Value(InterfaceHandler::documentation(*currentContract.contract, _type)));
 
 	return *(*doc);
 }
@@ -590,9 +591,19 @@ void CompilerStack::compileContract(
 	compiledContract.runtimeObject = compiler->runtimeObject();
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
-	Compiler cloneCompiler(_optimize, _runs);
-	cloneCompiler.compileClone(_contract, _compiledContracts);
-	compiledContract.cloneObject = cloneCompiler.assembledObject();
+	try
+	{
+		Compiler cloneCompiler(_optimize, _runs);
+		cloneCompiler.compileClone(_contract, _compiledContracts);
+		compiledContract.cloneObject = cloneCompiler.assembledObject();
+	}
+	catch (eth::AssemblyException const&)
+	{
+		// In some cases (if the constructor requests a runtime function), it is not
+		// possible to compile the clone.
+
+		// TODO: Report error / warning
+	}
 }
 
 std::string CompilerStack::defaultContractName() const

@@ -410,6 +410,16 @@ bool Why3Translator::visit(WhileStatement const& _node)
 {
 	addSourceFromDocStrings(_node.annotation());
 
+	// Why3 does not appear to support do-while loops,
+	// so we will simulate them by performing a while
+	// loop with the body prepended once.
+
+	if (_node.isDoWhile())
+	{
+		visitIndentedUnlessBlock(_node.body());
+		newLine();
+	}
+
 	add("while ");
 	_node.condition().accept(*this);
 	newLine();

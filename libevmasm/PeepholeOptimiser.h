@@ -15,31 +15,40 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity Utilities.
+ * @file PeepholeOptimiser.h
+ * Performs local optimising code changes to assembly.
  */
-
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <vector>
+#include <cstddef>
+#include <iterator>
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
-struct InternalCompilerError;
-struct UnimplementedFeatureError;
+class AssemblyItem;
+using AssemblyItems = std::vector<AssemblyItem>;
+
+class PeepholeOptimisationMethod
+{
+public:
+	virtual size_t windowSize() const;
+	virtual bool apply(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out);
+};
+
+class PeepholeOptimiser
+{
+public:
+	explicit PeepholeOptimiser(AssemblyItems& _items): m_items(_items) {}
+
+	bool optimise();
+
+private:
+	AssemblyItems& m_items;
+	AssemblyItems m_optimisedItems;
+};
+
 }
 }
-
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
-
-#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
-
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)

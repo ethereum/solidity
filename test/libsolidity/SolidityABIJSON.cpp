@@ -40,14 +40,14 @@ public:
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing contract failed");
-		std::string generatedInterfaceString = m_compilerStack.metadata("", DocumentationType::ABIInterface);
-		Json::Value generatedInterface;
-		m_reader.parse(generatedInterfaceString, generatedInterface);
+
+		Json::Value generatedInterface = m_compilerStack.metadata("", DocumentationType::ABIInterface);
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
-			"Expected:\n" << expectedInterface.toStyledString() << "\n but got:\n" << generatedInterface.toStyledString()
+			"Expected:\n" << expectedInterface.toStyledString() <<
+			"\n but got:\n" << generatedInterface.toStyledString()
 		);
 	}
 
@@ -524,6 +524,7 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 				"type": "bool"
 			}
 		],
+		"payable": false,
 		"type": "constructor"
 	}
 	])";
@@ -567,6 +568,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 					"type": "uint8"
 				}
 			],
+			"payable": false,
 			"type": "constructor"
 		}
 	]
@@ -684,7 +686,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(payable_fallback_unction)
+BOOST_AUTO_TEST_CASE(payable_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -698,6 +700,32 @@ BOOST_AUTO_TEST_CASE(payable_fallback_unction)
 			"payable": true,
 			"type" : "fallback"
 		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(function_type)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+	{
+		"constant" : false,
+		"payable": false,
+		"inputs": [{
+			"name": "x",
+			"type": "function"
+		}],
+		"name": "g",
+		"outputs": [],
+		"type" : "function"
+	}
 	]
 	)";
 	checkInterface(sourceCode, interface);

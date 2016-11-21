@@ -574,6 +574,14 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	return false;
 }
 
+void TypeChecker::endVisit(FunctionTypeName const& _funType)
+{
+	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
+	if (fun.location() == FunctionType::Location::External)
+		if (!fun.canBeUsedExternally(false))
+			typeError(_funType.location(), "External function type uses internal types.");
+}
+
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
 	// Inline assembly does not have its own type-checking phase, so we just run the
@@ -996,9 +1004,9 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 						fatalTypeError(components[i]->location(), "Invalid mobile type.");
 
 					if (i == 0)
-						inlineArrayType = types[i]->mobileType();
+						inlineArrayType = types[i];
 					else if (inlineArrayType)
-						inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
+						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 				}
 			}
 			else

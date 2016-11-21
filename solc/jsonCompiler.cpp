@@ -27,6 +27,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolidity/parsing/Scanner.h>
@@ -189,6 +190,10 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	{
 		errors.append(formatError(exception, "Internal compiler error", scannerFromSourceName));
 	}
+	catch (UnimplementedFeatureError const& exception)
+	{
+		errors.append(formatError(exception, "Unimplemented feature", scannerFromSourceName));
+	}
 	catch (Exception const& exception)
 	{
 		errors.append("Exception during compilation: " + boost::diagnostic_information(exception));
@@ -209,7 +214,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			for (string const& contractName: compiler.contractNames())
 			{
 				Json::Value contractData(Json::objectValue);
-				contractData["interface"] = compiler.interface(contractName);
+				contractData["interface"] = dev::jsonCompactPrint(compiler.interface(contractName));
 				contractData["bytecode"] = compiler.object(contractName).toHex();
 				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
@@ -270,7 +275,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 
 	try
 	{
-		return Json::FastWriter().write(output);
+		return dev::jsonCompactPrint(output);
 	}
 	catch (...)
 	{
@@ -288,7 +293,7 @@ string compileMulti(string const& _input, bool _optimize, CStyleReadFileCallback
 		errors.append("Error parsing input JSON: " + reader.getFormattedErrorMessages());
 		Json::Value output(Json::objectValue);
 		output["errors"] = errors;
-		return Json::FastWriter().write(output);
+		return dev::jsonCompactPrint(output);
 	}
 	else
 	{

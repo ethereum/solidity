@@ -25,7 +25,7 @@ Storage
             storedData = x;
         }
 
-        function get() constant returns (uint retVal) {
+        function get() constant returns (uint) {
             return storedData;
         }
     }
@@ -136,7 +136,7 @@ like this one. The accessor function created by the ``public`` keyword
 is a bit more complex in this case. It roughly looks like the
 following::
 
-    function balances(address _account) returns (uint balance) {
+    function balances(address _account) returns (uint) {
         return balances[_account];
     }
 

@@ -99,7 +99,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			solAssert(
+			solUnimplementedAssert(
 				!paramTypes[i]->isDynamicallySized(),
 				"Accessors for mapping with dynamically-sized keys not yet implemented."
 			);
@@ -211,7 +211,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	Token::Value op = _assignment.assignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
-		solAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
+		solUnimplementedAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
 		if (lvalueSize > 0)
@@ -312,7 +312,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		if (!_unaryOperation.isPrefixOperation())
 		{
 			// store value for later
-			solAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
+			solUnimplementedAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
 			m_context << Instruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
@@ -488,6 +488,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				parameterSize += function.selfType()->sizeOnStack();
 			}
 
+			if (m_context.runtimeContext())
+				// We have a runtime context, so we need the creation part.
+				m_context << (u256(1) << 32) << Instruction::SWAP1 << Instruction::DIV;
+			else
+				// Extract the runtime part.
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+
 			m_context.appendJump(eth::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 
@@ -521,8 +528,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// copy the contract's code into memory
 			eth::Assembly const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
+			// TODO we create a copy here, which is actually what we want.
+			// This should be revisited at the point where we fix
+			// https://github.com/ethereum/solidity/issues/1092
 			// pushes size
-			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
+			auto subroutine = m_context.addSubroutine(make_shared<eth::Assembly>(assembly));
 			m_context << Instruction::DUP1 << subroutine;
 			m_context << Instruction::DUP4 << Instruction::CODECOPY;
 
@@ -845,9 +855,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			if (funType->location() == FunctionType::Location::Internal)
 			{
-				m_context << m_context.functionEntryLabel(
-					dynamic_cast<FunctionDefinition const&>(funType->declaration())
-				).pushTag();
+				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
+				utils().pushCombinedFunctionEntryLabel(funDef);
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
 			}
 			else
@@ -883,7 +892,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					// us to link against it although we actually do not need it.
 					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
 					solAssert(!!function, "Function not found in member access");
-					m_context << m_context.functionEntryLabel(*function).pushTag();
+					utils().pushCombinedFunctionEntryLabel(*function);
 				}
 			}
 			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
@@ -915,10 +924,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (type.isSuper())
 		{
 			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-			m_context << m_context.superFunctionEntryLabel(
+			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
 				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
 				type.contractDefinition()
-			).pushTag();
+			));
 		}
 		else
 		{
@@ -1141,7 +1150,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			break;
 		case DataLocation::CallData:
 			//@todo if we implement this, the value in calldata has to be added to the base offset
-			solAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (arrayType.baseType()->isValueType())
 				CompilerUtils(m_context).loadFromMemoryDynamic(
 					*arrayType.baseType(),
@@ -1203,7 +1212,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		m_context << m_context.virtualFunctionEntryLabel(*functionDef).pushTag();
+		utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
@@ -1266,6 +1275,17 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 {
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
+		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
+		{
+			if (funType->location() == FunctionType::Location::Internal)
+			{
+				// We have to remove the upper bits (construction time value) because they might
+				// be "unknown" in one of the operands and not in the other.
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+				m_context << Instruction::SWAP1;
+				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			}
+		}
 		m_context << Instruction::EQ;
 		if (_operator == Token::NotEqual)
 			m_context << Instruction::ISZERO;
@@ -1318,7 +1338,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	bool const c_isSigned = type.isSigned();
 
 	if (_type.category() == Type::Category::FixedPoint)
-		solAssert(false, "Not yet implemented - FixedPointType.");
+		solUnimplemented("Not yet implemented - FixedPointType.");
 
 	switch (_operator)
 	{
@@ -1372,7 +1392,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 
 void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 {
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Shift operators not yet implemented."));
+	BOOST_THROW_EXCEPTION(UnimplementedFeatureError() << errinfo_comment("Shift operators not yet implemented."));
 	switch (_operator)
 	{
 	case Token::SHL:
@@ -1634,7 +1654,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression)
 {
-	solAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
+	solUnimplementedAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
 	_expression.accept(*this);
 	utils().convertType(*_expression.annotation().type, _expectedType, true);
 	utils().storeInMemoryDynamic(_expectedType);

@@ -38,11 +38,12 @@ namespace solidity {
 class ContractCompiler: private ASTConstVisitor
 {
 public:
-	explicit ContractCompiler(CompilerContext& _context, bool _optimise):
+	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimise):
 		m_optimise(_optimise),
+		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
-		m_context = CompilerContext();
+		m_context = CompilerContext(_runtimeCompiler ? &_runtimeCompiler->m_context : nullptr);
 	}
 
 	void compileContract(
@@ -52,7 +53,6 @@ public:
 	/// Compiles the constructor part of the contract.
 	/// @returns the identifier of the runtime sub-assembly.
 	size_t compileConstructor(
-		CompilerContext const& _runtimeContext,
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
@@ -74,12 +74,13 @@ private:
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
 	/// with a new and initialized context. Adds the constructor code.
 	/// @returns the identifier of the runtime sub assembly
-	size_t packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext);
+	size_t packIntoContractCreator(ContractDefinition const& _contract);
 	/// Appends state variable initialisation and constructor code.
 	void appendInitAndConstructorCode(ContractDefinition const& _contract);
 	void appendBaseConstructor(FunctionDefinition const& _constructor);
 	void appendConstructor(FunctionDefinition const& _constructor);
 	void appendFunctionSelector(ContractDefinition const& _contract);
+	void appendCallValueCheck();
 	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data.
 	/// Expects source offset on the stack, which is removed.
@@ -114,9 +115,11 @@ private:
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	/// @returns the runtime assembly for clone contracts.
-	static eth::Assembly cloneRuntime();
+	static eth::AssemblyPointer cloneRuntime();
 
 	bool const m_optimise;
+	/// Pointer to the runtime compiler in case this is a creation compiler.
+	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement

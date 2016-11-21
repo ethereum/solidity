@@ -14,32 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity Utilities.
+/** @file SwarmHash.h
  */
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libdevcore/FixedHash.h>
+#include <libdevcore/Common.h>
 
 namespace dev
 {
-namespace solidity
-{
-struct InternalCompilerError;
-struct UnimplementedFeatureError;
+
+/// Compute the "swarm hash" of @a _data
+h256 swarmHash(bytes const& _data);
+
 }
-}
-
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
-
-#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
-
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)

@@ -35,6 +35,7 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <json/json.h>
 
 namespace dev
 {
@@ -343,11 +344,11 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 
-	std::string const& userDocumentation() const;
-	void setUserDocumentation(std::string const& _userDocumentation);
+	Json::Value const& userDocumentation() const;
+	void setUserDocumentation(Json::Value const& _userDocumentation);
 
-	std::string const& devDocumentation() const;
-	void setDevDocumentation(std::string const& _devDocumentation);
+	Json::Value const& devDocumentation() const;
+	void setDevDocumentation(Json::Value const& _devDocumentation);
 
 	virtual TypePointer type() const override;
 
@@ -359,8 +360,8 @@ private:
 	bool m_isLibrary;
 
 	// parsed Natspec documentation of the contract.
-	std::string m_userDocumentation;
-	std::string m_devDocumentation;
+	Json::Value m_userDocumentation;
+	Json::Value m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
@@ -822,6 +823,41 @@ private:
 };
 
 /**
+ * A literal function type. Its source form is "function (paramType1, paramType2) internal / external returns (retType1, retType2)"
+ */
+class FunctionTypeName: public TypeName
+{
+public:
+	FunctionTypeName(
+		SourceLocation const& _location,
+		ASTPointer<ParameterList> const& _parameterTypes,
+		ASTPointer<ParameterList> const& _returnTypes,
+		Declaration::Visibility _visibility,
+		bool _isDeclaredConst,
+		bool _isPayable
+	):
+		TypeName(_location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
+		m_visibility(_visibility), m_isDeclaredConst(_isDeclaredConst), m_isPayable(_isPayable)
+	{}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
+	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
+
+	Declaration::Visibility visibility() const { return m_visibility; }
+	bool isDeclaredConst() const { return m_isDeclaredConst; }
+	bool isPayable() const { return m_isPayable; }
+
+private:
+	ASTPointer<ParameterList> m_parameterTypes;
+	ASTPointer<ParameterList> m_returnTypes;
+	Declaration::Visibility m_visibility;
+	bool m_isDeclaredConst;
+	bool m_isPayable;
+};
+
+/**
  * A mapping type. Its source form is "mapping('keyType' => 'valueType')"
  */
 class Mapping: public TypeName
@@ -1005,18 +1041,22 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
-		ASTPointer<Statement> const& _body
+		ASTPointer<Statement> const& _body,
+		bool _isDoWhile
 	):
-		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body) {}
+		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body),
+		m_isDoWhile(_isDoWhile) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& condition() const { return *m_condition; }
 	Statement const& body() const { return *m_body; }
+	bool isDoWhile() const { return m_isDoWhile; }
 
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_body;
+	bool m_isDoWhile;
 };
 
 /**

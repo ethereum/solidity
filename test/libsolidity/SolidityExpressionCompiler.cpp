@@ -325,12 +325,12 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 					   byte(Instruction::ADD),
 					   byte(Instruction::DUP2),
 					   byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::JUMPI),
 					   byte(Instruction::MOD),
 					   byte(Instruction::DUP2),
 					   byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::JUMPI),
 					   byte(Instruction::DIV),
 					   byte(Instruction::MUL)});
@@ -422,39 +422,6 @@ BOOST_AUTO_TEST_CASE(assignment)
 					   byte(Instruction::DUP3),
 					   // Stack here: a+b b 2 a+b
 					   byte(Instruction::MUL)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
-BOOST_AUTO_TEST_CASE(function_call)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function f(uint a, uint b) { a += g(a + 1, b) * 2; }\n"
-							 "  function g(uint a, uint b) returns (uint c) {}\n"
-							 "}\n";
-	bytes code = compileFirstExpression(sourceCode, {{"test", "g"}},
-										{{"test", "f", "a"}, {"test", "f", "b"}});
-
-	// Stack: a, b
-	bytes expectation({byte(Instruction::PUSH1), 0x02,
-					   byte(Instruction::PUSH1), 0x0c,
-					   byte(Instruction::PUSH1), 0x01,
-					   byte(Instruction::DUP5),
-					   byte(Instruction::ADD),
-					   // Stack here: a b 2 <ret label> (a+1)
-					   byte(Instruction::DUP4),
-					   byte(Instruction::PUSH1), 0x13,
-					   byte(Instruction::JUMP),
-					   byte(Instruction::JUMPDEST),
-					   // Stack here: a b 2 g(a+1, b)
-					   byte(Instruction::MUL),
-					   // Stack here: a b g(a+1, b)*2
-					   byte(Instruction::DUP3),
-					   byte(Instruction::ADD),
-					   // Stack here: a b a+g(a+1, b)*2
-					   byte(Instruction::SWAP2),
-					   byte(Instruction::POP),
-					   byte(Instruction::DUP2),
-					   byte(Instruction::JUMPDEST)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

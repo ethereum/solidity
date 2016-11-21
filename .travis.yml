@@ -135,10 +135,8 @@ git:
 cache:
     ccache: true
     directories:
-        - cryptopp
         - boost_1_57_0
         - build
-        - jsoncpp
 
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
@@ -164,7 +162,7 @@ script:
     # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
     # itself is broken from the failure messages which we are seeing.
     #
-    # More details on known issues at https://github.com/ethereum/solidity/issues/769    
+    # More details on known issues at https://github.com/ethereum/solidity/issues/769
     - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
 env:
     global:

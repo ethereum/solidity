@@ -55,7 +55,11 @@ struct SourceLocation
 		return *this;
 	}
 
-	bool operator==(SourceLocation const& _other) const { return start == _other.start && end == _other.end;}
+	bool operator==(SourceLocation const& _other) const
+	{
+		return start == _other.start && end == _other.end &&
+			((!sourceName && !_other.sourceName) || (sourceName && _other.sourceName && *sourceName == *_other.sourceName));
+	}
 	bool operator!=(SourceLocation const& _other) const { return !operator==(_other); }
 	inline bool operator<(SourceLocation const& _other) const;
 	inline bool contains(SourceLocation const& _other) const;
@@ -79,20 +83,21 @@ inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _locat
 bool SourceLocation::operator<(SourceLocation const& _other) const
 {
 	if (!sourceName || !_other.sourceName)
-		return int(!!sourceName) < int(!!_other.sourceName);
-	return make_tuple(*sourceName, start, end) < make_tuple(*_other.sourceName, _other.start, _other.end);
+		return std::make_tuple(int(!!sourceName), start, end) < std::make_tuple(int(!!_other.sourceName), _other.start, _other.end);
+	else
+		return std::make_tuple(*sourceName, start, end) < std::make_tuple(*_other.sourceName, _other.start, _other.end);
 }
 
 bool SourceLocation::contains(SourceLocation const& _other) const
 {
-	if (isEmpty() || _other.isEmpty() || !sourceName || !_other.sourceName || *sourceName != *_other.sourceName)
+	if (isEmpty() || _other.isEmpty() || ((!sourceName || !_other.sourceName || *sourceName != *_other.sourceName) && (sourceName || _other.sourceName)))
 		return false;
 	return start <= _other.start && _other.end <= end;
 }
 
 bool SourceLocation::intersects(SourceLocation const& _other) const
 {
-	if (isEmpty() || _other.isEmpty() || !sourceName || !_other.sourceName || *sourceName != *_other.sourceName)
+	if (isEmpty() || _other.isEmpty() || ((!sourceName || !_other.sourceName || *sourceName != *_other.sourceName) && (sourceName || _other.sourceName)))
 		return false;
 	return _other.start < end && start < _other.end;
 }

@@ -14,32 +14,31 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity Utilities.
+/** @file JSON.h
+ * @date 2016
+ *
+ * JSON related helpers
  */
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <json/json.h>
 
 namespace dev
 {
-namespace solidity
+
+/// Serialise the JSON object (@a _input) with identation
+std::string jsonPrettyPrint(Json::Value const& _input)
 {
-struct InternalCompilerError;
-struct UnimplementedFeatureError;
-}
+	return Json::StyledWriter().write(_input);
 }
 
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
+/// Serialise theJ SON object (@a _input) without identation
+std::string jsonCompactPrint(Json::Value const& _input)
+{
+	Json::FastWriter writer;
+	writer.omitEndingLineFeed();
+	return writer.write(_input);
+}
 
-#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
-
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)
+}

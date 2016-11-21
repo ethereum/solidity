@@ -1,3 +1,5 @@
+pragma solidity ^0.4.0;
+
 import "./Token.sol";
 
 contract StandardToken is Token {

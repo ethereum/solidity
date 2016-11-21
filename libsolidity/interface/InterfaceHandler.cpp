@@ -8,7 +8,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-string InterfaceHandler::documentation(
+Json::Value InterfaceHandler::documentation(
 	ContractDefinition const& _contractDef,
 	DocumentationType _type
 )
@@ -24,10 +24,9 @@ string InterfaceHandler::documentation(
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
-	return "";
 }
 
-string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 
@@ -67,8 +66,9 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 	{
 		Json::Value method;
 		method["type"] = "constructor";
-		auto externalFunction = FunctionType(*_contractDef.constructor()).interfaceFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
+		method["payable"] = externalFunction->isPayable();
 		method["inputs"] = populateParameters(
 			externalFunction->parameterNames(),
 			externalFunction->parameterTypeNames(_contractDef.isLibrary())
@@ -77,7 +77,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 	}
 	if (_contractDef.fallbackFunction())
 	{
-		auto externalFunctionType = FunctionType(*_contractDef.fallbackFunction()).interfaceFunctionType();
+		auto externalFunctionType = FunctionType(*_contractDef.fallbackFunction(), false).interfaceFunctionType();
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "fallback";
@@ -103,10 +103,11 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		event["inputs"] = params;
 		abi.append(event);
 	}
-	return Json::FastWriter().write(abi);
+
+	return abi;
 }
 
-string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -126,10 +127,10 @@ string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDe
 			}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return doc;
 }
 
-string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
+Json::Value InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -175,7 +176,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 	}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return doc;
 }
 
 string InterfaceHandler::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)

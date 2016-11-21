@@ -33,14 +33,15 @@ void Compiler::compileContract(
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler runtimeCompiler(m_runtimeContext, m_optimize);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
 
-	ContractCompiler creationCompiler(m_context, m_optimize);
-	m_runtimeSub = creationCompiler.compileConstructor(m_runtimeContext, _contract, _contracts);
+	// This might modify m_runtimeContext because it can access runtime functions at
+	// creation time.
+	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize);
+	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
-	if (m_optimize)
-		m_context.optimise(m_optimizeRuns);
+	m_context.optimise(m_optimize, m_optimizeRuns);
 
 	if (_contract.isLibrary())
 	{
@@ -54,11 +55,11 @@ void Compiler::compileClone(
 	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler cloneCompiler(m_context, m_optimize);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
+	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimize);
 	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
 
-	if (m_optimize)
-		m_context.optimise(m_optimizeRuns);
+	m_context.optimise(m_optimize, m_optimizeRuns);
 }
 
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const

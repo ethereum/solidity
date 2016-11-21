@@ -23,9 +23,12 @@
 
 #pragma once
 
+#include <libdevcore/Common.h>
+
 #include <cstddef>
 #include <vector>
 #include <functional>
+#include <map>
 
 namespace dev
 {
@@ -45,6 +48,18 @@ public:
 	BlockDeduplicator(AssemblyItems& _items): m_items(_items) {}
 	/// @returns true if something was changed
 	bool deduplicate();
+	/// @returns the tags that were replaced.
+	std::map<u256, u256> const& replacedTags() const { return m_replacedTags; }
+
+	/// Replaces all PushTag operations insied @a _items that match a key in
+	/// @a _replacements by the respective value. If @a _subID is not -1, only
+	/// apply the replacement for foreign tags from this sub id.
+	/// @returns true iff a replacement was performed.
+	static bool applyTagReplacement(
+		AssemblyItems& _items,
+		std::map<u256, u256> const& _replacements,
+		size_t _subID = size_t(-1)
+	);
 
 private:
 	/// Iterator that skips tags and skips to the end if (all branches of) the control
@@ -70,6 +85,7 @@ private:
 		AssemblyItem const* replaceWith;
 	};
 
+	std::map<u256, u256> m_replacedTags;
 	AssemblyItems& m_items;
 };
 
