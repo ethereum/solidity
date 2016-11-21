@@ -433,7 +433,7 @@ Logs
 ====
 
 It is possible to store data in a specially indexed data structure
-that maps all they way up to the block level. This feature called **logs**
+that maps all the way up to the block level. This feature called **logs**
 is used by Solidity in order to implement **events**.
 Contracts cannot access log data after it has been created, but they
 can be efficiently accessed from outside the blockchain.
