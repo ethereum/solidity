@@ -234,7 +234,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 
 			m_context << Instruction::SWAP1;
 			utils.convertType(_sourceType, _sourceType, true);
-			utils.convertType(*m_dataType, *m_dataType, true);
+			utils.convertType(*m_dataType, *m_dataType, true, true);
 			m_context << Instruction::SWAP1;
 
 			m_context << Instruction::SSTORE;
@@ -280,13 +280,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			{
 				solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size for opaque type.");
 				// remove the higher order bits
-				utils.convertType(*m_dataType, *m_dataType, true);
-				m_context
-					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
-					<< Instruction::SWAP1
-					<< Instruction::DUP2
-					<< Instruction::MUL
-					<< Instruction::DIV;
+				utils.convertType(*m_dataType, *m_dataType, true, true);
 			}
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value

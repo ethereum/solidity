@@ -358,7 +358,7 @@ void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
 			Instruction::OR;
 }
 
-void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
+void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded, bool _chopSignBits)
 {
 	// For a type extension, we need to remove all higher-order bits that we might have ignored in
 	// previous operations.
@@ -370,6 +370,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	Type::Category targetTypeCategory = _targetType.category();
 
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
+	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
+	if (chopSignBitsPending)
+	{
+		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		chopSignBitsPending = targetIntegerType.isSigned();
+	}
 
 	switch (stackTypeCategory)
 	{
@@ -482,6 +488,17 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					cleanHigherOrderBits(typeOnStack);
 				else if (_cleanupNeeded)
 					cleanHigherOrderBits(targetType);
+				if (chopSignBitsPending)
+				{
+					if (typeOnStack.numBits() < 256)
+						m_context
+							<< (u256(1) << (256 - typeOnStack.numBits()))
+							<< Instruction::SWAP1
+							<< Instruction::DUP2
+							<< Instruction::MUL
+							<< Instruction::DIV;
+					chopSignBitsPending = false;
+				}
 			}
 		}
 		break;
@@ -728,6 +745,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 
 	solAssert(!enumOverflowCheckPending, "enum overflow checking missing.");
+	solAssert(!chopSignBitsPending, "forgot to chop the sign bits.");
 }
 
 void CompilerUtils::pushZeroValue(Type const& _type)

@@ -130,7 +130,7 @@ public:
 	/// if a reference type is converted from calldata or storage to memory.
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
-	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
+	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false, bool _chopSignBits = false);
 
 	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
 	/// memory for memory references.
