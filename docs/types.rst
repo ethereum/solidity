@@ -368,11 +368,11 @@ Another example that uses external function types::
     contract Oracle {
       struct Request {
         bytes data;
-        function(bytes) external callback;
+        function(bytes memory) external callback;
       }
       Request[] requests;
       event NewRequest(uint);
-      function query(bytes data, function(bytes) external callback) {
+      function query(bytes data, function(bytes memory) external callback) {
         requests.push(Request(data, callback));
         NewRequest(requests.length - 1);
       }
