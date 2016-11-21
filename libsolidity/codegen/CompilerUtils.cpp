@@ -371,10 +371,10 @@ void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 	m_context << u256(0xffffffffUL) << Instruction::AND << Instruction::SWAP1;
 	if (!_leftAligned)
 		m_context << ((u256(1) << 160) - 1) << Instruction::AND;
-	m_context << (u256(1) << 32) << Instruction::MUL;
+	leftShiftNumberOnStack(u256(1) << 32);
 	m_context << Instruction::OR;
 	if (_leftAligned)
-		m_context << (u256(1) << 64) << Instruction::MUL;
+		leftShiftNumberOnStack(u256(1) << 64);
 }
 
 void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
@@ -425,7 +425,7 @@ void CompilerUtils::convertType(
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			m_context << (u256(1) << (256 - typeOnStack.numBytes() * 8)) << Instruction::SWAP1 << Instruction::DIV;
+			rightShiftNumberOnStack(u256(1) << (256 - typeOnStack.numBytes() * 8), false);
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
@@ -476,7 +476,7 @@ void CompilerUtils::convertType(
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 				if (targetBytesType.numBytes() * 8 > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			m_context << (u256(1) << (256 - targetBytesType.numBytes() * 8)) << Instruction::MUL;
+			leftShiftNumberOnStack(u256(1) << (256 - targetBytesType.numBytes() * 8));
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 		{
@@ -987,9 +987,9 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
 		u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
-		m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
+		rightShiftNumberOnStack(shiftFactor, false);
 		if (leftAligned)
-			m_context << shiftFactor << Instruction::MUL;
+			leftShiftNumberOnStack(shiftFactor);
 	}
 	if (_fromCalldata)
 		convertType(_type, _type, true, false, true);
