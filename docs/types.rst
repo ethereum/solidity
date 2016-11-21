@@ -312,6 +312,10 @@ If external function types are used outside of the context of Solidity,
 they are treated as the ``function`` type, which encodes the address
 followed by the function identifier together in a single ``bytes24`` type.
 
+Note that public functions of the current contract can be used both as an
+internal and as an external function. To use ``f`` as an internal function,
+just use ``f``, if you want to use its external form, use ``this.f``.
+
 Example that shows how to use internal function types::
 
     pragma solidity ^0.4.5;
@@ -385,7 +389,7 @@ Another example that uses external function types::
     contract OracleUser {
       Oracle constant oracle = Oracle(0x1234567); // known contract
       function buySomething() {
-        oracle.query("USD", oracleResponse);
+        oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) {
         if (msg.sender != address(oracle)) throw;
