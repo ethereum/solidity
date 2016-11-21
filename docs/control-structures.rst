@@ -427,7 +427,7 @@ these curly braces, the following can be used (see the later sections for more d
 
  - literals, e.g. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcodes in functional style, e.g. ``add(1, mlod(0))``
+ - opcodes in functional style, e.g. ``add(1, mload(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
  - identifiers (externals, labels or assembly-local variables), e.g. ``jump(name)``, ``3 x add``
