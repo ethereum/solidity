@@ -138,6 +138,7 @@ inline u256 s2u(s256 _u)
 inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 {
 	std::ostringstream ss;
+	ss << std::hex;
 	std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
 	std::string result = ss.str();
 	result.pop_back();
