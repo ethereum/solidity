@@ -314,10 +314,13 @@ followed by the function identifier together in a single ``bytes24`` type.
 
 Example that shows how to use internal function types::
 
+    pragma solidity ^0.4.5;
+
     library ArrayUtils {
       // internal functions can be used in internal library functions because
       // they will be part of the same code context
       function map(uint[] memory self, function (uint) returns (uint) f)
+        internal
         returns (uint[] memory r)
       {
         r = new uint[](self.length);
@@ -327,8 +330,9 @@ Example that shows how to use internal function types::
       }
       function reduce(
         uint[] memory self,
-        function (uint) returns (uint) f
+        function (uint x, uint y) returns (uint) f
       )
+        internal
         returns (uint r)
       {
         r = self[0];
@@ -336,7 +340,7 @@ Example that shows how to use internal function types::
           r = f(r, self[i]);
         }
       }
-      function range(uint length) returns (uint[] memory r) {
+      function range(uint length) internal returns (uint[] memory r) {
         r = new uint[](length);
         for (uint i = 0; i < r.length; i++) {
           r[i] = i;
@@ -346,7 +350,7 @@ Example that shows how to use internal function types::
     
     contract Pyramid {
       using ArrayUtils for *;
-      function pyramid(uint l) return (uint) {
+      function pyramid(uint l) returns (uint) {
         return ArrayUtils.range(l).map(square).reduce(sum);
       }
       function square(uint x) internal returns (uint) {
@@ -358,6 +362,8 @@ Example that shows how to use internal function types::
     }
 
 Another example that uses external function types::
+
+    pragma solidity ^0.4.5;
 
     contract Oracle {
       struct Request {
@@ -377,12 +383,12 @@ Another example that uses external function types::
     }
 
     contract OracleUser {
-      Oracle constant oracle = 0x1234567; // known contract
+      Oracle constant oracle = Oracle(0x1234567); // known contract
       function buySomething() {
         oracle.query("USD", oracleResponse);
       }
       function oracleResponse(bytes response) {
-        if (msg.sender != oracle) throw;
+        if (msg.sender != address(oracle)) throw;
         // Use the data
       }
     }
