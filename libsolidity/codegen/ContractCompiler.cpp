@@ -102,6 +102,13 @@ void ContractCompiler::initializeContext(
 	m_context.resetVisitedNodes(&_contract);
 }
 
+void ContractCompiler::appendCallValueCheck()
+{
+	// Throw if function is not payable but call contained ether.
+	m_context << Instruction::CALLVALUE;
+	m_context.appendConditionalJumpTo(m_context.errorTag());
+}
+
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 {
 	// Determine the arguments that are used for the base constructors.
@@ -137,6 +144,8 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 		appendConstructor(*constructor);
 	else if (auto c = m_context.nextConstructor(_contract))
 		appendBaseConstructor(*c);
+	else
+		appendCallValueCheck();
 }
 
 size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
@@ -184,6 +193,9 @@ void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _construc
 void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _constructor);
+	if (!_constructor.isPayable())
+		appendCallValueCheck();
+
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	if (!_constructor.parameters().empty())
 	{
@@ -251,11 +263,8 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	if (fallback)
 	{
 		if (!fallback->isPayable())
-		{
-			// Throw if function is not payable but call contained ether.
-			m_context << Instruction::CALLVALUE;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
-		}
+			appendCallValueCheck();
+
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
@@ -274,11 +283,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
 		if (!functionType->isPayable() && !_contract.isLibrary())
-		{
-			// Throw if function is not payable but call contained ether.
-			m_context << Instruction::CALLVALUE;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
-		}
+			appendCallValueCheck();
 
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		m_context << CompilerUtils::dataStartOffset;

@@ -524,6 +524,7 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 				"type": "bool"
 			}
 		],
+		"payable": false,
 		"type": "constructor"
 	}
 	])";
@@ -567,6 +568,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 					"type": "uint8"
 				}
 			],
+			"payable": false,
 			"type": "constructor"
 		}
 	]

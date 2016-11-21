@@ -1337,6 +1337,7 @@ BOOST_AUTO_TEST_CASE(struct_accessor)
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
+							 "  function test() payable {}\n"
 							 "  function getBalance() returns (uint256 balance) {\n"
 							 "    return address(this).balance;\n"
 							 "  }\n"
@@ -1348,6 +1349,7 @@ BOOST_AUTO_TEST_CASE(balance)
 BOOST_AUTO_TEST_CASE(blockchain)
 {
 	char const* sourceCode = "contract test {\n"
+							 "  function test() payable {}\n"
 							 "  function someInfo() payable returns (uint256 value, address coinbase, uint256 blockNumber) {\n"
 							 "    value = msg.value;\n"
 							 "    coinbase = block.coinbase;\n"
@@ -1563,6 +1565,7 @@ BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_greater_size)
 BOOST_AUTO_TEST_CASE(send_ether)
 {
 	char const* sourceCode = "contract test {\n"
+							 "  function test() payable {}\n"
 							 "  function a(address addr, uint amount) returns (uint ret) {\n"
 							 "    addr.send(amount);\n"
 							 "    return address(this).balance;\n"
@@ -1675,6 +1678,7 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 BOOST_AUTO_TEST_CASE(suicide)
 {
 	char const* sourceCode = "contract test {\n"
+							 "  function test() payable {}\n"
 							 "  function a(address receiver) returns (uint ret) {\n"
 							 "    suicide(receiver);\n"
 							 "    return 10;\n"
@@ -1691,6 +1695,7 @@ BOOST_AUTO_TEST_CASE(suicide)
 BOOST_AUTO_TEST_CASE(selfdestruct)
 {
 	char const* sourceCode = "contract test {\n"
+							 "  function test() payable {}\n"
 							 "  function a(address receiver) returns (uint ret) {\n"
 							 "    selfdestruct(receiver);\n"
 							 "    return 10;\n"
@@ -2956,24 +2961,24 @@ BOOST_AUTO_TEST_CASE(generic_call)
 BOOST_AUTO_TEST_CASE(generic_callcode)
 {
 	char const* sourceCode = R"**(
-			contract receiver {
+			contract Receiver {
 				uint public received;
 				function receive(uint256 x) payable { received = x; }
 			}
-			contract sender {
+			contract Sender {
 				uint public received;
-				function sender() payable { }
+				function Sender() payable { }
 				function doSend(address rec) returns (uint d)
 				{
 					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
 					rec.callcode.value(2)(signature, 23);
-					return receiver(rec).received();
+					return Receiver(rec).received();
 				}
 			}
 	)**";
-	compileAndRun(sourceCode, 0, "receiver");
+	compileAndRun(sourceCode, 0, "Receiver");
 	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "sender");
+	compileAndRun(sourceCode, 50, "Sender");
 	u160 const c_senderAddress = m_contractAddress;
 	BOOST_CHECK(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
@@ -2988,16 +2993,18 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 BOOST_AUTO_TEST_CASE(generic_delegatecall)
 {
 	char const* sourceCode = R"**(
-			contract receiver {
+			contract Receiver {
 				uint public received;
 				address public sender;
 				uint public value;
+				function Receiver() payable {}
 				function receive(uint256 x) payable { received = x; sender = msg.sender; value = msg.value; }
 			}
-			contract sender {
+			contract Sender {
 				uint public received;
 				address public sender;
 				uint public value;
+				function Sender() payable {}
 				function doSend(address rec) payable
 				{
 					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
@@ -3005,9 +3012,9 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				}
 			}
 	)**";
-	compileAndRun(sourceCode, 0, "receiver");
+	compileAndRun(sourceCode, 0, "Receiver");
 	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "sender");
+	compileAndRun(sourceCode, 50, "Sender");
 	u160 const c_senderAddress = m_contractAddress;
 	BOOST_CHECK(m_sender != c_senderAddress); // just for sanity
 	BOOST_CHECK(callContractFunctionWithValue("doSend(address)", 11, c_receiverAddress) == encodeArgs());
@@ -4818,6 +4825,7 @@ BOOST_AUTO_TEST_CASE(failing_send)
 			}
 		}
 		contract Main {
+			function Main() payable {}
 			function callHelper(address _a) returns (bool r, uint bal) {
 				r = !_a.send(5);
 				bal = this.balance;
@@ -4840,6 +4848,7 @@ BOOST_AUTO_TEST_CASE(send_zero_ether)
 			}
 		}
 		contract Main {
+			function Main() payable {}
 			function s() returns (bool) {
 				var r = new Receiver();
 				return r.send(0);
@@ -6341,6 +6350,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 	char const* sourceCode = R"(
 		library lib {}
 		contract c {
+			function c() payable {}
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
@@ -7279,6 +7289,7 @@ BOOST_AUTO_TEST_CASE(failed_create)
 		contract D { function D() payable {} }
 		contract C {
 			uint public x;
+			function C() payable {}
 			function f(uint amount) returns (address) {
 				x++;
 				return (new D).value(amount)();
@@ -7392,7 +7403,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 		}
 		contract Fund is mutexed {
 			uint shares;
-			function Fund() { shares = msg.value; }
+			function Fund() payable { shares = msg.value; }
 			function withdraw(uint amount) protected returns (uint) {
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
