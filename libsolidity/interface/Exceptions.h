@@ -58,11 +58,10 @@ public:
 
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
-	template <typename T>
-	bool regex_search(T&& _reg) const
+	bool regex_search(const std::string& _reg) const
 	{
 		if (std::string const* str = boost::get_error_info<errinfo_comment>(*this))
-			return std::regex_search(*str, std::regex(std::forward<T>(_reg)));
+			return std::regex_search(*str, std::regex(_reg));
 		else
 			return false;
 	}
