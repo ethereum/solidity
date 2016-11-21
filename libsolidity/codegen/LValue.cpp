@@ -216,15 +216,13 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
 	CompilerUtils utils(m_context);
+	solAssert(m_dataType, "");
+
 	// stack: value storage_key storage_offset
 	if (m_dataType->isValueType())
 	{
 		solAssert(m_dataType->storageBytes() <= 32, "Invalid storage bytes size.");
 		solAssert(m_dataType->storageBytes() > 0, "Invalid storage bytes size.");
-
-		m_context << Instruction::SWAP2;
-		CompilerUtils(m_context).convertType(*m_dataType, *m_dataType, true);
-		m_context << Instruction::SWAP2;
 
 		if (m_dataType->storageBytes() == 32)
 		{
@@ -233,10 +231,23 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			m_context << Instruction::POP;
 			if (!_move)
 				m_context << Instruction::DUP2 << Instruction::SWAP1;
+
+			m_context << Instruction::SWAP1;
+			utils.convertType(_sourceType, _sourceType, true);
+			utils.convertType(*m_dataType, *m_dataType, true);
+			m_context << Instruction::SWAP1;
+
 			m_context << Instruction::SSTORE;
 		}
 		else
 		{
+			if (_sourceType.sizeOnStack() == 1)
+			{
+				m_context << Instruction::SWAP2;
+				utils.convertType(_sourceType, _sourceType, true);
+				m_context << Instruction::SWAP2;
+			}
+
 			// OR the value into the other values in the storage slot
 			m_context << u256(0x100) << Instruction::EXP;
 			// stack: value storage_ref multiplier
@@ -269,6 +280,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			{
 				solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size for opaque type.");
 				// remove the higher order bits
+				utils.convertType(*m_dataType, *m_dataType, true);
 				m_context
 					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
 					<< Instruction::SWAP1
