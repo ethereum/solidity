@@ -346,7 +346,7 @@ Example that shows how to use internal function types::
     
     contract Pyramid {
       using ArrayUtils for *;
-      function pyramid(uint l) return (uint) {
+      function pyramid(uint l) returns (uint) {
         return ArrayUtils.range(l).map(square).reduce(sum);
       }
       function square(uint x) internal returns (uint) {
