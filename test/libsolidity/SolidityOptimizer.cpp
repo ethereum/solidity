@@ -1246,6 +1246,26 @@ BOOST_AUTO_TEST_CASE(dead_code_elimination_across_assemblies)
 	compareVersions("test()");
 }
 
+BOOST_AUTO_TEST_CASE(invalid_state_at_control_flow_join)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			uint256 public totalSupply = 100;
+			function f() returns (uint r) {
+				if (false)
+					r = totalSupply;
+				totalSupply -= 10;
+			}
+			function test() returns (uint) {
+				f();
+				return this.totalSupply();
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("test()");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
