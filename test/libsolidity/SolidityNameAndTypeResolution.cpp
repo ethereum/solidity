@@ -165,7 +165,7 @@ do \
 { \
 	Error err = expectError((text), (warning)); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(err.regex_search({substring})); \
+	BOOST_CHECK(err.searchForSubstring(substring)); \
 } while(0)
 
 // [checkError(text, type, substring)] asserts that the compilation down to typechecking
@@ -4104,7 +4104,7 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
 	BOOST_REQUIRE(!!sourceAndError.second);
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(sourceAndError.second->regex_search("Source file does not specify required compiler version!"));
+	BOOST_CHECK(sourceAndError.second->searchForSubstring("Source file does not specify required compiler version!"));
 }
 
 BOOST_AUTO_TEST_CASE(unsatisfied_version)

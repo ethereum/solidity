@@ -56,3 +56,10 @@ Error::Error(Type _type): m_type(_type)
 		break;
 	}
 }
+
+bool Error::searchForSubstring(const std::string& _substr) const
+{
+	if (const std::string* str = boost::get_error_info<errinfo_comment>(*this))
+		return str->find(_substr) != std::string::npos;
+	return _substr.empty();
+}
