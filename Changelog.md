@@ -1,3 +1,8 @@
+### 0.4.6 (2016-11-22)
+
+Bugfixes:
+ * Optimizer: Knowledge about state was not correctly cleared for JUMPDESTs
+
 ### 0.4.5 (2016-11-21)
 
 Features:
