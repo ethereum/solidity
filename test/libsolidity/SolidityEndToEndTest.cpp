@@ -8592,11 +8592,8 @@ BOOST_AUTO_TEST_CASE(shift_overflow)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	// should throw
-	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 8) == encodeArgs());
-	// should throw
-	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs());
-	// should return
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 8) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs(u256(254)));
 	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 0) == encodeArgs(u256(255)));
 
 	// should throw
