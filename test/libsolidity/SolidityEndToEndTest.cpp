@@ -8596,9 +8596,7 @@ BOOST_AUTO_TEST_CASE(shift_overflow)
 	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs(u256(254)));
 	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 0) == encodeArgs(u256(255)));
 
-	// should throw
-	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs());
-	// should return
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs(u256(128)));
 	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
 }
 
