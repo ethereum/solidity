@@ -360,46 +360,35 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
 			{
-				auto end = iter;
-				while (end != m_items.end())
-					if (SemanticInformation::altersControlFlow(*end++))
-						break;
-
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator(emptyState);
-				auto blockIter = iter;
-				auto const blockEnd = end;
-				while (blockIter < blockEnd)
+				auto orig = iter;
+				iter = eliminator.feedItems(iter, m_items.end());
+				bool shouldReplace = false;
+				AssemblyItems optimisedChunk;
+				try
 				{
-					auto orig = blockIter;
-					blockIter = eliminator.feedItems(blockIter, blockEnd);
-					bool shouldReplace = false;
-					AssemblyItems optimisedChunk;
-					try
-					{
-						optimisedChunk = eliminator.getOptimizedItems();
-						shouldReplace = (optimisedChunk.size() < size_t(blockIter - orig));
-					}
-					catch (StackTooDeepException const&)
-					{
-						// This might happen if the opcode reconstruction is not as efficient
-						// as the hand-crafted code.
-					}
-					catch (ItemNotAvailableException const&)
-					{
-						// This might happen if e.g. associativity and commutativity rules
-						// reorganise the expression tree, but not all leaves are available.
-					}
-
-					if (shouldReplace)
-					{
-						count++;
-						optimisedItems += optimisedChunk;
-					}
-					else
-						copy(orig, blockIter, back_inserter(optimisedItems));
+					optimisedChunk = eliminator.getOptimizedItems();
+					shouldReplace = (optimisedChunk.size() < size_t(iter - orig));
 				}
-				iter = end;
+				catch (StackTooDeepException const&)
+				{
+					// This might happen if the opcode reconstruction is not as efficient
+					// as the hand-crafted code.
+				}
+				catch (ItemNotAvailableException const&)
+				{
+					// This might happen if e.g. associativity and commutativity rules
+					// reorganise the expression tree, but not all leaves are available.
+				}
+
+				if (shouldReplace)
+				{
+					count++;
+					optimisedItems += optimisedChunk;
+				}
+				else
+					copy(orig, iter, back_inserter(optimisedItems));
 			}
 			if (optimisedItems.size() < m_items.size())
 			{
