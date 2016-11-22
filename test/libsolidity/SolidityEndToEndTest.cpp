@@ -8551,16 +8551,58 @@ BOOST_AUTO_TEST_CASE(shift_cleanup)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (uint x) {
-				uint16 x = 0xffff;
+			function f() returns (uint16 x) {
+				x = 0xffff;
 				x += 32;
-				x <<= 8
+				x <<= 8;
 				x >>= 16;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_cleanup_garbled)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint8 x) {
+				assembly {
+					x := 0xffff
+				}
+				x >>= 8;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_overflow)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function leftU(uint8 x, uint8 y) returns (uint8) {
+				return x << y;
+			}
+			function leftS(int8 x, int8 y) returns (int8) {
+				return x << y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// should throw
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 8) == encodeArgs());
+	// should throw
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs());
+	// should return
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 0) == encodeArgs(u256(255)));
+
+	// should throw
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs());
+	// should return
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)
