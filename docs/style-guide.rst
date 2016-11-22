@@ -153,7 +153,7 @@ No::
 Order of Functions
 ==================
 
-Ordering helps readers identify which functions they can call, and to find the "specials" (constructor and fallback function).
+Ordering helps readers identify which functions they can call and to find the constructor and fallback definitions easier.
 
 Functions should be grouped according to their visibility and ordered:
 
