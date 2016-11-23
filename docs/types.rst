@@ -739,9 +739,9 @@ assigning it to a local variable, as in
 Mappings
 ========
 
-Mapping types are declared as ``mapping _KeyType => _ValueType``, where
-``_KeyType`` can be almost any type except for a mapping and ``_ValueType``
-can actually be any type, including mappings.
+Mapping types are declared as ``mapping _KeyType => _ValueType``.
+Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
+``_ValueType`` can actually be any type, including mappings.
 
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
