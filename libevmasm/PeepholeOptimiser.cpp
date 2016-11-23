@@ -37,6 +37,35 @@ struct OptimiserState
 	std::back_insert_iterator<AssemblyItems> out;
 };
 
+template <class Method, size_t Arguments>
+struct ApplyRule
+{
+};
+template <class Method>
+struct ApplyRule<Method, 3>
+{
+	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	{
+		return Method::applySimple(_in[0], _in[1], _in[2], _out);
+	}
+};
+template <class Method>
+struct ApplyRule<Method, 2>
+{
+	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	{
+		return Method::applySimple(_in[0], _in[1], _out);
+	}
+};
+template <class Method>
+struct ApplyRule<Method, 1>
+{
+	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	{
+		return Method::applySimple(_in[0], _out);
+	}
+};
+
 template <class Method, size_t WindowSize>
 struct SimplePeepholeOptimizerMethod
 {
@@ -44,7 +73,7 @@ struct SimplePeepholeOptimizerMethod
 	{
 		if (
 			_state.i + WindowSize <= _state.items.size() &&
-			Method::applySimple(_state.items.begin() + _state.i, _state.out)
+			ApplyRule<Method, WindowSize>::applyRule(_state.items.begin() + _state.i, _state.out)
 		)
 		{
 			_state.i += WindowSize;
@@ -57,20 +86,20 @@ struct SimplePeepholeOptimizerMethod
 
 struct Identity: SimplePeepholeOptimizerMethod<Identity, 1>
 {
-	static bool applySimple(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	static bool applySimple(AssemblyItem const& _item, std::back_insert_iterator<AssemblyItems> _out)
 	{
-		*_out = *_in;
+		*_out = _item;
 		return true;
 	}
 };
 
 struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 {
-	static size_t applySimple(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems>)
+	static size_t applySimple(AssemblyItem const& _push, AssemblyItem const& _pop, std::back_insert_iterator<AssemblyItems>)
 	{
-		auto t = _in[0].type();
-		return _in[1] == Instruction::POP && (
-			SemanticInformation::isDupInstruction(_in[0]) ||
+		auto t = _push.type();
+		return _pop == Instruction::POP && (
+			SemanticInformation::isDupInstruction(_push) ||
 			t == Push || t == PushString || t == PushTag || t == PushSub ||
 			t == PushSubSize || t == PushProgramSize || t == PushData || t == PushLibraryAddress
 		);
@@ -104,26 +133,55 @@ struct AddPop: SimplePeepholeOptimizerMethod<AddPop, 2>
 
 struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap, 2>
 {
-	static size_t applySimple(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems>)
+	static size_t applySimple(AssemblyItem const& _s1, AssemblyItem const& _s2, std::back_insert_iterator<AssemblyItems>)
 	{
-		return _in[0] == _in[1] && SemanticInformation::isSwapInstruction(_in[0]);
+		return _s1 == _s2 && SemanticInformation::isSwapInstruction(_s1);
 	}
 };
 
 struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext, 3>
 {
-	static size_t applySimple(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	static size_t applySimple(
+		AssemblyItem const& _pushTag,
+		AssemblyItem const& _jump,
+		AssemblyItem const& _tag,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
 	{
 		if (
-			_in[0].type() == PushTag &&
-			(_in[1] == Instruction::JUMP || _in[1] == Instruction::JUMPI) &&
-			_in[2].type() == Tag &&
-			_in[0].data() == _in[2].data()
+			_pushTag.type() == PushTag &&
+			(_jump == Instruction::JUMP || _jump == Instruction::JUMPI) &&
+			_tag.type() == Tag &&
+			_pushTag.data() == _tag.data()
 		)
 		{
-			if (_in[1] == Instruction::JUMPI)
-				*_out = AssemblyItem(Instruction::POP, _in[1].location());
-			*_out = _in[2];
+			if (_jump == Instruction::JUMPI)
+				*_out = AssemblyItem(Instruction::POP, _jump.location());
+			*_out = _tag;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
+{
+	static bool applySimple(
+		AssemblyItem const& _pushTag,
+		AssemblyItem const& _pushConstant,
+		AssemblyItem const& _and,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_pushTag.type() == PushTag &&
+			_and == Instruction::AND &&
+			_pushConstant.type() == Push &&
+			(_pushConstant.data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
+		)
+		{
+			*_out = _pushTag;
 			return true;
 		}
 		else
@@ -155,26 +213,6 @@ struct UnreachableCode
 		{
 			*_state.out = it[0];
 			_state.i += i;
-			return true;
-		}
-		else
-			return false;
-	}
-};
-
-
-struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
-{
-	static bool applySimple(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
-	{
-		if (
-			_in[0].type() == PushTag &&
-			_in[2] == Instruction::AND &&
-			_in[1].type() == Push &&
-			(_in[1].data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
-		)
-		{
-			*_out = _in[0];
 			return true;
 		}
 		else
