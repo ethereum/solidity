@@ -232,6 +232,125 @@ Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
+*****************
+Contract Metadata
+*****************
+
+The Solidity compiler automatically generates an internal json file, the
+contract metadata, that contains information about the current contract.
+It can be used to query the compiler version, the sourcecode, the ABI
+and NatSpec documentation in order to more safely interact with the contract
+and to verify its source code.
+
+The compiler inserts a swarm hash of that file into the bytecode of each
+contract, so that you can retrieve the file in an authenticated way
+without having to resort to a centralized data provider.
+
+Specifically, the runtime code for a contract always starts with
+``push32 <metadata hash> pop``, so you can take a look at the 32 bytes starting at
+the second byte of the code of a contract.
+
+Of course, you have to publish the metadata file to swarm (or some other service)
+so that others can access it. The file can be output by using ``solc --metadata``.
+It will contain swarm references to the source code, so you have to upload
+all source files and the metadata.
+
+The metadata file has the following format. The example below is presented in a
+human-readable way. Properly formatted metadata should use quotes correctly,
+reduce whitespace to a minimum and sort the keys of all objects to arrive at a
+unique formatting.
+Comments are of course also not permitted and used here only for explanatory purposes.
+
+    {
+      // Required: The version of the metadata format
+      version: "1",
+      // Required: Source code language, basically selects a "sub-version"
+      // of the specification
+      language: "Solidity",
+      // Required: Details about the compiler, contents are specific
+      // to the language.
+      compiler: {
+        // Required for Solidity: Version of the compiler
+        version: "0.4.6+commit.2dabbdf0.Emscripten.clang",
+        // Optional: Hash of the compiler binary which produced this output
+        keccak256: "0x123..."
+      },
+      // Required: Compilation source files/source units, keys are file names
+      sources:
+      {
+        "myFile.sol": {
+          // Required: keccak256 hash of the source file
+          "keccak256": "0x123...",
+          // Required (unless "content" is used, see below): URL to the
+          // source file, protocol is more or less arbitrary, but a swarm
+          // URL is recommended
+          "url": "bzzr://56ab..."
+        },
+        "mortal": {
+          "keccak256": "0x123...",
+          // Required (unless "url" is used): literal contents of the source file
+          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+        }
+      },
+      // Required: Compiler settings
+      settings:
+      {
+        // Required for Solidity: Sorted list of remappings
+        remappings: [":g/dir"],
+        // Optional: Optimizer settings (enabled defaults to false)
+        optimizer: {enabled: true, runs: 500},
+        // Required for Solidity: File and name of the contract or library this
+        // metadata is created for.
+        compilationTarget: {
+          "myFile.sol": "MyContract"
+        },
+        // Required for Solidity: Addresses for libraries
+        libraries: {
+          "MyLib": "0x123123..."
+        }
+      },
+      // Required: Generated information about the contract.
+      output:
+      {
+        // Required: ABI definition of the contract
+        abi: [ ... ],
+        // Required: NatSpec user documentation of the contract
+        userdoc: [ ... ],
+        // Required: NatSpec developer documentation of the contract
+        devdoc: [ ... ],
+      }
+    }
+
+Usage for Automatic Interface Generation and NatSpec
+----------------------------------------------------
+
+The metadata is used in the following way: A component that wants to interact
+with a contract (e.g. mist) retrieves the code of the contract
+and from that the first 33 bytes. If the first byte decodes into a PUSH32
+instruction, the other 32 bytes are interpreted as the swarm hash of
+a file which is then retrieved.
+That file is JSON-decoded into a structure like above.
+
+The component can then use the abi to automatically generate a rudimentary
+user interface for the contract.
+
+Furthermore, mist can use the userdoc to display a confirmation message to the user
+whenever they interact with the contract.
+
+Usage for Source Code Verification
+----------------------------------
+
+In order to verify the compilation, sources can be retrieved from swarm
+via the link in the metadata file.
+The compiler of the correct version (which is checked to be part of the "official" compilers)
+is invoked on that input with the specified settings. The resulting
+bytecode is compared to the data of the creation transaction or CREATE opcode data.
+This automatically verifies the metadata since
+its hash is part of the bytecode.
+Excess data is constructor input data which should be decoded
+according to the interface and presented to the user.
+
+
 ***************
 Tips and Tricks
 ***************
