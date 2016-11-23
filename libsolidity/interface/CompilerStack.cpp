@@ -670,6 +670,7 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	meta["language"] = "Solidity";
 	meta["compiler"]["version"] = VersionString;
 
+	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
 	{
 		solAssert(s.second.scanner, "Scanner not available");
@@ -683,12 +684,14 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
 
+	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
 	for (auto const& r: m_remappings)
 		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
 	for (auto const& r: remappings)
 		meta["settings"]["remappings"].append(r);
 
+	meta["settings"]["libraries"] = Json::objectValue;
 	for (auto const& library: m_libraries)
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 

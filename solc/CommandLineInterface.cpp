@@ -212,7 +212,7 @@ void CommandLineInterface::handleOnChainMetadata(string const& _contract)
 
 	string data = m_compiler->onChainMetadata(_contract);
 	if (m_args.count("output-dir"))
-		createFile(_contract + ".meta", data);
+		createFile(_contract + "_meta.json", data);
 	else
 		cout << "Metadata: " << endl << data << endl;
 }
