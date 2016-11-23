@@ -2817,6 +2817,17 @@ BOOST_AUTO_TEST_CASE(using_for_not_used)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(library_memory_struct)
+{
+	char const* text = R"(
+		library c {
+			struct S { uint x; }
+			function f() returns (S ) {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
 {
 	// Bound to a, but self type does not match.
