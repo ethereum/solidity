@@ -721,8 +721,10 @@ Details are given in the following example.
             NameReg(config.lookup(1)).register(name);
         }
 
-        // Functions can be overridden, both local and
-        // message-based function calls take these overrides
+        // Functions can be overridden by another function with the same name and
+        // the same number/types of inputs.  If the overriding function has different
+        // types of output parameters, that causes an error.
+        // Both local and message-based function calls take these overrides
         // into account.
         function kill() {
             if (msg.sender == owner) {
