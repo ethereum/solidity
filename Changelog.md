@@ -1,6 +1,7 @@
 ### 0.4.7 (unreleased)
 
 Features:
+ * Code generator: Inject the swarm hash of a metadata file into the bytecode.
  * Optimizer: Some dead code elimination.
 
 Bugfixes:
