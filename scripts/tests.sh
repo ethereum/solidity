@@ -65,9 +65,14 @@ $ETH_PATH --test -d /tmp/test &
 # The node needs to get a little way into its startup sequence before the IPC
 # is available and is ready for the unit-tests to start talking to it.
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+echo "--> IPC available."
 
-# And then run the Solidity unit-tests, pointing to that IPC endpoint.
-"$REPO_ROOT"/build/test/soltest -- --ipcpath /tmp/test/geth.ipc
+# And then run the Solidity unit-tests (once without optimization, once with),
+# pointing to that IPC endpoint.
+echo "--> Running tests without optimizer..."
+  "$REPO_ROOT"/build/test/soltest -- --ipcpath /tmp/test/geth.ipc && \
+  echo "--> Running tests WITH optimizer..." && \
+  "$REPO_ROOT"/build/test/soltest -- --optimize --ipcpath /tmp/test/geth.ipc
 ERROR_CODE=$?
 pkill eth || true
 sleep 4
