@@ -1,5 +1,8 @@
 ### 0.4.7 (unreleased)
 
+Features:
+ * Optimizer: Some dead code elimination.
+
 Bugfixes:
  * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
 
