@@ -62,7 +62,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 
 		SyntaxChecker syntaxChecker(errors);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
-			return make_pair(sourceUnit, errors[0]);
+			return make_pair(sourceUnit, errors.at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(globalContext->declarations(), errors);
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(struct_accessor_one_array_only)
 			Data public data;
 		}
 	)";
-	BOOST_CHECK(expectError(sourceCode).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
@@ -2125,15 +2125,15 @@ BOOST_AUTO_TEST_CASE(integer_boolean_operators)
 	char const* sourceCode1 = R"(
 		contract test { function() { uint x = 1; uint y = 2; x || y; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode1).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode1, TypeError, "");
 	char const* sourceCode2 = R"(
 		contract test { function() { uint x = 1; uint y = 2; x && y; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode2).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode2, TypeError, "");
 	char const* sourceCode3 = R"(
 		contract test { function() { uint x = 1; !x; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode3).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode3, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(exp_signed_variable)
@@ -2141,15 +2141,15 @@ BOOST_AUTO_TEST_CASE(exp_signed_variable)
 	char const* sourceCode1 = R"(
 		contract test { function() { uint x = 3; int y = -4; x ** y; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode1).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode1, TypeError, "");
 	char const* sourceCode2 = R"(
 		contract test { function() { uint x = 3; int y = -4; y ** x; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode2).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode2, TypeError, "");
 	char const* sourceCode3 = R"(
 		contract test { function() { int x = -3; int y = -4; x ** y; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode3).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode3, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(reference_compare_operators)
@@ -2157,11 +2157,11 @@ BOOST_AUTO_TEST_CASE(reference_compare_operators)
 	char const* sourceCode1 = R"(
 		contract test { bytes a; bytes b; function() { a == b; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode1).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode1, TypeError, "");
 	char const* sourceCode2 = R"(
 		contract test { struct s {uint a;} s x; s y; function() { x == y; } }
 	)";
-	BOOST_CHECK(expectError(sourceCode2).type() == Error::Type::TypeError);
+	CHECK_ERROR(sourceCode2, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
@@ -2848,7 +2848,7 @@ BOOST_AUTO_TEST_CASE(library_memory_struct)
 			function f() returns (S ) {}
 		}
 	)";
-	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
@@ -4123,7 +4123,7 @@ BOOST_AUTO_TEST_CASE(constant_constructor)
 			function test() constant {}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(external_constructor)
@@ -4133,7 +4133,7 @@ BOOST_AUTO_TEST_CASE(external_constructor)
 			function test() external {}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
@@ -4144,7 +4144,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
 			function test(uint k)  { S[k]; }
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
@@ -4163,7 +4163,7 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(function_type)
@@ -4376,7 +4376,7 @@ BOOST_AUTO_TEST_CASE(delete_function_type_invalid)
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
@@ -4388,7 +4388,7 @@ BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
@@ -4400,7 +4400,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
@@ -4410,7 +4410,7 @@ BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
 			uint public a = 0x42 << -8;
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_right_negative_rvalue)
@@ -4420,7 +4420,7 @@ BOOST_AUTO_TEST_CASE(shift_constant_right_negative_rvalue)
 			uint public a = 0x42 >> -8;
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_left_excessive_rvalue)
@@ -4430,7 +4430,7 @@ BOOST_AUTO_TEST_CASE(shift_constant_left_excessive_rvalue)
 			uint public a = 0x42 << 0x100000000;
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
@@ -4440,7 +4440,7 @@ BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
 			uint public a = 0x42 >> 0x100000000;
 		}
 	)";
-	BOOST_CHECK(expectError(text, false).type() == Error::Type::TypeError);
+	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)

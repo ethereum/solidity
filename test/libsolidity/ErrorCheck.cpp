@@ -24,9 +24,11 @@
 
 #include <string>
 
+using namespace std;
+
 bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _substr)
 {
-	if (const std::string* errorMessage = boost::get_error_info<dev::errinfo_comment>(_err))
+	if (string const* errorMessage = boost::get_error_info<dev::errinfo_comment>(_err))
 		return errorMessage->find(_substr) != std::string::npos;
 	return _substr.empty();
 }
