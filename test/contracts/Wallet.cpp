@@ -447,7 +447,6 @@ protected:
 	{
 		if (!s_compiledWallet)
 		{
-			m_optimize = true;
 			m_compiler.reset(false);
 			m_compiler.addSource("", walletCode);
 			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");

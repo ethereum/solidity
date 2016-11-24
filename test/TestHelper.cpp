@@ -39,6 +39,9 @@ Options::Options()
 			ipcPath = suite.argv[i + 1];
 			i++;
 		}
+		else if (string(suite.argv[i]) == "--optimize")
+			optimize = true;
+
 	if (ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;

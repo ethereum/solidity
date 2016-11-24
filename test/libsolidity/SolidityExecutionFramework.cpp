@@ -46,6 +46,7 @@ string getIPCSocketPath()
 
 ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
+	m_optimize(dev::test::Options::get().optimize),
 	m_sender(m_rpc.account(0))
 {
 	m_rpc.test_rewindToBlock(0);

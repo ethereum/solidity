@@ -106,6 +106,7 @@ namespace test
 struct Options: boost::noncopyable
 {
 	std::string ipcPath;
+	bool optimize = false;
 
 	static Options const& get();
 
