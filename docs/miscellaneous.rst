@@ -111,6 +111,9 @@ value is considered ``true`` by ``JUMPI`` instruction, we do not clean
 the boolean values before they are used as the condition for
 ``JUMPI``.
 
+In addition to the design principle above, the Solidity compiler
+cleans input data when it is loaded onto the stack.
+
 Different types have different rules for cleaning up overflows:
 
 +---------------+---------------+------------------+
