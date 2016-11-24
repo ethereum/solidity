@@ -6547,17 +6547,6 @@ BOOST_AUTO_TEST_CASE(calldata_offset)
 	BOOST_CHECK(callContractFunction("last()", encodeArgs()) == encodeDyn(string("nd")));
 }
 
-BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
-{
-	char const* sourceCode = "library lib {}";
-	m_optimize = true;
-	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
-	BOOST_CHECK(runtimeCode.size() >= 8);
-	BOOST_CHECK_EQUAL(runtimeCode[0], int(Instruction::PUSH6)); // might change once we switch to 1.x.x
-	BOOST_CHECK_EQUAL(runtimeCode[1], 4); // might change once we switch away from x.4.x
-	BOOST_CHECK_EQUAL(runtimeCode[7], int(Instruction::POP));
-}
-
 BOOST_AUTO_TEST_CASE(contract_binary_dependencies)
 {
 	char const* sourceCode = R"(

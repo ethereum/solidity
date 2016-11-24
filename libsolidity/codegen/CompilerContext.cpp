@@ -220,13 +220,6 @@ void CompilerContext::appendInlineAssembly(
 	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "");
 }
 
-void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
-{
-	eth::Assembly& sub = m_asm->sub(_subIndex);
-	sub.injectStart(Instruction::POP);
-	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
-}
-
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 	FunctionDefinition const& _function,
 	vector<ContractDefinition const*>::const_iterator _searchStart

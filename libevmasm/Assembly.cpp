@@ -525,8 +525,9 @@ LinkerObject const& Assembly::assemble() const
 		}
 	}
 
-	// Append a STOP just to be sure.
-	ret.bytecode.push_back(0);
+	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
+		// Append a STOP just to be sure.
+		ret.bytecode.push_back(0);
 
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{
