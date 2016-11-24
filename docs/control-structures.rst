@@ -7,15 +7,15 @@ Expressions and Control Structures
 Input Parameters and Output Parameters
 ======================================
 
-Like in Javascript and in C, functions may take parameters as input;
+As in Javascript, functions may take parameters as input;
 unlike in Javascript and C, they may also return arbitrary number of
 parameters as output.
 
 Input Parameters
 ----------------
 
-The input parameters are declared type followed
-by name (though unused input parameters do not need names).
+The input parameters are declared the same way as variables are. As an
+exception, unused parameters can omit the variable name.
 For example, suppose we want our contract to
 accept one kind of external calls with two integers, we would write
 something like::
@@ -57,7 +57,7 @@ of assignment.
 Control Structures
 ===================
 
-Most of the control structures from C or JavaScript are available in Solidity
+Most of the control structures from JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
 there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
