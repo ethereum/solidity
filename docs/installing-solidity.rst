@@ -44,6 +44,19 @@ To install it, simply use
 Details about the usage of the Node.js package can be found in the
 `solc-js repository <https://github.com/ethereum/solc-js>`_.
 
+Docker
+======
+
+We provide up to date docker builds for the compiler:
+
+.. code:: bash
+
+    docker run ethereum/solc:stable solc --version
+
+Currenty, the docker image only contains the compiler executable,
+so you have to do some additional work to link in the source and
+output directories.
+
 Binary Packages
 ===============
 
