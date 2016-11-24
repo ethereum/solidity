@@ -233,8 +233,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context << Instruction::DUP2 << Instruction::SWAP1;
 
 			m_context << Instruction::SWAP1;
-			utils.convertType(_sourceType, _sourceType, true);
-			utils.convertType(*m_dataType, *m_dataType, true, true);
+			utils.convertType(_sourceType, *m_dataType, true);
 			m_context << Instruction::SWAP1;
 
 			m_context << Instruction::SSTORE;
@@ -244,7 +243,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			if (_sourceType.sizeOnStack() == 1)
 			{
 				m_context << Instruction::SWAP2;
-				utils.convertType(_sourceType, _sourceType, true);
+				utils.convertType(_sourceType, *m_dataType, true);
 				m_context << Instruction::SWAP2;
 			}
 
