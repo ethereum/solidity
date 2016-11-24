@@ -257,6 +257,8 @@ reduce whitespace to a minimum and sort the keys of all objects to arrive at a
 unique formatting.
 Comments are of course also not permitted and used here only for explanatory purposes.
 
+.. code-block:: json
+
     {
       // Required: The version of the metadata format
       version: "1",
