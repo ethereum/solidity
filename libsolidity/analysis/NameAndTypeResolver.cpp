@@ -32,6 +32,55 @@ namespace dev
 namespace solidity
 {
 
+namespace
+{
+void reportDeclarationError(
+	SourceLocation _sourceLoction,
+	string const& _description,
+	SourceLocation _secondarySourceLocation,
+	string const& _secondaryDescription,
+	ErrorList& _errors
+)
+{
+	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
+	*err <<
+		errinfo_sourceLocation(_sourceLoction) <<
+		errinfo_comment(_description) <<
+		errinfo_secondarySourceLocation(
+			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
+		);
+
+	_errors.push_back(err);
+}
+
+void reportConflict(bool _inheriting, DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
+{
+	SourceLocation firstDeclarationLocation;
+	SourceLocation secondDeclarationLocation;
+	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_inheriting, _declaration);
+	solAssert(conflictingDeclaration, "");
+
+	if (_inheriting || _declaration.location().start < conflictingDeclaration->location().start)
+	{
+		firstDeclarationLocation = _declaration.location();
+		secondDeclarationLocation = conflictingDeclaration->location();
+	}
+	else
+	{
+		firstDeclarationLocation = conflictingDeclaration->location();
+		secondDeclarationLocation = _declaration.location();
+	}
+
+	reportDeclarationError(
+		secondDeclarationLocation,
+		string("Identifier already declared") + (_inheriting ? " in a base contract" : "") + ".",
+		firstDeclarationLocation,
+		"The previous declaration is here:",
+		_errors
+	);
+}
+}
+
 NameAndTypeResolver::NameAndTypeResolver(
 	vector<Declaration const*> const& _globals,
 	ErrorList& _errors
@@ -295,33 +344,6 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 					reportConflict(true, m_currentScope, *declaration, m_errors);
 }
 
-void NameAndTypeResolver::reportConflict(bool _inheriting, DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
-{
-	SourceLocation firstDeclarationLocation;
-	SourceLocation secondDeclarationLocation;
-	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_inheriting, _declaration);
-	solAssert(conflictingDeclaration, "");
-
-	if (_inheriting || _declaration.location().start < conflictingDeclaration->location().start)
-	{
-		firstDeclarationLocation = _declaration.location();
-		secondDeclarationLocation = conflictingDeclaration->location();
-	}
-	else
-	{
-		firstDeclarationLocation = conflictingDeclaration->location();
-		secondDeclarationLocation = _declaration.location();
-	}
-
-	reportDeclarationError(
-		secondDeclarationLocation,
-		string("Identifier already declared") + (_inheriting ? " in a base contract" : "") + ".",
-		firstDeclarationLocation,
-		"The previous declaration is here:",
-		_errors
-	);
-}
-
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 {
 	// order in the lists is from derived to base
@@ -398,25 +420,6 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		removeCandidate(candidate);
 	}
 	return result;
-}
-
-void NameAndTypeResolver::reportDeclarationError(
-	SourceLocation _sourceLoction,
-	string const& _description,
-	SourceLocation _secondarySourceLocation,
-	string const& _secondaryDescription,
-	ErrorList& _errors
-)
-{
-	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
-	*err <<
-		errinfo_sourceLocation(_sourceLoction) <<
-		errinfo_comment(_description) <<
-		errinfo_secondarySourceLocation(
-			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
-		);
-
-	_errors.push_back(err);
 }
 
 void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLocation, string const& _description)
@@ -585,7 +588,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
-		NameAndTypeResolver::reportConflict(false, m_scopes[m_currentScope].get(), _declaration, m_errors);
+		reportConflict(false, m_scopes[m_currentScope].get(), _declaration, m_errors);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
