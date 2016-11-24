@@ -42,6 +42,9 @@ write::
     }
 
 The names of output parameters can be omitted.
+The output values can also be specified using ``return`` statements.
+The ``return`` statements are also capable of returning multiple
+values, see :ref:`multi-return`.
 Return parameters are initialized to zero; if they are not explicitly
 set, they stay to be zero.
 
@@ -65,6 +68,8 @@ around single-statement bodies.
 Note that there is no type conversion from non-boolean to boolean types as
 there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
 Solidity.
+
+.. _multi-return:
 
 Returning Multiple Values
 -------------------------
