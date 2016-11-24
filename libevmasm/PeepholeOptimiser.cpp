@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @file PeepholeOptimiser.h
+ * @file PeepholeOptimiser.cpp
  * Performs local optimising code changes to assembly.
  */
 
@@ -54,6 +54,31 @@ struct PushPop
 			return true;
 		else
 			return false;
+	}
+};
+
+struct AddPop
+{
+	static size_t windowSize() { return 2; }
+	static bool apply(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	{
+		if (_in[1] == Instruction::POP &&
+			_in[0].type() == Operation
+		)
+		{
+			Instruction i0 = _in[0].instruction();
+			if (instructionInfo(i0).ret == 1 &&
+				instructionInfo(i0).args == 2 &&
+				!SemanticInformation::invalidatesMemory(i0) &&
+				!SemanticInformation::invalidatesStorage(i0)
+			)
+			{
+				*_out = Instruction::POP;
+				*_out = Instruction::POP;
+			return true;
+			}
+		}
+		return false;
 	}
 };
 
@@ -136,7 +161,7 @@ bool PeepholeOptimiser::optimise()
 {
 	OptimiserState state {m_items, 0, std::back_inserter(m_optimisedItems)};
 	while (state.i < m_items.size())
-		applyMethods(state, PushPop(), DoubleSwap(), JumpToNext(), TagConjunctions(), Identity());
+		applyMethods(state, PushPop(), AddPop(), DoubleSwap(), JumpToNext(), TagConjunctions(), Identity());
 	if (m_optimisedItems.size() < m_items.size())
 	{
 		m_items = std::move(m_optimisedItems);
