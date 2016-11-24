@@ -95,7 +95,7 @@ struct Identity: SimplePeepholeOptimizerMethod<Identity, 1>
 
 struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 {
-	static size_t applySimple(AssemblyItem const& _push, AssemblyItem const& _pop, std::back_insert_iterator<AssemblyItems>)
+	static bool applySimple(AssemblyItem const& _push, AssemblyItem const& _pop, std::back_insert_iterator<AssemblyItems>)
 	{
 		auto t = _push.type();
 		return _pop == Instruction::POP && (
@@ -106,23 +106,20 @@ struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 	}
 };
 
-struct AddPop: SimplePeepholeOptimizerMethod<AddPop, 2>
+struct OpPop: SimplePeepholeOptimizerMethod<OpPop, 2>
 {
-	static bool apply(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
+	static bool applySimple(
+		AssemblyItem const& _op,
+		AssemblyItem const& _pop,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
 	{
-		if (_in[1] == Instruction::POP &&
-			_in[0].type() == Operation
-		)
+		if (_pop == Instruction::POP && _op.type() == Operation)
 		{
-			Instruction i0 = _in[0].instruction();
-			if (instructionInfo(i0).ret == 1 &&
-				!SemanticInformation::invalidatesMemory(i0) &&
-				!SemanticInformation::invalidatesStorage(i0) &&
-				!SemanticInformation::altersControlFlow(i0) &&
-				!instructionInfo(i0).sideEffects
-			)
+			Instruction instr = _op.instruction();
+			if (instructionInfo(instr).ret == 1 && !instructionInfo(instr).sideEffects)
 			{
-				for (int j = 0; j < instructionInfo(i0).args; j++)
+				for (int j = 0; j < instructionInfo(instr).args; j++)
 					*_out = Instruction::POP;
 				return true;
 			}
@@ -236,7 +233,7 @@ bool PeepholeOptimiser::optimise()
 {
 	OptimiserState state {m_items, 0, std::back_inserter(m_optimisedItems)};
 	while (state.i < m_items.size())
-		applyMethods(state, PushPop(), AddPop(), DoubleSwap(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
+		applyMethods(state, PushPop(), OpPop(), DoubleSwap(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
 	if (m_optimisedItems.size() < m_items.size())
 	{
 		m_items = std::move(m_optimisedItems);

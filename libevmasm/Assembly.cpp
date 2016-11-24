@@ -337,7 +337,7 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 		count = 0;
 
 		PeepholeOptimiser peepOpt(m_items);
-		if (peepOpt.optimise())
+		while (peepOpt.optimise())
 			count++;
 
 		if (!_enable)
