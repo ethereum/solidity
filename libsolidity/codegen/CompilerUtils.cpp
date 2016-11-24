@@ -492,11 +492,8 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				{
 					if (typeOnStack.numBits() < 256)
 						m_context
-							<< (u256(1) << (256 - typeOnStack.numBits()))
-							<< Instruction::SWAP1
-							<< Instruction::DUP2
-							<< Instruction::MUL
-							<< Instruction::DIV;
+							<< ((u256(1) << typeOnStack.numBits()) - 1)
+							<< Instruction::AND;
 					chopSignBitsPending = false;
 				}
 			}
