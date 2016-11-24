@@ -57,7 +57,6 @@ public:
 
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
-	bool searchForSubstring(const std::string& _substr) const;
 
 	/// helper functions
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
