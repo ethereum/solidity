@@ -302,7 +302,7 @@ void NameAndTypeResolver::reportConflict(bool _inheriting, DeclarationContainer*
 	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_inheriting, _declaration);
 	solAssert(conflictingDeclaration, "");
 
-	if (_declaration.location().start < conflictingDeclaration->location().start)
+	if (_inheriting || _declaration.location().start < conflictingDeclaration->location().start)
 	{
 		firstDeclarationLocation = _declaration.location();
 		secondDeclarationLocation = conflictingDeclaration->location();
@@ -315,7 +315,7 @@ void NameAndTypeResolver::reportConflict(bool _inheriting, DeclarationContainer*
 
 	reportDeclarationError(
 		secondDeclarationLocation,
-		"Identifier already declared.",
+		string("Identifier already declared") + (_inheriting ? " in a base contract" : "") + ".",
 		firstDeclarationLocation,
 		"The previous declaration is here:",
 		_errors
