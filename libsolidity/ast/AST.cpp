@@ -65,6 +65,7 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 
 string Declaration::sourceUnitName() const
 {
+	solAssert(!!m_scope, "");
 	ASTNode const* scope = m_scope;
 	while (dynamic_cast<Declaration const*>(scope) && dynamic_cast<Declaration const*>(scope)->m_scope)
 		scope = dynamic_cast<Declaration const*>(scope)->m_scope;

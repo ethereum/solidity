@@ -36,6 +36,7 @@ void Compiler::compileContract(
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
+	m_runtimeContext.appendAuxiliaryData(_metadataHash.asBytes());
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
@@ -43,9 +44,6 @@ void Compiler::compileContract(
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
 	m_context.optimise(m_optimize, m_optimizeRuns);
-
-	solAssert(m_runtimeSub != size_t(-1), "");
-	m_context.injectMetadataHashIntoSub(m_runtimeSub, _metadataHash);
 }
 
 void Compiler::compileClone(

@@ -242,13 +242,9 @@ It can be used to query the compiler version, the sourcecode, the ABI
 and NatSpec documentation in order to more safely interact with the contract
 and to verify its source code.
 
-The compiler inserts a swarm hash of that file into the bytecode of each
+The compiler appends a swarm hash (32 bytes) of that file to the end of the bytecode of each
 contract, so that you can retrieve the file in an authenticated way
 without having to resort to a centralized data provider.
-
-Specifically, the runtime code for a contract always starts with
-``push32 <metadata hash> pop``, so you can take a look at the 32 bytes starting at
-the second byte of the code of a contract.
 
 Of course, you have to publish the metadata file to swarm (or some other service)
 so that others can access it. The file can be output by using ``solc --metadata``.
@@ -326,8 +322,7 @@ Usage for Automatic Interface Generation and NatSpec
 
 The metadata is used in the following way: A component that wants to interact
 with a contract (e.g. mist) retrieves the code of the contract
-and from that the first 33 bytes. If the first byte decodes into a PUSH32
-instruction, the other 32 bytes are interpreted as the swarm hash of
+and from that the last 32 bytes, which are interpreted as the swarm hash of
 a file which is then retrieved.
 That file is JSON-decoded into a structure like above.
 

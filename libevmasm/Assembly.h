@@ -71,6 +71,9 @@ public:
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMPI); return ret; }
 	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
+	/// Appends @a _data literally to the very end of the bytecode.
+	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
+
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 	AssemblyItems const& items() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
@@ -125,10 +128,12 @@ private:
 	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 
 protected:
-	// 0 is reserved for exception
+	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
 	AssemblyItems m_items;
 	std::map<h256, bytes> m_data;
+	/// Data that is appended to the very end of the contract.
+	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
 	std::map<h256, std::string> m_strings;
 	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.

@@ -375,6 +375,7 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
+	solAssert(_contract.contract, "");
 	std::unique_ptr<Json::Value const>* doc;
 
 	// checks wheather we already have the documentation

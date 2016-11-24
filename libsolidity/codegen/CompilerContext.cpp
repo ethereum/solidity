@@ -227,13 +227,6 @@ void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
 }
 
-void CompilerContext::injectMetadataHashIntoSub(size_t _subIndex, h256 const& _metadataHash)
-{
-	eth::Assembly& sub = m_asm->sub(_subIndex);
-	sub.injectStart(Instruction::POP);
-	sub.injectStart(u256(_metadataHash));
-}
-
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 	FunctionDefinition const& _function,
 	vector<ContractDefinition const*>::const_iterator _searchStart
