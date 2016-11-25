@@ -20,16 +20,20 @@
  * Tests for the Solidity optimizer.
  */
 
-#include <string>
-#include <tuple>
-#include <memory>
-#include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+
 #include <libevmasm/CommonSubexpressionEliminator.h>
+#include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/BlockDeduplicator.h>
+
+#include <boost/test/unit_test.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <string>
+#include <tuple>
+#include <memory>
 
 using namespace std;
 using namespace dev::eth;
@@ -1119,6 +1123,40 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 		if (item.type() == PushTag)
 			pushTags.insert(item.data());
 	BOOST_CHECK_EQUAL(pushTags.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(clear_unreachable_code)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		u256(0),
+		Instruction::SLOAD,
+		AssemblyItem(Tag, 2),
+		u256(5),
+		u256(6),
+		Instruction::SSTORE,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		u256(5),
+		u256(6)
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(5),
+		u256(6),
+		Instruction::SSTORE,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
 }
 
 BOOST_AUTO_TEST_CASE(computing_constants)
