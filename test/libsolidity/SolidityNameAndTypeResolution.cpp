@@ -2038,7 +2038,7 @@ BOOST_AUTO_TEST_CASE(string)
 	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_utf8)
+BOOST_AUTO_TEST_CASE(invalid_utf8_implicit)
 {
 	char const* sourceCode = R"(
 		contract C {
@@ -2046,6 +2046,16 @@ BOOST_AUTO_TEST_CASE(invalid_utf8)
 		}
 	)";
 	CHECK_ERROR(sourceCode, TypeError, "invalid UTF-8");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_utf8_explicit)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = string("\xa0\x00");
+		}
+	)";
+	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed");
 }
 
 BOOST_AUTO_TEST_CASE(string_index)
