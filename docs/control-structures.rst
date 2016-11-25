@@ -2,12 +2,62 @@
 Expressions and Control Structures
 ##################################
 
+.. index:: ! parameter, parameter;input, parameter;output
+
+Input Parameters and Output Parameters
+======================================
+
+As in Javascript, functions may take parameters as input;
+unlike in Javascript and C, they may also return arbitrary number of
+parameters as output.
+
+Input Parameters
+----------------
+
+The input parameters are declared the same way as variables are. As an
+exception, unused parameters can omit the variable name.
+For example, suppose we want our contract to
+accept one kind of external calls with two integers, we would write
+something like::
+
+    contract Simple {
+        function taker(uint _a, uint _b) {
+            // do something with _a and _b.
+        }
+    }
+
+Output Parameters
+-----------------
+
+The output parameters can be declared with the same syntax after the
+``returns`` keyword. For example, suppose we wished to return two results:
+the sum and the product of the two given integers, then we would
+write::
+
+    contract Simple {
+        function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
+            o_sum = _a + _b;
+            o_product = _a * _b;
+        }
+    }
+
+The names of output parameters can be omitted.
+The output values can also be specified using ``return`` statements.
+The ``return`` statements are also capable of returning multiple
+values, see :ref:`multi-return`.
+Return parameters are initialized to zero; if they are not explicitly
+set, they stay to be zero.
+
+Input parameters and output parameters can be used as expressions in
+the function body.  There, they are also usable in the left-hand side
+of assignment.
+
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
 Control Structures
 ===================
 
-Most of the control structures from C or JavaScript are available in Solidity
+Most of the control structures from JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
 there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
@@ -16,7 +66,17 @@ Parentheses can *not* be omitted for conditionals, but curly brances can be omit
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid Solidity.
+there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
+Solidity.
+
+.. _multi-return:
+
+Returning Multiple Values
+-------------------------
+
+When a function has multiple output parameters, ``return (v0, v1, ...,
+vn)`` can return multiple values.  The number of components must be
+the same as the number of output parameters.
 
 .. index:: ! function;call, function;internal, function;external
 
