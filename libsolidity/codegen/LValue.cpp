@@ -240,13 +240,6 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		}
 		else
 		{
-			if (_sourceType.sizeOnStack() == 1)
-			{
-				m_context << Instruction::SWAP2;
-				utils.convertType(_sourceType, *m_dataType, true);
-				m_context << Instruction::SWAP2;
-			}
-
 			// OR the value into the other values in the storage slot
 			m_context << u256(0x100) << Instruction::EXP;
 			// stack: value storage_ref multiplier
@@ -263,6 +256,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier value
 			if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
 			{
+				solAssert(_sourceType == *m_dataType, "function item stored but target is not equal to source");
 				if (fun->location() == FunctionType::Location::External)
 					// Combine the two-item function type into a single stack slot.
 					utils.combineExternalFunctionType(false);
@@ -272,14 +266,17 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						Instruction::AND;
 			}
 			else if (m_dataType->category() == Type::Category::FixedBytes)
+			{
+				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< Instruction::SWAP1 << Instruction::DIV;
+			}
 			else
 			{
 				solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size for opaque type.");
 				// remove the higher order bits
-				utils.convertType(*m_dataType, *m_dataType, true, true);
+				utils.convertType(_sourceType, *m_dataType, true, true);
 			}
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
