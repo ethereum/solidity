@@ -2038,6 +2038,16 @@ BOOST_AUTO_TEST_CASE(string)
 	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_utf8)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = "\xa0\x00";
+		}
+	)";
+	CHECK_ERROR(sourceCode, TypeError, "Invalid UTF-8");
+}
+
 BOOST_AUTO_TEST_CASE(string_index)
 {
 	char const* sourceCode = R"(
