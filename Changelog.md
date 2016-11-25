@@ -1,3 +1,8 @@
+### 0.4.7 (unreleased)
+
+Bugfixes:
+ * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
+
 ### 0.4.6 (2016-11-22)
 
 Bugfixes:
