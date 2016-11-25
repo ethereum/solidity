@@ -169,9 +169,13 @@ Fixed Point Numbers
 Rational and Integer Literals
 -----------------------------
 
-Integer literals and rational number literals belong to a special type.
-The number literal type contains not just single literals
-but all number literal expressions (i.e. the expressions that contain only number literals and operators).
+Solidity has a number literal type for each rational number.
+Integer literals and rational number literals belong to number literal types.
+Moreover, all number literal expressions (i.e. the expressions that
+contain only number literals and operators) belong to number literal
+types.  So the number literal expressions `1 + 2` and `2 + 1` both
+belong to the same number literal type for the rational number three.
+
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).
 This means that computations do not overflow and divisions do not truncate
