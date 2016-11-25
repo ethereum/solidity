@@ -358,7 +358,7 @@ void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
 			Instruction::OR;
 }
 
-void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
+void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded, bool _chopSignBits)
 {
 	// For a type extension, we need to remove all higher-order bits that we might have ignored in
 	// previous operations.
@@ -370,6 +370,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	Type::Category targetTypeCategory = _targetType.category();
 
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
+	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
+	if (chopSignBitsPending)
+	{
+		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		chopSignBitsPending = targetIntegerType.isSigned();
+	}
 
 	switch (stackTypeCategory)
 	{
@@ -482,6 +488,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					cleanHigherOrderBits(typeOnStack);
 				else if (_cleanupNeeded)
 					cleanHigherOrderBits(targetType);
+				if (chopSignBitsPending)
+				{
+					if (typeOnStack.numBits() < 256)
+						m_context
+							<< ((u256(1) << typeOnStack.numBits()) - 1)
+							<< Instruction::AND;
+					chopSignBitsPending = false;
+				}
 			}
 		}
 		break;
@@ -724,10 +738,15 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+				m_context
+					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
+					<< Instruction::AND;
 		break;
 	}
 
 	solAssert(!enumOverflowCheckPending, "enum overflow checking missing.");
+	solAssert(!chopSignBitsPending, "forgot to chop the sign bits.");
 }
 
 void CompilerUtils::pushZeroValue(Type const& _type)

@@ -4506,6 +4506,102 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 	BOOST_CHECK(callContractFunction("t2()") == encodeArgs(u256(9)));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_enum_compared)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+
+			function test_eq() returns (bool) {
+				X garbled;
+				assembly {
+					garbled := 5
+				}
+				return garbled == garbled;
+			}
+			function test_eq_ok() returns (bool) {
+				X garbled = X.A;
+				return garbled == garbled;
+			}
+			function test_neq() returns (bool) {
+				X garbled;
+				assembly {
+					garbled := 5
+				}
+				return garbled != garbled;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test_eq_ok()") == encodeArgs(u256(1)));
+	// both should throw
+	BOOST_CHECK(callContractFunction("test_eq()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test_neq()") == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(invalid_enum_logged)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+			event Log(X);
+
+			function test_log() returns (uint) {
+				X garbled = X.A;
+				assembly {
+					garbled := 5
+				}
+				Log(garbled);
+				return 1;
+			}
+			function test_log_ok() returns (uint) {
+				X x = X.A;
+				Log(x);
+				return 1;
+			}
+		}
+		)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test_log_ok()") == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Log(uint8)")));
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(0)));
+
+	// should throw
+	BOOST_CHECK(callContractFunction("test_log()") == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(invalid_enum_stored)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum X { A, B }
+			X public x;
+
+			function test_store() returns (uint) {
+				X garbled = X.A;
+				assembly {
+					garbled := 5
+				}
+				x = garbled;
+				return 1;
+			}
+			function test_store_ok() returns (uint) {
+				x = X.A;
+				return 1;
+			}
+		}
+		)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test_store_ok()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+
+	// should throw
+	BOOST_CHECK(callContractFunction("test_store()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(invalid_enum_as_external_ret)
 {
 	char const* sourceCode = R"(
