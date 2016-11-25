@@ -185,7 +185,7 @@ private:
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
 	/// Prepares the given type for storing in memory by shifting it if necessary.
-	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
+	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries);
 	/// Loads type from memory assuming memory offset is on stack top.
 	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries);
 

@@ -941,7 +941,7 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
 }
 
-unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries)
 {
 	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
@@ -950,8 +950,7 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBou
 	else
 	{
 		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
-		if (_type.category() == Type::Category::Bool)
-			m_context << Instruction::ISZERO << Instruction::ISZERO;
+		convertType(_type, _type, true);
 		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
 			// shift the value accordingly before storing
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << Instruction::MUL;
