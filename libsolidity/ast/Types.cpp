@@ -880,7 +880,7 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return
 			arrayType->isByteArray() &&
 			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
-            !(arrayType->isString() && !isValidUTF8());
+			!(arrayType->isString() && !isValidUTF8());
 	else
 		return false;
 }
