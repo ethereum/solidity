@@ -114,28 +114,28 @@ the boolean values before they are used as the condition for
 In addition to the design principle above, the Solidity compiler
 cleans input data when it is loaded onto the stack.
 
-Different types have different rules for cleaning up overflows:
+Different types have different rules for cleaning up invalid values:
 
-+---------------+---------------+------------------+
-|Type           |Cleaned Form   |Overflow Means    |
-+===============+===============+==================+
-|enum of n      |0 until n - 1  |exception         |
-|members        |               |                  |
-+---------------+---------------+------------------+
-|bool           |0 or 1         |zero or nonzero   |
-+---------------+---------------+------------------+
-|signed integers|sign-extended  |currently silently|
-|               |word           |wraps; in the     |
-|               |               |future exceptions |
-|               |               |will be thrown    |
-|               |               |                  |
-|               |               |                  |
-+---------------+---------------+------------------+
-|unsigned       |higher bits    |currently silently|
-|integers       |zeroed         |wraps; in the     |
-|               |               |future exceptions |
-|               |               |will be thrown    |
-+---------------+---------------+------------------+
++---------------+---------------+-------------------+
+|Type           |Valid Valies   |Invalid Values Mean|
++===============+===============+===================+
+|enum of n      |0 until n - 1  |exception          |
+|members        |               |                   |
++---------------+---------------+-------------------+
+|bool           |0 or 1         |1                  |
++---------------+---------------+-------------------+
+|signed integers|sign-extended  |currently silently |
+|               |word           |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
+|               |               |                   |
+|               |               |                   |
++---------------+---------------+-------------------+
+|unsigned       |higher bits    |currently silently |
+|integers       |zeroed         |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
++---------------+---------------+-------------------+
 
 
 *****************
