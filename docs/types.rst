@@ -169,13 +169,6 @@ Fixed Point Numbers
 Rational and Integer Literals
 -----------------------------
 
-Solidity has a number literal type for each rational number.
-Integer literals and rational number literals belong to number literal types.
-Moreover, all number literal expressions (i.e. the expressions that
-contain only number literals and operators) belong to number literal
-types.  So the number literal expressions `1 + 2` and `2 + 1` both
-belong to the same number literal type for the rational number three.
-
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).
 This means that computations do not overflow and divisions do not truncate
@@ -197,6 +190,14 @@ Any operator that can be applied to integers can also be applied to number liter
 long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
+
+.. note::
+    Solidity has a number literal type for each rational number.
+    Integer literals and rational number literals belong to number literal types.
+    Moreover, all number literal expressions (i.e. the expressions that
+    contain only number literals and operators) belong to number literal
+    types.  So the number literal expressions `1 + 2` and `2 + 1` both
+    belong to the same number literal type for the rational number three.
 
 .. note::
     Most finite decimal fractions like ``5.3743`` are not finitely representable in binary. The correct type
