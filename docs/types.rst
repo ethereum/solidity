@@ -169,9 +169,10 @@ Fixed Point Numbers
 Rational and Integer Literals
 -----------------------------
 
-All number literals retain arbitrary precision until they are converted to a non-literal type (i.e. by
-using them together with a non-literal type). This means that computations do not overflow but also
-divisions do not truncate.
+Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
+using them together with a non-literal expression).
+This means that computations do not overflow and divisions do not truncate
+in number literal expressions.
 
 For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``uint8``)
 although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
@@ -185,10 +186,18 @@ In ``var x = 1/4;``, ``x`` will receive the type ``ufixed0x8`` while in ``var x 
 the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary and will thus be
 approximated.
 
-Any operator that can be applied to integers can also be applied to literal expressions as
+Any operator that can be applied to integers can also be applied to number literal expressions as
 long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
+
+.. note::
+    Solidity has a number literal type for each rational number.
+    Integer literals and rational number literals belong to number literal types.
+    Moreover, all number literal expressions (i.e. the expressions that
+    contain only number literals and operators) belong to number literal
+    types.  So the number literal expressions `1 + 2` and `2 + 1` both
+    belong to the same number literal type for the rational number three.
 
 .. note::
     Most finite decimal fractions like ``5.3743`` are not finitely representable in binary. The correct type
@@ -200,7 +209,7 @@ a non-rational number).
     Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
-    Literal expressions are converted to a permanent type as soon as they are used with other
+    Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
     expressions. Even though we know that the value of the
     expression assigned to ``b`` in the following example evaluates to an integer, it still
     uses fixed point types (and not rational number literals) in between and so the code
@@ -216,7 +225,7 @@ a non-rational number).
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``). As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; `"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
