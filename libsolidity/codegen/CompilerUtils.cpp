@@ -738,6 +738,10 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+				m_context
+					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
+					<< Instruction::AND;
 		break;
 	}
 
