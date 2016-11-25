@@ -47,7 +47,9 @@ Details about the usage of the Node.js package can be found in the
 Docker
 ======
 
-We provide up to date docker builds for the compiler:
+We provide up to date docker builds for the compiler. The ``stable``
+repository contains released versions while the ``nightly``
+repository contains potentially unstable changes in the develop branch.
 
 .. code:: bash
 
