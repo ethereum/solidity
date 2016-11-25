@@ -425,6 +425,8 @@ public:
 	virtual std::string toString(bool) const override;
 	virtual TypePointer mobileType() const override;
 
+	bool isValidUTF8() const;
+
 	std::string const& value() const { return m_value; }
 
 private:

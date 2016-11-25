@@ -2045,7 +2045,7 @@ BOOST_AUTO_TEST_CASE(invalid_utf8)
 			string s = "\xa0\x00";
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Invalid UTF-8");
+	CHECK_ERROR(sourceCode, TypeError, "invalid UTF-8");
 }
 
 BOOST_AUTO_TEST_CASE(string_index)

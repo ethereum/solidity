@@ -879,7 +879,8 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
 		return
 			arrayType->isByteArray() &&
-			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
+            !(arrayType->isString() && !isValidUTF8());
 	else
 		return false;
 }
@@ -904,6 +905,12 @@ std::string StringLiteralType::toString(bool) const
 TypePointer StringLiteralType::mobileType() const
 {
 	return make_shared<ArrayType>(DataLocation::Memory, true);
+}
+
+bool StringLiteralType::isValidUTF8() const
+{
+	size_t dontCare {};
+	return dev::validate(m_value, dontCare);
 }
 
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
