@@ -278,42 +278,43 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			bytes data;
 			for (auto const& i: _t)
 			{
-				if (ii == 1)
+				if (ii == 0)
+				{
+					ii++;
+					continue;
+				}
+				else if (ii == 1)
 				{
 					pos = CodeFragment(i, _s);
 					if (pos.m_asm.deposit() != 1)
 						error<InvalidDeposit>();
 				}
-				else if (ii == 2 && !i.tag() && i.which() == sp::utree_type::string_type)
+				else if (i.tag() != 0)
+				{
+					error<InvalidLiteral>();
+				}
+				else if (i.which() == sp::utree_type::string_type)
 				{
 					auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-					data = bytes((byte const*)sr.begin(), (byte const*)sr.end());
+					data.insert(data.end(), (byte const *)sr.begin(), (byte const*)sr.end());
 				}
-				else if (ii >= 2 && !i.tag() && i.which() == sp::utree_type::any_type)
+				else if (i.which() == sp::utree_type::any_type)
 				{
 					bigint bi = *i.get<bigint*>();
 					if (bi < 0)
 						error<IntegerOutOfRange>();
-					else if (bi > bigint(u256(0) - 1))
-					{
-						if (ii == 2 && _t.size() == 3)
-						{
-							// One big int - allow it as hex.
-							data.resize(bytesRequired(bi));
-							toBigEndian(bi, data);
-						}
-						else
-							error<IntegerOutOfRange>();
-					}
 					else
 					{
-						data.resize(data.size() + 32);
-						*(h256*)(&data.back() - 31) = (u256)bi;
+						bytes tmp = toCompactBigEndian(bi);
+						data.insert(data.end(), tmp.begin(), tmp.end());
 					}
 				}
-				else if (ii)
+				else
+				{
 					error<InvalidLiteral>();
-				++ii;
+				}
+
+				ii++;
 			}
 			m_asm.append((u256)data.size());
 			m_asm.append(Instruction::DUP1);
