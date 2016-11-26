@@ -909,8 +909,7 @@ TypePointer StringLiteralType::mobileType() const
 
 bool StringLiteralType::isValidUTF8() const
 {
-	size_t dontCare {};
-	return dev::validate(m_value, dontCare);
+	return dev::validate(m_value);
 }
 
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)

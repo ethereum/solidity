@@ -32,4 +32,10 @@ namespace dev
 /// @returns false if it is invalid and the first invalid position in invalidPosition
 bool validate(std::string const& _input, size_t& _invalidPosition);
 
+inline bool validate(std::string const& _input)
+{
+	size_t invalidPos;
+	return validate(_input, invalidPos);
+}
+
 }
