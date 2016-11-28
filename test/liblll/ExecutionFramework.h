@@ -52,6 +52,9 @@ public:
 		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
 	) override
 	{
+		BOOST_REQUIRE(_contractName.empty());
+		BOOST_REQUIRE(_libraryAddresses.empty());
+
 		std::vector<std::string> errors;
 		bytes bytecode = eth::compileLLL(_sourceCode, m_optimize, &errors);
 		if (!errors.empty())
