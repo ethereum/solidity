@@ -184,10 +184,10 @@ bool CompilerStack::parse()
 				{
 					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
 					if (contract != existingContract)
-						BOOST_THROW_EXCEPTION(CompilerError() <<
+						BOOST_THROW_EXCEPTION(DeclarationError() <<
 							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(contract->name() + " is already defined at "
-								+ *(existingContract->location().sourceName)));
+							errinfo_comment(contract->name() + " is already defined.") <<
+              errinfo_secondarySourceLocation(SecondarySourceLocation().append(existingContract->location()), "Previous definition is here:"));
 				}
 				m_contracts[contract->name()].contract = contract;
 			}
