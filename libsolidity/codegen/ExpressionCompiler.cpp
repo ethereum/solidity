@@ -1406,9 +1406,14 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 	// The RValue can be a RationalNumberType too.
 	bool c_rightSigned = false;
 	if (auto rightType = dynamic_cast<RationalNumberType const*>(&_rightType))
+	{
+		solAssert(rightType->integerType(), "integerType() called for fractional number.");
 		c_rightSigned = rightType->integerType()->isSigned();
+	}
 	else if (auto rightType = dynamic_cast<IntegerType const*>(&_rightType))
 		c_rightSigned = rightType->isSigned();
+	else
+		solUnimplemented("Not implemented yet - FixedPointType.");
 
 	// shift with negative rvalue throws exception
 	if (c_rightSigned)
