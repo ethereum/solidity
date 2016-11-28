@@ -37,6 +37,7 @@
 
 using namespace std;
 using namespace dev::eth;
+using namespace dev::test;
 
 namespace dev
 {

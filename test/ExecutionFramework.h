@@ -32,7 +32,7 @@
 
 namespace dev
 {
-namespace solidity
+namespace test
 {
 	using rational = boost::rational<dev::bigint>;
 	/// An Ethereum address: 20 bytes.
@@ -45,9 +45,6 @@ namespace solidity
 	static const u256 szabo = exp10<12>();
 	static const u256 shannon = exp10<9>();
 	static const u256 wei = exp10<0>();
-
-namespace test
-{
 
 class ExecutionFramework
 {
@@ -282,7 +279,6 @@ protected:
 	u256 m_gasUsed;
 };
 
-}
 }
 } // end namespaces
 

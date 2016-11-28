@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace std::placeholders;
+using namespace dev::test;
 
 namespace dev
 {

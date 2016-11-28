@@ -27,6 +27,7 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
+using namespace dev::test;
 
 namespace dev
 {

@@ -27,8 +27,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace dev::test;
 
 namespace // anonymous
 {

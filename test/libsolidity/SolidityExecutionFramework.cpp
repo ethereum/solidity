@@ -24,8 +24,7 @@
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-using namespace std;
-using namespace dev;
+using namespace dev::test;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 

@@ -38,7 +38,7 @@ namespace solidity
 namespace test
 {
 
-class SolidityExecutionFramework: public ExecutionFramework
+class SolidityExecutionFramework: public dev::test::ExecutionFramework
 {
 
 public:
@@ -49,7 +49,7 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = bytes(),
-		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
+		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
 	) override
 	{
 		// Silence compiler version warning
