@@ -1400,8 +1400,11 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 {
 	// stack: rvalue lvalue
 
-	IntegerType const& leftType = dynamic_cast<IntegerType const&>(_leftType);
-	bool const c_leftSigned = leftType.isSigned();
+	bool c_leftSigned = false;
+	if (auto leftType = dynamic_cast<IntegerType const*>(&_leftType))
+		c_leftSigned = leftType->isSigned();
+	else
+		solUnimplemented("Only IntegerType can be shifted.");
 
 	// The RValue can be a RationalNumberType too.
 	bool c_rightSigned = false;
