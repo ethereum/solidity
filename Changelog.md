@@ -1,6 +1,7 @@
 ### 0.4.7 (unreleased)
 
 Features:
+ * Assignment and conversion of fixed point types.
  * Optimizer: Some dead code elimination.
 
 Bugfixes:
