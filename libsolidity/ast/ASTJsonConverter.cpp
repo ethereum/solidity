@@ -418,7 +418,7 @@ bool ASTJsonConverter::visit(Literal const& _node)
 {
 	char const* tokenString = Token::toString(_node.token());
 	Json::Value value{_node.value()};
-	if (!dev::validate(_node.value()))
+	if (!dev::validateUTF8(_node.value()))
 		value = Json::nullValue;
 	Token::Value subdenomination = Token::Value(_node.subDenomination());
 	addJsonNode(_node, "Literal", {

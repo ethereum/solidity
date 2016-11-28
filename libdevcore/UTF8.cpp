@@ -28,7 +28,7 @@ namespace dev
 {
 
 
-bool validate(std::string const& _input, size_t& _invalidPosition)
+bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 {
 	const size_t length = _input.length();
 	bool valid = true;
