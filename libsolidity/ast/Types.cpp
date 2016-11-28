@@ -348,7 +348,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	if (Token::isCompareOp(_operator))
 		return commonType;
 	if (Token::isShiftOp(_operator) && !isAddress()) // && !_other->isAddress())
-		return commonType;
+		return shared_from_this();
 	if (Token::isBooleanOp(_operator))
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
