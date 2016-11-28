@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
         char const* sourceCode = "(returnlll { (return \"test\") })";
         compileAndRun(sourceCode);
-        BOOST_CHECK(callContractFunction("") == encodeArgs(string("test", 4)));
+        BOOST_CHECK(callFallback() == encodeArgs(string("test", 4)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

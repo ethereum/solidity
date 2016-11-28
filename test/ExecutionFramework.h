@@ -73,6 +73,17 @@ public:
 		return m_output;
 	}
 
+	bytes const& callFallbackWithValue(u256 const& _value)
+	{
+		sendMessage(bytes(), false, _value);
+		return m_output;
+	}
+
+	bytes const & callFallback()
+	{
+		return callFallbackWithValue(0);
+	}
+
 	template <class... Args>
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
