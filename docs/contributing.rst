@@ -59,3 +59,18 @@ for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
 Thank you for your help!
+
+Running the compiler tests
+==========================
+
+Solidity includes different types of tests. They are included in the application
+called ``soltest``. Some of them require the ``cpp-ethereum`` client in testing mode.
+
+To run ``cpp-ethereum`` in testing mode: ``eth --test -d /tmp/testeth``.
+
+To run the tests: ``soltest -- --ipcpath /tmp/testeth/geth.ipc``.
+
+To run a subset of tests, filters can be used:
+``soltest -t TestSuite/TestName -- --ipcpath /tmp/testeth/geth.ipc``, where ``TestName`` can be a wildcard ``*``.
+
+Alternatively, there is a testing script at ``scripts/test.sh`` which executes all tests.
