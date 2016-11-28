@@ -40,7 +40,7 @@ namespace solidity
 namespace test
 {
 
-class GasMeterTestFramework: public ExecutionFramework
+class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
 	GasMeterTestFramework() { }

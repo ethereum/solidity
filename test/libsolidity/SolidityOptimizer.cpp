@@ -45,7 +45,7 @@ namespace solidity
 namespace test
 {
 
-class OptimizerTestFramework: public ExecutionFramework
+class OptimizerTestFramework: public SolidityExecutionFramework
 {
 public:
 	OptimizerTestFramework() { }

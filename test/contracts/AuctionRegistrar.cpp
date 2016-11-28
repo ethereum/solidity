@@ -213,7 +213,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 static unique_ptr<bytes> s_compiledRegistrar;
 
-class AuctionRegistrarTestFramework: public ExecutionFramework
+class AuctionRegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
@@ -229,11 +229,11 @@ protected:
 		BOOST_REQUIRE(!m_output.empty());
 	}
 
-	using ContractInterface = ExecutionFramework::ContractInterface;
+	using ContractInterface = SolidityExecutionFramework::ContractInterface;
 	class RegistrarInterface: public ContractInterface
 	{
 	public:
-		RegistrarInterface(ExecutionFramework& _framework): ContractInterface(_framework) {}
+		RegistrarInterface(SolidityExecutionFramework& _framework): ContractInterface(_framework) {}
 		void reserve(string const& _name)
 		{
 			callString("reserve", _name);

@@ -125,7 +125,7 @@ contract FixedFeeRegistrar is Registrar {
 
 static unique_ptr<bytes> s_compiledRegistrar;
 
-class RegistrarTestFramework: public ExecutionFramework
+class RegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()

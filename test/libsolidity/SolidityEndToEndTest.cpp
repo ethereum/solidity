@@ -25,6 +25,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
+#include <libevmasm/Assembly.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
@@ -38,7 +39,7 @@ namespace solidity
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, ExecutionFramework)
+BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityExecutionFramework)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

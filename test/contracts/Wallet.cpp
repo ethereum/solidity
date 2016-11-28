@@ -435,7 +435,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 static unique_ptr<bytes> s_compiledWallet;
 
-class WalletTestFramework: public ExecutionFramework
+class WalletTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployWallet(
