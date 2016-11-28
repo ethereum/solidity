@@ -187,7 +187,8 @@ bool CompilerStack::parse()
 						BOOST_THROW_EXCEPTION(DeclarationError() <<
 							errinfo_sourceLocation(contract->location()) <<
 							errinfo_comment(contract->name() + " is already defined.") <<
-              errinfo_secondarySourceLocation(SecondarySourceLocation().append(existingContract->location()), "Previous definition is here:"));
+															errinfo_secondarySourceLocation(
+																SecondarySourceLocation().append(existingContract->location()), "Previous definition is here:"));
 				}
 				m_contracts[contract->name()].contract = contract;
 			}
