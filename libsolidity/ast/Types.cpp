@@ -896,7 +896,7 @@ std::string StringLiteralType::toString(bool) const
 {
 	size_t invalidSequence;
 
-	if (!dev::validate(m_value, invalidSequence))
+	if (!dev::validateUTF8(m_value, invalidSequence))
 		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
 
 	return "literal_string \"" + m_value + "\"";
@@ -909,8 +909,7 @@ TypePointer StringLiteralType::mobileType() const
 
 bool StringLiteralType::isValidUTF8() const
 {
-	size_t dontCare {};
-	return dev::validate(m_value, dontCare);
+	return dev::validateUTF8(m_value);
 }
 
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
