@@ -611,7 +611,14 @@ void CompilerStack::compileContract(
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.name());
 	string onChainMetadata = createOnChainMetadata(compiledContract);
-	compiler->compileContract(_contract, _compiledContracts, dev::swarmHash(onChainMetadata));
+	bytes cborEncodedMetadata =
+		// CBOR-encoding of {"bzzr0": dev::swarmHash(onChainMetadata)}
+		bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
+		dev::swarmHash(onChainMetadata).asBytes();
+	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
+	// 16-bit big endian length
+	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
+	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	compiledContract.compiler = compiler;
 	compiledContract.object = compiler->assembledObject();
 	compiledContract.runtimeObject = compiler->runtimeObject();

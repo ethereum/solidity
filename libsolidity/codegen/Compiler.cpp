@@ -31,12 +31,12 @@ using namespace dev::solidity;
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts,
-	h256 const& _metadataHash
+	bytes const& _metadata
 )
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
-	m_runtimeContext.appendAuxiliaryData(_metadataHash.asBytes());
+	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.

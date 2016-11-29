@@ -236,20 +236,22 @@ If ``solc`` is called with the option ``--link``, all input files are interprete
 Contract Metadata
 *****************
 
-The Solidity compiler automatically generates an internal json file, the
+The Solidity compiler automatically generates a json file, the
 contract metadata, that contains information about the current contract.
 It can be used to query the compiler version, the sourcecode, the ABI
 and NatSpec documentation in order to more safely interact with the contract
 and to verify its source code.
 
-The compiler appends a swarm hash (32 bytes) of that file to the end of the bytecode of each
-contract, so that you can retrieve the file in an authenticated way
-without having to resort to a centralized data provider.
+The compiler appends a swarm hash (32 bytes) of that file to the end of the
+bytecode (for details, see below) of each contract, so that you can retrieve
+the file in an authenticated way without having to resort to a centralized
+data provider.
 
 Of course, you have to publish the metadata file to swarm (or some other service)
-so that others can access it. The file can be output by using ``solc --metadata``.
+so that others can access it. The file can be output by using ``solc --metadata``
+and the file will be called ``ContractName_meta.json``.
 It will contain swarm references to the source code, so you have to upload
-all source files and the metadata.
+all source files and the metadata file.
 
 The metadata file has the following format. The example below is presented in a
 human-readable way. Properly formatted metadata should use quotes correctly,
@@ -319,13 +321,29 @@ Comments are of course also not permitted and used here only for explanatory pur
       }
     }
 
+
+Encoding of the Metadata Hash in the Bytecode
+---------------------------------------------
+
+Because we might support other ways to retrieve the metadata file in the future,
+the mapping ``{"bzzr0": <swarm hash>}`` is stored
+[CBOR](https://tools.ietf.org/html/rfc7049)-encoded. Since the beginning of that
+encoding is not easy to find, its length is added in a two-byte big-endian
+encoding. The current version of the Solidity compiler thus adds the following
+to the end of the deployed bytecode::
+
+    0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
+
+So in order to retrieve the data, you can check the end of the deployed
+bytecode to match that pattern and use the swarm hash to retrieve the
+file.
+
 Usage for Automatic Interface Generation and NatSpec
 ----------------------------------------------------
 
 The metadata is used in the following way: A component that wants to interact
-with a contract (e.g. mist) retrieves the code of the contract
-and from that the last 32 bytes, which are interpreted as the swarm hash of
-a file which is then retrieved.
+with a contract (e.g. mist) retrieves the code of the contract, from that
+the swarm hash of a file which is then retrieved.
 That file is JSON-decoded into a structure like above.
 
 The component can then use the abi to automatically generate a rudimentary
