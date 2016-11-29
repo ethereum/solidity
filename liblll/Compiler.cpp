@@ -99,15 +99,28 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 
 string dev::eth::parseLLL(string const& _src)
 {
+	bool failed = false;
+	sp::utree o;
+
 	try
 	{
-		sp::utree o;
 		parseTreeLLL(_src, o);
-		ostringstream ret;
-		debugOutAST(ret, o);
-		killBigints(o);
+	}
+	catch (...)
+	{
+		failed = true;
+	}
+
+	ostringstream ret;
+	debugOutAST(ret, o);
+	killBigints(o);
+
+	if (failed)
+	{
+		return string();
+	}
+	else
+	{
 		return ret.str();
 	}
-	catch (...) {}
-	return string();
 }
