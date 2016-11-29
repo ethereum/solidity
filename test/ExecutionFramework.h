@@ -99,30 +99,30 @@ public:
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCpp(std::string _sig, CppFunction const& _cppFunction, Args const&... _arguments)
+	void testContractAgainstCpp(std::string _sig, CppFunction const& _cppFunction, Args const&... _arguments)
 	{
-		bytes solidityResult = callContractFunction(_sig, _arguments...);
+		bytes contractResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
 		BOOST_CHECK_MESSAGE(
-			solidityResult == cppResult,
-			"Computed values do not match.\nSolidity: " +
-				toHex(solidityResult) +
+			contractResult == cppResult,
+			"Computed values do not match.\nContract: " +
+				toHex(contractResult) +
 				"\nC++:      " +
 				toHex(cppResult)
 		);
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction, u256 const& _rangeStart, u256 const& _rangeEnd)
+	void testContractAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction, u256 const& _rangeStart, u256 const& _rangeEnd)
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
-			bytes solidityResult = callContractFunction(_sig, argument);
+			bytes contractResult = callContractFunction(_sig, argument);
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
 			BOOST_CHECK_MESSAGE(
-				solidityResult == cppResult,
-				"Computed values do not match.\nSolidity: " +
-					toHex(solidityResult) +
+				contractResult == cppResult,
+				"Computed values do not match.\nContract: " +
+					toHex(contractResult) +
 					"\nC++:      " +
 					toHex(cppResult) +
 					"\nArgument: " +
