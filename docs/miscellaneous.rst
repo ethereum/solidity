@@ -95,11 +95,11 @@ bytes.  The internal function calls use a different convention.
 Internals - Cleaning Up Overflows in EVM
 ****************************************
 
-When a value is shorter than 256-bit, sometimes the remaining bits
+When a value is shorter than 256-bit, in some cases the remaining bits
 must be cleaned.
 The Solidity compiler is designed to clean such remaining bits before any operations
-that might be broken by the garbage in the remaining bits.  For
-example, before writing a value to the memory, the remaining bits need
+that might be adversely affected by the potential garbage in the remaining bits.
+For example, before writing a value to the memory, the remaining bits need
 to be cleared because the memory contents can be used for computing
 hashes or sent as the data of a message call.  Similarly, before
 storing a value in the storage, the remaining bits need to be cleaned
@@ -117,7 +117,7 @@ cleans input data when it is loaded onto the stack.
 Different types have different rules for cleaning up invalid values:
 
 +---------------+---------------+-------------------+
-|Type           |Valid Valies   |Invalid Values Mean|
+|Type           |Valid Values   |Invalid Values Mean|
 +===============+===============+===================+
 |enum of n      |0 until n - 1  |exception          |
 |members        |               |                   |
