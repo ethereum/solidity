@@ -747,8 +747,11 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	bytes const& bytecode = m_compilerStack.runtimeObject("test").bytecode;
 	bytes hash = dev::swarmHash(m_compilerStack.onChainMetadata("test")).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
-	BOOST_REQUIRE(bytecode.size() >= hash.size());
-	BOOST_CHECK(std::equal(hash.begin(), hash.end(), bytecode.end() - 32));
+	BOOST_REQUIRE(bytecode.size() >= 2);
+	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
+	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
+	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
+	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
