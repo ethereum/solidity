@@ -258,7 +258,7 @@ private:
 
 	ReadFileCallback m_readFile;
 	bool m_optimize = false;
-	size_t m_optimizeRuns = 200;
+	unsigned m_optimizeRuns = 200;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

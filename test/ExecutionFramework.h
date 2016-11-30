@@ -279,7 +279,7 @@ protected:
 		bytes data;
 	};
 
-	size_t m_optimizeRuns = 200;
+	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	Address m_sender;
 	Address m_contractAddress;
