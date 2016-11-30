@@ -7820,13 +7820,6 @@ BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
 	u160 cAddr = m_contractAddress;
 	compileAndRun(sourceCode, 0, "D");
 	BOOST_CHECK(callContractFunction("f(address)", cAddr) == encodeArgs(u256(7)));
-
-	m_optimize = true;
-
-	compileAndRun(sourceCode, 0, "C");
-	u160 cAddrOpt = m_contractAddress;
-	compileAndRun(sourceCode, 0, "D");
-	BOOST_CHECK(callContractFunction("f(address)", cAddrOpt) == encodeArgs(u256(7)));
 }
 
 BOOST_AUTO_TEST_CASE(calling_uninitialized_function)
