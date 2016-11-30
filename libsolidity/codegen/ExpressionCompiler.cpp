@@ -526,7 +526,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			if (m_context.runtimeContext())
 				// We have a runtime context, so we need the creation part.
-				utils().rightShiftNumberOnStack(u256(1) << 32, false);
+				utils().rightShiftNumberOnStack(32, false);
 			else
 				// Extract the runtime part.
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
@@ -1269,7 +1269,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		m_context.appendConditionalInvalid();
 
 		m_context << Instruction::BYTE;
-		utils().leftShiftNumberOnStack(u256(1) << (256 - 8));
+		utils().leftShiftNumberOnStack(256 - 8);
 	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{

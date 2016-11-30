@@ -371,10 +371,10 @@ void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 	m_context << u256(0xffffffffUL) << Instruction::AND << Instruction::SWAP1;
 	if (!_leftAligned)
 		m_context << ((u256(1) << 160) - 1) << Instruction::AND;
-	leftShiftNumberOnStack(u256(1) << 32);
+	leftShiftNumberOnStack(32);
 	m_context << Instruction::OR;
 	if (_leftAligned)
-		leftShiftNumberOnStack(u256(1) << 64);
+		leftShiftNumberOnStack(64);
 }
 
 void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
@@ -425,7 +425,7 @@ void CompilerUtils::convertType(
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			rightShiftNumberOnStack(u256(1) << (256 - typeOnStack.numBytes() * 8), false);
+			rightShiftNumberOnStack(256 - typeOnStack.numBytes() * 8, false);
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
@@ -476,7 +476,7 @@ void CompilerUtils::convertType(
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 				if (targetBytesType.numBytes() * 8 > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			leftShiftNumberOnStack(u256(1) << (256 - targetBytesType.numBytes() * 8));
+			leftShiftNumberOnStack(256 - targetBytesType.numBytes() * 8);
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 		{
@@ -986,7 +986,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	{
 		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
-		u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
+		int shiftFactor = (32 - numBytes) * 8;
 		rightShiftNumberOnStack(shiftFactor, false);
 		if (leftAligned)
 			leftShiftNumberOnStack(shiftFactor);
@@ -1007,14 +1007,14 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
 }
 
-void CompilerUtils::leftShiftNumberOnStack(u256 _shiftFactor)
+void CompilerUtils::leftShiftNumberOnStack(unsigned _bits)
 {
-	m_context << _shiftFactor << Instruction::MUL;
+	m_context << (u256(1) << _bits) << Instruction::MUL;
 }
 
-void CompilerUtils::rightShiftNumberOnStack(u256 _shiftFactor, bool _isSigned)
+void CompilerUtils::rightShiftNumberOnStack(unsigned _bits, bool _isSigned)
 {
-	m_context << _shiftFactor << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
+	m_context << (u256(1) << _bits) << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
