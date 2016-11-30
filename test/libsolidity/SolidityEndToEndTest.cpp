@@ -2587,6 +2587,23 @@ BOOST_AUTO_TEST_CASE(function_modifier_overriding)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(false));
 }
 
+BOOST_AUTO_TEST_CASE(shadow_function_by_accessor)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() returns (uint) { return 1; }
+		}
+		contract B is A {
+			uint256 public f;
+			function B() {
+				f = 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 {
 	char const* sourceCode = R"(

@@ -1334,24 +1334,6 @@ BOOST_AUTO_TEST_CASE(function_event_clash)
 	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
 }
 
-BOOST_AUTO_TEST_CASE(accessor_function_clash)
-{
-	// bug #1798 (cpp-ethereum), related to #1286 (solidity)
-	char const* text = R"(
-		contract attribute {
-			bool ok = false;
-		}
-		contract func {
-			function ok() returns (bool) { return true; }
-		}
-
-		contract func_attr is func, attribute {
-			function checkOk() returns (bool) { return ok; }
-		}
-	)";
-	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
-}
-
 BOOST_AUTO_TEST_CASE(function_accessor_clash)
 {
 	// bug #1798 (cpp-ethereum), related to #1286 (solidity)

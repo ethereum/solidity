@@ -46,18 +46,24 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 	// Since functions can be overloaded even within a single contract, `_inheriting` is not checked.
 	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 	{
-		// check that all other declarations with the same name are functions
+		// check that all other declarations with the same name are functions or state variables.
 		for (Declaration const* declaration: declarations)
 			if (!dynamic_cast<FunctionDefinition const*>(declaration))
-				return declaration;
+			{
+				if (!dynamic_cast<VariableDeclaration const*>(declaration))
+					return declaration;
+				// A function definition might be clashing with a variable declaration.
+				// This is only allowed when the function definition comes from inheritance.
+				if (!_inheriting)
+					return declaration;
+			}
 	}
 	// Until we implement #1245, there are no special cases for events
 	else if (_inheriting && dynamic_cast<VariableDeclaration const*>(&_declaration))
 	{
-		// Check that all other declarations with the same name are variables or functions.
+		// Check that all other declarations with the same name are variables.
 		for (Declaration const* declaration: declarations)
-			if (!dynamic_cast<VariableDeclaration const*>(declaration) &&
-                !dynamic_cast<FunctionDefinition const*>(declaration))
+			if (!dynamic_cast<FunctionDefinition const*>(declaration))
 				return declaration;
 	}
 	else if (_inheriting && dynamic_cast<ModifierDefinition const*>(&_declaration))
