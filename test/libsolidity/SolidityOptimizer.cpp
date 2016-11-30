@@ -50,6 +50,25 @@ class OptimizerTestFramework: public SolidityExecutionFramework
 {
 public:
 	OptimizerTestFramework() { }
+
+	bytes const& compileAndRunWithOptimizer(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = "",
+		bool const _optimize = true,
+		unsigned const _optimizeRuns = 200
+	)
+	{
+		bool const c_optimize = m_optimize;
+		unsigned const c_optimizeRuns = m_optimizeRuns;
+		m_optimize = _optimize;
+		m_optimizeRuns = _optimizeRuns;
+		bytes const& ret = compileAndRun(_sourceCode, _value, _contractName);
+		m_optimize = c_optimize;
+		m_optimizeRuns = c_optimizeRuns;
+		return ret;
+	}
+
 	/// Compiles the source code with and without optimizing.
 	void compileBothVersions(
 		std::string const& _sourceCode,
@@ -57,11 +76,9 @@ public:
 		std::string const& _contractName = ""
 	)
 	{
-		m_optimize = false;
-		bytes nonOptimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
+		bytes nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false);
 		m_nonOptimizedContract = m_contractAddress;
-		m_optimize = true;
-		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
+		bytes optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true);
 		size_t nonOptimizedSize = 0;
 		solidity::eachInstruction(nonOptimizedBytecode, [&](Instruction, u256 const&) {
 			nonOptimizedSize++;
@@ -315,8 +332,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 	compareVersions("f(uint256,bytes32)", 8, "def");
 	compareVersions("f(uint256,bytes32)", 10, "ghi");
 
-	m_optimize = true;
-	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
+	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true);
 	size_t numSHA3s = 0;
 	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
 		if (_instr == Instruction::SHA3)
@@ -359,8 +375,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 	compileBothVersions(sourceCode);
 	compareVersions("f(uint256,bytes32)", 7, "abc");
 
-	m_optimize = true;
-	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "test");
+	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "test", true);
 	size_t numSHA3s = 0;
 	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
 		if (_instr == Instruction::SHA3)
@@ -1187,9 +1202,7 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 	compareVersions("set()");
 	compareVersions("get()");
 
-	m_optimize = true;
-	m_optimizeRuns = 1;
-	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
+	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true, 1);
 	bytes complicatedConstant = toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
 	unsigned occurrences = 0;
 	for (auto iter = optimizedBytecode.cbegin(); iter < optimizedBytecode.cend(); ++occurrences)
