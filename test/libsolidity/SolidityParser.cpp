@@ -962,6 +962,19 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(comment_end_with_double_star)
+{
+	char const* text = R"(
+		contract C1 {
+		/**
+		 **/
+		}
+		contract C2 {}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+
 BOOST_AUTO_TEST_CASE(library_simple)
 {
 	char const* text = R"(

@@ -327,7 +327,12 @@ Token::Value Scanner::scanMultiLineDocComment()
 		if (isLineTerminator(m_char))
 		{
 			skipWhitespace();
-			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
+			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '*')
+			{ // it is unknown if this leads to the end of the comment
+				addCommentLiteralChar('*');
+				advance();
+			}
+			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
 			{ // skip first '*' in subsequent lines
 				if (charsAdded)
 					addCommentLiteralChar('\n');
