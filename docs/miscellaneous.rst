@@ -259,7 +259,7 @@ reduce whitespace to a minimum and sort the keys of all objects to arrive at a
 unique formatting.
 Comments are of course also not permitted and used here only for explanatory purposes.
 
-.. code-block:: json
+.. code-block:: none
 
     {
       // Required: The version of the metadata format
@@ -327,7 +327,7 @@ Comments are of course also not permitted and used here only for explanatory pur
 
 
 Encoding of the Metadata Hash in the Bytecode
----------------------------------------------
+=============================================
 
 Because we might support other ways to retrieve the metadata file in the future,
 the mapping ``{"bzzr0": <Swarm hash>}`` is stored
@@ -342,7 +342,7 @@ So in order to retrieve the data, the end of the deployed bytecode can be checke
 to match that pattern and use the Swarm hash to retrieve the file.
 
 Usage for Automatic Interface Generation and NatSpec
-----------------------------------------------------
+====================================================
 
 The metadata is used in the following way: A component that wants to interact
 with a contract (e.g. Mist) retrieves the code of the contract, from that
@@ -356,7 +356,7 @@ Furthermore, Mist can use the userdoc to display a confirmation message to the u
 whenever they interact with the contract.
 
 Usage for Source Code Verification
-----------------------------------
+==================================
 
 In order to verify the compilation, sources can be retrieved from Swarm
 via the link in the metadata file.
