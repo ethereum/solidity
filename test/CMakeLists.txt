@@ -5,6 +5,7 @@ aux_source_directory(libdevcore SRC_LIST)
 aux_source_directory(libevmasm SRC_LIST)
 aux_source_directory(libsolidity SRC_LIST)
 aux_source_directory(contracts SRC_LIST)
+aux_source_directory(liblll SRC_LIST)
 
 get_filename_component(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
@@ -28,7 +29,7 @@ file(GLOB HEADERS "*.h" "*/*.h")
 set(EXECUTABLE soltest)
 eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Solidity::solidity)
+eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Solidity::lll)
 
 include_directories(BEFORE ..)
 target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})

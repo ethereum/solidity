@@ -37,6 +37,7 @@
 
 using namespace std;
 using namespace dev::eth;
+using namespace dev::test;
 
 namespace dev
 {
@@ -45,7 +46,7 @@ namespace solidity
 namespace test
 {
 
-class OptimizerTestFramework: public ExecutionFramework
+class OptimizerTestFramework: public SolidityExecutionFramework
 {
 public:
 	OptimizerTestFramework() { }

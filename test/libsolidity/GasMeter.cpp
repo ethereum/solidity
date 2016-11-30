@@ -32,6 +32,7 @@
 using namespace std;
 using namespace dev::eth;
 using namespace dev::solidity;
+using namespace dev::test;
 
 namespace dev
 {
@@ -40,7 +41,7 @@ namespace solidity
 namespace test
 {
 
-class GasMeterTestFramework: public ExecutionFramework
+class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
 	GasMeterTestFramework() { }

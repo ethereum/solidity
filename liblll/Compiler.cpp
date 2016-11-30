@@ -100,11 +100,17 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 string dev::eth::parseLLL(string const& _src)
 {
 	sp::utree o;
+
 	try
 	{
 		parseTreeLLL(_src, o);
 	}
-	catch (...) {}
+	catch (...)
+	{
+		killBigints(o);
+		return string();
+	}
+
 	ostringstream ret;
 	debugOutAST(ret, o);
 	killBigints(o);
