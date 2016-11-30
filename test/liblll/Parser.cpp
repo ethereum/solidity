@@ -87,6 +87,8 @@ BOOST_AUTO_TEST_CASE(hexadecimals)
 	char const* text = "0x1234";
 	BOOST_CHECK(successParse(text));
 	BOOST_CHECK_EQUAL(parse(text), R"(4660)");
+
+	BOOST_CHECK(!successParse("0x"));
 }
 
 BOOST_AUTO_TEST_CASE(sequence)
@@ -169,7 +171,7 @@ BOOST_AUTO_TEST_CASE(list)
 	BOOST_CHECK_EQUAL(parse(text), R"(( 1234 ))");
 
 	BOOST_CHECK(successParse("( 1234 5467 )"));
-	BOOST_CHECK(successParse("()"));
+	BOOST_CHECK(!successParse("()"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
