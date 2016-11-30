@@ -245,22 +245,25 @@ Rules::Rules()
 
 		// invariants involving known constants
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }},
+		{{Instruction::SUB, {X, 0}}, [=]{ return X; }},
 		{{Instruction::MUL, {X, 1}}, [=]{ return X; }},
 		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
 		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
 		{{Instruction::OR, {X, 0}}, [=]{ return X; }},
 		{{Instruction::XOR, {X, 0}}, [=]{ return X; }},
 		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
+		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::DIV, {0, X}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }},
-		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; } },
 		// operations involving an expression and itself
 		{{Instruction::AND, {X, X}}, [=]{ return X; }},
 		{{Instruction::OR, {X, X}}, [=]{ return X; }},
+		{{Instruction::XOR, {X, X}}, [=]{ return u256(0); }},
 		{{Instruction::SUB, {X, X}}, [=]{ return u256(0); }},
 		{{Instruction::EQ, {X, X}}, [=]{ return u256(1); }},
 		{{Instruction::LT, {X, X}}, [=]{ return u256(0); }},
@@ -270,6 +273,11 @@ Rules::Rules()
 		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }},
 
 		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }},
+		{{Instruction::XOR, {{{X}, {Instruction::XOR, {X, Y}}}}}, [=]{ return Y; }},
+		{{Instruction::OR, {{{X}, {Instruction::AND, {X, Y}}}}}, [=]{ return X; }},
+		{{Instruction::AND, {{{X}, {Instruction::OR, {X, Y}}}}}, [=]{ return X; }},
+		{{Instruction::AND, {{{X}, {Instruction::NOT, {X}}}}}, [=]{ return u256(0); }},
+		{{Instruction::OR, {{{X}, {Instruction::NOT, {X}}}}}, [=]{ return ~u256(0); }},
 	};
 	// Double negation of opcodes with binary result
 	for (auto const& op: vector<Instruction>{
@@ -286,6 +294,10 @@ Rules::Rules()
 	m_rules.push_back({
 		{Instruction::ISZERO, {{Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}}},
 		[=]() -> Pattern { return {Instruction::ISZERO, {X}}; }
+	});
+	m_rules.push_back({
+		{Instruction::ISZERO, {{Instruction::XOR, {X, Y}}}},
+		[=]() -> Pattern { return { Instruction::EQ, {X, Y} }; }
 	});
 	// Associative operations
 	for (auto const& opFun: vector<pair<Instruction,function<u256(u256 const&,u256 const&)>>>{
