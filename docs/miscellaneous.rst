@@ -380,4 +380,4 @@ These keywords are reserved in Solidity. They might become part of the syntax in
 Language Grammar
 ================
 
-The entire language grammar is `available here <https://github.com/ethereum/solidity/blob/release/libsolidity/grammar.txt>`_.
+.. literalinclude:: grammar.txt
