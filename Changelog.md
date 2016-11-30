@@ -2,6 +2,7 @@
 
 Features:
  * Optimizer: Some dead code elimination.
+ * Type checker: allow state variable accessors to implement abstract functions
 
 Bugfixes:
  * Type checker: string literals that are not valid UTF-8 cannot be converted to string type

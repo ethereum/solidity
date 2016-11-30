@@ -184,6 +184,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	{
 		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			// Take constructors out of overload hierarchy
@@ -205,6 +206,24 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			else if (function->isImplemented())
 				it->second = true;
 		}
+		for (VariableDeclaration const* variable : contract->stateVariables())
+		{
+			solAssert(variable, "");
+			if (variable->isPublic())
+			{
+				auto& overloads = functions[variable->name()];
+				FunctionTypePointer funType = make_shared<FunctionType>(*variable);
+				auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
+				{
+					return funType->hasEqualArgumentTypes(*_funAndFlag.first);
+				});
+				if (it == overloads.end())
+					overloads.push_back(make_pair(funType, true));
+				else
+					it->second = true;
+			}
+		}
+	}
 
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
