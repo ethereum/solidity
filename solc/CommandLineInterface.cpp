@@ -482,7 +482,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined metadata JSON whose swarm hash is stored on-chain.")
+		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
 		("formal", "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
 
