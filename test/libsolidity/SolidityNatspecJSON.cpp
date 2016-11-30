@@ -251,6 +251,29 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	checkNatspec(sourceCode, natspec, false);
 }
 
+BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev	 Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param 	 a Documentation for the first parameter\n"
+	"  /// @param	 second			 Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 {
 	char const* sourceCode = R"(

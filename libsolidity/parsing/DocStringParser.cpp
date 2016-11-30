@@ -16,15 +16,38 @@ static inline string::const_iterator skipLineOrEOS(
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }
 
-static inline string::const_iterator firstSpaceOrNl(
+static inline string::const_iterator firstSpaceOrTab(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
 {
 	auto spacePos = find(_pos, _end, ' ');
-	auto nlPos = find(_pos, _end, '\n');
-	return (spacePos < nlPos) ? spacePos : nlPos;
+	auto tabPos = find(_pos, _end, '\t');
+	return (spacePos < tabPos) ? spacePos : tabPos;
 }
+
+static inline string::const_iterator firstWsOrNl(
+	string::const_iterator _pos,
+	string::const_iterator _end
+)
+{
+	auto wsPos = firstSpaceOrTab(_pos, _end);
+	auto nlPos = find(wsPos, _end, '\n');
+	return (wsPos < nlPos) ? wsPos : nlPos;
+}
+
+
+static inline string::const_iterator skipWhitespace(
+	string::const_iterator _pos,
+	string::const_iterator _end
+)
+{
+	auto currPos = _pos;
+	while ((*currPos == ' ' || *currPos == '\t') && currPos != _end)
+		currPos += 1;
+	return currPos;
+}
+
 
 bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
 {
@@ -43,7 +66,7 @@ bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = firstSpaceOrNl(tagPos, end);
+			auto tagNameEndPos = firstWsOrNl(tagPos, end);
 			if (tagNameEndPos == end)
 			{
 				appendError("End of tag " + string(tagPos, tagNameEndPos) + "not found");
@@ -75,7 +98,7 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 {
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
-	if (_appending && _pos < _end && *_pos != ' ')
+	if (_appending && _pos < _end && *_pos != ' ' && *_pos != '\t')
 		m_lastTag->content += " ";
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	return skipLineOrEOS(nlPos, _end);
@@ -83,19 +106,30 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 
 DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 {
-	// find param name
-	auto currPos = find(_pos, _end, ' ');
-	if (currPos == _end)
+	// find param name start
+	auto nameStartPos = skipWhitespace(_pos, _end);
+	if (nameStartPos == _end)
 	{
-		appendError("End of param name not found" + string(_pos, _end));
+		appendError("No param name given" + string(nameStartPos, _end));
+		return _end;
+	}
+	auto nameEndPos = firstSpaceOrTab(nameStartPos, _end);
+	if (nameEndPos == _end)
+	{
+		appendError("End of param name not found" + string(nameStartPos, _end));
+		return _end;
+	}
+	auto paramName = string(nameStartPos, nameEndPos);
+
+	auto descStartPos = skipWhitespace(nameEndPos, _end);
+	if (descStartPos == _end)
+	{
+		appendError("No description given for param" + paramName);
 		return _end;
 	}
 
-	auto paramName = string(_pos, currPos);
-
-	currPos += 1;
-	auto nlPos = find(currPos, _end, '\n');
-	auto paramDesc = string(currPos, nlPos);
+	auto nlPos = find(descStartPos, _end, '\n');
+	auto paramDesc = string(descStartPos, nlPos);
 	newTag("param");
 	m_lastTag->paramName = paramName;
 	m_lastTag->content = paramDesc;
