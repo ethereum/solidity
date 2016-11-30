@@ -1311,16 +1311,17 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 		Instruction::DUP2,
 		Instruction::SUB
 	}, {
-		u256(5)
+		Instruction::DUP1
 	});
 
 	checkCSE({
-		Instruction::DUP2,
+		Instruction::DUP1,
 		u256(0),
 		Instruction::SUB
 	}, {
-		Instruction::DUP2,
 		u256(0),
+		Instruction::DUP2,
+		Instruction::SWAP1,
 		Instruction::SUB
 	});
 }
