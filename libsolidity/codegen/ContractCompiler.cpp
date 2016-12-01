@@ -583,7 +583,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				// lvalue context
 				auto variable = dynamic_cast<VariableDeclaration const*>(decl);
 				solAssert(
-					!!variable || !m_context.isLocalVariable(variable),
+					!!variable && m_context.isLocalVariable(variable),
 					"Can only assign to stack variables in inline assembly."
 				);
 				unsigned size = variable->type()->sizeOnStack();
