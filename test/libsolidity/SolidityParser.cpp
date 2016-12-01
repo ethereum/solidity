@@ -88,72 +88,88 @@ BOOST_AUTO_TEST_SUITE(SolidityParser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVariable1;\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVariable1;
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 ;\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 ;
+		}
+	)";
 	BOOST_CHECK(!successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(empty_function)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  function functionName(bytes20 arg1, address addr) constant\n"
-					   "    returns (int id)\n"
-					   "  { }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+		uint256 stateVar;
+			function functionName(bytes20 arg1, address addr) constant
+				returns (int id)
+			{ }
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(no_function_params)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  function functionName() {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			function functionName() {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(single_function_param)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			function functionName(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_no_body)
 {
-	char const* text = "contract test {\n"
-					   "  function functionName(bytes32 input) returns (bytes32 out);\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function functionName(bytes32 input) returns (bytes32 out);
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
 {
-	char const* text = "contract test {\n"
-					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
-					   "  function b() returns (uint r) { r = a({: 1, : 2, : 3}); }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
+			function b() returns (uint r) { r = a({: 1, : 2, : 3}); }
+		}
+	)";
 	BOOST_CHECK(!successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 {
-	char const* text = "contract test {\n"
-					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
-					   "  function b() returns (uint r) { r = a({a: , b: , c: }); }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
+			function b() returns (uint r) { r = a({a: , b: , c: }); }
+		}
+	)";
 	BOOST_CHECK(!successParse(text));
 }
 
@@ -184,11 +200,13 @@ BOOST_AUTO_TEST_CASE(overloaded_functions)
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  /// This is a test function\n"
-					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			/// This is a test function
+			function functionName(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -202,11 +220,13 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 BOOST_AUTO_TEST_CASE(function_normal_comments)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  // We won't see this comment\n"
-					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			// We won't see this comment
+			function functionName(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -219,17 +239,19 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  /// This is test function 1\n"
-					   "  function functionName1(bytes32 input) returns (bytes32 out) {}\n"
-					   "  /// This is test function 2\n"
-					   "  function functionName2(bytes32 input) returns (bytes32 out) {}\n"
-					   "  // nothing to see here\n"
-					   "  function functionName3(bytes32 input) returns (bytes32 out) {}\n"
-					   "  /// This is test function 4\n"
-					   "  function functionName4(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			/// This is test function 1
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			/// This is test function 2
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+			// nothing to see here
+			function functionName3(bytes32 input) returns (bytes32 out) {}
+			/// This is test function 4
+			function functionName4(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -252,12 +274,14 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  /// This is a test function\n"
-					   "  /// and it has 2 lines\n"
-					   "  function functionName1(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			/// This is a test function
+			/// and it has 2 lines
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -270,19 +294,21 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  /// fun1 description\n"
-					   "  function fun1(uint256 a) {\n"
-					   "    var b;\n"
-					   "    /// I should not interfere with actual natspec comments\n"
-					   "    uint256 c;\n"
-					   "    mapping(address=>bytes32) d;\n"
-					   "    bytes7 name = \"Solidity\";"
-					   "  }\n"
-					   "  /// This is a test function\n"
-					   "  /// and it has 2 lines\n"
-					   "  function fun(bytes32 input) returns (bytes32 out) {}\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			/// fun1 description
+			function fun1(uint256 a) {
+				var b;
+				/// I should not interfere with actual natspec comments
+				uint256 c;
+				mapping(address=>bytes32) d;
+				bytes7 name = "Solidity";
+			}
+			/// This is a test function
+			/// and it has 2 lines
+			function fun(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -299,17 +325,19 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  function ///I am in the wrong place \n"
-					   "  fun1(uint256 a) {\n"
-					   "    var b;\n"
-					   "    /// I should not interfere with actual natspec comments\n"
-					   "    uint256 c;\n"
-					   "    mapping(address=>bytes32) d;\n"
-					   "    bytes7 name = \"Solidity\";"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			function ///I am in the wrong place
+			fun1(uint256 a) {
+				var b;
+				/// I should not interfere with actual natspec comments
+				uint256 c;
+				mapping(address=>bytes32) d;
+				bytes7 name = "Solidity";
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -323,17 +351,19 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 {
 	FunctionDefinition const* function = nullptr;
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  function fun1(uint256 a) {\n"
-					   "  /// I should have been above the function signature\n"
-					   "    var b;\n"
-					   "    /// I should not interfere with actual natspec comments\n"
-					   "    uint256 c;\n"
-					   "    mapping(address=>bytes32) d;\n"
-					   "    bytes7 name = \"Solidity\";"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			function fun1(uint256 a) {
+				/// I should have been above the function signature
+				var b;
+				/// I should not interfere with actual natspec comments
+				uint256 c;
+				mapping(address=>bytes32) d;
+				bytes7 name = "Solidity";
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
@@ -346,71 +376,83 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 
 BOOST_AUTO_TEST_CASE(struct_definition)
 {
-	char const* text = "contract test {\n"
-					   "  uint256 stateVar;\n"
-					   "  struct MyStructName {\n"
-					   "    address addr;\n"
-					   "    uint256 count;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			uint256 stateVar;
+			struct MyStructName {
+				address addr;
+				uint256 count;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(mapping)
 {
-	char const* text = "contract test {\n"
-					   "  mapping(address => bytes32) names;\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			mapping(address => bytes32) names;
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_in_struct)
 {
-	char const* text = "contract test {\n"
-					   "  struct test_struct {\n"
-					   "    address addr;\n"
-					   "    uint256 count;\n"
-					   "    mapping(bytes32 => test_struct) self_reference;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			struct test_struct {
+				address addr;
+				uint256 count;
+				mapping(bytes32 => test_struct) self_reference;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_to_mapping_in_struct)
 {
-	char const* text = "contract test {\n"
-					   "  struct test_struct {\n"
-					   "    address addr;\n"
-					   "    mapping (uint64 => mapping (bytes32 => uint)) complex_mapping;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			struct test_struct {
+				address addr;
+				mapping (uint64 => mapping (bytes32 => uint)) complex_mapping;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(variable_definition)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    var b;\n"
-					   "    uint256 c;\n"
-					   "    mapping(address=>bytes32) d;\n"
-					   "    customtype varname;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				var b;
+				uint256 c;
+				mapping(address=>bytes32) d;
+				customtype varname;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    var b = 2;\n"
-					   "    uint256 c = 0x87;\n"
-					   "    mapping(address=>bytes32) d;\n"
-					   "    bytes7 name = \"Solidity\";"
-					   "    customtype varname;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				var b = 2;
+				uint256 c = 0x87;
+				mapping(address=>bytes32) d;
+				bytes7 name = "Solidity";
+				customtype varname;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -450,21 +492,25 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
 
 BOOST_AUTO_TEST_CASE(operator_expression)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    uint256 x = (1 + 4) || false && (1 - 12) + -9;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 x = (1 + 4) || false && (1 - 12) + -9;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(complex_expression)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    uint256 x = (1 + 4).member(++67)[a/=9] || true;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 x = (1 + 4).member(++67)[a/=9] || true;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -475,248 +521,294 @@ BOOST_AUTO_TEST_CASE(exp_expression)
 			function fun(uint256 a) {
 				uint256 x = 3 ** a;
 			}
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(while_loop)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    while (true) { uint256 x = 1; break; continue; } x = 9;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				while (true) { uint256 x = 1; break; continue; } x = 9;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(for_loop_vardef_initexpr)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    for (uint256 i = 0; i < 10; i++)\n"
-					   "    { uint256 x = i; break; continue; }\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				for (uint256 i = 0; i < 10; i++) {
+					uint256 x = i; break; continue;
+				}
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(for_loop_simple_initexpr)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    uint256 i =0;\n"
-					   "    for (i = 0; i < 10; i++)\n"
-					   "    { uint256 x = i; break; continue; }\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 i =0;
+				for (i = 0; i < 10; i++) {
+					uint256 x = i; break; continue;
+				}
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(for_loop_simple_noexpr)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    uint256 i =0;\n"
-					   "    for (;;)\n"
-					   "    { uint256 x = i; break; continue; }\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+				function fun(uint256 a) {
+					uint256 i =0;
+					for (;;) {
+						uint256 x = i; break; continue;
+					}
+				}
+			}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(for_loop_single_stmt_body)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    uint256 i =0;\n"
-					   "    for (i = 0; i < 10; i++)\n"
-					   "        continue;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 i = 0;
+				for (i = 0; i < 10; i++)
+					continue;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(if_statement)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) {\n"
-					   "    if (a >= 8) { return 2; } else { var b = 7; }\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				if (a >= 8) { return 2; } else { var b = 7; }
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(else_if_statement)
 {
-	char const* text = "contract test {\n"
-					   "  function fun(uint256 a) returns (address b) {\n"
-					   "    if (a < 0) b = 0x67; else if (a == 0) b = 0x12; else b = 0x78;\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) returns (address b) {
+				if (a < 0) b = 0x67; else if (a == 0) b = 0x12; else b = 0x78;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
 {
-	char const* text = "contract test {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "    uint64[7](3);\n"
-					   "    uint64[](3);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun() {
+				uint64(2);
+				uint64[7](3);
+				uint64[](3);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversion_to_dynamic_array)
 {
-	char const* text = "contract test {\n"
-					   "  function fun() {\n"
-					   "    var x = uint64[](3);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun() {
+				var x = uint64[](3);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(import_directive)
 {
-	char const* text = "import \"abc\";\n"
-					   "contract test {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		import "abc";
+		contract test {
+			function fun() {
+				uint64(2);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(multiple_contracts)
 {
-	char const* text = "contract test {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "contract test2 {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract test {
+			function fun() {
+				uint64(2);
+			}
+		}
+		contract test2 {
+			function fun() {
+				uint64(2);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(multiple_contracts_and_imports)
 {
-	char const* text = "import \"abc\";\n"
-					   "contract test {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "import \"def\";\n"
-					   "contract test2 {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "import \"ghi\";\n";
+	char const* text = R"(
+		import "abc";
+		contract test {
+			function fun() {
+				uint64(2);
+			}
+		}
+		import "def";
+		contract test2 {
+			function fun() {
+				uint64(2);
+			}
+		}
+		import "ghi";
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(contract_inheritance)
 {
-	char const* text = "contract base {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "contract derived is base {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract base {
+			function fun() {
+				uint64(2);
+			}
+		}
+		contract derived is base {
+			function fun() {
+				uint64(2);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(contract_multiple_inheritance)
 {
-	char const* text = "contract base {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "contract derived is base, nonExisting {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract base {
+			function fun() {
+				uint64(2);
+			}
+		}
+		contract derived is base, nonExisting {
+			function fun() {
+				uint64(2);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(contract_multiple_inheritance_with_arguments)
 {
-	char const* text = "contract base {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n"
-					   "contract derived is base(2), nonExisting(\"abc\", \"def\", base.fun()) {\n"
-					   "  function fun() {\n"
-					   "    uint64(2);\n"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract base {
+			function fun() {
+				uint64(2);
+			}
+		}
+		contract derived is base(2), nonExisting("abc", "def", base.fun()) {
+			function fun() {
+				uint64(2);
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(placeholder_in_function_context)
 {
-	char const* text = "contract c {\n"
-					   "  function fun() returns (uint r) {\n"
-					   "    var _ = 8;\n"
-					   "    return _ + 1;"
-					   "  }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			function fun() returns (uint r) {
+				var _ = 8;
+				return _ + 1;
+			}
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(modifier)
 {
-	char const* text = "contract c {\n"
-					   "  modifier mod { if (msg.sender == 0) _; }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			modifier mod { if (msg.sender == 0) _; }
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_without_semicolon)
 {
-	char const* text = "contract c {\n"
-					   "  modifier mod { if (msg.sender == 0) _ }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			modifier mod { if (msg.sender == 0) _ }
+		}
+	)";
 	BOOST_CHECK(!successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_arguments)
 {
-	char const* text = "contract c {\n"
-					   "  modifier mod(uint a) { if (msg.sender == a) _; }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			modifier mod(uint a) { if (msg.sender == a) _; }
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_invocation)
 {
-	char const* text = "contract c {\n"
-					   "  modifier mod1(uint a) { if (msg.sender == a) _; }\n"
-					   "  modifier mod2 { if (msg.sender == 2) _; }\n"
-					   "  function f() mod1(7) mod2 { }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			modifier mod1(uint a) { if (msg.sender == a) _; }
+			modifier mod2 { if (msg.sender == 2) _; }
+			function f() mod1(7) mod2 { }
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
 {
-	char const* text = "contract c {\n"
-					   "  function() { }\n"
-					   "}\n";
+	char const* text = R"(
+		contract c {
+			function() { }
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
