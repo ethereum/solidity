@@ -327,7 +327,7 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 				auto infile = boost::filesystem::path(path);
 				if (!boost::filesystem::exists(infile))
 				{
-					cerr << "Skipping non existant input file \"" << infile << "\"" << endl;
+					cerr << "Skipping non-existent input file \"" << infile << "\"" << endl;
 					continue;
 				}
 

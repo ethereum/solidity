@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	expectNatspecError(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistent_param)
 {
 	char const* sourceCode = "contract test {\n"
 	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
