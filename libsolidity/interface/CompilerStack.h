@@ -120,7 +120,7 @@ public:
 	);
 	/// Parses and compiles the given source code.
 	/// @returns false on error.
-	bool compile(std::string const& _sourceCode, bool _optimize = false);
+	bool compile(std::string const& _sourceCode, bool _optimize = false, unsigned _runs = 200);
 
 	/// Tries to translate all source files into a language suitable for formal analysis.
 	/// @param _errors list to store errors - defaults to the internal error list.
