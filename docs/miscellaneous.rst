@@ -89,11 +89,11 @@ ABI specification requires arguments to be padded to multiples of 32
 bytes.  The internal function calls use a different convention.
 
 
-.. index: overflow
+.. index: variable cleanup
 
-****************************************
-Internals - Cleaning Up Overflows in EVM
-****************************************
+*********************************
+Internals - Cleaning Up Variables
+*********************************
 
 When a value is shorter than 256-bit, in some cases the remaining bits
 must be cleaned.
