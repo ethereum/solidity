@@ -151,12 +151,12 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 }
 
 static FunctionTypePointer retrieveFunctionBySignature(
-	ContractDefinition const* _contract,
+	ContractDefinition const& _contract,
 	std::string const& _signature
 )
 {
 	FixedHash<4> hash(dev::keccak256(_signature));
-	return _contract->interfaceFunctions()[hash];
+	return _contract.interfaceFunctions()[hash];
 }
 
 }
@@ -1002,13 +1002,13 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	ContractDefinition const* contract;
 	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
-	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
+	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->returnParameterTypeNames(false);
 	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
 	BOOST_CHECK(function->isConstant());
 
-	function = retrieveFunctionBySignature(contract, "map(uint256)");
+	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto params = function->parameterTypeNames(false);
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
@@ -1016,7 +1016,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
-	function = retrieveFunctionBySignature(contract, "multiple_map(uint256,uint256)");
+	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	params = function->parameterTypeNames(false);
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
@@ -1053,9 +1053,9 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function;
-	function = retrieveFunctionBySignature(contract, "foo()");
+	function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
-	function = retrieveFunctionBySignature(contract, "bar()");
+	function = retrieveFunctionBySignature(*contract, "bar()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
