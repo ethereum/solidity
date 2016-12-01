@@ -91,7 +91,7 @@ private:
 
 	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
 	void appendBitOperatorCode(Token::Value _operator);
-	void appendShiftOperatorCode(Token::Value _operator);
+	void appendShiftOperatorCode(Token::Value _operator, Type const& _leftType, Type const& _rightType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
