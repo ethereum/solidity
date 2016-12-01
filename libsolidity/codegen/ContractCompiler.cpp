@@ -862,8 +862,6 @@ void ContractCompiler::appendModifierOrFunctionCode()
 				CompilerUtils::sizeOnStack(modifier.parameters()) +
 				CompilerUtils::sizeOnStack(modifier.localVariables());
 			codeBlock = &modifier.body();
-
-			codeBlock = &modifier.body();
 		}
 	}
 
