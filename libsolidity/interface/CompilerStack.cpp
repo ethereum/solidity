@@ -32,6 +32,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
+#include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/InterfaceHandler.h>
@@ -202,6 +203,15 @@ bool CompilerStack::parse()
 
 				m_contracts[contract->name()].contract = contract;
 			}
+
+	if (noErrors)
+	{
+		StaticAnalyzer staticAnalyzer(m_errors);
+		for (Source const* source: m_sourceOrder)
+			if (!staticAnalyzer.analyze(*source->ast))
+				noErrors = false;
+	}
+
 	m_parseSuccessful = noErrors;
 	return m_parseSuccessful;
 }
