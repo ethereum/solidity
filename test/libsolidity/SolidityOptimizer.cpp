@@ -79,17 +79,13 @@ public:
 		bytes nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false);
 		m_nonOptimizedContract = m_contractAddress;
 		bytes optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true);
-		size_t nonOptimizedSize = 0;
-		solidity::eachInstruction(nonOptimizedBytecode, [&](Instruction, u256 const&) {
-			nonOptimizedSize++;
-		});
-		size_t optimizedSize = 0;
-		solidity::eachInstruction(optimizedBytecode, [&](Instruction, u256 const&) {
-			optimizedSize++;
-		});
+		size_t nonOptimizedSize = numInstructions(nonOptimizedBytecode);
+		size_t optimizedSize = numInstructions(optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
-			nonOptimizedSize > optimizedSize,
-			"Optimizer did not reduce bytecode size."
+			optimizedSize < nonOptimizedSize,
+			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
+			std::to_string(nonOptimizedSize) + " - optimized size: " +
+			std::to_string(optimizedSize)
 		);
 		m_optimizedContract = m_contractAddress;
 	}
@@ -173,6 +169,22 @@ public:
 	}
 
 protected:
+	/// @returns the number of intructions in the given bytecode, not taking the metadata hash
+	/// into account.
+	size_t numInstructions(bytes const& _bytecode)
+	{
+		BOOST_REQUIRE(_bytecode.size() > 5);
+		size_t metadataSize = (_bytecode[_bytecode.size() - 2] << 8) + _bytecode[_bytecode.size() - 1];
+		BOOST_REQUIRE_MESSAGE(metadataSize == 0x29, "Invalid metadata size");
+		BOOST_REQUIRE(_bytecode.size() >= metadataSize + 2);
+		bytes realCode = bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
+		size_t instructions = 0;
+		solidity::eachInstruction(realCode, [&](Instruction, u256 const&) {
+			instructions++;
+		});
+		return instructions;
+	}
+
 	Address m_optimizedContract;
 	Address m_nonOptimizedContract;
 };
