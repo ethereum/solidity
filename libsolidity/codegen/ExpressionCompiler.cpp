@@ -307,6 +307,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		break;
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
+	{
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->retrieveValue(_unaryOperation.location());
 		if (!_unaryOperation.isPrefixOperation())
@@ -318,7 +319,15 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
 					m_context << swapInstruction(i);
 		}
-		m_context << u256(1);
+		u256 oneValue;
+		if (_unaryOperation.annotation().type->category() == Type::Category::FixedPoint)
+		{
+			FixedPointType const& fixedType = dynamic_cast<FixedPointType const&>(*_unaryOperation.subExpression().annotation().type);
+			oneValue = u256(1) << fixedType.fractionalBits();		
+		}	
+		else
+			oneValue = u256(1);
+		m_context << oneValue;
 		if (_unaryOperation.getOperator() == Token::Inc)
 			m_context << Instruction::ADD;
 		else
@@ -332,6 +341,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			!_unaryOperation.isPrefixOperation());
 		m_currentLValue.reset();
 		break;
+	}
 	case Token::Add: // +
 		// unary add, so basically no-op
 		break;
@@ -363,7 +373,11 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool cleanupNeeded = false;
 		if (Token::isCompareOp(c_op))
 			cleanupNeeded = true;
-		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
+		if (
+			(commonType.category() == Type::Category::Integer && 
+			(c_op == Token::Div || c_op == Token::Mod)) ||
+			commonType.category() == Type::Category::FixedPoint
+		)
 			cleanupNeeded = true;
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
@@ -1252,7 +1266,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		solUnimplemented("Only integer, rational, boolean and string literals implemented for now.");
 	}
 }
 
@@ -1294,6 +1308,8 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	{
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
+			isSigned = type->isSigned();
+		else if (auto type = dynamic_cast<FixedPointType const*>(&_type))
 			isSigned = type->isSigned();
 
 		switch (_operator)
