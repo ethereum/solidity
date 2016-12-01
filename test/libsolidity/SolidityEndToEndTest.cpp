@@ -8378,6 +8378,18 @@ BOOST_AUTO_TEST_CASE(inline_assembly_invalidjumplabel)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
+{
+	char const* sourceCode = R"(
+		contract C1 {}
+		/**
+		**/
+		contract C2 {}
+	)";
+	compileAndRun(sourceCode, 0, "C1");
+	compileAndRun(sourceCode, 0, "C2");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
