@@ -331,8 +331,7 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 	}
 
 	map<u256, u256> tagReplacements;
-	unsigned total = 0;
-	for (unsigned count = 1; count > 0; total += count)
+	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
 
@@ -399,7 +398,7 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 	}
 
 	if (_enable)
-		total += ConstantOptimisationMethod::optimiseConstants(
+		ConstantOptimisationMethod::optimiseConstants(
 			_isCreation,
 			_isCreation ? 1 : _runs,
 			*this,
