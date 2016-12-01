@@ -2158,6 +2158,17 @@ bool FunctionType::operator==(Type const& _other) const
 	return true;
 }
 
+bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (m_location == Location::External && _convertTo.category() == Category::Integer)
+	{
+		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
+		if (convertTo.isAddress())
+			return true;
+	}
+	return _convertTo.category() == category();
+}
+
 TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
 {
 	if (_operator == Token::Value::Delete)

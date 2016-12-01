@@ -922,6 +922,7 @@ public:
 
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
 	virtual std::string toString(bool _short) const override;
