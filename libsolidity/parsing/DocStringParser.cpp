@@ -99,7 +99,13 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
 	if (_appending && _pos < _end && *_pos != ' ' && *_pos != '\t')
+	{
 		m_lastTag->content += " ";
+	}
+	else if (!_appending)
+	{
+		_pos = skipWhitespace(_pos, _end);
+	}
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	return skipLineOrEOS(nlPos, _end);
 }

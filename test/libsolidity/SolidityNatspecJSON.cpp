@@ -56,7 +56,7 @@ public:
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected " << expectedDocumentation.toStyledString() <<
+			"Expected:\n" << expectedDocumentation.toStyledString() <<
 			"\n but got:\n" << generatedDocumentation.toStyledString()
 		);
 	}
