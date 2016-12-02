@@ -300,6 +300,8 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 
 void CompilerUtils::memoryCopy(bool _useIdentityPrecompile)
 {
+	//@TODO do not use ::CALL if less than 32 bytes?
+
 	// Stack here: size target source
 
 	if (!_useIdentityPrecompile)
@@ -332,20 +334,25 @@ void CompilerUtils::memoryCopy(bool _useIdentityPrecompile)
 		m_context << Instruction::POP;
 		return;
 	}
-
-	// stack for call: outsize target size source value contract gas
-	//@TODO do not use ::CALL if less than 32 bytes?
-	m_context << Instruction::DUP3 << Instruction::SWAP1;
-	m_context << u256(0) << u256(identityContractAddress);
-	// compute gas costs
-	m_context << u256(32) << Instruction::DUP5 << u256(31) << Instruction::ADD;
-	static unsigned c_identityGas = 15;
-	static unsigned c_identityWordGas = 3;
-	m_context << Instruction::DIV << u256(c_identityWordGas) << Instruction::MUL;
-	m_context << u256(c_identityGas) << Instruction::ADD;
-	m_context << Instruction::CALL;
-	m_context << Instruction::ISZERO;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	else
+	{
+		m_context.appendInlineAssembly(R"(
+			{
+			let words := div(add(len, 31), 32)
+			let cost := add(15, mul(3, words))
+			jump(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
+			}
+		)",
+			{ "len", "dst", "src" },
+			map<string, string> {
+			    { "$identityContractAddress", toString(identityContractAddress) }
+			}
+		);
+		m_context << Instruction::POP;
+		m_context << Instruction::POP;
+		m_context << Instruction::POP;
+		return;
+	}
 }
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
