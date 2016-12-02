@@ -49,6 +49,8 @@ QUESTION: How to specific file-reading callback? - probably not as part of json 
 The input description is language-specific and could change with each compiler version, but it
 should be backwards compatible if possible.
 
+.. code-block:: none
+
     {
       sources:
       {
@@ -105,6 +107,7 @@ should be backwards compatible if possible.
 Regular Output
 --------------
 
+.. code-block:: none
 
     {
       errors: ["error1", "error2"], // we might structure them
