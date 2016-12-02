@@ -43,6 +43,20 @@ BOOST_AUTO_TEST_CASE(smoke_test)
         BOOST_CHECK(callFallback() == encodeArgs(string("test", 4)));
 }
 
+BOOST_AUTO_TEST_CASE(bare_panic)
+{
+	char const* sourceCode = "(panic)";
+	compileAndRunWithoutCheck(sourceCode);
+	BOOST_REQUIRE(m_output.empty());
+}
+
+BOOST_AUTO_TEST_CASE(enclosed_panic)
+{
+	char const* sourceCode = "(seq (panic))";
+	compileAndRunWithoutCheck(sourceCode);
+	BOOST_REQUIRE(m_output.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
