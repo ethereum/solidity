@@ -260,20 +260,42 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
 	{
 		solAssert(*it, "");
-		// the declaration is functionDefinition while declarations > 1
-		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
-		FunctionType functionType(functionDefinition);
-		for (auto parameter: functionType.parameterTypes() + functionType.returnParameterTypes())
-			if (!parameter)
-				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+		// the declaration is functionDefinition or a VariableDeclaration while declarations > 1
+		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
+			"Found overloading involving something not a function or a variable");
+
+		shared_ptr<FunctionType const> functionType {};
+
+		if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(*it))
+		{
+			functionType = make_shared<FunctionType const>(*functionDefinition);
+			for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+				if (!parameter)
+					reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+		}
+		else
+		{
+			VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(*it);
+			functionType = make_shared<FunctionType const>(*variableDeclaration);
+		}
+		solAssert(functionType, "failed to determine the function type of the overloaded");
 
 		if (uniqueFunctions.end() == find_if(
 			uniqueFunctions.begin(),
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				FunctionType newFunctionType(dynamic_cast<FunctionDefinition const&>(*d));
-				return functionType.hasEqualArgumentTypes(newFunctionType);
+				if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(d))
+				{
+					FunctionType const newFunctionType(*functionDefinition);
+					return functionType->hasEqualArgumentTypes(newFunctionType);
+				}
+				else if (VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(d))
+				{
+					FunctionType const newFunctionType(*variableDeclaration);
+					return functionType->hasEqualArgumentTypes(newFunctionType);
+				}
+				return false; // to make compiler happy
 			}
 		))
 			uniqueFunctions.push_back(*it);
