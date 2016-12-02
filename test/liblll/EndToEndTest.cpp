@@ -77,21 +77,17 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
     BOOST_CHECK(callFallback() == toBigEndian(u256(-8)));
 }
 
-BOOST_AUTO_TEST_CASE(exp_operator_parameter)
+BOOST_AUTO_TEST_CASE(exp_operator_on_range)
 {
 	char const* sourceCode = R"(
-		(seq
-			(def 'function (function-hash code-body)
-				(when (= (div (calldataload 0x00) (exp 2 224)) function-hash)
-					code-body))
-			(returnlll
-				(seq
-					(function 0xb3de648b
-						(return (exp 2 (calldataload 0x04))))
-					(jump 0x02))))
+		(returnlll
+			(seq
+				(when (= (div (calldataload 0x00) (exp 2 224)) 0xb3de648b)
+					(return (exp 2 (calldataload 0x04))))
+				(jump 0x02)))
     )";
 	compileAndRun(sourceCode);
-    BOOST_CHECK(callContractFunction("f(uint256)", u256(16)) == toBigEndian(u256(65536)));
+	testContractAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return u256(1 << a.convert_to<int>()); }, 0, 16);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
