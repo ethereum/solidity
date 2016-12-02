@@ -57,6 +57,43 @@ BOOST_AUTO_TEST_CASE(enclosed_panic)
 	BOOST_REQUIRE(m_output.empty());
 }
 
+BOOST_AUTO_TEST_CASE(exp_operator_const)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (exp 2 3)))
+    )";
+	compileAndRun(sourceCode);
+    BOOST_CHECK(callFallback() == toBigEndian(u256(8)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (exp (- 0 2) 3)))
+    )";
+	compileAndRun(sourceCode);
+    BOOST_CHECK(callFallback() == toBigEndian(u256(-8)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_parameter)
+{
+	char const* sourceCode = R"(
+		(seq
+			(def 'function (function-hash code-body)
+				(when (= (div (calldataload 0x00) (exp 2 224)) function-hash)
+					code-body))
+			(returnlll
+				(seq
+					(function 0xb3de648b
+						(return (exp 2 (calldataload 0x04))))
+					(jump 0x02))))
+    )";
+	compileAndRun(sourceCode);
+    BOOST_CHECK(callContractFunction("f(uint256)", u256(16)) == toBigEndian(u256(65536)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
