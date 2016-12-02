@@ -33,24 +33,11 @@ Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
 
-**************************************************
-Standardized Input Description and Metadata Output
-**************************************************
+*****************************************
+Standardized Input and Output Description
+*****************************************
 
-In order to ease source code verification of complex contracts that are spread across several files,
-there is a standardized way for describing the relations between those files.
-Furthermore, the compiler can generate a json file while compiling that includes
-the (hash of the) source, natspec comments and other metadata whose hash is included in the
-actual bytecode. Specifically, the creation data for a contract has to begin with
-`push32 <metadata hash> pop`.
-
-The metadata standard is versioned. Future versions are only required to provide the "version" field,
-the "language" field and the two keys inside the "compiler" field.
-The field compiler.keccak should be the keccak hash of a binary of the compiler with the given version.
-
-The example below is presented in a human-readable way. Properly formatted metadata
-should use quotes correctly, reduce whitespace to a minimum and sort the keys of all objects
-to arrive at a unique formatting.
+The compiler API expects a JSON formatted input and outputs the compilations result in a JSON formatted output.
 
 Comments are of course not permitted and used here only for explanatory purposes.
 
@@ -163,7 +150,7 @@ Regular Output
               }
           },
           functionHashes:
-          metadata: // see below
+          metadata: // see the Metadata Output documentation
           ewasm: {
               wast: // S-expression format
               wasm: //
@@ -183,80 +170,3 @@ Regular Output
         }
       }
     }
-
-Metadata Output
----------------
-
-Note that the actual bytecode is not part of the metadata because the hash
-of the metadata structure will be included in the bytecode itself.
-
-This requires the compiler to be able to compute the hash of its own binary,
-which requires it to be statically linked. The hash of the binary is not
-too important. It is much more important to have the commit hash because
-that can be used to query a location of the binary (and whether the version is
-"official") at a registry contract.
-
-    {
-      // The version of the metadata format (required field)
-      version: "1",
-      // Required field
-      language: "Solidity",
-      // Required field, the contents are specific to the language
-      compiler: {
-        name: "solc",
-        version: "0.4.5-nightly.2016.11.15+commit.c1b1efaf.Emscripten.clang",
-        // Optional hash of the compiler binary which produced this output
-        keccak256: "0x123..."
-      },
-      // This is a subset of the regular compiler input
-      sources:
-      {
-        "myFile.sol": {
-          "keccak256": "0x123...",
-          "url": "bzzr://0x56..."
-        },
-        "Token": {
-          "keccak256": "0x456...",
-          "url": "https://raw.githubusercontent.com/ethereum/solidity/develop/std/Token.sol"
-        },
-        "mortal": {
-          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
-        }
-      },
-      // This is a subset of the regular compiler input
-      // Its content is specific to the compiler (determined by the language and compiler fields)
-      settings:
-      {
-        remappings: [":g/dir"],
-        optimizer: {enabled: true, runs: 500},
-        compilationTarget: {
-          "myFile.sol": MyContract"
-        },
-        libraries: {
-          "MyLib": "0x123123..."
-        }
-      },
-      // This is a subset of the regular compiler output
-      output:
-      {
-        abi: [ /* abi definition */ ],
-        userdoc: [],
-        devdoc: [],
-      }
-    }
-
-This is used in the following way: A component that wants to interact
-with a contract (e.g. mist) retrieves the creation transaction of the contract
-and from that the first 33 bytes. If the first byte decodes into a PUSH32
-instruction, the other 32 bytes are interpreted as the keccak-hash of
-a file which is retrieved via a content-addressable storage like swarm.
-That file is JSON-decoded into a structure like above. Sources are
-retrieved in the same way and combined with the structure into a proper
-compiler input description, which selects only the bytecode as output.
-
-The compiler of the correct version (which is checked to be part of the "official" compilers)
-is invoked on that input. The resulting
-bytecode is compared (excess bytecode in the creation transaction
-is constructor input data) which automatically verifies the metadata since
-its hash is part of the bytecode. The constructor input data is decoded
-according to the interface and presented to the user.
