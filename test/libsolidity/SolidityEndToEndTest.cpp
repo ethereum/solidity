@@ -4869,60 +4869,6 @@ BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
 	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(false));
 }
 
-BOOST_AUTO_TEST_CASE(proper_overwriting_accessor_by_function)
-{
-	// bug #1798
-	char const* sourceCode = R"(
-		contract attribute {
-			bool ok = false;
-		}
-		contract func {
-			function ok() returns (bool) { return true; }
-		}
-
-		contract attr_func is attribute, func {
-			function checkOk() returns (bool) { return ok(); }
-		}
-		contract func_attr is func, attribute {
-			function checkOk() returns (bool) { return ok; }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "attr_func");
-	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
-	compileAndRun(sourceCode, 0, "func_attr");
-	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(false));
-}
-
-
-BOOST_AUTO_TEST_CASE(overwriting_inheritance)
-{
-	// bug #1798
-	char const* sourceCode = R"(
-		contract A {
-			function ok() returns (uint) { return 1; }
-		}
-		contract B {
-			function ok() returns (uint) { return 2; }
-		}
-		contract C {
-			uint ok = 6;
-		}
-		contract AB is A, B {
-			function ok() returns (uint) { return 4; }
-		}
-		contract reversedE is C, AB {
-			function checkOk() returns (uint) { return ok(); }
-		}
-		contract E is AB, C {
-			function checkOk() returns (uint) { return ok; }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "reversedE");
-	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(4));
-	compileAndRun(sourceCode, 0, "E");
-	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(6));
-}
-
 BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 {
 	char const* sourceCode = R"(

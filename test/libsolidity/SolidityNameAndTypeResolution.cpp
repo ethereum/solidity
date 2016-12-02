@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) { } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1065,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -4303,6 +4303,25 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 	)";
 	CHECK_ERROR(text, TypeError, "");
 }
+
+BOOST_AUTO_TEST_CASE(function_variable_mixin)
+{
+       // bug #1798 (cpp-ethereum), related to #1286 (solidity)
+       char const* text = R"(
+               contract attribute {
+                       bool ok = false;
+               }
+               contract func {
+                       function ok() returns (bool) { return true; }
+               }
+
+               contract attr_func is attribute, func {
+                       function checkOk() returns (bool) { return ok(); }
+               }
+       )";
+       CHECK_ERROR(text, DeclarationError, "");
+}
+
 
 BOOST_AUTO_TEST_CASE(payable_constant_conflict)
 {
