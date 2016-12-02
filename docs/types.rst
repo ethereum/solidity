@@ -186,14 +186,6 @@ For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``
 although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
 in the integer ``4`` (although non-integers were used in between).
 
-If the result is not an integer,
-an appropriate ``ufixed`` or ``fixed`` type is used whose number of fractional bits is as large as
-required (approximating the rational number in the worst case).
-
-In ``var x = 1/4;``, ``x`` will receive the type ``ufixed0x8`` while in ``var x = 1/3`` it will receive
-the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary and will thus be
-approximated.
-
 Any operator that can be applied to integers can also be applied to number literal expressions as
 long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
@@ -207,20 +199,14 @@ a non-rational number).
     types.  So the number literal expressions `1 + 2` and `2 + 1` both
     belong to the same number literal type for the rational number three.
 
-.. note::
-    Most finite decimal fractions like ``5.3743`` are not finitely representable in binary. The correct type
-    for ``5.3743`` is ``ufixed8x248`` because that allows to best approximate the number. If you want to
-    use the number together with types like ``ufixed`` (i.e. ``ufixed128x128``), you have to explicitly
-    specify the desired precision: ``x + ufixed(5.3743)``.
-
 .. warning::
     Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
     expressions. Even though we know that the value of the
-    expression assigned to ``b`` in the following example evaluates to an integer, it still
-    uses fixed point types (and not rational number literals) in between and so the code
+    expression assigned to ``b`` in the following example evaluates to
+    an integer, but the partial expression ``2.5 + a`` does not type check so the code
     does not compile
 
 ::
