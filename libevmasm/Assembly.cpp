@@ -432,7 +432,7 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesPerTag = dev::bytesRequired(bytesRequiredForCode);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
-	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1;
+	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + m_auxiliaryData.size();
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += sub->assemble().bytecode.size();
 
@@ -525,8 +525,10 @@ LinkerObject const& Assembly::assemble() const
 		}
 	}
 
-	if (!dataRef.empty() && !subRef.empty())
+	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
+		// Append a STOP just to be sure.
 		ret.bytecode.push_back(0);
+
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{
 		auto references = subRef.equal_range(i);
@@ -568,6 +570,9 @@ LinkerObject const& Assembly::assemble() const
 		}
 		ret.bytecode += dataItem.second;
 	}
+
+	ret.bytecode += m_auxiliaryData;
+
 	for (unsigned pos: sizeRef)
 	{
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);

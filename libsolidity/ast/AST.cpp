@@ -63,6 +63,15 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return static_cast<SourceUnitAnnotation&>(*m_annotation);
 }
 
+string Declaration::sourceUnitName() const
+{
+	solAssert(!!m_scope, "");
+	ASTNode const* scope = m_scope;
+	while (dynamic_cast<Declaration const*>(scope) && dynamic_cast<Declaration const*>(scope)->m_scope)
+		scope = dynamic_cast<Declaration const*>(scope)->m_scope;
+	return dynamic_cast<SourceUnit const&>(*scope).annotation().path;
+}
+
 ImportAnnotation& ImportDirective::annotation() const
 {
 	if (!m_annotation)

@@ -56,7 +56,7 @@ public:
 		std::string sourceCode = "pragma solidity >=0.0;\n" + _sourceCode;
 		m_compiler.reset(false);
 		m_compiler.addSource("", sourceCode);
-		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
+		if (!m_compiler.compile(m_optimize, m_optimizeRuns, _libraryAddresses))
 		{
 			for (auto const& error: m_compiler.errors())
 				SourceReferenceFormatter::printExceptionInformation(
@@ -68,7 +68,6 @@ public:
 			BOOST_ERROR("Compiling contract failed");
 		}
 		eth::LinkerObject obj = m_compiler.object(_contractName);
-		obj.link(_libraryAddresses);
 		BOOST_REQUIRE(obj.linkReferences.empty());
 		sendMessage(obj.bytecode + _arguments, true, _value);
 		return m_output;

@@ -152,8 +152,8 @@ public:
 		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
 	);
 
-	/// Prepends "PUSH <compiler version number> POP"
-	void injectVersionStampIntoSub(size_t _subIndex);
+	/// Appends arbitrary data to the end of the bytecode.
+	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
 	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, true, _runs); }
 

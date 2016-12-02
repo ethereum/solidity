@@ -30,11 +30,13 @@ using namespace dev::solidity;
 
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts,
+	bytes const& _metadata
 )
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
+	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
@@ -42,12 +44,6 @@ void Compiler::compileContract(
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
 	m_context.optimise(m_optimize, m_optimizeRuns);
-
-	if (_contract.isLibrary())
-	{
-		solAssert(m_runtimeSub != size_t(-1), "");
-		m_context.injectVersionStampIntoSub(m_runtimeSub);
-	}
 }
 
 void Compiler::compileClone(
