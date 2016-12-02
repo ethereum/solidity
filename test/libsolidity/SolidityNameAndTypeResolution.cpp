@@ -4725,6 +4725,18 @@ BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(external_function_type_to_address)
+{
+	char const* text = R"(
+		contract C {
+			function f() return (address) {
+				return address(this.f);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
 {
 	char const* text = R"(
