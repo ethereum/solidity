@@ -218,6 +218,7 @@ void CompilerContext::appendInlineAssembly(
 	};
 
 	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "Failed to assemble inline assembly block.");
+	setStackOffset(startStackHeight);
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
