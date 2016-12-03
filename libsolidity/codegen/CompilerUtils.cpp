@@ -312,7 +312,8 @@ void CompilerUtils::memoryCopy()
 	m_context << Instruction::DIV << u256(c_identityWordGas) << Instruction::MUL;
 	m_context << u256(c_identityGas) << Instruction::ADD;
 	m_context << Instruction::CALL;
-	m_context << Instruction::POP; // ignore return value
+	m_context << Instruction::ISZERO;
+	m_context.appendConditionalJumpTo(m_context.errorTag());
 }
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
