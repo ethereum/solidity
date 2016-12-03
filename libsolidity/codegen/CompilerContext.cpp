@@ -217,7 +217,7 @@ void CompilerContext::appendInlineAssembly(
 		return true;
 	};
 
-	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "");
+	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "Failed to assemble inline assembly block.");
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
