@@ -340,6 +340,28 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		_other->category() != category()
 	)
 		return TypePointer();
+	if (Token::isShiftOp(_operator))
+	{
+		// Disable >>> here.
+		if (_operator == Token::SHR)
+			return TypePointer();
+
+		// Shifts are not symmetric with respect to the type
+		if (isAddress())
+			return TypePointer();
+		if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(_other.get()))
+		{
+			if (!otherInt->isAddress())
+				return shared_from_this();
+		}
+		else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(_other.get()))
+		{
+			if (!otherRat->isFractional())
+				return shared_from_this();
+		}
+		return TypePointer();
+	}
+
 	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
 	if (!commonType)
 		return TypePointer();
@@ -347,11 +369,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
-	// Disable >>> here.
-	if (_operator == Token::SHR)
-		return TypePointer();
-	if (Token::isShiftOp(_operator) && !isAddress()) // && !_other->isAddress())
-		return shared_from_this();
 	if (Token::isBooleanOp(_operator))
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
@@ -959,6 +976,26 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 
 TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
+	if (Token::isShiftOp(_operator))
+	{
+		// Disable >>> here.
+		if (_operator == Token::SHR)
+			return TypePointer();
+
+		// Shifts are not symmetric with respect to the type
+		if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(_other.get()))
+		{
+			if (!otherInt->isAddress())
+				return shared_from_this();
+		}
+		else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(_other.get()))
+		{
+			if (!otherRat->isFractional())
+				return shared_from_this();
+		}
+		return TypePointer();
+	}
+
 	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));
 	if (!commonType)
 		return TypePointer();

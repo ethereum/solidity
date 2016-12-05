@@ -8505,6 +8505,21 @@ BOOST_AUTO_TEST_CASE(shift_left_uint8)
 	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x66), u256(8)) == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_left_larger_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (int8) {
+				uint8 x = 255;
+				int8 y = 1;
+				return a << b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1) << 255));
+}
+
 BOOST_AUTO_TEST_CASE(shift_left_assignment)
 {
 	char const* sourceCode = R"(
