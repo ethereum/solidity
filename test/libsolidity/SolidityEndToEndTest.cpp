@@ -8403,6 +8403,23 @@ BOOST_AUTO_TEST_CASE(shift_right)
 	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(17)) == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_right_garbled)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint8 a, uint8 b) returns (uint) {
+				assembly {
+					a := 0xffffffff
+				}
+				// Higher bits should be cleared before the shift
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(4)) == encodeArgs(u256(0xf)));
+}
+
 BOOST_AUTO_TEST_CASE(shift_right_uint32)
 {
 	char const* sourceCode = R"(
