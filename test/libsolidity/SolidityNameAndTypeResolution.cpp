@@ -46,7 +46,7 @@ namespace
 {
 
 pair<ASTPointer<SourceUnit>, std::shared_ptr<Error const>>
-parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true)
+parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true, bool _allowMultipleErrors = false)
 {
 	// Silence compiler version warning
 	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
@@ -62,11 +62,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 
 		SyntaxChecker syntaxChecker(errors);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
-		{
-			if (errors.size() > 1)
-				BOOST_FAIL("Multiple errors found after checking syntax.");
 			return make_pair(sourceUnit, errors.at(0));
-		}
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(globalContext->declarations(), errors);
@@ -93,11 +89,9 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					TypeChecker typeChecker(errors);
 					bool success = typeChecker.checkTypeRequirements(*contract);
 					BOOST_CHECK(success || !errors.empty());
-					if (errors.size() > 1)
-						BOOST_FAIL("Multiple errors found after checking type requirements");
 
 				}
-		if (errors.size() > 1)
+		if (errors.size() > 1 && !_allowMultipleErrors)
 			BOOST_FAIL("Multiple errors found");
 		for (auto const& currentError: errors)
 		{
@@ -139,9 +133,9 @@ bool success(string const& _source)
 	return !parseAnalyseAndReturnError(_source).second;
 }
 
-Error expectError(std::string const& _source, bool _warning = false)
+Error expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false)
 {
-	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning);
+	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
 	BOOST_REQUIRE(!!sourceAndError.second);
 	BOOST_REQUIRE(!!sourceAndError.first);
 	return *sourceAndError.second;
@@ -169,10 +163,10 @@ static FunctionTypePointer retrieveFunctionBySignature(
 
 }
 
-#define CHECK_ERROR_OR_WARNING(text, typ, substring, warning) \
+#define CHECK_ERROR_OR_WARNING(text, typ, substring, warning, allowMulti) \
 do \
 { \
-	Error err = expectError((text), (warning)); \
+	Error err = expectError((text), (warning), (allowMulti)); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
 	BOOST_CHECK(searchErrorMessage(err, substring)); \
 } while(0)
@@ -180,12 +174,17 @@ do \
 // [checkError(text, type, substring)] asserts that the compilation down to typechecking
 // emits an error of type [type] and with a message containing [substring].
 #define CHECK_ERROR(text, type, substring) \
-CHECK_ERROR_OR_WARNING(text, type, substring, false)
+CHECK_ERROR_OR_WARNING(text, type, substring, false, false)
+
+// [checkError(text, type, substring)] asserts that the compilation down to typechecking
+// emits an error of type [type] and with a message containing [substring].
+#define CHECK_ERROR_ALLOW_MULTI(text, type, substring) \
+CHECK_ERROR_OR_WARNING(text, type, substring, false, true)
 
 // [checkWarning(text, type, substring)] asserts that the compilation down to typechecking
 // emits a warning of type [type] and with a message containing [substring].
 #define CHECK_WARNING(text, substring) \
-CHECK_ERROR_OR_WARNING(text, Warning, substring, true)
+CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
 #define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
@@ -847,7 +846,7 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 		contract A is B { }
 		contract B is A { }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(legal_override_direct)
@@ -1291,7 +1290,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_twice)
 			function() { x = 3; }
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
@@ -1673,16 +1672,28 @@ BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
+BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay_256)
 {
 	char const* text = R"(
 		contract test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			function test() {
 				a = ActionChoices.GoStraight;
-				b = ActionChoices.Sit;
 			}
 			uint256 a;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "");
+}
+
+BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay_64)
+{
+	char const* text = R"(
+		contract test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			function test() {
+				b = ActionChoices.Sit;
+			}
 			uint64 b;
 		}
 	)";
@@ -2046,7 +2057,8 @@ BOOST_AUTO_TEST_CASE(complex_const_variable)
 	//for now constant specifier is valid only for uint bytesXX and enums
 	char const* text = R"(
 		contract Foo {
-			mapping(uint => bool) constant mapVar;
+			mapping(uint => bool) x;
+			mapping(uint => bool) constant mapVar = x;
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "");
@@ -2151,12 +2163,12 @@ BOOST_AUTO_TEST_CASE(multiple_constructors)
 BOOST_AUTO_TEST_CASE(equal_overload)
 {
 	char const* sourceCode = R"(
-		contract test {
+		contract C {
 			function test(uint a) returns (uint b) { }
 			function test(uint a) external {}
 		}
 	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "");
+	CHECK_ERROR_ALLOW_MULTI(sourceCode, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_var)
@@ -3307,7 +3319,7 @@ BOOST_AUTO_TEST_CASE(left_value_in_conditional_expression_not_supported_yet)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(conditional_expression_with_different_struct)
@@ -3321,8 +3333,8 @@ BOOST_AUTO_TEST_CASE(conditional_expression_with_different_struct)
 				uint x;
 			}
 			function f() {
-				s1 x;
-				s2 y;
+				s1 memory x;
+				s2 memory y;
 				true ? x : y;
 			}
 		}
@@ -3803,7 +3815,7 @@ BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 3.2;
+				fixed a = 3.25;
 				bytes32 c = a;
 			}
 		}
@@ -3893,14 +3905,47 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(rational_as_exponent_value)
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_decimal)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
 				fixed g = 2 ** -2.2;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_pos_decimal)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
 				ufixed b = 3 ** 2.5;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_as_exponent_half)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
 				ufixed24x24 b = 2 ** (1/2);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_quarter)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
 				fixed40x40 c = 42 ** (-1/4);
 			}
 		}
@@ -3908,15 +3953,48 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value)
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents)
+BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_15)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
 				ufixed a = 3 ** ufixed(1.5);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_half)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
 				ufixed b = 2 ** ufixed(1/2);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_neg)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
 				fixed c = 42 ** fixed(-1/4);
-				fixed d = 16 ** fixed(-0.33);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_neg_decimal)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed d = 16 ** fixed(-0.5);
 			}
 		}
 	)";
@@ -3966,7 +4044,7 @@ BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = ~3.56;
+				fixed a = ~3.5;
 			}
 		}
 	)";
@@ -3978,7 +4056,7 @@ BOOST_AUTO_TEST_CASE(rational_bitor_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.56 | 3;
+				fixed a = 1.5 | 3;
 			}
 		}
 	)";
@@ -3990,7 +4068,7 @@ BOOST_AUTO_TEST_CASE(rational_bitxor_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.56 ^ 3;
+				fixed a = 1.75 ^ 3;
 			}
 		}
 	)";
@@ -4002,7 +4080,7 @@ BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.56 & 3;
+				fixed a = 1.75 & 3;
 			}
 		}
 	)";
@@ -4659,6 +4737,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 			function f() {
 				assembly {
 					x := 2
+					pop
 				}
 			}
 		}
@@ -4674,6 +4753,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 			modifier m {
 				assembly {
 					x := 2
+					pop
 				}
 				_;
 			}
