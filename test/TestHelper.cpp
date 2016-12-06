@@ -41,6 +41,8 @@ Options::Options()
 		}
 		else if (string(suite.argv[i]) == "--optimize")
 			optimize = true;
+		else if (string(suite.argv[i]) == "--show-messages")
+			showMessages = true;
 
 	if (ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))

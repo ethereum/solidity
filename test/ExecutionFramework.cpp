@@ -46,6 +46,7 @@ string getIPCSocketPath()
 ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
 	m_optimize(dev::test::Options::get().optimize),
+	m_showMessages(dev::test::Options::get().showMessages),
 	m_sender(m_rpc.account(0))
 {
 	m_rpc.test_rewindToBlock(0);
@@ -53,6 +54,13 @@ ExecutionFramework::ExecutionFramework() :
 
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
 {
+	if (m_showMessages)
+	{
+		if (_isCreation)
+			cout << "CREATE " << toHex(m_sender) << ": " << toHex(_data) << endl;
+		else
+			cout << "CALL   " << toHex(m_sender) << " -> " << toHex(m_contractAddress) << ": " << toHex(_data) << endl;
+	}
 	RPCSession::TransactionData d;
 	d.data = "0x" + toHex(_data);
 	d.from = "0x" + toString(m_sender);
@@ -78,6 +86,9 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		string code = m_rpc.eth_getCode(receipt.contractAddress, "latest");
 		m_output = fromHex(code, WhenError::Throw);
 	}
+
+	if (m_showMessages)
+		cout << " -> " << toHex(m_output) << endl;
 
 	m_gasUsed = u256(receipt.gasUsed);
 	m_logs.clear();
