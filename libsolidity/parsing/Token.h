@@ -147,7 +147,6 @@ namespace solidity
 	K(Const, "constant", 0)                                            \
 	K(Continue, "continue", 0)                                         \
 	K(Contract, "contract", 0)                                         \
-	K(Default, "default", 0)                                           \
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Enum, "enum", 0)                                                 \
@@ -208,7 +207,6 @@ namespace solidity
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
-	K(NullLiteral, "null", 0)                                          \
 	K(TrueLiteral, "true", 0)                                          \
 	K(FalseLiteral, "false", 0)                                        \
 	T(Number, NULL, 0)                                                 \
@@ -223,12 +221,14 @@ namespace solidity
 	K(After, "after", 0)                                               \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
+	K(Default, "default", 0)                                           \
 	K(Final, "final", 0)                                               \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
 	K(Interface, "interface", 0)                                       \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
+	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
 	K(Pure, "pure", 0)                                                 \
 	K(Relocatable, "relocatable", 0)                                   \
