@@ -57,9 +57,12 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	if (m_showMessages)
 	{
 		if (_isCreation)
-			cout << "CREATE " << toHex(m_sender) << ": " << toHex(_data) << endl;
+			cout << "CREATE " << m_sender.hex() << ":" << endl;
 		else
-			cout << "CALL   " << toHex(m_sender) << " -> " << toHex(m_contractAddress) << ": " << toHex(_data) << endl;
+			cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << endl;
+		if (_value > 0)
+			cout << " value: " << _value << endl;
+		cout << " in: " << toHex(_data) << endl;
 	}
 	RPCSession::TransactionData d;
 	d.data = "0x" + toHex(_data);
@@ -88,7 +91,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	}
 
 	if (m_showMessages)
-		cout << " -> " << toHex(m_output) << endl;
+		cout << " out: " << toHex(m_output) << endl;
 
 	m_gasUsed = u256(receipt.gasUsed);
 	m_logs.clear();
