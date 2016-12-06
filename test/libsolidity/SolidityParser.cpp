@@ -26,6 +26,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/interface/Exceptions.h>
 #include "../TestHelper.h"
+#include "ErrorCheck.h"
 
 using namespace std;
 
@@ -71,6 +72,22 @@ bool successParse(std::string const& _source)
 	return true;
 }
 
+Error getError(std::string const& _source)
+{
+	ErrorList errors;
+	try
+	{
+		parseText(_source, errors);
+	}
+	catch (FatalError const& /*_exception*/)
+	{
+		// no-op
+	}
+	Error const* error = Error::containsErrorOfType(errors, Error::Type::ParserError);
+	BOOST_REQUIRE(error);
+	return *error;
+}
+
 void checkFunctionNatspec(
 	FunctionDefinition const* _function,
 	std::string const& _expectedDoc
@@ -82,6 +99,14 @@ void checkFunctionNatspec(
 }
 
 }
+
+#define CHECK_PARSE_ERROR(source, substring) \
+do \
+{\
+	Error err = getError((source)); \
+	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+}\
+while(0)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
@@ -103,7 +128,7 @@ BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
 			uint256 ;
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(empty_function)
@@ -159,7 +184,7 @@ BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
 			function b() returns (uint r) { r = a({: 1, : 2, : 3}); }
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
@@ -170,7 +195,7 @@ BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 			function b() returns (uint r) { r = a({a: , b: , c: }); }
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected primary expression");
 }
 
 BOOST_AUTO_TEST_CASE(two_exact_functions)
@@ -463,7 +488,7 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_function_parameter)
 			function fun(var a) {}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
@@ -475,7 +500,7 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
 			}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected elementary type name for mapping key type");
 }
 
 BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
@@ -487,7 +512,7 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
 			}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(operator_expression)
@@ -777,14 +802,14 @@ BOOST_AUTO_TEST_CASE(modifier_without_semicolon)
 			modifier mod { if (msg.sender == 0) _ }
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected token Semicolon got");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_arguments)
 {
 	char const* text = R"(
 		contract c {
-			modifier mod(uint a) { if (msg.sender == a) _; }
+			modifier mod(address a) { if (msg.sender == a) _; }
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -861,7 +886,7 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 		contract c {
 			uint private internal a;
 		})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Visibility already specified");
 }
 
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
@@ -916,7 +941,7 @@ BOOST_AUTO_TEST_CASE(empty_enum_declaration)
 		contract c {
 			enum foo { }
 		})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "enum with no members is not allowed");
 }
 
 BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
@@ -925,7 +950,7 @@ BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
 		contract c {
 			enum foo { WARNING,}
 		})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected Identifier after");
 }
 
 BOOST_AUTO_TEST_CASE(external_function)
@@ -943,7 +968,7 @@ BOOST_AUTO_TEST_CASE(external_variable)
 		contract c {
 			uint external x;
 		})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(arrays_in_storage)
@@ -991,7 +1016,7 @@ BOOST_AUTO_TEST_CASE(constant_is_keyword)
 		contract Foo {
 			uint constant = 4;
 	})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(var_array)
@@ -1000,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(var_array)
 		contract Foo {
 			function f() { var[] a; }
 	})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(location_specifiers_for_params)
@@ -1032,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(location_specifiers_for_state)
 		contract Foo {
 			uint[] memory x;
 	})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(location_specifiers_with_var)
@@ -1041,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(location_specifiers_with_var)
 		contract Foo {
 			function f() { var memory x; }
 	})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Location specifier needs explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -1088,7 +1113,7 @@ BOOST_AUTO_TEST_CASE(local_const_variable)
 				return local;
 			}
 	})";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected token Semicolon");
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration)
@@ -1207,7 +1232,7 @@ BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_lvalue)
 			}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected expression");
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
@@ -1220,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
 			}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected expression");
 }
 
 BOOST_AUTO_TEST_CASE(conditional_true_false_literal)
@@ -1321,7 +1346,7 @@ BOOST_AUTO_TEST_CASE(no_double_radix_in_fixed_literal)
 			fixed40x40 pi = 3.14.15;
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected token Semicolon");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_conversion_leading_zeroes_check)
@@ -1333,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_conversion_leading_zeroes_check)
 			}
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected primary expression");
 }
 
 BOOST_AUTO_TEST_CASE(payable_accessor)
@@ -1343,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(payable_accessor)
 			uint payable x;
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(function_type_in_expression)
@@ -1376,7 +1401,7 @@ BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_modifiers)
 			function (uint, uint) modifier1() returns (uint) f1;
 		}
 	)";
-	BOOST_CHECK(!successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected token LBrace");
 }
 
 BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_assignment)

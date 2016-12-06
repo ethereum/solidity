@@ -166,7 +166,7 @@ do \
 { \
 	Error err = expectError((text), (warning)); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(searchErrorMessage(err, substring)); \
+	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
 // [checkError(text, type, substring)] asserts that the compilation down to typechecking
