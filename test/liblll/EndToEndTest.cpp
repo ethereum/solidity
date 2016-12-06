@@ -119,12 +119,157 @@ BOOST_AUTO_TEST_CASE(constructor_arguments_external)
 					(when (= (div (calldataload 0x00) (exp 2 224)) 0xf2c9ecd8)
 						(return @@0x00))
 					(when (= (div (calldataload 0x00) (exp 2 224)) 0x89ea642f)
-						(return @@0x01))
-					(jump 0x02))))
+						(return @@0x01)))))
 	)";
 	compileAndRun(sourceCode, 0, "", encodeArgs(u256(65535), "test"));
 	BOOST_CHECK(callContractFunction("getNumber()") == encodeArgs(u256(65535)));
 	BOOST_CHECK(callContractFunction("getString()") == encodeArgs("test"));
+}
+
+BOOST_AUTO_TEST_CASE(fallback_and_invalid_function)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= (div (calldataload 0x00) (exp 2 224)) 0xab5ed150)
+					(return "one"))
+				(when (= (div (calldataload 0x00) (exp 2 224)) 0xee784123)
+					(return "two"))
+				(return "three")))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getOne()") == encodeArgs("one"));
+	BOOST_CHECK(callContractFunction("getTwo()") == encodeArgs("two"));
+	BOOST_CHECK(callContractFunction("invalidFunction()") == encodeArgs("three"));
+	BOOST_CHECK(callFallback() == encodeArgs("three"));
+}
+
+BOOST_AUTO_TEST_CASE(lit_string)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(lit 0x00 "abcdef")
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
+}
+
+BOOST_AUTO_TEST_CASE(arithmetic)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore8 0x00 (+ 160 22))
+				(mstore8 0x01 (- 223 41))
+				(mstore8 0x02 (* 33 2))
+				(mstore8 0x03 (/ 10 2))
+				(mstore8 0x04 (% 67 2))
+				(mstore8 0x05 (& 15 8))
+				(mstore8 0x06 (| 18 8))
+				(mstore8 0x07 (^ 26 6))
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("b6b6420501081a1c000000000000000000000000000000000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(binary)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore8 0x00 (< 53 87))
+				(mstore8 0x01 (< 73 42))
+				(mstore8 0x02 (<= 37 94))
+				(mstore8 0x03 (<= 37 37))
+				(mstore8 0x04 (<= 183 34))
+				(mstore8 0x05 (S< (- 0 53) 87))
+				(mstore8 0x06 (S< 73 (- 0 42)))
+				(mstore8 0x07 (S<= (- 0 37) 94))
+				(mstore8 0x08 (S<= (- 0 37) (- 0 37)))
+				(mstore8 0x09 (S<= 183 (- 0 34)))
+				(mstore8 0x0a (> 73 42))
+				(mstore8 0x0b (> 53 87))
+				(mstore8 0x0c (>= 94 37))
+				(mstore8 0x0d (>= 94 94))
+				(mstore8 0x0e (>= 34 183))
+				(mstore8 0x0f (S> 73 (- 0 42)))
+				(mstore8 0x10 (S> (- 0 53) 87))
+				(mstore8 0x11 (S>= 94 (- 0 37)))
+				(mstore8 0x12 (S>= (- 0 94) (- 0 94)))
+				(mstore8 0x13 (S>= (- 0 34) 183))
+				(mstore8 0x14 (= 53 53))
+				(mstore8 0x15 (= 73 42))
+				(mstore8 0x16 (!= 37 94))
+				(mstore8 0x17 (!= 37 37))
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0100010100010001010001000101000100010100010001000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(unary)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore8 0x00 (! (< 53 87)))
+				(mstore8 0x01 (! (>= 42 73)))
+				(mstore8 0x02 (~ 0x7f))
+				(mstore8 0x03 (~ 0xaa))
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0001805500000000000000000000000000000000000000000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(assembly_mload_mstore)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(asm
+				0x07 0x00 mstore
+				"abcdef" 0x20 mstore
+				0x00 mload 0x40 mstore
+				0x20 mload 0x60 mstore
+				0x40 0x40 return))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(7), string("abcdef")));
+}
+
+BOOST_AUTO_TEST_CASE(assembly_sload_sstore)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(asm
+				0x07 0x00 sstore
+				"abcdef" 0x01 sstore
+				0x00 sload 0x00 mstore
+				0x01 sload 0x20 mstore
+				0x40 0x00 return))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(7), string("abcdef")));
+}
+
+BOOST_AUTO_TEST_CASE(assembly_codecopy)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(lit 0x00 "abcdef")
+				(asm
+					0x06 0x16 0x20 codecopy
+					0x20 0x20 return)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
