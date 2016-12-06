@@ -25,12 +25,63 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/Exceptions.h>
 
+#include <memory>
+
 using namespace std;
 
 namespace dev
 {
 namespace solidity
 {
+
+namespace
+{
+void reportDeclarationError(
+	SourceLocation _sourceLoction,
+	string const& _description,
+	SourceLocation _secondarySourceLocation,
+	string const& _secondaryDescription,
+	ErrorList& _errors
+)
+{
+	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
+	*err <<
+		errinfo_sourceLocation(_sourceLoction) <<
+		errinfo_comment(_description) <<
+		errinfo_secondarySourceLocation(
+			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
+		);
+
+	_errors.push_back(err);
+}
+
+void reportConflict(bool _inheriting, DeclarationContainer* _scope, Declaration const& _declaration, ErrorList& _errors)
+{
+	SourceLocation firstDeclarationLocation;
+	SourceLocation secondDeclarationLocation;
+	Declaration const* conflictingDeclaration = _scope->conflictingDeclaration(_inheriting, _declaration);
+	solAssert(conflictingDeclaration, "");
+
+	if (_inheriting || _declaration.location().start < conflictingDeclaration->location().start)
+	{
+		firstDeclarationLocation = _declaration.location();
+		secondDeclarationLocation = conflictingDeclaration->location();
+	}
+	else
+	{
+		firstDeclarationLocation = conflictingDeclaration->location();
+		secondDeclarationLocation = _declaration.location();
+	}
+
+	reportDeclarationError(
+		secondDeclarationLocation,
+		string("Identifier already declared") + (_inheriting ? " in a base contract" : "") + ".",
+		firstDeclarationLocation,
+		"The previous declaration is here:",
+		_errors
+	);
+}
+}
 
 NameAndTypeResolver::NameAndTypeResolver(
 	vector<Declaration const*> const& _globals,
@@ -260,20 +311,42 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
 	{
 		solAssert(*it, "");
-		// the declaration is functionDefinition while declarations > 1
-		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
-		FunctionType functionType(functionDefinition);
-		for (auto parameter: functionType.parameterTypes() + functionType.returnParameterTypes())
-			if (!parameter)
-				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+		// the declaration is functionDefinition or a VariableDeclaration while declarations > 1
+		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
+			"Found overloading involving something not a function or a variable");
+
+		unique_ptr<FunctionType const> functionType {};
+
+		if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(*it))
+		{
+			functionType = unique_ptr<FunctionType const>(new FunctionType(*functionDefinition));
+			for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+				if (!parameter)
+					reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+		}
+		else
+		{
+			VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(*it);
+			functionType = unique_ptr<FunctionType const>(new FunctionType(*variableDeclaration));
+		}
+		solAssert(functionType, "failed to determine the function type of the overloaded");
 
 		if (uniqueFunctions.end() == find_if(
 			uniqueFunctions.begin(),
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				FunctionType newFunctionType(dynamic_cast<FunctionDefinition const&>(*d));
-				return functionType.hasEqualArgumentTypes(newFunctionType);
+				if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(d))
+				{
+					FunctionType const newFunctionType(*functionDefinition);
+					return functionType->hasEqualArgumentTypes(newFunctionType);
+				}
+				else if (VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(d))
+				{
+					FunctionType const newFunctionType(*variableDeclaration);
+					return functionType->hasEqualArgumentTypes(newFunctionType);
+				}
+				return false; // to make compiler happy
 			}
 		))
 			uniqueFunctions.push_back(*it);
@@ -289,7 +362,8 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
-				m_currentScope->registerDeclaration(*declaration);
+				if (!m_currentScope->registerDeclaration(*declaration, nullptr, false, dynamic_cast<VariableDeclaration const*>(declaration), true))
+					reportConflict(true, m_currentScope, *declaration, m_errors);
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
@@ -368,24 +442,6 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		removeCandidate(candidate);
 	}
 	return result;
-}
-
-void NameAndTypeResolver::reportDeclarationError(
-	SourceLocation _sourceLoction,
-	string const& _description,
-	SourceLocation _secondarySourceLocation,
-	string const& _secondaryDescription
-)
-{
-	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
-	*err <<
-		errinfo_sourceLocation(_sourceLoction) <<
-		errinfo_comment(_description) <<
-		errinfo_secondarySourceLocation(
-			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
-		);
-
-	m_errors.push_back(err);
 }
 
 void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLocation, string const& _description)
@@ -554,30 +610,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
-	{
-		SourceLocation firstDeclarationLocation;
-		SourceLocation secondDeclarationLocation;
-		Declaration const* conflictingDeclaration = m_scopes[m_currentScope]->conflictingDeclaration(_declaration);
-		solAssert(conflictingDeclaration, "");
-
-		if (_declaration.location().start < conflictingDeclaration->location().start)
-		{
-			firstDeclarationLocation = _declaration.location();
-			secondDeclarationLocation = conflictingDeclaration->location();
-		}
-		else
-		{
-			firstDeclarationLocation = conflictingDeclaration->location();
-			secondDeclarationLocation = _declaration.location();
-		}
-
-		declarationError(
-			secondDeclarationLocation,
-			"Identifier already declared.",
-			firstDeclarationLocation,
-			"The previous declaration is here:"
-		);
-	}
+		reportConflict(false, m_scopes[m_currentScope].get(), _declaration, m_errors);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)

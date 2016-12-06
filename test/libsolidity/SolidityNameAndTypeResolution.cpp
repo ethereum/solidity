@@ -1036,7 +1036,7 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) { } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1045,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -1374,6 +1374,75 @@ BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
 		}
 	)";
 	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_event_iniheritrance)
+{
+	// This should throw an error until #1245 is implemented
+	char const* text = R"(
+		contract A
+		{
+			event E;
+		}
+		contract B
+		{
+			event E(uint a);
+		}
+		contract C is A, B {
+		}
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
+}
+BOOST_AUTO_TEST_CASE(event_function_clash)
+{
+	char const* text = R"(
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract B {
+			event dup();
+		}
+		contract C is A, B {
+		}
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(function_event_clash)
+{
+	char const* text = R"(
+		contract B {
+			event dup();
+		}
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract C is B, A {
+		}
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(function_accessor_clash)
+{
+	// bug #1798 (cpp-ethereum), related to #1286 (solidity)
+	char const* text = R"(
+		contract attribute {
+			bool ok = false;
+		}
+		contract func {
+			function ok() returns (bool) { return true; }
+		}
+
+		contract attr_func is attribute, func {
+			function checkOk() returns (bool) { return ok(); }
+		}
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
@@ -2730,6 +2799,78 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
 		contract C { function f() { var (x,y); } }
 	)";
 	CHECK_ERROR(text, TypeError, "");
+}
+
+BOOST_AUTO_TEST_CASE(creation_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { new A.A(); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(sha256_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.sha256(); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(ripemd160_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.ripemd160(); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(ecrecover_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.ecrecover(); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(bare_call_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.call("7885"); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(send_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.send(10); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(delegatecall_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.delegatecall("abbc"); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(callcode_with_base_name)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A { function f() { A.callcode("abbc"); } }
+	)";
+	BOOST_CHECK(expectError(text).type() == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)

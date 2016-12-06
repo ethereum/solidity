@@ -29,6 +29,7 @@ using namespace dev;
 using namespace dev::solidity;
 
 Declaration const* DeclarationContainer::conflictingDeclaration(
+	bool _inheriting,
 	Declaration const& _declaration,
 	ASTString const* _name
 ) const
@@ -42,11 +43,34 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 	if (m_invisibleDeclarations.count(*_name))
 		declarations += m_invisibleDeclarations.at(*_name);
 
+	// Since functions can be overloaded even within a single contract, `_inheriting` is not checked.
 	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 	{
-		// check that all other declarations with the same name are functions
+		// check that all other declarations with the same name are functions or state variables.
 		for (Declaration const* declaration: declarations)
 			if (!dynamic_cast<FunctionDefinition const*>(declaration))
+			{
+				if (!dynamic_cast<VariableDeclaration const*>(declaration))
+					return declaration;
+				// A function definition might be clashing with a variable declaration.
+				// This is only allowed when the function definition comes from inheritance.
+				if (!_inheriting)
+					return declaration;
+			}
+	}
+	// Until we implement #1245, there are no special cases for events
+	else if (_inheriting && dynamic_cast<VariableDeclaration const*>(&_declaration))
+	{
+		// Check that all other declarations with the same name are variables.
+		for (Declaration const* declaration: declarations)
+			if (!dynamic_cast<FunctionDefinition const*>(declaration))
+				return declaration;
+	}
+	else if (_inheriting && dynamic_cast<ModifierDefinition const*>(&_declaration))
+	{
+		// Check that all other declarations with the same name are variables.
+		for (Declaration const* declaration: declarations)
+			if (!dynamic_cast<ModifierDefinition const*>(declaration))
 				return declaration;
 	}
 	else if (declarations.size() == 1 && declarations.front() == &_declaration)
@@ -61,7 +85,8 @@ bool DeclarationContainer::registerDeclaration(
 	Declaration const& _declaration,
 	ASTString const* _name,
 	bool _invisible,
-	bool _update
+	bool _update,
+	bool _inheriting
 )
 {
 	if (!_name)
@@ -75,7 +100,7 @@ bool DeclarationContainer::registerDeclaration(
 		m_declarations.erase(*_name);
 		m_invisibleDeclarations.erase(*_name);
 	}
-	else if (conflictingDeclaration(_declaration, _name))
+	else if (conflictingDeclaration(_inheriting, _declaration, _name))
 		return false;
 
 	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];

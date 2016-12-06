@@ -818,6 +818,7 @@ public:
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
 		ObjectCreation ///< array creation using new
 	};
+	static bool locationIsEvent(Location _location);
 
 	virtual Category category() const override { return Category::Function; }
 

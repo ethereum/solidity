@@ -91,13 +91,6 @@ private:
 	static std::vector<_T const*> cThreeMerge(std::list<std::list<_T const*>>& _toMerge);
 
 	// creates the Declaration error and adds it in the errors list
-	void reportDeclarationError(
-		SourceLocation _sourceLoction,
-		std::string const& _description,
-		SourceLocation _secondarySourceLocation,
-		std::string const& _secondaryDescription
-	);
-	// creates the Declaration error and adds it in the errors list
 	void reportDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
 	void reportFatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);

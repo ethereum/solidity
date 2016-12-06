@@ -184,6 +184,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	{
 		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			// Take constructors out of overload hierarchy
@@ -205,6 +206,24 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			else if (function->isImplemented())
 				it->second = true;
 		}
+		for (VariableDeclaration const* variable : contract->stateVariables())
+		{
+			solAssert(variable, "");
+			if (variable->isPublic())
+			{
+				auto& overloads = functions[variable->name()];
+				FunctionTypePointer funType = make_shared<FunctionType>(*variable);
+				auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
+				{
+					return funType->hasEqualArgumentTypes(*_funAndFlag.first);
+				});
+				if (it == overloads.end())
+					overloads.push_back(make_pair(funType, true));
+				else
+					it->second = true;
+			}
+		}
+	}
 
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
@@ -1500,8 +1519,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (!annotation.referencedDeclaration)
 	{
 		if (!annotation.argumentTypes)
-			fatalTypeError(_identifier.location(), "Unable to determine overloaded type.");
-		if (annotation.overloadedDeclarations.empty())
+		{
+			// The identifier should be a public state variable shadowing other functions
+			vector<Declaration const*> candidates;
+
+			for (Declaration const* declaration: annotation.overloadedDeclarations)
+			{
+				if (VariableDeclaration const* variableDeclaration = dynamic_cast<decltype(variableDeclaration)>(declaration))
+					candidates.push_back(declaration);
+			}
+			if (candidates.empty())
+				fatalTypeError(_identifier.location(), "No matching declaration found after variable lookup.");
+			else if (candidates.size() == 1)
+				annotation.referencedDeclaration = candidates.front();
+			else
+				fatalTypeError(_identifier.location(), "No unique declaration found after variable lookup.");
+		}
+		else if (annotation.overloadedDeclarations.empty())
 			fatalTypeError(_identifier.location(), "No candidates for overload resolution found.");
 		else if (annotation.overloadedDeclarations.size() == 1)
 			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();

@@ -3,10 +3,12 @@
 Features:
  * Code generator: Inject the Swarm hash of a metadata file into the bytecode.
  * Optimizer: Some dead code elimination.
+ * Type checker: allow state variable accessors to implement abstract functions
 
 Bugfixes:
  * Code generator: throw if calling the identity precompile failed during memory (array) copying.
  * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
+ * Type checker, code generator: enable access to events of base contracts' names
 
 ### 0.4.6 (2016-11-22)
 
