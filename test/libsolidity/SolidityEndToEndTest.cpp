@@ -8507,17 +8507,18 @@ BOOST_AUTO_TEST_CASE(shift_left_uint8)
 
 BOOST_AUTO_TEST_CASE(shift_left_larger_type)
 {
+	// This basically tests proper cleanup and conversion. It should not convert x to int8.
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (int8) {
-				uint8 x = 255;
+				uint8 x = 254;
 				int8 y = 1;
-				return a << b;
+				return y << x;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1) << 255));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(shift_left_assignment)
@@ -8570,6 +8571,7 @@ BOOST_AUTO_TEST_CASE(shift_right_garbled)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(4)) == encodeArgs(u256(0xf)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(0x1004)) == encodeArgs(u256(0xf)));
 }
 
 BOOST_AUTO_TEST_CASE(shift_right_uint32)
@@ -8767,6 +8769,23 @@ BOOST_AUTO_TEST_CASE(shift_overflow)
 
 	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs(u256(128)));
 	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
+}
+
+BOOST_AUTO_TEST_CASE(cleanup_in_compound_assign)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function test() returns (uint, uint) {
+				uint32 a = 0xffffffff;
+				uint16 x = uint16(a);
+				uint16 y = x;
+				x /= 0x100;
+				return (x, y);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(0xff), u256(0xff)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)

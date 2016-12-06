@@ -251,6 +251,19 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountType)
+{
+	// Disable >>> here.
+	if (_operator == Token::SHR)
+		return false;
+	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
+		return !otherInt->isAddress();
+	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
+		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+	else
+		return false;
+}
+
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
@@ -342,24 +355,13 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 	if (Token::isShiftOp(_operator))
 	{
-		// Disable >>> here.
-		if (_operator == Token::SHR)
-			return TypePointer();
-
 		// Shifts are not symmetric with respect to the type
 		if (isAddress())
 			return TypePointer();
-		if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(_other.get()))
-		{
-			if (!otherInt->isAddress())
-				return shared_from_this();
-		}
-		else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(_other.get()))
-		{
-			if (!otherRat->isFractional())
-				return shared_from_this();
-		}
-		return TypePointer();
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
+			return TypePointer();
 	}
 
 	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
@@ -978,22 +980,10 @@ TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePoi
 {
 	if (Token::isShiftOp(_operator))
 	{
-		// Disable >>> here.
-		if (_operator == Token::SHR)
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
 			return TypePointer();
-
-		// Shifts are not symmetric with respect to the type
-		if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(_other.get()))
-		{
-			if (!otherInt->isAddress())
-				return shared_from_this();
-		}
-		else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(_other.get()))
-		{
-			if (!otherRat->isFractional())
-				return shared_from_this();
-		}
-		return TypePointer();
 	}
 
 	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));

@@ -197,22 +197,37 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
+	Token::Value op = _assignment.assignmentOperator();
+	Token::Value binOp = op == Token::Assign ? op : Token::AssignmentToBinaryOp(op);
+	Type const& leftType = *_assignment.leftHandSide().annotation().type;
+	if (leftType.category() == Type::Category::Tuple)
+	{
+		solAssert(*_assignment.annotation().type == TupleType(), "");
+		solAssert(op == Token::Assign, "");
+	}
+	else
+		solAssert(*_assignment.annotation().type == leftType, "");
+	bool cleanupNeeded = false;
+	if (op != Token::Assign)
+		cleanupNeeded = cleanupNeededForOp(leftType.category(), binOp);
 	_assignment.rightHandSide().accept(*this);
 	// Perform some conversion already. This will convert storage types to memory and literals
 	// to their actual type, but will not convert e.g. memory to storage.
-	TypePointer type = _assignment.rightHandSide().annotation().type->closestTemporaryType(
-		_assignment.leftHandSide().annotation().type
-	);
-	utils().convertType(*_assignment.rightHandSide().annotation().type, *type);
+	TypePointer rightIntermediateType;
+	if (op != Token::Assign && Token::isShiftOp(binOp))
+		rightIntermediateType = _assignment.rightHandSide().annotation().type->mobileType();
+	else
+		rightIntermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
+			_assignment.leftHandSide().annotation().type
+		);
+	utils().convertType(*_assignment.rightHandSide().annotation().type, *rightIntermediateType, cleanupNeeded);
 
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
-	Token::Value op = _assignment.assignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
-		Token::Value target_op = Token::AssignmentToBinaryOp(op);
-		solUnimplementedAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
+		solAssert(leftType.isValueType(), "Compound operators only available for value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
 		if (lvalueSize > 0)
@@ -222,11 +237,17 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			// value lvalue_ref value lvalue_ref
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
-		if (Token::isShiftOp(target_op))
-			// shift only cares about the signedness of both sides
-			appendShiftOperatorCode(target_op, *_assignment.leftHandSide().annotation().type, *_assignment.rightHandSide().annotation().type);
+		utils().convertType(leftType, leftType, cleanupNeeded);
+
+		Token::Value targetOp = Token::AssignmentToBinaryOp(op);
+
+		if (Token::isShiftOp(targetOp))
+			appendShiftOperatorCode(targetOp, leftType, *rightIntermediateType);
 		else
-			appendOrdinaryBinaryOperatorCode(target_op, *_assignment.annotation().type);
+		{
+			solAssert(leftType == *rightIntermediateType, "");
+			appendOrdinaryBinaryOperatorCode(targetOp, leftType);
+		}
 		if (lvalueSize > 0)
 		{
 			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
@@ -235,7 +256,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;
 		}
 	}
-	m_currentLValue->storeValue(*type, _assignment.location());
+	m_currentLValue->storeValue(*rightIntermediateType, _assignment.location());
 	m_currentLValue.reset();
 	return false;
 }
@@ -356,20 +377,19 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
 	solAssert(!!_binaryOperation.annotation().commonType, "");
-	Type const& commonType = *_binaryOperation.annotation().commonType;
+	TypePointer const& commonType = _binaryOperation.annotation().commonType;
 	Token::Value const c_op = _binaryOperation.getOperator();
 
 	if (c_op == Token::And || c_op == Token::Or) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
-	else if (commonType.category() == Type::Category::RationalNumber)
-		m_context << commonType.literalValue(nullptr);
+	else if (commonType->category() == Type::Category::RationalNumber)
+		m_context << commonType->literalValue(nullptr);
 	else
 	{
-		bool cleanupNeeded = false;
-		if (Token::isCompareOp(c_op) || Token::isShiftOp(c_op))
-			cleanupNeeded = true;
-		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
-			cleanupNeeded = true;
+		bool cleanupNeeded = cleanupNeededForOp(commonType->category(), c_op);
+
+		TypePointer leftTargetType = commonType;
+		TypePointer rightTargetType = Token::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
@@ -380,24 +400,24 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		if (swap)
 		{
 			leftExpression.accept(*this);
-			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
+			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
 			rightExpression.accept(*this);
-			utils().convertType(*rightExpression.annotation().type, commonType, cleanupNeeded);
+			utils().convertType(*rightExpression.annotation().type, *rightTargetType, cleanupNeeded);
 		}
 		else
 		{
 			rightExpression.accept(*this);
-			utils().convertType(*rightExpression.annotation().type, commonType, cleanupNeeded);
+			utils().convertType(*rightExpression.annotation().type, *rightTargetType, cleanupNeeded);
 			leftExpression.accept(*this);
-			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
+			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
 		}
 		if (Token::isShiftOp(c_op))
 			// shift only cares about the signedness of both sides
-			appendShiftOperatorCode(c_op, *leftExpression.annotation().type, *rightExpression.annotation().type);
+			appendShiftOperatorCode(c_op, *leftTargetType, *rightTargetType);
 		else if (Token::isCompareOp(c_op))
-			appendCompareOperatorCode(c_op, commonType);
+			appendCompareOperatorCode(c_op, *commonType);
 		else
-			appendOrdinaryBinaryOperatorCode(c_op, commonType);
+			appendOrdinaryBinaryOperatorCode(c_op, *commonType);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
@@ -1396,30 +1416,31 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 	}
 }
 
-void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _leftType, Type const& _rightType)
+void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType)
 {
-	// stack: rvalue lvalue
+	// stack: shift_amount value_to_shift
 
-	bool c_leftSigned = false;
-	if (auto leftType = dynamic_cast<IntegerType const*>(&_leftType))
-		c_leftSigned = leftType->isSigned();
+	bool c_valueSigned = false;
+	if (auto valueType = dynamic_cast<IntegerType const*>(&_valueType))
+		c_valueSigned = valueType->isSigned();
 	else
-		solUnimplemented("Only IntegerType can be shifted.");
+		solAssert(dynamic_cast<FixedBytesType const*>(&_valueType), "Only integer and fixed bytes type supported for shifts.");
 
-	// The RValue can be a RationalNumberType too.
-	bool c_rightSigned = false;
-	if (auto rightType = dynamic_cast<RationalNumberType const*>(&_rightType))
+	// The amount can be a RationalNumberType too.
+	bool c_amountSigned = false;
+	if (auto amountType = dynamic_cast<RationalNumberType const*>(&_shiftAmountType))
 	{
-		solAssert(rightType->integerType(), "integerType() called for fractional number.");
-		c_rightSigned = rightType->integerType()->isSigned();
+		// This should be handled by the type checker.
+		solAssert(amountType->integerType(), "");
+		solAssert(!amountType->integerType()->isSigned(), "");
 	}
-	else if (auto rightType = dynamic_cast<IntegerType const*>(&_rightType))
-		c_rightSigned = rightType->isSigned();
+	else if (auto amountType = dynamic_cast<IntegerType const*>(&_shiftAmountType))
+		c_amountSigned = amountType->isSigned();
 	else
-		solUnimplemented("Not implemented yet - FixedPointType.");
+		solAssert(false, "Invalid shift amount type.");
 
-	// shift with negative rvalue throws exception
-	if (c_rightSigned)
+	// shift by negative amount throws exception
+	if (c_amountSigned)
 	{
 		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
 		m_context.appendConditionalJumpTo(m_context.errorTag());
@@ -1431,7 +1452,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_leftSigned ? Instruction::SDIV : Instruction::DIV);
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
 	default:
@@ -1719,6 +1740,16 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
+}
+
+bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op)
+{
+	if (Token::isCompareOp(_op) || Token::isShiftOp(_op))
+		return true;
+	else if (_type == Type::Category::Integer && (_op == Token::Div || _op == Token::Mod))
+		return true;
+	else
+		return false;
 }
 
 CompilerUtils ExpressionCompiler::utils()
