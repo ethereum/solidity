@@ -281,6 +281,7 @@ protected:
 
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
+	bool m_showMessages = false;
 	Address m_sender;
 	Address m_contractAddress;
 	u256 const m_gasPrice = 100 * szabo;
