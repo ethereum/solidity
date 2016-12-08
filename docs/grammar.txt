@@ -112,7 +112,7 @@ Ufixed = 'ufixed' | 'ufixed0x8' | 'ufixed0x16' | 'ufixed0x24' | 'ufixed0x32' | '
 
 InlineAssemblyBlock = '{' AssemblyItem* '}'
 
-AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | Identifier | NumberLiteral | StringLiteral | HexLiteral
+AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | NumberLiteral | StringLiteral | HexLiteral
 AssemblyLocalBinding = 'let' Identifier ':=' FunctionalAssemblyExpression
 AssemblyAssignment = Identifier ':=' FunctionalAssemblyExpression | '=:' Identifier
 FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
