@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(16, SourceLocation(2, 75, n)) +
+		vector<SourceLocation>(18, SourceLocation(2, 75, n)) +
 		vector<SourceLocation>(27, SourceLocation(20, 72, n)) +
 		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
 		vector<SourceLocation>(2, SourceLocation(58, 67, n)) +

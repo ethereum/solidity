@@ -56,6 +56,8 @@ So for the following contract snippet::
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
 
+.. index: memory layout
+
 ****************
 Layout in Memory
 ****************
@@ -72,7 +74,8 @@ Solidity always places new objects at the free memory pointer and memory is neve
 .. warning::
   There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
 
-.. index: memory layout
+
+.. index: calldata layout
 
 *******************
 Layout of Call Data
@@ -84,6 +87,56 @@ specification
 <https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI>`_.  The
 ABI specification requires arguments to be padded to multiples of 32
 bytes.  The internal function calls use a different convention.
+
+
+.. index: variable cleanup
+
+*********************************
+Internals - Cleaning Up Variables
+*********************************
+
+When a value is shorter than 256-bit, in some cases the remaining bits
+must be cleaned.
+The Solidity compiler is designed to clean such remaining bits before any operations
+that might be adversely affected by the potential garbage in the remaining bits.
+For example, before writing a value to the memory, the remaining bits need
+to be cleared because the memory contents can be used for computing
+hashes or sent as the data of a message call.  Similarly, before
+storing a value in the storage, the remaining bits need to be cleaned
+because otherwise the garbled value can be observed.
+
+On the other hand, we do not clean the bits if the immediately
+following operation is not affected.  For instance, since any non-zero
+value is considered ``true`` by ``JUMPI`` instruction, we do not clean
+the boolean values before they are used as the condition for
+``JUMPI``.
+
+In addition to the design principle above, the Solidity compiler
+cleans input data when it is loaded onto the stack.
+
+Different types have different rules for cleaning up invalid values:
+
++---------------+---------------+-------------------+
+|Type           |Valid Values   |Invalid Values Mean|
++===============+===============+===================+
+|enum of n      |0 until n - 1  |exception          |
+|members        |               |                   |
++---------------+---------------+-------------------+
+|bool           |0 or 1         |1                  |
++---------------+---------------+-------------------+
+|signed integers|sign-extended  |currently silently |
+|               |word           |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
+|               |               |                   |
+|               |               |                   |
++---------------+---------------+-------------------+
+|unsigned       |higher bits    |currently silently |
+|integers       |zeroed         |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
++---------------+---------------+-------------------+
+
 
 *****************
 Esoteric Features
