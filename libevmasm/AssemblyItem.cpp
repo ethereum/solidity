@@ -171,7 +171,7 @@ string AssemblyItem::toAssemblyText() const
 		text = string("dataSize(sub_") + to_string(size_t(data())) + ")";
 		break;
 	case PushProgramSize:
-		text = string("programSize");
+		text = string("bytecodeSize");
 		break;
 	case PushLibraryAddress:
 		text = string("linkerSymbol(\"") + toHex(data()) + string("\")");
