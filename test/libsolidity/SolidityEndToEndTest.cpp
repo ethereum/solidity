@@ -8570,8 +8570,8 @@ BOOST_AUTO_TEST_CASE(shift_right_garbled)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(4)) == encodeArgs(u256(0xf)));
-	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(0x1004)) == encodeArgs(u256(0xf)));
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x0), u256(4)) == encodeArgs(u256(0xf)));
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x0), u256(0x1004)) == encodeArgs(u256(0xf)));
 }
 
 BOOST_AUTO_TEST_CASE(shift_right_uint32)
@@ -8767,7 +8767,8 @@ BOOST_AUTO_TEST_CASE(shift_overflow)
 	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs(u256(254)));
 	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 0) == encodeArgs(u256(255)));
 
-	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs(u256(128)));
+	// Result is -128 and output is sign-extended, not zero-padded.
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs(u256(0) - 128));
 	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
 }
 
@@ -8780,6 +8781,7 @@ BOOST_AUTO_TEST_CASE(cleanup_in_compound_assign)
 				uint16 x = uint16(a);
 				uint16 y = x;
 				x /= 0x100;
+				y = y / 0x100;
 				return (x, y);
 			}
 		}
