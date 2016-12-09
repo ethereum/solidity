@@ -62,7 +62,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 			cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << endl;
 		if (_value > 0)
 			cout << " value: " << _value << endl;
-		cout << " in: " << toHex(_data) << endl;
+		cout << " in:      " << toHex(_data) << endl;
 	}
 	RPCSession::TransactionData d;
 	d.data = "0x" + toHex(_data);
@@ -91,7 +91,10 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	}
 
 	if (m_showMessages)
-		cout << " out: " << toHex(m_output) << endl;
+	{
+		cout << " out:     " << toHex(m_output) << endl;
+		cout << " tx hash: " << txHash << endl;
+	}
 
 	m_gasUsed = u256(receipt.gasUsed);
 	m_logs.clear();
