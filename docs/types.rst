@@ -51,13 +51,18 @@ Integers
 Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
+* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation), ``<<`` (left shift), ``>>`` (right shift)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation)
 
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws an exception.
+
+The result of a shift operation is the type of the left operand. The
+expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
+equivalent to ``x / 2**y``. This means that shifting negative numbers
+sign extends. Shifting by a negative amount throws an exception.
 
 .. index:: address, balance, send, call, callcode, delegatecall
 
@@ -136,8 +141,12 @@ Fixed-size byte arrays
 Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
+* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation), ``<<`` (left shift), ``>>`` (right shift)
 * Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
+
+The shifting operator wors with any integer type as right operand (bit will
+return the type of the left operand). Shifting by a negative amount will cause
+a runtime exception.
 
 Members:
 
