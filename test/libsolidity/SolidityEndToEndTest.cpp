@@ -8772,6 +8772,44 @@ BOOST_AUTO_TEST_CASE(shift_overflow)
 	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_bytes)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function left(bytes20 x, uint8 y) returns (bytes20) {
+				return x << y;
+			}
+			function right(bytes20 x, uint8 y) returns (bytes20) {
+				return x >> y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("left(bytes20,uint8)", "12345678901234567890", 8 * 8) == encodeArgs("901234567890" + string(8, 0)));
+	BOOST_CHECK(callContractFunction("right(bytes20,uint8)", "12345678901234567890", 8 * 8) == encodeArgs(string(8, 0) + "123456789012"));
+}
+
+BOOST_AUTO_TEST_CASE(shift_bytes_cleanup)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function left(uint8 y) returns (bytes20) {
+				bytes20 x;
+				assembly { x := "12345678901234567890abcde" }
+				return x << y;
+			}
+			function right(uint8 y) returns (bytes20) {
+				bytes20 x;
+				assembly { x := "12345678901234567890abcde" }
+				return x >> y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("left(uint8)", 8 * 8) == encodeArgs("901234567890" + string(8, 0)));
+	BOOST_CHECK(callContractFunction("right(uint8)", 8 * 8) == encodeArgs(string(8, 0) + "123456789012"));
+}
+
 BOOST_AUTO_TEST_CASE(cleanup_in_compound_assign)
 {
 	char const* sourceCode = R"(
