@@ -1117,6 +1117,8 @@ public:
 
 	virtual std::string toString(bool _short) const override;
 
+	Kind kind() const { return m_kind; }
+
 private:
 	Kind m_kind;
 };

@@ -26,6 +26,7 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/GlobalContext.h>
@@ -89,8 +90,12 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					TypeChecker typeChecker(errors);
 					bool success = typeChecker.checkTypeRequirements(*contract);
 					BOOST_CHECK(success || !errors.empty());
-
 				}
+		if (success)
+		{
+			StaticAnalyzer staticAnalyzer(errors);
+			staticAnalyzer.analyze(*sourceUnit);
+		}
 		if (errors.size() > 1 && !_allowMultipleErrors)
 			BOOST_FAIL("Multiple errors found");
 		for (auto const& currentError: errors)
@@ -188,6 +193,14 @@ CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
 #define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
+
+#define CHECK_SUCCESS_NO_WARNINGS(text) \
+do \
+{ \
+	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
+	BOOST_CHECK(sourceAndError.second == nullptr); \
+} \
+while(0)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -4775,6 +4788,81 @@ BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 			}
 	)";
 	CHECK_ERROR(text, TypeError, "");
+}
+
+BOOST_AUTO_TEST_CASE(warns_msg_value_in_non_payable_public_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				msg.value;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?");
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_payable_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() payable {
+				msg.value;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_internal_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() internal {
+				msg.value;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_library)
+{
+	char const* text = R"(
+		library C {
+			function f() {
+				msg.value;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_non_magic_msg_value)
+{
+	char const* text = R"(
+		contract C {
+			struct msg {
+				uint256 value;
+			}
+
+			function f() {
+				msg.value;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_modifier_following_non_payable_public_function)
+{
+	char const* text = R"(
+		contract c {
+			function f() { }
+			modifier m() { msg.value; _; }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
