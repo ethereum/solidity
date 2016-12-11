@@ -325,7 +325,6 @@ void CommandLineInterface::handleFormal()
 
 void CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
-	vector<string> inputFiles;
 	bool addStdin = false;
 	if (!m_args.count("input-file"))
 		addStdin = true;
