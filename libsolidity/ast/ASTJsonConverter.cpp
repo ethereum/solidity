@@ -318,7 +318,7 @@ bool ASTJsonConverter::visit(Throw const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 {
-	addJsonNode(_node, "VariableDefinitionStatement", {}, true);
+	addJsonNode(_node, "VariableDeclarationStatement", {}, true);
 	return true;
 }
 
@@ -407,7 +407,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
-	addJsonNode(_node, "ElementaryTypenameExpression", {
+	addJsonNode(_node, "ElementaryTypeNameExpression", {
 		make_pair("value", _node.typeName().toString()),
 		make_pair("type", type(_node))
 	});
