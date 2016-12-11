@@ -21,6 +21,7 @@
  * Full-stack compiler that converts a source code string to bytecode.
  */
 
+
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <libsolidity/interface/Version.h>
@@ -180,17 +181,18 @@ bool CompilerStack::parse()
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract)) return false;
-				if (m_contracts.find(contract->name()) != m_contracts.end())
+
+				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
 				{
-					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
+					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
 					if (contract != existingContract)
-						BOOST_THROW_EXCEPTION(DeclarationError() <<
+						BOOST_THROW_EXCEPTION(CompilerError() <<
 							errinfo_sourceLocation(contract->location()) <<
 							errinfo_comment(contract->name() + " is already defined.") <<
 															errinfo_secondarySourceLocation(
-																SecondarySourceLocation().append(existingContract->location()), "Previous definition is here:"));
+																SecondarySourceLocation().append("Previous definition is here:", existingContract->location())));
 				}
-				m_contracts[contract->name()].contract = contract;
+				m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
 	if (!checkLibraryNameClashes())
@@ -211,9 +213,9 @@ bool CompilerStack::parse()
 				else
 					noErrors = false;
 
-				if (m_contracts.find(contract->name()) != m_contracts.end())
+				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
 				{
-					const ContractDefinition* existingContract = m_contracts.find(contract->name())->second.contract;
+					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
 					if (contract != existingContract)
 						BOOST_THROW_EXCEPTION(CompilerError() <<
 							errinfo_sourceLocation(contract->location()) <<
@@ -221,7 +223,7 @@ bool CompilerStack::parse()
 								+ *(existingContract->location().sourceName)));
 				}
 
-				m_contracts[contract->name()].contract = contract;
+				m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
 	if (noErrors)
@@ -333,6 +335,28 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 			c.runtimeSourceMapping.reset(new string(computeSourceMapping(*items)));
 	}
 	return c.runtimeSourceMapping.get();
+}
+
+std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
+{
+	// Look up the contract (by its fully-qualified name)
+	Contract const& matchContract = m_contracts.at(_contractName);
+	// Check to see if it could collide on name
+	for (auto const& contract: m_contracts)
+	{
+		if (contract.second.contract->name() == matchContract.contract->name() &&
+				contract.second.contract != matchContract.contract)
+		{
+			// If it does, then return its fully-qualified name, made fs-friendly
+			std::string friendlyName = boost::algorithm::replace_all_copy(_contractName, "/", "_");
+			boost::algorithm::replace_all(friendlyName, ":", "_");
+			boost::algorithm::replace_all(friendlyName, ".", "_");
+			return friendlyName;
+		}
+	}
+	// If no collision, return the contract's name
+  // String is copied to ensure that the contract's name can't be messed with
+	return std::string(matchContract.contract->name());
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -598,7 +622,7 @@ bool CompilerStack::checkLibraryNameClashes()
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				if (contract->isLibrary())
 				{
-					if (libraries.count(contract->name()))
+					if (libraries.count(contract->fullyQualifiedName()))
 					{
 						auto err = make_shared<Error>(Error::Type::DeclarationError);
 						*err <<
@@ -615,7 +639,7 @@ bool CompilerStack::checkLibraryNameClashes()
 						clashFound = true;
 					}
 					else
-						libraries[contract->name()] = contract->location();
+						libraries[contract->fullyQualifiedName()] = contract->location();
 				}
 	return !clashFound;
 }
@@ -648,7 +672,7 @@ void CompilerStack::compileContract(
 		compileContract(*dependency, _compiledContracts);
 
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
-	Contract& compiledContract = m_contracts.at(_contract.name());
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string onChainMetadata = createOnChainMetadata(compiledContract);
 	bytes cborEncodedMetadata =
 		// CBOR-encoding of {"bzzr0": dev::swarmHash(onChainMetadata)}
@@ -694,7 +718,7 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 		for (auto const& it: m_sources)
 			for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
 				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-					contractName = contract->name();
+					contractName = contract->fullyQualifiedName();
 	auto it = m_contracts.find(contractName);
 	if (it == m_contracts.end())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));

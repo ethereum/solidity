@@ -358,6 +358,8 @@ public:
 	Json::Value const& devDocumentation() const;
 	void setDevDocumentation(Json::Value const& _devDocumentation);
 
+	std::string fullyQualifiedName() const;
+
 	virtual TypePointer type() const override;
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
