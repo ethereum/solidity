@@ -3,6 +3,7 @@
 Features:
  * Type checker: Warn when ``msg.value`` is used in non-payable function.
  * Code generator: Inject the Swarm hash of a metadata file into the bytecode.
+ * Code generator: Replace expensive memcpy precompile by simple assembly loop.
  * Optimizer: Some dead code elimination.
 
 Bugfixes:
