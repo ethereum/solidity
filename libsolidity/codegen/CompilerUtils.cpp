@@ -298,61 +298,73 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
-void CompilerUtils::memoryCopy(bool _useIdentityPrecompile)
+void CompilerUtils::memoryCopyPrecompile()
 {
-	//@TODO do not use ::CALL if less than 32 bytes?
-
 	// Stack here: size target source
 
-	if (!_useIdentityPrecompile)
-	{
-		m_context.appendInlineAssembly(R"(
-			{
-			// expects three locals: src, dst, len
+	m_context.appendInlineAssembly(R"(
+		{
+		let words := div(add(len, 31), 32)
+		let cost := add(15, mul(3, words))
+		jumpi(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
+		}
+	)",
+		{ "len", "dst", "src" },
+		map<string, string> {
+			{ "$identityContractAddress", toString(identityContractAddress) }
+		}
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
 
-			// copy 32 bytes at once
-			start32:
-			jumpi(end32, lt(len, 32))
-			mstore(dst, mload(src))
-			dst := add(dst, 32)
-			src := add(src, 32)
-			len := sub(len, 32)
-			jump(start32)
-			end32:
+void CompilerUtils::memoryCopy32()
+{
+	// Stack here: size target source
 
-			// copy the remainder (0 < len < 32)
-			let mask := sub(exp(256, sub(32, len)), 1)
-			let srcpart := and(mload(src), not(mask))
-			let dstpart := and(mload(dst), mask)
-			mstore(dst, or(srcpart, dstpart))
-			}
-		)",
-			{ "len", "dst", "src" }
-		);
-		m_context << Instruction::POP;
-		m_context << Instruction::POP;
-		m_context << Instruction::POP;
-		return;
-	}
-	else
-	{
-		m_context.appendInlineAssembly(R"(
-			{
-			let words := div(add(len, 31), 32)
-			let cost := add(15, mul(3, words))
-			jump(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
-			}
-		)",
-			{ "len", "dst", "src" },
-			map<string, string> {
-			    { "$identityContractAddress", toString(identityContractAddress) }
-			}
-		);
-		m_context << Instruction::POP;
-		m_context << Instruction::POP;
-		m_context << Instruction::POP;
-		return;
-	}
+	m_context.appendInlineAssembly(R"(
+		{
+		jumpi(end, eq(len, 0))
+		start:
+		mstore(dst, mload(src))
+		jumpi(end, iszero(gt(len, 32)))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start)
+		end:
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
+
+void CompilerUtils::memoryCopy()
+{
+	// Stack here: size target source
+
+	m_context.appendInlineAssembly(R"(
+		{
+		// copy 32 bytes at once
+		start32:
+		jumpi(end32, lt(len, 32))
+		mstore(dst, mload(src))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start32)
+		end32:
+
+		// copy the remainder (0 < len < 32)
+		let mask := sub(exp(256, sub(32, len)), 1)
+		let srcpart := and(mload(src), not(mask))
+		let dstpart := and(mload(dst), mask)
+		mstore(dst, or(srcpart, dstpart))
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
 }
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)

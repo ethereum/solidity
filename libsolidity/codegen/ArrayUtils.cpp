@@ -335,9 +335,14 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		if (baseSize > 1)
 			m_context << u256(baseSize) << Instruction::MUL;
 		// stack: <target> <source> <size>
-		//@TODO do not use ::CALL if less than 32 bytes?
 		m_context << Instruction::DUP1 << Instruction::DUP4 << Instruction::DUP4;
-		utils.memoryCopy();
+		// We can resort to copying full 32 bytes only if
+		// - the length is known to be a multiple of 32 or
+		// - we will pad to full 32 bytes later anyway.
+		if (((baseSize % 32) == 0) || _padToWordBoundaries)
+			utils.memoryCopy32();
+		else
+			utils.memoryCopy();
 
 		m_context << Instruction::SWAP1 << Instruction::POP;
 		// stack: <target> <size>
