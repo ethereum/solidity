@@ -202,6 +202,8 @@ void CompilerContext::appendInlineAssembly(
 			return false;
 		unsigned stackDepth = _localVariables.end() - it;
 		int stackDiff = _assembly.deposit() - startStackHeight + stackDepth;
+		if (_context == assembly::CodeGenerator::IdentifierContext::LValue)
+			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				CompilerError() <<
@@ -218,7 +220,6 @@ void CompilerContext::appendInlineAssembly(
 	};
 
 	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "Failed to assemble inline assembly block.");
-	setStackOffset(startStackHeight);
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
