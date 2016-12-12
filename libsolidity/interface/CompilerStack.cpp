@@ -186,13 +186,24 @@ bool CompilerStack::parse()
 				{
 					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
 					if (contract != existingContract)
-						BOOST_THROW_EXCEPTION(CompilerError() <<
+					{
+						auto err = make_shared<Error>(Error::Type::DeclarationError);
+						*err <<
 							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(contract->name() + " is already defined.") <<
-															errinfo_secondarySourceLocation(
-																SecondarySourceLocation().append("Previous definition is here:", existingContract->location())));
+							errinfo_comment(
+								"Contract/Library \"" + contract->name() + "\" declared twice "
+							) <<
+							errinfo_secondarySourceLocation(SecondarySourceLocation().append(
+									"The other declaration is here:", existingContract->location()));
+
+						m_errors.push_back(err);
+						noErrors = false;
+					}
 				}
-				m_contracts[contract->fullyQualifiedName()].contract = contract;
+				else
+				{
+					m_contracts[contract->fullyQualifiedName()].contract = contract;
+				}
 			}
 
 	if (!checkLibraryNameClashes())
@@ -216,14 +227,27 @@ bool CompilerStack::parse()
 				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
 				{
 					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
-					if (contract != existingContract)
-						BOOST_THROW_EXCEPTION(CompilerError() <<
-							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(contract->name() + " is already defined at "
-								+ *(existingContract->location().sourceName)));
-				}
 
-				m_contracts[contract->fullyQualifiedName()].contract = contract;
+					if (contract != existingContract)
+					{
+						auto err = make_shared<Error>(Error::Type::DeclarationError);
+						*err <<
+							errinfo_sourceLocation(contract->location()) <<
+							errinfo_comment(
+								"Contract/Library \"" + contract->name() + "\" declared twice "
+							) <<
+							errinfo_secondarySourceLocation(SecondarySourceLocation().append(
+									"The other declaration is here:", existingContract->location()));
+
+						m_errors.push_back(err);
+						noErrors = false;
+					}
+
+				}
+				else
+				{
+					m_contracts[contract->fullyQualifiedName()].contract = contract;
+				}
 			}
 
 	if (noErrors)
