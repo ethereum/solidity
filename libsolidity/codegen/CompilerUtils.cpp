@@ -298,22 +298,73 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
+void CompilerUtils::memoryCopyPrecompile()
+{
+	// Stack here: size target source
+
+	m_context.appendInlineAssembly(R"(
+		{
+		let words := div(add(len, 31), 32)
+		let cost := add(15, mul(3, words))
+		jumpi(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
+		}
+	)",
+		{ "len", "dst", "src" },
+		map<string, string> {
+			{ "$identityContractAddress", toString(identityContractAddress) }
+		}
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
+
+void CompilerUtils::memoryCopy32()
+{
+	// Stack here: size target source
+
+	m_context.appendInlineAssembly(R"(
+		{
+		jumpi(end, eq(len, 0))
+		start:
+		mstore(dst, mload(src))
+		jumpi(end, iszero(gt(len, 32)))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start)
+		end:
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
+
 void CompilerUtils::memoryCopy()
 {
 	// Stack here: size target source
-	// stack for call: outsize target size source value contract gas
-	//@TODO do not use ::CALL if less than 32 bytes?
-	m_context << Instruction::DUP3 << Instruction::SWAP1;
-	m_context << u256(0) << u256(identityContractAddress);
-	// compute gas costs
-	m_context << u256(32) << Instruction::DUP5 << u256(31) << Instruction::ADD;
-	static unsigned c_identityGas = 15;
-	static unsigned c_identityWordGas = 3;
-	m_context << Instruction::DIV << u256(c_identityWordGas) << Instruction::MUL;
-	m_context << u256(c_identityGas) << Instruction::ADD;
-	m_context << Instruction::CALL;
-	m_context << Instruction::ISZERO;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+
+	m_context.appendInlineAssembly(R"(
+		{
+		// copy 32 bytes at once
+		start32:
+		jumpi(end32, lt(len, 32))
+		mstore(dst, mload(src))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start32)
+		end32:
+
+		// copy the remainder (0 < len < 32)
+		let mask := sub(exp(256, sub(32, len)), 1)
+		let srcpart := and(mload(src), not(mask))
+		let dstpart := and(mload(dst), mask)
+		mstore(dst, or(srcpart, dstpart))
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
 }
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)

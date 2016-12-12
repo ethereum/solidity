@@ -112,6 +112,14 @@ public:
 	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:
+	void memoryCopyPrecompile();
+	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than length.
+	/// Stack pre: <size> <target> <source>
+	/// Stack post:
+	void memoryCopy32();
+	/// Copies data in memory (regions cannot overlap).
+	/// Stack pre: <size> <target> <source>
+	/// Stack post:
 	void memoryCopy();
 
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
