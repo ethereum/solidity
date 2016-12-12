@@ -24,6 +24,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <libdevcore/UTF8.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 
@@ -173,9 +174,9 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	addJsonNode(_node, "FunctionDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("public", _node.isPublic()),
 		make_pair("constant", _node.isDeclaredConst()),
-		make_pair("payable", _node.isPayable())
+		make_pair("payable", _node.isPayable()),
+		make_pair("visibility", visibility(_node.visibility()))
 	}, true);
 	return true;
 }
@@ -228,13 +229,9 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 
 bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 {
-	string visibility = "internal";
-	if (_node.visibility() == Declaration::Visibility::External)
-		visibility = "external";
-
 	addJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility),
+		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("constant", _node.isDeclaredConst())
 	}, true);
 	return true;
@@ -654,6 +651,23 @@ void ASTJsonConverter::process()
 	if (!processed)
 		m_ast->accept(*this);
 	processed = true;
+}
+
+string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
+{
+	switch (_visibility)
+	{
+	case Declaration::Visibility::Private:
+		return "private";
+	case Declaration::Visibility::Internal:
+		return "internal";
+	case Declaration::Visibility::Public:
+		return "public";
+	case Declaration::Visibility::External:
+		return "external";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration visibility."));
+	}
 }
 
 string ASTJsonConverter::type(Expression const& _expression)
