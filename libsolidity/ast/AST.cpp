@@ -192,7 +192,8 @@ void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentat
 
 std::string ContractDefinition::fullyQualifiedName() const
 {
-	std::string qualifiedName = *(location().sourceName) + ":" + name();
+	std::string sourceString = *(location().sourceName);
+	std::string qualifiedName = (sourceString.empty() ? ("") : (sourceString + ":")) + name();
 	return qualifiedName;
 }
 
