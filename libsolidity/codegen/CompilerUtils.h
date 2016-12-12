@@ -52,13 +52,13 @@ public:
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load
 	/// @param _fromCalldata if true, load from calldata, not from memory
-	/// @param _padToWordBoundaries if true, assume the data is padded to word (32 byte) boundaries
+	/// @param _padToWords if true, assume the data is padded to full words (32 bytes)
 	/// @returns the number of bytes consumed in memory.
 	unsigned loadFromMemory(
 		unsigned _offset,
 		Type const& _type = IntegerType(256),
 		bool _fromCalldata = false,
-		bool _padToWordBoundaries = false
+		bool _padToWords = false
 	);
 	/// Dynamic version of @see loadFromMemory, expects the memory offset on the stack.
 	/// Stack pre: memory_offset
@@ -66,7 +66,7 @@ public:
 	void loadFromMemoryDynamic(
 		Type const& _type,
 		bool _fromCalldata = false,
-		bool _padToWordBoundaries = true,
+		bool _padToWords = true,
 		bool _keepUpdatedMemoryOffset = true
 	);
 	/// Stores a 256 bit integer from stack in memory.
@@ -76,11 +76,11 @@ public:
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
 	/// non-memory-references.
-	/// @param _padToWordBoundaries if true, adds zeros to pad to multiple of 32 bytes. Array elements
+	/// @param _padToWords if true, adds zeros to pad to multiple of 32 bytes. Array elements
 	/// are always padded (except for byte arrays), regardless of this parameter.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
-	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
+	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true);
 
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
@@ -88,7 +88,7 @@ public:
 	/// Stack pre: <v1> <v2> ... <vn> <memptr>
 	/// Stack post: <memptr_updated>
 	/// Does not touch the memory-free pointer.
-	/// @param _padToWordBoundaries if false, all values are concatenated without padding.
+	/// @param _padToWords if false, all values are concatenated without padding.
 	/// @param _copyDynamicDataInPlace if true, dynamic types is stored (without length)
 	/// together with fixed-length data.
 	/// @param _encodeAsLibraryTypes if true, encodes for a library function, e.g. does not
@@ -98,7 +98,7 @@ public:
 	void encodeToMemory(
 		TypePointers const& _givenTypes = {},
 		TypePointers const& _targetTypes = {},
-		bool _padToWordBoundaries = true,
+		bool _padToWords = true,
 		bool _copyDynamicDataInPlace = false,
 		bool _encodeAsLibraryTypes = false
 	);
@@ -193,9 +193,9 @@ private:
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
 	/// Prepares the given type for storing in memory by shifting it if necessary.
-	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries);
+	unsigned prepareMemoryStore(Type const& _type, bool _padToWords);
 	/// Loads type from memory assuming memory offset is on stack top.
-	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries);
+	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords);
 
 	CompilerContext& m_context;
 };
