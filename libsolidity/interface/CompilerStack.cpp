@@ -146,7 +146,7 @@ bool CompilerStack::parse()
 		}
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
-		// errors while parsing. sould stop before type checking
+		// errors while parsing. should stop before type checking
 		return false;
 
 	resolveImports();
