@@ -4865,6 +4865,17 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_modifier_following_non_payable_p
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(assignment_to_constant)
+{
+	char const* text = R"(
+		contract c {
+			uint constant a = 1;
+			function f() { a = 2; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
