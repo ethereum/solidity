@@ -225,7 +225,9 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
-	if (op != Token::Assign) // compound assignment
+	if (op == Token::Assign)
+		m_currentLValue->storeValue(*rightIntermediateType, _assignment.location());
+	else  // compound assignment
 	{
 		solAssert(leftType.isValueType(), "Compound operators only available for value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
@@ -239,14 +241,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		m_currentLValue->retrieveValue(_assignment.location(), true);
 		utils().convertType(leftType, leftType, cleanupNeeded);
 
-		Token::Value targetOp = Token::AssignmentToBinaryOp(op);
-
-		if (Token::isShiftOp(targetOp))
-			appendShiftOperatorCode(targetOp, leftType, *rightIntermediateType);
+		if (Token::isShiftOp(binOp))
+			appendShiftOperatorCode(binOp, leftType, *rightIntermediateType);
 		else
 		{
 			solAssert(leftType == *rightIntermediateType, "");
-			appendOrdinaryBinaryOperatorCode(targetOp, leftType);
+			appendOrdinaryBinaryOperatorCode(binOp, leftType);
 		}
 		if (lvalueSize > 0)
 		{
@@ -255,8 +255,8 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;
 		}
+		m_currentLValue->storeValue(*_assignment.annotation().type, _assignment.location());
 	}
-	m_currentLValue->storeValue(*rightIntermediateType, _assignment.location());
 	m_currentLValue.reset();
 	return false;
 }
