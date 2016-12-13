@@ -1529,6 +1529,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		!!annotation.referencedDeclaration,
 		"Referenced declaration is null after overload resolution."
 	);
+	auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
+	annotation.isConstant = variableDeclaration != nullptr && variableDeclaration->isConstant();
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
@@ -1612,7 +1614,10 @@ void TypeChecker::requireLValue(Expression const& _expression)
 {
 	_expression.annotation().lValueRequested = true;
 	_expression.accept(*this);
-	if (!_expression.annotation().isLValue)
+
+	if (_expression.annotation().isConstant)
+		typeError(_expression.location(), "Cannot assign to a constant variable.");
+	else if (!_expression.annotation().isLValue)
 		typeError(_expression.location(), "Expression has to be an lvalue.");
 }
 
