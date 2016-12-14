@@ -1056,7 +1056,9 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) { } }
 	)";
-	CHECK_ERROR(text, DeclarationError, "");
+	// Error: Identifier already declared.
+	// Error: Override changes modifier to function.
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1065,7 +1067,9 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	CHECK_ERROR(text, DeclarationError, "");
+	// Error: Identifier already declared.
+	// Error: Override changes function to modifier.
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
