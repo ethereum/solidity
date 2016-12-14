@@ -334,10 +334,10 @@ Comments are of course also not permitted and used here only for explanatory pur
         "myFile.sol": {
           // Required: keccak256 hash of the source file
           "keccak256": "0x123...",
-          // Required (unless "content" is used, see below): URL to the
-          // source file, protocol is more or less arbitrary, but a Swarm
-          // URL is recommended
-          "url": "bzzr://56ab..."
+          // Required (unless "content" is used, see below): Sorted URL(s)
+          // to the source file, protocol is more or less arbitrary, but a
+          // Swarm URL is recommended
+          "urls": [ "bzzr://56ab..." ]
         },
         "mortal": {
           // Required: keccak256 hash of the source file
