@@ -1,6 +1,7 @@
 ### 0.4.7 (unreleased)
 
 Features:
+ * Bitshift operators.
  * Type checker: Warn when ``msg.value`` is used in non-payable function.
  * Code generator: Inject the Swarm hash of a metadata file into the bytecode.
  * Code generator: Replace expensive memcpy precompile by simple assembly loop.

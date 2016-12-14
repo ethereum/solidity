@@ -251,6 +251,19 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountType)
+{
+	// Disable >>> here.
+	if (_operator == Token::SHR)
+		return false;
+	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
+		return !otherInt->isAddress();
+	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
+		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+	else
+		return false;
+}
+
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
@@ -340,6 +353,17 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		_other->category() != category()
 	)
 		return TypePointer();
+	if (Token::isShiftOp(_operator))
+	{
+		// Shifts are not symmetric with respect to the type
+		if (isAddress())
+			return TypePointer();
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
+			return TypePointer();
+	}
+
 	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
 	if (!commonType)
 		return TypePointer();
@@ -954,6 +978,14 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 
 TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
+	if (Token::isShiftOp(_operator))
+	{
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
+			return TypePointer();
+	}
+
 	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));
 	if (!commonType)
 		return TypePointer();

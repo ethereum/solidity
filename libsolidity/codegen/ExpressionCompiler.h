@@ -91,7 +91,7 @@ private:
 
 	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
 	void appendBitOperatorCode(Token::Value _operator);
-	void appendShiftOperatorCode(Token::Value _operator);
+	void appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -116,6 +116,10 @@ private:
 	/// Also retrieves the value if it was not requested by @a _expression.
 	template <class _LValueType, class... _Arguments>
 	void setLValue(Expression const& _expression, _Arguments const&... _arguments);
+
+	/// @returns true if the operator applied to the given type requires a cleanup prior to the
+	/// operation.
+	bool cleanupNeededForOp(Type::Category _type, Token::Value _op);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
