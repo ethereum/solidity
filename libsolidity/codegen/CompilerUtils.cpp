@@ -952,9 +952,9 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 	}
 }
 
-unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
+unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords)
 {
-	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
+	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool isExternalFunctionType = false;
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 		if (funType->location() == FunctionType::Location::External)
@@ -993,9 +993,9 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
 }
 
-unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries)
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 {
-	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
+	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 	if (numBytes == 0)
 		m_context << Instruction::POP;
@@ -1003,7 +1003,7 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBou
 	{
 		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
 		convertType(_type, _type, true);
-		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
+		if (numBytes != 32 && !leftAligned && !_padToWords)
 			// shift the value accordingly before storing
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << Instruction::MUL;
 	}
