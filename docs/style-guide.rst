@@ -150,6 +150,74 @@ No::
         ...
     }
 
+Order of Functions
+==================
+
+Ordering helps readers identify which functions they can call and to find the constructor and fallback definitions easier.
+
+Functions should be grouped according to their visibility and ordered:
+
+- constructor
+- fallback function (if exists)
+- external
+- public
+- internal
+- private
+
+Within a grouping, place the `constant` functions last.
+
+Yes::
+
+    contract A {
+        function A() {
+            ...
+        }
+        
+        function() {
+            ...
+        }
+        
+        // External functions
+        // ...
+        
+        // External functions that are constant
+        // ...
+        
+        // Public functions
+        // ...
+        
+        // Internal functions
+        // ...
+        
+        // Private functions
+        // ...
+    }
+
+No::
+
+    contract A {
+        
+        // External functions
+        // ...
+
+        // Private functions
+        // ...
+
+        // Public functions
+        // ...
+
+        function A() {
+            ...
+        }
+        
+        function() {
+            ...
+        }
+
+        // Internal functions
+        // ...       
+    }
+
 Whitespace in Expressions
 =========================
 
@@ -194,6 +262,19 @@ No::
     y             = 2;
     long_variable = 3;
 
+Don't include a whitespace in the fallback function:
+
+Yes::
+
+    function() {
+        ...
+    }
+
+No::
+   
+    function () {
+        ...
+    }
 
 Control Structures
 ==================

@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
 	This file is derived from the file "scanner.h", which was part of the
 	V8 project. The original copyright header follows:
@@ -80,6 +80,8 @@ public:
 
 	void reset() { m_position = 0; }
 
+	std::string const& source() const { return m_source; }
+
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
@@ -101,6 +103,8 @@ class Scanner
 public:
 
 	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
+
+	std::string source() const { return m_source.source(); }
 
 	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
 	void reset(CharStream const& _source, std::string const& _sourceName);

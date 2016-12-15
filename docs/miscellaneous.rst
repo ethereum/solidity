@@ -56,6 +56,8 @@ So for the following contract snippet::
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
 
+.. index: memory layout
+
 ****************
 Layout in Memory
 ****************
@@ -72,7 +74,69 @@ Solidity always places new objects at the free memory pointer and memory is neve
 .. warning::
   There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
 
-.. index: memory layout
+
+.. index: calldata layout
+
+*******************
+Layout of Call Data
+*******************
+
+When a Solidity contract is deployed and when it is called from an
+account, the input data is assumed to be in the format in `the ABI
+specification
+<https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI>`_.  The
+ABI specification requires arguments to be padded to multiples of 32
+bytes.  The internal function calls use a different convention.
+
+
+.. index: variable cleanup
+
+*********************************
+Internals - Cleaning Up Variables
+*********************************
+
+When a value is shorter than 256-bit, in some cases the remaining bits
+must be cleaned.
+The Solidity compiler is designed to clean such remaining bits before any operations
+that might be adversely affected by the potential garbage in the remaining bits.
+For example, before writing a value to the memory, the remaining bits need
+to be cleared because the memory contents can be used for computing
+hashes or sent as the data of a message call.  Similarly, before
+storing a value in the storage, the remaining bits need to be cleaned
+because otherwise the garbled value can be observed.
+
+On the other hand, we do not clean the bits if the immediately
+following operation is not affected.  For instance, since any non-zero
+value is considered ``true`` by ``JUMPI`` instruction, we do not clean
+the boolean values before they are used as the condition for
+``JUMPI``.
+
+In addition to the design principle above, the Solidity compiler
+cleans input data when it is loaded onto the stack.
+
+Different types have different rules for cleaning up invalid values:
+
++---------------+---------------+-------------------+
+|Type           |Valid Values   |Invalid Values Mean|
++===============+===============+===================+
+|enum of n      |0 until n - 1  |exception          |
+|members        |               |                   |
++---------------+---------------+-------------------+
+|bool           |0 or 1         |1                  |
++---------------+---------------+-------------------+
+|signed integers|sign-extended  |currently silently |
+|               |word           |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
+|               |               |                   |
+|               |               |                   |
++---------------+---------------+-------------------+
+|unsigned       |higher bits    |currently silently |
+|integers       |zeroed         |wraps; in the      |
+|               |               |future exceptions  |
+|               |               |will be thrown     |
++---------------+---------------+-------------------+
+
 
 *****************
 Esoteric Features
@@ -221,6 +285,142 @@ Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
+*****************
+Contract Metadata
+*****************
+
+The Solidity compiler automatically generates a JSON file, the
+contract metadata, that contains information about the current contract.
+It can be used to query the compiler version, the sources used, the ABI
+and NatSpec documentation in order to more safely interact with the contract
+and to verify its source code.
+
+The compiler appends a Swarm hash of the metadata file to the end of the
+bytecode (for details, see below) of each contract, so that you can retrieve
+the file in an authenticated way without having to resort to a centralized
+data provider.
+
+Of course, you have to publish the metadata file to Swarm (or some other service)
+so that others can access it. The file can be output by using ``solc --metadata``
+and the file will be called ``ContractName_meta.json``.
+It will contain Swarm references to the source code, so you have to upload
+all source files and the metadata file.
+
+The metadata file has the following format. The example below is presented in a
+human-readable way. Properly formatted metadata should use quotes correctly,
+reduce whitespace to a minimum and sort the keys of all objects to arrive at a
+unique formatting.
+Comments are of course also not permitted and used here only for explanatory purposes.
+
+.. code-block:: none
+
+    {
+      // Required: The version of the metadata format
+      version: "1",
+      // Required: Source code language, basically selects a "sub-version"
+      // of the specification
+      language: "Solidity",
+      // Required: Details about the compiler, contents are specific
+      // to the language.
+      compiler: {
+        // Required for Solidity: Version of the compiler
+        version: "0.4.6+commit.2dabbdf0.Emscripten.clang",
+        // Optional: Hash of the compiler binary which produced this output
+        keccak256: "0x123..."
+      },
+      // Required: Compilation source files/source units, keys are file names
+      sources:
+      {
+        "myFile.sol": {
+          // Required: keccak256 hash of the source file
+          "keccak256": "0x123...",
+          // Required (unless "content" is used, see below): Sorted URL(s)
+          // to the source file, protocol is more or less arbitrary, but a
+          // Swarm URL is recommended
+          "urls": [ "bzzr://56ab..." ]
+        },
+        "mortal": {
+          // Required: keccak256 hash of the source file
+          "keccak256": "0x234...",
+          // Required (unless "url" is used): literal contents of the source file
+          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+        }
+      },
+      // Required: Compiler settings
+      settings:
+      {
+        // Required for Solidity: Sorted list of remappings
+        remappings: [ ":g/dir" ],
+        // Optional: Optimizer settings (enabled defaults to false)
+        optimizer: {
+          enabled: true,
+          runs: 500
+        },
+        // Required for Solidity: File and name of the contract or library this
+        // metadata is created for.
+        compilationTarget: {
+          "myFile.sol": "MyContract"
+        },
+        // Required for Solidity: Addresses for libraries used
+        libraries: {
+          "MyLib": "0x123123..."
+        }
+      },
+      // Required: Generated information about the contract.
+      output:
+      {
+        // Required: ABI definition of the contract
+        abi: [ ... ],
+        // Required: NatSpec user documentation of the contract
+        userdoc: [ ... ],
+        // Required: NatSpec developer documentation of the contract
+        devdoc: [ ... ],
+      }
+    }
+
+
+Encoding of the Metadata Hash in the Bytecode
+=============================================
+
+Because we might support other ways to retrieve the metadata file in the future,
+the mapping ``{"bzzr0": <Swarm hash>}`` is stored
+[CBOR](https://tools.ietf.org/html/rfc7049)-encoded. Since the beginning of that
+encoding is not easy to find, its length is added in a two-byte big-endian
+encoding. The current version of the Solidity compiler thus adds the following
+to the end of the deployed bytecode::
+
+    0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
+
+So in order to retrieve the data, the end of the deployed bytecode can be checked
+to match that pattern and use the Swarm hash to retrieve the file.
+
+Usage for Automatic Interface Generation and NatSpec
+====================================================
+
+The metadata is used in the following way: A component that wants to interact
+with a contract (e.g. Mist) retrieves the code of the contract, from that
+the Swarm hash of a file which is then retrieved.
+That file is JSON-decoded into a structure like above.
+
+The component can then use the ABI to automatically generate a rudimentary
+user interface for the contract.
+
+Furthermore, Mist can use the userdoc to display a confirmation message to the user
+whenever they interact with the contract.
+
+Usage for Source Code Verification
+==================================
+
+In order to verify the compilation, sources can be retrieved from Swarm
+via the link in the metadata file.
+The compiler of the correct version (which is checked to be part of the "official" compilers)
+is invoked on that input with the specified settings. The resulting
+bytecode is compared to the data of the creation transaction or CREATE opcode data.
+This automatically verifies the metadata since its hash is part of the bytecode.
+Excess data corresponds to the constructor input data, which should be decoded
+according to the interface and presented to the user.
+
+
 ***************
 Tips and Tricks
 ***************
@@ -363,10 +563,10 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``,
+``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``, ``null``,
 ``of``, ``pure``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``, ``view``.
 
 Language Grammar
 ================
 
-The entire language grammar is `available here <https://github.com/ethereum/solidity/blob/release/libsolidity/grammar.txt>`_.
+.. literalinclude:: grammar.txt

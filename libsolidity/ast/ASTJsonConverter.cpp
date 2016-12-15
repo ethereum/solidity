@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+    This file is part of solidity.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
+    solidity is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
+    solidity is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Lefteris <lefteris@ethdev.com>
@@ -24,6 +24,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <libdevcore/UTF8.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 
@@ -173,9 +174,9 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	addJsonNode(_node, "FunctionDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("public", _node.isPublic()),
 		make_pair("constant", _node.isDeclaredConst()),
-		make_pair("payable", _node.isPayable())
+		make_pair("payable", _node.isPayable()),
+		make_pair("visibility", visibility(_node.visibility()))
 	}, true);
 	return true;
 }
@@ -228,13 +229,9 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 
 bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 {
-	string visibility = "internal";
-	if (_node.visibility() == Declaration::Visibility::External)
-		visibility = "external";
-
 	addJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility),
+		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("constant", _node.isDeclaredConst())
 	}, true);
 	return true;
@@ -318,7 +315,7 @@ bool ASTJsonConverter::visit(Throw const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 {
-	addJsonNode(_node, "VariableDefinitionStatement", {}, true);
+	addJsonNode(_node, "VariableDeclarationStatement", {}, true);
 	return true;
 }
 
@@ -407,7 +404,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
-	addJsonNode(_node, "ElementaryTypenameExpression", {
+	addJsonNode(_node, "ElementaryTypeNameExpression", {
 		make_pair("value", _node.typeName().toString()),
 		make_pair("type", type(_node))
 	});
@@ -417,9 +414,8 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 bool ASTJsonConverter::visit(Literal const& _node)
 {
 	char const* tokenString = Token::toString(_node.token());
-	size_t invalidPos = 0;
 	Json::Value value{_node.value()};
-	if (!dev::validate(_node.value(), invalidPos))
+	if (!dev::validateUTF8(_node.value()))
 		value = Json::nullValue;
 	Token::Value subdenomination = Token::Value(_node.subDenomination());
 	addJsonNode(_node, "Literal", {
@@ -655,6 +651,23 @@ void ASTJsonConverter::process()
 	if (!processed)
 		m_ast->accept(*this);
 	processed = true;
+}
+
+string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
+{
+	switch (_visibility)
+	{
+	case Declaration::Visibility::Private:
+		return "private";
+	case Declaration::Visibility::Internal:
+		return "internal";
+	case Declaration::Visibility::Public:
+		return "public";
+	case Declaration::Visibility::External:
+		return "external";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration visibility."));
+	}
 }
 
 string ASTJsonConverter::type(Expression const& _expression)

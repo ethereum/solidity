@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file Assembly.cpp
  * @author Gav Wood <i@gavwood.com>
@@ -331,13 +331,12 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 	}
 
 	map<u256, u256> tagReplacements;
-	unsigned total = 0;
-	for (unsigned count = 1; count > 0; total += count)
+	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
 
 		PeepholeOptimiser peepOpt(m_items);
-		if (peepOpt.optimise())
+		while (peepOpt.optimise())
 			count++;
 
 		if (!_enable)
@@ -399,7 +398,7 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 	}
 
 	if (_enable)
-		total += ConstantOptimisationMethod::optimiseConstants(
+		ConstantOptimisationMethod::optimiseConstants(
 			_isCreation,
 			_isCreation ? 1 : _runs,
 			*this,
@@ -433,7 +432,7 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesPerTag = dev::bytesRequired(bytesRequiredForCode);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
-	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1;
+	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + m_auxiliaryData.size();
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += sub->assemble().bytecode.size();
 
@@ -526,8 +525,10 @@ LinkerObject const& Assembly::assemble() const
 		}
 	}
 
-	if (!dataRef.empty() && !subRef.empty())
+	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
+		// Append a STOP just to be sure.
 		ret.bytecode.push_back(0);
+
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{
 		auto references = subRef.equal_range(i);
@@ -569,6 +570,9 @@ LinkerObject const& Assembly::assemble() const
 		}
 		ret.bytecode += dataItem.second;
 	}
+
+	ret.bytecode += m_auxiliaryData;
+
 	for (unsigned pos: sizeRef)
 	{
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);

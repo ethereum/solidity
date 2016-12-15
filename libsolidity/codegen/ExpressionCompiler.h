@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -91,7 +91,7 @@ private:
 
 	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
 	void appendBitOperatorCode(Token::Value _operator);
-	void appendShiftOperatorCode(Token::Value _operator);
+	void appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -116,6 +116,10 @@ private:
 	/// Also retrieves the value if it was not requested by @a _expression.
 	template <class _LValueType, class... _Arguments>
 	void setLValue(Expression const& _expression, _Arguments const&... _arguments);
+
+	/// @returns true if the operator applied to the given type requires a cleanup prior to the
+	/// operation.
+	bool cleanupNeededForOp(Type::Category _type, Token::Value _op);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();

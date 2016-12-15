@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -1529,6 +1529,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		!!annotation.referencedDeclaration,
 		"Referenced declaration is null after overload resolution."
 	);
+	auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
+	annotation.isConstant = variableDeclaration != nullptr && variableDeclaration->isConstant();
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
@@ -1612,7 +1614,10 @@ void TypeChecker::requireLValue(Expression const& _expression)
 {
 	_expression.annotation().lValueRequested = true;
 	_expression.accept(*this);
-	if (!_expression.annotation().isLValue)
+
+	if (_expression.annotation().isConstant)
+		typeError(_expression.location(), "Cannot assign to a constant variable.");
+	else if (!_expression.annotation().isLValue)
 		typeError(_expression.location(), "Expression has to be an lvalue.");
 }
 

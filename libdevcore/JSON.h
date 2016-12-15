@@ -27,14 +27,14 @@
 namespace dev
 {
 
-/// Serialise the JSON object (@a _input) with identation
-std::string jsonPrettyPrint(Json::Value const& _input)
+/// Serialise the JSON object (@a _input) with indentation
+inline std::string jsonPrettyPrint(Json::Value const& _input)
 {
 	return Json::StyledWriter().write(_input);
 }
 
-/// Serialise theJ SON object (@a _input) without identation
-std::string jsonCompactPrint(Json::Value const& _input)
+/// Serialise the JSON object (@a _input) without indentation
+inline std::string jsonCompactPrint(Json::Value const& _input)
 {
 	Json::FastWriter writer;
 	writer.omitEndingLineFeed();

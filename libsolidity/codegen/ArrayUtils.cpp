@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -200,7 +200,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		else if (sourceBaseType->isValueType())
 			CompilerUtils(m_context).loadFromMemoryDynamic(*sourceBaseType, fromCalldata, true, false);
 		else
-			solAssert(false, "Copying of type " + _sourceType.toString(false) + " to storage not yet supported.");
+			solUnimplemented("Copying of type " + _sourceType.toString(false) + " to storage not yet supported.");
 		// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset] <source_value>...
 		solAssert(
 			2 + byteOffsetSize + sourceBaseType->sizeOnStack() <= 16,
@@ -335,9 +335,14 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		if (baseSize > 1)
 			m_context << u256(baseSize) << Instruction::MUL;
 		// stack: <target> <source> <size>
-		//@TODO do not use ::CALL if less than 32 bytes?
 		m_context << Instruction::DUP1 << Instruction::DUP4 << Instruction::DUP4;
-		utils.memoryCopy();
+		// We can resort to copying full 32 bytes only if
+		// - the length is known to be a multiple of 32 or
+		// - we will pad to full 32 bytes later anyway.
+		if (((baseSize % 32) == 0) || _padToWordBoundaries)
+			utils.memoryCopy32();
+		else
+			utils.memoryCopy();
 
 		m_context << Instruction::SWAP1 << Instruction::POP;
 		// stack: <target> <size>

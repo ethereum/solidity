@@ -25,20 +25,20 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Modifications as part of cpp-ethereum under the following license:
+// Modifications as part of solidity under the following license:
 //
-// cpp-ethereum is free software: you can redistribute it and/or modify
+// solidity is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// cpp-ethereum is distributed in the hope that it will be useful,
+// solidity is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+// along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -147,7 +147,6 @@ namespace solidity
 	K(Const, "constant", 0)                                            \
 	K(Continue, "continue", 0)                                         \
 	K(Contract, "contract", 0)                                         \
-	K(Default, "default", 0)                                           \
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Enum, "enum", 0)                                                 \
@@ -208,7 +207,6 @@ namespace solidity
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
-	K(NullLiteral, "null", 0)                                          \
 	K(TrueLiteral, "true", 0)                                          \
 	K(FalseLiteral, "false", 0)                                        \
 	T(Number, NULL, 0)                                                 \
@@ -223,12 +221,14 @@ namespace solidity
 	K(After, "after", 0)                                               \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
+	K(Default, "default", 0)                                           \
 	K(Final, "final", 0)                                               \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
 	K(Interface, "interface", 0)                                       \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
+	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
 	K(Pure, "pure", 0)                                                 \
 	K(Relocatable, "relocatable", 0)                                   \

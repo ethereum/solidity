@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -216,6 +216,8 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
 	CompilerUtils utils(m_context);
+	solAssert(m_dataType, "");
+
 	// stack: value storage_key storage_offset
 	if (m_dataType->isValueType())
 	{
@@ -228,6 +230,11 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			m_context << Instruction::POP;
 			if (!_move)
 				m_context << Instruction::DUP2 << Instruction::SWAP1;
+
+			m_context << Instruction::SWAP1;
+			utils.convertType(_sourceType, *m_dataType, true);
+			m_context << Instruction::SWAP1;
+
 			m_context << Instruction::SSTORE;
 		}
 		else
@@ -248,6 +255,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier value
 			if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
 			{
+				solAssert(_sourceType == *m_dataType, "function item stored but target is not equal to source");
 				if (fun->location() == FunctionType::Location::External)
 					// Combine the two-item function type into a single stack slot.
 					utils.combineExternalFunctionType(false);
@@ -257,19 +265,17 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						Instruction::AND;
 			}
 			else if (m_dataType->category() == Type::Category::FixedBytes)
+			{
+				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< Instruction::SWAP1 << Instruction::DIV;
+			}
 			else
 			{
 				solAssert(m_dataType->sizeOnStack() == 1, "Invalid stack size for opaque type.");
 				// remove the higher order bits
-				m_context
-					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
-					<< Instruction::SWAP1
-					<< Instruction::DUP2
-					<< Instruction::MUL
-					<< Instruction::DIV;
+				utils.convertType(_sourceType, *m_dataType, true, true);
 			}
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value

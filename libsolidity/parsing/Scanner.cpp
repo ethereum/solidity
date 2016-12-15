@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
 	This file is derived from the file "scanner.cc", which was part of the
 	V8 project. The original copyright header follows:
@@ -327,7 +327,12 @@ Token::Value Scanner::scanMultiLineDocComment()
 		if (isLineTerminator(m_char))
 		{
 			skipWhitespace();
-			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
+			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '*')
+			{ // it is unknown if this leads to the end of the comment
+				addCommentLiteralChar('*');
+				advance();
+			}
+			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
 			{ // skip first '*' in subsequent lines
 				if (charsAdded)
 					addCommentLiteralChar('\n');

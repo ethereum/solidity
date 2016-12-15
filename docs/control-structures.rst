@@ -2,12 +2,62 @@
 Expressions and Control Structures
 ##################################
 
+.. index:: ! parameter, parameter;input, parameter;output
+
+Input Parameters and Output Parameters
+======================================
+
+As in Javascript, functions may take parameters as input;
+unlike in Javascript and C, they may also return arbitrary number of
+parameters as output.
+
+Input Parameters
+----------------
+
+The input parameters are declared the same way as variables are. As an
+exception, unused parameters can omit the variable name.
+For example, suppose we want our contract to
+accept one kind of external calls with two integers, we would write
+something like::
+
+    contract Simple {
+        function taker(uint _a, uint _b) {
+            // do something with _a and _b.
+        }
+    }
+
+Output Parameters
+-----------------
+
+The output parameters can be declared with the same syntax after the
+``returns`` keyword. For example, suppose we wished to return two results:
+the sum and the product of the two given integers, then we would
+write::
+
+    contract Simple {
+        function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
+            o_sum = _a + _b;
+            o_product = _a * _b;
+        }
+    }
+
+The names of output parameters can be omitted.
+The output values can also be specified using ``return`` statements.
+The ``return`` statements are also capable of returning multiple
+values, see :ref:`multi-return`.
+Return parameters are initialized to zero; if they are not explicitly
+set, they stay to be zero.
+
+Input parameters and output parameters can be used as expressions in
+the function body.  There, they are also usable in the left-hand side
+of assignment.
+
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
 Control Structures
 ===================
 
-Most of the control structures from C or JavaScript are available in Solidity
+Most of the control structures from JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
 there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
@@ -16,7 +66,17 @@ Parentheses can *not* be omitted for conditionals, but curly brances can be omit
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid Solidity.
+there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
+Solidity.
+
+.. _multi-return:
+
+Returning Multiple Values
+-------------------------
+
+When a function has multiple output parameters, ``return (v0, v1, ...,
+vn)`` can return multiple values.  The number of components must be
+the same as the number of output parameters.
 
 .. index:: ! function;call, function;internal, function;external
 
@@ -322,17 +382,18 @@ In the following example, we show how ``throw`` can be used to easily revert an 
         }
     }
 
-Currently, there are situations, where exceptions happen automatically in Solidity:
+Currently, Solidity automatically generates a runtime exception in the following situations:
 
 1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-2. If you access a fixed-length ``bytesN`` at a too large or negative index.
-3. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
-4. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
-5. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-6. If you convert a value too big or negative into an enum type.
-7. If you perform an external function call targeting a contract that contains no code.
-8. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-9. If your contract receives Ether via a public accessor function.
+1. If you access a fixed-length ``bytesN`` at a too large or negative index.
+1. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+1. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
+1. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+1. If you shift by a negative amount.
+1. If you convert a value too big or negative into an enum type.
+1. If you perform an external function call targeting a contract that contains no code.
+1. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+1. If your contract receives Ether via a public accessor function.
 
 Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
 

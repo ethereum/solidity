@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
  */
 /**
  * @author Marek Kotewicz <marek@ethdev.com>
@@ -22,8 +22,11 @@
 
 #include "../TestHelper.h"
 #include <libsolidity/interface/CompilerStack.h>
-#include <json/json.h>
+
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/SwarmHash.h>
+
+#include <json/json.h>
 
 namespace dev
 {
@@ -51,7 +54,7 @@ public:
 		);
 	}
 
-private:
+protected:
 	CompilerStack m_compilerStack;
 	Json::Reader m_reader;
 };
@@ -60,9 +63,11 @@ BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, JSONInterfaceChecker)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return a * 7; }
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -90,8 +95,9 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 BOOST_AUTO_TEST_CASE(empty_contract)
 {
-	char const* sourceCode = "contract test {\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test { }
+	)";
 	char const* interface = "[]";
 
 	checkInterface(sourceCode, interface);
@@ -99,10 +105,12 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 
 BOOST_AUTO_TEST_CASE(multiple_methods)
 {
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"  function g(uint b) returns(uint e) { return b * 8; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return a * 7; }
+			function g(uint b) returns(uint e) { return b * 8; }
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -148,9 +156,11 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 
 BOOST_AUTO_TEST_CASE(multiple_params)
 {
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a, uint b) returns(uint d) { return a + b; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -183,10 +193,12 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 BOOST_AUTO_TEST_CASE(multiple_methods_order)
 {
 	// methods are expected to be in alpabetical order
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"  function c(uint b) returns(uint e) { return b * 8; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return a * 7; }
+			function c(uint b) returns(uint e) { return b * 8; }
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -232,10 +244,12 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 
 BOOST_AUTO_TEST_CASE(const_function)
 {
-	char const* sourceCode = "contract test {\n"
-	"  function foo(uint a, uint b) returns(uint d) { return a + b; }\n"
-	"  function boo(uint32 a) constant returns(uint b) { return a * 4; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function foo(uint a, uint b) returns(uint d) { return a + b; }
+			function boo(uint32 a) constant returns(uint b) { return a * 4; }
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -283,11 +297,13 @@ BOOST_AUTO_TEST_CASE(const_function)
 
 BOOST_AUTO_TEST_CASE(events)
 {
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"  event e1(uint b, address indexed c); \n"
-	"  event e2(); \n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return a * 7; }
+			event e1(uint b, address indexed c);
+			event e2();
+		}
+	)";
 	char const* interface = R"([
 	{
 		"name": "f",
@@ -338,9 +354,11 @@ BOOST_AUTO_TEST_CASE(events)
 
 BOOST_AUTO_TEST_CASE(events_anonymous)
 {
-	char const* sourceCode = "contract test {\n"
-	"  event e() anonymous; \n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			event e() anonymous;
+		}
+	)";
 	char const* interface = R"([
 	{
 		"name": "e",
@@ -356,15 +374,16 @@ BOOST_AUTO_TEST_CASE(events_anonymous)
 
 BOOST_AUTO_TEST_CASE(inherited)
 {
-	char const* sourceCode =
-	"	contract Base { \n"
-	"		function baseFunction(uint p) returns (uint i) { return p; } \n"
-	"		event baseEvent(bytes32 indexed evtArgBase); \n"
-	"	} \n"
-	"	contract Derived is Base { \n"
-	"		function derivedFunction(bytes32 p) returns (bytes32 i) { return p; } \n"
-	"		event derivedEvent(uint indexed evtArgDerived); \n"
-	"	}";
+	char const* sourceCode = R"(
+		contract Base {
+			function baseFunction(uint p) returns (uint i) { return p; }
+			event baseEvent(bytes32 indexed evtArgBase);
+		}
+		contract Derived is Base {
+			function derivedFunction(bytes32 p) returns (bytes32 i) { return p; }
+			event derivedEvent(uint indexed evtArgDerived);
+		}
+	)";
 
 	char const* interface = R"([
 	{
@@ -428,13 +447,14 @@ BOOST_AUTO_TEST_CASE(inherited)
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 {
 	char const* sourceCode = R"(
-	contract test {
-		function f(uint, uint k) returns(uint ret_k, uint ret_g){
-			uint g = 8;
-			ret_k = k;
-			ret_g = g;
+		contract test {
+			function f(uint, uint k) returns(uint ret_k, uint ret_g) {
+				uint g = 8;
+				ret_k = k;
+				ret_g = g;
+			}
 		}
-	})";
+	)";
 
 	char const* interface = R"([
 	{
@@ -472,10 +492,11 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 {
 	char const* sourceCode = R"(
 		contract test {
-		function f(uint k) returns(uint){
-			return k;
+			function f(uint k) returns(uint) {
+				return k;
+			}
 		}
-	})";
+	)";
 
 	char const* interface = R"([
 	{
@@ -539,7 +560,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 		contract test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			function test(ActionChoices param) {}
-			function ret() returns(ActionChoices){
+			function ret() returns(ActionChoices) {
 				ActionChoices action = ActionChoices.GoLeft;
 				return action;
 			}
@@ -609,7 +630,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	char const* sourceCode = R"(
 		library test {
 			struct StructType { uint a; }
-			function f(StructType storage b, uint[] storage c, test d) returns (uint[] e, StructType storage f){}
+			function f(StructType storage b, uint[] storage c, test d) returns (uint[] e, StructType storage f) {}
 		}
 	)";
 
@@ -729,6 +750,26 @@ BOOST_AUTO_TEST_CASE(function_type)
 	]
 	)";
 	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_stamp)
+{
+	// Check that the metadata stamp is at the end of the runtime bytecode.
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract test {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	BOOST_REQUIRE(m_compilerStack.compile(std::string(sourceCode)));
+	bytes const& bytecode = m_compilerStack.runtimeObject("test").bytecode;
+	bytes hash = dev::swarmHash(m_compilerStack.onChainMetadata("test")).asBytes();
+	BOOST_REQUIRE(hash.size() == 32);
+	BOOST_REQUIRE(bytecode.size() >= 2);
+	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
+	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
+	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
+	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

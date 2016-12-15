@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+    This file is part of solidity.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
+    solidity is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
+    solidity is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -251,6 +251,19 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountType)
+{
+	// Disable >>> here.
+	if (_operator == Token::SHR)
+		return false;
+	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
+		return !otherInt->isAddress();
+	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
+		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+	else
+		return false;
+}
+
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
@@ -340,6 +353,17 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		_other->category() != category()
 	)
 		return TypePointer();
+	if (Token::isShiftOp(_operator))
+	{
+		// Shifts are not symmetric with respect to the type
+		if (isAddress())
+			return TypePointer();
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
+			return TypePointer();
+	}
+
 	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
 	if (!commonType)
 		return TypePointer();
@@ -879,7 +903,8 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
 		return
 			arrayType->isByteArray() &&
-			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
+			!(arrayType->isString() && !isValidUTF8());
 	else
 		return false;
 }
@@ -895,7 +920,7 @@ std::string StringLiteralType::toString(bool) const
 {
 	size_t invalidSequence;
 
-	if (!dev::validate(m_value, invalidSequence))
+	if (!dev::validateUTF8(m_value, invalidSequence))
 		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
 
 	return "literal_string \"" + m_value + "\"";
@@ -904,6 +929,11 @@ std::string StringLiteralType::toString(bool) const
 TypePointer StringLiteralType::mobileType() const
 {
 	return make_shared<ArrayType>(DataLocation::Memory, true);
+}
+
+bool StringLiteralType::isValidUTF8() const
+{
+	return dev::validateUTF8(m_value);
 }
 
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
@@ -948,6 +978,14 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 
 TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
+	if (Token::isShiftOp(_operator))
+	{
+		if (isValidShiftAndAmountType(_operator, *_other))
+			return shared_from_this();
+		else
+			return TypePointer();
+	}
+
 	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));
 	if (!commonType)
 		return TypePointer();

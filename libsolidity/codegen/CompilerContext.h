@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -152,8 +152,8 @@ public:
 		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
 	);
 
-	/// Prepends "PUSH <compiler version number> POP"
-	void injectVersionStampIntoSub(size_t _subIndex);
+	/// Appends arbitrary data to the end of the bytecode.
+	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
 	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, true, _runs); }
 

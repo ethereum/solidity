@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
@@ -71,6 +71,9 @@ public:
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMPI); return ret; }
 	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
+	/// Appends @a _data literally to the very end of the bytecode.
+	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
+
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 	AssemblyItems const& items() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
@@ -125,10 +128,12 @@ private:
 	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 
 protected:
-	// 0 is reserved for exception
+	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
 	AssemblyItems m_items;
 	std::map<h256, bytes> m_data;
+	/// Data that is appended to the very end of the contract.
+	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
 	std::map<h256, std::string> m_strings;
 	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.

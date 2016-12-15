@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -298,21 +298,73 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
+void CompilerUtils::memoryCopyPrecompile()
+{
+	// Stack here: size target source
+
+	m_context.appendInlineAssembly(R"(
+		{
+		let words := div(add(len, 31), 32)
+		let cost := add(15, mul(3, words))
+		jumpi(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
+		}
+	)",
+		{ "len", "dst", "src" },
+		map<string, string> {
+			{ "$identityContractAddress", toString(identityContractAddress) }
+		}
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
+
+void CompilerUtils::memoryCopy32()
+{
+	// Stack here: size target source
+
+	m_context.appendInlineAssembly(R"(
+		{
+		jumpi(end, eq(len, 0))
+		start:
+		mstore(dst, mload(src))
+		jumpi(end, iszero(gt(len, 32)))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start)
+		end:
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+}
+
 void CompilerUtils::memoryCopy()
 {
 	// Stack here: size target source
-	// stack for call: outsize target size source value contract gas
-	//@TODO do not use ::CALL if less than 32 bytes?
-	m_context << Instruction::DUP3 << Instruction::SWAP1;
-	m_context << u256(0) << u256(identityContractAddress);
-	// compute gas costs
-	m_context << u256(32) << Instruction::DUP5 << u256(31) << Instruction::ADD;
-	static unsigned c_identityGas = 15;
-	static unsigned c_identityWordGas = 3;
-	m_context << Instruction::DIV << u256(c_identityWordGas) << Instruction::MUL;
-	m_context << u256(c_identityGas) << Instruction::ADD;
-	m_context << Instruction::CALL;
-	m_context << Instruction::POP; // ignore return value
+
+	m_context.appendInlineAssembly(R"(
+		{
+		// copy 32 bytes at once
+		start32:
+		jumpi(end32, lt(len, 32))
+		mstore(dst, mload(src))
+		dst := add(dst, 32)
+		src := add(src, 32)
+		len := sub(len, 32)
+		jump(start32)
+		end32:
+
+		// copy the remainder (0 < len < 32)
+		let mask := sub(exp(256, sub(32, len)), 1)
+		let srcpart := and(mload(src), not(mask))
+		let dstpart := and(mload(dst), mask)
+		mstore(dst, or(srcpart, dstpart))
+		}
+	)",
+		{ "len", "dst", "src" }
+	);
+	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
 }
 
 void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
@@ -358,7 +410,7 @@ void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
 			Instruction::OR;
 }
 
-void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
+void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded, bool _chopSignBits)
 {
 	// For a type extension, we need to remove all higher-order bits that we might have ignored in
 	// previous operations.
@@ -370,6 +422,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	Type::Category targetTypeCategory = _targetType.category();
 
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
+	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
+	if (chopSignBitsPending)
+	{
+		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		chopSignBitsPending = targetIntegerType.isSigned();
+	}
 
 	switch (stackTypeCategory)
 	{
@@ -482,6 +540,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					cleanHigherOrderBits(typeOnStack);
 				else if (_cleanupNeeded)
 					cleanHigherOrderBits(targetType);
+				if (chopSignBitsPending)
+				{
+					if (typeOnStack.numBits() < 256)
+						m_context
+							<< ((u256(1) << typeOnStack.numBits()) - 1)
+							<< Instruction::AND;
+					chopSignBitsPending = false;
+				}
 			}
 		}
 		break;
@@ -724,10 +790,15 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+				m_context
+					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
+					<< Instruction::AND;
 		break;
 	}
 
 	solAssert(!enumOverflowCheckPending, "enum overflow checking missing.");
+	solAssert(!chopSignBitsPending, "forgot to chop the sign bits.");
 }
 
 void CompilerUtils::pushZeroValue(Type const& _type)
@@ -881,9 +952,9 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 	}
 }
 
-unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
+unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords)
 {
-	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
+	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool isExternalFunctionType = false;
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 		if (funType->location() == FunctionType::Location::External)
@@ -906,6 +977,8 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		if (leftAligned)
 			m_context << shiftFactor << Instruction::MUL;
 	}
+	if (_fromCalldata)
+		convertType(_type, _type, true);
 
 	return numBytes;
 }
@@ -920,16 +993,17 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
 }
 
-unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 {
-	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
+	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 	if (numBytes == 0)
 		m_context << Instruction::POP;
 	else
 	{
 		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
-		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
+		convertType(_type, _type, true);
+		if (numBytes != 32 && !leftAligned && !_padToWords)
 			// shift the value accordingly before storing
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << Instruction::MUL;
 	}

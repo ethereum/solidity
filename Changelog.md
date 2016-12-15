@@ -1,7 +1,24 @@
+### 0.4.7 (2016-12-15)
+
+Features:
+ * Bitshift operators.
+ * Type checker: Warn when ``msg.value`` is used in non-payable function.
+ * Code generator: Inject the Swarm hash of a metadata file into the bytecode.
+ * Code generator: Replace expensive memcpy precompile by simple assembly loop.
+ * Optimizer: Some dead code elimination.
+
+Bugfixes:
+ * Code generator: throw if calling the identity precompile failed during memory (array) copying.
+ * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
+ * Code generator: any non-zero value given as a boolean argument is now converted into 1.
+ * AST Json Converter: replace ``VariableDefinitionStatement`` nodes with ``VariableDeclarationStatement``
+ * AST Json Converter: fix the camel case in ``ElementaryTypeNameExpression``
+ * AST Json Converter: replace ``public`` field with ``visibility`` in the function definition nodes
+
 ### 0.4.6 (2016-11-22)
 
 Bugfixes:
- * Optimizer: Knowledge about state was not correctly cleared for JUMPDESTs
+ * Optimizer: Knowledge about state was not correctly cleared for JUMPDESTs (introduced in 0.4.5)
 
 ### 0.4.5 (2016-11-21)
 
