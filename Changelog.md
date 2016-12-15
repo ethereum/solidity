@@ -1,4 +1,4 @@
-### 0.4.7 (unreleased)
+### 0.4.7 (2016-12-15)
 
 Features:
  * Bitshift operators.
@@ -11,9 +11,9 @@ Bugfixes:
  * Code generator: throw if calling the identity precompile failed during memory (array) copying.
  * Type checker: string literals that are not valid UTF-8 cannot be converted to string type
  * Code generator: any non-zero value given as a boolean argument is now converted into 1.
- * AST Json Converter: replace "VariableDefinitionStatement" nodes with "VariableDeclarationStatement"
- * AST Json Converter: fix the camel case in "ElementaryTypeNameExpression"
- * AST Json Converter: replace "public" field with "visibility" in the function definition nodes
+ * AST Json Converter: replace ``VariableDefinitionStatement`` nodes with ``VariableDeclarationStatement``
+ * AST Json Converter: fix the camel case in ``ElementaryTypeNameExpression``
+ * AST Json Converter: replace ``public`` field with ``visibility`` in the function definition nodes
 
 ### 0.4.6 (2016-11-22)
 
