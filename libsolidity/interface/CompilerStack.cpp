@@ -184,7 +184,7 @@ bool CompilerStack::parse()
 
 				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
 				{
-					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
+					ContractDefinition const* existingContract = m_contracts[contract->fullyQualifiedName()].contract;
 					if (contract != existingContract)
 					{
 						auto err = make_shared<Error>(Error::Type::DeclarationError);
@@ -201,9 +201,7 @@ bool CompilerStack::parse()
 					}
 				}
 				else
-				{
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
-				}
 			}
 
 	if (!checkLibraryNameClashes())
@@ -224,9 +222,10 @@ bool CompilerStack::parse()
 				else
 					noErrors = false;
 
+				// Note that find() must be used here to prevent an automatic insert into the map
 				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
 				{
-					const ContractDefinition* existingContract = m_contracts.find(contract->fullyQualifiedName())->second.contract;
+					ContractDefinition const* existingContract = m_contracts[contract->fullyQualifiedName()].contract;
 
 					if (contract != existingContract)
 					{
@@ -245,9 +244,7 @@ bool CompilerStack::parse()
 
 				}
 				else
-				{
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
-				}
 			}
 
 	if (noErrors)
@@ -379,8 +376,7 @@ std::string const CompilerStack::filesystemFriendlyName(string const& _contractN
 		}
 	}
 	// If no collision, return the contract's name
-  // String is copied to ensure that the contract's name can't be messed with
-	return std::string(matchContract.contract->name());
+	return matchContract.contract->name();
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
