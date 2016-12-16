@@ -161,6 +161,7 @@ public:
 	/// @returns the source name this declaration is present in.
 	/// Can be combined with annotation().canonicalName to form a globally unique name.
 	std::string sourceUnitName() const;
+	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -357,8 +358,6 @@ public:
 
 	Json::Value const& devDocumentation() const;
 	void setDevDocumentation(Json::Value const& _devDocumentation);
-
-	std::string fullyQualifiedName() const;
 
 	virtual TypePointer type() const override;
 

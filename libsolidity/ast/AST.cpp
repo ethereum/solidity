@@ -189,14 +189,6 @@ void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentat
 	m_userDocumentation = _userDocumentation;
 }
 
-
-string ContractDefinition::fullyQualifiedName() const
-{
-	std::string sourceString = *(location().sourceName);
-	std::string qualifiedName = (sourceString.empty() ? ("") : (sourceString + ":")) + name();
-	return qualifiedName;
-}
-
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {
 	if (!m_inheritableMembers)
