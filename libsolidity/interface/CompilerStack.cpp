@@ -182,25 +182,12 @@ bool CompilerStack::parse()
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
-				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
-				{
-					ContractDefinition const* existingContract = m_contracts[contract->fullyQualifiedName()].contract;
-					if (contract != existingContract)
-					{
-						auto err = make_shared<Error>(Error::Type::DeclarationError);
-						*err <<
-							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(
-								"Contract/Library \"" + contract->name() + "\" declared twice "
-							) <<
-							errinfo_secondarySourceLocation(SecondarySourceLocation().append(
-									"The other declaration is here:", existingContract->location()));
+				// Note that we now reference contracts by their fully qualified names, and
+				// thus contracts can only conflict if declared in the same source file.  This
+				// already causes a double-declaration error elsewhere, so we do not report
+				// an error here and instead silently drop any additional contracts we find.
 
-						m_errors.push_back(err);
-						noErrors = false;
-					}
-				}
-				else
+				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
@@ -222,28 +209,12 @@ bool CompilerStack::parse()
 				else
 					noErrors = false;
 
-				// Note that find() must be used here to prevent an automatic insert into the map
-				if (m_contracts.find(contract->fullyQualifiedName()) != m_contracts.end())
-				{
-					ContractDefinition const* existingContract = m_contracts[contract->fullyQualifiedName()].contract;
+				// Note that we now reference contracts by their fully qualified names, and
+				// thus contracts can only conflict if declared in the same source file.  This
+				// already causes a double-declaration error elsewhere, so we do not report
+				// an error here and instead silently drop any additional contracts we find.
 
-					if (contract != existingContract)
-					{
-						auto err = make_shared<Error>(Error::Type::DeclarationError);
-						*err <<
-							errinfo_sourceLocation(contract->location()) <<
-							errinfo_comment(
-								"Contract/Library \"" + contract->name() + "\" declared twice "
-							) <<
-							errinfo_secondarySourceLocation(SecondarySourceLocation().append(
-									"The other declaration is here:", existingContract->location()));
-
-						m_errors.push_back(err);
-						noErrors = false;
-					}
-
-				}
-				else
+				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
