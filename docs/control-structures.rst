@@ -207,8 +207,8 @@ Creating Contracts via ``new``
 ==============================
 
 A contract can create a new contract using the ``new`` keyword. The full
-code of the contract being created has to be known and, thus, recursive
-creation-dependencies are not possible.
+code of the contract being created has to be known; though recursive
+creation-dependencies are possible, cyclic dependencies are not.
 
 ::
 
