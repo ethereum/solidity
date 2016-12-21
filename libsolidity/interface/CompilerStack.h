@@ -234,9 +234,6 @@ private:
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
-	/// Checks whether there are libraries with the same name, reports that as an error and
-	/// @returns false in this case.
-	bool checkLibraryNameClashes();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
 	/// Helper function to return path converted strings.
