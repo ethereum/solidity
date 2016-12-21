@@ -10176,6 +10176,92 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(5)));
 }
 
+BOOST_AUTO_TEST_CASE(snark)
+{
+	char const* sourceCode = R"(
+		library Pairing {
+			struct G1Point {
+				uint X;
+				uint Y;
+				uint Z;
+			}
+			struct G2Point {
+				uint[2] X;
+				uint[2] Y;
+				uint[2] Z;
+			}
+
+			function add(G1Point p1, G1Point p2) internal returns (G1Point r) {
+				uint[6] memory input;
+				input[0] = p1.X;
+				input[1] = p1.Y;
+				input[2] = p1.Z;
+				input[3] = p2.X;
+				input[4] = p2.Y;
+				input[5] = p2.Z;
+				bool success;
+				assembly {
+					success := call(sub(gas, 2000), 0x20, 0, input, 0xc0, r, 0x60)
+				}
+				if (!success) throw;
+			}
+			function mul(G1Point p, uint s) internal returns (G1Point r) {
+				uint[4] memory input;
+				input[0] = s;
+				input[1] = p.X;
+				input[2] = p.Y;
+				input[3] = p.Z;
+				bool success;
+				assembly {
+					success := call(sub(gas, 2000), 0x21, 0, input, 0x80, r, 0x60)
+				}
+				if (!success) throw;
+			}
+			function pairing(G1Point[] p1, G2Point[] p2) internal returns (bool) {
+				if (p1.length != p2.length) throw;
+				uint inputSize = p1.length * 9;
+				uint[] memory input = new uint[](inputSize);
+				for (uint i = 0; i < p1.length; i++)
+				{
+					input[i * 9 + 0] = p1[i].X;
+					input[i * 9 + 1] = p1[i].Y;
+					input[i * 9 + 2] = p1[i].Z;
+					input[i * 9 + 3] = p2[i].X[0];
+					input[i * 9 + 4] = p2[i].X[1];
+					input[i * 9 + 5] = p2[i].Y[0];
+					input[i * 9 + 6] = p2[i].Y[1];
+					input[i * 9 + 7] = p2[i].Z[0];
+					input[i * 9 + 8] = p2[i].Z[1];
+				}
+				uint[1] memory out;
+				bool success;
+				assembly {
+					success := call(sub(gas, 2000), 0x22, 0, input, mul(inputSize, 0x20), out, 0x20)
+				}
+				if (!success) throw;
+				return out[0] != 0;
+			}
+		}
+
+		contract Test {
+			function f() returns (bool) {
+				Pairing.G1Point memory p1;
+				Pairing.G1Point memory p2;
+				p1.X = 1; p1.Y = 2; p1.Z = 1;
+				p2.X = 1; p2.Y = 2; p2.Z = 1;
+				var explict_sum = Pairing.add(p1, p2);
+				var scalar_prod = Pairing.mul(p1, 2);
+				return (explict_sum.X == scalar_prod.X &&
+						explict_sum.Y == scalar_prod.Y &&
+						explict_sum.Z == scalar_prod.Z);
+			}
+		}
+			)";
+	compileAndRun(sourceCode, 0, "Pairing");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Pairing", m_contractAddress}});
+	callContractFunction("f()");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
