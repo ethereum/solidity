@@ -575,7 +575,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
 				{
 					solAssert(contract->isLibrary(), "");
-					_assembly.appendLibraryAddress(contract->name());
+					_assembly.appendLibraryAddress(contract->fullyQualifiedName());
 				}
 				else
 					solAssert(false, "Invalid declaration type.");

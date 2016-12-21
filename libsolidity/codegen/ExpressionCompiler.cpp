@@ -892,7 +892,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				solAssert(funType->location() == FunctionType::Location::DelegateCall, "");
 				auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
 				solAssert(contract && contract->isLibrary(), "");
-				m_context.appendLibraryAddress(contract->name());
+				m_context.appendLibraryAddress(contract->fullyQualifiedName());
 				m_context << funType->externalIdentifier();
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
 			}
@@ -1270,7 +1270,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		if (contract->isLibrary())
-			m_context.appendLibraryAddress(contract->name());
+			m_context.appendLibraryAddress(contract->fullyQualifiedName());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
