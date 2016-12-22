@@ -10400,41 +10400,57 @@ BOOST_AUTO_TEST_CASE(snark)
 			vk.IC[1] = Pairing.g1FromAffine(0x1e39e9f0f91fa7ff8047ffd90de08785777fe61c0e3434e728fce4cf35047ddc, 0x2e0b64d75ebfa86d7f8f8e08abbe2e7ae6e0a1c0b34d028f19fa56e9450527cb);
 			vk.IC[2] = Pairing.g1FromAffine(0x1c36e713d4d54e3a9644dffca1fc524be4868f66572516025a61ca542539d43f, 0x042dcc4525b82dfb242b09cb21909d5c22643dcdbe98c4d082cc2877e96b24db);
 			vk.IC[3] = Pairing.g1FromAffine(0x17d5d09b4146424bff7e6fb01487c477bbfcd0cdbbc92d5d6457aae0b6717cc5, 0x02b5636903efbf46db9235bbe74045d21c138897fda32e079040db1a16c1a7a1);
-			vk.IC[ 4] = Pairing.g1FromAffine(0x0f103f14a584d4203c27c26155b2c955f8dfa816980b24ba824e1972d6486a5d, 0x0c4165133b9f5be17c804203af781bcf168da7386620479f9b885ecbcd27b17b);
+			vk.IC[4] = Pairing.g1FromAffine(0x0f103f14a584d4203c27c26155b2c955f8dfa816980b24ba824e1972d6486a5d, 0x0c4165133b9f5be17c804203af781bcf168da7386620479f9b885ecbcd27b17b);
 			vk.IC[5] = Pairing.g1FromAffine(0x232063b584fb76c8d07995bee3a38fa7565405f3549c6a918ddaa90ab971e7f8, 0x2ac9b135a81d96425c92d02296322ad56ffb16299633233e4880f95aafa7fda7);
 			vk.IC[6] = Pairing.g1FromAffine(0x09b54f111d3b2d1b2fe1ae9669b3db3d7bf93b70f00647e65c849275de6dc7fe, 0x18b2e77c63a3e400d6d1f1fbc6e1a1167bbca603d34d03edea231eb0ab7b14b4);
 			vk.IC[7] = Pairing.g1FromAffine(0x0c54b42137b67cc268cbb53ac62b00ecead23984092b494a88befe58445a244a, 0x18e3723d37fae9262d58b548a0575f59d9c3266db7afb4d5739555837f6b8b3e);
 			vk.IC[8] = Pairing.g1FromAffine(0x0a6de0e2240aa253f46ce0da883b61976e3588146e01c9d8976548c145fe6e4a, 0x04fbaa3a4aed4bb77f30ebb07a3ec1c7d77a7f2edd75636babfeff97b1ea686e);
 			vk.IC[9] = Pairing.g1FromAffine(0x111e2e2a5f8828f80ddad08f9f74db56dac1cc16c1cb278036f79a84cf7a116f, 0x1d7d62e192b219b9808faa906c5ced871788f6339e8d91b83ac1343e20a16b30);
 			}
-		function verify(uint[] input, Proof proof) internal returns (bool) {
+		function verify(uint[] input, Proof proof) internal returns (uint) {
 			VerifyingKey memory vk = verifyingKey();
 			if (input.length + 1 != vk.IC.length) throw;
 			// Compute the linear combination vk_x
 			Pairing.G1Point memory vk_x = vk.IC[0];
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[1], input[0]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[2], input[1]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[3], input[2]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[4], input[3]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[5], input[4]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[6], input[5]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[7], input[6]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[8], input[7]));
-			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[9], input[8]));
-			if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return false;
-			if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return false;
-			if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return false;
-			if (!Pairing.pairingProd3(proof.K, vk.gamma, Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2, Pairing.negate(vk.gammaBeta1), proof.B)) return false;
+			for (uint i = 0; i < input.length; i++)
+				vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[i + 1], input[i]));
+			if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return 1;
+			if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return 2;
+			if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return 3;
+			if (!Pairing.pairingProd3(
+				proof.K, vk.gamma,
+				Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2,
+				Pairing.negate(vk.gammaBeta1), proof.B
+			)) return 4;
 			if (!Pairing.pairingProd3(
 					Pairing.add(vk_x, proof.A), proof.B,
 					Pairing.negate(proof.H), vk.Z,
 					Pairing.negate(proof.C), Pairing.P2()
-			)) return false;
-			return true;
+			)) return 5;
+			return 0;
 		}
-		function verifyTx() returns (bool) {
-			uint[] memory input = new uint[](10);
+		function verifyTx() returns (uint) {
+			uint[] memory input = new uint[](9);
 			Proof memory proof;
+			proof.A = Pairing.g1FromAffine(12873740738727497448187997291915224677121726020054032516825496230827252793177, 21804419174137094775122804775419507726154084057848719988004616848382402162497);
+			proof.A_p = Pairing.g1FromAffine(7742452358972543465462254569134860944739929848367563713587808717088650354556, 7324522103398787664095385319014038380128814213034709026832529060148225837366);
+			proof.B = Pairing.g2FromAffine(
+				[8176651290984905087450403379100573157708110416512446269839297438960217797614, 15588556568726919713003060429893850972163943674590384915350025440408631945055],
+				[15347511022514187557142999444367533883366476794364262773195059233657571533367, 4265071979090628150845437155927259896060451682253086069461962693761322642015]);
+			proof.B_p = Pairing.g1FromAffine(2979746655438963305714517285593753729335852012083057917022078236006592638393, 6470627481646078059765266161088786576504622012540639992486470834383274712950);
+			proof.C = Pairing.g1FromAffine(6851077925310461602867742977619883934042581405263014789956638244065803308498, 10336382210592135525880811046708757754106524561907815205241508542912494488506);
+			proof.C_p = Pairing.g1FromAffine(12491625890066296859584468664467427202390981822868257437245835716136010795448, 13818492518017455361318553880921248537817650587494176379915981090396574171686);
+			proof.H = Pairing.g1FromAffine(12091046215835229523641173286701717671667447745509192321596954139357866668225, 14446807589950902476683545679847436767890904443411534435294953056557941441758);
+			proof.K = Pairing.g1FromAffine(21341087976609916409401737322664290631992568431163400450267978471171152600502, 2942165230690572858696920423896381470344658299915828986338281196715687693170);
+			input[0] = 13986731495506593864492662381614386532349950841221768152838255933892789078521;
+			input[1] = 622860516154313070522697309645122400675542217310916019527100517240519630053;
+			input[2] = 11094488463398718754251685950409355128550342438297986977413505294941943071569;
+			input[3] = 6627643779954497813586310325594578844876646808666478625705401786271515864467;
+			input[4] = 2957286918163151606545409668133310005545945782087581890025685458369200827463;
+			input[5] = 1384290496819542862903939282897996566903332587607290986044945365745128311081;
+			input[6] = 5613571677741714971687805233468747950848449704454346829971683826953541367271;
+			input[7] = 9643208548031422463313148630985736896287522941726746581856185889848792022807;
+			input[8] = 180664969333308397318778281566;
 			return verify(input, proof);
 		}
 
