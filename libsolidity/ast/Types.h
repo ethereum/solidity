@@ -321,6 +321,10 @@ public:
 	int numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
+	u256 maximumPossibleInteger() const { return isSigned() ? 
+		u256((u256(1) << m_bits) - 1):
+		u256((u256(1) << m_bits));
+	}
 
 	bigint minValue() const;
 	bigint maxValue() const;
@@ -342,7 +346,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _integerBits, int _fractionalBits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string identifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -352,8 +356,8 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 
-	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_integerBits + m_fractionalBits) / 8; }
-	virtual unsigned storageBytes() const override { return (m_integerBits + m_fractionalBits) / 8; }
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_totalBits / 8; }
+	virtual unsigned storageBytes() const override { return m_totalBits / 8; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString(bool _short) const override;
@@ -361,14 +365,17 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_integerBits + m_fractionalBits; }
-	int integerBits() const { return m_integerBits; }
-	int fractionalBits() const { return m_fractionalBits; }
+	int numBits() const { return m_totalBits; }
+	int fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
+	u256 maximumPossibleInteger() const { return isSigned() ? 
+		u256(((u256(1) << m_totalBits) - 1) / (pow(bigint(10), m_fractionalDigits))):
+		u256(((u256(1) << m_totalBits)) / (pow(bigint(10), m_fractionalDigits)));
+	}
 
 private:
-	int m_integerBits;
-	int m_fractionalBits;
+	int m_totalBits;
+	int m_fractionalDigits;
 	Modifier m_modifier;
 };
 

@@ -4145,20 +4145,8 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x16 a = 3.25;
-				fixed8x16 b = -3.25;
-				a;
-				b;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract test {
-			function f() {
-				ufixed8x16 a = +3.25;
-				fixed8x16 b = -3.25;
-				a; b;
+				ufixed16x2 a = +3.25;
+				fixed16x2 b = -3.25;
 			}
 		}
 	)";
@@ -4179,11 +4167,10 @@ BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
 	char const* text = R"(
 		contract A {
 			function f() {
-				ufixed0x8 a = 0.5;
-				ufixed0x56 b = 0.0000000000000006661338147750939242541790008544921875;
-				fixed0x8 c = -0.5;
-				fixed0x56 d = -0.0000000000000006661338147750939242541790008544921875;
-				a; b; c; d;
+				ufixed16x8 a = 0.5;
+				ufixed256x56 b = 0.0000000000000006661338147750939242541790008544921875;
+				fixed16x8 c = -0.5;
+				fixed256x56 d = -0.0000000000000006661338147750939242541790008544921875;
 			}
 		}
 	)";
@@ -4195,13 +4182,25 @@ BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed248x8 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
-				ufixed0x256 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637829135688384325135165352082715782143655824815685807141335814463015972119819459298455224338812271036061391763384038070334798471324635050876128428143374549108557403087615966796875;
-				ufixed0x256 c = 0.0000000000015198847363997979984922685411315294875958273543939784943666052676464653042434787697605517039455161817147718251801220885263595179331845639229818863564267318422845592626219390573301877339317935702714669975697814319204326238832436501979827880859375;
-				fixed248x8 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
-				fixed0x256 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
-				fixed0x256 g = -0.00011788606643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
-				a; b; c; d; e; g;
+				ufixed256x1 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				ufixed256x77 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637;
+				ufixed224x78 c = 0.000000000001519884736399797998492268541131529487595827354393978494366605267646;
+				fixed256x1 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				fixed256x76 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123;
+				fixed256x79 g = -0.0001178860664374434257558003517679482519889396811442970209184641173410108012309;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(zero_handling)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed16x8 a = 0;
+				ufixed8x8 b = 0;
 			}
 		}
 	)";
@@ -4226,7 +4225,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed0x256 a = 1/3;
+				ufixed256x1 a = 1/3;
 			}
 		}
 	)";
@@ -4238,10 +4237,9 @@ BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed0x256 a = ufixed0x256(1/3);
-				ufixed0x248 b = ufixed0x248(1/3);
-				ufixed0x8 c = ufixed0x8(1/3);
-				a; b; c;
+				ufixed256x80 a = ufixed256x80(1/3);
+				ufixed248x80 b = ufixed248x80(1/3);
+				ufixed8x1 c = ufixed8x1(1/3);
 			}
 		}
 	)";
@@ -4260,12 +4258,24 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_fixed_type)
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
 				uint[fixed(3.5)] a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[ufixed(3.5)] a;
 			}
 		}
 	)";
@@ -4301,7 +4311,7 @@ BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
 {
 	char const* text = R"(
 		contract test {
-			mapping(ufixed8x248 => string) fixedString;
+			mapping(ufixed8x1 => string) fixedString;
 			function f() {
 				fixedString[0.5] = "Half";
 			}
@@ -4341,7 +4351,7 @@ BOOST_AUTO_TEST_CASE(inline_array_rationals)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+				ufixed16x3[4] memory a = [3.5, 4.125, 2.5, 4.0];
 			}
 		}
 	)";
@@ -4368,10 +4378,10 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 			function f() {
 				ufixed8x8 a = 3.5 * 3;
 				ufixed8x8 b = 4 - 2.5;
-				ufixed8x8 c = 11 / 4;
-				ufixed16x240 d = 599 + 0.21875;
-				ufixed8x248 e = ufixed8x248(35.245 % 12.9);
-				ufixed8x248 f = ufixed8x248(1.2 % 2);
+				ufixed16x8 c = 11 / 4;
+				ufixed240x5 d = 599 + 0.21875;
+				ufixed256x80 e = ufixed256x80(35.245 % 12.9);
+				ufixed256x80 f = ufixed256x80(1.2 % 2);
 				fixed g = 2 ** -2;
 				a; b; c; d; e; f; g;
 			}
@@ -4380,7 +4390,7 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_decimal)
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_signed)
 {
 	char const* text = R"(
 		contract test {
@@ -4392,7 +4402,7 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_decimal)
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(rational_as_exponent_value_pos_decimal)
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_unsigned)
 {
 	char const* text = R"(
 		contract test {
@@ -4562,20 +4572,6 @@ BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
 		}
 	)";
 	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(zero_handling)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed8x8 a = 0;
-				ufixed8x8 b = 0;
-				a; b;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(missing_bool_conversion)
