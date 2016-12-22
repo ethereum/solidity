@@ -10179,87 +10179,273 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 BOOST_AUTO_TEST_CASE(snark)
 {
 	char const* sourceCode = R"(
-		library Pairing {
-			struct G1Point {
-				uint X;
-				uint Y;
-				uint Z;
-			}
-			struct G2Point {
-				uint[2] X;
-				uint[2] Y;
-				uint[2] Z;
-			}
-
-			function add(G1Point p1, G1Point p2) internal returns (G1Point r) {
-				uint[6] memory input;
-				input[0] = p1.X;
-				input[1] = p1.Y;
-				input[2] = p1.Z;
-				input[3] = p2.X;
-				input[4] = p2.Y;
-				input[5] = p2.Z;
-				bool success;
-				assembly {
-					success := call(sub(gas, 2000), 0x20, 0, input, 0xc0, r, 0x60)
-				}
-				if (!success) throw;
-			}
-			function mul(G1Point p, uint s) internal returns (G1Point r) {
-				uint[4] memory input;
-				input[0] = s;
-				input[1] = p.X;
-				input[2] = p.Y;
-				input[3] = p.Z;
-				bool success;
-				assembly {
-					success := call(sub(gas, 2000), 0x21, 0, input, 0x80, r, 0x60)
-				}
-				if (!success) throw;
-			}
-			function pairing(G1Point[] p1, G2Point[] p2) internal returns (bool) {
-				if (p1.length != p2.length) throw;
-				uint inputSize = p1.length * 9;
-				uint[] memory input = new uint[](inputSize);
-				for (uint i = 0; i < p1.length; i++)
-				{
-					input[i * 9 + 0] = p1[i].X;
-					input[i * 9 + 1] = p1[i].Y;
-					input[i * 9 + 2] = p1[i].Z;
-					input[i * 9 + 3] = p2[i].X[0];
-					input[i * 9 + 4] = p2[i].X[1];
-					input[i * 9 + 5] = p2[i].Y[0];
-					input[i * 9 + 6] = p2[i].Y[1];
-					input[i * 9 + 7] = p2[i].Z[0];
-					input[i * 9 + 8] = p2[i].Z[1];
-				}
-				uint[1] memory out;
-				bool success;
-				assembly {
-					success := call(sub(gas, 2000), 0x22, 0, input, mul(inputSize, 0x20), out, 0x20)
-				}
-				if (!success) throw;
-				return out[0] != 0;
-			}
+	library Pairing {
+		struct G1Point {
+			uint X;
+			uint Y;
+			uint Z;
+		}
+		// Encoding of field elements is: X[0] * z + X[1]
+		struct G2Point {
+			uint[2] X;
+			uint[2] Y;
+			uint[2] Z;
 		}
 
-		contract Test {
-			function f() returns (bool) {
-				Pairing.G1Point memory p1;
-				Pairing.G1Point memory p2;
-				p1.X = 1; p1.Y = 2; p1.Z = 1;
-				p2.X = 1; p2.Y = 2; p2.Z = 1;
-				var explict_sum = Pairing.add(p1, p2);
-				var scalar_prod = Pairing.mul(p1, 2);
-				return (explict_sum.X == scalar_prod.X &&
-						explict_sum.Y == scalar_prod.Y &&
-						explict_sum.Z == scalar_prod.Z);
-			}
+		/// @return the generator of G1
+		function P1() internal returns (G1Point) {
+			return G1Point(1, 2, 1);
 		}
-			)";
+
+		/// @return the generator of G2
+		function P2() internal returns (G2Point) {
+			return G2Point(
+				[11559732032986387107991004021392285783925812861821192530917403151452391805634,
+				 10857046999023057135944570762232829481370756359578518086990519993285655852781],
+				[4082367875863433681332203403145435568316851327593401208105741076214120093531,
+				 8495653923123431417604973247489272438418190587263600148770280649306958101930],
+				[uint(0), 1]
+			);
+		}
+
+		function g1FromAffine(uint X, uint Y) internal returns (G1Point) {
+			return G1Point(X, Y, 1);
+		}
+
+		function g2FromAffine(uint[2] X, uint[2] Y) internal returns (G2Point) {
+			return G2Point(X, Y, [uint(0), 1]);
+		}
+
+		function negate(G1Point p) internal returns (G1Point) {
+			// The prime q in the base field F_q for G1
+			uint q = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+			if (p.X == 0 && p.Y == 1 && p.Z == 0)
+				return G1Point(0, 1, 0);
+			if (p.Z != 1) throw;
+			return G1Point(p.X, q - (p.Y % q), 1);
+		}
+
+		function add(G1Point p1, G1Point p2) internal returns (G1Point r) {
+			uint[6] memory input;
+			input[0] = p1.X;
+			input[1] = p1.Y;
+			input[2] = p1.Z;
+			input[3] = p2.X;
+			input[4] = p2.Y;
+			input[5] = p2.Z;
+			bool success;
+			assembly {
+				success := call(sub(gas, 2000), 0x20, 0, input, 0xc0, r, 0x60)
+			}
+			if (!success) throw;
+		}
+
+		function mul(G1Point p, uint s) internal returns (G1Point r) {
+			uint[4] memory input;
+			input[0] = s;
+			input[1] = p.X;
+			input[2] = p.Y;
+			input[3] = p.Z;
+			bool success;
+			assembly {
+				success := call(sub(gas, 2000), 0x21, 0, input, 0x80, r, 0x60)
+			}
+			if (!success) throw;
+		}
+
+		function pairing(G1Point[] p1, G2Point[] p2) internal returns (bool) {
+			if (p1.length != p2.length) throw;
+			uint inputSize = p1.length * 9;
+			uint[] memory input = new uint[](inputSize);
+			for (uint i = 0; i < p1.length; i++)
+			{
+				input[i * 9 + 0] = p1[i].X;
+				input[i * 9 + 1] = p1[i].Y;
+				input[i * 9 + 2] = p1[i].Z;
+				input[i * 9 + 3] = p2[i].X[0];
+				input[i * 9 + 4] = p2[i].X[1];
+				input[i * 9 + 5] = p2[i].Y[0];
+				input[i * 9 + 6] = p2[i].Y[1];
+				input[i * 9 + 7] = p2[i].Z[0];
+				input[i * 9 + 8] = p2[i].Z[1];
+			}
+			uint[1] memory out;
+			bool success;
+			assembly {
+				success := call(sub(gas, 2000), 0x22, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+			}
+			if (!success) throw;
+			return out[0] != 0;
+		}
+		function pairingProd2(G1Point a1, G2Point a2, G1Point b1, G2Point b2) internal returns (bool) {
+			G1Point[] memory p1 = new G1Point[](2);
+			G2Point[] memory p2 = new G2Point[](2);
+			p1[0] = a1;
+			p1[1] = b1;
+			p2[0] = a2;
+			p2[1] = b2;
+			return pairing(p1, p2);
+		}
+		function pairingProd3(
+				G1Point a1, G2Point a2,
+				G1Point b1, G2Point b2,
+				G1Point c1, G2Point c2
+		) internal returns (bool) {
+			G1Point[] memory p1 = new G1Point[](3);
+			G2Point[] memory p2 = new G2Point[](3);
+			p1[0] = a1;
+			p1[1] = b1;
+			p1[2] = c1;
+			p2[0] = a2;
+			p2[1] = b2;
+			p2[2] = c2;
+			return pairing(p1, p2);
+		}
+		function pairingProd4(
+				G1Point a1, G2Point a2,
+				G1Point b1, G2Point b2,
+				G1Point c1, G2Point c2,
+				G1Point d1, G2Point d2
+		) internal returns (bool) {
+			G1Point[] memory p1 = new G1Point[](4);
+			G2Point[] memory p2 = new G2Point[](4);
+			p1[0] = a1;
+			p1[1] = b1;
+			p1[2] = c1;
+			p1[3] = d1;
+			p2[0] = a2;
+			p2[1] = b2;
+			p2[2] = c2;
+			p2[3] = d2;
+			return pairing(p1, p2);
+		}
+	}
+
+	contract Test {
+		using Pairing for *;
+		struct VerifyingKey {
+			Pairing.G2Point A;
+			Pairing.G1Point B;
+			Pairing.G2Point C;
+			Pairing.G2Point gamma;
+			Pairing.G1Point gammaBeta1;
+			Pairing.G2Point gammaBeta2;
+			Pairing.G2Point Z;
+			Pairing.G1Point[] IC;
+		}
+		struct Proof {
+			Pairing.G1Point A;
+			Pairing.G1Point A_p;
+			Pairing.G2Point B;
+			Pairing.G1Point B_p;
+			Pairing.G1Point C;
+			Pairing.G1Point C_p;
+			Pairing.G1Point K;
+			Pairing.G1Point H;
+		}
+		function f() returns (bool) {
+			Pairing.G1Point memory p1;
+			Pairing.G1Point memory p2;
+			p1.X = 1; p1.Y = 2; p1.Z = 1;
+			p2.X = 1; p2.Y = 2; p2.Z = 1;
+			var explict_sum = Pairing.add(p1, p2);
+			var scalar_prod = Pairing.mul(p1, 2);
+			return (explict_sum.X == scalar_prod.X &&
+					explict_sum.Y == scalar_prod.Y &&
+					explict_sum.Z == scalar_prod.Z);
+		}
+		function g() returns (bool) {
+			Pairing.G1Point memory x = Pairing.add(Pairing.P1(), Pairing.negate(Pairing.P1()));
+			// should be zero
+			return (x.X == 0 && x.Y == 1 && x.Z == 0);
+		}
+		function pair() returns (bool) {
+			Pairing.G2Point memory fiveTimesP2 = Pairing.G2Point(
+				[4540444681147253467785307942530223364530218361853237193970751657229138047649, 20954117799226682825035885491234530437475518021362091509513177301640194298072],
+				[11631839690097995216017572651900167465857396346217730511548857041925508482915, 21508930868448350162258892668132814424284302804699005394342512102884055673846],
+				[uint256(0), 1]
+			);
+			// The prime p in the base field F_p for G1
+			uint p = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+			Pairing.G1Point[] memory g1points = new Pairing.G1Point[](2);
+			Pairing.G2Point[] memory g2points = new Pairing.G2Point[](2);
+			// check e(5 P1, P2)e(-P1, 5 P2) == 1
+			g1points[0] = Pairing.P1().mul(5);
+			g1points[1] = Pairing.P1();
+			g1points[1].Y = p - g1points[1].Y;
+			g2points[0] = Pairing.P2();
+			g2points[1] = fiveTimesP2;
+			if (!Pairing.pairing(g1points, g2points))
+				return false;
+			// check e(P1, P2)e(-P1, P2) == 1
+			g1points[0] = Pairing.P1();
+			g1points[1] = Pairing.P1();
+			g1points[1].Y = p - g1points[1].Y;
+			g2points[0] = Pairing.P2();
+			g2points[1] = Pairing.P2();
+			if (!Pairing.pairing(g1points, g2points))
+				return false;
+			return true;
+		}
+		function verifyingKey() internal returns (VerifyingKey vk) {
+			vk.A = Pairing.g2FromAffine([0x209dd15ebff5d46c4bd888e51a93cf99a7329636c63514396b4a452003a35bf7, 0x04bf11ca01483bfa8b34b43561848d28905960114c8ac04049af4b6315a41678], [0x2bb8324af6cfc93537a2ad1a445cfd0ca2a71acd7ac41fadbf933c2a51be344d, 0x120a2a4cf30c1bf9845f20c6fe39e07ea2cce61f0c9bb048165fe5e4de877550]);
+			vk.B = Pairing.g1FromAffine(0x2eca0c7238bf16e83e7a1e6c5d49540685ff51380f309842a98561558019fc02, 0x03d3260361bb8451de5ff5ecd17f010ff22f5c31cdf184e9020b06fa5997db84);
+			vk.C = Pairing.g2FromAffine([0x2e89718ad33c8bed92e210e81d1853435399a271913a6520736a4729cf0d51eb, 0x01a9e2ffa2e92599b68e44de5bcf354fa2642bd4f26b259daa6f7ce3ed57aeb3], [0x14a9a87b789a58af499b314e13c3d65bede56c07ea2d418d6874857b70763713, 0x178fb49a2d6cd347dc58973ff49613a20757d0fcc22079f9abd10c3baee24590]);
+			vk.gamma = Pairing.g2FromAffine([0x25f83c8b6ab9de74e7da488ef02645c5a16a6652c3c71a15dc37fe3a5dcb7cb1, 0x22acdedd6308e3bb230d226d16a105295f523a8a02bfc5e8bd2da135ac4c245d], [0x065bbad92e7c4e31bf3757f1fe7362a63fbfee50e7dc68da116e67d600d9bf68, 0x06d302580dc0661002994e7cd3a7f224e7ddc27802777486bf80f40e4ca3cfdb]);
+			vk.gammaBeta1 = Pairing.g1FromAffine(0x15794ab061441e51d01e94640b7e3084a07e02c78cf3103c542bc5b298669f21, 0x14db745c6780e9df549864cec19c2daf4531f6ec0c89cc1c7436cc4d8d300c6d);
+			vk.gammaBeta2 = Pairing.g2FromAffine([0x1f39e4e4afc4bc74790a4a028aff2c3d2538731fb755edefd8cb48d6ea589b5e, 0x283f150794b6736f670d6a1033f9b46c6f5204f50813eb85c8dc4b59db1c5d39], [0x140d97ee4d2b36d99bc49974d18ecca3e7ad51011956051b464d9e27d46cc25e, 0x0764bb98575bd466d32db7b15f582b2d5c452b36aa394b789366e5e3ca5aabd4]);
+			vk.Z = Pairing.g2FromAffine([0x217cee0a9ad79a4493b5253e2e4e3a39fc2df38419f230d341f60cb064a0ac29, 0x0a3d76f140db8418ba512272381446eb73958670f00cf46f1d9e64cba057b53c], [0x26f64a8ec70387a13e41430ed3ee4a7db2059cc5fc13c067194bcc0cb49a9855, 0x2fd72bd9edb657346127da132e5b82ab908f5816c826acb499e22f2412d1a2d7]);
+			vk.IC = new Pairing.G1Point[](10);
+			vk.IC[0] = Pairing.g1FromAffine(0x0aee46a7ea6e80a3675026dfa84019deee2a2dedb1bbe11d7fe124cb3efb4b5a, 0x044747b6e9176e13ede3a4dfd0d33ccca6321b9acd23bf3683a60adc0366ebaf);
+			vk.IC[1] = Pairing.g1FromAffine(0x1e39e9f0f91fa7ff8047ffd90de08785777fe61c0e3434e728fce4cf35047ddc, 0x2e0b64d75ebfa86d7f8f8e08abbe2e7ae6e0a1c0b34d028f19fa56e9450527cb);
+			vk.IC[2] = Pairing.g1FromAffine(0x1c36e713d4d54e3a9644dffca1fc524be4868f66572516025a61ca542539d43f, 0x042dcc4525b82dfb242b09cb21909d5c22643dcdbe98c4d082cc2877e96b24db);
+			vk.IC[3] = Pairing.g1FromAffine(0x17d5d09b4146424bff7e6fb01487c477bbfcd0cdbbc92d5d6457aae0b6717cc5, 0x02b5636903efbf46db9235bbe74045d21c138897fda32e079040db1a16c1a7a1);
+			vk.IC[ 4] = Pairing.g1FromAffine(0x0f103f14a584d4203c27c26155b2c955f8dfa816980b24ba824e1972d6486a5d, 0x0c4165133b9f5be17c804203af781bcf168da7386620479f9b885ecbcd27b17b);
+			vk.IC[5] = Pairing.g1FromAffine(0x232063b584fb76c8d07995bee3a38fa7565405f3549c6a918ddaa90ab971e7f8, 0x2ac9b135a81d96425c92d02296322ad56ffb16299633233e4880f95aafa7fda7);
+			vk.IC[6] = Pairing.g1FromAffine(0x09b54f111d3b2d1b2fe1ae9669b3db3d7bf93b70f00647e65c849275de6dc7fe, 0x18b2e77c63a3e400d6d1f1fbc6e1a1167bbca603d34d03edea231eb0ab7b14b4);
+			vk.IC[7] = Pairing.g1FromAffine(0x0c54b42137b67cc268cbb53ac62b00ecead23984092b494a88befe58445a244a, 0x18e3723d37fae9262d58b548a0575f59d9c3266db7afb4d5739555837f6b8b3e);
+			vk.IC[8] = Pairing.g1FromAffine(0x0a6de0e2240aa253f46ce0da883b61976e3588146e01c9d8976548c145fe6e4a, 0x04fbaa3a4aed4bb77f30ebb07a3ec1c7d77a7f2edd75636babfeff97b1ea686e);
+			vk.IC[9] = Pairing.g1FromAffine(0x111e2e2a5f8828f80ddad08f9f74db56dac1cc16c1cb278036f79a84cf7a116f, 0x1d7d62e192b219b9808faa906c5ced871788f6339e8d91b83ac1343e20a16b30);
+			}
+		function verify(uint[] input, Proof proof) internal returns (bool) {
+			VerifyingKey memory vk = verifyingKey();
+			if (input.length + 1 != vk.IC.length) throw;
+			// Compute the linear combination vk_x
+			Pairing.G1Point memory vk_x = vk.IC[0];
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[1], input[0]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[2], input[1]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[3], input[2]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[4], input[3]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[5], input[4]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[6], input[5]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[7], input[6]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[8], input[7]));
+			vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[9], input[8]));
+			if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return false;
+			if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return false;
+			if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return false;
+			if (!Pairing.pairingProd3(proof.K, vk.gamma, Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2, Pairing.negate(vk.gammaBeta1), proof.B)) return false;
+			if (!Pairing.pairingProd3(
+					Pairing.add(vk_x, proof.A), proof.B,
+					Pairing.negate(proof.H), vk.Z,
+					Pairing.negate(proof.C), Pairing.P2()
+			)) return false;
+			return true;
+		}
+		function verifyTx() returns (bool) {
+			uint[] memory input = new uint[](10);
+			Proof memory proof;
+			return verify(input, proof);
+		}
+
+	}
+	)";
 	compileAndRun(sourceCode, 0, "Pairing");
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Pairing", m_contractAddress}});
-	callContractFunction("f()");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("pair()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
