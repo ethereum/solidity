@@ -192,8 +192,19 @@ BOOST_AUTO_TEST_CASE(ensure_global_remapping_preserved_through_complex_directory
 	c.setRemappings(vector<string>{"foo=vendor/foo", "bar=vendor/bar/2.0.0", "@foo:bar=vendor/bar/1.0.0"});
 	c.addSource("main.sol", "import {Foo} from \"foo/foo.sol\"; import \"bar/bar.sol\"; contract Main is Foo, Bar {function Main(){IsTwo();}} pragma solidity >=0.0;");
 	c.addSource("vendor/foo/foo.sol", "import \"bar/bar.sol\"; contract Foo is Bar{function Foo(){IsOne();}} pragma solidity >=0.0;");
-	c.addSource("vendor/bar/1.0.0", "contract Bar{function IsOne(){}} pragma solidity >=0.0;");
-	c.addSource("vendor/bar/2.0.0", "contract Bar{function IsTwo(){}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/1.0.0/bar.sol", "contract Bar{function IsOne(){}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/2.0.0/bar.sol", "contract Bar{function IsTwo(){}} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(ensure_global_remapping_preserved_through_complex_directory_ordering_does_not_matter)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"foo=vendor/foo", "@foo:bar=vendor/bar/1.0.0", "bar=vendor/bar/2.0.0"});
+	c.addSource("main.sol", "import {Foo} from \"foo/foo.sol\"; import \"bar/bar.sol\"; contract Main is Foo, Bar {function Main(){IsTwo();}} pragma solidity >=0.0;");
+	c.addSource("vendor/foo/foo.sol", "import \"bar/bar.sol\"; contract Foo is Bar{function Foo(){IsOne();}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/1.0.0/bar.sol", "contract Bar{function IsOne(){}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/2.0.0/bar.sol", "contract Bar{function IsTwo(){}} pragma solidity >=0.0;");
 	BOOST_CHECK(c.compile());
 }
 
