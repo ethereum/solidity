@@ -569,7 +569,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		longestPrefix = redir.prefix.length();
 		longestPrefixTarget = redir.target;
 	}
-	string path = longestPrefixTarget; 
+	string path = longestPrefixTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
 	return path;
 }
