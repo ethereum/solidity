@@ -90,8 +90,15 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 		if (reference.front() != '@')
 			continue; // ignore
 		reference = string(reference.begin()+1, reference.end());
-		string referencedPrefix = remappings.at(index.at(reference)).target;
-		remappings[key.second].context = referencedPrefix;
+		try
+		{
+			string referencedTarget = remappings.at(index.at(reference)).target;
+			remappings[key.second].context = referencedTarget;
+		}
+		catch (...)
+		{
+			continue;
+		}
 	}
 	swap(m_remappings, remappings);
 }
@@ -549,7 +556,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 	size_t longestPrefix = 0;
 	string longestPrefixTarget;
 	string currentClosestContext;
-	string referenceContext = _context.substr(0, _context.find_last_of('/'));
+	string referenceContext = _context.substr(0, _context.find_last_of('/')+1);
 	for (auto const& redir: m_remappings)
 	{
 		// Skip if we already have a closer match.
