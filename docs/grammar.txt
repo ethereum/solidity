@@ -23,7 +23,7 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier? ParameterList
                      ( FunctionCall | Identifier | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
-                     ( 'returns' ParameterList )? Block
+                     ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
@@ -38,7 +38,7 @@ TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 VariableDeclaration = TypeName Identifier
 TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName | FunctionTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
-ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
+ArrayTypeName = TypeName '[' Expression? ']' StorageLocation?
 FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
@@ -90,12 +90,15 @@ MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
-NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
+NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
+
+HexNumber = '0x' [0-9a-fA-F]+
+DecimalNumber = [0-9]+
 
 ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
                    | Int | Uint | Byte | Fixed | Ufixed
