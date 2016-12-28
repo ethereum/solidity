@@ -570,3 +570,4 @@ Language Grammar
 ================
 
 .. literalinclude:: grammar.txt
+   :language: none
