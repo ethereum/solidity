@@ -553,25 +553,27 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		return abs(a) < abs(b);
 	};
 
+	using filepath = boost::filesystem::path;
+	filepath context(_context);
 	size_t longestPrefix = 0;
 	string longestPrefixTarget;
 	string currentClosestContext;
-	string referenceContext = _context.substr(0, _context.find_last_of('/')+1);
+	string referenceContext = context.parent_path().generic_string();
 	for (auto const& redir: m_remappings)
 	{
+		filepath redirContext(redir.context);
 		// Skip if we already have a closer match.
 		if (longestPrefix > 0 && redir.prefix.length() < longestPrefix)
 			continue;
 		// Skip if redir.context is not a prefix of _context
-		if (!isPrefixOf(redir.context, _context))
+		if (!isPrefixOf(redirContext.generic_string(), _context))
 			continue;
 		// Skip if the prefix does not match.
 		if (!isPrefixOf(redir.prefix, _path))
 			continue;
 		// Skip if there is a prefix collision and the current context is closer
-		if (redir.prefix.length() == longestPrefix && !isClosestContext(redir.context, currentClosestContext, referenceContext))
+		if (redir.prefix.length() == longestPrefix && !isClosestContext(redirContext.generic_string(), currentClosestContext, referenceContext))
 			continue;
-
 		currentClosestContext = redir.context;
 		longestPrefix = redir.prefix.length();
 		longestPrefixTarget = redir.target;
