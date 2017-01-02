@@ -14,7 +14,7 @@ ContractDefinition = ( 'contract' | 'library' ) Identifier
 ContractPart = StateVariableDeclaration | UsingForDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
-InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
+InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
 StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
@@ -36,7 +36,15 @@ TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName | FunctionTypeName
+
+TypeName = ElementaryTypeName
+         | UserDefinedTypeName StorageLocation?
+         | Mapping
+         | ArrayTypeName
+         | FunctionTypeName
+
+UserDefinedTypeName = Identifier ( '.' Identifier )*
+
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']' StorageLocation?
 FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
