@@ -79,8 +79,9 @@ Paths
 -----
 
 In the above, ``filename`` is always treated as a path with ``/`` as directory separator,
-``.`` as the current and ``..`` as the parent directory. Path names that do not start
-with ``.`` are treated as absolute paths.
+``.`` as the current and ``..`` as the parent directory.  When ``.`` or ``..`` is followed by a character except ``/``,
+it is not considered as the current or the parent directory.
+All path names are treated as absolute paths unless they start with the current ``.`` or the parent directory ``..``.
 
 To import a file ``x`` from the same directory as the current file, use ``import "./x" as x;``.
 If you use ``import "x" as x;`` instead, a different file could be referenced
