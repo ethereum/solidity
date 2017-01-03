@@ -164,6 +164,14 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(filename_with_period)
+{
+	CompilerStack c;
+	c.addSource("a/a.sol", "import \".b.sol\"; contract A is B {} pragma solidity >=0.0;");
+	c.addSource("a/.b.sol", "contract B {} pragma solidity >=0.0;");
+	BOOST_CHECK(!c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
