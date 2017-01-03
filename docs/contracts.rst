@@ -877,6 +877,13 @@ cannot be resolved.
 A simple rule to remember is to specify the base classes in
 the order from "most base-like" to "most derived".
 
+Inheriting Different Kinds of Members of the Same Name
+======================================================
+
+When the inheritance results in a contract with a function and a modifier of the same name, it is considered as an error.
+This error is produced also by an event and a modifier of the same name, and a function and an event of the same name.
+As an exception, a state variable accessor can override a public function.
+
 .. index:: ! contract;abstract, ! abstract contract
 
 ******************
