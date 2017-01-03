@@ -71,6 +71,7 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
+          node_js: stable
           services:
               - docker
           before_install:
