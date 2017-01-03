@@ -10399,26 +10399,6 @@ BOOST_AUTO_TEST_CASE(snark)
 			return true;
 		}
 		function verifyingKey() internal returns (VerifyingKey vk) {
-// On 23rd of December we got those numbers from the verifying key:
-//			vk.A = Pairing.g2FromAffine([0x17ffeae92e447a34d38926ffb33d9defa949aa5f127fb2e3d6f006a5f645c385, 0x1b52ddfa0f1756883dc50249aa118aed2f3b6cefc8ce0ccf80fb170b60395307], [0x23cc1832cc2efc169c45b90cae97ba116a6feeb5885705343c118dc1faa124dc, 0x020613e261eded2bced11805ce04f149fbe2b27c9951cacb3b169eeee378a531]);
-//			vk.B = Pairing.g1FromAffine(0x00d67cdf3d222c1318ca756ac2d5e1e47d606bcc64db4cb18b49fcbd7b888e3a, 0x2852fa8dbf599d930f6f8e037bae8416b7af417ad896dca6be6da26987088fda);
-//			vk.C = Pairing.g2FromAffine([0x05cd879a9ee87e1316da75dd1949e6c9e867f50ff3d7cfc78bf1be1f9818e156, 0x257f32472b344e825b4aabf1cc7fe91cd14be10e9e386f8c6aa2467940247c2d], [0x24215683ceebc9ea18b49ea849c3f0b188bc5df6cb0146f1155385ac6ae87fd7, 0x009d1cac91def5941b5bbac9f86ace568513150b3ff7a8d3a329d9b07e07887a]);
-//			vk.gamma = Pairing.g2FromAffine([0x166a05d1fa46aff0acd26d472b05913642bcc15d85c42b2f4a432299251630ca, 0x1386c45ec5683201f17f1a3a423d6a8f9c46ac2fef6a32621d8f2a5ec6c163c2], [0x03e10c59a9ac33e29c39e2128c4726129d96143c26e4f82149297847d4a8919e, 0x1bf6a83ab8abdef6cbcf60dbb97a348cfbc45a283f24c900a51250ce3782d77c]);
-//			vk.gammaBeta1 = Pairing.g1FromAffine(0x0f6284f33d52e09f6cdcbcef504f518600df00ab68dcf1b0105d0bc6c7e69c5d, 0x1e48ce5f2126d6fa06a96330609104c3fd252088fe2162023435aed865ed36c6);
-//			vk.gammaBeta2 = Pairing.g2FromAffine([0x2d5b9bed0fd9ba741be154cb7a4275348bc5b2c0ec75dd20e3790a507bd97540, 0x10fd86bfdb23630d86befe1626361c8837f136aaae4f6f389f03b5029fb0bc8a], [0x058e33b32b5f1b9ececf8762b771a4340dedd7df660753ee453b8986be3e3f93, 0x0963b1156d32691feabc4320f536982748e163c7c36197487fea656ccdbbd2bc]);
-//			vk.Z = Pairing.g2FromAffine([0x1847faf6b8177933258f8a08871b46434ee5226769260dafaca013664d48c9ba, 0x22e2c2c88d9e1c3eae5cf840072eecf9648bb27b8ef8b2fa95e5c65b782c9ccb], [0x2f06cc1ec41d3f99328769898221e43d63fa453ba8b64aea974cf61db63d51ea, 0x2cdfd43b5907005e58b1bc81eebfd407e89dab57e5a749a61c339cbf6fc3ab3f]);
-//			vk.IC = new Pairing.G1Point[](10);
-//			vk.IC[0] = Pairing.g1FromAffine(0x1dca5ce4281a91235afa62667dce3ee2bbab2b45f62288fd9791e0fe0b8e92e1, 0x1d6203306abd0940b8e45cfee03f0d4457cf0b963cbc21ffb39d372360952cd3);
-//			vk.IC[1] = Pairing.g1FromAffine(0x1f3aa27851409fd573e3ea94a243d632307287b4024954c113900bb4c23f3dbe, 0x23e15d674823d41160c3c801819a46393127b39997a9c97d4c14a0a8e4d01cf9);
-//			vk.IC[2] = Pairing.g1FromAffine(0x08c0fcb6caf18d415ce77eb47f58865c812644b4f6bdcc15c168b1e33d10e482, 0x1632ed536a0dfcddc03d2f5873c3bbf38c1cde373af9acabc031f2a516e97382);
-//			vk.IC[3] = Pairing.g1FromAffine(0x1ddce64e3307b0326c2d11e2346fcdf38d8c52ca5d7fd29a1ac4f141ca06c247, 0x097438ced32a155bc9be32f9b3dbfec15194220990a3355f2c6a619bc938a47d);
-//			vk.IC[4] = Pairing.g1FromAffine(0x08c6e0515ad6f5158e0e5bb440550546c4c9a7f14554d51a726da2609fd47eee, 0x23a0a9442c53e11c0e543dbc786260f8690aed4f4d3cd5fdfffce7c0592b44ee);
-//			vk.IC[5] = Pairing.g1FromAffine(0x2205e898da89cc2b6aa3573f128308bc4254fdd2ab3dcab36b894b477807df18, 0x1d2ae22646967301ac2bd4bc12e70679df2d101a865c690cf78987f833ddef4b);
-//			vk.IC[6] = Pairing.g1FromAffine(0x2c4605629e2eb7530ae2166e000d00072b30d260e6e86681b994be8d01be41a2, 0x28d4990aa413de86151ab96ce860188ad527fb0558fa8fbf94e28a25a76b2d43);
-//			vk.IC[7] = Pairing.g1FromAffine(0x0a4a574dab1e883d10936a6a3abeac528084a13c6aa2d2587233250de64d674b, 0x1eb9a9d8bd1acd6596ef6c4458ff3aa4724e0edc5ccb8c50dfb6bec74d1d77e2);
-//			vk.IC[8] = Pairing.g1FromAffine(0x17d3a29962c1b30d23e64ef51f664929c794da3d33eff734f83bfc7512e2c882, 0x2c156bea122c6b6f64a7427d4f932245cda2df8a3e1d588a149c3d8610d8efbc);
-//			vk.IC[9] = Pairing.g1FromAffine(0x23e3ccb7082225856249fd7fb96f5c82fb7f93b4adc4af959a2302e162b01601, 0x1200beb182634d7ed6241425ac20de5ca970f006868548b033ea26eec7d438dc);
-// On 21nd we got these:
 			vk.A = Pairing.g2FromAffine([0x209dd15ebff5d46c4bd888e51a93cf99a7329636c63514396b4a452003a35bf7, 0x04bf11ca01483bfa8b34b43561848d28905960114c8ac04049af4b6315a41678], [0x2bb8324af6cfc93537a2ad1a445cfd0ca2a71acd7ac41fadbf933c2a51be344d, 0x120a2a4cf30c1bf9845f20c6fe39e07ea2cce61f0c9bb048165fe5e4de877550]);
 			vk.B = Pairing.g1FromAffine(0x2eca0c7238bf16e83e7a1e6c5d49540685ff51380f309842a98561558019fc02, 0x03d3260361bb8451de5ff5ecd17f010ff22f5c31cdf184e9020b06fa5997db84);
 			vk.C = Pairing.g2FromAffine([0x2e89718ad33c8bed92e210e81d1853435399a271913a6520736a4729cf0d51eb, 0x01a9e2ffa2e92599b68e44de5bcf354fa2642bd4f26b259daa6f7ce3ed57aeb3], [0x14a9a87b789a58af499b314e13c3d65bede56c07ea2d418d6874857b70763713, 0x178fb49a2d6cd347dc58973ff49613a20757d0fcc22079f9abd10c3baee24590]);
@@ -10441,18 +10421,11 @@ BOOST_AUTO_TEST_CASE(snark)
 		function verify(uint[] input, Proof proof) internal returns (uint) {
 			VerifyingKey memory vk = verifyingKey();
 			if (input.length + 1 != vk.IC.length) throw;
-//			var intermed = Pairing.mul(vk.IC[1], input[0]);
-//			return (intermed.X, intermed.Y, intermed.Z);
 			// Compute the linear combination vk_x
 			Pairing.G1Point memory vk_x = Pairing.G1Point(0, 1, 0);
 			for (uint i = 0; i < input.length; i++)
 				vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[i + 1], input[i]));
 			vk_x = Pairing.add(vk_x, vk.IC[0]);
-//			// Cheating here:
-//			vk_x.X = 15139874671431897876661498033384770870262028515617493100153499881928330163749;
-//			vk_x.Y = 7118157521157494223366136387472572432833258812544870328231719829255264538641;
-//			vk_x.Z = 1;
-//			return (vk_x.X, vk_x.Y, vk_x.Z);
 			if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return 1;
 			if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return 2;
 			if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return 3;
@@ -10468,7 +10441,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			)) return 5;
 			return 0;
 		}
-		function verifyTx() returns (uint) {
+		function verifyTx() returns (bool) {
 			uint[] memory input = new uint[](9);
 			Proof memory proof;
 			proof.A = Pairing.g1FromAffine(12873740738727497448187997291915224677121726020054032516825496230827252793177, 21804419174137094775122804775419507726154084057848719988004616848382402162497);
@@ -10489,8 +10462,8 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[5] = 1384290496819542862903939282897996566903332587607290986044945365745128311081;
 			input[6] = 5613571677741714971687805233468747950848449704454346829971683826953541367271;
 			input[7] = 9643208548031422463313148630985736896287522941726746581856185889848792022807;
-			input[8] = 180664969333308397318778281566;
-			return verify(input, proof);
+			input[8] = 18066496933330839731877828156604;
+			return verify(input, proof) == 0;
 		}
 
 	}
@@ -10501,7 +10474,7 @@ BOOST_AUTO_TEST_CASE(snark)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("pair()") == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
