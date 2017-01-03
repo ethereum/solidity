@@ -190,43 +190,18 @@ deploy:
             - release
 
     # This is the deploy target for the native build (Linux and macOS)
-    # which generates ZIPs per commit.  We are in agreement that
-    # generating ZIPs per commit for the develop branch is probably
-    # just noise, so we only run this deployment target on 'release'.
+    # which generates ZIPs per commit and the source tarball.
     #
-    # Unlike the Appveyor GitHub Releases target, the support in TravisCI
-    # seemingly doesn't provide a means for passing a description, tag, etc.
-    # In practice, we are letting the Appveyor CI do all that stuff, and
-    # then this deployment flow just seems to find that most recent tag,
-    # and just add our Linux and macOS ZIPs into the same tag, which is
-    # what we want to happen.  But is very accidental and brittle-looking.
-    #
-    # The 'skip_cleanup' stops the workspace being cleaned out prior to
-    # generation of the artifacts.  Strange that we should explicitly
-    # need to do that, but we do.
-    #
-    # Tokens in TravisCI can be generated a few different ways.  Bob had
-    # success using the 'travis' gem, and then using that gem to
-    # create/edit this .travis.yml file, and then cut-and-pasting the
-    # good bits back out of what it generated.  The gem changes all the
-    # whitespace and deletes comments, so cannot be used as-is.  But
-    # it does generate an appropriate auth token.
-    #
-    # TODO - I do not know if the api_key below which work correctly
-    # for ethereum/solidity.   I suspect not, for the same reason as
-    # my auth token does not work for Appveyor.  I don't have enough
-    # permissions to enable this myself.  Christian should be able to.
-    #
-    # See https://docs.travis-ci.com/user/deployment/releases
-    # See https://blog.travis-ci.com/2013-01-28-token-token-token/
-    # See https://github.com/ethereum/webthree-umbrella/issues/658
-    #
+    # This runs for each tag that is created and adds the corresponding files.
     - provider: releases
       api_key:
-          secure: PWH37xVBCF0XiSjl+eH7XIdkrfxZXjzvqF4PiBOnD3VnFz+odrdnIwBmCeBYTHTWF8efpp8fmzWJk2UVq1JcpyZiC+SVxO8dx91W2ia1a+wKrEQuDgkUrZBkl5IQNCv0QS81DDQhliyZEaYh8wHO/7RReyMpGpw2U2u85WkFiZ+LdlHEZPfzUeh9lxQ9n8qwFL8Rja+Q05d4cQ8zaVEtofJJT4T6DUWhc3TzuxDYxOmjwg37rC9CkGSLn6VadSh8b3j5R0SZupFsAEvBL/imBLP9r9ewoo7o4p6By3jwiIgH9yNg7LM618xbffcNaYF/KtLBi9uPHfqF7hRD4PlECz+D0PR78nQItOX5HKm1QMg5kCnghRVCA0IVjpV5fiYQnMLM7dCRv34I5b3zLpa69wQ/GLYB2FViqNUfvPeiZTEeIJ2OmATlFx8AH2JoqpY1XJknWb35+vMfa8LSiJJW++SLWeV+ncC92hrvyZ1cy3trepRRZIfyYepxHifnfdWMkddQUJk5b2WS5Fy/TJLZNPeombnpvRhUC38dsYItarKeXTc6k4oADCEDZ2rgGIcEiqRxXV11Y5xHJekLDWzUs+YJNcCuL4pnAP//LOnbnH2w9rLpwhQYSl0anCd097NivAXQJXO2JI/byIYz1kiCVQWnW6EM8+72mLOklf/Qr8k=
-      file: $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
+          secure: "kyDTn9taQWSzALK2CbtJ9VC1KhIO3DzIM1aIwpJexPsEq6h1Wnjp3PoyyzJGf+09AjWZLM5lNcHy6/F9AEINgnEeekdMVNT1YIYsGSJ76z/pDXB4AOZKqGXdZgLNvmxZy9dWQJykBSV65kGgEZlihW/5gF0/ouxyZafYOYlwseA7H2NDDTdIzf5uV9oIPo/y3phXG1nxGcmE3tOH/bEJL+dv0C6hI3dhL7mQhmmBCgyo/ZlAEsdj0hbBF332dxqojGwfPeuFDrxvnWLX4jhbJAkrqKgcU+1lnsr7aI+RBHu7mV3/Fj+XfTrs3J9HvCjVfe0d9s1dMsIhdY8xT8NnZX618AiZYMIoQ1gE89R8uL/mN5BpcYG7U654FDG/+OTIa6VBMDxB9J85kYdnLq3XBlcr1YoPMfTJ1UV7mpG4D1EDJObgToyCEDNbKS1Nf+osVcP8UcsrvhBCNXhPsFud8ZemaXmrVNhJOcf8sAHZx2N/HSfm7Im74ZFqJbHrWlx9aFKZ71BvSCPAbcp4hGw0A0Anynn9hOfxZjh5aqwxhz4ieTolCWaZCVyMveLJccu2ib2LVza2soHiSX2maFFlXqkoPd8h3vIGMR4CbqWfxAhXuxzMivOc24kPVHLEt5zq9635V519eOEEPYUs4X1ArZySKvJBbEcJ2RP+AZrZlj4="
+
+      overwrite: true
+      file:
+          - $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
+          - $TRAVIS_BUILD_DIR/solidity_source.tar.gz
       skip_cleanup: true
       on:
-          repo: ethereum/solidity
-          branch: release
+          tags: true
           condition: $TRAVIS_RELEASE == On
