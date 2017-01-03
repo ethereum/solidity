@@ -1381,7 +1381,16 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				exprType->toString() + " (expected " + funType->selfType()->toString() + ")"
 			);
 
-	if (exprType->category() == Type::Category::Struct)
+	if (exprType->category() == Type::Category::Magic)
+	{
+		auto const& magicType(dynamic_cast<MagicType const&>(*exprType));
+		if ((magicType.kind() == MagicType::Kind::Transaction) && (memberName == "origin"))
+			warning(
+				_memberAccess.location(),
+				"Using tx.origin is not recommended."
+			);
+	}
+	else if (exprType->category() == Type::Category::Struct)
 		annotation.isLValue = true;
 	else if (exprType->category() == Type::Category::Array)
 	{

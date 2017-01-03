@@ -1109,6 +1109,7 @@ public:
 		return TypePointer();
 	}
 
+	virtual Kind kind() const { return m_kind; }
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }

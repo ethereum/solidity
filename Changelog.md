@@ -57,6 +57,7 @@ Features:
  * Inline assembly: issue warning if stack is not balanced after block.
  * Include ``keccak256()`` as an alias to ``sha3()``.
  * Support shifting constant numbers.
+ * Type Checker: warn if using ``tx.origin``.
 
 Bugfixes:
  * Commandline interface: Disallow unknown options in ``solc``.
