@@ -122,7 +122,8 @@ before_script:
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
-      && ./scripts/release.sh $ZIP_SUFFIX )
+      && ./scripts/release.sh $ZIP_SUFFIX
+      && ./scripts/create_source_tarball.sh )
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
 
@@ -171,9 +172,10 @@ deploy:
           secure: kyDTn9taQWSzALK2CbtJ9VC1KhIO3DzIM1aIwpJexPsEq6h1Wnjp3PoyyzJGf+09AjWZLM5lNcHy6/F9AEINgnEeekdMVNT1YIYsGSJ76z/pDXB4AOZKqGXdZgLNvmxZy9dWQJykBSV65kGgEZlihW/5gF0/ouxyZafYOYlwseA7H2NDDTdIzf5uV9oIPo/y3phXG1nxGcmE3tOH/bEJL+dv0C6hI3dhL7mQhmmBCgyo/ZlAEsdj0hbBF332dxqojGwfPeuFDrxvnWLX4jhbJAkrqKgcU+1lnsr7aI+RBHu7mV3/Fj+XfTrs3J9HvCjVfe0d9s1dMsIhdY8xT8NnZX618AiZYMIoQ1gE89R8uL/mN5BpcYG7U654FDG/+OTIa6VBMDxB9J85kYdnLq3XBlcr1YoPMfTJ1UV7mpG4D1EDJObgToyCEDNbKS1Nf+osVcP8UcsrvhBCNXhPsFud8ZemaXmrVNhJOcf8sAHZx2N/HSfm7Im74ZFqJbHrWlx9aFKZ71BvSCPAbcp4hGw0A0Anynn9hOfxZjh5aqwxhz4ieTolCWaZCVyMveLJccu2ib2LVza2soHiSX2maFFlXqkoPd8h3vIGMR4CbqWfxAhXuxzMivOc24kPVHLEt5zq9635V519eOEEPYUs4X1ArZySKvJBbEcJ2RP+AZrZlj4=
 
       overwrite: true
+      file_glob: true
       file:
-          - $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
-          - $TRAVIS_BUILD_DIR/solidity_source.tar.gz
+          - $TRAVIS_BUILD_DIR/solidity*.zip
+          - $TRAVIS_BUILD_DIR/solidity*tar.gz
       skip_cleanup: true
       on:
           branch: release
