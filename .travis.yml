@@ -26,11 +26,13 @@
 
 language: cpp
 branches:
-    # We need to whitelist the branches which we want to have "push" automation.
+    # We need to whitelist the branches which we want to have "push" automation,
+    # this includes tags (which are treated as branches by travis).
     # Pull request automation is not constrained to this set of branches.
     only:
         - develop
         - release
+        - /^v[0-9]/
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
