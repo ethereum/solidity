@@ -178,5 +178,6 @@ deploy:
           - $TRAVIS_BUILD_DIR/solidity*tar.gz
       skip_cleanup: true
       on:
-          branch: release
+          all_branches: true
+          tags: true
           condition: $TRAVIS_RELEASE == On
