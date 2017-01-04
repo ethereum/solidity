@@ -29,7 +29,7 @@ arising when writing manual assembly by the following features:
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
 * switch statements: ``switch x case 0: { y := mul(x, 2) } default: { y := 0 }``
-* function calls: ``function f(x) -> (y) { switch x case 0: { y := 1 } default: y := mul(x, f(sub(x, 1))) }``
+* function calls: ``function f(x) -> (y) { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
 
 .. note::
     Of the above, loops, function calls and switch statements are not yet implemented.
@@ -69,7 +69,7 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 Inline assembly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
-the compiler does not perform checks, so you should use it for complex things only if
+the compiler does not perform checks, so you should use it only if
 you really know what you are doing.
 
 .. code::
@@ -88,7 +88,7 @@ you really know what you are doing.
         function sumAsm(uint[] _data) returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
-                    o_sum := mload(add(add(_data, 0x20), i))
+                    o_sum := mload(add(add(_data, 0x20), mul(i, 0x20)))
                 }
             }
         }
@@ -109,7 +109,7 @@ to write assembly programs that do not make use of explicit ``SWAP``, ``DUP``,
 ``JUMP`` and ``JUMPI`` statements, because the first two obfuscate the data flow
 and the last two obfuscate control flow. Furthermore, functional statements of
 the form ``mul(add(x, y), 7)`` are preferred over pure opcode statements like
-``7 x y add mul`` because in the first form, it is much easier to see which
+``7 y x add mul`` because in the first form, it is much easier to see which
 operand is used for which opcode.
 
 The second goal is achieved by introducing a desugaring phase that only removes
@@ -131,11 +131,14 @@ outer assembly is visible in a sub-assembly.
 If control flow passes over the end of a block, pop instructions are inserted
 that match the number of local variables declared in that block, unless the
 ``}`` is directly preceded by an opcode that does not have a continuing control
-flow path. The stack height is reduced by the number of local variables
-regardless of that. This mean that labels in the next block will have the
-same height as before the block that just ended.
+flow path. Whenever a local variable is referenced, the code generator needs
+to know its current relative position in the stack and thus it needs to
+keep track of the current so-called stack height.
+At the end of a block, this implicit stack height is always reduced by the number
+of local variables whether ther is a continuing control flow or not.
 
-If at the end of a block, the stack is not balanced, a warning is issued,
+This means that the stack height before and after the block should be the same.
+If this is not the case, a warning is issued,
 unless the last instruction in the block did not have a continuing control flow path.
 
 Why do we use higher-level constructs like ``switch``, ``for`` and functions:
@@ -160,7 +163,7 @@ We consider the runtime bytecode of the following Solidity program::
 
     contract C {
       function f(uint x) returns (uint y) {
-        y = 1
+        y = 1;
         for (uint i = 0; i < x; i++)
           y = 2 * y;
       }
@@ -228,6 +231,7 @@ After the desugaring phase it looks as follows::
       $fun_allocate:
       {
         $start[$retpos, size]:
+        // output variables live in the same scope as the arguments.
         let pos := 0
         {
           pos := mload(0x40)
@@ -261,7 +265,7 @@ Syntax
 ------
 
 Inline assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
-usual ``//`` and ``/* */`` comments. Inline assembly is initiated by ``assembly { ... }`` and inside
+usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
 these curly braces, the following can be used (see the later sections for more details)
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
@@ -778,8 +782,8 @@ Grammar::
     AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
         ( 'default' ':' AssemblyBlock )?
     AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
-    AssemblyFunctionDefinition = 'function' Identifier '(' IdentifierList? ')' '->'
-        ( '(' IdentifierList ')' AssemblyBlock
+    AssemblyFunctionDefinition = 'function' Identifier '(' IdentifierList? ')'
+        ( '->' '(' IdentifierList ')' )? AssemblyBlock
     AssemblyFor = 'for' ( AssemblyBlock | FunctionalAssemblyExpression)
         FunctionalAssemblyExpression ( AssemblyBlock | FunctionalAssemblyExpression) AssemblyBlock
     SubAssembly = 'assembly' Identifier AssemblyBlock
