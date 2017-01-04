@@ -604,12 +604,89 @@ For both ways, the colon points to the name of the variable.
         =: v // instruction style assignment, puts the result of sload(10) into v
     }
 
+Switch
+------
+
+You can use a switch statement as a very basic version of "if/else".
+It takes the value of an expression and compares it to several constants.
+The branch corresponding to the matching constant is taken. Contrary to the
+error-prone behaviour of some programming languages, control flow does
+not continue from one case to the next. There is a fallback or default
+case called ``default``.
+
+.. code::
+
+    assembly {
+        let x := 0
+        switch calldataload(4)
+            case 0: { x := calldataload(0x24) }
+            default: { x := calldataload(0x44) }
+        sstore(0, div(x, 2))
+    }
+
+The list of cases does not require curly braces, but the body of a
+case does require them.
+
+Loops
+-----
+
+Assembly supports a simple for-style loop. For-style loops have
+a header containing an initializing part, a condition and a post-iteration
+part. The condition has to be a functional-style expression, while
+the other two can also be blocks. If the initializing part is a block that
+declares any variables, the scope of these variables is extended into the
+body (including the condition and the post-iteration part).
+
+The following example computes the sum of an area in memory.
+
+.. code::
+
+    assembly {
+        let x := 0
+        for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
+            x := add(x, mload(i))
+        }
+    }
+
+Functions
+---------
+
+Assembly allows the definition of low-level functions. These take their
+arguments (and a return PC) from the stack and also put the results onto the
+stack. Calling a function looks the same way as executing a functional-style
+opcode.
+
+Functions can be defined anywhere and are visible in the block they are
+declared in. Inside a function, you cannot access local variables
+defined outside of that function. There is no explicit ``return``
+statement.
+
+If you call a function that returns multiple values, you have to assign
+them to a tuple using ``(a, b) := f(x)`` or ``let (a, b) := f(x)``.
+
+The following example implements the power function by square-and-multiply.
+
+.. code::
+
+    assembly {
+        function power(base, exponent) -> (result) {
+            switch exponent
+                0: { result := 1 }
+                1: { result := base }
+                default: {
+                    result := power(mul(base, base), div(exponent, 2))
+                    switch mod(exponent, 2)
+                        1: { result := mul(base, result) }
+                }
+        }
+    }
 
 Things to Avoid
 ---------------
 
 Inline assembly might have a quite high-level look, but it actually is extremely
-low-level. The only thing the assembler does for you is re-arranging
+low-level. Function calls, loops and switches are converted by simple
+rewriting rules and after that, the only thing the assembler does for you is re-arranging
 functional-style opcodes, managing jump labels, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
 of their block is reached. Especially for those two last cases, it is important
