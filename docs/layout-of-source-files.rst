@@ -128,18 +128,21 @@ and then run the compiler as
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
-As a more complex example, suppose you rely on some module that uses a
-very old version of dapp-bin. That old version of dapp-bin is checked
+As a more complex example, suppose you rely on some modules `module1` and `module2`. Further,
+suppose that `module1` uses a very old version of dapp-bin. That old version of dapp-bin is checked
 out at ``/usr/local/dapp-bin_old``, then you can use
 
 .. code-block:: bash
 
-  solc module1:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ \
-       module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
+  solc module1/=/path/to/module1/ \
+       module2/=/path/to/module2/ \
+       @module1:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ \
+       @module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
        source.sol
 
 so that all imports in ``module2`` point to the old version but imports
-in ``module1`` get the new version.
+in ``module1`` get the new version. Note that the `@` is actually referencing your
+previous remappings' prefix and substituting the path that it maps to.
 
 Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly

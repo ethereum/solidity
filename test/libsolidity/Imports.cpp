@@ -164,6 +164,72 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(context_dependent_remappings_referencing_previous_remappings)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"foo=Foo", "bar=Bar", "@foo:s=s_1.4.6", "@bar:s=s_1.4.7"});
+	c.addSource("Foo/foo.sol", "import \"s/s.sol\"; contract Foo is SSix {} pragma solidity >=0.0;");
+	c.addSource("Bar/bar.sol", "import \"s/s.sol\"; contract Bar is SSeven {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.7/s.sol", "contract SSeven {} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(remappings_ensure_order_doesnt_matter_in_reference)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"@foo:s=s_1.4.6", "@bar:s=s_1.4.7", "foo=Foo", "bar=Bar"});
+	c.addSource("Foo/foo.sol", "import \"s/s.sol\"; contract Foo is SSix {} pragma solidity >=0.0;");
+	c.addSource("Bar/bar.sol", "import \"s/s.sol\"; contract Bar is SSeven {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.7/s.sol", "contract SSeven {} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(remappings_reference_a_directory_tree)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"@foo/0.0.1/:s=s_1.4.6", "@bar/0.0.1/:s=s_1.4.7", "foo/0.0.1/=Foo", "bar/0.0.1/=Bar"});
+	c.addSource("Foo/foo.sol", "import \"s/s.sol\"; contract Foo is SSix {} pragma solidity >=0.0;");
+	c.addSource("Bar/bar.sol", "import \"s/s.sol\"; contract Bar is SSeven {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.7/s.sol", "contract SSeven {} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(remappings_improperly_reference_a_directory_tree)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"@foo:s=s_1.4.6", "@bar:s=s_1.4.7", "foo/0.0.1/=Foo", "bar/0.0.1/=Bar"});
+	c.addSource("Foo/foo.sol", "import \"s/s.sol\"; contract Foo is SSix {} pragma solidity >=0.0;");
+	c.addSource("Bar/bar.sol", "import \"s/s.sol\"; contract Bar is SSeven {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;");
+	c.addSource("s_1.4.7/s.sol", "contract SSeven {} pragma solidity >=0.0;");
+	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(ensure_global_remapping_preserved_through_complex_directory)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"foo=vendor/foo", "bar=vendor/bar/2.0.0", "@foo:bar=vendor/bar/1.0.0"});
+	c.addSource("main.sol", "import {Foo} from \"foo/foo.sol\"; import \"bar/bar.sol\"; contract Main is Foo, Bar {function Main(){IsTwo();}} pragma solidity >=0.0;");
+	c.addSource("vendor/foo/foo.sol", "import \"bar/bar.sol\"; contract Foo is Bar{function Foo(){IsOne();}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/1.0.0/bar.sol", "contract Bar{function IsOne(){}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/2.0.0/bar.sol", "contract Bar{function IsTwo(){}} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(ensure_global_remapping_preserved_through_complex_directory_ordering_does_not_matter)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"@foo:bar=vendor/bar/1.0.0", "foo=vendor/foo", "bar=vendor/bar/2.0.0"});
+	c.addSource("main.sol", "import {Foo} from \"foo/foo.sol\"; import \"bar/bar.sol\"; contract Main is Foo, Bar {function Main(){IsTwo();}} pragma solidity >=0.0;");
+	c.addSource("vendor/foo/foo.sol", "import \"bar/bar.sol\"; contract Foo is Bar{function Foo(){IsOne();}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/1.0.0/bar.sol", "contract Bar{function IsOne(){}} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/2.0.0/bar.sol", "contract Bar{function IsTwo(){}} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
