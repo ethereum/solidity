@@ -265,6 +265,19 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
+BOOST_AUTO_TEST_CASE(balance_gas)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function lookup_balance(address a) returns (uint) {
+				return a.balance;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
