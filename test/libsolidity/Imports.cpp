@@ -172,6 +172,17 @@ BOOST_AUTO_TEST_CASE(filename_with_period)
 	BOOST_CHECK(!c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_preserved)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"foo=vendor/foo_2.0.0", "vendor/bar:foo=vendor/foo_1.0.0", "bar=vendor/bar"});
+	c.addSource("main.sol", "import \"foo/foo.sol\"; import {Bar} \"bar/bar.sol\"; contract Main is Foo2, Bar {} pragma solidity >=0.0;");
+	c.addSource("vendor/bar/bar.sol", "import \"foo/foo.sol\"; contract Bar is Foo1 {} pragma solidity >=0.0;");
+	c.addSource("vendor/foo_1.0.0/foo.sol", "contract Foo1 {} pragma solidity >=0.0;");
+	c.addSource("vendor/foo_2.0.0/foo.sol", "contract Foo2 {} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
