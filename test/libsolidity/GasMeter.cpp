@@ -278,6 +278,19 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
 }
 
+BOOST_AUTO_TEST_CASE(selfdestruct_gas)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() {
+				selfdestruct(0x30);
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
