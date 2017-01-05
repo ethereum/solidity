@@ -291,6 +291,21 @@ BOOST_AUTO_TEST_CASE(selfdestruct_gas)
 	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
 }
 
+BOOST_AUTO_TEST_CASE(extcodesize_gas)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() returns (uint _s) {
+				assembly {
+					_s := extcodesize(0x30)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
