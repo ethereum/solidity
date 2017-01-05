@@ -248,6 +248,23 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
+BOOST_AUTO_TEST_CASE(exponent_size)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function g(uint x) returns (uint) {
+				return x ** 0x100;
+			}
+			function h(uint x) returns (uint) {
+				return x ** 0x10000;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
