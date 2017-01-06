@@ -60,7 +60,10 @@ public:
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
 		m_params(_params), m_value(_value) {}
 	virtual bigint gasNeeded() = 0;
-	virtual void execute(Assembly& _assembly, AssemblyItems& _items) = 0;
+	/// Executes the method, potentially appending to the assembly and returns a vector of
+	/// assembly items the constant should be relpaced with in one sweep.
+	/// If the vector is empty, the constants will not be deleted.
+	virtual AssemblyItems execute(Assembly& _assembly) = 0;
 
 protected:
 	size_t dataSize() const { return std::max<size_t>(1, dev::bytesRequired(m_value)); }
@@ -83,8 +86,8 @@ protected:
 		return m_params.runs * _runGas + m_params.multiplicity * _repeatedDataGas + _uniqueDataGas;
 	}
 
-	/// Replaces the constant by the code given in @a _replacement.
-	void replaceConstants(AssemblyItems& _items, AssemblyItems const& _replacement) const;
+	/// Replaces all constants i by the code given in @a _replacement[i].
+	static void replaceConstants(AssemblyItems& _items, std::map<u256, AssemblyItems> const& _replacement);
 
 	Params m_params;
 	u256 const& m_value;
@@ -100,7 +103,7 @@ public:
 	explicit LiteralMethod(Params const& _params, u256 const& _value):
 		ConstantOptimisationMethod(_params, _value) {}
 	virtual bigint gasNeeded() override;
-	virtual void execute(Assembly&, AssemblyItems&) override {}
+	virtual AssemblyItems execute(Assembly&) override { return AssemblyItems{}; }
 };
 
 /**
@@ -111,10 +114,10 @@ class CodeCopyMethod: public ConstantOptimisationMethod
 public:
 	explicit CodeCopyMethod(Params const& _params, u256 const& _value);
 	virtual bigint gasNeeded() override;
-	virtual void execute(Assembly& _assembly, AssemblyItems& _items) override;
+	virtual AssemblyItems execute(Assembly& _assembly) override;
 
 protected:
-	AssemblyItems m_copyRoutine;
+	AssemblyItems const& copyRoutine() const;
 };
 
 /**
@@ -130,9 +133,9 @@ public:
 	}
 
 	virtual bigint gasNeeded() override { return gasNeeded(m_routine); }
-	virtual void execute(Assembly&, AssemblyItems& _items) override
+	virtual AssemblyItems execute(Assembly&) override
 	{
-		replaceConstants(_items, m_routine);
+		return m_routine;
 	}
 
 protected:
