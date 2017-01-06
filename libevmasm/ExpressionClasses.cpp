@@ -40,8 +40,18 @@ bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression cons
 	assertThrow(!!item && !!_other.item, OptimizerException, "");
 	auto type = item->type();
 	auto otherType = _other.item->type();
-	return std::tie(type, item->data(), arguments, sequenceNumber) <
-		std::tie(otherType, _other.item->data(), _other.arguments, _other.sequenceNumber);
+	if (type != otherType)
+		return type < otherType;
+	else if (type == Operation)
+	{
+		auto instr = item->instruction();
+		auto otherInstr = _other.item->instruction();
+		return std::tie(instr, arguments, sequenceNumber) <
+			std::tie(otherInstr, _other.arguments, _other.sequenceNumber);
+	}
+	else
+		return std::tie(item->data(), arguments, sequenceNumber) <
+			std::tie(_other.item->data(), _other.arguments, _other.sequenceNumber);
 }
 
 ExpressionClasses::Id ExpressionClasses::find(
@@ -479,8 +489,13 @@ bool Pattern::matchesBaseItem(AssemblyItem const* _item) const
 		return false;
 	if (m_type != _item->type())
 		return false;
-	if (m_requireDataMatch && m_data != _item->data())
-		return false;
+	if (m_requireDataMatch)
+	{
+		if (m_type == Operation)
+			return m_data == u256(byte(_item->instruction()));
+		else
+			return m_data == _item->data();
+	}
 	return true;
 }
 

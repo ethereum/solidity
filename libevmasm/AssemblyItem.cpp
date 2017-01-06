@@ -29,19 +29,19 @@ using namespace dev::eth;
 
 AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
-	assertThrow(m_data < (u256(1) << 64), Exception, "Tag already has subassembly set.");
+	assertThrow(data() < (u256(1) << 64), Exception, "Tag already has subassembly set.");
 
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
-	r.setPushTagSubIdAndTag(_subId, size_t(m_data));
+	r.setPushTagSubIdAndTag(_subId, size_t(data()));
 	return r;
 }
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
-	return make_pair(size_t(m_data / (u256(1) << 64)) - 1, size_t(m_data));
+	return make_pair(size_t((data()) / (u256(1) << 64)) - 1, size_t(data()));
 }
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
@@ -60,7 +60,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushString:
 		return 33;
 	case Push:
-		return 1 + max<unsigned>(1, dev::bytesRequired(m_data));
+		return 1 + max<unsigned>(1, dev::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 4;		// worst case: a 16MB program
