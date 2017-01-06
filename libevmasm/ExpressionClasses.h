@@ -135,7 +135,7 @@ public:
 	// Matches a specific constant value.
 	Pattern(unsigned _value): Pattern(u256(_value)) {}
 	// Matches a specific constant value.
-	Pattern(u256 const& _value): m_type(Push), m_requireDataMatch(true), m_data(_value) {}
+	Pattern(u256 const& _value): m_type(Push), m_requireDataMatch(true), m_data(std::make_shared<u256>(_value)) {}
 	// Matches a specific assembly item type or anything if not given.
 	Pattern(AssemblyItemType _type = UndefinedItem): m_type(_type) {}
 	// Matches a given instruction with given arguments
@@ -160,10 +160,12 @@ public:
 private:
 	bool matchesBaseItem(AssemblyItem const* _item) const;
 	Expression const& matchGroupValue() const;
+	u256 const& data() const;
 
 	AssemblyItemType m_type;
 	bool m_requireDataMatch = false;
-	u256 m_data = 0;
+	Instruction m_instruction; ///< Only valid if m_type is Operation
+	std::shared_ptr<u256> m_data; ///< Only valid if m_type is not Operation
 	std::vector<Pattern> m_arguments;
 	unsigned m_matchGroup = 0;
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;

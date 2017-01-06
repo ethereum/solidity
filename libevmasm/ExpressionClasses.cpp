@@ -185,7 +185,7 @@ class Rules: public boost::noncopyable
 public:
 	Rules();
 	void resetMatchGroups() { m_matchGroups.clear(); }
-	vector<pair<Pattern, function<Pattern()>>> rules() const { return m_rules; }
+	vector<pair<Pattern, function<Pattern()>>> const& rules() const { return m_rules; }
 
 private:
 	using Expression = ExpressionClasses::Expression;
@@ -417,8 +417,7 @@ ExpressionClasses::Id ExpressionClasses::rebuildExpression(ExpressionTemplate co
 
 Pattern::Pattern(Instruction _instruction, std::vector<Pattern> const& _arguments):
 	m_type(Operation),
-	m_requireDataMatch(true),
-	m_data(_instruction),
+	m_instruction(_instruction),
 	m_arguments(_arguments)
 {
 }
@@ -449,7 +448,10 @@ bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes
 
 AssemblyItem Pattern::toAssemblyItem(SourceLocation const& _location) const
 {
-	return AssemblyItem(m_type, m_data, _location);
+	if (m_type == Operation)
+		return AssemblyItem(m_instruction, _location);
+	else
+		return AssemblyItem(m_type, data(), _location);
 }
 
 string Pattern::toString() const
@@ -458,16 +460,16 @@ string Pattern::toString() const
 	switch (m_type)
 	{
 	case Operation:
-		s << instructionInfo(Instruction(unsigned(m_data))).name;
+		s << instructionInfo(m_instruction).name;
 		break;
 	case Push:
-		s << "PUSH " << hex << m_data;
+		s << "PUSH " << hex << data();
 		break;
 	case UndefinedItem:
 		s << "ANY";
 		break;
 	default:
-		s << "t=" << dec << m_type << " d=" << hex << m_data;
+		s << "t=" << dec << m_type << " d=" << hex << data();
 		break;
 	}
 	if (!m_requireDataMatch)
@@ -489,13 +491,10 @@ bool Pattern::matchesBaseItem(AssemblyItem const* _item) const
 		return false;
 	if (m_type != _item->type())
 		return false;
-	if (m_requireDataMatch)
-	{
-		if (m_type == Operation)
-			return m_data == u256(byte(_item->instruction()));
-		else
-			return m_data == _item->data();
-	}
+	else if (m_type == Operation)
+		return m_instruction == _item->instruction();
+	else if (m_requireDataMatch)
+		return data() == _item->data();
 	return true;
 }
 
@@ -507,6 +506,11 @@ Pattern::Expression const& Pattern::matchGroupValue() const
 	return *(*m_matchGroups)[m_matchGroup];
 }
 
+u256 const& Pattern::data() const
+{
+	assertThrow(m_data, OptimizerException, "");
+	return *m_data;
+}
 
 ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation const& _location)
 {
