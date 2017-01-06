@@ -593,11 +593,11 @@ bool CompilerStack::checkLibraryNameClashes()
 
 string CompilerStack::absolutePath(string const& _path, string const& _reference) const
 {
-	// Anything that does not start with `.` is an absolute path.
-	if (_path.empty() || _path.front() != '.')
-		return _path;
 	using path = boost::filesystem::path;
 	path p(_path);
+	// Anything that does not start with `.` is an absolute path.
+	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
+		return _path;
 	path result(_reference);
 	result.remove_filename();
 	for (path::iterator it = p.begin(); it != p.end(); ++it)

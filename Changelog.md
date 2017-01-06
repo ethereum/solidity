@@ -2,6 +2,7 @@
 
 BugFixes:
  * Type checker, code generator: enable access to events of base contracts' names.
+ * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
 
 ### 0.4.7 (2016-12-15)
 
