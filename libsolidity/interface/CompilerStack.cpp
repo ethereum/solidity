@@ -507,47 +507,36 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 			return false;
 		return std::equal(_a.begin(), _a.end(), _b.begin());
 	};
-	// Try to find whether _a is a closer match for context _reference than _b
-	// Defaults to longest prefix in case of a tie.
-	auto isClosestContext = [](string const& _a, string const& _b, string const& _reference)
-	{
-		int a = _reference.compare(_a);
-		int b = _reference.compare(_b);
-		if (a == 0)
-			return true;
-		else if (b == 0)
-			return false;
-		else if (abs(a) == abs(b)) {
-			return a > 0;
-		}
-		return abs(a) < abs(b);
-	};
 
 	using filepath = boost::filesystem::path;
-	filepath context(_context);
 	size_t longestPrefix = 0;
+	size_t longestContext = 0;
 	string longestPrefixTarget;
-	string currentClosestContext;
-	string referenceContext = context.parent_path().generic_string();
+
 	for (auto const& redir: m_remappings)
 	{
 		filepath redirContext(redir.context);
-		// Skip if we already have a closer match.
-		if (longestPrefix > 0 && redir.prefix.length() < longestPrefix)
+		filepath redirPrefix(redir.prefix);
+		string contextFileString = redirContext.generic_string();
+		string prefixFileString = redirPrefix.generic_string();
+		// Skip if there is a prefix collision and the current context is closer
+		if (longestContext > 0 && contextFileString.length() < longestContext)
 			continue;
 		// Skip if redir.context is not a prefix of _context
-		if (!isPrefixOf(redirContext.generic_string(), _context))
+		if (!isPrefixOf(contextFileString, _context))
+			continue;
+		// Skip if we already have a closer match.
+		if (longestPrefix > 0 && prefixFileString.length() < longestPrefix)
 			continue;
 		// Skip if the prefix does not match.
-		if (!isPrefixOf(redir.prefix, _path))
+		if (!isPrefixOf(prefixFileString, _path))
 			continue;
-		// Skip if there is a prefix collision and the current context is closer
-		if (redir.prefix.length() == longestPrefix && !isClosestContext(redirContext.generic_string(), currentClosestContext, referenceContext))
-			continue;
-		currentClosestContext = redir.context;
-		longestPrefix = redir.prefix.length();
+
+		longestContext = contextFileString.length();
+		longestPrefix = prefixFileString.length();
 		longestPrefixTarget = redir.target;
 	}
+
 	string path = longestPrefixTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
 	return path;
