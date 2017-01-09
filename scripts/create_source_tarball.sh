@@ -6,10 +6,9 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 (
     cd "$REPO_ROOT"
-    version=`grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt`
-    commithash=`git rev-parse --short=8 HEAD`
-    committimestamp=`git show --format=%ci HEAD | head -n 1`
-    commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./'`
+    version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt)
+    commithash=$(git rev-parse --short=8 HEAD)
+    commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
     # file exists and has zero size -> not a prerelease
     if [ -e prerelease.txt -a ! -s prerelease.txt ]
