@@ -765,7 +765,7 @@ assigning it to a local variable, as in
 Mappings
 ========
 
-Mapping types are declared as ``mapping _KeyType => _ValueType``.
+Mapping types are declared as ``mapping(_KeyType => _ValueType)``.
 Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
 ``_ValueType`` can actually be any type, including mappings.
 

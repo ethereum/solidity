@@ -96,8 +96,8 @@ Use in Actual Compilers
 When the compiler is invoked, it is not only possible to specify how to
 discover the first element of a path, but it is possible to specify path prefix
 remappings so that e.g. ``github.com/ethereum/dapp-bin/library`` is remapped to
-``/usr/local/dapp-bin/library`` and the compiler will read the files from there. If
-remapping keys are prefixes of each other, the longest is tried first. This
+``/usr/local/dapp-bin/library`` and the compiler will read the files from there.
+If multiple remappings can be applied, the one with the longest key is tried first. This
 allows for a "fallback-remapping" with e.g. ``""`` maps to
 ``"/usr/local/include/solidity"``. Furthermore, these remappings can
 depend on the context, which allows you to configure packages to

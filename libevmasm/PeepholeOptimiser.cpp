@@ -120,7 +120,7 @@ struct OpPop: SimplePeepholeOptimizerMethod<OpPop, 2>
 			if (instructionInfo(instr).ret == 1 && !instructionInfo(instr).sideEffects)
 			{
 				for (int j = 0; j < instructionInfo(instr).args; j++)
-					*_out = Instruction::POP;
+					*_out = {Instruction::POP, _op.location()};
 				return true;
 			}
 		}

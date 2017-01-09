@@ -908,19 +908,43 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
 			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
-				if (funType->location() != FunctionType::Location::Internal)
+				switch (funType->location())
 				{
-					_memberAccess.expression().accept(*this);
-					m_context << funType->externalIdentifier();
-				}
-				else
-				{
+				case FunctionType::Location::Internal:
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing
 					// us to link against it although we actually do not need it.
-					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-					solAssert(!!function, "Function not found in member access");
-					utils().pushCombinedFunctionEntryLabel(*function);
+					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						utils().pushCombinedFunctionEntryLabel(*function);
+					else
+						solAssert(false, "Function not found in member access");
+					break;
+				case FunctionType::Location::Event:
+					if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						solAssert(false, "event not found");
+					// no-op, because the parent node will do the job
+					break;
+				case FunctionType::Location::External:
+				case FunctionType::Location::Creation:
+				case FunctionType::Location::DelegateCall:
+				case FunctionType::Location::CallCode:
+				case FunctionType::Location::Send:
+				case FunctionType::Location::Bare:
+				case FunctionType::Location::BareCallCode:
+				case FunctionType::Location::BareDelegateCall:
+					_memberAccess.expression().accept(*this);
+					m_context << funType->externalIdentifier();
+					break;
+				case FunctionType::Location::Log0:
+				case FunctionType::Location::Log1:
+				case FunctionType::Location::Log2:
+				case FunctionType::Location::Log3:
+				case FunctionType::Location::Log4:
+				case FunctionType::Location::ECRecover:
+				case FunctionType::Location::SHA256:
+				case FunctionType::Location::RIPEMD160:
+				default:
+					solAssert(false, "unsupported member function");
 				}
 			}
 			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type.get()))
