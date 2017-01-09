@@ -12,6 +12,9 @@ Bugfixes:
  * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
  * Type checker, disallow inheritances of different kinds (e.g. a function and a modifier) of members of the same name
 
+Features:
+ * Contracts and libraries are now unique to their source files, rather than globally.
+
 ### 0.4.7 (2016-12-15)
 
 Features:
