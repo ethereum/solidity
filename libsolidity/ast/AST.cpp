@@ -274,6 +274,45 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
+shared_ptr<FunctionType const> FunctionDefinition::functionType(bool _internal) const
+{
+	if (_internal)
+	{
+		switch (visibility())
+		{
+		case Declaration::Visibility::Default:
+			solAssert(false, "visibility() should not return Default");
+		case Declaration::Visibility::Private:
+		case Declaration::Visibility::Internal:
+		case Declaration::Visibility::Public:
+			return make_shared<FunctionType const>(*this, _internal);
+		case Declaration::Visibility::External:
+			return {};
+		default:
+			solAssert(false, "visibility() should not return a Visibility");
+		}
+	}
+	else
+	{
+		switch (visibility())
+		{
+		case Declaration::Visibility::Default:
+			solAssert(false, "visibility() should not return Default");
+		case Declaration::Visibility::Private:
+		case Declaration::Visibility::Internal:
+			return {};
+		case Declaration::Visibility::Public:
+		case Declaration::Visibility::External:
+			return make_shared<FunctionType const>(*this, _internal);
+		default:
+			solAssert(false, "visibility() should not return a Visibility");
+		}
+	}
+
+	// To make the compiler happy
+	return {};
+}
+
 TypePointer FunctionDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
@@ -363,6 +402,28 @@ bool VariableDeclaration::canHaveAutoType() const
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
+}
+
+shared_ptr<FunctionType const> VariableDeclaration::functionType(bool _internal) const
+{
+	if (_internal)
+		return {};
+	switch (visibility())
+	{
+	case Declaration::Visibility::Default:
+		solAssert(false, "visibility() should not return Default");
+	case Declaration::Visibility::Private:
+	case Declaration::Visibility::Internal:
+		return {};
+	case Declaration::Visibility::Public:
+	case Declaration::Visibility::External:
+		return make_shared<FunctionType const>(*this);
+	default:
+		solAssert(false, "visibility() should not return a Visibility");
+	}
+
+	// To make the compiler happy
+	return {};
 }
 
 VariableDeclarationAnnotation& VariableDeclaration::annotation() const

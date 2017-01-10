@@ -264,21 +264,14 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
 			"Found overloading involving something not a function or a variable");
 
-		unique_ptr<FunctionType const> functionType {};
-
-		if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(*it))
-		{
-			functionType = unique_ptr<FunctionType const>(new FunctionType(*functionDefinition));
-			for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
-				if (!parameter)
-					reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
-		}
-		else
-		{
-			VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(*it);
-			functionType = unique_ptr<FunctionType const>(new FunctionType(*variableDeclaration));
-		}
+		shared_ptr<FunctionType const> functionType { (*it)->functionType(false) };
+		if (!functionType)
+			functionType = (*it)->functionType(true);
 		solAssert(functionType, "failed to determine the function type of the overloaded");
+
+		for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+			if (!parameter)
+				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
 
 		if (uniqueFunctions.end() == find_if(
 			uniqueFunctions.begin(),

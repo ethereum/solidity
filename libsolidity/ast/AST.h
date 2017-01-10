@@ -171,6 +171,10 @@ public:
 	/// This can only be called once types of variable declarations have already been resolved.
 	virtual TypePointer type() const = 0;
 
+	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
+	/// @returns null when it is not accessible as a function.
+	virtual std::shared_ptr<FunctionType const> functionType(bool /*_internal*/) const { return {}; }
+
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
 
@@ -581,6 +585,10 @@ public:
 
 	virtual TypePointer type() const override;
 
+	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
+	/// @returns null when it is not accessible as a function.
+	virtual std::shared_ptr<FunctionType const> functionType(bool /*_internal*/) const override;
+
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
 private:
@@ -642,6 +650,10 @@ public:
 	Location referenceLocation() const { return m_location; }
 
 	virtual TypePointer type() const override;
+
+	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
+	/// @returns null when it is not accessible as a function.
+	virtual std::shared_ptr<FunctionType const> functionType(bool /*_internal*/) const override;
 
 	virtual VariableDeclarationAnnotation& annotation() const override;
 
