@@ -48,6 +48,7 @@ pair<Pattern, function<Pattern()> > const* Rules::findFirstMatch(
 	{
 		if (rule.first.matches(_expr, _classes))
 			return &rule;
+		resetMatchGroups();
 	}
 	return nullptr;
 }
