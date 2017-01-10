@@ -515,10 +515,8 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 	for (auto const& redir: m_remappings)
 	{
-		filepath redirContext(redir.context);
-		filepath redirPrefix(redir.prefix);
-		string contextFileString = redirContext.generic_string();
-		string prefixFileString = redirPrefix.generic_string();
+		string contextFileString = sanitizePath(redir.context);
+		string prefixFileString = sanitizePath(redir.prefix);
 		// Skip if there is a prefix collision and the current context is closer
 		if (longestContext > 0 && contextFileString.length() < longestContext)
 			continue;

@@ -29,6 +29,7 @@
 #include <vector>
 #include <functional>
 #include <boost/noncopyable.hpp>
+#include <boost/filesystem.hpp>
 #include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
@@ -239,7 +240,8 @@ private:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 	);
-
+	/// Helper function to return path converted strings.
+	std::string sanitizePath(std::string const& _path) { return boost::filesystem::path(_path).generic_string(); }
 	void link();
 
 	Contract const& contract(std::string const& _contractName = "") const;
