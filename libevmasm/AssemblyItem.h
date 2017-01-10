@@ -97,6 +97,9 @@ public:
 	unsigned bytesRequired(unsigned _addressLength) const;
 	int deposit() const;
 
+	/// @returns true if the assembly item can be used in a functional context.
+	bool canBeFunctional() const;
+
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
 	void setLocation(SourceLocation const& _location) { m_location = _location; }
 	SourceLocation const& location() const { return m_location; }
@@ -107,6 +110,8 @@ public:
 
 	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
 	u256 const* pushedValue() const { return m_pushedValue.get(); }
+
+	std::string toAssemblyText() const;
 
 private:
 	AssemblyItemType m_type;
