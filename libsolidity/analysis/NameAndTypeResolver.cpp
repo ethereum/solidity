@@ -278,17 +278,10 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				if (FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(d))
-				{
-					FunctionType const newFunctionType(*functionDefinition);
-					return functionType->hasEqualArgumentTypes(newFunctionType);
-				}
-				else if (VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(d))
-				{
-					FunctionType const newFunctionType(*variableDeclaration);
-					return functionType->hasEqualArgumentTypes(newFunctionType);
-				}
-				return false; // to make compiler happy
+				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
+				if (!newFunctionType)
+					newFunctionType = d->functionType(true);
+				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
 			}
 		))
 			uniqueFunctions.push_back(*it);
