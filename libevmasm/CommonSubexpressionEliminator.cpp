@@ -303,7 +303,9 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 	for (auto it: m_classPositions)
 		for (auto p: it.second)
 			if (p > m_stackHeight)
+			{
 				assertThrow(false, OptimizerException, "");
+			}
 	// do some cleanup
 	removeStackTopIfPossible();
 
