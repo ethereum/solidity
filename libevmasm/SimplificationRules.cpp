@@ -283,13 +283,19 @@ string Pattern::toString() const
 		s << instructionInfo(m_instruction).name;
 		break;
 	case Push:
-		s << "PUSH " << hex << data();
+		if (m_data)
+			s << "PUSH " << hex << data();
+		else
+			s << "PUSH ";
 		break;
 	case UndefinedItem:
 		s << "ANY";
 		break;
 	default:
-		s << "t=" << dec << m_type << " d=" << hex << data();
+		if (m_data)
+			s << "t=" << dec << m_type << " d=" << hex << data();
+		else
+			s << "t=" << dec << m_type << " d: nullptr";
 		break;
 	}
 	if (!m_requireDataMatch)
