@@ -35,10 +35,10 @@ TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
-VariableDeclaration = TypeName Identifier
+VariableDeclaration = TypeName StorageLocation? Identifier
 
 TypeName = ElementaryTypeName
-         | UserDefinedTypeName StorageLocation?
+         | UserDefinedTypeName
          | Mapping
          | ArrayTypeName
          | FunctionTypeName
@@ -46,7 +46,7 @@ TypeName = ElementaryTypeName
 UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
-ArrayTypeName = TypeName '[' Expression? ']' StorageLocation?
+ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
@@ -97,8 +97,14 @@ PrimaryExpression = Identifier
                   | StringLiteral
                   | ElementaryTypeNameExpression
 
-FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
-NewExpression = 'new' Identifier
+ExpressionList = Expression ( ',' Expression )*
+NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
+
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' FunctionCallArguments ')'
+FunctionCallArguments = '{' NameValueList? '}'
+                      | ExpressionList?
+
+NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
 
