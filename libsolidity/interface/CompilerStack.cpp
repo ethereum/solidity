@@ -508,7 +508,6 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		return std::equal(_a.begin(), _a.end(), _b.begin());
 	};
 
-	using filepath = boost::filesystem::path;
 	size_t longestPrefix = 0;
 	size_t longestContext = 0;
 	string longestPrefixTarget;
@@ -524,7 +523,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		if (!isPrefixOf(contextFileString, _context))
 			continue;
 		// Skip if we already have a closer match.
-		if (longestPrefix > 0 && prefixFileString.length() < longestPrefix)
+		if (prefixFileString.length() < longestPrefix)
 			continue;
 		// Skip if the prefix does not match.
 		if (!isPrefixOf(prefixFileString, _path))
