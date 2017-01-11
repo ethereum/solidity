@@ -1,6 +1,8 @@
 ### 0.4.8 (unreleased)
 
 BugFixes:
+ * Remappings: a=b would overwrite c:a=d. This has now been fixed to all modules except
+ c using b as their target, with c using d as the target.
  * Type checker, code generator: enable access to events of base contracts' names.
  * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
 
