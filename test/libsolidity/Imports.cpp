@@ -183,6 +183,24 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_pres
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"a:x/y/z=d", "a/b:x=e"});
+	c.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
+	c.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
+	c.addSource("x/y/z/z.sol", "contract D {} pragma solidity >=0.0;");
+	c.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
+	BOOST_CHECK(c.compile());
+	CompilerStack d;
+	d.setRemappings(vector<string>{"a/b:x=e", "a:x/y/z=d"});
+	d.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
+	d.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
+	d.addSource("x/y/z/z.sol", "contract D {} pragma solidity >=0.0;");
+	d.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
+	BOOST_CHECK(d.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

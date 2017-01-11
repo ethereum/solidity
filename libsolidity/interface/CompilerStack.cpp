@@ -523,7 +523,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		if (!isPrefixOf(context, _context))
 			continue;
 		// Skip if we already have a closer prefix match.
-		if (prefix.length() < longestPrefix)
+		if (prefix.length() < longestPrefix && context.length() == longestContext)
 			continue;
 		// Skip if the prefix does not match.
 		if (!isPrefixOf(prefix, _path))
@@ -534,7 +534,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		bestMatchTarget = redir.target;
 	}
 
-	string path = longestPrefixTarget;
+	string path = bestMatchTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
 	return path;
 }
