@@ -104,7 +104,7 @@ FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifi
 FunctionCallArguments = '{' NameValueList? '}'
                       | ExpressionList?
 
-NewExpression = 'new' Identifier
+NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
 
