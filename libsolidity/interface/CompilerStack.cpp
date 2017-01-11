@@ -516,6 +516,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 	{
 		string context = sanitizePath(redir.context);
 		string prefix = sanitizePath(redir.prefix);
+
 		// Skip if current context is closer
 		if (context.length() < longestContext)
 			continue;
@@ -531,9 +532,8 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 		longestContext = context.length();
 		longestPrefix = prefix.length();
-		bestMatchTarget = redir.target;
+		bestMatchTarget = sanitizePath(redir.target);
 	}
-
 	string path = bestMatchTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
 	return path;
