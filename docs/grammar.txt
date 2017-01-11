@@ -97,7 +97,13 @@ PrimaryExpression = Identifier
                   | StringLiteral
                   | ElementaryTypeNameExpression
 
-FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
+ExpressionList = Expression ( ',' Expression )*
+NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
+
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' FunctionCallArguments ')'
+FunctionCallArguments = '{' NameValueList? '}'
+                      | ExpressionList?
+
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
