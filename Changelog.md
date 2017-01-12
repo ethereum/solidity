@@ -1,7 +1,7 @@
 ### 0.4.8 (unreleased)
 
 Features:
- * Optimiser: Performance improments.
+ * Optimiser: Performance improvements.
  * Output: Print assembly in new standardized Solidity assembly format.
 
 Bugfixes:

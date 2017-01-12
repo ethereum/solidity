@@ -86,7 +86,6 @@ public:
 
 	AssemblyItemType type() const { return m_type; }
 	u256 const& data() const { assertThrow(m_type != Operation, Exception, ""); return *m_data; }
-	//void setType(AssemblyItemType const _type) { m_type = _type; }
 	void setData(u256 const& _data) { assertThrow(m_type != Operation, Exception, ""); m_data = std::make_shared<u256>(_data); }
 
 	/// @returns the instruction of this item (only valid if type() == Operation)

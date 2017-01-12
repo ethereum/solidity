@@ -60,7 +60,7 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 			replacement = copy.execute(_assembly);
 			optimisations++;
 		}
-		else if (computeGas < literalGas && computeGas < copyGas)
+		else if (computeGas < literalGas && computeGas <= copyGas)
 		{
 			replacement = compute.execute(_assembly);
 			optimisations++;
