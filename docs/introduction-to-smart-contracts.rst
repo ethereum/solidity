@@ -283,8 +283,8 @@ determined at the time the contract is created
 (it is derived from the creator address and the number
 of transactions sent from that address, the so-called "nonce").
 
-Apart from the fact whether an account stores code or not,
-the EVM treats the two types equally, though.
+Regardless of whether or not the account stores code, the two types are
+treated equally by the EVM.
 
 Every account has a persistent key-value store mapping 256-bit words to 256-bit
 words called **storage**.
