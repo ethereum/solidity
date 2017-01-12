@@ -509,23 +509,32 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 	};
 
 	size_t longestPrefix = 0;
-	string longestPrefixTarget;
+	size_t longestContext = 0;
+	string bestMatchTarget;
+
 	for (auto const& redir: m_remappings)
 	{
-		// Skip if we already have a closer match.
-		if (longestPrefix > 0 && redir.prefix.length() <= longestPrefix)
+		string context = sanitizePath(redir.context);
+		string prefix = sanitizePath(redir.prefix);
+
+		// Skip if current context is closer
+		if (context.length() < longestContext)
 			continue;
 		// Skip if redir.context is not a prefix of _context
-		if (!isPrefixOf(redir.context, _context))
+		if (!isPrefixOf(context, _context))
+			continue;
+		// Skip if we already have a closer prefix match.
+		if (prefix.length() < longestPrefix && context.length() == longestContext)
 			continue;
 		// Skip if the prefix does not match.
-		if (!isPrefixOf(redir.prefix, _path))
+		if (!isPrefixOf(prefix, _path))
 			continue;
 
-		longestPrefix = redir.prefix.length();
-		longestPrefixTarget = redir.target;
+		longestContext = context.length();
+		longestPrefix = prefix.length();
+		bestMatchTarget = sanitizePath(redir.target);
 	}
-	string path = longestPrefixTarget;
+	string path = bestMatchTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
 	return path;
 }

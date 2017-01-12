@@ -4,6 +4,7 @@ Features:
  * Output: Print assembly in new standardized Solidity assembly format.
 
 BugFixes:
+ * Remappings: Prefer longer context over longer prefix.
  * Type checker, code generator: enable access to events of base contracts' names.
  * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
 

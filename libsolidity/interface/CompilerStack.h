@@ -29,6 +29,7 @@
 #include <vector>
 #include <functional>
 #include <boost/noncopyable.hpp>
+#include <boost/filesystem.hpp>
 #include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
@@ -234,12 +235,14 @@ private:
 	bool checkLibraryNameClashes();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
+	/// Helper function to return path converted strings.
+	std::string sanitizePath(std::string const& _path) const { return boost::filesystem::path(_path).generic_string(); }
+
 	/// Compile a single contract and put the result in @a _compiledContracts.
 	void compileContract(
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 	);
-
 	void link();
 
 	Contract const& contract(std::string const& _contractName = "") const;
