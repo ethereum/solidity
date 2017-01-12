@@ -140,9 +140,11 @@ cache:
     directories:
         - boost_1_57_0
         - build
+        - $HOME/.local
 
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
