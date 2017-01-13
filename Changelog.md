@@ -1,4 +1,4 @@
-### 0.4.8 (unreleased)
+### 0.4.8 (2017-01-13)
 
 Features:
  * Optimiser: Performance improvements.
