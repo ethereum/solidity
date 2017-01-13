@@ -1,403 +1,17 @@
-##################################
-Expressions and Control Structures
-##################################
-
-.. index:: ! parameter, parameter;input, parameter;output
-
-Input Parameters and Output Parameters
-======================================
-
-As in Javascript, functions may take parameters as input;
-unlike in Javascript and C, they may also return arbitrary number of
-parameters as output.
-
-Input Parameters
-----------------
-
-The input parameters are declared the same way as variables are. As an
-exception, unused parameters can omit the variable name.
-For example, suppose we want our contract to
-accept one kind of external calls with two integers, we would write
-something like::
-
-    contract Simple {
-        function taker(uint _a, uint _b) {
-            // do something with _a and _b.
-        }
-    }
-
-Output Parameters
------------------
-
-The output parameters can be declared with the same syntax after the
-``returns`` keyword. For example, suppose we wished to return two results:
-the sum and the product of the two given integers, then we would
-write::
-
-    contract Simple {
-        function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
-            o_sum = _a + _b;
-            o_product = _a * _b;
-        }
-    }
-
-The names of output parameters can be omitted.
-The output values can also be specified using ``return`` statements.
-The ``return`` statements are also capable of returning multiple
-values, see :ref:`multi-return`.
-Return parameters are initialized to zero; if they are not explicitly
-set, they stay to be zero.
-
-Input parameters and output parameters can be used as expressions in
-the function body.  There, they are also usable in the left-hand side
-of assignment.
-
-.. index:: if, else, while, do/while, for, break, continue, return, switch, goto
-
-Control Structures
-===================
-
-Most of the control structures from JavaScript are available in Solidity
-except for ``switch`` and ``goto``. So
-there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
-the usual semantics known from C or JavaScript.
-
-Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
-around single-statement bodies.
-
-Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
-Solidity.
-
-.. _multi-return:
-
-Returning Multiple Values
--------------------------
-
-When a function has multiple output parameters, ``return (v0, v1, ...,
-vn)`` can return multiple values.  The number of components must be
-the same as the number of output parameters.
-
-.. index:: ! function;call, function;internal, function;external
-
-.. _function-calls:
-
-Function Calls
-==============
-
-Internal Function Calls
------------------------
-
-Functions of the current contract can be called directly ("internally"), also recursively, as seen in
-this nonsensical example::
-
-    contract C {
-        function g(uint a) returns (uint ret) { return f(); }
-        function f() returns (uint ret) { return g(7) + f(); }
-    }
-
-These function calls are translated into simple jumps inside the EVM. This has
-the effect that the current memory is not cleared, i.e. passing memory references
-to internally-called functions is very efficient. Only functions of the same
-contract can be called internally.
-
-External Function Calls
------------------------
-
-The expressions ``this.g(8);`` and ``c.g(2);`` (where ``g`` is a contract
-instance) are also valid function calls, but this time, the function
-will be called "externally", via a message call and not directly via jumps.
-Please note that function calls on ``this`` cannot be used in the constructor, as the
-actual contract has not been created yet.
-
-Functions of other contracts have to be called externally. For an external call,
-all function arguments have to be copied to memory.
-
-When calling functions
-of other contracts, the amount of Wei sent with the call and the gas can be specified::
-
-    contract InfoFeed {
-        function info() payable returns (uint ret) { return 42; }
-    }
-
-
-    contract Consumer {
-        InfoFeed feed;
-        function setFeed(address addr) { feed = InfoFeed(addr); }
-        function callFeed() { feed.info.value(10).gas(800)(); }
-    }
-
-The modifier ``payable`` has to be used for ``info``, because otherwise,
-we would not be able to send Ether to it in the call ``feed.info.value(10).gas(800)()``.
-
-Note that the expression ``InfoFeed(addr)`` performs an explicit type conversion stating
-that "we know that the type of the contract at the given address is ``InfoFeed``" and
-this does not execute a constructor. Explicit type conversions have to be
-handled with extreme caution. Never call a function on a contract where you
-are not sure about its type.
-
-We could also have used ``function setFeed(InfoFeed _feed) { feed = _feed; }`` directly.
-Be careful about the fact that ``feed.info.value(10).gas(800)``
-only (locally) sets the value and amount of gas sent with the function call and only the
-parentheses at the end perform the actual call.
-
-Function calls cause exceptions if the called contract does not exist (in the
-sense that the account does not contain code) or if the called contract itself
-throws an exception or goes out of gas.
-
-.. warning::
-    Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The current
-    contract hands over control to the called contract and that may potentially
-    do just about anything. Even if the called contract inherits from a known parent contract,
-    the inheriting contract is only required to have a correct interface. The
-    implementation of the contract, however, can be completely arbitrary and thus,
-    pose a danger. In addition, be prepared in case it calls into other contracts of
-    your system or even back into the calling contract before the first
-    call returns. This means
-    that the called contract can change state variables of the calling contract
-    via its functions. Write your functions in a way that, for example, calls to
-    external functions happen after any changes to state variables in your contract
-    so your contract is not vulnerable to a reentrancy exploit.
-
-Named Calls and Anonymous Function Parameters
----------------------------------------------
-
-Function call arguments can also be given by name, in any order,
-if they are enclosed in ``{ }`` as can be seen in the following
-example. The argument list has to coincide by name with the list of
-parameters from the function declaration, but can be in arbitrary order.
-
-::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        function f(uint key, uint value) { ... }
-
-        function g() {
-            // named arguments
-            f({value: 2, key: 3});
-        }
-    }
-
-Omitted Function Parameter Names
---------------------------------
-
-The names of unused parameters (especially return parameters) can be omitted.
-Those names will still be present on the stack, but they are inaccessible.
-
-::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        // omitted name for parameter
-        function func(uint k, uint) returns(uint) {
-            return k;
-        }
-    }
-    
-
-.. index:: ! new, contracts;creating
-
-.. _creating-contracts:
-
-Creating Contracts via ``new``
-==============================
-
-A contract can create a new contract using the ``new`` keyword. The full
-code of the contract being created has to be known in advance, so recursive
-creation-dependencies are not possible.
-
-::
-
-    pragma solidity ^0.4.0;
-
-    contract D {
-        uint x;
-        function D(uint a) payable {
-            x = a;
-        }
-    }
-
-
-    contract C {
-        D d = new D(4); // will be executed as part of C's constructor
-
-        function createD(uint arg) {
-            D newD = new D(arg);
-        }
-
-        function createAndEndowD(uint arg, uint amount) {
-            // Send ether along with the creation
-            D newD = (new D).value(amount)(arg);
-        }
-    }
-
-As seen in the example, it is possible to forward Ether to the creation,
-but it is not possible to limit the amount of gas. If the creation fails
-(due to out-of-stack, not enough balance or other problems), an exception
-is thrown.
-
-Order of Evaluation of Expressions
-==================================
-
-The evaluation order of expressions is not specified (more formally, the order
-in which the children of one node in the expression tree are evaluated is not
-specified, but they are of course evaluated before the node itself). It is only
-guaranteed that statements are executed in order and short-circuiting for
-boolean expressions is done. See :ref:`order` for more information.
-
-.. index:: ! assignment
-
-Assignment
-==========
-
-.. index:: ! assignment;destructuring
-
-Destructuring Assignments and Returning Multiple Values
--------------------------------------------------------
-
-Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
-
-    contract C {
-        uint[] data;
-
-        function f() returns (uint, bool, uint) {
-            return (7, true, 2);
-        }
-
-        function g() {
-            // Declares and assigns the variables. Specifying the type explicitly is not possible.
-            var (x, b, y) = f();
-            // Assigns to a pre-existing variable.
-            (x, y) = (2, 7);
-            // Common trick to swap values -- does not work for non-value storage types.
-            (x, y) = (y, x);
-            // Components can be left out (also for variable declarations).
-            // If the tuple ends in an empty component,
-            // the rest of the values are discarded.
-            (data.length,) = f(); // Sets the length to 7
-            // The same can be done on the left side.
-            (,data[3]) = f(); // Sets data[3] to 2
-            // Components can only be left out at the left-hand-side of assignments, with
-            // one exception:
-            (x,) = (1,);
-            // (1,) is the only way to specify a 1-component tuple, because (1) is
-            // equivalent to 1.
-        }
-    }
-
-Complications for Arrays and Structs
-------------------------------------
-
-The semantics of assignment are a bit more complicated for non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
-
-.. index:: ! scoping, declarations, default value
-
-.. _default-value:
-
-Scoping and Declarations
-========================
-
-A variable which is declared will have an initial default value whose byte-representation is all zeros.
-The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
-element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string.
-
-A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
-This happens because Solidity inherits its scoping rules from JavaScript.
-This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
-As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
-
-    pragma solidity ^0.4.0;
-
-    contract ScopingErrors {
-        function scoping() {
-            uint i = 0;
-
-            while (i++ < 1) {
-                uint same1 = 0;
-            }
-
-            while (i++ < 2) {
-                uint same1 = 0;// Illegal, second declaration of same1
-            }
-        }
-
-        function minimalScoping() {
-            {
-                uint same2 = 0;
-            }
-
-            {
-                uint same2 = 0;// Illegal, second declaration of same2
-            }
-        }
-
-        function forLoopScoping() {
-            for (uint same3 = 0; same3 < 1; same3++) {
-            }
-
-            for (uint same3 = 0; same3 < 1; same3++) {// Illegal, second declaration of same3
-            }
-        }
-    }
-
-In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
-As a result, the following code is legal, despite being poorly written::
-
-    function foo() returns (uint) {
-        // baz is implicitly initialized as 0
-        uint bar = 5;
-        if (true) {
-            bar += baz;
-        } else {
-            uint baz = 10;// never executes
-        }
-        return bar;// returns 5
-    }
-
-.. index:: ! exception, ! throw
-
-Exceptions
-==========
-
-There are some cases where exceptions are thrown automatically (see below). You can use the ``throw`` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are ``send`` and the low-level functions ``call``, ``delegatecall`` and ``callcode``, those return ``false`` in case of an exception).
-
-Catching exceptions is not yet possible.
-
-In the following example, we show how ``throw`` can be used to easily revert an Ether transfer and also how to check the return value of ``send``::
-
-    pragma solidity ^0.4.0;
-
-    contract Sharer {
-        function sendHalf(address addr) payable returns (uint balance) {
-            if (!addr.send(msg.value / 2))
-                throw; // also reverts the transfer to Sharer
-            return this.balance;
-        }
-    }
-
-Currently, Solidity automatically generates a runtime exception in the following situations:
-
-1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-1. If you access a fixed-length ``bytesN`` at a too large or negative index.
-1. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
-1. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
-1. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-1. If you shift by a negative amount.
-1. If you convert a value too big or negative into an enum type.
-1. If you perform an external function call targeting a contract that contains no code.
-1. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-1. If your contract receives Ether via a public accessor function.
-
-Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
+#################
+Solidity Assembly
+#################
 
 .. index:: ! assembly, ! asm, ! evmasm
+
+Solidity defines an assembly language that can also be used without Solidity.
+This assembly language can also be used as "inline assembly" inside Solidity
+source code. We start with describing how to use inline assembly and how it
+differs from standalone assembly and then specify assembly itself.
+
+TODO: Write about how scoping rules of inline assembly are a bit different
+and the complications that arise when for example using internal functions
+of libraries. Furhermore, write about the symbols defined by the compiler.
 
 Inline Assembly
 ===============
@@ -413,13 +27,18 @@ arising when writing manual assembly by the following features:
 * assembly-local variables: ``let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)``
 * access to external variables: ``function f(uint x) { assembly { x := sub(x, 1) } }``
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
+* loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
+* switch statements: ``switch x case 0: { y := mul(x, 2) } default: { y := 0 }``
+* function calls: ``function f(x) -> (y) { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
+
+.. note::
+    Of the above, loops, function calls and switch statements are not yet implemented.
 
 We now want to describe the inline assembly language in detail.
 
 .. warning::
-    Inline assembly is a way to access the Ethereum Virtual Machine
-    at a low level. This discards several important safety
-    features of Solidity.
+    Inline assembly is still a relatively new feature and might change if it does not prove useful,
+    so please try to keep up to date.
 
 Example
 -------
@@ -429,8 +48,6 @@ load it into a ``bytes`` variable. This is not possible at all with "plain Solid
 idea is that assembly libraries will be used to enhance the language in such ways.
 
 .. code::
-
-    pragma solidity ^0.4.0;
 
     library GetCode {
         function at(address _addr) returns (bytes o_code) {
@@ -452,12 +69,10 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 Inline assembly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
-the compiler does not perform checks, so you should use it for complex things only if
+the compiler does not perform checks, so you should use it only if
 you really know what you are doing.
 
 .. code::
-
-    pragma solidity ^0.4.0;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
@@ -473,25 +88,26 @@ you really know what you are doing.
         function sumAsm(uint[] _data) returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
-                    o_sum := mload(add(add(_data, 0x20), i))
+                    o_sum := mload(add(add(_data, 0x20), mul(i, 0x20)))
                 }
             }
         }
     }
 
+
 Syntax
 ------
 
-Inline assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
-usual ``//`` and ``/* */`` comments. Inline assembly is initiated by ``assembly { ... }`` and inside
+Assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
+usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
 these curly braces, the following can be used (see the later sections for more details)
 
- - literals, e.g. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+ - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcodes in functional style, e.g. ``add(1, mload(0))``
+ - opcode in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
- - identifiers (externals, labels or assembly-local variables), e.g. ``jump(name)``, ``3 x add``
+ - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
  - assignments (in "instruction style"), e.g. ``3 =: x``
  - assignments in functional style, e.g. ``x := add(y, 3)``
  - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
@@ -503,7 +119,7 @@ This document does not want to be a full description of the Ethereum virtual mac
 following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
-Note that the order of arguments can be seen as being reversed compared to the instructional style (explained below).
+Note that the order of arguments can be seed to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
 special and all others push exactly one item onte the stack.
 
@@ -511,6 +127,8 @@ In the following, ``mem[a...b)`` signifies the bytes of memory starting at posit
 (excluding) position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
 
 The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
+
+In the grammar, opcodes are represented as pre-defined identifiers.
 
 +-------------------------+------+-----------------------------------------------------------------+
 | stop                    + `-`  | stop execution, identical to return(0,0)                        |
@@ -567,7 +185,7 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | pc                      |      | current position in code                                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| pop(x)                  | `-`  | remove the element pushed by x                                  |
+| pop                     | `*`  | remove topmost stack slot                                       |
 +-------------------------+------+-----------------------------------------------------------------+
 | dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -595,9 +213,9 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | callvalue               |      | wei sent together with the current call                         |
 +-------------------------+------+-----------------------------------------------------------------+
-| calldataload(p)         |      | calldata starting from position p (32 bytes)                    |
+| calldataload(p)         |      | call data starting from position p (32 bytes)                   |
 +-------------------------+------+-----------------------------------------------------------------+
-| calldatasize            |      | size of calldata in bytes                                       |
+| calldatasize            |      | size of call data in bytes                                      |
 +-------------------------+------+-----------------------------------------------------------------+
 | calldatacopy(t, f, s)   | `-`  | copy s bytes from calldata at position f to mem at position t   |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -612,20 +230,19 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 | create(v, p, s)         |      | create new contract with code mem[p..(p+s)) and send v wei      |
 |                         |      | and return the new address                                      |
 +-------------------------+------+-----------------------------------------------------------------+
-| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize))      |
+| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize)]      |
 | insize, out, outsize)   |      | providing g gas and v wei and output area                       |
-|                         |      | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
-|                         |      | and 1 on success                                                |
+|                         |      | mem[out..(out+outsize)] returting 1 on error (out of gas)       |
 +-------------------------+------+-----------------------------------------------------------------+
-| callcode(g, a, v, in,   |      | identical to `call` but only use the code from a and stay       |
+| callcode(g, a, v, in,   |      | identical to call but only use the code from a and stay         |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
 +-------------------------+------+-----------------------------------------------------------------+
-| delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
+| delegatecall(g, a, in,  |      | identical to callcode but also keep ``caller``                  |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
-| return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
+| selfdestruct(a)         | `*`  | end execution, destroy current contract and send funds to a     |
 +-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -714,8 +331,6 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
-    pragma solidity ^0.4.0;
-
     contract C {
         uint b;
         function f(uint x) returns (uint r) {
@@ -754,7 +369,7 @@ jumps easier. The following code computes an element in the Fibonacci series.
 
 Please note that automatically accessing stack variables can only work if the
 assembler knows the current stack height. This fails to work if the jump source
-and target have different stack heights. It is still fine to use such jumps,
+and target have different stack heights. It is still fine to use such jumps, but
 you should just not access any stack variables (even assembly variables) in that case.
 
 Furthermore, the stack height analyser goes through the code opcode by opcode
@@ -777,10 +392,6 @@ will have a wrong impression about the stack height at label ``two``:
         three:
     }
 
-.. note::
-
-    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
-    result in an invalid jump, effectively aborting execution of the code.
 
 Declaring Assembly-Local Variables
 ----------------------------------
@@ -793,8 +404,6 @@ is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
-
-    pragma solidity ^0.4.0;
 
     contract C {
         function f(uint x) returns (uint b) {
@@ -818,11 +427,12 @@ Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
-There are two kinds of assignments: Functional-style and instruction-style.
+There are two kinds of assignments: functional-style and instruction-style.
 For functional-style assignments (``variable := value``), you need to provide a value in a
 functional-style expression that results in exactly one stack value
 and for instruction-style (``=: variable``), the value is just taken from the stack top.
-For both ways, the colon points to the name of the variable.
+For both ways, the colon points to the name of the variable. The assignment
+is performed by replacing the variable's value on the stack by the new value.
 
 .. code::
 
@@ -833,12 +443,93 @@ For both ways, the colon points to the name of the variable.
         =: v // instruction style assignment, puts the result of sload(10) into v
     }
 
+Switch
+------
+
+You can use a switch statement as a very basic version of "if/else".
+It takes the value of an expression and compares it to several constants.
+The branch corresponding to the matching constant is taken. Contrary to the
+error-prone behaviour of some programming languages, control flow does
+not continue from one case to the next. There can be a fallback or default
+case called ``default``.
+
+.. code::
+
+    assembly {
+        let x := 0
+        switch calldataload(4)
+        case 0: {
+            x := calldataload(0x24)
+        }
+        default: {
+            x := calldataload(0x44)
+        }
+        sstore(0, div(x, 2))
+    }
+
+The list of cases does not require curly braces, but the body of a
+case does require them.
+
+Loops
+-----
+
+Assembly supports a simple for-style loop. For-style loops have
+a header containing an initializing part, a condition and a post-iteration
+part. The condition has to be a functional-style expression, while
+the other two can also be blocks. If the initializing part is a block that
+declares any variables, the scope of these variables is extended into the
+body (including the condition and the post-iteration part).
+
+The following example computes the sum of an area in memory.
+
+.. code::
+
+    assembly {
+        let x := 0
+        for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
+            x := add(x, mload(i))
+        }
+    }
+
+Functions
+---------
+
+Assembly allows the definition of low-level functions. These take their
+arguments (and a return PC) from the stack and also put the results onto the
+stack. Calling a function looks the same way as executing a functional-style
+opcode.
+
+Functions can be defined anywhere and are visible in the block they are
+declared in. Inside a function, you cannot access local variables
+defined outside of that function. There is no explicit ``return``
+statement.
+
+If you call a function that returns multiple values, you have to assign
+them to a tuple using ``(a, b) := f(x)`` or ``let (a, b) := f(x)``.
+
+The following example implements the power function by square-and-multiply.
+
+.. code::
+
+    assembly {
+        function power(base, exponent) -> (result) {
+            switch exponent
+            0: { result := 1 }
+            1: { result := base }
+            default: {
+                result := power(mul(base, base), div(exponent, 2))
+                switch mod(exponent, 2)
+                    1: { result := mul(base, result) }
+            }
+        }
+    }
 
 Things to Avoid
 ---------------
 
 Inline assembly might have a quite high-level look, but it actually is extremely
-low-level. The only thing the assembler does for you is re-arranging
+low-level. Function calls, loops and switches are converted by simple
+rewriting rules and after that, the only thing the assembler does for you is re-arranging
 functional-style opcodes, managing jump labels, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
 of their block is reached. Especially for those two last cases, it is important
@@ -851,7 +542,7 @@ Conventions in Solidity
 
 In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
 e.g. ``uint24``. In order to make them more efficient, most arithmetic operations just
-treat them as 256-bit numbers and the higher-order bits are only cleaned at the
+treat them as 256 bit numbers and the higher-order bits are only cleaned at the
 point where it is necessary, i.e. just shortly before they are written to memory
 or before comparisons are performed. This means that if you access such a variable
 from within inline assembly, you might have to manually clean the higher order bits
@@ -870,3 +561,390 @@ first slot of the array and then only the array elements follow.
     Statically-sized memory arrays do not have a length field, but it will be added soon
     to allow better convertibility between statically- and dynamically-sized arrays, so
     please do not rely on that.
+
+
+Standalone Assembly
+===================
+
+The assembly language described as inline assembly above can also be used
+standalone and in fact, the plan is to use it as an intermediate language
+for the Solidity compiler. In this form, it tries to achieve several goals:
+
+1. Programs written in it should be readable, even if the code is generated by a compiler from Solidity.
+2. The translation from assembly to bytecode should contain as few "surprises" as possible.
+3. Control flow should be easy to detect to help in formal verification and optimization.
+
+In order to achieve the first and last goal, assembly provides high-level constructs
+like ``for`` loops, ``switch`` statements and function calls. It should be possible
+to write assembly programs that do not make use of explicit ``SWAP``, ``DUP``,
+``JUMP`` and ``JUMPI`` statements, because the first two obfuscate the data flow
+and the last two obfuscate control flow. Furthermore, functional statements of
+the form ``mul(add(x, y), 7)`` are preferred over pure opcode statements like
+``7 y x add mul`` because in the first form, it is much easier to see which
+operand is used for which opcode.
+
+The second goal is achieved by introducing a desugaring phase that only removes
+the higher level constructs in a very regular way and still allows inspecting
+the generated low-level assembly code. The only non-local operation performed
+by the assembler is name lookup of user-defined identifiers (functions, variables, ...),
+which follow very simple and regular scoping rules and cleanup of local variables from the stack.
+
+Scoping: An identifier that is declared (label, variable, function, assembly)
+is only visible in the block where it was declared (including nested blocks
+inside the current block). It is not legal to access local variables across
+function borders, even if they would be in scope. Shadowing is allowed, but
+two identifiers with the same name cannot be declared in the same block.
+Local variables cannot be accessed before they were declared, but labels,
+functions and assemblies can. Assemblies are special blocks that are used
+for e.g. returning runtime code or creating contracts. No identifier from an
+outer assembly is visible in a sub-assembly.
+
+If control flow passes over the end of a block, pop instructions are inserted
+that match the number of local variables declared in that block, unless the
+``}`` is directly preceded by an opcode that does not have a continuing control
+flow path. Whenever a local variable is referenced, the code generator needs
+to know its current relative position in the stack and thus it needs to
+keep track of the current so-called stack height.
+At the end of a block, this implicit stack height is always reduced by the number
+of local variables whether ther is a continuing control flow or not.
+
+This means that the stack height before and after the block should be the same.
+If this is not the case, a warning is issued,
+unless the last instruction in the block did not have a continuing control flow path.
+
+Why do we use higher-level constructs like ``switch``, ``for`` and functions:
+
+Using ``switch``, ``for`` and functions, it should be possible to write
+complex code without using ``jump`` or ``jumpi`` manually. This makes it much
+easier to analyze the control flow, which allows for improved formal
+verification and optimization.
+
+Furthermore, if manual jumps are allowed, computing the stack height is rather complicated.
+The position of all local variables on the stack needs to be known, otherwise
+neither references to local variables nor removing local variables automatically
+from the stack at the end of a block will work properly. Because of that,
+every label that is preceded by an instruction that ends or diverts control flow
+should be annotated with the current stack layout. This annotation is performed
+automatically during the desugaring phase.
+
+Example:
+
+We will follow an example compilation from Solidity to desugared assembly.
+We consider the runtime bytecode of the following Solidity program::
+
+    contract C {
+      function f(uint x) returns (uint y) {
+        y = 1;
+        for (uint i = 0; i < x; i++)
+          y = 2 * y;
+      }
+    }
+
+The following assembly will be generated::
+
+    {
+      mstore(0x40, 0x60) // store the "free memory pointer"
+      // function dispatcher
+      switch div(calldataload(0), exp(2, 226))
+      case 0xb3de648b: {
+        let (r) = f(calldataload(4))
+        let ret := $allocate(0x20)
+        mstore(ret, r)
+        return(ret, 0x20)
+      }
+      default: { jump(invalidJumpLabel) }
+      // memory allocator
+      function $allocate(size) -> (pos) {
+        pos := mload(0x40)
+        mstore(0x40, add(pos, size))
+      }
+      // the contract function
+      function f(x) -> (y) {
+        y := 1
+        for { let i := 0 } lt(i, x) { i := add(i, 1) } {
+          y := mul(2, y)
+        }
+      }
+    }
+
+After the desugaring phase it looks as follows::
+
+    {
+      mstore(0x40, 0x60)
+      {
+        let $0 := div(calldataload(0), exp(2, 226))
+        jumpi($case1, eq($0, 0xb3de648b))
+        jump($caseDefault)
+        $case1:
+        {
+          // the function call - we put return label and arguments on the stack
+          $ret1 calldataload(4) jump($fun_f)
+          $ret1 [r]: // a label with a [...]-annotation resets the stack height
+                    // to "current block + number of local variables". It also
+                    // introduces a variable, r:
+                    // r is at top of stack, $0 is below (from enclosing block)
+          $ret2 0x20 jump($fun_allocate)
+          $ret2 [ret]: // stack here: $0, r, ret (top)
+          mstore(ret, r)
+          return(ret, 0x20)
+          // although it is useless, the jump is automatically inserted,
+          // since the desugaring process does not analyze control-flow
+          jump($endswitch)
+        }
+        $caseDefault:
+        {
+          jump(invalidJumpLabel)
+          jump($endswitch)
+        }
+        $endswitch:
+      }
+      jump($afterFunction)
+      $fun_allocate:
+      {
+        $start[$retpos, size]:
+        // output variables live in the same scope as the arguments.
+        let pos := 0
+        {
+          pos := mload(0x40)
+          mstore(0x40, add(pos, size))
+        }
+        swap1 pop swap1 jump
+      }
+      $fun_f:
+      {
+        start [$retpos, x]:
+        let y := 0
+        {
+          let i := 0
+          $for_begin:
+          jumpi($for_end, iszero(lt(i, x)))
+          {
+            y := mul(2, y)
+          }
+          $for_continue:
+          { i := add(i, 1) }
+          jump($for_begin)
+          $for_end:
+        } // Here, a pop instruction is inserted for i
+        swap1 pop swap1 jump
+      }
+      $afterFunction:
+      stop
+    }
+
+
+Assembly happens in four stages:
+
+1. Parsing
+2. Desugaring (removes switch, for and functions)
+3. Opcode stream generation
+4. Bytecode generation
+
+We will specify steps one to three in a pseudo-formal way. More formal
+specifications will follow.
+
+
+Parsing / Grammar
+-----------------
+
+The tasks of the parser are the following:
+
+- Turn the byte stream into a token stream, discarding C++-style comments
+  (a special comment exists for source references, but we will not explain it here).
+- Turn the token stream into an AST according to the grammar below
+- Register identifiers with the block they are defined in (annotation to the
+  AST node) and note from which point on, variables can be accessed.
+
+The assembly lexer follows the one defined by Solidity itself.
+
+Whitespace is used to delimit tokens and it consists of the characters
+Space, Tab and Linefeed. Comments are regular JavaScript/C++ comments and
+are interpreted in the same way as Whitespace.
+
+Grammar::
+
+    AssemblyBlock = '{' AssemblyItem* '}'
+    AssemblyItem =
+        Identifier |
+        AssemblyBlock |
+        FunctionalAssemblyExpression |
+        AssemblyLocalDefinition |
+        FunctionalAssemblyAssignment |
+        AssemblyAssignment |
+        LabelDefinition |
+        AssemblySwitch |
+        AssemblyFunctionDefinition |
+        AssemblyFor |
+        'break' | 'continue' |
+        SubAssembly | 'dataSize' '(' Identifier ')' |
+        LinkerSymbol |
+        'errorLabel' | 'bytecodeSize' |
+        NumberLiteral | StringLiteral | HexLiteral
+    Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
+    FunctionalAssemblyExpression = Identifier '(' ( AssemblyItem ( ',' AssemblyItem )* )? ')'
+    AssemblyLocalDefinition = 'let' IdentifierOrList ':=' FunctionalAssemblyExpression
+    FunctionalAssemblyAssignment = IdentifierOrList ':=' FunctionalAssemblyExpression
+    IdentifierOrList = Identifier | '(' IdentifierList ')'
+    IdentifierList = Identifier ( ',' Identifier)*
+    AssemblyAssignment = '=:' Identifier
+    LabelDefinition = Identifier ( '[' ( IdentifierList | NumberLiteral ) ']' )? ':'
+    AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
+        ( 'default' ':' AssemblyBlock )?
+    AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
+    AssemblyFunctionDefinition = 'function' Identifier '(' IdentifierList? ')'
+        ( '->' '(' IdentifierList ')' )? AssemblyBlock
+    AssemblyFor = 'for' ( AssemblyBlock | FunctionalAssemblyExpression)
+        FunctionalAssemblyExpression ( AssemblyBlock | FunctionalAssemblyExpression) AssemblyBlock
+    SubAssembly = 'assembly' Identifier AssemblyBlock
+    LinkerSymbol = 'linkerSymbol' '(' StringLiteral ')'
+    NumberLiteral = HexNumber | DecimalNumber
+    HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+    StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+    HexNumber = '0x' [0-9a-fA-F]+
+    DecimalNumber = [0-9]+
+
+
+Desugaring
+----------
+
+An AST transformation removes for, switch and function constructs. The result
+is still parseable by the same parser, but it will not use certain constructs.
+If jumpdests are added that are only jumped to and not continued at, information
+about the stack content is added, unless no local variables of outer scopes are
+accessed or the stack height is the same as for the previous instruction.
+
+Pseudocode::
+
+    desugar item: AST -> AST =
+    match item {
+    AssemblyFunctionDefinition('function' name '(' arg1, ..., argn ')' '->' ( '(' ret1, ..., retm ')' body) ->
+      <name>:
+      {
+        $<name>_start [$retPC, $argn, ..., arg1]:
+        let ret1 := 0 ... let retm := 0
+        { desugar(body) }
+        swap and pop items so that only ret1, ... retn, $retPC are left on the stack
+        jump 
+      }
+    AssemblyFor('for' { init } condition post body) ->
+      {
+        init // cannot be its own block because we want variable scope to extend into the body
+        // find I such that there are no labels $forI_*
+        $forI_begin:
+        jumpi($forI_end, iszero(condition))
+        { body }
+        $forI_continue:
+        { post }
+        jump($forI_begin)
+        $forI_end:
+      }
+    'break' ->
+      {
+        // find nearest enclosing scope with label $forI_end
+        pop all local variables that are defined at the current point
+        but not at $forI_end
+        jump($forI_end)
+      }
+    'continue' ->
+      {
+        // find nearest enclosing scope with label $forI_continue
+        pop all local variables that are defined at the current point
+        but not at $forI_continue
+        jump($forI_continue)
+      }
+    AssemblySwitch(switch condition cases ( default: defaultBlock )? ) ->
+      {
+        // find I such that there is no $switchI* label or variable
+        let $switchI_value := condition
+        for each of cases match {
+          case val: -> jumpi($switchI_caseJ, eq($switchI_value, val))
+        }
+        if default block present: ->
+          { defaultBlock jump($switchI_end) }
+        for each of cases match {
+          case val: { body } -> $switchI_caseJ: { body jump($switchI_end) }
+        }
+        $switchI_end:
+      }
+    FunctionalAssemblyExpression( identifier(arg1, arg2, ..., argn) ) ->
+      {
+        if identifier is function <name> with n args and m ret values ->
+          {
+            // find I such that $funcallI_* does not exist
+            $funcallI_return argn  ... arg2 arg1 jump(<name>)
+            if the current context is `let (id1, ..., idm) := f(...)` ->
+              $funcallI_return [id1, ..., idm]:
+            else ->
+              $funcallI_return[m - n - 1]:
+              turn the functional expression that leads to the function call
+              into a statement stream
+          }
+        else -> desugar(children of node)
+      }
+    default node ->
+      desugar(children of node)
+    }
+
+Opcode Stream Generation
+------------------------
+
+During opcode stream generation, we keep track of the current stack height,
+so that accessing stack variables by name is possible.
+
+Pseudocode::
+
+    codegen item: AST -> opcode_stream =
+    match item {
+    AssemblyBlock({ items }) ->
+      join(codegen(item) for item in items)
+      if last generated opcode has continuing control flow:
+        POP for all local variables registered at the block (including variables
+        introduced by labels)
+        warn if the stack height at this point is not the same as at the start of the block
+    Identifier(id) ->
+      lookup id in the syntactic stack of blocks
+      match type of id
+        Local Variable ->
+          DUPi where i = 1 + stack_height - stack_height_of_identifier(id)
+        Label ->
+          // reference to be resolved during bytecode generation
+          PUSH<bytecode position of label>
+        SubAssembly ->
+          PUSH<bytecode position of subassembly data>
+    FunctionalAssemblyExpression(id ( arguments ) ) ->
+      join(codegen(arg) for arg in arguments.reversed())
+      id (which has to be an opcode, might be a function name later)
+    AssemblyLocalDefinition(let (id1, ..., idn) := expr) ->
+      register identifiers id1, ..., idn as locals in current block at current stack height
+      codegen(expr) - assert that expr returns n items to the stack
+    FunctionalAssemblyAssignment((id1, ..., idn) := expr) ->
+      lookup id1, ..., idn in the syntactic stack of blocks, assert that they are variables
+      codegen(expr)
+      for j = n, ..., i:
+      SWAPi where i = 1 + stack_height - stack_height_of_identifier(idj)
+      POP
+    AssemblyAssignment(=: id) ->
+      look up id in the syntactic stack of blocks, assert that it is a variable
+      SWAPi where i = 1 + stack_height - stack_height_of_identifier(id)
+      POP
+    LabelDefinition(name [id1, ..., idn] :) ->
+      JUMPDEST
+      // register new variables id1, ..., idn and set the stack height to
+      // stack_height_at_block_start + number_of_local_variables
+    LabelDefinition(name [number] :) ->
+      JUMPDEST
+      // adjust stack height by +number (can be negative)
+    NumberLiteral(num) ->
+      PUSH<num interpreted as decimal and right-aligned>
+    HexLiteral(lit) ->
+      PUSH32<lit interpreted as hex and left-aligned>
+    StringLiteral(lit) ->
+      PUSH32<lit utf-8 encoded and left-aligned>
+    SubAssembly(assembly <name> block) ->
+      append codegen(block) at the end of the code
+    dataSize(<name>) ->
+      assert that <name> is a subassembly ->
+      PUSH32<size of code generated from subassembly <name>>
+    linkerSymbol(<lit>) ->
+      PUSH32<zeros> and append position to linker table
+    }

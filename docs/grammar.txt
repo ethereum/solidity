@@ -14,7 +14,7 @@ ContractDefinition = ( 'contract' | 'library' ) Identifier
 ContractPart = StateVariableDeclaration | UsingForDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
-InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
+InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
 StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
@@ -23,7 +23,7 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier? ParameterList
                      ( FunctionCall | Identifier | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
-                     ( 'returns' ParameterList )? Block
+                     ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
@@ -35,10 +35,18 @@ TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
-VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName | FunctionTypeName
+VariableDeclaration = TypeName StorageLocation? Identifier
+
+TypeName = ElementaryTypeName
+         | UserDefinedTypeName
+         | Mapping
+         | ArrayTypeName
+         | FunctionTypeName
+
+UserDefinedTypeName = Identifier ( '.' Identifier )*
+
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
-ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
+ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
@@ -69,7 +77,7 @@ Expression =
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
   | Expression ('+' | '-') Expression
-  | Expression ('<<' | '>>')
+  | Expression ('<<' | '>>') Expression
   | Expression '&' Expression
   | Expression '^' Expression
   | Expression '|' Expression
@@ -82,20 +90,36 @@ Expression =
   | Expression? (',' Expression)
   | PrimaryExpression
 
-PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
+PrimaryExpression = Identifier
+                  | BooleanLiteral
+                  | NumberLiteral
+                  | HexLiteral
+                  | StringLiteral
+                  | ElementaryTypeNameExpression
 
-FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
-NewExpression = 'new' Identifier
+ExpressionList = Expression ( ',' Expression )*
+NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
+
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' FunctionCallArguments ')'
+FunctionCallArguments = '{' NameValueList? '}'
+                      | ExpressionList?
+
+NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
-NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
+NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
+
+HexNumber = '0x' [0-9a-fA-F]+
+DecimalNumber = [0-9]+
+
+ElementaryTypeNameExpression = ElementaryTypeName
 
 ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
                    | Int | Uint | Byte | Fixed | Ufixed

@@ -87,6 +87,15 @@ Solidity Tools
 * `evmdis <https://github.com/Arachnid/evmdis>`_
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
 
+Third-Party Solidity Parsers and Grammars
+-----------------------------------------
+
+* `solidity-parser <https://github.com/ConsenSys/solidity-parser>`_
+    Solidity parser for JavaScript
+
+* `Solidity Grammar for ANTLR 4 <https://github.com/federicobond/solidity-antlr4>`_
+    Solidity grammar for the ANTLR 4 parser generator
+
 Language Documentation
 ----------------------
 

@@ -26,11 +26,13 @@
 
 language: cpp
 branches:
-    # We need to whitelist the branches which we want to have "push" automation.
+    # We need to whitelist the branches which we want to have "push" automation,
+    # this includes tags (which are treated as branches by travis).
     # Pull request automation is not constrained to this set of branches.
     only:
         - develop
         - release
+        - /^v[0-9]/
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -71,6 +73,7 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
+          node_js: stable
           services:
               - docker
           before_install:
@@ -137,11 +140,12 @@ cache:
     directories:
         - boost_1_57_0
         - build
+        - $HOME/.local
 
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test "$TRAVIS_PULL_REQUESTS" != "false" || test "$TRAVIS_BRANCH" != release || echo -n > prerelease.txt # this is a proper release
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
     - test $TRAVIS_RELEASE != On || (mkdir -p build
@@ -149,7 +153,8 @@ before_script:
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
-      && ./scripts/release.sh $ZIP_SUFFIX )
+      && ./scripts/release.sh $ZIP_SUFFIX
+      && ./scripts/create_source_tarball.sh )
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
 
@@ -190,43 +195,20 @@ deploy:
             - release
 
     # This is the deploy target for the native build (Linux and macOS)
-    # which generates ZIPs per commit.  We are in agreement that
-    # generating ZIPs per commit for the develop branch is probably
-    # just noise, so we only run this deployment target on 'release'.
+    # which generates ZIPs per commit and the source tarball.
     #
-    # Unlike the Appveyor GitHub Releases target, the support in TravisCI
-    # seemingly doesn't provide a means for passing a description, tag, etc.
-    # In practice, we are letting the Appveyor CI do all that stuff, and
-    # then this deployment flow just seems to find that most recent tag,
-    # and just add our Linux and macOS ZIPs into the same tag, which is
-    # what we want to happen.  But is very accidental and brittle-looking.
-    #
-    # The 'skip_cleanup' stops the workspace being cleaned out prior to
-    # generation of the artifacts.  Strange that we should explicitly
-    # need to do that, but we do.
-    #
-    # Tokens in TravisCI can be generated a few different ways.  Bob had
-    # success using the 'travis' gem, and then using that gem to
-    # create/edit this .travis.yml file, and then cut-and-pasting the
-    # good bits back out of what it generated.  The gem changes all the
-    # whitespace and deletes comments, so cannot be used as-is.  But
-    # it does generate an appropriate auth token.
-    #
-    # TODO - I do not know if the api_key below which work correctly
-    # for ethereum/solidity.   I suspect not, for the same reason as
-    # my auth token does not work for Appveyor.  I don't have enough
-    # permissions to enable this myself.  Christian should be able to.
-    #
-    # See https://docs.travis-ci.com/user/deployment/releases
-    # See https://blog.travis-ci.com/2013-01-28-token-token-token/
-    # See https://github.com/ethereum/webthree-umbrella/issues/658
-    #
+    # This runs for each tag that is created and adds the corresponding files.
     - provider: releases
       api_key:
           secure: PWH37xVBCF0XiSjl+eH7XIdkrfxZXjzvqF4PiBOnD3VnFz+odrdnIwBmCeBYTHTWF8efpp8fmzWJk2UVq1JcpyZiC+SVxO8dx91W2ia1a+wKrEQuDgkUrZBkl5IQNCv0QS81DDQhliyZEaYh8wHO/7RReyMpGpw2U2u85WkFiZ+LdlHEZPfzUeh9lxQ9n8qwFL8Rja+Q05d4cQ8zaVEtofJJT4T6DUWhc3TzuxDYxOmjwg37rC9CkGSLn6VadSh8b3j5R0SZupFsAEvBL/imBLP9r9ewoo7o4p6By3jwiIgH9yNg7LM618xbffcNaYF/KtLBi9uPHfqF7hRD4PlECz+D0PR78nQItOX5HKm1QMg5kCnghRVCA0IVjpV5fiYQnMLM7dCRv34I5b3zLpa69wQ/GLYB2FViqNUfvPeiZTEeIJ2OmATlFx8AH2JoqpY1XJknWb35+vMfa8LSiJJW++SLWeV+ncC92hrvyZ1cy3trepRRZIfyYepxHifnfdWMkddQUJk5b2WS5Fy/TJLZNPeombnpvRhUC38dsYItarKeXTc6k4oADCEDZ2rgGIcEiqRxXV11Y5xHJekLDWzUs+YJNcCuL4pnAP//LOnbnH2w9rLpwhQYSl0anCd097NivAXQJXO2JI/byIYz1kiCVQWnW6EM8+72mLOklf/Qr8k=
-      file: $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
+
+      overwrite: true
+      file_glob: true
+      file:
+          - $TRAVIS_BUILD_DIR/solidity*.zip
+          - $TRAVIS_BUILD_DIR/solidity*tar.gz
       skip_cleanup: true
       on:
-          repo: ethereum/solidity
-          branch: release
+          all_branches: true
+          tags: true
           condition: $TRAVIS_RELEASE == On

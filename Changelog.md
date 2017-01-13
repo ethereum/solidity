@@ -1,3 +1,15 @@
+### 0.4.8 (2017-01-13)
+
+Features:
+ * Optimiser: Performance improvements.
+ * Output: Print assembly in new standardized Solidity assembly format.
+
+Bugfixes:
+ * Remappings: Prefer longer context over longer prefix.
+ * Type checker, code generator: enable access to events of base contracts' names.
+ * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
+ * Type checker, disallow inheritances of different kinds (e.g. a function and a modifier) of members of the same name
+
 ### 0.4.7 (2016-12-15)
 
 Features:

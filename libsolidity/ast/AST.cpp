@@ -217,6 +217,9 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 
 		for (EnumDefinition const* e: definedEnums())
 			addInheritableMember(e);
+
+		for (EventDefinition const* e: events())
+			addInheritableMember(e);
 	}
 	return *m_inheritableMembers;
 }
@@ -271,6 +274,45 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
+shared_ptr<FunctionType> FunctionDefinition::functionType(bool _internal) const
+{
+	if (_internal)
+	{
+		switch (visibility())
+		{
+		case Declaration::Visibility::Default:
+			solAssert(false, "visibility() should not return Default");
+		case Declaration::Visibility::Private:
+		case Declaration::Visibility::Internal:
+		case Declaration::Visibility::Public:
+			return make_shared<FunctionType>(*this, _internal);
+		case Declaration::Visibility::External:
+			return {};
+		default:
+			solAssert(false, "visibility() should not return a Visibility");
+		}
+	}
+	else
+	{
+		switch (visibility())
+		{
+		case Declaration::Visibility::Default:
+			solAssert(false, "visibility() should not return Default");
+		case Declaration::Visibility::Private:
+		case Declaration::Visibility::Internal:
+			return {};
+		case Declaration::Visibility::Public:
+		case Declaration::Visibility::External:
+			return make_shared<FunctionType>(*this, _internal);
+		default:
+			solAssert(false, "visibility() should not return a Visibility");
+		}
+	}
+
+	// To make the compiler happy
+	return {};
+}
+
 TypePointer FunctionDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
@@ -303,6 +345,14 @@ ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 TypePointer EventDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
+}
+
+std::shared_ptr<FunctionType> EventDefinition::functionType(bool _internal) const
+{
+	if (_internal)
+		return make_shared<FunctionType>(*this);
+	else
+		return {};
 }
 
 EventDefinitionAnnotation& EventDefinition::annotation() const
@@ -360,6 +410,28 @@ bool VariableDeclaration::canHaveAutoType() const
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
+}
+
+shared_ptr<FunctionType> VariableDeclaration::functionType(bool _internal) const
+{
+	if (_internal)
+		return {};
+	switch (visibility())
+	{
+	case Declaration::Visibility::Default:
+		solAssert(false, "visibility() should not return Default");
+	case Declaration::Visibility::Private:
+	case Declaration::Visibility::Internal:
+		return {};
+	case Declaration::Visibility::Public:
+	case Declaration::Visibility::External:
+		return make_shared<FunctionType>(*this);
+	default:
+		solAssert(false, "visibility() should not return a Visibility");
+	}
+
+	// To make the compiler happy
+	return {};
 }
 
 VariableDeclarationAnnotation& VariableDeclaration::annotation() const

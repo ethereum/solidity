@@ -38,6 +38,7 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
 			pushes[item]++;
+	map<u256, AssemblyItems> pendingReplacements;
 	for (auto it: pushes)
 	{
 		AssemblyItem const& item = it.first;
@@ -53,17 +54,22 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 		bigint copyGas = copy.gasNeeded();
 		ComputeMethod compute(params, item.data());
 		bigint computeGas = compute.gasNeeded();
+		AssemblyItems replacement;
 		if (copyGas < literalGas && copyGas < computeGas)
 		{
-			copy.execute(_assembly, _items);
+			replacement = copy.execute(_assembly);
 			optimisations++;
 		}
-		else if (computeGas < literalGas && computeGas < copyGas)
+		else if (computeGas < literalGas && computeGas <= copyGas)
 		{
-			compute.execute(_assembly, _items);
+			replacement = compute.execute(_assembly);
 			optimisations++;
 		}
+		if (!replacement.empty())
+			pendingReplacements[item.data()] = replacement;
 	}
+	if (!pendingReplacements.empty())
+		replaceConstants(_items, pendingReplacements);
 	return optimisations;
 }
 
@@ -101,18 +107,24 @@ size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 
 void ConstantOptimisationMethod::replaceConstants(
 	AssemblyItems& _items,
-	AssemblyItems const& _replacement
-) const
+	map<u256, AssemblyItems> const& _replacements
+)
 {
-	assertThrow(_items.size() > 0, OptimizerException, "");
-	for (size_t i = 0; i < _items.size(); ++i)
+	AssemblyItems replaced;
+	for (AssemblyItem const& item: _items)
 	{
-		if (_items.at(i) != AssemblyItem(m_value))
-			continue;
-		_items[i] = _replacement[0];
-		_items.insert(_items.begin() + i + 1, _replacement.begin() + 1, _replacement.end());
-		i += _replacement.size() - 1;
+		if (item.type() == Push)
+		{
+			auto it = _replacements.find(item.data());
+			if (it != _replacements.end())
+			{
+				replaced += it->second;
+				continue;
+			}
+		}
+		replaced.push_back(item);
 	}
+	_items = std::move(replaced);
 }
 
 bigint LiteralMethod::gasNeeded()
@@ -128,7 +140,31 @@ bigint LiteralMethod::gasNeeded()
 CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
 	ConstantOptimisationMethod(_params, _value)
 {
-	m_copyRoutine = AssemblyItems{
+}
+
+bigint CodeCopyMethod::gasNeeded()
+{
+	return combineGas(
+		// Run gas: we ignore memory increase costs
+		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
+		// Data gas for copy routines: Some bytes are zero, but we ignore them.
+		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
+		// Data gas for data itself
+		dataGas(toBigEndian(m_value))
+	);
+}
+
+AssemblyItems CodeCopyMethod::execute(Assembly& _assembly)
+{
+	bytes data = toBigEndian(m_value);
+	AssemblyItems actualCopyRoutine = copyRoutine();
+	actualCopyRoutine[4] = _assembly.newData(data);
+	return actualCopyRoutine;
+}
+
+AssemblyItems const& CodeCopyMethod::copyRoutine() const
+{
+	AssemblyItems static copyRoutine{
 		u256(0),
 		Instruction::DUP1,
 		Instruction::MLOAD, // back up memory
@@ -141,25 +177,7 @@ CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
 		Instruction::SWAP2,
 		Instruction::MSTORE
 	};
-}
-
-bigint CodeCopyMethod::gasNeeded()
-{
-	return combineGas(
-		// Run gas: we ignore memory increase costs
-		simpleRunGas(m_copyRoutine) + GasCosts::copyGas,
-		// Data gas for copy routines: Some bytes are zero, but we ignore them.
-		bytesRequired(m_copyRoutine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
-		// Data gas for data itself
-		dataGas(toBigEndian(m_value))
-	);
-}
-
-void CodeCopyMethod::execute(Assembly& _assembly, AssemblyItems& _items)
-{
-	bytes data = toBigEndian(m_value);
-	m_copyRoutine[4] = _assembly.newData(data);
-	replaceConstants(_items, m_copyRoutine);
+	return copyRoutine;
 }
 
 AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
