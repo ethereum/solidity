@@ -108,6 +108,9 @@ NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+
+ReservedKeyword = 'abstract' | 'after' | 'case' | 'catch' | 'default' | 'final' | 'in' | 'inline' | 'interface' | 'let' | 'match' | 'null' | 'of' | 'pure' | 'relocatable' | 'static' | 'switch' | 'try' | 'type' | 'typeof' | 'view'
+
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
 
 HexNumber = '0x' [0-9a-fA-F]+
