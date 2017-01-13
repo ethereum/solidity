@@ -225,7 +225,7 @@ inline Instruction logInstruction(unsigned _number)
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
-enum Tier
+enum class Tier : int
 {
 	ZeroTier = 0,	// 0, Zero
 	BaseTier,		// 2, Quick
@@ -246,7 +246,7 @@ struct InstructionInfo
 	int args;			///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
 	int ret;			///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
 	bool sideEffects;	///< false if the only effect on the execution environment (apart from gas usage) is a change to a topmost segment of the stack
-	int gasPriceTier;	///< Tier for gas pricing.
+	Tier gasPriceTier;	///< Tier for gas pricing.
 };
 
 /// Information on all the instructions.
