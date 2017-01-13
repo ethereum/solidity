@@ -44,10 +44,19 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 
 	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 	{
-		// check that all other declarations with the same name are functions
+		// check that all other declarations with the same name are functions or a public state variable
 		for (Declaration const* declaration: declarations)
-			if (!dynamic_cast<FunctionDefinition const*>(declaration))
+		{
+			if (dynamic_cast<FunctionDefinition const*>(declaration))
+				continue;
+			if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(declaration))
+			{
+				if (variableDeclaration->isStateVariable() && !variableDeclaration->isConstant() && variableDeclaration->isPublic())
+					continue;
 				return declaration;
+			}
+			return declaration;
+		}
 	}
 	else if (declarations.size() == 1 && declarations.front() == &_declaration)
 		return nullptr;

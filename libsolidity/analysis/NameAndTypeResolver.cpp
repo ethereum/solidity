@@ -260,10 +260,16 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
 	{
 		solAssert(*it, "");
-		// the declaration is functionDefinition while declarations > 1
-		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
-		FunctionType functionType(functionDefinition);
-		for (auto parameter: functionType.parameterTypes() + functionType.returnParameterTypes())
+		// the declaration is functionDefinition or a VariableDeclaration while declarations > 1
+		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
+			"Found overloading involving something not a function or a variable");
+
+		shared_ptr<FunctionType const> functionType { (*it)->functionType(false) };
+		if (!functionType)
+			functionType = (*it)->functionType(true);
+		solAssert(functionType, "failed to determine the function type of the overloaded");
+
+		for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
 			if (!parameter)
 				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
 
@@ -272,8 +278,10 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				FunctionType newFunctionType(dynamic_cast<FunctionDefinition const&>(*d));
-				return functionType.hasEqualArgumentTypes(newFunctionType);
+				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
+				if (!newFunctionType)
+					newFunctionType = d->functionType(true);
+				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
 			}
 		))
 			uniqueFunctions.push_back(*it);
@@ -289,7 +297,39 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
-				m_currentScope->registerDeclaration(*declaration);
+				if (!m_currentScope->registerDeclaration(*declaration))
+				{
+					SourceLocation firstDeclarationLocation;
+					SourceLocation secondDeclarationLocation;
+					Declaration const* conflictingDeclaration = m_currentScope->conflictingDeclaration(*declaration);
+					solAssert(conflictingDeclaration, "");
+
+					// Usual shadowing is not an error
+					if (dynamic_cast<VariableDeclaration const*>(declaration) && dynamic_cast<VariableDeclaration const*>(conflictingDeclaration))
+						continue;
+
+					// Usual shadowing is not an error
+					if (dynamic_cast<ModifierDefinition const*>(declaration) && dynamic_cast<ModifierDefinition const*>(conflictingDeclaration))
+						continue;
+
+					if (declaration->location().start < conflictingDeclaration->location().start)
+					{
+						firstDeclarationLocation = declaration->location();
+						secondDeclarationLocation = conflictingDeclaration->location();
+					}
+					else
+					{
+						firstDeclarationLocation = conflictingDeclaration->location();
+						secondDeclarationLocation = declaration->location();
+					}
+
+					reportDeclarationError(
+						secondDeclarationLocation,
+						"Identifier already declared.",
+						firstDeclarationLocation,
+						"The previous declaration is here:"
+					);
+				}
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)

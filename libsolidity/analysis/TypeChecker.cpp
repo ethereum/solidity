@@ -1500,8 +1500,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (!annotation.referencedDeclaration)
 	{
 		if (!annotation.argumentTypes)
-			fatalTypeError(_identifier.location(), "Unable to determine overloaded type.");
-		if (annotation.overloadedDeclarations.empty())
+		{
+			// The identifier should be a public state variable shadowing other functions
+			vector<Declaration const*> candidates;
+
+			for (Declaration const* declaration: annotation.overloadedDeclarations)
+			{
+				if (VariableDeclaration const* variableDeclaration = dynamic_cast<decltype(variableDeclaration)>(declaration))
+					candidates.push_back(declaration);
+			}
+			if (candidates.empty())
+				fatalTypeError(_identifier.location(), "No matching declaration found after variable lookup.");
+			else if (candidates.size() == 1)
+				annotation.referencedDeclaration = candidates.front();
+			else
+				fatalTypeError(_identifier.location(), "No unique declaration found after variable lookup.");
+		}
+		else if (annotation.overloadedDeclarations.empty())
 			fatalTypeError(_identifier.location(), "No candidates for overload resolution found.");
 		else if (annotation.overloadedDeclarations.size() == 1)
 			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
