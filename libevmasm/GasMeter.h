@@ -44,6 +44,8 @@ namespace GasCosts
 	static unsigned const tier5Gas = 10;
 	static unsigned const tier6Gas = 20;
 	static unsigned const tier7Gas = 0;
+	static unsigned const extCodeGas = 700;
+	static unsigned const balanceGas = 400;
 	static unsigned const expGas = 10;
 	static unsigned const expByteGas = 10;
 	static unsigned const sha3Gas = 30;
