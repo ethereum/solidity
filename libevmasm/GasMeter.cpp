@@ -232,6 +232,8 @@ unsigned GasMeter::runGas(Instruction _instruction)
 	case Tier::High:    return GasCosts::tier5Gas;
 	case Tier::Ext:     return GasCosts::tier6Gas;
 	case Tier::Special: return GasCosts::tier7Gas;
+	case Tier::ExtCode: return GasCosts::extCodeGas;
+	case Tier::Balance: return GasCosts::balanceGas;
 	default: break;
 	}
 	assertThrow(false, OptimizerException, "Invalid gas tier.");

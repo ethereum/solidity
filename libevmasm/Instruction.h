@@ -237,6 +237,8 @@ enum class Tier : unsigned
 	Mid,		// 8, Mid
 	High,		// 10, Slow
 	Ext,		// 20, Ext
+	ExtCode,	// 700, Extcode
+	Balance,	// 400, Balance
 	Special,	// multiparam or otherwise special
 	Invalid		// Invalid.
 };
