@@ -136,7 +136,7 @@ protected:
 			m_compiler.reset(false);
 			m_compiler.addSource("", registrarCode);
 			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
-			s_compiledRegistrar.reset(new bytes(m_compiler.object(":FixedFeeRegistrar").bytecode));
+			s_compiledRegistrar.reset(new bytes(m_compiler.object("FixedFeeRegistrar").bytecode));
 		}
 		sendMessage(*s_compiledRegistrar, true);
 		BOOST_REQUIRE(!m_output.empty());
