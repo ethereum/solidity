@@ -149,6 +149,8 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			}
 			break;
 		}
+		case Instruction::SELFDESTRUCT:
+			gas = GasCosts::selfdestructGas;
 		case Instruction::CREATE:
 			if (_includeExternalCosts)
 				// We assume that we do not know the target contract and thus, the consumption is infinite.

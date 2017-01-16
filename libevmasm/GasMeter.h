@@ -59,10 +59,11 @@ namespace GasCosts
 	static unsigned const logDataGas = 8;
 	static unsigned const logTopicGas = 375;
 	static unsigned const createGas = 32000;
-	static unsigned const callGas = 40;
+	static unsigned const callGas = 700;
 	static unsigned const callStipend = 2300;
 	static unsigned const callValueTransferGas = 9000;
 	static unsigned const callNewAccountGas = 25000;
+	static unsigned const selfdestructGas = 5000;
 	static unsigned const selfdestructRefundGas = 24000;
 	static unsigned const memoryGas = 3;
 	static unsigned const quadCoeffDiv = 512;
