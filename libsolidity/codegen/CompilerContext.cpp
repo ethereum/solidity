@@ -125,6 +125,21 @@ Declaration const* CompilerContext::nextFunctionToCompile() const
 	return m_functionCompilationQueue.nextFunctionToCompile();
 }
 
+eth::AssemblyItem const* CompilerContext::lowLevelFunctionEntryPoint(string const& _name) const
+{
+	auto it = m_lowLevelFunctions.find(_name);
+	if (it == m_lowLevelFunctions.end())
+		return nullptr;
+	else
+		return *it;
+}
+
+void CompilerContext::addLowLevelFunction(string const& _name, eth::AssemblyItem const& _label)
+{
+	solAssert(lowLevelFunctionEntryPoint(_name) != nullptr, "Low level function with that name already exists.");
+	m_lowLevelFunctions[_name] = _label.pushTag();
+}
+
 ModifierDefinition const& CompilerContext::functionModifier(string const& _name) const
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");

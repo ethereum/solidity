@@ -90,6 +90,12 @@ public:
 	/// as "having code".
 	void startFunction(Declaration const& _function);
 
+	/// Returns the label of the low level function with the given name or nullptr if it
+	/// does not exist. The lifetime of the returned pointer is short.
+	eth::AssemblyItem const* lowLevelFunctionEntryPoint(std::string const& _name) const;
+	/// Inserts a low level function entry point into the list of low level functions.
+	void addLowLevelFunction(std::string const& _name, eth::AssemblyItem const& _label);
+
 	ModifierDefinition const& functionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
@@ -248,6 +254,8 @@ private:
 	CompilerContext *m_runtimeContext;
 	/// The index of the runtime subroutine.
 	size_t m_runtimeSub = -1;
+	/// An index of low-level function labels by name.
+	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
 };
 
 }
