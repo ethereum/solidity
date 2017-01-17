@@ -726,10 +726,15 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 		solAssert(s.second.scanner, "Scanner not available");
 		meta["sources"][s.first]["keccak256"] =
 			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
-		meta["sources"][s.first]["urls"] = Json::arrayValue;
-		meta["sources"][s.first]["urls"].append(
-			"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
-		);
+		if (m_metadataLiteralSources)
+			meta["sources"][s.first]["content"] = s.second.scanner->source();
+		else
+		{
+			meta["sources"][s.first]["urls"] = Json::arrayValue;
+			meta["sources"][s.first]["urls"].append(
+				"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
+			);
+		}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
