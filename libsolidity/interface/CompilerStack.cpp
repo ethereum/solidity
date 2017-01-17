@@ -677,8 +677,25 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 					contractName = contract->fullyQualifiedName();
 	auto it = m_contracts.find(contractName);
-	if (it == m_contracts.end())
+	// To provide a measure of backward-compatibility, if a contract is not located by its
+	// fully-qualified name, a lookup will be attempted purely on the contract's name to see
+	// if anything will satisfy.
+	if (it == m_contracts.end() && contractName.find(":") == string::npos)
+	{
+		for (auto const& contractEntry: m_contracts)
+		{
+			stringstream ss;
+			ss.str(contractEntry.first);
+			// All entries are <source>:<contract>
+			string source;
+			string foundName;
+			getline(ss, source, ':');
+			getline(ss, foundName, ':');
+			if (foundName == contractName) return contractEntry.second;
+		}
+		// If we get here, both lookup methods failed.
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));
+	}
 	return it->second;
 }
 
