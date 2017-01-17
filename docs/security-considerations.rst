@@ -33,26 +33,30 @@ Pitfalls and Vulnerabilities
 
 The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It serves als as a taxonomy reference for future findings.
 
-<a name="taxonomy-vulnerabilities"></a>
+.. table:: Truth table for "not"
 
-## Taxonomy of vulnerabilities
+   :widths: auto
 
-| Level      | Cause of vulnerability | Example | Attacks |
-|------------|------------------------|---------|---------|
-| Solidity   | Call to the unknown    | [External calls](https://github.com/paolokoelio/smart-contract-best-practices/#avoid-external-calls)        | [Reentrancy](https://github.com/paolokoelio/smart-contract-best-practices/#reentrancy) |
-|            | Gasless send           |         |         |
-|            | Exception disorders    |         |         |
-|            | Type casts             |         |         |
-|            | Reentrancy             |         |         |
-|            | Keeping secrets        |         |         |
-| EVM        | Immutable bugs         |         |         |
-|            | Ether lost in trasfer  |         |         |
-|            | Stack size limit       |         |         |
-| Blockchain | Unpredictable state    |         |         |
-|            | Generating randomness  |         |         |
-|            | Time constraints       |         |         |
+   =====  =====  =====
+   Level Cause of vulnerability
+   =====  =====  =====
+   False  True   True
+   True   False  True
+   =====  =====  =====
 
-###
+
+
++------------+-----------------------+-----------+-----------+
+| Level   |    | Example  |  Attacks  |
++============+============+===========+
+| Solidity | column 2   | column 3  |
++------------+------------+-----------+
+| EVM | Cells may span columns.|
++------------+------------+-----------+
+| Blockchain | Cells may  | - Cells   |
++------------+ span rows. | - contain |
+| body row 4 |            | - blocks. |
++------------+------------+-----------+
 
 Private Information and Randomness
 ==================================
