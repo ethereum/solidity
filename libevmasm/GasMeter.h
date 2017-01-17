@@ -47,7 +47,7 @@ namespace GasCosts
 	static unsigned const extCodeGas = 700;
 	static unsigned const balanceGas = 400;
 	static unsigned const expGas = 10;
-	static unsigned const expByteGas = 10;
+	static unsigned const expByteGas = 50;
 	static unsigned const sha3Gas = 30;
 	static unsigned const sha3WordGas = 6;
 	static unsigned const sloadGas = 50;
