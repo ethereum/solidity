@@ -119,6 +119,11 @@ you should fork Solidity and add your personal fork as a second remote:
     cd solidity
     git remote add personal git@github.com:[username]/solidity.git
 
+Solidity has git submodules.  Ensure they are properly loaded:
+
+.. code:: bash
+
+   git submodule update --init --recursive
 
 Prerequisites - macOS
 ---------------------
