@@ -42,7 +42,7 @@ void ASTJsonConverter::addJsonNode(
 {
 	Json::Value node;
 
-	node["id"] = reinterpret_cast<Json::UInt64>(&_node);
+	node["id"] = _node.id();
 	node["src"] = sourceLocationToString(_node.location());
 	node["name"] = _nodeName;
 	if (_attributes.size() != 0)
@@ -124,7 +124,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
 	Json::Value linearizedBaseContracts(Json::arrayValue);
 	for (auto const& baseContract: _node.annotation().linearizedBaseContracts)
-		linearizedBaseContracts.append(reinterpret_cast<Json::UInt64>(baseContract));
+		linearizedBaseContracts.append(baseContract->id());
 	addJsonNode(_node, "ContractDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("isLibrary", _node.isLibrary()),
