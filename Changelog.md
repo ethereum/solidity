@@ -7,6 +7,7 @@ Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
  * Type system: Disallow arrays with negative length.
+ * Gas-estimator: reflect the most recent fee schedule.
 
 ### 0.4.9 (2017-01-31)
 
