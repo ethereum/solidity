@@ -37,6 +37,8 @@ using namespace dev::solidity;
 ASTNode::ASTNode(SourceLocation const& _location):
 	m_location(_location)
 {
+	static size_t id = 0;
+	m_id = ++id;
 }
 
 ASTNode::~ASTNode()

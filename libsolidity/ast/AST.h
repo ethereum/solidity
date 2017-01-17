@@ -57,6 +57,9 @@ public:
 	explicit ASTNode(SourceLocation const& _location);
 	virtual ~ASTNode();
 
+	/// @returns an identifier of this AST node that is unique for a single compilation run.
+	size_t id() const { return m_id; }
+
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
 	template <class T>
@@ -94,6 +97,7 @@ public:
 	///@}
 
 protected:
+	size_t m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable ASTAnnotation* m_annotation = nullptr;
 

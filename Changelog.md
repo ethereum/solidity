@@ -1,5 +1,8 @@
 ### 0.4.9 (unreleased)
 
+Features:
+ * AST: Use deterministic node identifiers.
+
 ### 0.4.8 (2017-01-13)
 
 Features:
