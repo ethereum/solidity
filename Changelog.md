@@ -3,6 +3,7 @@
 Features:
  * Compiler Interface: Contracts and libraries can be referenced with a `file:` prefix to make them unique.
  * AST: Use deterministic node identifiers.
+ * Type system: Introduce type identifier strings.
  * Metadata: Do not include platform in the version number.
 
 ### 0.4.8 (2017-01-13)
