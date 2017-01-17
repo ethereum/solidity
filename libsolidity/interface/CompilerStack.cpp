@@ -695,7 +695,7 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	Json::Value meta;
 	meta["version"] = 1;
 	meta["language"] = "Solidity";
-	meta["compiler"]["version"] = VersionString;
+	meta["compiler"]["version"] = VersionStringStrict;
 
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)

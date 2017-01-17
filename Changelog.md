@@ -2,6 +2,7 @@
 
 Features:
  * AST: Use deterministic node identifiers.
+ * Metadata: Do not include platform in the version number.
 
 ### 0.4.8 (2017-01-13)
 
