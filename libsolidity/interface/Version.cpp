@@ -38,6 +38,9 @@ string const dev::solidity::VersionString =
 	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
 	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
+string const dev::solidity::VersionStringStrict =
+	string(dev::solidity::VersionNumber) +
+	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE));
 
 bytes dev::solidity::binaryVersion()
 {
