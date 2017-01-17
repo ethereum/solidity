@@ -28,8 +28,31 @@ As always, with open source documentation, please help us extend this section
 (especially, some examples would not hurt)!
 
 ********
-Pitfalls
+Pitfalls and Vulnerabilities
 ********
+
+The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It serves als as a taxonomy reference for future findings.
+
+<a name="taxonomy-vulnerabilities"></a>
+
+## Taxonomy of vulnerabilities
+
+| Level      | Cause of vulnerability | Example | Attacks |
+|------------|------------------------|---------|---------|
+| Solidity   | Call to the unknown    | [External calls](https://github.com/paolokoelio/smart-contract-best-practices/#avoid-external-calls)        | [Reentrancy](https://github.com/paolokoelio/smart-contract-best-practices/#reentrancy) |
+|            | Gasless send           |         |         |
+|            | Exception disorders    |         |         |
+|            | Type casts             |         |         |
+|            | Reentrancy             |         |         |
+|            | Keeping secrets        |         |         |
+| EVM        | Immutable bugs         |         |         |
+|            | Ether lost in trasfer  |         |         |
+|            | Stack size limit       |         |         |
+| Blockchain | Unpredictable state    |         |         |
+|            | Generating randomness  |         |         |
+|            | Time constraints       |         |         |
+
+###
 
 Private Information and Randomness
 ==================================
