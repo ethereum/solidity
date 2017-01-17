@@ -216,6 +216,21 @@ Alternatively, you can build for Windows on the command-line, like so:
 
     cmake --build . --config RelWithDebInfo
 
+The version string in detail
+============================
+
+The Solidity version string contains four parts:
+- the version number
+- pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
+- commit in the format of ``commit.GITHASH``
+- platform has arbitrary number of items, containing details about the platform and compiler
+
+If there are local modifications, the commit will be postfixed with ``.mod``.
+
+A relase example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
+
+A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
+
 Important information about versioning
 ======================================
 
