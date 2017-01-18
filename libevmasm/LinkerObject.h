@@ -49,6 +49,12 @@ struct LinkerObject
 	/// @returns a hex representation of the bytecode of the given object, replacing unlinked
 	/// addresses by placeholders.
 	std::string toHex() const;
+
+private:
+	static h160 const* matchLibrary(
+		std::string const& _linkRefName,
+		std::map<std::string, h160> const& _libraryAddresses
+	);
 };
 
 }

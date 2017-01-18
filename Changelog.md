@@ -1,6 +1,7 @@
 ### 0.4.9 (unreleased)
 
 Features:
+ * Compiler Interface: Contracts and libraries can be referenced with a `file:` prefix to make them unique.
  * AST: Use deterministic node identifiers.
  * Metadata: Do not include platform in the version number.
 
@@ -15,9 +16,6 @@ Bugfixes:
  * Type checker, code generator: enable access to events of base contracts' names.
  * Imports: ``import ".dir/a"`` is not a relative path.  Relative paths begin with directory ``.`` or ``..``.
  * Type checker, disallow inheritances of different kinds (e.g. a function and a modifier) of members of the same name
-
-Features:
- * Contracts and libraries are now unique to their source files, rather than globally.
 
 ### 0.4.7 (2016-12-15)
 

@@ -37,13 +37,10 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses)
 {
 	std::map<size_t, std::string> remainingRefs;
 	for (auto const& linkRef: linkReferences)
-	{
-		auto it = _libraryAddresses.find(linkRef.second);
-		if (it == _libraryAddresses.end())
-			remainingRefs.insert(linkRef);
+		if (h160 const* address = matchLibrary(linkRef.second, _libraryAddresses))
+			address->ref().copyTo(ref(bytecode).cropped(linkRef.first, 20));
 		else
-			it->second.ref().copyTo(ref(bytecode).cropped(linkRef.first, 20));
-	}
+			remainingRefs.insert(linkRef);
 	linkReferences.swap(remainingRefs);
 }
 
@@ -59,4 +56,24 @@ string LinkerObject::toHex() const
 			hex[pos + 2 + i] = i < name.size() ? name[i] : '_';
 	}
 	return hex;
+}
+
+h160 const*
+LinkerObject::matchLibrary(
+	string const& _linkRefName,
+	map<string, h160> const& _libraryAddresses
+)
+{
+	auto it = _libraryAddresses.find(_linkRefName);
+	if (it != _libraryAddresses.end())
+		return &it->second;
+	// If the user did not supply a fully qualified library name,
+	// try to match only the simple libary name
+	size_t colon = _linkRefName.find(':');
+	if (colon == string::npos)
+		return nullptr;
+	it = _libraryAddresses.find(_linkRefName.substr(colon + 1));
+	if (it != _libraryAddresses.end())
+		return &it->second;
+	return nullptr;
 }
