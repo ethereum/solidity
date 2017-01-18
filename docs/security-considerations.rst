@@ -167,8 +167,8 @@ Sending and Receiving Ether
      a :ref:`"withdraw" pattern instead of a "send" pattern <withdrawal_pattern>`.
 
 
-
-:strike:`Callstack Depth`
+.. class:: strike
+Callstack Depth [not a vulnerability]
 ===============
 
 On October 18th 2016 a hard fork occurred due to EIP 150, where the stack size limit is no more a vulnerability, thus call depth attacks are not exploitable.
@@ -178,14 +178,14 @@ The cost of EVM instructions were modified together with the way gas consumption
 
 For documentaiton purposes the desription is kept.
 
-External function calls can fail any time because they exceed the maximum
-call stack of 1024. In such situations, Solidity throws an exception.
-Malicious actors might be able to force the call stack to a high value
-before they interact with your contract.
+   External function calls can fail any time because they exceed the maximum
+   call stack of 1024. In such situations, Solidity throws an exception.
+   Malicious actors might be able to force the call stack to a high value
+   before they interact with your contract.
 
-Note that ``.send()`` does **not** throw an exception if the call stack is
-depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+   Note that ``.send()`` does **not** throw an exception if the call stack is
+   depleted but rather returns ``false`` in that case. The low-level functions
+   ``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
 
 tx.origin
 =========
