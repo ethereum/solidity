@@ -31,7 +31,7 @@ As always, with open source documentation, please help us extend this section
 Pitfalls and Vulnerabilities
 ********
 
-The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It serves als as a taxonomy reference for future findings.
+The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with Solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It also serves as a taxonomy reference for future findings.
 
 .. table:: Truth table for "not"
 
@@ -166,8 +166,17 @@ Sending and Receiving Ether
      means for the recipient to block progress in the sending contract. Again, the best practice here is to use
      a :ref:`"withdraw" pattern instead of a "send" pattern <withdrawal_pattern>`.
 
-Callstack Depth
+
+
+:strike:`Callstack Depth`
 ===============
+
+On October 18th 2016 a hard fork occurred due to EIP 150, where the stack size limit is no more a vulnerability, thus call depth attacks are not exploitable.
+The cost of EVM instructions were modified together with the way gas consumption of ``call`` and ``delegatecall`` is computed. Practically, the de-facto maximum call stack depth is limited to ~340 (4,7M gas) mitigating every DoS attack based on calls.
+
+.. TODO Explain how this affects a call/delegatecall in terms of execution flow (maybe an example?) when the gas limit is reached.
+
+For documentaiton purposes the desription is kept.
 
 External function calls can fail any time because they exceed the maximum
 call stack of 1024. In such situations, Solidity throws an exception.
