@@ -33,30 +33,10 @@ Pitfalls and Vulnerabilities
 
 The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with Solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It also serves as a taxonomy reference for future findings.
 
-.. table:: Truth table for "not"
 
-   :widths: auto
-
-   =====  =====  =====
-   Level Cause of vulnerability
-   =====  =====  =====
-   False  True   True
-   True   False  True
-   =====  =====  =====
+.. TODO: table in rst format
 
 
-
-+------------+-----------------------+-----------+-----------+
-| Level   |    | Example  |  Attacks  |
-+============+============+===========+
-| Solidity | column 2   | column 3  |
-+------------+------------+-----------+
-| EVM | Cells may span columns.|
-+------------+------------+-----------+
-| Blockchain | Cells may  | - Cells   |
-+------------+ span rows. | - contain |
-| body row 4 |            | - blocks. |
-+------------+------------+-----------+
 
 Private Information and Randomness
 ==================================
