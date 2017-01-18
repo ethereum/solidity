@@ -606,7 +606,7 @@ private:
 
 /**
  * Declaration of a variable. This can be used in various places, e.g. in function parameter
- * lists, struct definitions and even function bodys.
+ * lists, struct definitions and even function bodies.
  */
 class VariableDeclaration: public Declaration
 {
