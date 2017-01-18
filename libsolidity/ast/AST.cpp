@@ -191,7 +191,6 @@ void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentat
 	m_userDocumentation = _userDocumentation;
 }
 
-
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {
 	if (!m_inheritableMembers)

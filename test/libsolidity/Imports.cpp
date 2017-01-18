@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE(library_name_clash)
 	CompilerStack c;
 	c.addSource("a", "library A {} pragma solidity >=0.0;");
 	c.addSource("b", "library A {} pragma solidity >=0.0;");
+	c.addSource("c", "import {A} from \"./a\"; import {A} from \"./b\";");
 	BOOST_CHECK(!c.compile());
 }
 

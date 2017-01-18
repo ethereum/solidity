@@ -3192,7 +3192,7 @@ BOOST_AUTO_TEST_CASE(library_call_in_homestead)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{":Lib", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 	BOOST_CHECK(callContractFunction("sender()") == encodeArgs(u160(m_sender)));
 }
@@ -6191,7 +6191,7 @@ BOOST_AUTO_TEST_CASE(library_call)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{":Lib", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(33) * 9));
 }
 
@@ -6208,7 +6208,7 @@ BOOST_AUTO_TEST_CASE(library_stray_values)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{":Lib", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(42)));
 }
 
@@ -6341,7 +6341,7 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{":Lib", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(4), u256(17)));
 }
 
@@ -6368,7 +6368,7 @@ BOOST_AUTO_TEST_CASE(using_library_structs)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{":Lib", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7), u256(8)));
 }
 
@@ -6902,7 +6902,7 @@ BOOST_AUTO_TEST_CASE(using_for_function_on_int)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(9)) == encodeArgs(u256(2 * 9)));
 }
 
@@ -6920,7 +6920,7 @@ BOOST_AUTO_TEST_CASE(using_for_function_on_struct)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(3 * 7)));
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(3 * 7)));
 }
@@ -6943,7 +6943,7 @@ BOOST_AUTO_TEST_CASE(using_for_overload)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
 }
@@ -6962,7 +6962,7 @@ BOOST_AUTO_TEST_CASE(using_for_by_name)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
 }
@@ -6982,7 +6982,7 @@ BOOST_AUTO_TEST_CASE(bound_function_in_var)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
 }
@@ -7005,7 +7005,7 @@ BOOST_AUTO_TEST_CASE(bound_function_to_string)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":D", m_contractAddress}});
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(3)));
 }
@@ -7751,7 +7751,7 @@ BOOST_AUTO_TEST_CASE(payable_function_calls_library)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "L");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{":L", m_contractAddress}});
 	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs(u256(7)));
 }
 

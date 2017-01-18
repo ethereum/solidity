@@ -148,6 +148,10 @@ public:
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
+
+	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
+	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
 	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
 	/// does not have runtime code.
@@ -230,9 +234,6 @@ private:
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
-	/// Checks whether there are libraries with the same name, reports that as an error and
-	/// @returns false in this case.
-	bool checkLibraryNameClashes();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
 	/// Helper function to return path converted strings.
