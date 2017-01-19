@@ -119,7 +119,7 @@ matrix:
               # See https://travis-ci.org/ethereum/solidity/jobs/150240930
               - TRAVIS_BUILD_TYPE=Debug
               # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
+              # https://github.com/ethereum/solidity/issues/894
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 
