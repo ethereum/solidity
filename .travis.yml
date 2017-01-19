@@ -36,89 +36,30 @@ branches:
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
-        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
-        #
-        # TravisCI doesn't directly support any new Ubuntu releases.  These is
-        # some Docker support, which we should probably investigate, at least for
-        # Ubuntu 16.04 LTS "Xenial Xerus"
-        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          env:
-              - ZIP_SUFFIX=ubuntu-trusty
+      - os: linux
+        dist: trusty 
+        sudo: required
+        compiler:
+          - clang
+      
+      - os: linux
+        dist: trusty 
+        sudo: required
+        compiler:
+          - gcc  
+        # Yosemite
+      - os: osx
+        osx_image: xcode6.4
+        # El Capitan
+      - os: osx
+        osx_image: xcode7.3
+      - os: osx
+        osx_image: xcode8
+        # Sierra
+      - os: osx
+        osx_image: xcode8.1
+      - os: osx
+        osx_image: xcode8.2
 
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: clang
-          env:
-              - ZIP_SUFFIX=ubuntu-trusty-clang
-
-        # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          env:
-              - TRAVIS_DOCS=On
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
-
-        # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
-        # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
-        # and in other Ethereum web-based development contexts.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          node_js: stable
-          services:
-              - docker
-          before_install:
-              - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
-          env:
-              - TRAVIS_EMSCRIPTEN=On
-              - TRAVIS_INSTALL_DEPS=Off
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
-
-        # OS X Yosemite (10.10)
-        # https://en.wikipedia.org/wiki/OS_X_Yosemite
-        #
-        - os: osx
-          osx_image: xcode7.1
-          env:
-              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-yosemite
-
-        # OS X El Capitan (10.11)
-        # https://en.wikipedia.org/wiki/OS_X_El_Capitan
-        #
-        - os: osx
-          osx_image: xcode7.3
-          env:
-#              # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
-#              # See https://github.com/ethereum/webthree-umbrella/issues/565
-              - TRAVIS_BUILD_TYPE=Debug
-#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-elcapitan
-
-        # macOS Sierra (10.12)
-        # https://en.wikipedia.org/wiki/MacOS_Sierra
-        #
-       - os: osx
-          osx_image: xcode8
-          env:
-#              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
-#              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
-              - TRAVIS_BUILD_TYPE=Debug
-#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=macos-sier
+install:
+  - ./scripts/install_deps.sh
