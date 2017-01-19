@@ -50,16 +50,26 @@ matrix:
         # Yosemite
       - os: osx
         osx_image: xcode6.4
+        compiler:
+          - clang
         # El Capitan
       - os: osx
         osx_image: xcode7.3
+        compiler:
+          - clang
       - os: osx
         osx_image: xcode8
+        compiler:
+          - clang
         # Sierra
       - os: osx
         osx_image: xcode8.1
+        compiler:
+          - clang
       - os: osx
         osx_image: xcode8.2
+        compiler:
+          - clang
 
 install:
   - ./scripts/install_deps.sh
