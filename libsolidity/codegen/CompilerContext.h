@@ -22,16 +22,20 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/ASTAnnotations.h>
+
+#include <libevmasm/Instruction.h>
+#include <libevmasm/Assembly.h>
+
+#include <libdevcore/Common.h>
+
 #include <ostream>
 #include <stack>
 #include <queue>
 #include <utility>
-#include <libevmasm/Instruction.h>
-#include <libevmasm/Assembly.h>
-#include <libsolidity/ast/ASTForward.h>
-#include <libsolidity/ast/Types.h>
-#include <libsolidity/ast/ASTAnnotations.h>
-#include <libdevcore/Common.h>
+#include <functional>
 
 namespace dev {
 namespace solidity {
@@ -90,11 +94,18 @@ public:
 	/// as "having code".
 	void startFunction(Declaration const& _function);
 
-	/// Returns the label of the low level function with the given name or nullptr if it
-	/// does not exist. The lifetime of the returned pointer is short.
-	eth::AssemblyItem const* lowLevelFunctionEntryPoint(std::string const& _name) const;
-	/// Inserts a low level function entry point into the list of low level functions.
-	void addLowLevelFunction(std::string const& _name, eth::AssemblyItem const& _label);
+	/// Appends a call to the named low-level function and inserts the generator into the
+	/// list of low-level-functions to be generated, unless it already exists.
+	/// Note that the generator should not assume that objects are still alive when it is called,
+	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for example).
+	void callLowLevelFunction(
+		std::string const& _name,
+		unsigned _inArgs,
+		unsigned _outArgs,
+		std::function<void(CompilerContext&)> const& _generator
+	);
+	/// Generates the code for missing low-level functions, i.e. calls the generators passed above.
+	void appendMissingLowLevelFunctions();
 
 	ModifierDefinition const& functionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
@@ -256,6 +267,8 @@ private:
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
 	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
+	/// The queue of low-level functions to generate.
+	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 };
 
 }

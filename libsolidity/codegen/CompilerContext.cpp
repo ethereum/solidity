@@ -21,14 +21,17 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
-#include <utility>
-#include <numeric>
-#include <boost/algorithm/string/replace.hpp>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmStack.h>
+
+#include <boost/algorithm/string/replace.hpp>
+
+#include <utility>
+#include <numeric>
 
 using namespace std;
 
@@ -55,6 +58,51 @@ void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionCompilationQueue.startFunction(_function);
 	*this << functionEntryLabel(_function);
+}
+
+void CompilerContext::callLowLevelFunction(
+	string const& _name,
+	unsigned _inArgs,
+	unsigned _outArgs,
+	function<void(CompilerContext&)> const& _generator
+)
+{
+	eth::AssemblyItem retTag = pushNewTag();
+	CompilerUtils(*this).moveIntoStack(_inArgs);
+
+	auto it = m_lowLevelFunctions.find(_name);
+	if (it == m_lowLevelFunctions.end())
+	{
+		eth::AssemblyItem tag = newTag().pushTag();
+		m_lowLevelFunctions.insert(make_pair(_name, tag));
+		m_lowLevelFunctionGenerationQueue.push(make_tuple(_name, _inArgs, _outArgs, _generator));
+		*this << tag;
+	}
+	else
+		*this << it->second;
+	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
+	adjustStackOffset(_outArgs - 1 - _inArgs);
+	*this << retTag.tag();
+}
+
+void CompilerContext::appendMissingLowLevelFunctions()
+{
+	while (!m_lowLevelFunctionGenerationQueue.empty())
+	{
+		string name;
+		unsigned inArgs;
+		unsigned outArgs;
+		function<void(CompilerContext&)> generator;
+		tie(name, inArgs, outArgs, generator) = m_lowLevelFunctionGenerationQueue.front();
+		m_lowLevelFunctionGenerationQueue.pop();
+
+		setStackOffset(inArgs + 1);
+		*this << m_lowLevelFunctions.at(name).tag();
+		generator(*this);
+		CompilerUtils(*this).moveToStackTop(outArgs);
+		appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+		solAssert(stackHeight() == outArgs, "Invalid stack height in low-level function " + name + ".");
+	}
 }
 
 void CompilerContext::addVariable(VariableDeclaration const& _declaration,
@@ -123,21 +171,6 @@ FunctionDefinition const* CompilerContext::nextConstructor(ContractDefinition co
 Declaration const* CompilerContext::nextFunctionToCompile() const
 {
 	return m_functionCompilationQueue.nextFunctionToCompile();
-}
-
-eth::AssemblyItem const* CompilerContext::lowLevelFunctionEntryPoint(string const& _name) const
-{
-	auto it = m_lowLevelFunctions.find(_name);
-	if (it == m_lowLevelFunctions.end())
-		return nullptr;
-	else
-		return *it;
-}
-
-void CompilerContext::addLowLevelFunction(string const& _name, eth::AssemblyItem const& _label)
-{
-	solAssert(lowLevelFunctionEntryPoint(_name) != nullptr, "Low level function with that name already exists.");
-	m_lowLevelFunctions[_name] = _label.pushTag();
 }
 
 ModifierDefinition const& CompilerContext::functionModifier(string const& _name) const

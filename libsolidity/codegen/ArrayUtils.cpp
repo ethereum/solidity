@@ -502,60 +502,70 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 	}
 }
 
-void ArrayUtils::clearArray(ArrayType const& _type) const
+void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 {
-	unsigned stackHeightStart = m_context.stackHeight();
-	solAssert(_type.location() == DataLocation::Storage, "");
-	if (_type.baseType()->storageBytes() < 32)
-	{
-		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
-		solAssert(_type.baseType()->storageSize() <= 1, "Invalid storage size for type.");
-	}
-	if (_type.baseType()->isValueType())
-		solAssert(_type.baseType()->storageSize() <= 1, "Invalid size for value type.");
-
-	m_context << Instruction::POP; // remove byte offset
-	if (_type.isDynamicallySized())
-		clearDynamicArray(_type);
-	else if (_type.length() == 0 || _type.baseType()->category() == Type::Category::Mapping)
-		m_context << Instruction::POP;
-	else if (_type.baseType()->isValueType() && _type.storageSize() <= 5)
-	{
-		// unroll loop for small arrays @todo choose a good value
-		// Note that we loop over storage slots here, not elements.
-		for (unsigned i = 1; i < _type.storageSize(); ++i)
-			m_context
-				<< u256(0) << Instruction::DUP2 << Instruction::SSTORE
-				<< u256(1) << Instruction::ADD;
-		m_context << u256(0) << Instruction::SWAP1 << Instruction::SSTORE;
-	}
-	else if (!_type.baseType()->isValueType() && _type.length() <= 4)
-	{
-		// unroll loop for small arrays @todo choose a good value
-		solAssert(_type.baseType()->storageBytes() >= 32, "Invalid storage size.");
-		for (unsigned i = 1; i < _type.length(); ++i)
+	TypePointer type = _typeIn.shared_from_this();
+	m_context.callLowLevelFunction(
+		"$clearArray_" + _typeIn.identifier(),
+		2,
+		0,
+		[type](CompilerContext& _context)
 		{
-			m_context << u256(0);
-			StorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), false);
-			m_context
-				<< Instruction::POP
-				<< u256(_type.baseType()->storageSize()) << Instruction::ADD;
+			ArrayType const& _type = dynamic_cast<ArrayType const&>(*type);
+			unsigned stackHeightStart = _context.stackHeight();
+			solAssert(_type.location() == DataLocation::Storage, "");
+			if (_type.baseType()->storageBytes() < 32)
+			{
+				solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+				solAssert(_type.baseType()->storageSize() <= 1, "Invalid storage size for type.");
+			}
+			if (_type.baseType()->isValueType())
+				solAssert(_type.baseType()->storageSize() <= 1, "Invalid size for value type.");
+
+			_context << Instruction::POP; // remove byte offset
+			if (_type.isDynamicallySized())
+				ArrayUtils(_context).clearDynamicArray(_type);
+			else if (_type.length() == 0 || _type.baseType()->category() == Type::Category::Mapping)
+				_context << Instruction::POP;
+			else if (_type.baseType()->isValueType() && _type.storageSize() <= 5)
+			{
+				// unroll loop for small arrays @todo choose a good value
+				// Note that we loop over storage slots here, not elements.
+				for (unsigned i = 1; i < _type.storageSize(); ++i)
+					_context
+						<< u256(0) << Instruction::DUP2 << Instruction::SSTORE
+						<< u256(1) << Instruction::ADD;
+				_context << u256(0) << Instruction::SWAP1 << Instruction::SSTORE;
+			}
+			else if (!_type.baseType()->isValueType() && _type.length() <= 4)
+			{
+				// unroll loop for small arrays @todo choose a good value
+				solAssert(_type.baseType()->storageBytes() >= 32, "Invalid storage size.");
+				for (unsigned i = 1; i < _type.length(); ++i)
+				{
+					_context << u256(0);
+					StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), false);
+					_context
+						<< Instruction::POP
+						<< u256(_type.baseType()->storageSize()) << Instruction::ADD;
+				}
+				_context << u256(0);
+				StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), true);
+			}
+			else
+			{
+				_context << Instruction::DUP1 << _type.length();
+				ArrayUtils(_context).convertLengthToSize(_type);
+				_context << Instruction::ADD << Instruction::SWAP1;
+				if (_type.baseType()->storageBytes() < 32)
+					ArrayUtils(_context).clearStorageLoop(IntegerType(256));
+				else
+					ArrayUtils(_context).clearStorageLoop(*_type.baseType());
+				_context << Instruction::POP;
+			}
+			solAssert(_context.stackHeight() == stackHeightStart - 2, "");
 		}
-		m_context << u256(0);
-		StorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), true);
-	}
-	else
-	{
-		m_context << Instruction::DUP1 << _type.length();
-		convertLengthToSize(_type);
-		m_context << Instruction::ADD << Instruction::SWAP1;
-		if (_type.baseType()->storageBytes() < 32)
-			clearStorageLoop(IntegerType(256));
-		else
-			clearStorageLoop(*_type.baseType());
-		m_context << Instruction::POP;
-	}
-	solAssert(m_context.stackHeight() == stackHeightStart - 2, "");
+	);
 }
 
 void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
@@ -597,144 +607,154 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 	m_context << Instruction::POP;
 }
 
-void ArrayUtils::resizeDynamicArray(ArrayType const& _type) const
+void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 {
-	solAssert(_type.location() == DataLocation::Storage, "");
-	solAssert(_type.isDynamicallySized(), "");
-	if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
-		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+	TypePointer type = _typeIn.shared_from_this();
+	m_context.callLowLevelFunction(
+		"$resizeDynamicArray_" + _typeIn.identifier(),
+		2,
+		0,
+		[type](CompilerContext& _context)
+		{
+			ArrayType const& _type = dynamic_cast<ArrayType const&>(*type);
+			solAssert(_type.location() == DataLocation::Storage, "");
+			solAssert(_type.isDynamicallySized(), "");
+			if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
+				solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
 
-	unsigned stackHeightStart = m_context.stackHeight();
-	eth::AssemblyItem resizeEnd = m_context.newTag();
+			unsigned stackHeightStart = _context.stackHeight();
+			eth::AssemblyItem resizeEnd = _context.newTag();
 
-	// stack: ref new_length
-	// fetch old length
-	retrieveLength(_type, 1);
-	// stack: ref new_length old_length
-	solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "2");
+			// stack: ref new_length
+			// fetch old length
+			ArrayUtils(_context).retrieveLength(_type, 1);
+			// stack: ref new_length old_length
+			solAssert(_context.stackHeight() - stackHeightStart == 3 - 2, "2");
 
-	// Special case for short byte arrays, they are stored together with their length
-	if (_type.isByteArray())
-	{
-		eth::AssemblyItem regularPath = m_context.newTag();
-		// We start by a large case-distinction about the old and new length of the byte array.
+			// Special case for short byte arrays, they are stored together with their length
+			if (_type.isByteArray())
+			{
+				eth::AssemblyItem regularPath = _context.newTag();
+				// We start by a large case-distinction about the old and new length of the byte array.
 
-		m_context << Instruction::DUP3 << Instruction::SLOAD;
-		// stack: ref new_length current_length ref_value
+				_context << Instruction::DUP3 << Instruction::SLOAD;
+				// stack: ref new_length current_length ref_value
 
-		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
-		m_context << Instruction::DUP2 << u256(31) << Instruction::LT;
-		eth::AssemblyItem currentIsLong = m_context.appendConditionalJump();
-		m_context << Instruction::DUP3 << u256(31) << Instruction::LT;
-		eth::AssemblyItem newIsLong = m_context.appendConditionalJump();
+				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+				_context << Instruction::DUP2 << u256(31) << Instruction::LT;
+				eth::AssemblyItem currentIsLong = _context.appendConditionalJump();
+				_context << Instruction::DUP3 << u256(31) << Instruction::LT;
+				eth::AssemblyItem newIsLong = _context.appendConditionalJump();
 
-		// Here: short -> short
+				// Here: short -> short
 
-		// Compute 1 << (256 - 8 * new_size)
-		eth::AssemblyItem shortToShort = m_context.newTag();
-		m_context << shortToShort;
-		m_context << Instruction::DUP3 << u256(8) << Instruction::MUL;
-		m_context << u256(0x100) << Instruction::SUB;
-		m_context << u256(2) << Instruction::EXP;
-		// Divide and multiply by that value, clearing bits.
-		m_context << Instruction::DUP1 << Instruction::SWAP2;
-		m_context << Instruction::DIV << Instruction::MUL;
-		// Insert 2*length.
-		m_context << Instruction::DUP3 << Instruction::DUP1 << Instruction::ADD;
-		m_context << Instruction::OR;
-		// Store.
-		m_context << Instruction::DUP4 << Instruction::SSTORE;
-		solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "3");
-		m_context.appendJumpTo(resizeEnd);
+				// Compute 1 << (256 - 8 * new_size)
+				eth::AssemblyItem shortToShort = _context.newTag();
+				_context << shortToShort;
+				_context << Instruction::DUP3 << u256(8) << Instruction::MUL;
+				_context << u256(0x100) << Instruction::SUB;
+				_context << u256(2) << Instruction::EXP;
+				// Divide and multiply by that value, clearing bits.
+				_context << Instruction::DUP1 << Instruction::SWAP2;
+				_context << Instruction::DIV << Instruction::MUL;
+				// Insert 2*length.
+				_context << Instruction::DUP3 << Instruction::DUP1 << Instruction::ADD;
+				_context << Instruction::OR;
+				// Store.
+				_context << Instruction::DUP4 << Instruction::SSTORE;
+				solAssert(_context.stackHeight() - stackHeightStart == 3 - 2, "3");
+				_context.appendJumpTo(resizeEnd);
 
-		m_context.adjustStackOffset(1); // we have to do that because of the jumps
-		// Here: short -> long
+				_context.adjustStackOffset(1); // we have to do that because of the jumps
+				// Here: short -> long
 
-		m_context << newIsLong;
-		// stack: ref new_length current_length ref_value
-		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
-		// Zero out lower-order byte.
-		m_context << u256(0xff) << Instruction::NOT << Instruction::AND;
-		// Store at data location.
-		m_context << Instruction::DUP4;
-		CompilerUtils(m_context).computeHashStatic();
-		m_context << Instruction::SSTORE;
-		// stack: ref new_length current_length
-		// Store new length: Compule 2*length + 1 and store it.
-		m_context << Instruction::DUP2 << Instruction::DUP1 << Instruction::ADD;
-		m_context << u256(1) << Instruction::ADD;
-		// stack: ref new_length current_length 2*new_length+1
-		m_context << Instruction::DUP4 << Instruction::SSTORE;
-		solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "3");
-		m_context.appendJumpTo(resizeEnd);
+				_context << newIsLong;
+				// stack: ref new_length current_length ref_value
+				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+				// Zero out lower-order byte.
+				_context << u256(0xff) << Instruction::NOT << Instruction::AND;
+				// Store at data location.
+				_context << Instruction::DUP4;
+				CompilerUtils(_context).computeHashStatic();
+				_context << Instruction::SSTORE;
+				// stack: ref new_length current_length
+				// Store new length: Compule 2*length + 1 and store it.
+				_context << Instruction::DUP2 << Instruction::DUP1 << Instruction::ADD;
+				_context << u256(1) << Instruction::ADD;
+				// stack: ref new_length current_length 2*new_length+1
+				_context << Instruction::DUP4 << Instruction::SSTORE;
+				solAssert(_context.stackHeight() - stackHeightStart == 3 - 2, "3");
+				_context.appendJumpTo(resizeEnd);
 
-		m_context.adjustStackOffset(1); // we have to do that because of the jumps
+				_context.adjustStackOffset(1); // we have to do that because of the jumps
 
-		m_context << currentIsLong;
-		m_context << Instruction::DUP3 << u256(31) << Instruction::LT;
-		m_context.appendConditionalJumpTo(regularPath);
+				_context << currentIsLong;
+				_context << Instruction::DUP3 << u256(31) << Instruction::LT;
+				_context.appendConditionalJumpTo(regularPath);
 
-		// Here: long -> short
-		// Read the first word of the data and store it on the stack. Clear the data location and
-		// then jump to the short -> short case.
+				// Here: long -> short
+				// Read the first word of the data and store it on the stack. Clear the data location and
+				// then jump to the short -> short case.
 
-		// stack: ref new_length current_length ref_value
-		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
-		m_context << Instruction::POP << Instruction::DUP3;
-		CompilerUtils(m_context).computeHashStatic();
-		m_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::SWAP1;
-		// stack: ref new_length current_length first_word data_location
-		m_context << Instruction::DUP3;
-		convertLengthToSize(_type);
-		m_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
-		// stack: ref new_length current_length first_word data_location_end data_location
-		clearStorageLoop(IntegerType(256));
-		m_context << Instruction::POP;
-		// stack: ref new_length current_length first_word
-		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
-		m_context.appendJumpTo(shortToShort);
+				// stack: ref new_length current_length ref_value
+				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+				_context << Instruction::POP << Instruction::DUP3;
+				CompilerUtils(_context).computeHashStatic();
+				_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::SWAP1;
+				// stack: ref new_length current_length first_word data_location
+				_context << Instruction::DUP3;
+				ArrayUtils(_context).convertLengthToSize(_type);
+				_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
+				// stack: ref new_length current_length first_word data_location_end data_location
+				ArrayUtils(_context).clearStorageLoop(IntegerType(256));
+				_context << Instruction::POP;
+				// stack: ref new_length current_length first_word
+				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+				_context.appendJumpTo(shortToShort);
 
-		m_context << regularPath;
-		// stack: ref new_length current_length ref_value
-		m_context << Instruction::POP;
-	}
+				_context << regularPath;
+				// stack: ref new_length current_length ref_value
+				_context << Instruction::POP;
+			}
 
-	// Change of length for a regular array (i.e. length at location, data at sha3(location)).
-	// stack: ref new_length old_length
-	// store new length
-	m_context << Instruction::DUP2;
-	if (_type.isByteArray())
-		// For a "long" byte array, store length as 2*length+1
-		m_context << Instruction::DUP1 << Instruction::ADD << u256(1) << Instruction::ADD;
-	m_context<< Instruction::DUP4 << Instruction::SSTORE;
-	// skip if size is not reduced
-	m_context << Instruction::DUP2 << Instruction::DUP2
-		<< Instruction::ISZERO << Instruction::GT;
-	m_context.appendConditionalJumpTo(resizeEnd);
+			// Change of length for a regular array (i.e. length at location, data at sha3(location)).
+			// stack: ref new_length old_length
+			// store new length
+			_context << Instruction::DUP2;
+			if (_type.isByteArray())
+				// For a "long" byte array, store length as 2*length+1
+				_context << Instruction::DUP1 << Instruction::ADD << u256(1) << Instruction::ADD;
+			_context<< Instruction::DUP4 << Instruction::SSTORE;
+			// skip if size is not reduced
+			_context << Instruction::DUP2 << Instruction::DUP2
+				<< Instruction::ISZERO << Instruction::GT;
+			_context.appendConditionalJumpTo(resizeEnd);
 
-	// size reduced, clear the end of the array
-	// stack: ref new_length old_length
-	convertLengthToSize(_type);
-	m_context << Instruction::DUP2;
-	convertLengthToSize(_type);
-	// stack: ref new_length old_size new_size
-	// compute data positions
-	m_context << Instruction::DUP4;
-	CompilerUtils(m_context).computeHashStatic();
-	// stack: ref new_length old_size new_size data_pos
-	m_context << Instruction::SWAP2 << Instruction::DUP3 << Instruction::ADD;
-	// stack: ref new_length data_pos new_size delete_end
-	m_context << Instruction::SWAP2 << Instruction::ADD;
-	// stack: ref new_length delete_end delete_start
-	if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
-		clearStorageLoop(IntegerType(256));
-	else
-		clearStorageLoop(*_type.baseType());
+			// size reduced, clear the end of the array
+			// stack: ref new_length old_length
+			ArrayUtils(_context).convertLengthToSize(_type);
+			_context << Instruction::DUP2;
+			ArrayUtils(_context).convertLengthToSize(_type);
+			// stack: ref new_length old_size new_size
+			// compute data positions
+			_context << Instruction::DUP4;
+			CompilerUtils(_context).computeHashStatic();
+			// stack: ref new_length old_size new_size data_pos
+			_context << Instruction::SWAP2 << Instruction::DUP3 << Instruction::ADD;
+			// stack: ref new_length data_pos new_size delete_end
+			_context << Instruction::SWAP2 << Instruction::ADD;
+			// stack: ref new_length delete_end delete_start
+			if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
+				ArrayUtils(_context).clearStorageLoop(IntegerType(256));
+			else
+				ArrayUtils(_context).clearStorageLoop(*_type.baseType());
 
-	m_context << resizeEnd;
-	// cleanup
-	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
-	solAssert(m_context.stackHeight() == stackHeightStart - 2, "");
+			_context << resizeEnd;
+			// cleanup
+			_context << Instruction::POP << Instruction::POP << Instruction::POP;
+			solAssert(_context.stackHeight() == stackHeightStart - 2, "");
+		}
+	);
 }
 
 void ArrayUtils::clearStorageLoop(Type const& _type) const
