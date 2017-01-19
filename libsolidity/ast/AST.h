@@ -867,7 +867,10 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
 
-	Declaration::Visibility visibility() const { return m_visibility; }
+	Declaration::Visibility visibility() const
+	{
+		return m_visibility == Declaration::Visibility::Default ? Declaration::Visibility::Internal : m_visibility;
+	}
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	bool isPayable() const { return m_isPayable; }
 
