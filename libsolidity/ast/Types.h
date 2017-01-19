@@ -22,17 +22,20 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <map>
-#include <boost/noncopyable.hpp>
-#include <boost/rational.hpp>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/UndefMacros.h>
+
+#include <boost/noncopyable.hpp>
+#include <boost/rational.hpp>
+
+#include <memory>
+#include <string>
+#include <map>
 
 namespace dev
 {
@@ -158,6 +161,9 @@ public:
 	/// @returns a valid solidity identifier such that two types should compare equal if and
 	/// only if they have the same identifier.
 	/// The identifier should start with "t_".
+	/// More complex identifier strings use "parentheses", where $_ is interpreted as as
+	/// "opening parenthesis", _$ as "closing parenthesis", _$_ as "comma" and any $ that
+	/// appears as part of a user-supplied identifier is escaped as _$$$_.
 	virtual std::string identifier() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -912,7 +918,7 @@ public:
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
 	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
 	/// @returns the "self" parameter type for a bound function
-	TypePointer selfType() const;
+	TypePointer const& selfType() const;
 
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;

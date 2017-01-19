@@ -21,15 +21,21 @@
  */
 
 #include <libsolidity/ast/Types.h>
-#include <limits>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/sliced.hpp>
+
+#include <libsolidity/interface/Utils.h>
+#include <libsolidity/ast/AST.h>
+
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/UTF8.h>
-#include <libsolidity/interface/Utils.h>
-#include <libsolidity/ast/AST.h>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+
+#include <limits>
 
 using namespace std;
 using namespace dev;
@@ -115,6 +121,51 @@ u256 const& MemberList::storageSize() const
 	// trigger lazy computation
 	memberStorageOffset("");
 	return m_storageOffsets->storageSize();
+}
+
+/// Helper functions for type identifier
+namespace
+{
+
+string parenthesizeIdentifier(string const& _internal)
+{
+	return "$_" + _internal + "_$";
+}
+
+template <class Range>
+string identifierList(Range const&& _list)
+{
+	return parenthesizeIdentifier(boost::algorithm::join(_list, "_$_"));
+}
+
+string identifier(TypePointer const& _type)
+{
+	return _type ? _type->identifier() : "";
+}
+
+string identifierList(vector<TypePointer> const& _list)
+{
+	return identifierList(_list | boost::adaptors::transformed(identifier));
+}
+
+string identifierList(TypePointer const& _type)
+{
+	return parenthesizeIdentifier(identifier(_type));
+}
+
+string identifierList(TypePointer const& _type1, TypePointer const& _type2)
+{
+	TypePointers list;
+	list.push_back(_type1);
+	list.push_back(_type2);
+	return identifierList(list);
+}
+
+string parenthesizeUserIdentifier(string const& _internal)
+{
+	return parenthesizeIdentifier(boost::replace_all_copy(_internal, "$", "$$$"));
+}
+
 }
 
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
@@ -1218,16 +1269,17 @@ string ArrayType::identifier() const
 {
 	string id;
 	if (isString())
-		id += "t_string";
+		id = "t_string";
 	else if (isByteArray())
-		id += "t_bytes";
+		id = "t_bytes";
 	else
 	{
-		id = baseType()->identifier();
+		id = "t_array";
+		id += identifierList(baseType());
 		if (isDynamicallySized())
-			id += "_arraydyn";
+			id += "dyn";
 		else
-			id += string("_array") + length().str();
+			id += length().str();
 	}
 	id += identifierLocationSuffix();
 
@@ -1422,7 +1474,7 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 
 string ContractType::identifier() const
 {
-	return (m_super ? "t_super_" : "t_contract_") + m_contract.name() + "_" + std::to_string(m_contract.id());
+	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -1536,7 +1588,7 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 
 string StructType::identifier() const
 {
-	return "t_struct_" + m_struct.name() + "_" + std::to_string(m_struct.id()) + identifierLocationSuffix();
+	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -1681,7 +1733,7 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 
 string EnumType::identifier() const
 {
-	return "t_enum_" + m_enum.name() + "_" + std::to_string(m_enum.id());
+	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
 }
 
 bool EnumType::operator==(Type const& _other) const
@@ -1767,14 +1819,7 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 
 string TupleType::identifier() const
 {
-	string id = "t_tuple" + std::to_string(components().size()) + "_";
-	for (auto const& c: components())
-		if (c)
-			id += c->identifier() + "_";
-		else
-			id += "t_empty_";
-	id += "tuple_end";
-	return id;
+	return "t_tuple" + identifierList(components());
 }
 
 bool TupleType::operator==(Type const& _other) const
@@ -2062,19 +2107,13 @@ string FunctionType::identifier() const
 	}
 	if (isConstant())
 		id += "_constant";
-	id += "_param" + std::to_string(m_parameterTypes.size()) + "_";
-	for (auto const& p: m_parameterTypes)
-		id += p->identifier() + "_";
-	id += "return" + std::to_string(m_returnParameterTypes.size()) + "_";
-	for (auto const& r: m_returnParameterTypes)
-		id += r->identifier() + "_";
+	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
 		id += "gas_set_";
 	if (m_valueSet)
 		id += "value_set_";
 	if (bound())
-		id += "bound_to" + selfType()->identifier() + "_";
-	id += "function_end";
+		id += "bound_to" + identifierList(selfType());
 	return id;
 }
 
@@ -2482,7 +2521,7 @@ vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocatio
 	return names;
 }
 
-TypePointer FunctionType::selfType() const
+TypePointer const& FunctionType::selfType() const
 {
 	solAssert(bound(), "Function is not bound.");
 	solAssert(m_parameterTypes.size() > 0, "Function has no self type.");
@@ -2500,7 +2539,7 @@ ASTPointer<ASTString> FunctionType::documentation() const
 
 string MappingType::identifier() const
 {
-	return "t_mapping_" + m_keyType->identifier() + "_to_" + m_valueType->identifier() + "_mapping_end";
+	return "t_mapping" + identifierList(m_keyType, m_valueType);
 }
 
 bool MappingType::operator==(Type const& _other) const
@@ -2523,7 +2562,7 @@ string MappingType::canonicalName(bool) const
 
 string TypeType::identifier() const
 {
-	return "t_type_" + actualType()->identifier();
+	return "t_type" + identifierList(actualType());
 }
 
 bool TypeType::operator==(Type const& _other) const
@@ -2612,10 +2651,7 @@ u256 ModifierType::storageSize() const
 
 string ModifierType::identifier() const
 {
-	string id = "t_modifier_param" + std::to_string(m_parameterTypes.size()) + "_";
-	for (auto const& p: m_parameterTypes)
-		id += p->identifier() + "_";
-	return id + "end_modifier";
+	return "t_modifier" + identifierList(m_parameterTypes);
 }
 
 bool ModifierType::operator==(Type const& _other) const
