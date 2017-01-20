@@ -99,7 +99,7 @@ public:
 	///@}
 
 protected:
-	size_t m_id = 0;
+	size_t const m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable ASTAnnotation* m_annotation = nullptr;
 
