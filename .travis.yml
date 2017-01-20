@@ -140,7 +140,7 @@ script:
     # itself is broken from the failure messages which we are seeing.
     #
     # More details on known issues at https://github.com/ethereum/solidity/issues/769
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
+    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh)
 env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
