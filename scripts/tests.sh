@@ -45,6 +45,10 @@ do
     test -z "$output" -a "$failed" -eq 0
 done
 
+echo "Checking that StandardToken.sol, owned.sol and mortal.sol produce bytecode..."
+output=$("$REPO_ROOT"/build/solc/solc --bin "$REPO_ROOT"/std/*.sol 2>/dev/null | grep "ffff" | wc -l)
+test "$output" = "3"
+
 # This conditional is only needed because we don't have a working Homebrew
 # install for `eth` at the time of writing, so we unzip the ZIP file locally
 # instead.  This will go away soon.
