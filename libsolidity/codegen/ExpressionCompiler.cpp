@@ -556,20 +556,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arg->accept(*this);
 				argumentTypes.push_back(arg->annotation().type);
 			}
-			ContractDefinition const& contract =
-				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
-			// copy the contract's code into memory
-			eth::Assembly const& assembly = m_context.compiledContract(contract);
-			utils().fetchFreeMemoryPointer();
-			// TODO we create a copy here, which is actually what we want.
-			// This should be revisited at the point where we fix
-			// https://github.com/ethereum/solidity/issues/1092
-			// pushes size
-			auto subroutine = m_context.addSubroutine(make_shared<eth::Assembly>(assembly));
-			m_context << Instruction::DUP1 << subroutine;
-			m_context << Instruction::DUP4 << Instruction::CODECOPY;
-
-			m_context << Instruction::ADD;
+			ContractDefinition const* contract =
+				&dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
+			m_context.callLowLevelFunction(
+				"$copyContractCreationCodeToMemory_" + contract->type()->identifier(),
+				0,
+				1,
+				[contract](CompilerContext& _context)
+				{
+					// copy the contract's code into memory
+					eth::Assembly const& assembly = _context.compiledContract(*contract);
+					CompilerUtils(_context).fetchFreeMemoryPointer();
+					// pushes size
+					auto subroutine = _context.addSubroutine(make_shared<eth::Assembly>(assembly));
+					_context << Instruction::DUP1 << subroutine;
+					_context << Instruction::DUP4 << Instruction::CODECOPY;
+					_context << Instruction::ADD;
+				}
+			);
 			utils().encodeToMemory(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
