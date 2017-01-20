@@ -94,18 +94,18 @@ case $(uname -s) in
         # Check for Homebrew install and abort if it is not installed.
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
+        #todo: add a conditional for travis specific testing. We don't need to 
+        # upgrade everything in Travis' suite of brew and I believe this is the main
+        # cause of why our OS X images are so slow.
         brew update
         brew upgrade
 
         brew install boost
         brew install cmake
 
-        # We should really 'brew install' our eth client here, but at the time of writing
-        # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
-        # the time being, which is good enough.   The cause of the breaks will go away
-        # when we commit the repository reorg changes anyway.
-        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/v1.3.0/cpp-ethereum-osx-mavericks-v1.3.0.zip
-        unzip cpp-ethereum-osx-mavericks-v1.3.0.zip
+        brew tap ethereum/ethereum
+        brew install cpp-ethereum
+        brew linkapps cpp-ethereum
 
         ;;
 
@@ -156,8 +156,7 @@ case $(uname -s) in
                 # All our dependencies can be found in the Alpine Linux official repositories.
                 # See https://pkgs.alpinelinux.org/
 
-                apk update
-                apk add boost-dev build-base cmake
+                apk --no-cache --update add build-base cmake boost-dev git
 
                 ;;
 
