@@ -116,7 +116,8 @@ public:
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags.
-	std::map<u256, u256> optimiseInternal(bool _enable, bool _isCreation, size_t _runs);
+	/// @param _tagsPushedByParent the tags of this sub which are used by the parent sub.
+	std::map<u256, u256> optimiseInternal(bool _enable, bool _isCreation, size_t _runs, std::set<size_t> const& _tagsPushedByParent);
 
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired(unsigned subTagSize) const;

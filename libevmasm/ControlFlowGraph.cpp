@@ -50,7 +50,9 @@ BasicBlocks ControlFlowGraph::optimisedBlocks()
 	resolveNextLinks();
 	removeUnusedBlocks();
 	setPrevLinks();
-	gatherKnowledge();
+	// Disable the "gather knowledge" stage, it might not be 100% safe because of
+	// the "KnownState" mechanism.
+	// gatherKnowledge();
 
 	return rebuildCode();
 }
@@ -59,12 +61,19 @@ void ControlFlowGraph::findLargestTag()
 {
 	m_lastUsedId = 0;
 	for (auto const& item: m_items)
-		if (item.type() == Tag || item.type() == PushTag)
+		if (item.type() == Tag || (item.type() == PushTag && !item.isForeignTag()))
 		{
 			// Assert that it can be converted.
 			BlockId(item.data());
 			m_lastUsedId = max(unsigned(item.data()), m_lastUsedId);
 		}
+	for (size_t tag: m_tagsPushedByParent)
+	{
+		// Assert that it can be converted.
+		BlockId(unsigned(tag));
+		m_lastUsedId = max(unsigned(tag), m_lastUsedId);
+		//cout << "Parent used tag: " << tag << endl;
+	}
 }
 
 void ControlFlowGraph::splitBlocks()
@@ -86,7 +95,7 @@ void ControlFlowGraph::splitBlocks()
 			id = item.type() == Tag ? BlockId(item.data()) : generateNewId();
 			m_blocks[id].begin = index;
 		}
-		if (item.type() == PushTag)
+		if (item.type() == PushTag && !item.isForeignTag())
 			m_blocks[id].pushedTags.push_back(BlockId(item.data()));
 		if (SemanticInformation::altersControlFlow(item))
 		{
@@ -117,6 +126,7 @@ void ControlFlowGraph::resolveNextLinks()
 
 	for (auto& idAndBlock: m_blocks)
 	{
+		//cout << "Checking " << idAndBlock.first.m_id << endl;
 		BasicBlock& block = idAndBlock.second;
 		switch (block.endType)
 		{
@@ -127,6 +137,7 @@ void ControlFlowGraph::resolveNextLinks()
 				OptimizerException,
 				"Successor block not found."
 			);
+			//cout << "Setting " << idAndBlock.first.m_id << ".next = " << blockByBeginPos.at(block.end).m_id << endl;
 			block.next = blockByBeginPos.at(block.end);
 			break;
 		default:
@@ -139,6 +150,13 @@ void ControlFlowGraph::removeUnusedBlocks()
 {
 	vector<BlockId> blocksToProcess{BlockId::initial()};
 	set<BlockId> neededBlocks{BlockId::initial()};
+
+	for (size_t tag: m_tagsPushedByParent)
+	{
+		blocksToProcess.push_back(BlockId(tag));
+		neededBlocks.insert(BlockId(tag));
+	}
+
 	while (!blocksToProcess.empty())
 	{
 		BasicBlock const& block = m_blocks.at(blocksToProcess.back());
@@ -159,7 +177,10 @@ void ControlFlowGraph::removeUnusedBlocks()
 		if (neededBlocks.count(it->first))
 			++it;
 		else
+		{
+			//cout << "Removing " << it->first.m_id << endl;
 			m_blocks.erase(it++);
+		}
 }
 
 void ControlFlowGraph::setPrevLinks()
@@ -171,6 +192,8 @@ void ControlFlowGraph::setPrevLinks()
 		{
 		case BasicBlock::EndType::JUMPI:
 		case BasicBlock::EndType::HANDOVER:
+			//cout << "Setting " << block.next.m_id << ".prev = " << idAndBlock.first.m_id << endl;
+			//cout << "Was: " << m_blocks.at(block.next).prev.m_id << endl;
 			assertThrow(
 				!m_blocks.at(block.next).prev,
 				OptimizerException,
@@ -192,6 +215,7 @@ void ControlFlowGraph::setPrevLinks()
 		AssemblyItem const& push = m_items.at(block.end - 2);
 		if (push.type() != PushTag)
 			continue;
+		assertThrow(!push.isForeignTag(), OptimizerException, "Jump to foreign tag");
 		BlockId nextId(push.data());
 		if (m_blocks.count(nextId) && m_blocks.at(nextId).prev)
 			continue;
@@ -237,6 +261,9 @@ void ControlFlowGraph::gatherKnowledge()
 		item.blocksSeen.insert(_currentItem.blockId);
 		workQueue.push_back(move(item));
 	};
+
+	for (size_t tag: m_tagsPushedByParent)
+		workQueue.push_back(WorkQueueItem{BlockId(tag), emptyState->copy(), set<BlockId>()});
 
 	while (!workQueue.empty())
 	{
@@ -325,6 +352,8 @@ BasicBlocks ControlFlowGraph::rebuildCode()
 		for (BlockId ref: idAndBlock.second.pushedTags)
 			if (m_blocks.count(ref))
 				pushes[ref]++;
+	for (size_t tag: m_tagsPushedByParent)
+		pushes[BlockId(tag)]++;
 
 	set<BlockId> blocksToAdd;
 	for (auto it: m_blocks)
@@ -355,8 +384,10 @@ BasicBlocks ControlFlowGraph::rebuildCode()
 			if (block.begin < block.end)
 			{
 				blocks.push_back(block);
-				blocks.back().startState->clearTagUnions();
-				blocks.back().endState->clearTagUnions();
+				if (blocks.back().startState)
+					blocks.back().startState->clearTagUnions();
+				if (blocks.back().endState)
+					blocks.back().endState->clearTagUnions();
 			}
 			previousHandedOver = (block.endType == BasicBlock::EndType::HANDOVER);
 		}

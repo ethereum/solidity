@@ -4,6 +4,7 @@ Features:
  * Add ``assert(condition)``, which throws if condition is false.
  * Introduce ``.transfer(value)`` for sending Ether.
  * Code generator: Support ``revert()`` to abort with rolling back, but not consuming all gas.
+ * Code generator: Reactivate control flow graph optimizations.
  * Inline assembly: Support ``revert`` (EIP140) as an opcode.
  * Type system: Support explicit conversion of external function to address.
 

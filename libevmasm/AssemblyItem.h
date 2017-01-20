@@ -83,6 +83,7 @@ public:
 	std::pair<size_t, size_t> splitForeignPushTag() const;
 	/// Sets sub-assembly part and tag for a push tag.
 	void setPushTagSubIdAndTag(size_t _subId, size_t _tag);
+	bool isForeignTag() const;
 
 	AssemblyItemType type() const { return m_type; }
 	u256 const& data() const { assertThrow(m_type != Operation, Exception, ""); return *m_data; }

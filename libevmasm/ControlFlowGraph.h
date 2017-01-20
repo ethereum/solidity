@@ -55,7 +55,7 @@ public:
 	bool operator<(BlockId const& _other) const { return m_id < _other.m_id; }
 	explicit operator bool() const { return *this != invalid(); }
 
-private:
+//private:
 	unsigned m_id;
 };
 
@@ -99,10 +99,16 @@ class ControlFlowGraph
 public:
 	/// Initializes the control flow graph.
 	/// @a _items has to persist across the usage of this class.
+	/// @a _tagsPushedByParent tags of this assembly that are used by the parent assembly
 	/// @a _joinKnowledge if true, reduces state knowledge to common base at the join of two paths
-	explicit ControlFlowGraph(AssemblyItems const& _items, bool _joinKnowledge = true):
+	explicit ControlFlowGraph(
+		AssemblyItems const& _items,
+		std::set<size_t> const& _tagsPushedByParent = std::set<size_t>{},
+		bool _joinKnowledge = true
+	):
 		m_items(_items),
-		m_joinKnowledge(_joinKnowledge)
+		m_joinKnowledge(_joinKnowledge),
+		m_tagsPushedByParent(_tagsPushedByParent)
 	{}
 	/// @returns vector of basic blocks in the order they should be used in the final code.
 	/// Should be called only once.
@@ -122,6 +128,7 @@ private:
 	unsigned m_lastUsedId = 0;
 	AssemblyItems const& m_items;
 	bool m_joinKnowledge = true;
+	std::set<size_t> const& m_tagsPushedByParent;
 	std::map<BlockId, BasicBlock> m_blocks;
 };
 
