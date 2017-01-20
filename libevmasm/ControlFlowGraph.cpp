@@ -40,7 +40,7 @@ BlockId::BlockId(u256 const& _id):
 	assertThrow( _id < initial().m_id, OptimizerException, "Tag number too large.");
 }
 
-BasicBlocks ControlFlowGraph::optimisedBlocks()
+BasicBlocks ControlFlowGraph::optimisedBlocks(bool _enableKnowledge)
 {
 	if (m_items.empty())
 		return BasicBlocks();
@@ -50,9 +50,8 @@ BasicBlocks ControlFlowGraph::optimisedBlocks()
 	resolveNextLinks();
 	removeUnusedBlocks();
 	setPrevLinks();
-	// Disable the "gather knowledge" stage, it might not be 100% safe because of
-	// the "KnownState" mechanism.
-	// gatherKnowledge();
+	if (_enableKnowledge)
+		gatherKnowledge();
 
 	return rebuildCode();
 }

@@ -400,7 +400,9 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 		// Control flow graph that resets knowledge at path joins.
 		ControlFlowGraph cfg(m_items, _tagsPushedByParent, false);
 		AssemblyItems optimisedItems;
-		for (BasicBlock const& block: cfg.optimisedBlocks())
+		// Disable the "gather knowledge" stage, it might not be 100% safe because of
+		// the "KnownState" mechanism.
+		for (BasicBlock const& block: cfg.optimisedBlocks(false))
 		{
 			auto iter = m_items.begin() + block.begin;
 			auto const end = m_items.begin() + block.end;

@@ -46,7 +46,8 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	map<SourceLocation, GasConsumption> particularCosts;
 
 	ControlFlowGraph cfg(_items);
-	for (BasicBlock const& block: cfg.optimisedBlocks())
+	// Enable gathering of knowledge
+	for (BasicBlock const& block: cfg.optimisedBlocks(true))
 	{
 		assertThrow(!!block.startState, OptimizerException, "");
 		GasMeter meter(block.startState->copy());

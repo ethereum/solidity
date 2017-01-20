@@ -112,7 +112,7 @@ public:
 	{}
 	/// @returns vector of basic blocks in the order they should be used in the final code.
 	/// Should be called only once.
-	BasicBlocks optimisedBlocks();
+	BasicBlocks optimisedBlocks(bool _enableKnowledge);
 
 private:
 	void findLargestTag();

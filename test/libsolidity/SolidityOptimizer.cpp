@@ -154,7 +154,7 @@ public:
 		{
 			ControlFlowGraph cfg(output);
 			AssemblyItems optItems;
-			for (BasicBlock const& block: cfg.optimisedBlocks())
+			for (BasicBlock const& block: cfg.optimisedBlocks(true))
 				copy(output.begin() + block.begin, output.begin() + block.end,
 					 back_inserter(optItems));
 			output = move(optItems);
