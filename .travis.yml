@@ -41,12 +41,32 @@ matrix:
         sudo: required
         compiler:
           - clang
-      
+          - gcc
+        # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
       - os: linux
-        dist: trusty 
+        dist: trusty
         sudo: required
-        compiler:
-          - gcc  
+        env:
+            - TRAVIS_DOCS=On
+            - TRAVIS_RELEASE=Off
+            - TRAVIS_TESTS=Off
+        # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
+        # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
+        # and in other Ethereum web-based development contexts.
+      - os: linux
+        dist: trusty
+        sudo: required
+        compiler: gcc
+        node_js: stable
+        services:
+            - docker
+        before_install:
+            - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
+        env:
+            - TRAVIS_EMSCRIPTEN=On
+            - TRAVIS_INSTALL_DEPS=Off
+            - TRAVIS_RELEASE=Off
+            - TRAVIS_TESTS=Off
         # Yosemite
       - os: osx
         osx_image: xcode6.4
@@ -70,6 +90,3 @@ matrix:
         osx_image: xcode8.2
         compiler:
           - clang
-
-install:
-  - ./scripts/install_deps.sh
