@@ -34,16 +34,34 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+class IDDispenser
+{
+public:
+	static size_t next() { return ++instance(); }
+	static void reset() { instance() = 0; }
+private:
+	static size_t& instance()
+	{
+		static IDDispenser dispenser;
+		return dispenser.id;
+	}
+	size_t id = 0;
+};
+
 ASTNode::ASTNode(SourceLocation const& _location):
+	m_id(IDDispenser::next()),
 	m_location(_location)
 {
-	static size_t id = 0;
-	m_id = ++id;
 }
 
 ASTNode::~ASTNode()
 {
 	delete m_annotation;
+}
+
+void ASTNode::resetID()
+{
+	IDDispenser::reset();
 }
 
 ASTAnnotation& ASTNode::annotation() const

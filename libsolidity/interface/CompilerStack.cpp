@@ -112,6 +112,7 @@ bool CompilerStack::parse()
 {
 	//reset
 	m_errors.clear();
+	ASTNode::resetID();
 	m_parseSuccessful = false;
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())

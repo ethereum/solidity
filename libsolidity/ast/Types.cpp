@@ -21,15 +21,22 @@
  */
 
 #include <libsolidity/ast/Types.h>
-#include <limits>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/sliced.hpp>
+
+#include <libsolidity/interface/Utils.h>
+#include <libsolidity/ast/AST.h>
+
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/UTF8.h>
-#include <libsolidity/interface/Utils.h>
-#include <libsolidity/ast/AST.h>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+
+#include <limits>
 
 using namespace std;
 using namespace dev;
@@ -115,6 +122,51 @@ u256 const& MemberList::storageSize() const
 	// trigger lazy computation
 	memberStorageOffset("");
 	return m_storageOffsets->storageSize();
+}
+
+/// Helper functions for type identifier
+namespace
+{
+
+string parenthesizeIdentifier(string const& _internal)
+{
+	return "$_" + _internal + "_$";
+}
+
+template <class Range>
+string identifierList(Range const&& _list)
+{
+	return parenthesizeIdentifier(boost::algorithm::join(_list, "_$_"));
+}
+
+string identifier(TypePointer const& _type)
+{
+	return _type ? _type->identifier() : "";
+}
+
+string identifierList(vector<TypePointer> const& _list)
+{
+	return identifierList(_list | boost::adaptors::transformed(identifier));
+}
+
+string identifierList(TypePointer const& _type)
+{
+	return parenthesizeIdentifier(identifier(_type));
+}
+
+string identifierList(TypePointer const& _type1, TypePointer const& _type2)
+{
+	TypePointers list;
+	list.push_back(_type1);
+	list.push_back(_type2);
+	return identifierList(list);
+}
+
+string parenthesizeUserIdentifier(string const& _internal)
+{
+	return parenthesizeIdentifier(boost::algorithm::replace_all_copy(_internal, "$", "$$$"));
+}
+
 }
 
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
@@ -272,7 +324,15 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
 		"Invalid bit number for integer type: " + dev::toString(_bits)
-	);
+				);
+}
+
+string IntegerType::identifier() const
+{
+	if (isAddress())
+		return "t_address";
+	else
+		return "t_" + string(isSigned() ? "" : "u") + "int" + std::to_string(numBits());
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -412,7 +472,12 @@ FixedPointType::FixedPointType(int _integerBits, int _fractionalBits, FixedPoint
 		m_fractionalBits % 8 == 0,
 		"Invalid bit number(s) for fixed type: " + 
 		dev::toString(_integerBits) + "x" + dev::toString(_fractionalBits)
-	);
+				);
+}
+
+string FixedPointType::identifier() const
+{
+	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(integerBits()) + "x" + std::to_string(fractionalBits());
 }
 
 bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -770,6 +835,11 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	}
 }
 
+string RationalNumberType::identifier() const
+{
+	return "t_rational_" + m_value.numerator().str() + "_by_" + m_value.denominator().str();
+}
+
 bool RationalNumberType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -909,6 +979,13 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 }
 
+string StringLiteralType::identifier() const
+{
+	// Since we have to return a valid identifier and the string itself may contain
+	// anything, we hash it.
+	return "t_stringliteral_" + toHex(keccak256(m_value).asBytes());
+}
+
 bool StringLiteralType::operator==(const Type& _other) const
 {
 	if (_other.category() != category())
@@ -1000,6 +1077,11 @@ TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePoi
 MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) const
 {
 	return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
+}
+
+string FixedBytesType::identifier() const
+{
+	return "t_bytes" + std::to_string(m_bytes);
 }
 
 bool FixedBytesType::operator==(Type const& _other) const
@@ -1115,6 +1197,20 @@ string ReferenceType::stringForReferencePart() const
 	return "";
 }
 
+string ReferenceType::identifierLocationSuffix() const
+{
+	string id;
+	if (location() == DataLocation::Storage)
+		id += "_storage";
+	else if (location() == DataLocation::Memory)
+		id += "_memory";
+	else
+		id += "_calldata";
+	if (isPointer())
+		id += "_ptr";
+	return id;
+}
+
 bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 {
 	if (_convertTo.category() != category())
@@ -1170,6 +1266,27 @@ bool ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
 	return true;
 }
 
+string ArrayType::identifier() const
+{
+	string id;
+	if (isString())
+		id = "t_string";
+	else if (isByteArray())
+		id = "t_bytes";
+	else
+	{
+		id = "t_array";
+		id += identifierList(baseType());
+		if (isDynamicallySized())
+			id += "dyn";
+		else
+			id += length().str();
+	}
+	id += identifierLocationSuffix();
+
+	return id;
+}
+
 bool ArrayType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -1184,7 +1301,7 @@ bool ArrayType::operator==(Type const& _other) const
 		return false;
 	if (*other.baseType() != *baseType())
 		return false;
-	return isDynamicallySized() || length()  == other.length();
+	return isDynamicallySized() || length() == other.length();
 }
 
 unsigned ArrayType::calldataEncodedSize(bool _padded) const
@@ -1356,6 +1473,11 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 	return copy;
 }
 
+string ContractType::identifier() const
+{
+	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
+}
+
 bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -1463,6 +1585,11 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	if (convertTo.location() == DataLocation::CallData && location() != convertTo.location())
 		return false;
 	return this->m_struct == convertTo.m_struct;
+}
+
+string StructType::identifier() const
+{
+	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -1605,6 +1732,11 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
+string EnumType::identifier() const
+{
+	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
+}
+
 bool EnumType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -1684,6 +1816,11 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 	}
 	else
 		return false;
+}
+
+string TupleType::identifier() const
+{
+	return "t_tuple" + identifierList(components());
 }
 
 bool TupleType::operator==(Type const& _other) const
@@ -1932,6 +2069,53 @@ TypePointers FunctionType::parameterTypes() const
 	if (!bound())
 		return m_parameterTypes;
 	return TypePointers(m_parameterTypes.cbegin() + 1, m_parameterTypes.cend());
+}
+
+string FunctionType::identifier() const
+{
+	string id = "t_function_";
+	switch (location())
+	{
+	case Location::Internal: id += "internal"; break;
+	case Location::External: id += "external"; break;
+	case Location::CallCode: id += "callcode"; break;
+	case Location::DelegateCall: id += "delegatecall"; break;
+	case Location::Bare: id += "bare"; break;
+	case Location::BareCallCode: id += "barecallcode"; break;
+	case Location::BareDelegateCall: id += "baredelegatecall"; break;
+	case Location::Creation: id += "creation"; break;
+	case Location::Send: id += "send"; break;
+	case Location::SHA3: id += "sha3"; break;
+	case Location::Selfdestruct: id += "selfdestruct"; break;
+	case Location::ECRecover: id += "ecrecover"; break;
+	case Location::SHA256: id += "sha256"; break;
+	case Location::RIPEMD160: id += "ripemd160"; break;
+	case Location::Log0: id += "log0"; break;
+	case Location::Log1: id += "log1"; break;
+	case Location::Log2: id += "log2"; break;
+	case Location::Log3: id += "log3"; break;
+	case Location::Log4: id += "log4"; break;
+	case Location::Event: id += "event"; break;
+	case Location::SetGas: id += "setgas"; break;
+	case Location::SetValue: id += "setvalue"; break;
+	case Location::BlockHash: id += "blockhash"; break;
+	case Location::AddMod: id += "addmod"; break;
+	case Location::MulMod: id += "mulmod"; break;
+	case Location::ArrayPush: id += "arraypush"; break;
+	case Location::ByteArrayPush: id += "bytearraypush"; break;
+	case Location::ObjectCreation: id += "objectcreation"; break;
+	default: solAssert(false, "Unknown function location."); break;
+	}
+	if (isConstant())
+		id += "_constant";
+	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
+	if (m_gasSet)
+		id += "gas";
+	if (m_valueSet)
+		id += "value";
+	if (bound())
+		id += "bound_to" + identifierList(selfType());
+	return id;
 }
 
 bool FunctionType::operator==(Type const& _other) const
@@ -2338,7 +2522,7 @@ vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocatio
 	return names;
 }
 
-TypePointer FunctionType::selfType() const
+TypePointer const& FunctionType::selfType() const
 {
 	solAssert(bound(), "Function is not bound.");
 	solAssert(m_parameterTypes.size() > 0, "Function has no self type.");
@@ -2352,6 +2536,11 @@ ASTPointer<ASTString> FunctionType::documentation() const
 		return function->documentation();
 
 	return ASTPointer<ASTString>();
+}
+
+string MappingType::identifier() const
+{
+	return "t_mapping" + identifierList(m_keyType, m_valueType);
 }
 
 bool MappingType::operator==(Type const& _other) const
@@ -2370,6 +2559,11 @@ string MappingType::toString(bool _short) const
 string MappingType::canonicalName(bool) const
 {
 	return "mapping(" + keyType()->canonicalName(false) + " => " + valueType()->canonicalName(false) + ")";
+}
+
+string TypeType::identifier() const
+{
+	return "t_type" + identifierList(actualType());
 }
 
 bool TypeType::operator==(Type const& _other) const
@@ -2456,6 +2650,11 @@ u256 ModifierType::storageSize() const
 			<< errinfo_comment("Storage size of non-storable type type requested."));
 }
 
+string ModifierType::identifier() const
+{
+	return "t_modifier" + identifierList(m_parameterTypes);
+}
+
 bool ModifierType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -2480,6 +2679,11 @@ string ModifierType::toString(bool _short) const
 	return name + ")";
 }
 
+string ModuleType::identifier() const
+{
+	return "t_module_" + std::to_string(m_sourceUnit.id());
+}
+
 bool ModuleType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -2499,6 +2703,22 @@ MemberList::MemberMap ModuleType::nativeMembers(ContractDefinition const*) const
 string ModuleType::toString(bool) const
 {
 	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
+}
+
+string MagicType::identifier() const
+{
+	switch (m_kind)
+	{
+	case Kind::Block:
+		return "t_magic_block";
+	case Kind::Message:
+		return "t_magic_message";
+	case Kind::Transaction:
+		return "t_magic_transaction";
+	default:
+		solAssert(false, "Unknown kind of magic");
+	}
+	return "";
 }
 
 bool MagicType::operator==(Type const& _other) const
