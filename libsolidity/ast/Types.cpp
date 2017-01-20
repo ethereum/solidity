@@ -31,6 +31,7 @@
 #include <libdevcore/UTF8.h>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -163,7 +164,7 @@ string identifierList(TypePointer const& _type1, TypePointer const& _type2)
 
 string parenthesizeUserIdentifier(string const& _internal)
 {
-	return parenthesizeIdentifier(boost::replace_all_copy(_internal, "$", "$$$"));
+	return parenthesizeIdentifier(boost::algorithm::replace_all_copy(_internal, "$", "$$$"));
 }
 
 }
@@ -2109,9 +2110,9 @@ string FunctionType::identifier() const
 		id += "_constant";
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
-		id += "gas_set_";
+		id += "gas";
 	if (m_valueSet)
-		id += "value_set_";
+		id += "value";
 	if (bound())
 		id += "bound_to" + identifierList(selfType());
 	return id;

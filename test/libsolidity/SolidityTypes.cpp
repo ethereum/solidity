@@ -90,6 +90,7 @@ BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 
 BOOST_AUTO_TEST_CASE(type_identifiers)
 {
+	ASTNode::resetID();
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("uint128")->identifier(), "t_uint128");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("int128")->identifier(), "t_int128");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("address")->identifier(), "t_address");
