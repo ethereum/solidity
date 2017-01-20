@@ -624,7 +624,11 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 )
 {
-	if (_compiledContracts.count(&_contract) || !_contract.annotation().isFullyImplemented)
+	if (
+		_compiledContracts.count(&_contract) ||
+		!_contract.annotation().isFullyImplemented ||
+		!_contract.annotation().hasPublicConstructor
+	)
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);

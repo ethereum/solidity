@@ -80,6 +80,8 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 {
 	/// Whether all functions are implemented.
 	bool isFullyImplemented = true;
+	/// Whether a public constructor (even the default one) is available.
+	bool hasPublicConstructor = true;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
