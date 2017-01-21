@@ -39,12 +39,16 @@ matrix:
       - os: linux
         dist: trusty 
         sudo: required
+        services:
+            - docker
         compiler:
           - clang
       # Ubuntu 14.04 LTS "Trusty Tahr"
       - os: linux
         dist: trusty 
         sudo: required
+        services:
+            - docker
         compiler:
           - gcc
       # Docker image support for alpine native solc
@@ -86,6 +90,8 @@ matrix:
         # Yosemite
       - os: osx
         osx_image: xcode6.4
+        services:
+            - docker
         before_install:
           - ./scripts/travis-osx/install_deps.sh
         env:
@@ -93,12 +99,16 @@ matrix:
         # El Capitan
       - os: osx
         osx_image: xcode7.3
+        services:
+            - docker
         before_install:
           - ./scripts/travis-osx/install_deps.sh
         env:
           - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8
+        services:
+            - docker
         before_install:
           - ./scripts/travis-osx/install_deps.sh
         env:
@@ -106,12 +116,16 @@ matrix:
         # Sierra
       - os: osx
         osx_image: xcode8.1
+        services:
+            - docker
         before_install:
           - ./scripts/travis-osx/install_deps.sh
         env:
           - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8.2
+        services:
+            - docker
         before_install:
           - ./scripts/travis-osx/install_deps.sh
         env:
