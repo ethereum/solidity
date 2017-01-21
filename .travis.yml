@@ -54,8 +54,8 @@ matrix:
         services:
           - docker
         env: 
-            - UseDocker=On
-            - DockerOs=Alpine
+            - USE_DOCKER=On
+            - DOCKER_OS=Alpine
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
       - os: linux
         dist: trusty
