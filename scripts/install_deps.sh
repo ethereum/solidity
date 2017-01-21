@@ -103,10 +103,6 @@ case $(uname -s) in
         brew install boost
         brew install cmake
 
-        brew tap ethereum/ethereum
-        brew install cpp-ethereum
-        brew linkapps cpp-ethereum
-
         ;;
 
 #------------------------------------------------------------------------------

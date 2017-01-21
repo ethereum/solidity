@@ -86,16 +86,36 @@ matrix:
         # Yosemite
       - os: osx
         osx_image: xcode6.4
+        before_install:
+          - ./scripts/travis-osx/install_deps.sh
+        env:
+          - TRAVIS_INSTALL_DEPS=Off
         # El Capitan
       - os: osx
         osx_image: xcode7.3
+        before_install:
+          - ./scripts/travis-osx/install_deps.sh
+        env:
+          - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8
+        before_install:
+          - ./scripts/travis-osx/install_deps.sh
+        env:
+          - TRAVIS_INSTALL_DEPS=Off
         # Sierra
       - os: osx
         osx_image: xcode8.1
+        before_install:
+          - ./scripts/travis-osx/install_deps.sh
+        env:
+          - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8.2
+        before_install:
+          - ./scripts/travis-osx/install_deps.sh
+        env:
+          - TRAVIS_INSTALL_DEPS=Off
 git:
     depth: 2
 
@@ -108,7 +128,6 @@ cache:
 
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
-    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
