@@ -215,6 +215,18 @@ CompilerContext& CompilerContext::appendJump(eth::AssemblyItem::JumpType _jumpTy
 	return *this << item;
 }
 
+CompilerContext& CompilerContext::appendInvalid()
+{
+	return *this << Instruction::INVALID;
+}
+
+CompilerContext& CompilerContext::appendConditionalInvalid()
+{
+	eth::AssemblyItem falseTag = appendConditionalJump();
+	eth::AssemblyItem endTag = appendJumpToNew();
+	return *this << falseTag << Instruction::INVALID << endTag;
+}
+
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 {
 	stack<ASTNode const*> newStack;

@@ -585,7 +585,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -1234,7 +1234,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		m_context << u256(fixedBytesType.numBytes());
 		m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
 		// out-of-bounds access throws exception
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 
 		m_context << Instruction::BYTE;
 		m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
@@ -1416,7 +1416,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	{
 		// Test for division by zero
 		m_context << Instruction::DUP2 << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 
 		if (_operator == Token::Div)
 			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
@@ -1477,7 +1477,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 	if (c_amountSigned)
 	{
 		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 	}
 
 	switch (_operator)
@@ -1663,7 +1663,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionKind::External || funKind == FunctionKind::CallCode || funKind == FunctionKind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 		existenceChecked = true;
 	}
 
@@ -1699,7 +1699,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 	}
 
 	utils().popStackSlots(remainsSize);

@@ -106,7 +106,7 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	m_context.appendConditionalInvalid();
 }
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
@@ -271,7 +271,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
-		m_context.appendJumpTo(m_context.errorTag());
+		m_context.appendInvalid();
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -918,7 +918,9 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime()
 	a << Instruction::DELEGATECALL;
 	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
 	a << Instruction::ISZERO;
-	a.appendJumpI(a.errorTag());
+	eth::AssemblyItem falseTag = a.appendJumpI();
+	eth::AssemblyItem endTag = a.appendJump().tag();
+	a << falseTag << Instruction::INVALID << endTag;
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;
 	return make_shared<eth::Assembly>(a);

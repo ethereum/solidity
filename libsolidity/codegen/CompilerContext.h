@@ -127,6 +127,10 @@ public:
 	eth::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	/// Appends an INVALID instruction
+	CompilerContext&  appendInvalid();
+	/// Appends a conditional INVALID instruction
+	CompilerContext&  appendConditionalInvalid();
 	/// Returns an "ErrorTag"
 	eth::AssemblyItem errorTag() { return m_asm->errorTag(); }
 	/// Appends a JUMP to a specific tag
