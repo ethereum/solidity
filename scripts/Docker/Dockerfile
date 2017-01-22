@@ -1,5 +1,6 @@
 FROM alpine
 MAINTAINER chriseth <chris@ethereum.org>
+#Official solidity docker image, others are used for testing
 
 #Establish working directory as soliditiy
 WORKDIR /solidity
@@ -14,7 +15,7 @@ RUN \
   ./scripts/install_deps.sh                                           									    										&& \
   sed -i -E -e 's/include <sys\/poll.h>/include <poll.h>/' /usr/include/boost/asio/detail/socket_types.hpp  										&& \
   test $TEST == On && cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC_LINKING=1 || cmake -DCMAKE_BUILD_TYPE=Release -DTESTS=0 -DSTATIC_LINKING=1      	    && \
-  test $TEST == On && (make -j 2 && install -s solc/solc /usr/bin && install -s test/soltest /usr/bin) || (make solc && install -s  solc/solc /usr/bin) && \
+  test $TEST == On && (make solc soltest && install -s solc/solc /usr/bin && install -s test/soltest /usr/bin) || (make solc && install -s  solc/solc /usr/bin) && \
   cd / && rm -rf solidity                                                                                   										&& \
   apk del sed build-base git make cmake gcc g++ musl-dev curl-dev boost-dev                                 										&& \
   rm -rf /var/cache/apk/*

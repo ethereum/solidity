@@ -64,7 +64,7 @@ $ETH_PATH --test -d /tmp/test &
 # Wait until the IPC endpoint is available.  That won't be available instantly.
 # The node needs to get a little way into its startup sequence before the IPC
 # is available and is ready for the unit-tests to start talking to it.
-while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+while [ ! -S /tmp/test/geth.ipc ]; do sleep 1; done
 echo "--> IPC available."
 
 # And then run the Solidity unit-tests (once without optimization, once with),

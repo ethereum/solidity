@@ -33,9 +33,23 @@ branches:
         - develop
         - release
         - /^v[0-9]/
+
+env:
+    global:
+        - ENCRYPTION_LABEL="6d4541b72666"
+        - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        - TRAVIS_DOCS=Off
+        - TRAVIS_EMSCRIPTEN=Off
+        - TRAVIS_INSTALL_DEPS=On
+        - TRAVIS_RELEASE=On
+        - TRAVIS_TESTS=On
+        - USE_DOCKER=Off
+        - DOCKER_RELEASE=Off
+        - DOCKER_OS=
+
 matrix:
     include:
-        # Ubuntu 14.04 LTS "Trusty Tahr"
+        # Ubuntu 14.04 LTS "Trusty Tahr" clang compile
       - os: linux
         dist: trusty 
         sudo: required
@@ -43,7 +57,7 @@ matrix:
             - docker
         compiler:
           - clang
-      # Ubuntu 14.04 LTS "Trusty Tahr"
+      # Ubuntu 14.04 LTS "Trusty Tahr" gcc compile
       - os: linux
         dist: trusty 
         sudo: required
@@ -60,6 +74,44 @@ matrix:
         env: 
             - USE_DOCKER=On
             - DOCKER_OS=Alpine
+            - TRAVIS_INSTALL_DEPS=Off
+            - DOCKER_RELEASE=On
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+          - docker
+        env: 
+            - USE_DOCKER=On
+            - DOCKER_OS=Arch
+            - TRAVIS_INSTALL_DEPS=Off
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+          - docker
+        env: 
+            - USE_DOCKER=On
+            - DOCKER_OS=Xenial
+            - TRAVIS_INSTALL_DEPS=Off
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+          - docker
+        env: 
+            - USE_DOCKER=On
+            - DOCKER_OS=Fedora
+            - TRAVIS_INSTALL_DEPS=Off
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+          - docker
+        env: 
+            - USE_DOCKER=On
+            - DOCKER_OS=Jessie
+            - TRAVIS_INSTALL_DEPS=Off
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
       - os: linux
         dist: trusty
@@ -92,44 +144,24 @@ matrix:
         osx_image: xcode6.4
         services:
             - docker
-        before_install:
-          - ./scripts/travis-osx/install_deps.sh
-        env:
-          - TRAVIS_INSTALL_DEPS=Off
         # El Capitan
       - os: osx
         osx_image: xcode7.3
         services:
             - docker
-        before_install:
-          - ./scripts/travis-osx/install_deps.sh
-        env:
-          - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8
         services:
             - docker
-        before_install:
-          - ./scripts/travis-osx/install_deps.sh
-        env:
-          - TRAVIS_INSTALL_DEPS=Off
         # Sierra
       - os: osx
         osx_image: xcode8.1
         services:
             - docker
-        before_install:
-          - ./scripts/travis-osx/install_deps.sh
-        env:
-          - TRAVIS_INSTALL_DEPS=Off
       - os: osx
         osx_image: xcode8.2
         services:
             - docker
-        before_install:
-          - ./scripts/travis-osx/install_deps.sh
-        env:
-          - TRAVIS_INSTALL_DEPS=Off
 git:
     depth: 2
 
@@ -141,40 +173,16 @@ cache:
         - $HOME/.local
 
 install:
-    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/travis/travis_install_deps.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 before_script:
-    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || (mkdir -p build
-      && cd build
-      && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
-      && make -j2
-      && cd ..
+    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/travis/build_emscripten.sh
+    - test $TRAVIS_RELEASE != On || 
       && ./scripts/release.sh $ZIP_SUFFIX
       && ./scripts/create_source_tarball.sh )
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
-
-    # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
-    # up to 3 times before giving up and declaring the tests as broken.
-    #
-    # We should aim to remove this "retry logic" as soon as we can, because it is a
-    # band-aid for issues which need solving at their root.  Some of those issues will be
-    # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
-    # itself is broken from the failure messages which we are seeing.
-    #
-    # More details on known issues at https://github.com/ethereum/solidity/issues/769
     - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh)
-env:
-    global:
-        - ENCRYPTION_LABEL="6d4541b72666"
-        - TRAVIS_BUILD_TYPE=RelWithDebInfo
-        - TRAVIS_DOCS=Off
-        - TRAVIS_EMSCRIPTEN=Off
-        - TRAVIS_INSTALL_DEPS=On
-        - TRAVIS_RELEASE=On
-        - TRAVIS_TESTS=On
 
 deploy:
     # This is the deploy target for the Emscripten build.

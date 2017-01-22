@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for building solidity
-# using Emscripten on Ubuntu Trusty.
+# Bash script for building Solidity for emscripten.
 #
 # The documentation for solidity is hosted at:
 #
-# http://solidity.readthedocs.io/
+#     https://solidity.readthedocs.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -27,16 +26,15 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -ev
+set -e
 
-echo -en 'travis_fold:start:installing_dependencies\\r'
-test -e boost_1_57_0 -a -e boost_1_57_0/boost || (
-wget 'http://downloads.sourceforge.net/project/boost/boost/'\
-'1.57.0/boost_1_57_0.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2F'\
-'projects%2Fboost%2Ffiles%2Fboost%2F1.57.0%2F&ts=1421887207'\
- -O - | tar xj
-cd boost_1_57_0
-./bootstrap.sh --with-toolset=gcc --with-libraries=thread,system,regex,date_time,chrono,filesystem,program_options,random
-)
-cd ..
-echo -en 'travis_fold:end:installing_dependencies\\r'
+if [[ "$OSTYPE" != "darwin"* ]]; then
+    if [ "$TRAVIS_BRANCH" = release ]
+    then
+        echo -n > prerelease.txt
+    else
+        date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
+    fi
+    ./scripts/travis/travis-emscripten/install_deps.sh
+    docker run -v $(pwd):/src trzeci/emscripten:sdk-tag-1.35.4-64bit ./scripts/travis-emscripten/travis/build_emscripten.sh
+fi
