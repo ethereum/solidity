@@ -58,7 +58,12 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 				return declaration;
 			}
 			if (
-				!dynamic_cast<FunctionDefinition const*>(declaration) &&
+				dynamic_cast<FunctionDefinition const*>(&_declaration) &&
+				!dynamic_cast<FunctionDefinition const*>(declaration)
+			)
+				return declaration;
+			if (
+				dynamic_cast<EventDefinition const*>(&_declaration) &&
 				!dynamic_cast<EventDefinition const*>(declaration)
 			)
 				return declaration;
