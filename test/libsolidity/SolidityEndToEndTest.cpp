@@ -2505,6 +2505,16 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
 }
 
+BOOST_AUTO_TEST_CASE(internal_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function C() internal {}
+		}
+	)";
+	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "C").empty());
+}
+
 BOOST_AUTO_TEST_CASE(function_modifier)
 {
 	char const* sourceCode = R"(

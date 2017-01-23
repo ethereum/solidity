@@ -4899,6 +4899,32 @@ BOOST_AUTO_TEST_CASE(assignment_to_constant)
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
 }
 
+BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D {
+			function f() { var x = new C(); }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
+}
+
+BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D is C {
+			function D() { }
+		}
+	)";
+	success(text);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
