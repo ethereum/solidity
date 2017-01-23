@@ -250,7 +250,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		}
 		if (lvalueSize > 0)
 		{
-			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
+			if (itemSize + lvalueSize > 16)
+				BOOST_THROW_EXCEPTION(
+					CompilerError() <<
+					errinfo_sourceLocation(_assignment.location()) <<
+					errinfo_comment("Stack too deep, try removing local variables.")
+				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;

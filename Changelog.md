@@ -1,7 +1,8 @@
 ### 0.4.9 (unreleased)
 
 Features:
- * Compiler Interface: Contracts and libraries can be referenced with a `file:` prefix to make them unique.
+ * Compiler interface: Contracts and libraries can be referenced with a ``file:`` prefix to make them unique.
+ * Compiler interface: Report source location for "stack too deep" errors.
  * AST: Use deterministic node identifiers.
  * Type system: Introduce type identifier strings.
  * Metadata: Do not include platform in the version number.

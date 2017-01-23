@@ -486,7 +486,12 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		stackLayout.push_back(i);
 	stackLayout += vector<int>(c_localVariablesSize, -1);
 
-	solAssert(stackLayout.size() <= 17, "Stack too deep, try removing local variables.");
+	if (stackLayout.size() > 17)
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_function.location()) <<
+			errinfo_comment("Stack too deep, try removing local variables.")
+		);
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
 		{
@@ -551,6 +556,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 						if (stackDiff < 1 || stackDiff > 16)
 							BOOST_THROW_EXCEPTION(
 								CompilerError() <<
+								errinfo_sourceLocation(_inlineAssembly.location()) <<
 								errinfo_comment("Stack too deep, try removing local variables.")
 							);
 						for (unsigned i = 0; i < variable->type()->sizeOnStack(); ++i)
@@ -591,6 +597,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				if (stackDiff > 16 || stackDiff < 1)
 					BOOST_THROW_EXCEPTION(
 						CompilerError() <<
+						errinfo_sourceLocation(_inlineAssembly.location()) <<
 						errinfo_comment("Stack too deep, try removing local variables.")
 					);
 				for (unsigned i = 0; i < size; ++i) {
