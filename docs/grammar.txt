@@ -114,7 +114,7 @@ NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
-Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
+Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
 HexNumber = '0x' [0-9a-fA-F]+
 DecimalNumber = [0-9]+
