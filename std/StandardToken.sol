@@ -22,19 +22,23 @@ contract StandardToken is Token {
 	}
 
 	function transfer(address _to, uint256 _value) returns (bool success) {
-		if (balance[msg.sender] >= _value && balance[_to] + _value >= balance[_to]) {
-			balance[msg.sender] -= _value;
-			balance[_to] += _value;
-			Transfer(msg.sender, _to, _value);
+		return doTransfer(msg.sender, _to, _value);
+	}
+
+	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+		if (m_allowance[_from][msg.sender] >= _value) {
+			if (doTransfer(_from, _to, _value)) {
+				m_allowance[_from][msg.sender] -= _value;
+			}
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		if (m_allowance[_from][msg.sender] >= _value && balance[_to] + _value >= balance[_to]) {
-			m_allowance[_from][msg.sender] -= _value;
+	function doTransfer(address _from, address _to, uint _value) internal returns (bool success) {
+		if (balance[_from] >= _value && balance[_to] + _value >= balance[_to]) {
+			balance[_from] -= _value;
 			balance[_to] += _value;
 			Transfer(_from, _to, _value);
 			return true;
