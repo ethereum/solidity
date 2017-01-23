@@ -1387,6 +1387,53 @@ BOOST_AUTO_TEST_CASE(event_call)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(event_function_inheritance_clash)
+{
+	char const* text = R"(
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract B {
+			event dup();
+		}
+		contract C is A, B {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_inheritance_clash)
+{
+	char const* text = R"(
+		contract B {
+			event dup();
+		}
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract C is B, A {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_in_contract_clash)
+{
+	char const* text = R"(
+		contract A {
+			event dup();
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
 BOOST_AUTO_TEST_CASE(event_inheritance)
 {
 	char const* text = R"(
