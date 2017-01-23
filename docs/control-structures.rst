@@ -104,7 +104,7 @@ contract can be called internally.
 External Function Calls
 -----------------------
 
-The expressions ``this.g(8);`` and ``c.g(2);`` (where ``g`` is a contract
+The expressions ``this.g(8);`` and ``c.g(2);`` (where ``c`` is a contract
 instance) are also valid function calls, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
 Please note that function calls on ``this`` cannot be used in the constructor, as the
