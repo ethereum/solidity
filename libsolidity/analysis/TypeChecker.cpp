@@ -1565,6 +1565,16 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	if (_literal.looksLikeAddress())
+	{
+		if (_literal.passesAddressChecksum())
+		{
+			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+			return;
+		}
+		else
+			warning(_literal.location(), "This looks like an address but has an invalid checksum.");
+	}
 	_literal.annotation().type = Type::forLiteral(_literal);
 	if (!_literal.annotation().type)
 		fatalTypeError(_literal.location(), "Invalid literal value.");
