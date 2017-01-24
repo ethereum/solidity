@@ -6,6 +6,10 @@ Features:
  * AST: Use deterministic node identifiers.
  * Type system: Introduce type identifier strings.
  * Metadata: Do not include platform in the version number.
+ * Code generator: Extract array utils into low-level functions.
+
+Bugfixes:
+ * Code generator: Allow recursive structs.
  * Type checker: Allow multiple events of the same name (but with different arities or argument types)
 
 ### 0.4.8 (2017-01-13)

@@ -8992,6 +8992,28 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	compileAndRun(sourceCode, 0, "C2");
 }
 
+BOOST_AUTO_TEST_CASE(recursive_structs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S {
+				S[] x;
+			}
+			S sstorage;
+			function f() returns (uint) {
+				S memory s;
+				s.x = new S[](10);
+				delete s;
+				sstorage.x.length++;
+				delete sstorage;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

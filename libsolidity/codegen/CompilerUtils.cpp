@@ -820,37 +820,46 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	}
 	solAssert(referenceType->location() == DataLocation::Memory, "");
 
-	m_context << u256(max(32u, _type.calldataEncodedSize()));
-	allocateMemory();
-	m_context << Instruction::DUP1;
+	TypePointer type = _type.shared_from_this();
+	m_context.callLowLevelFunction(
+		"$pushZeroValue_" + referenceType->identifier(),
+		0,
+		1,
+		[type](CompilerContext& _context) {
+			CompilerUtils utils(_context);
+			_context << u256(max(32u, type->calldataEncodedSize()));
+			utils.allocateMemory();
+			_context << Instruction::DUP1;
 
-	if (auto structType = dynamic_cast<StructType const*>(&_type))
-		for (auto const& member: structType->members(nullptr))
-		{
-			pushZeroValue(*member.type);
-			storeInMemoryDynamic(*member.type);
-		}
-	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
-	{
-		if (arrayType->isDynamicallySized())
-		{
-			// zero length
-			m_context << u256(0);
-			storeInMemoryDynamic(IntegerType(256));
-		}
-		else if (arrayType->length() > 0)
-		{
-			m_context << arrayType->length() << Instruction::SWAP1;
-			// stack: items_to_do memory_pos
-			zeroInitialiseMemoryArray(*arrayType);
-			// stack: updated_memory_pos
-		}
-	}
-	else
-		solAssert(false, "Requested initialisation for unknown type: " + _type.toString());
+			if (auto structType = dynamic_cast<StructType const*>(type.get()))
+				for (auto const& member: structType->members(nullptr))
+				{
+					utils.pushZeroValue(*member.type);
+					utils.storeInMemoryDynamic(*member.type);
+				}
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+			{
+				if (arrayType->isDynamicallySized())
+				{
+					// zero length
+					_context << u256(0);
+					utils.storeInMemoryDynamic(IntegerType(256));
+				}
+				else if (arrayType->length() > 0)
+				{
+					_context << arrayType->length() << Instruction::SWAP1;
+					// stack: items_to_do memory_pos
+					utils.zeroInitialiseMemoryArray(*arrayType);
+					// stack: updated_memory_pos
+				}
+			}
+			else
+				solAssert(false, "Requested initialisation for unknown type: " + type->toString());
 
-	// remove the updated memory pointer
-	m_context << Instruction::POP;
+			// remove the updated memory pointer
+			_context << Instruction::POP;
+		}
+	);
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)

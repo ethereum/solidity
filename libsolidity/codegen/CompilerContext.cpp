@@ -21,14 +21,17 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
-#include <utility>
-#include <numeric>
-#include <boost/algorithm/string/replace.hpp>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmStack.h>
+
+#include <boost/algorithm/string/replace.hpp>
+
+#include <utility>
+#include <numeric>
 
 using namespace std;
 
@@ -55,6 +58,51 @@ void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionCompilationQueue.startFunction(_function);
 	*this << functionEntryLabel(_function);
+}
+
+void CompilerContext::callLowLevelFunction(
+	string const& _name,
+	unsigned _inArgs,
+	unsigned _outArgs,
+	function<void(CompilerContext&)> const& _generator
+)
+{
+	eth::AssemblyItem retTag = pushNewTag();
+	CompilerUtils(*this).moveIntoStack(_inArgs);
+
+	auto it = m_lowLevelFunctions.find(_name);
+	if (it == m_lowLevelFunctions.end())
+	{
+		eth::AssemblyItem tag = newTag().pushTag();
+		m_lowLevelFunctions.insert(make_pair(_name, tag));
+		m_lowLevelFunctionGenerationQueue.push(make_tuple(_name, _inArgs, _outArgs, _generator));
+		*this << tag;
+	}
+	else
+		*this << it->second;
+	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
+	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	*this << retTag.tag();
+}
+
+void CompilerContext::appendMissingLowLevelFunctions()
+{
+	while (!m_lowLevelFunctionGenerationQueue.empty())
+	{
+		string name;
+		unsigned inArgs;
+		unsigned outArgs;
+		function<void(CompilerContext&)> generator;
+		tie(name, inArgs, outArgs, generator) = m_lowLevelFunctionGenerationQueue.front();
+		m_lowLevelFunctionGenerationQueue.pop();
+
+		setStackOffset(inArgs + 1);
+		*this << m_lowLevelFunctions.at(name).tag();
+		generator(*this);
+		CompilerUtils(*this).moveToStackTop(outArgs);
+		appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+		solAssert(stackHeight() == outArgs, "Invalid stack height in low-level function " + name + ".");
+	}
 }
 
 void CompilerContext::addVariable(VariableDeclaration const& _declaration,
