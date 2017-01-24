@@ -10,10 +10,7 @@ create_bin_artifacts() {
 	done
 }
 
-SOLTEST=$(soltest --run_test=SolidityASTJSON,Assembly,SolidityImports,         
-      SolidityInlineAssembly,SemVerMatcher,SolidityNameAndTypeResolution,
-      SolidityABIJSON,SolidityExpressionCompiler,SolidityTypes,
-      SolidityNatspecJSON,SolidityParser,SolidityScanner)
+SOLTEST="soltest --run_test=SolidityASTJSON,Assembly,SolidityImports,SolidityInlineAssembly,SemVerMatcher,SolidityNameAndTypeResolution,SolidityABIJSON,SolidityExpressionCompiler,SolidityTypes,SolidityNatspecJSON,SolidityParser,SolidityScanner"
 
 cd "$TRAVIS_BUILD_DIR"
 mkdir -p solcbins
@@ -25,15 +22,15 @@ cd ./solcbins
 
 case "$OS_VERSION" in
 	"OSX-xcode6.4"|"OSX-xcode7.3"|"OSX-xcode8"|"OSX-xcode8.1"|"OSX-xcode8.2")
-		exec "$SOLTEST"
+		eval "$SOLTEST"
 		create_bin_artifacts "$OS_VERSION" "solc"
 		;;
 	"Ubuntu-Clang"|"Ubuntu-Gcc")
-		exec "$SOLTEST"
+		eval "$SOLTEST"
 		create_bin_artifacts "$OS_VERSION" "solc"
 		;;
 	"Emscripten")
-		exec "$SOLTEST"
+		eval "$SOLTEST"
 		create_bin_artifacts "$OS_VERSION" "solcjs"
 		;;
 	"Docker")

@@ -154,7 +154,7 @@ before_script:
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
     - test $NON_IPC_TESTS != On || ./scripts/run_non_ipc_tests_and_collect_binaries.sh
-
+    - test $IPC_TESTS != On || ./scripts/run_ipc_tests.sh
 deploy:
     # This is the deploy target for the Emscripten build.
     # It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'
