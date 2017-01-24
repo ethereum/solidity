@@ -276,7 +276,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			// stack: target_ref target_data_end source_data_pos target_data_pos_updated source_data_end
 			_context << Instruction::POP << Instruction::SWAP1 << Instruction::POP;
 			// stack: target_ref target_data_end target_data_pos_updated
-			utils.clearStorageLoop(*targetBaseType);
+			utils.clearStorageLoop(targetBaseType);
 			_context << Instruction::POP;
 		}
 	);
@@ -572,9 +572,9 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::ADD << Instruction::SWAP1;
 				if (_type.baseType()->storageBytes() < 32)
-					ArrayUtils(_context).clearStorageLoop(*make_shared<IntegerType>(256));
+					ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
 				else
-					ArrayUtils(_context).clearStorageLoop(*_type.baseType());
+					ArrayUtils(_context).clearStorageLoop(_type.baseType());
 				_context << Instruction::POP;
 			}
 			solAssert(_context.stackHeight() == stackHeightStart - 2, "");
@@ -613,9 +613,9 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 		<< Instruction::SWAP1;
 	// stack: data_pos_end data_pos
 	if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
-		clearStorageLoop(*make_shared<IntegerType>(256));
+		clearStorageLoop(make_shared<IntegerType>(256));
 	else
-		clearStorageLoop(*_type.baseType());
+		clearStorageLoop(_type.baseType());
 	// cleanup
 	m_context << endTag;
 	m_context << Instruction::POP;
@@ -720,7 +720,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
 				// stack: ref new_length current_length first_word data_location_end data_location
-				ArrayUtils(_context).clearStorageLoop(*make_shared<IntegerType>(256));
+				ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
 				_context << Instruction::POP;
 				// stack: ref new_length current_length first_word
 				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
@@ -759,9 +759,9 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			_context << Instruction::SWAP2 << Instruction::ADD;
 			// stack: ref new_length delete_end delete_start
 			if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
-				ArrayUtils(_context).clearStorageLoop(*make_shared<IntegerType>(256));
+				ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
 			else
-				ArrayUtils(_context).clearStorageLoop(*_type.baseType());
+				ArrayUtils(_context).clearStorageLoop(_type.baseType());
 
 			_context << resizeEnd;
 			// cleanup
@@ -771,17 +771,16 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 	);
 }
 
-void ArrayUtils::clearStorageLoop(Type const& _type) const
+void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
 {
-	TypePointer type = _type.shared_from_this();
 	m_context.callLowLevelFunction(
-		"$clearStorageLoop_" + _type.identifier(),
+		"$clearStorageLoop_" + _type->identifier(),
 		2,
 		1,
-		[type](CompilerContext& _context)
+		[_type](CompilerContext& _context)
 		{
 			unsigned stackHeightStart = _context.stackHeight();
-			if (type->category() == Type::Category::Mapping)
+			if (_type->category() == Type::Category::Mapping)
 			{
 				_context << Instruction::POP;
 				return;
@@ -802,10 +801,10 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 			_context.appendConditionalJumpTo(zeroLoopEnd);
 			// delete
 			_context << u256(0);
-			StorageItem(_context, *type).setToZero(SourceLocation(), false);
+			StorageItem(_context, *_type).setToZero(SourceLocation(), false);
 			_context << Instruction::POP;
 			// increment
-			_context << type->storageSize() << Instruction::ADD;
+			_context << _type->storageSize() << Instruction::ADD;
 			_context.appendJumpTo(loopStart);
 			// cleanup
 			_context << zeroLoopEnd;
