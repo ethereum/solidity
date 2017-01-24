@@ -79,6 +79,7 @@ matrix:
         env: 
             - DOCKER_SOLC=On
             - OS_VERSION="Docker"
+            - TRAVIS_RELEASE=Off
             - TRAVIS_INSTALL_DEPS=Off
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
       - os: linux
