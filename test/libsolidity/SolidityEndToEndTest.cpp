@@ -9682,6 +9682,47 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	compileAndRun(sourceCode, 0, "C2");
 }
 
+BOOST_AUTO_TEST_CASE(return_structs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; T[] sub; }
+			struct T { uint[2] x; }
+			function f() returns (uint x, S s) {
+				x = 7;
+				s.a = 8;
+				s.sub = new S[](3);
+				s.sub[0][0] = 9;
+				s.sub[1][0] = 10;
+				s.sub[2][1] = 11;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+//	Will calculate the exact encoding later.
+//	BOOST_CHECK(callContractFunction("f()") == encodeArgs(
+//		u256(7), u256(0x40),
+//		u256(8), u256(0x40),
+//		u256(3),
+//		// s.sub[0]
+//		u256(9), u256(0xc0),
+//		// s.sub[1]
+//		u256(10), u256(0xe0),
+//		// s.sub[2]
+//		u256(11), u256(0x100),
+//		// s.sub[0].sub
+//		u256(2)
+//		// s.sub[0].sub[0].a
+//		u256(8),
+//		u256()
+//		// s.sub[1].sub
+//		u256(0)
+//		// s.sub[2].sub
+//		u256(2)
+//					));
+}
+
 BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 {
 	char const* sourceCode = R"(
