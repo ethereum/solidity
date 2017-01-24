@@ -30,20 +30,8 @@ set -e
 
 REPO_ROOT="$(dirname "$0")"/..
 
- # Compile all files in std and examples.
-
-for f in "$REPO_ROOT"/std/*.sol
-do
-    echo "Compiling $f..."
-    set +e
-    output=$("$REPO_ROOT"/build/solc/solc "$f" 2>&1)
-    failed=$?
-    # Remove the pre-release warning from the compiler output
-    output=$(echo "$output" | grep -v 'pre-release')
-    echo "$output"
-    set -e
-    test -z "$output" -a "$failed" -eq 0
-done
+echo "Running commandline tests..."
+"$REPO_ROOT/test/cmdlineTests.sh"
 
 # This conditional is only needed because we don't have a working Homebrew
 # install for `eth` at the time of writing, so we unzip the ZIP file locally
