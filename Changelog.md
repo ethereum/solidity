@@ -6,6 +6,7 @@ Features:
  * AST: Use deterministic node identifiers.
  * Type system: Introduce type identifier strings.
  * Metadata: Do not include platform in the version number.
+ * Type checker: Allow multiple events of the same name (but with different arities or argument types)
 
 ### 0.4.8 (2017-01-13)
 
