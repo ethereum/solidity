@@ -146,6 +146,7 @@ cache:
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/travis/travis_install_deps.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
+    - test $IPC_TESTS != On || docker pull ethereum/client-cpp
 
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/travis/build_emscripten.sh
