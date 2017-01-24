@@ -9,5 +9,5 @@ fi
 mkdir -p build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-make -j2
+make -j2 && install -s solc/solc /usr/bin && install -s test/soltest
 cd ..
