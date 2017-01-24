@@ -54,3 +54,5 @@ case $(uname -s) in
             cmake \
             git \
             libboost-all-dev
+        ;;
+esac
