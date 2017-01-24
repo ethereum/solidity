@@ -81,7 +81,7 @@ void CompilerContext::callLowLevelFunction(
 	else
 		*this << it->second;
 	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
-	adjustStackOffset(_outArgs - 1 - _inArgs);
+	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
 	*this << retTag.tag();
 }
 
