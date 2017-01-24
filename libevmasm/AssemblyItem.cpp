@@ -76,12 +76,20 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	BOOST_THROW_EXCEPTION(InvalidOpcode());
 }
 
-int AssemblyItem::deposit() const
+int AssemblyItem::arguments() const
+{
+	if (type() == Operation)
+		return instructionInfo(instruction()).args;
+	else
+		return 0;
+}
+
+int AssemblyItem::returnValues() const
 {
 	switch (m_type)
 	{
 	case Operation:
-		return instructionInfo(instruction()).ret - instructionInfo(instruction()).args;
+		return instructionInfo(instruction()).ret;
 	case Push:
 	case PushString:
 	case PushTag:
