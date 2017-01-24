@@ -48,7 +48,7 @@ public:
 
 		Json::Value generatedInterface = m_compilerStack.contractABI("");
 		Json::Value expectedInterface;
-		m_reader.parse(_expectedInterfaceString, expectedInterface);
+		BOOST_REQUIRE(m_reader.parse(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
 			"Expected:\n" << expectedInterface.toStyledString() <<
@@ -752,6 +752,140 @@ BOOST_AUTO_TEST_CASE(function_type)
 	]
 	)";
 	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(return_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; T[] sub; }
+			struct T { uint[2] x; }
+			function f() returns (uint x, S s) {
+			}
+		}
+	)";
+	char const* interface = R"(
+	[
+	{
+		"constant" : false,
+		"payable": false,
+		"inputs": [],
+		"name": "f",
+		"outputs": [{
+			"name": "x",
+			"type": "uint256"
+		}, {
+			"name": "s",
+			"type": [{
+				"name": "a",
+				"type": "uint256"
+			}, {
+				"name": "sub",
+				"subtype": [{
+					"name": "x",
+					"type": "uint256[2]"
+				}],
+				"type": "[]"
+			}]
+		}],
+		"type" : "function"
+	}
+	]
+	)";
+	checkInterface(text, interface);
+}
+
+BOOST_AUTO_TEST_CASE(event_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; T[] sub; bytes b; }
+			struct T { uint[2] x; }
+			event E(T t, S s);
+		}
+	)";
+	char const* interface = R"(
+	[{
+		"anonymous" : false,
+		"inputs" : [{
+			"indexed" : false,
+			"name" : "t",
+			"type" : [{
+				"name" : "x",
+				"type" : "uint256[2]"
+			}]
+		}, {
+			"indexed" : false,
+			"name" : "s",
+			"type" : [{
+					"name" : "a",
+					"type" : "uint256"
+				}, {
+					"name" : "sub",
+					"subtype" : [{
+						"name" : "x",
+						"type" : "uint256[2]"
+					}],
+					"type" : "[]"
+				}, {
+					"name" : "b",
+					"type" : "bytes"
+				}]
+		}],
+		"name" : "E",
+		"type" : "event"
+	}]
+	)";
+	checkInterface(text, interface);
+}
+
+BOOST_AUTO_TEST_CASE(structs_in_libraries)
+{
+	char const* text = R"(
+		library L {
+			struct S { uint a; T[] sub; bytes b; }
+			struct T { uint[2] x; }
+			function f(L.S storage s) {}
+			function g(L.S s) {}
+		}
+	)";
+	char const* interface = R"(
+	[{
+		"constant" : false,
+		"inputs" : [{
+			"name" : "s",
+			"type" : [{
+				"name" : "a",
+				"type" : "uint256"
+			}, {
+				"name" : "sub",
+				"subtype" : [{
+					"name" : "x",
+					"type" : "uint256[2]"
+				}],
+				"type" : "[]"
+			}, {
+				"name" : "b",
+				"type" : "bytes"
+			}]
+		}],
+		"name" : "g",
+		"outputs" : [],
+		"payable" : false,
+		"type" : "function"
+	}, {
+		"constant" : false,
+		"inputs" : [{
+			"name" : "s",
+			"type" : "L.S storage"
+		}],
+		"name" : "f",
+		"outputs" : [],
+		"payable" : false,
+		"type" : "function"
+	}]
+	)";
+	checkInterface(text, interface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
