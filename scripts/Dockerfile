@@ -15,7 +15,7 @@ COPY / $WORKDIR
 #add in soltest to the binary. If not, assume this is basic solidity image, build it and ship it out.
 RUN ./scripts/install_deps.sh && sed -i -E -e 's/include <sys\/poll.h>/include <poll.h>/' /usr/include/boost/asio/detail/socket_types.hpp
 RUN test $TEST == On && cmake -DCMAKE_BUILD_TYPE=$BUILD -DSTATIC_LINKING=1 || cmake -DCMAKE_BUILD_TYPE=$BUILD -DTESTS=0 -DSTATIC_LINKING=1
-RUN test $TEST == On && (make solc soltest && install -s solc/solc /usr/bin && install -s test/soltest /usr/bin) || (make solc && install -s  solc/solc /usr/bin)
+RUN test $TEST == On && (make && install -s solc/solc /usr/bin && install -s test/soltest /usr/bin) || (make solc && install -s  solc/solc /usr/bin)
 RUN cd / && rm -rf solidity
 RUN apk del sed build-base git make cmake gcc g++ musl-dev curl-dev boost-dev
 RUN rm -rf /var/cache/apk/*
