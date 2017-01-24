@@ -50,7 +50,6 @@ case $(uname -s) in
 #Since it's Travis, we assume that this is Ubuntu Trusty Tahr for now
         sudo apt-get -y update
         sudo apt-get -y install \
-            python-sphinx \
             build-essential \
             cmake \
             git \

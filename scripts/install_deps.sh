@@ -94,9 +94,6 @@ case $(uname -s) in
         # Check for Homebrew install and abort if it is not installed.
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
-        #todo: add a conditional for travis specific testing. We don't need to 
-        # upgrade everything in Travis' suite of brew and I believe this is the main
-        # cause of why our OS X images are so slow.
         brew update
         brew upgrade
 
@@ -200,7 +197,6 @@ case $(uname -s) in
                 # Install "normal packages"
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     g++ \
@@ -304,7 +300,6 @@ case $(uname -s) in
 
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     git \

@@ -45,15 +45,6 @@ do
     test -z "$output" -a "$failed" -eq 0
 done
 
-# This conditional is only needed because we don't have a working Homebrew
-# install for `eth` at the time of writing, so we unzip the ZIP file locally
-# instead.  This will go away soon.
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    ETH_PATH="$REPO_ROOT/eth"
-else
-    ETH_PATH="eth"
-fi
-
 # This trailing ampersand directs the shell to run the command in the background,
 # that is, it is forked and run in a separate sub-shell, as a job,
 # asynchronously. The shell will immediately return the return status of 0 for

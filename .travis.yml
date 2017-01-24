@@ -42,10 +42,10 @@ env:
         - TRAVIS_EMSCRIPTEN=Off
         - TRAVIS_INSTALL_DEPS=On
         - TRAVIS_RELEASE=On
-        - TRAVIS_TESTS=On
-        - USE_DOCKER=Off
-        - DOCKER_RELEASE=Off
-        - DOCKER_OS=
+        - NON_IPC_TESTS=On
+        - DOCKER_SOLC=Off
+        - OS_VERSION=
+        - IPC_TESTS=Off
 
 matrix:
     include:
@@ -57,7 +57,10 @@ matrix:
             - docker
         compiler:
           - clang
-      # Ubuntu 14.04 LTS "Trusty Tahr" gcc compile
+        env:
+          - IPC_TESTS=On
+          - OS_VERSION="Ubuntu-Clang"
+        # Ubuntu 14.04 LTS "Trusty Tahr" gcc compile
       - os: linux
         dist: trusty 
         sudo: required
@@ -65,61 +68,28 @@ matrix:
             - docker
         compiler:
           - gcc
-      # Docker image support for alpine native solc
+        env:
+          - OS_VERSION="Ubuntu-Gcc"
+        # Docker image in Alpine
       - os: linux
         dist: trusty 
         sudo: required
         services:
           - docker
         env: 
-            - USE_DOCKER=On
-            - DOCKER_OS=Alpine
-            - TRAVIS_INSTALL_DEPS=Off
-            - DOCKER_RELEASE=On
-      - os: linux
-        dist: trusty 
-        sudo: required
-        services:
-          - docker
-        env: 
-            - USE_DOCKER=On
-            - DOCKER_OS=Arch
-            - TRAVIS_INSTALL_DEPS=Off
-      - os: linux
-        dist: trusty 
-        sudo: required
-        services:
-          - docker
-        env: 
-            - USE_DOCKER=On
-            - DOCKER_OS=Xenial
-            - TRAVIS_INSTALL_DEPS=Off
-      - os: linux
-        dist: trusty 
-        sudo: required
-        services:
-          - docker
-        env: 
-            - USE_DOCKER=On
-            - DOCKER_OS=Fedora
-            - TRAVIS_INSTALL_DEPS=Off
-      - os: linux
-        dist: trusty 
-        sudo: required
-        services:
-          - docker
-        env: 
-            - USE_DOCKER=On
-            - DOCKER_OS=Jessie
+            - DOCKER_SOLC=On
+            - OS_VERSION="Docker"
             - TRAVIS_INSTALL_DEPS=Off
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
       - os: linux
         dist: trusty
         sudo: required
+        before_install: apt-get -y install python-sphinx
         env:
             - TRAVIS_DOCS=On
             - TRAVIS_RELEASE=Off
             - TRAVIS_TESTS=Off
+            - TRAVIS_INSTALL_DEPS=Off
         # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
         # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
         # and in other Ethereum web-based development contexts.
@@ -142,26 +112,26 @@ matrix:
         # Yosemite
       - os: osx
         osx_image: xcode6.4
-        services:
-            - docker
+        env:
+          - OS_VERSION="OSX-xcode6.4"
         # El Capitan
       - os: osx
         osx_image: xcode7.3
-        services:
-            - docker
+        env:
+          - OS_VERSION="OSX-xcode7.3"
       - os: osx
         osx_image: xcode8
-        services:
-            - docker
+        env:
+          - OS_VERSION="OSX-xcode8"
         # Sierra
       - os: osx
         osx_image: xcode8.1
-        services:
-            - docker
+        env:
+          - OS_VERSION="OSX-xcode8.1"
       - os: osx
         osx_image: xcode8.2
-        services:
-            - docker
+        env:
+          - OS_VERSION="OSX-xcode8.2"
 git:
     depth: 2
 
@@ -175,14 +145,14 @@ cache:
 install:
     - test $TRAVIS_INSTALL_DEPS != On || ./scripts/travis/travis_install_deps.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
+
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/travis/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || 
-      && ./scripts/release.sh $ZIP_SUFFIX
-      && ./scripts/create_source_tarball.sh )
+    - test $TRAVIS_RELEASE != On || ./scripts/build.sh $TRAVIS_BUILD_TYPE
+    - test $DOCKER_SOLC != On || docker build --build-arg TEST=On --build-arg BUILD=$TRAVIS_BUILD_TYPE -t ethereum/solc:build -f ./scripts/Dockerfile $TRAVIS_BUILD_DIR
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh)
+    - test $NON_IPC_TESTS != On || ./scripts/run_non_ipc_tests_and_collect_binaries.sh
 
 deploy:
     # This is the deploy target for the Emscripten build.
