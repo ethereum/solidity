@@ -19,8 +19,12 @@
  * @date 2014
  */
 
-#include "CommonData.h"
-#include "Exceptions.h"
+#include <libdevcore/CommonData.h>
+#include <libdevcore/Exceptions.h>
+#include <libdevcore/SHA3.h>
+
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace dev;
 
@@ -94,4 +98,36 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 			return bytes();
 	}
 	return ret;
+}
+
+
+bool dev::passesAddressChecksum(string const& _str, bool _strict)
+{
+	string s = _str.substr(0, 2) == "0x" ? _str.substr(2) : _str;
+
+	if (s.length() != 40)
+		return false;
+
+	if (!_strict && (
+		_str.find_first_of("abcdef") == string::npos ||
+		_str.find_first_of("ABCDEF") == string::npos
+	))
+		return true;
+
+	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
+	for (size_t i = 0; i < 40; ++i)
+	{
+		char addressCharacter = s[i];
+		bool lowerCase;
+		if ('a' <= addressCharacter && addressCharacter <= 'f')
+			lowerCase = true;
+		else if ('A' <= addressCharacter && addressCharacter <= 'F')
+			lowerCase = false;
+		else
+			continue;
+		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;
+		if ((nibble >= 8) == lowerCase)
+			return false;
+	}
+	return true;
 }

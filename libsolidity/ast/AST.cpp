@@ -539,25 +539,5 @@ bool Literal::passesAddressChecksum() const
 {
 	string lit = value();
 	solAssert(lit.substr(0, 2) == "0x", "Expected hex prefix");
-	lit = lit.substr(2);
-
-	if (lit.length() != 40)
-		return false;
-
-	h256 hash = keccak256(boost::algorithm::to_lower_copy(lit, std::locale::classic()));
-	for (size_t i = 0; i < 40; ++i)
-	{
-		char addressCharacter = lit[i];
-		bool lowerCase;
-		if ('a' <= addressCharacter && addressCharacter <= 'f')
-			lowerCase = true;
-		else if ('A' <= addressCharacter && addressCharacter <= 'F')
-			lowerCase = false;
-		else
-			continue;
-		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;
-		if ((nibble >= 8) == lowerCase)
-			return false;
-	}
-	return true;
+	return dev::passesAddressChecksum(lit, true);
 }
