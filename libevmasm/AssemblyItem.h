@@ -116,7 +116,9 @@ public:
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
 	unsigned bytesRequired(unsigned _addressLength) const;
-	int deposit() const;
+	int arguments() const;
+	int returnValues() const;
+	int deposit() const { return returnValues() - arguments(); }
 
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
