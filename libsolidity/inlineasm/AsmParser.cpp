@@ -130,7 +130,7 @@ assembly::Statement Parser::parseExpression()
 		return operation;
 }
 
-std::map<string, dev::solidity::Instruction> Parser::getInstructions()
+std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 {
 	// Allowed instructions, lowercase names.
 	static map<string, dev::solidity::Instruction> s_instructions;
@@ -156,7 +156,7 @@ std::map<string, dev::solidity::Instruction> Parser::getInstructions()
 
 assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 {
-	map<string, dev::solidity::Instruction> s_instructions = getInstructions();
+	map<string, dev::solidity::Instruction> const& s_instructions = instructions();
 
 	Statement ret;
 	switch (m_scanner->currentToken())
@@ -178,7 +178,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		// first search the set of instructions.
 		if (s_instructions.count(literal))
 		{
-			dev::solidity::Instruction const& instr = s_instructions[literal];
+			dev::solidity::Instruction const& instr = s_instructions.at(literal);
 			if (_onlySinglePusher)
 			{
 				InstructionInfo info = dev::solidity::instructionInfo(instr);
@@ -210,7 +210,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 
 assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
-	map<string, dev::solidity::Instruction> s_instructions = getInstructions();
+	map<string, dev::solidity::Instruction> const& s_instructions = instructions();
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
 	varDecl.name = m_scanner->currentLiteral();
