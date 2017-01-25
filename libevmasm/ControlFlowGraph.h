@@ -103,7 +103,7 @@ public:
 	/// @a _joinKnowledge if true, reduces state knowledge to common base at the join of two paths
 	explicit ControlFlowGraph(
 		AssemblyItems const& _items,
-		std::set<size_t> const& _tagsPushedByParent = std::set<size_t>{},
+		std::set<size_t> const& _tagsPushedByParent,
 		bool _joinKnowledge = true
 	):
 		m_items(_items),

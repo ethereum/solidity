@@ -45,7 +45,8 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
 	map<SourceLocation, GasConsumption> particularCosts;
 
-	ControlFlowGraph cfg(_items);
+	set<size_t> tagsPushedByParent;
+	ControlFlowGraph cfg(_items, tagsPushedByParent);
 	// Enable gathering of knowledge
 	for (BasicBlock const& block: cfg.optimisedBlocks(true))
 	{
