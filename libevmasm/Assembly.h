@@ -113,7 +113,12 @@ public:
 		bool _inJsonFormat = false
 	) const;
 
-protected:
+private:
+	/// Assembles the assembly into bytecode. The assembly should not be modified after this call.
+	/// @param _additionalBytesPerTag sometimes we fail in correctly predicting the tag size, which
+	/// results in a recursive call with this number increased by one.
+	LinkerObject const& assemble(size_t _additionalBytesPerTag) const;
+
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags.
 	/// @param _tagsPushedByParent the tags of this sub which are used by the parent sub.
@@ -122,12 +127,10 @@ protected:
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired(unsigned subTagSize) const;
 
-private:
 	Json::Value streamAsmJson(std::ostream& _out, StringMap const& _sourceCodes) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
 	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 
-protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
 	AssemblyItems m_items;

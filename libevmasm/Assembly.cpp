@@ -459,10 +459,17 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 
 LinkerObject const& Assembly::assemble() const
 {
+	return assemble(0);
+}
+
+LinkerObject const& Assembly::assemble(size_t _additionalBytesPerTag) const
+{
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
 
-	size_t subTagSize = 1;
+	assertThrow(_additionalBytesPerTag < 3, AssemblyException, "Something went really wrong with tag size estimation.");
+
+	size_t subTagSize = 1 + _additionalBytesPerTag;
 	for (auto const& sub: m_subs)
 	{
 		sub->assemble();
@@ -470,7 +477,7 @@ LinkerObject const& Assembly::assemble() const
 			subTagSize = max(subTagSize, *max_element(sub->m_tagPositionsInBytecode.begin(), sub->m_tagPositionsInBytecode.end()));
 	}
 
-	LinkerObject& ret = m_assembledObject;
+	LinkerObject ret;
 
 	size_t bytesRequiredForCode = bytesRequired(subTagSize);
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
@@ -603,6 +610,11 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");
+		if (dev::bytesRequired(pos) > bytesPerTag)
+		{
+			// This happens sometimes, not often, but it happens. Let's just re-try with more space.
+			return assemble(_additionalBytesPerTag + 1);
+		}
 		assertThrow(dev::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
@@ -627,5 +639,7 @@ LinkerObject const& Assembly::assemble() const
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
 		toBigEndian(ret.bytecode.size(), r);
 	}
-	return ret;
+
+	swap(ret, m_assembledObject);
+	return m_assembledObject;
 }
