@@ -1479,20 +1479,6 @@ BOOST_AUTO_TEST_CASE(function_type_state_variable)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction)
-{
-	char const* text = R"(
-		contract A {
-			function f() {
-				assembly {
-					let gas := 1
-				}
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Cannot shadow instructions with variable declaration.");
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }

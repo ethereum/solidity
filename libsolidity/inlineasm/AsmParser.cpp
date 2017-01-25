@@ -215,7 +215,7 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 	expectToken(Token::Let);
 	varDecl.name = m_scanner->currentLiteral();
 	if (s_instructions.count(varDecl.name))
-		fatalParserError("Cannot shadow instructions with variable declaration.");
+		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
