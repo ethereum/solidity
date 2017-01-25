@@ -98,6 +98,7 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
+static string const g_strMetadataLiteral = "metadata-literal";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -126,6 +127,7 @@ static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argMetadataLiteral = g_strMetadataLiteral;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -511,7 +513,8 @@ Allowed options)",
 			g_argLink.c_str(),
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
-		);
+		)
+		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -634,6 +637,8 @@ bool CommandLineInterface::processInput()
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
+		if (m_args.count(g_argMetadataLiteral) > 0)
+			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
