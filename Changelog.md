@@ -10,7 +10,7 @@ Features:
 
 Bugfixes:
  * Code generator: Allow recursive structs.
- * Inline assembly: reject shadowing instructions by variables.
+ * Inline assembly: Disallow variables named like opcodes.
  * Type checker: Allow multiple events of the same name (but with different arities or argument types)
 
 ### 0.4.8 (2017-01-13)
