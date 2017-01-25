@@ -130,7 +130,7 @@ assembly::Statement Parser::parseExpression()
 		return operation;
 }
 
-assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
+std::map<string, dev::solidity::Instruction> Parser::getInstructions()
 {
 	// Allowed instructions, lowercase names.
 	static map<string, dev::solidity::Instruction> s_instructions;
@@ -151,6 +151,12 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		// add alias for selfdestruct
 		s_instructions["selfdestruct"] = solidity::Instruction::SUICIDE;
 	}
+	return s_instructions;
+}
+
+assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
+{
+	map<string, dev::solidity::Instruction> s_instructions = getInstructions();
 
 	Statement ret;
 	switch (m_scanner->currentToken())
@@ -204,9 +210,12 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 
 assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
+	map<string, dev::solidity::Instruction> s_instructions = getInstructions();
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
 	varDecl.name = m_scanner->currentLiteral();
+	if (s_instructions.count(varDecl.name))
+		fatalParserError("Cannot shadow instructions with variable declaration.");
 	expectToken(Token::Identifier);
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
