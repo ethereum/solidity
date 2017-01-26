@@ -180,8 +180,8 @@ Address Literals
 
 Hexadecimal literals that pass the address checksum test, for example
 ``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address`` type.
-Hexadecimal literals that are 20 bytes long (differ from that in at
-most one hexadecimal digit) but do not pass the checksum test produce
+Hexadecimal literals that are between 39 and 41 digits
+long and do not pass the checksum test produce
 a warning and are treated as regular rational number literals.
 
 .. index:: literal, literal;rational
