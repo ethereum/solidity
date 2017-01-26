@@ -1584,6 +1584,11 @@ public:
 
 	SubDenomination subDenomination() const { return m_subDenomination; }
 
+	/// @returns true if this looks like a checksummed address.
+	bool looksLikeAddress() const;
+	/// @returns true if it passes the address checksum test.
+	bool passesAddressChecksum() const;
+
 private:
 	Token::Value m_token;
 	ASTPointer<ASTString> m_value;

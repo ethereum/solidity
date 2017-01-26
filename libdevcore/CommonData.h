@@ -179,4 +179,9 @@ bool contains(T const& _t, V const& _v)
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
 }
 
+/// @returns true iff @a _str passess the hex address checksum test.
+/// @param _strict if false, hex strings with only uppercase or only lowercase letters
+/// are considered valid.
+bool passesAddressChecksum(std::string const& _str, bool _strict);
+
 }

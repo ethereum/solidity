@@ -405,6 +405,14 @@ string IntegerType::toString(bool) const
 	return prefix + dev::toString(m_bits);
 }
 
+u256 IntegerType::literalValue(Literal const* _literal) const
+{
+	solAssert(m_modifier == Modifier::Address, "");
+	solAssert(_literal, "");
+	solAssert(_literal->value().substr(0, 2) == "0x", "");
+	return u256(_literal->value());
+}
+
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (

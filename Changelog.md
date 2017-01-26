@@ -5,6 +5,7 @@ Features:
  * Compiler interface: Report source location for "stack too deep" errors.
  * AST: Use deterministic node identifiers.
  * Type system: Introduce type identifier strings.
+ * Type checker: Warn about invalid checksum for addresses and deduce type from valid ones.
  * Metadata: Do not include platform in the version number.
  * Metadata: Add option to store sources as literal content.
  * Code generator: Extract array utils into low-level functions.

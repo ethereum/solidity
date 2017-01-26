@@ -20,8 +20,6 @@
  * Solidity abstract syntax tree.
  */
 
-#include <algorithm>
-#include <functional>
 #include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -29,6 +27,11 @@
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>
+
+#include <boost/algorithm/string.hpp>
+
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 using namespace dev;
@@ -521,4 +524,20 @@ IdentifierAnnotation& Identifier::annotation() const
 	if (!m_annotation)
 		m_annotation = new IdentifierAnnotation();
 	return static_cast<IdentifierAnnotation&>(*m_annotation);
+}
+
+bool Literal::looksLikeAddress() const
+{
+	if (subDenomination() != SubDenomination::None)
+		return false;
+
+	string lit = value();
+	return lit.substr(0, 2) == "0x" && abs(int(lit.length()) - 42) <= 1;
+}
+
+bool Literal::passesAddressChecksum() const
+{
+	string lit = value();
+	solAssert(lit.substr(0, 2) == "0x", "Expected hex prefix");
+	return dev::passesAddressChecksum(lit, true);
 }

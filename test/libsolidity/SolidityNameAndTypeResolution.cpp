@@ -4983,6 +4983,55 @@ BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				x.send(2);
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_length)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
