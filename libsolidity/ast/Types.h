@@ -915,10 +915,8 @@ public:
 
 	TypePointers parameterTypes() const;
 	std::vector<std::string> parameterNames() const;
-	std::vector<std::string> const parameterTypeNames(bool _addDataLocation) const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
-	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
 	/// @returns the "self" parameter type for a bound function
 	TypePointer const& selfType() const;
 
