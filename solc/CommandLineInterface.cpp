@@ -22,28 +22,8 @@
  */
 #include "CommandLineInterface.h"
 
-#ifdef _WIN32 // windows
-	#include <io.h>
-	#define isatty _isatty
-	#define fileno _fileno
-#else // unix
-	#include <unistd.h>
-#endif
-#include <string>
-#include <iostream>
-#include <fstream>
-
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string.hpp>
-
 #include "solidity/BuildInfo.h"
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
-#include <libevmasm/Instruction.h>
-#include <libevmasm/GasMeter.h>
+
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -54,8 +34,30 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/formal/Why3Translator.h>
+
+#include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+
+#ifdef _WIN32 // windows
+	#include <io.h>
+	#define isatty _isatty
+	#define fileno _fileno
+#else // unix
+	#include <unistd.h>
+#endif
+#include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -912,7 +914,6 @@ void CommandLineInterface::writeLinkedFiles()
 
 bool CommandLineInterface::assemble()
 {
-	//@TODO later, we will use the convenience interface and should also remove the include above
 	bool successful = true;
 	map<string, shared_ptr<Scanner>> scanners;
 	for (auto const& src: m_sourceCodes)
@@ -926,6 +927,7 @@ bool CommandLineInterface::assemble()
 			m_assemblyStacks[src.first].assemble();
 	}
 	for (auto const& stack: m_assemblyStacks)
+	{
 		for (auto const& error: stack.second.errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
@@ -933,6 +935,9 @@ bool CommandLineInterface::assemble()
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
 			);
+		if (!Error::containsOnlyWarnings(stack.second.errors()))
+			successful = false;
+	}
 
 	return successful;
 }
