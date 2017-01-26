@@ -194,6 +194,12 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 	BOOST_CHECK(!successAssemble("{ 2 =: gas }"));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
+{
+	// Error message: "Cannot use instruction names for identifier names."
+	BOOST_CHECK(!successAssemble("{ gas := 2 }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
