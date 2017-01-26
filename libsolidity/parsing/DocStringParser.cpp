@@ -26,7 +26,7 @@ static inline string::const_iterator firstSpaceOrTab(
 	return (spacePos < tabPos) ? spacePos : tabPos;
 }
 
-static inline string::const_iterator firstWsOrNl(
+static inline string::const_iterator firstWhitespaceOrNewline(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
@@ -66,7 +66,7 @@ bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = firstWsOrNl(tagPos, end);
+			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
 				appendError("End of tag " + string(tagPos, tagNameEndPos) + "not found");
