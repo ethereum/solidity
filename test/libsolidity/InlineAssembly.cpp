@@ -182,6 +182,24 @@ BOOST_AUTO_TEST_CASE(error_tag)
 	BOOST_CHECK(successAssemble("{ invalidJumpLabel }"));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
+{
+	// Error message: "Cannot use instruction names for identifier names."
+	BOOST_CHECK(!successAssemble("{ let gas := 1 }"));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
+{
+	// Error message: "Identifier expected, got instruction name."
+	BOOST_CHECK(!successAssemble("{ 2 =: gas }"));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
+{
+	// Error message: "Cannot use instruction names for identifier names."
+	BOOST_CHECK(!successAssemble("{ gas := 2 }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
