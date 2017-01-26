@@ -177,6 +177,7 @@ public:
 	/// Can be one of 4 types defined at @c DocumentationType
 	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
 	std::string const& onChainMetadata(std::string const& _contractName) const;
+	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
@@ -274,6 +275,7 @@ private:
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;
 	ErrorList m_errors;
+	bool m_metadataLiteralSources = false;
 };
 
 }
