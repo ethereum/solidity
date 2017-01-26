@@ -31,8 +31,8 @@ static inline string::const_iterator firstWsOrNl(
 	string::const_iterator _end
 )
 {
+	auto nlPos = find(_pos, _end, '\n');
 	auto wsPos = firstSpaceOrTab(_pos, _end);
-	auto nlPos = find(wsPos, _end, '\n');
 	return (wsPos < nlPos) ? wsPos : nlPos;
 }
 
