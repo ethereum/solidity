@@ -807,7 +807,9 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	{
 		if (funType->location() == FunctionType::Location::Internal)
 		{
-			m_context.appendInvalid();
+			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
+				_context.appendInvalid();
+			});
 			return;
 		}
 	}
