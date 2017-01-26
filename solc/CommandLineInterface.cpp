@@ -921,6 +921,7 @@ bool CommandLineInterface::assemble()
 			m_assemblyStacks[src.first].assemble();
 	}
 	for (auto const& stack: m_assemblyStacks)
+	{
 		for (auto const& error: stack.second.errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
@@ -928,6 +929,9 @@ bool CommandLineInterface::assemble()
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
 			);
+		if (!Error::containsOnlyWarnings(stack.second.errors()))
+			successful = false;
+	}
 
 	return successful;
 }
