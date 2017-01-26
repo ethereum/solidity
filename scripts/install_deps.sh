@@ -94,7 +94,7 @@ case $(uname -s) in
         # Check for Homebrew install and abort if it is not installed.
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
-        if [$CI = true]; then
+        if ["$CI" = true]; then
             brew update
             brew upgrade cmake
             brew install boost
@@ -315,8 +315,7 @@ case $(uname -s) in
                     cmake \
                     git \
                     libboost-all-dev
-                
-                if [$CI = true]; then
+                if [ "$CI" = true ]; then
                     # Install 'eth', for use in the Solidity Tests-over-IPC.
                     sudo add-apt-repository -y ppa:ethereum/ethereum
                     sudo add-apt-repository -y ppa:ethereum/ethereum-dev

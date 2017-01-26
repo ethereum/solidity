@@ -11,5 +11,5 @@ cd $(git rev-parse --show-toplevel)
 mkdir -p build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-make -j2 && install -s solc/solc /usr/bin && install -s test/soltest
+make -j2 && install solc/solc /usr/bin && install test/soltest
 cd "$PWD"

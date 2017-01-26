@@ -200,6 +200,7 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
 or even easier:
 
 .. code:: bash
+
     ./scripts/build.sh --Release #specifies the build type
 
 And even for Windows:
