@@ -70,19 +70,30 @@ void CompilerContext::callLowLevelFunction(
 	eth::AssemblyItem retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
 
+	*this << lowLevelFunctionTag(_name, _inArgs, _outArgs, _generator);
+
+	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
+	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	*this << retTag.tag();
+}
+
+eth::AssemblyItem CompilerContext::lowLevelFunctionTag(
+	string const& _name,
+	unsigned _inArgs,
+	unsigned _outArgs,
+	function<void(CompilerContext&)> const& _generator
+)
+{
 	auto it = m_lowLevelFunctions.find(_name);
 	if (it == m_lowLevelFunctions.end())
 	{
 		eth::AssemblyItem tag = newTag().pushTag();
 		m_lowLevelFunctions.insert(make_pair(_name, tag));
 		m_lowLevelFunctionGenerationQueue.push(make_tuple(_name, _inArgs, _outArgs, _generator));
-		*this << tag;
+		return tag;
 	}
 	else
-		*this << it->second;
-	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
-	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
-	*this << retTag.tag();
+		return it->second;
 }
 
 void CompilerContext::appendMissingLowLevelFunctions()
