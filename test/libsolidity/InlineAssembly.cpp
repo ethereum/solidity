@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 {
-	// Error message: "Cannot use instruction names for identifier names."
+	// Error message: "Identifier expected, got instruction name."
 	BOOST_CHECK(!successAssemble("{ 2 =: gas }"));
 }
 

@@ -72,7 +72,7 @@ assembly::Statement Parser::parseStatement()
 		assignment.variableName.location = location();
 		assignment.variableName.name = m_scanner->currentLiteral();
 		if (instructions().count(assignment.variableName.name))
-			fatalParserError("Identifier expected.");
+			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
 		return assignment;
