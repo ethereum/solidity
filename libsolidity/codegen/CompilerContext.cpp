@@ -224,7 +224,9 @@ CompilerContext& CompilerContext::appendConditionalInvalid()
 {
 	*this << Instruction::ISZERO;
 	eth::AssemblyItem afterTag = appendConditionalJump();
-	return *this << Instruction::INVALID << afterTag;
+	*this << Instruction::INVALID;
+	*this << afterTag;
+	return *this;
 }
 
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
