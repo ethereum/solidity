@@ -138,11 +138,13 @@ case $(uname -s) in
 
                 # All our dependencies can be found in the Arch Linux official repositories.
                 # See https://wiki.archlinux.org/index.php/Official_repositories
+                # Also adding ethereum-git to allow for testing with the `eth` client
                 sudo pacman -Sy \
                     base-devel \
                     boost \
                     cmake \
                     git \
+                    ethereum-git \
                 ;;
 
 #------------------------------------------------------------------------------
