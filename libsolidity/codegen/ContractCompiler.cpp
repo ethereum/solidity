@@ -919,7 +919,7 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime()
 	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
 	a << Instruction::ISZERO;
 	a << Instruction::ISZERO;
-	eth::AssemblyItem afterTag = a.appendJumpI();
+	eth::AssemblyItem afterTag = a.appendJumpI().tag();
 	a << Instruction::INVALID << afterTag;
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;

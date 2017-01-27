@@ -397,7 +397,7 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If you call a zero-initialized variable of internal function type.
 
 Internally, Solidity performs an "invalid jump" when a user-provided exception is thrown. In contrast, it performs an invalid operation
-(code ``0xfe``) if a runtime exception is encountered. In both cases, this causes
+(instruction ``0xfe``) if a runtime exception is encountered. In both cases, this causes
 the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
 (or at least call) without effect.
