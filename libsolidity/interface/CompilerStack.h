@@ -137,6 +137,14 @@ public:
 	/// @returns false on error.
 	bool compile(std::string const& _sourceCode, bool _optimize = false, unsigned _runs = 200);
 
+	/// Parses the given source as either a function or an expression in the context of the
+	/// previously parsed contract @a _contextContractName and stores the bytecode corresponding
+	/// to the expression (turned into a function returning its value) or function under the
+	/// given name.
+	/// If @a _contextContractName is empty, uses the first matching contract or compiles
+	/// the snippet inside an empty context.
+	bool compileSnippet(std::string const& _name, std::string const& _source, std::string const& _contextContractName);
+
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
 	/// @returns the runtime object for the contract.

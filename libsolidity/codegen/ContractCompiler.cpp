@@ -95,6 +95,28 @@ size_t ContractCompiler::compileClone(
 	return size_t(runtimeSub.data());
 }
 
+void ContractCompiler::compileSnippetFunction(
+	FunctionDefinition const& _function,
+	ContractDefinition const* _contract
+)
+{
+	CompilerUtils(m_context).initialiseFreeMemoryPointer();
+	if (_contract)
+		registerStateVariables(*_contract);
+	m_context.resetVisitedNodes(&_function);
+
+	FunctionTypePointer functionType = make_shared<FunctionType>(_function, false);
+	CompilerContext::LocationSetter locationSetter(m_context, _function);
+
+	eth::AssemblyItem returnTag = m_context.pushNewTag();
+	m_context << CompilerUtils::dataStartOffset;
+	appendCalldataUnpacker(functionType->parameterTypes());
+	m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
+	m_context << returnTag;
+	appendReturnValuePacker(functionType->returnParameterTypes(), false);
+	appendMissingFunctions();
+}
+
 void ContractCompiler::initializeContext(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts

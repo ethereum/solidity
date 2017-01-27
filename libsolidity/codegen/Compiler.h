@@ -51,6 +51,8 @@ public:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
+	void compileSnippetFunction(FunctionDefinition const& _function, ContractDefinition const* _contract);
+
 	eth::Assembly const& assembly() { return m_context.assembly(); }
 	eth::LinkerObject assembledObject() { return m_context.assembledObject(); }
 	eth::LinkerObject runtimeObject() { return m_context.assembledRuntimeObject(m_runtimeSub); }

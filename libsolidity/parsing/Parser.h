@@ -39,6 +39,11 @@ public:
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 
+	/// Parses a snippet of code that can either be a single expression or
+	/// a function declaration. Returns a source unit that contains such a single
+	/// AST node.
+	ASTPointer<SourceUnit> parseSnippet(std::shared_ptr<Scanner> const& _scanner);
+
 private:
 	class ASTNodeFactory;
 
@@ -75,7 +80,6 @@ private:
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
 	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable(ASTString const* _contractName);
-	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();

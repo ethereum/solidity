@@ -305,6 +305,66 @@ bool CompilerStack::compile(string const& _sourceCode, bool _optimize, unsigned 
 	return parseAndAnalyze(_sourceCode) && compile(_optimize, _runs);
 }
 
+bool CompilerStack::compileSnippet(string const& _name, string const& _source, string const& _contextContractName)
+{
+	Contract const* context = nullptr;
+	if (!m_contracts.empty() && !_contextContractName.empty())
+		context = &contract(_contextContractName);
+
+	Source& source = m_sources[_name];
+	solAssert(!source.ast, "Snippet name already used.");
+	source.scanner = make_shared<Scanner>(CharStream(_source), _name);
+	source.ast = Parser(m_errors).parseSnippet(source.scanner);
+	if (!source.ast)
+		solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+	if (!Error::containsOnlyWarnings(m_errors))
+		// errors while parsing. should stop before type checking
+		return false;
+	solAssert(source.ast->nodes().size() == 1, "Invalid number of root nodes for snippet.");
+
+	ASTNode& rootNode = *source.ast->nodes().at(0);
+
+	SyntaxChecker syntaxChecker(m_errors);
+	if (!syntaxChecker.checkSyntax(rootNode))
+		return false;
+
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errors);
+	resolver.registerDeclarations(*source.ast, context ? context->contract : nullptr);
+
+	if (context)
+	{
+		m_globalContext->setCurrentContract(*context->contract);
+		if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
+		if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
+	}
+	else
+	{
+		//@TODO "unset" currentContract and current this / super
+	}
+	resolver.resolveNamesAndTypes(*source.ast);
+
+	TypeChecker typeChecker(m_errors);
+	if (!typeChecker.checkTypeRequirements(*source.ast))
+		return false;
+
+	//@TODO this should be reported as a user error
+	solAssert(!m_contracts.count(_name), "Object with snippet name already exists");
+	Contract& compiledContract = m_contracts[_name];
+
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
+	if (FunctionDefinition* f = dynamic_cast<FunctionDefinition*>(&rootNode))
+		compiler->compileSnippetFunction(*f, context->contract);
+	else
+	{
+		//@TODO
+	}
+	compiledContract.compiler = compiler;
+	compiledContract.object = compiler->assembledObject();
+
+	//@TOOD link
+	return true;
+}
+
 void CompilerStack::link()
 {
 	for (auto& contract: m_contracts)

@@ -64,6 +64,8 @@ public:
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
 
+	void compileSnippetFunction(FunctionDefinition const& _function, ContractDefinition const* _contract);
+
 private:
 	/// Registers the non-function objects inside the contract with the context and stores the basic
 	/// information about the contract like the AST annotations.

@@ -58,6 +58,17 @@ void Compiler::compileClone(
 	m_context.optimise(m_optimize, m_optimizeRuns);
 }
 
+void Compiler::compileSnippetFunction(
+	FunctionDefinition const& _function,
+	ContractDefinition const* _contract
+)
+{
+	ContractCompiler compiler(nullptr, m_context, m_optimize);
+	compiler.compileSnippetFunction(_function, _contract);
+
+	m_context.optimise(m_optimize, m_optimizeRuns);
+}
+
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
 {
 	return m_runtimeContext.functionEntryLabelIfExists(_function);

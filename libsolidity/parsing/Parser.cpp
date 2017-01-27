@@ -100,6 +100,32 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
+ASTPointer<SourceUnit> Parser::parseSnippet(shared_ptr<Scanner> const& _scanner)
+{
+	try
+	{
+		m_scanner = _scanner;
+		ASTNodeFactory nodeFactory(*this);
+		ASTPointer<ASTNode> node;
+		if (m_scanner->currentToken() == Token::Function)
+		{
+			node = parseFunctionDefinitionOrFunctionTypeStateVariable(nullptr);
+			if (!dynamic_cast<FunctionDefinition const*>(node.get()))
+				fatalParserError("Expected function definition.");
+		}
+		else
+			node = parseExpression();
+		expectToken(Token::EOS);
+		return nodeFactory.createNode<SourceUnit>(vector<ASTPointer<ASTNode>>(1, node));
+	}
+	catch (FatalError const&)
+	{
+		if (m_errors.empty())
+			throw; // Something is weird here, rather throw again.
+		return nullptr;
+	}
+}
+
 ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 {
 	// pragma anything* ;
