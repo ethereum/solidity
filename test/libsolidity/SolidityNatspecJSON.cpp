@@ -635,6 +635,48 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistent_param)
 	expectNatspecError(sourceCode);
 }
 
+BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param 
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname_end)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param se
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param second 
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
