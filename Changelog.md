@@ -11,6 +11,7 @@ Features:
 Bugfixes:
  * Code generator: Allow recursive structs.
  * Type checker: Allow multiple events of the same name (but with different arities or argument types)
+ * Natspec parser: Fix error with ``@param`` parsing and whitespace.
 
 ### 0.4.8 (2017-01-13)
 
