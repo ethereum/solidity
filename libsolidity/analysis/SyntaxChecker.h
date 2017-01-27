@@ -39,7 +39,7 @@ public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
 	SyntaxChecker(ErrorList& _errors): m_errors(_errors) {}
 
-	bool checkSyntax(SourceUnit const& _sourceUnit);
+	bool checkSyntax(ASTNode const& _astRoot);
 
 private:
 	/// Adds a new error to the list of errors.

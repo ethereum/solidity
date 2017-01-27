@@ -132,68 +132,64 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 	return !error;
 }
 
-bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
+bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode)
 {
+	bool success = true;
 	try
 	{
-		m_currentScope = m_scopes[_contract.scope()].get();
-		solAssert(!!m_currentScope, "");
-
-		ReferencesResolver resolver(m_errors, *this, nullptr);
-		bool success = true;
-		for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.baseContracts())
-			if (!resolver.resolve(*baseContract))
-				success = false;
-
-		m_currentScope = m_scopes[&_contract].get();
-
-		if (success)
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(&_node))
 		{
-			linearizeBaseContracts(_contract);
-			vector<ContractDefinition const*> properBases(
-				++_contract.annotation().linearizedBaseContracts.begin(),
-				_contract.annotation().linearizedBaseContracts.end()
-			);
+			m_currentScope = m_scopes[contract->scope()].get();
+			solAssert(!!m_currentScope, "");
 
-			for (ContractDefinition const* base: properBases)
-				importInheritedScope(*base);
+			for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
+				if (!resolveNamesAndTypes(*baseContract, false))
+					success = false;
+
+			m_currentScope = m_scopes[contract].get();
+
+			if (success)
+			{
+				linearizeBaseContracts(*contract);
+				vector<ContractDefinition const*> properBases(
+					++contract->annotation().linearizedBaseContracts.begin(),
+					contract->annotation().linearizedBaseContracts.end()
+				);
+
+				for (ContractDefinition const* base: properBases)
+					importInheritedScope(*base);
+			}
+
+			// these can contain code, only resolve parameters for now
+			for (ASTPointer<ASTNode> const& node: contract->subNodes())
+			{
+				m_currentScope = m_scopes[contract].get();
+				if (!resolveNamesAndTypes(*node, false))
+					success = false;
+			}
+
+			if (!success)
+				return false;
+
+			if (!_resolveInsideCode)
+				return success;
+
+			m_currentScope = m_scopes[contract].get();
+
+			// now resolve references inside the code
+			for (ASTPointer<ASTNode> const& node: contract->subNodes())
+			{
+				m_currentScope = m_scopes[contract].get();
+				if (!resolveNamesAndTypes(*node, true))
+					success = false;
+			}
 		}
-
-		// these can contain code, only resolve parameters for now
-		for (ASTPointer<ASTNode> const& node: _contract.subNodes())
+		else
 		{
-			m_currentScope = m_scopes[m_scopes.count(node.get()) ? node.get() : &_contract].get();
-			if (!resolver.resolve(*node))
-				success = false;
+			if (m_scopes.count(&_node))
+				m_currentScope = m_scopes[&_node].get();
+			return ReferencesResolver(m_errors, *this, _resolveInsideCode).resolve(_node);
 		}
-
-		if (!success)
-			return false;
-
-		m_currentScope = m_scopes[&_contract].get();
-
-		// now resolve references inside the code
-		for (ModifierDefinition const* modifier: _contract.functionModifiers())
-		{
-			m_currentScope = m_scopes[modifier].get();
-			ReferencesResolver resolver(m_errors, *this, nullptr, true);
-			if (!resolver.resolve(*modifier))
-				success = false;
-		}
-
-		for (FunctionDefinition const* function: _contract.definedFunctions())
-		{
-			m_currentScope = m_scopes[function].get();
-			if (!ReferencesResolver(
-				m_errors,
-				*this,
-				function->returnParameterList().get(),
-				true
-			).resolve(*function))
-				success = false;
-		}
-		if (!success)
-			return false;
 	}
 	catch (FatalError const&)
 	{
@@ -201,7 +197,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			throw; // Something is weird here, rather throw again.
 		return false;
 	}
-	return true;
+	return success;
 }
 
 bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)

@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 			modifier mod(uint a) { _; return 7; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, TypeError, "Return arguments not allowed.");
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)

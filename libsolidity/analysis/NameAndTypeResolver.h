@@ -48,9 +48,12 @@ public:
 	bool registerDeclarations(SourceUnit& _sourceUnit);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
-	/// Resolves all names and types referenced from the given contract.
+	/// Resolves all names and types referenced from the given AST Node.
+	/// This is usually only called at the contract level, but with a bit of care, it can also
+	/// be called at deeper levels.
+	/// @param _avoidCode if false, does not descend into nodes that contain code.
 	/// @returns false in case of error.
-	bool resolveNamesAndTypes(ContractDefinition& _contract);
+	bool resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode = true);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
 	/// @returns false in case of error.
@@ -77,8 +80,6 @@ public:
 	);
 
 private:
-	void reset();
-
 	/// Imports all members declared directly in the given contract (i.e. does not import inherited members)
 	/// into the current scope if they are not present already.
 	void importInheritedScope(ContractDefinition const& _base);

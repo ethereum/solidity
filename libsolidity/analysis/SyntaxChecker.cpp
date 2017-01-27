@@ -26,9 +26,9 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-bool SyntaxChecker::checkSyntax(SourceUnit const& _sourceUnit)
+bool SyntaxChecker::checkSyntax(ASTNode const& _astRoot)
 {
-	_sourceUnit.accept(*this);
+	_astRoot.accept(*this);
 	return Error::containsOnlyWarnings(m_errors);
 }
 

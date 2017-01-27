@@ -65,6 +65,30 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 	return true;
 }
 
+bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
+{
+	m_returnParameters.push_back(_functionDefinition.returnParameterList().get());
+	return true;
+}
+
+void ReferencesResolver::endVisit(FunctionDefinition const&)
+{
+	solAssert(!m_returnParameters.empty(), "");
+	m_returnParameters.pop_back();
+}
+
+bool ReferencesResolver::visit(ModifierDefinition const&)
+{
+	m_returnParameters.push_back(nullptr);
+	return true;
+}
+
+void ReferencesResolver::endVisit(ModifierDefinition const&)
+{
+	solAssert(!m_returnParameters.empty(), "");
+	m_returnParameters.pop_back();
+}
+
 void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 {
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
@@ -161,7 +185,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 bool ReferencesResolver::visit(Return const& _return)
 {
-	_return.annotation().functionReturnParameters = m_returnParameters;
+	solAssert(!m_returnParameters.empty(), "");
+	_return.annotation().functionReturnParameters = m_returnParameters.back();
 	return true;
 }
 
