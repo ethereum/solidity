@@ -2512,24 +2512,6 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 	);
 }
 
-vector<string> const FunctionType::parameterTypeNames(bool _addDataLocation) const
-{
-	vector<string> names;
-	for (TypePointer const& t: parameterTypes())
-		names.push_back(t->canonicalName(_addDataLocation));
-
-	return names;
-}
-
-vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocation) const
-{
-	vector<string> names;
-	for (TypePointer const& t: m_returnParameterTypes)
-		names.push_back(t->canonicalName(_addDataLocation));
-
-	return names;
-}
-
 TypePointer const& FunctionType::selfType() const
 {
 	solAssert(bound(), "Function is not bound.");

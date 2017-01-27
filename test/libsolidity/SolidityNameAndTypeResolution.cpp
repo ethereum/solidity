@@ -1102,25 +1102,25 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	auto returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "uint256");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	auto params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	BOOST_CHECK_EQUAL(params.at(1), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 }
 
