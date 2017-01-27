@@ -1,14 +1,19 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
-#include <boost/range/irange.hpp>
 #include <libsolidity/interface/Utils.h>
+
+#include <boost/range/irange.hpp>
+#include <boost/range/algorithm.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
 
-static inline string::const_iterator skipLineOrEOS(
+namespace
+{
+
+string::const_iterator skipLineOrEOS(
 	string::const_iterator _nlPos,
 	string::const_iterator _end
 )
@@ -16,38 +21,35 @@ static inline string::const_iterator skipLineOrEOS(
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }
 
-static inline string::const_iterator firstSpaceOrTab(
+string::const_iterator firstSpaceOrTab(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
 {
-	auto spacePos = find(_pos, _end, ' ');
-	auto tabPos = find(_pos, _end, '\t');
-	return (spacePos < tabPos) ? spacePos : tabPos;
+	return boost::range::find_first_of(make_pair(_pos, _end), " \t");
 }
 
-static inline string::const_iterator firstWhitespaceOrNewline(
+string::const_iterator firstWhitespaceOrNewline(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
 {
-	auto nlPos = find(_pos, _end, '\n');
-	auto wsPos = firstSpaceOrTab(_pos, _end);
-	return (wsPos < nlPos) ? wsPos : nlPos;
+	return boost::range::find_first_of(make_pair(_pos, _end), " \t\n");
 }
 
 
-static inline string::const_iterator skipWhitespace(
+string::const_iterator skipWhitespace(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
 {
 	auto currPos = _pos;
-	while ((*currPos == ' ' || *currPos == '\t') && currPos != _end)
+	while (currPos != _end && (*currPos == ' ' || *currPos == '\t'))
 		currPos += 1;
 	return currPos;
 }
 
+}
 
 bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
 {
@@ -99,13 +101,9 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
 	if (_appending && _pos < _end && *_pos != ' ' && *_pos != '\t')
-	{
 		m_lastTag->content += " ";
-	}
 	else if (!_appending)
-	{
 		_pos = skipWhitespace(_pos, _end);
-	}
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	return skipLineOrEOS(nlPos, _end);
 }
@@ -116,13 +114,13 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto nameStartPos = skipWhitespace(_pos, _end);
 	if (nameStartPos == _end)
 	{
-		appendError("No param name given" + string(nameStartPos, _end));
+		appendError("No param name given");
 		return _end;
 	}
 	auto nameEndPos = firstSpaceOrTab(nameStartPos, _end);
 	if (nameEndPos == _end)
 	{
-		appendError("End of param name not found" + string(nameStartPos, _end));
+		appendError("End of param name not found: " + string(nameStartPos, _end));
 		return _end;
 	}
 	auto paramName = string(nameStartPos, nameEndPos);
@@ -130,7 +128,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto descStartPos = skipWhitespace(nameEndPos, _end);
 	if (descStartPos == _end)
 	{
-		appendError("No description given for param" + paramName);
+		appendError("No description given for param " + paramName);
 		return _end;
 	}
 
