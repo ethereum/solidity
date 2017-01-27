@@ -32,11 +32,11 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-bool TypeChecker::checkTypeRequirements(ContractDefinition const& _contract)
+bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
 	try
 	{
-		visit(_contract);
+		_contract.accept(*this);
 	}
 	catch (FatalError const&)
 	{

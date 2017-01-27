@@ -44,18 +44,12 @@ NameAndTypeResolver::NameAndTypeResolver(
 		m_scopes[nullptr]->registerDeclaration(*declaration);
 }
 
-bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
+bool NameAndTypeResolver::registerDeclarations(ASTNode& _sourceUnit)
 {
-	if (!m_scopes[&_sourceUnit])
-		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
-	m_currentScope = m_scopes[&_sourceUnit].get();
-
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
 		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
-		_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
 	}
 	catch (FatalError const&)
 	{
@@ -458,11 +452,26 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	ErrorList& _errors
 ):
 	m_scopes(_scopes),
-	m_currentScope(&_astRoot),
+	m_currentScope(nullptr),
 	m_errors(_errors)
 {
-	solAssert(!!m_scopes.at(m_currentScope), "");
 	_astRoot.accept(*this);
+	solAssert(m_currentScope == nullptr, "Scopes not correctly closed.");
+}
+
+bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
+{
+	if (!m_scopes[&_sourceUnit])
+		// By importing, it is possible that the container already exists.
+		m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+	m_currentScope = &_sourceUnit;
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(SourceUnit& _sourceUnit)
+{
+	_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
+	closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
@@ -583,12 +592,13 @@ void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declara
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	solAssert(m_currentScope, "Closed non-existing scope.");
+	solAssert(m_currentScope && m_scopes.count(m_currentScope), "Closed non-existing scope.");
 	m_currentScope = m_scopes[m_currentScope]->enclosingNode();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
+	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
 	{
 		SourceLocation firstDeclarationLocation;

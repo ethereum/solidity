@@ -43,9 +43,9 @@ class NameAndTypeResolver: private boost::noncopyable
 {
 public:
 	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
-	/// Registers all declarations found in the source unit.
+	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
-	bool registerDeclarations(SourceUnit& _sourceUnit);
+	bool registerDeclarations(ASTNode& _sourceUnit);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
 	/// Resolves all names and types referenced from the given AST Node.
@@ -133,6 +133,8 @@ public:
 	);
 
 private:
+	bool visit(SourceUnit& _sourceUnit) override;
+	void endVisit(SourceUnit& _sourceUnit) override;
 	bool visit(ImportDirective& _declaration) override;
 	bool visit(ContractDefinition& _contract) override;
 	void endVisit(ContractDefinition& _contract) override;
