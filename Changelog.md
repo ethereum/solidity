@@ -9,6 +9,8 @@ Features:
  * Metadata: Do not include platform in the version number.
  * Metadata: Add option to store sources as literal content.
  * Code generator: Extract array utils into low-level functions.
+ * Code generator: Internal errors (array out of bounds, etc.) now cause a reversion by using an invalid
+   instruction (0xfe) instead of an invalid jump. Invalid jump is still kept for explicit throws.
 
 Bugfixes:
  * Code generator: Allow recursive structs.

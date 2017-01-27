@@ -468,7 +468,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_typeOnStack);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;
 		}
 		break;
@@ -497,7 +497,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;
 		}
 		else if (targetTypeCategory == Type::Category::FixedPoint)
@@ -807,7 +807,9 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	{
 		if (funType->location() == FunctionType::Location::Internal)
 		{
-			m_context << m_context.errorTag();
+			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
+				_context.appendInvalid();
+			});
 			return;
 		}
 	}

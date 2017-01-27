@@ -901,7 +901,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		// check out-of-bounds access
 		m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
 		// out-of-bounds access throws exception
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 	}
 	if (location == DataLocation::CallData && _arrayType.isDynamicallySized())
 		// remove length if present

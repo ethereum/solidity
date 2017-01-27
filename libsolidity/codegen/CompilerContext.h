@@ -104,6 +104,16 @@ public:
 		unsigned _outArgs,
 		std::function<void(CompilerContext&)> const& _generator
 	);
+	/// Returns the tag of the named low-level function and inserts the generator into the
+	/// list of low-level-functions to be generated, unless it already exists.
+	/// Note that the generator should not assume that objects are still alive when it is called,
+	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for example).
+	eth::AssemblyItem lowLevelFunctionTag(
+		std::string const& _name,
+		unsigned _inArgs,
+		unsigned _outArgs,
+		std::function<void(CompilerContext&)> const& _generator
+	);
 	/// Generates the code for missing low-level functions, i.e. calls the generators passed above.
 	void appendMissingLowLevelFunctions();
 
@@ -127,6 +137,10 @@ public:
 	eth::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	/// Appends an INVALID instruction
+	CompilerContext&  appendInvalid();
+	/// Appends a conditional INVALID instruction
+	CompilerContext&  appendConditionalInvalid();
 	/// Returns an "ErrorTag"
 	eth::AssemblyItem errorTag() { return m_asm->errorTag(); }
 	/// Appends a JUMP to a specific tag
