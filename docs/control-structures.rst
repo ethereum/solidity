@@ -632,6 +632,8 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
 +-------------------------+------+-----------------------------------------------------------------+
+| invalid                 | `-`  | end execution with invalid instruction                          |
++-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+
 | log1(p, s, t1)          | `-`  | log with topic t1 and data mem[p..(p+s))                        |
