@@ -56,7 +56,7 @@ public:
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected " << expectedDocumentation.toStyledString() <<
+			"Expected:\n" << expectedDocumentation.toStyledString() <<
 			"\n but got:\n" << generatedDocumentation.toStyledString()
 		);
 	}
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 	char const* natspec = "{"
 	"\"methods\":{"
 	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \" Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
@@ -236,6 +236,29 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
 		}
 	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev	 Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param 	 a Documentation for the first parameter\n"
+	"  /// @param	 second			 Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
 
 	char const* natspec = "{"
 	"\"methods\":{"
@@ -379,7 +402,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \" The result of the multiplication\"\n"
+	"        \"return\": \"The result of the multiplication\"\n"
 	"    }\n"
 	"}}";
 
@@ -605,6 +628,48 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistent_param)
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param not_existing Documentation for the second parameter
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param 
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname_end)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param se
+			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param second 
 			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
 		}
 	)";
