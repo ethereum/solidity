@@ -9043,6 +9043,21 @@ BOOST_AUTO_TEST_CASE(recursive_structs)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_instruction)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					invalid
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

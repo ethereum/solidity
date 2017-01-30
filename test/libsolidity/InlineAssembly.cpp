@@ -182,6 +182,11 @@ BOOST_AUTO_TEST_CASE(error_tag)
 	BOOST_CHECK(successAssemble("{ invalidJumpLabel }"));
 }
 
+BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
+{
+	BOOST_CHECK(successAssemble("{ invalid }"));
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
 	// Error message: "Cannot use instruction names for identifier names."
