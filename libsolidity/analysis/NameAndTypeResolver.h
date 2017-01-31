@@ -49,7 +49,9 @@ public:
 	);
 	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
-	bool registerDeclarations(ASTNode& _sourceUnit);
+	/// @param _currentScope should be nullptr but can be used to inject new declarations into
+	/// existing scopes, used by the snippets feature.
+	bool registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope = nullptr);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
 	/// Resolves all names and types referenced from the given AST Node.
@@ -130,10 +132,15 @@ private:
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
+	/// Registers declarations in their scopes and creates new scopes as a side-effect
+	/// of construction.
+	/// @param _currentScope should be nullptr if we start at SourceUnit, but can be different
+	/// to inject new declarations into an existing scope, used by snippets.
 	DeclarationRegistrationHelper(
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		ASTNode& _astRoot,
-		ErrorList& _errors
+		ErrorList& _errors,
+		ASTNode const* _currentScope = nullptr
 	);
 
 private:

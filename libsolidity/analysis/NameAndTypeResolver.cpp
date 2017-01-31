@@ -46,12 +46,12 @@ NameAndTypeResolver::NameAndTypeResolver(
 		m_scopes[nullptr]->registerDeclaration(*declaration);
 }
 
-bool NameAndTypeResolver::registerDeclarations(ASTNode& _sourceUnit)
+bool NameAndTypeResolver::registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope)
 {
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
-		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
+		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors, _currentScope);
 	}
 	catch (FatalError const&)
 	{
@@ -451,21 +451,22 @@ void NameAndTypeResolver::reportFatalTypeError(Error const& _e)
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
-	ErrorList& _errors
+	ErrorList& _errors,
+	ASTNode const* _currentScope
 ):
 	m_scopes(_scopes),
-	m_currentScope(nullptr),
+	m_currentScope(_currentScope),
 	m_errors(_errors)
 {
 	_astRoot.accept(*this);
-	solAssert(m_currentScope == nullptr, "Scopes not correctly closed.");
+	solAssert(m_currentScope == _currentScope, "Scopes not correctly closed.");
 }
 
 bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 {
 	if (!m_scopes[&_sourceUnit])
 		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+		m_scopes[&_sourceUnit].reset(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
 	m_currentScope = &_sourceUnit;
 	return true;
 }
