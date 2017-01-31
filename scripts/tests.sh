@@ -33,14 +33,8 @@ REPO_ROOT="$(dirname "$0")"/..
 echo "Running commandline tests..."
 "$REPO_ROOT/test/cmdlineTests.sh"
 
-# This conditional is only needed because we don't have a working Homebrew
-# install for `eth` at the time of writing, so we unzip the ZIP file locally
-# instead.  This will go away soon.
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    ETH_PATH="$REPO_ROOT/eth"
-else
-    ETH_PATH="eth"
-fi
+ETH_PATH="eth"
+
 
 # This trailing ampersand directs the shell to run the command in the background,
 # that is, it is forked and run in a separate sub-shell, as a job,

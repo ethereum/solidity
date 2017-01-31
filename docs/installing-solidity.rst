@@ -197,7 +197,13 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
     cd build
     cmake .. && make
 
-And even on Windows:
+or even easier:
+
+.. code:: bash
+
+    ./scripts/build.sh --Release #specifies the build type
+
+And even for Windows:
 
 .. code:: bash
 
