@@ -114,7 +114,8 @@ bytes compileFirstExpression(
 		declarations.push_back(variable.get());
 
 	ErrorList errors;
-	NameAndTypeResolver resolver(declarations, errors);
+	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
+	NameAndTypeResolver resolver(declarations, scopes, errors);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;

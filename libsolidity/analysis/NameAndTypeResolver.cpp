@@ -34,8 +34,10 @@ namespace solidity
 
 NameAndTypeResolver::NameAndTypeResolver(
 	vector<Declaration const*> const& _globals,
+	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ErrorList& _errors
 ) :
+	m_scopes(_scopes),
 	m_errors(_errors)
 {
 	if (!m_scopes[nullptr])

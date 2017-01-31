@@ -53,7 +53,8 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	BOOST_CHECK(!!sourceUnit);
 
-	NameAndTypeResolver resolver({}, errors);
+	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
+	NameAndTypeResolver resolver({}, scopes, errors);
 	solAssert(Error::containsOnlyWarnings(errors), "");
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

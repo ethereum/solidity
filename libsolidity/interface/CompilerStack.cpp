@@ -88,6 +88,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();
+	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errors.clear();
@@ -165,7 +166,7 @@ bool CompilerStack::parse()
 			noErrors = false;
 
 	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;

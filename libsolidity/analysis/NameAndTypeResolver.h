@@ -42,7 +42,11 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
+	NameAndTypeResolver(
+		std::vector<Declaration const*> const& _globals,
+		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
+		ErrorList& _errors
+	);
 	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
 	bool registerDeclarations(ASTNode& _sourceUnit);
@@ -113,7 +117,7 @@ private:
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
 	/// Aliases (for example `import "x" as y;`) create multiple pointers to the same scope.
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;

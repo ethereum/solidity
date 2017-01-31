@@ -66,7 +66,8 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 			return make_pair(sourceUnit, errors.at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(globalContext->declarations(), errors);
+		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
+		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errors);
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
