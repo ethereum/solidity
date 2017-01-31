@@ -119,6 +119,11 @@ you should fork Solidity and add your personal fork as a second remote:
     cd solidity
     git remote add personal git@github.com:[username]/solidity.git
 
+Solidity has git submodules.  Ensure they are properly loaded:
+
+.. code:: bash
+
+   git submodule update --init --recursive
 
 Prerequisites - macOS
 ---------------------
@@ -210,6 +215,24 @@ Alternatively, you can build for Windows on the command-line, like so:
 .. code:: bash
 
     cmake --build . --config RelWithDebInfo
+
+The version string in detail
+============================
+
+The Solidity version string contains four parts:
+- the version number
+- pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
+- commit in the format of ``commit.GITHASH``
+- platform has arbitrary number of items, containing details about the platform and compiler
+
+If there are local modifications, the commit will be postfixed with ``.mod``.
+
+These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
+and the Solidity commit and platform combined make up the Semver build metadata.
+
+A relase example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
+
+A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
 
 Important information about versioning
 ======================================

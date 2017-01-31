@@ -22,17 +22,20 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <map>
-#include <boost/noncopyable.hpp>
-#include <boost/rational.hpp>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/UndefMacros.h>
+
+#include <boost/noncopyable.hpp>
+#include <boost/rational.hpp>
+
+#include <memory>
+#include <string>
+#include <map>
 
 namespace dev
 {
@@ -155,6 +158,13 @@ public:
 	static TypePointer commonType(TypePointer const& _a, TypePointer const& _b);
 
 	virtual Category category() const = 0;
+	/// @returns a valid solidity identifier such that two types should compare equal if and
+	/// only if they have the same identifier.
+	/// The identifier should start with "t_".
+	/// More complex identifier strings use "parentheses", where $_ is interpreted as as
+	/// "opening parenthesis", _$ as "closing parenthesis", _$_ as "comma" and any $ that
+	/// appears as part of a user-supplied identifier is escaped as _$$$_.
+	virtual std::string identifier() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
 	{
@@ -288,6 +298,7 @@ public:
 
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
 
+	virtual std::string identifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -302,6 +313,8 @@ public:
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
 	virtual std::string toString(bool _short) const override;
+
+	virtual u256 literalValue(Literal const* _literal) const override;
 
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
@@ -329,6 +342,7 @@ public:
 
 	explicit FixedPointType(int _integerBits, int _fractionalBits, Modifier _modifier = Modifier::Unsigned);
 
+	virtual std::string identifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -378,6 +392,7 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual bool canBeStored() const override { return false; }
@@ -416,6 +431,7 @@ public:
 		return TypePointer();
 	}
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual bool canBeStored() const override { return false; }
@@ -449,6 +465,7 @@ public:
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
@@ -476,6 +493,7 @@ class BoolType: public Type
 public:
 	BoolType() {}
 	virtual Category category() const override { return Category::Bool; }
+	virtual std::string identifier() const override { return "t_bool"; }
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
@@ -533,6 +551,8 @@ protected:
 	TypePointer copyForLocationIfReference(TypePointer const& _type) const;
 	/// @returns a human-readable description of the reference part of the type.
 	std::string stringForReferencePart() const;
+	/// @returns the suffix computed from the reference part to be used by identifier();
+	std::string identifierLocationSuffix() const;
 
 	DataLocation m_location = DataLocation::Storage;
 	bool m_isPointer = true;
@@ -573,6 +593,7 @@ public:
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
@@ -622,6 +643,7 @@ public:
 	/// Contracts can be converted to themselves and to integers.
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded ) const override
 	{
@@ -677,6 +699,7 @@ public:
 	explicit StructType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage):
 		ReferenceType(_location), m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	u256 memorySize() const;
@@ -720,6 +743,7 @@ public:
 	virtual Category category() const override { return Category::Enum; }
 	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override
 	{
@@ -760,6 +784,7 @@ public:
 	virtual Category category() const override { return Category::Tuple; }
 	explicit TupleType(std::vector<TypePointer> const& _types = std::vector<TypePointer>()): m_components(_types) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const override;
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual std::string toString(bool) const override;
@@ -890,13 +915,12 @@ public:
 
 	TypePointers parameterTypes() const;
 	std::vector<std::string> parameterNames() const;
-	std::vector<std::string> const parameterTypeNames(bool _addDataLocation) const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
-	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
 	/// @returns the "self" parameter type for a bound function
-	TypePointer selfType() const;
+	TypePointer const& selfType() const;
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
@@ -995,6 +1019,7 @@ public:
 	MappingType(TypePointer const& _keyType, TypePointer const& _valueType):
 		m_keyType(_keyType), m_valueType(_valueType) {}
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
@@ -1029,6 +1054,7 @@ public:
 	TypePointer const& actualType() const { return m_actualType; }
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 storageSize() const override;
@@ -1056,6 +1082,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override { return 0; }
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
 
@@ -1080,6 +1107,7 @@ public:
 		return TypePointer();
 	}
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
@@ -1109,6 +1137,7 @@ public:
 		return TypePointer();
 	}
 
+	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
@@ -1132,6 +1161,7 @@ class InaccessibleDynamicType: public Type
 public:
 	virtual Category category() const override { return Category::InaccessibleDynamic; }
 
+	virtual std::string identifier() const override { return "t_inaccessible"; }
 	virtual bool isImplicitlyConvertibleTo(Type const&) const override { return false; }
 	virtual bool isExplicitlyConvertibleTo(Type const&) const override { return false; }
 	virtual unsigned calldataEncodedSize(bool _padded) const override { (void)_padded; return 32; }

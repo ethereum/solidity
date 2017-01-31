@@ -20,8 +20,6 @@
  * Solidity abstract syntax tree.
  */
 
-#include <algorithm>
-#include <functional>
 #include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -30,11 +28,31 @@
 
 #include <libdevcore/SHA3.h>
 
+#include <boost/algorithm/string.hpp>
+
+#include <algorithm>
+#include <functional>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+class IDDispenser
+{
+public:
+	static size_t next() { return ++instance(); }
+	static void reset() { instance() = 0; }
+private:
+	static size_t& instance()
+	{
+		static IDDispenser dispenser;
+		return dispenser.id;
+	}
+	size_t id = 0;
+};
+
 ASTNode::ASTNode(SourceLocation const& _location):
+	m_id(IDDispenser::next()),
 	m_location(_location)
 {
 }
@@ -42,6 +60,11 @@ ASTNode::ASTNode(SourceLocation const& _location):
 ASTNode::~ASTNode()
 {
 	delete m_annotation;
+}
+
+void ASTNode::resetID()
+{
+	IDDispenser::reset();
 }
 
 ASTAnnotation& ASTNode::annotation() const
@@ -188,7 +211,6 @@ void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentat
 {
 	m_userDocumentation = _userDocumentation;
 }
-
 
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {
@@ -502,4 +524,20 @@ IdentifierAnnotation& Identifier::annotation() const
 	if (!m_annotation)
 		m_annotation = new IdentifierAnnotation();
 	return static_cast<IdentifierAnnotation&>(*m_annotation);
+}
+
+bool Literal::looksLikeAddress() const
+{
+	if (subDenomination() != SubDenomination::None)
+		return false;
+
+	string lit = value();
+	return lit.substr(0, 2) == "0x" && abs(int(lit.length()) - 42) <= 1;
+}
+
+bool Literal::passesAddressChecksum() const
+{
+	string lit = value();
+	solAssert(lit.substr(0, 2) == "0x", "Expected hex prefix");
+	return dev::passesAddressChecksum(lit, true);
 }

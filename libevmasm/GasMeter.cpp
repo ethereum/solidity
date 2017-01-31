@@ -223,14 +223,14 @@ unsigned GasMeter::runGas(Instruction _instruction)
 
 	switch (instructionInfo(_instruction).gasPriceTier)
 	{
-	case 0: return GasCosts::tier0Gas;
-	case 1: return GasCosts::tier1Gas;
-	case 2: return GasCosts::tier2Gas;
-	case 3: return GasCosts::tier3Gas;
-	case 4: return GasCosts::tier4Gas;
-	case 5: return GasCosts::tier5Gas;
-	case 6: return GasCosts::tier6Gas;
-	case 7: return GasCosts::tier7Gas;
+	case Tier::Zero:    return GasCosts::tier0Gas;
+	case Tier::Base:    return GasCosts::tier1Gas;
+	case Tier::VeryLow: return GasCosts::tier2Gas;
+	case Tier::Low:     return GasCosts::tier3Gas;
+	case Tier::Mid:     return GasCosts::tier4Gas;
+	case Tier::High:    return GasCosts::tier5Gas;
+	case Tier::Ext:     return GasCosts::tier6Gas;
+	case Tier::Special: return GasCosts::tier7Gas;
 	default: break;
 	}
 	assertThrow(false, OptimizerException, "Invalid gas tier.");

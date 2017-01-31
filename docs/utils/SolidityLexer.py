@@ -57,7 +57,7 @@ class SolidityLexer(RegexLexer):
             (r'(for|in|while|do|break|return|continue|switch|case|default|if|else|'
              r'throw|try|catch|finally|new|delete|typeof|instanceof|void|'
              r'this|import|mapping|returns|private|public|external|internal|'
-             r'constant|memory|storage)\b', Keyword, 'slashstartsregex'),
+             r'constant|memory|storage|payable)\b', Keyword, 'slashstartsregex'),
             (r'(var|let|with|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
             (r'(bytes|string|address|uint|int|bool|byte|' +
              '|'.join(
@@ -67,6 +67,7 @@ class SolidityLexer(RegexLexer):
                  ['ufixed%dx%d' % ((i), (j + 8)) for i in range(0, 256, 8) for j in range(0, 256 - i, 8)] +
                  ['fixed%dx%d' % ((i), (j + 8)) for i in range(0, 256, 8) for j in range(0, 256 - i, 8)]
              ) + r')\b', Keyword.Type, 'slashstartsregex'),
+            (r'(wei|szabo|finney|ether|seconds|minutes|hours|days|weeks|years)\b', Keyword.Type, 'slashstartsregex'),
             (r'(abstract|boolean|byte|char|class|const|debugger|double|enum|export|'
              r'extends|final|float|goto|implements|int|interface|long|native|'
              r'package|private|protected|public|short|static|super|synchronized|throws|'

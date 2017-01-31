@@ -21,11 +21,13 @@
  */
 #pragma once
 
-#include <memory>
-#include <boost/program_options.hpp>
-#include <boost/filesystem/path.hpp>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/inlineasm/AsmStack.h>
+
+#include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
+
+#include <memory>
 
 namespace dev
 {

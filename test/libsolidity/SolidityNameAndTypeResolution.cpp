@@ -1102,25 +1102,25 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	auto returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "uint256");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	auto params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	BOOST_CHECK_EQUAL(params.at(1), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 }
 
@@ -1365,6 +1365,17 @@ BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name)
+{
+	char const* text = R"(
+		contract TestIt {
+			event A();
+			event A(uint i);
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
@@ -1374,6 +1385,53 @@ BOOST_AUTO_TEST_CASE(event_call)
 		}
 	)";
 	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(event_function_inheritance_clash)
+{
+	char const* text = R"(
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract B {
+			event dup();
+		}
+		contract C is A, B {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_inheritance_clash)
+{
+	char const* text = R"(
+		contract B {
+			event dup();
+		}
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract C is B, A {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_in_contract_clash)
+{
+	char const* text = R"(
+		contract A {
+			event dup();
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
 }
 
 BOOST_AUTO_TEST_CASE(event_inheritance)
@@ -4897,6 +4955,81 @@ BOOST_AUTO_TEST_CASE(assignment_to_constant)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
+}
+
+BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D {
+			function f() { var x = new C(); }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
+}
+
+BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D is C {
+			function D() { }
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				x.send(2);
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_length)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

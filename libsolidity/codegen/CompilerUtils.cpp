@@ -468,7 +468,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_typeOnStack);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;
 		}
 		break;
@@ -497,7 +497,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;
 		}
 		else if (targetTypeCategory == Type::Category::FixedPoint)
@@ -807,7 +807,9 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	{
 		if (funType->location() == FunctionType::Location::Internal)
 		{
-			m_context << m_context.errorTag();
+			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
+				_context.appendInvalid();
+			});
 			return;
 		}
 	}
@@ -820,37 +822,46 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	}
 	solAssert(referenceType->location() == DataLocation::Memory, "");
 
-	m_context << u256(max(32u, _type.calldataEncodedSize()));
-	allocateMemory();
-	m_context << Instruction::DUP1;
+	TypePointer type = _type.shared_from_this();
+	m_context.callLowLevelFunction(
+		"$pushZeroValue_" + referenceType->identifier(),
+		0,
+		1,
+		[type](CompilerContext& _context) {
+			CompilerUtils utils(_context);
+			_context << u256(max(32u, type->calldataEncodedSize()));
+			utils.allocateMemory();
+			_context << Instruction::DUP1;
 
-	if (auto structType = dynamic_cast<StructType const*>(&_type))
-		for (auto const& member: structType->members(nullptr))
-		{
-			pushZeroValue(*member.type);
-			storeInMemoryDynamic(*member.type);
-		}
-	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
-	{
-		if (arrayType->isDynamicallySized())
-		{
-			// zero length
-			m_context << u256(0);
-			storeInMemoryDynamic(IntegerType(256));
-		}
-		else if (arrayType->length() > 0)
-		{
-			m_context << arrayType->length() << Instruction::SWAP1;
-			// stack: items_to_do memory_pos
-			zeroInitialiseMemoryArray(*arrayType);
-			// stack: updated_memory_pos
-		}
-	}
-	else
-		solAssert(false, "Requested initialisation for unknown type: " + _type.toString());
+			if (auto structType = dynamic_cast<StructType const*>(type.get()))
+				for (auto const& member: structType->members(nullptr))
+				{
+					utils.pushZeroValue(*member.type);
+					utils.storeInMemoryDynamic(*member.type);
+				}
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+			{
+				if (arrayType->isDynamicallySized())
+				{
+					// zero length
+					_context << u256(0);
+					utils.storeInMemoryDynamic(IntegerType(256));
+				}
+				else if (arrayType->length() > 0)
+				{
+					_context << arrayType->length() << Instruction::SWAP1;
+					// stack: items_to_do memory_pos
+					utils.zeroInitialiseMemoryArray(*arrayType);
+					// stack: updated_memory_pos
+				}
+			}
+			else
+				solAssert(false, "Requested initialisation for unknown type: " + type->toString());
 
-	// remove the updated memory pointer
-	m_context << Instruction::POP;
+			// remove the updated memory pointer
+			_context << Instruction::POP;
+		}
+	);
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)

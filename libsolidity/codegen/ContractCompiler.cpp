@@ -106,7 +106,7 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	m_context.appendConditionalInvalid();
 }
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
@@ -271,7 +271,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
-		m_context.appendJumpTo(m_context.errorTag());
+		m_context.appendInvalid();
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -486,7 +486,12 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		stackLayout.push_back(i);
 	stackLayout += vector<int>(c_localVariablesSize, -1);
 
-	solAssert(stackLayout.size() <= 17, "Stack too deep, try removing local variables.");
+	if (stackLayout.size() > 17)
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_function.location()) <<
+			errinfo_comment("Stack too deep, try removing local variables.")
+		);
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
 		{
@@ -551,6 +556,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 						if (stackDiff < 1 || stackDiff > 16)
 							BOOST_THROW_EXCEPTION(
 								CompilerError() <<
+								errinfo_sourceLocation(_inlineAssembly.location()) <<
 								errinfo_comment("Stack too deep, try removing local variables.")
 							);
 						for (unsigned i = 0; i < variable->type()->sizeOnStack(); ++i)
@@ -575,7 +581,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
 				{
 					solAssert(contract->isLibrary(), "");
-					_assembly.appendLibraryAddress(contract->name());
+					_assembly.appendLibraryAddress(contract->fullyQualifiedName());
 				}
 				else
 					solAssert(false, "Invalid declaration type.");
@@ -591,6 +597,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				if (stackDiff > 16 || stackDiff < 1)
 					BOOST_THROW_EXCEPTION(
 						CompilerError() <<
+						errinfo_sourceLocation(_inlineAssembly.location()) <<
 						errinfo_comment("Stack too deep, try removing local variables.")
 					);
 				for (unsigned i = 0; i < size; ++i) {
@@ -820,6 +827,7 @@ void ContractCompiler::appendMissingFunctions()
 		function->accept(*this);
 		solAssert(m_context.nextFunctionToCompile() != function, "Compiled the wrong function?");
 	}
+	m_context.appendMissingLowLevelFunctions();
 }
 
 void ContractCompiler::appendModifierOrFunctionCode()
@@ -910,7 +918,9 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime()
 	a << Instruction::DELEGATECALL;
 	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
 	a << Instruction::ISZERO;
-	a.appendJumpI(a.errorTag());
+	a << Instruction::ISZERO;
+	eth::AssemblyItem afterTag = a.appendJumpI().tag();
+	a << Instruction::INVALID << afterTag;
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;
 	return make_shared<eth::Assembly>(a);

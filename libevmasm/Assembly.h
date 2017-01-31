@@ -118,7 +118,6 @@ protected:
 	/// returns the replaced tags.
 	std::map<u256, u256> optimiseInternal(bool _enable, bool _isCreation, size_t _runs);
 
-	std::string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired(unsigned subTagSize) const;
 

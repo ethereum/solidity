@@ -75,7 +75,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	checkContractAbstractConstructors(_contract);
 
 	FunctionDefinition const* function = _contract.constructor();
-	if (function) {
+	if (function)
+	{
+		if (!function->isPublic())
+			_contract.annotation().hasPublicConstructor = false;
 		if (!function->returnParameters().empty())
 			typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 		if (function->isDeclaredConst())
@@ -1280,6 +1283,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (!contract->annotation().isFullyImplemented)
 			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
+		if (!contract->annotation().hasPublicConstructor)
+			typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
 		solAssert(!!m_scope, "");
 		m_scope->annotation().contractDependencies.insert(contract);
@@ -1560,6 +1565,16 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	if (_literal.looksLikeAddress())
+	{
+		if (_literal.passesAddressChecksum())
+		{
+			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+			return;
+		}
+		else
+			warning(_literal.location(), "This looks like an address but has an invalid checksum.");
+	}
 	_literal.annotation().type = Type::forLiteral(_literal);
 	if (!_literal.annotation().type)
 		fatalTypeError(_literal.location(), "Invalid literal value.");

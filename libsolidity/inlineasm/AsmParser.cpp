@@ -71,6 +71,8 @@ assembly::Statement Parser::parseStatement()
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
 		assignment.variableName.name = m_scanner->currentLiteral();
+		if (instructions().count(assignment.variableName.name))
+			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
 		return assignment;
@@ -101,6 +103,8 @@ assembly::Statement Parser::parseStatement()
 		{
 			// functional assignment
 			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
+			if (instructions().count(identifier.name))
+				fatalParserError("Cannot use instruction names for identifier names.");
 			m_scanner->next();
 			funAss.variableName = identifier;
 			funAss.value.reset(new Statement(parseExpression()));
@@ -130,7 +134,7 @@ assembly::Statement Parser::parseExpression()
 		return operation;
 }
 
-assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
+std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 {
 	// Allowed instructions, lowercase names.
 	static map<string, dev::solidity::Instruction> s_instructions;
@@ -151,7 +155,11 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		// add alias for selfdestruct
 		s_instructions["selfdestruct"] = solidity::Instruction::SUICIDE;
 	}
+	return s_instructions;
+}
 
+assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
+{
 	Statement ret;
 	switch (m_scanner->currentToken())
 	{
@@ -170,9 +178,9 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		else
 			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.
-		if (s_instructions.count(literal))
+		if (instructions().count(literal))
 		{
-			dev::solidity::Instruction const& instr = s_instructions[literal];
+			dev::solidity::Instruction const& instr = instructions().at(literal);
 			if (_onlySinglePusher)
 			{
 				InstructionInfo info = dev::solidity::instructionInfo(instr);
@@ -207,6 +215,8 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
 	varDecl.name = m_scanner->currentLiteral();
+	if (instructions().count(varDecl.name))
+		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);

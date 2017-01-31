@@ -104,7 +104,7 @@ contract can be called internally.
 External Function Calls
 -----------------------
 
-The expressions ``this.g(8);`` and ``c.g(2);`` (where ``g`` is a contract
+The expressions ``this.g(8);`` and ``c.g(2);`` (where ``c`` is a contract
 instance) are also valid function calls, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
 Please note that function calls on ``this`` cannot be used in the constructor, as the
@@ -384,18 +384,23 @@ In the following example, we show how ``throw`` can be used to easily revert an 
 
 Currently, Solidity automatically generates a runtime exception in the following situations:
 
-1. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-1. If you access a fixed-length ``bytesN`` at a too large or negative index.
-1. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
-1. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
-1. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-1. If you shift by a negative amount.
-1. If you convert a value too big or negative into an enum type.
-1. If you perform an external function call targeting a contract that contains no code.
-1. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-1. If your contract receives Ether via a public accessor function.
+#. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+#. If you access a fixed-length ``bytesN`` at a too large or negative index.
+#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+#. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
+#. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. If you shift by a negative amount.
+#. If you convert a value too big or negative into an enum type.
+#. If you perform an external function call targeting a contract that contains no code.
+#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public accessor function.
+#. If you call a zero-initialized variable of internal function type.
 
-Internally, Solidity performs an "invalid jump" when an exception is thrown and thus causes the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction (or at least call) without effect.
+Internally, Solidity performs an "invalid jump" when a user-provided exception is thrown. In contrast, it performs an invalid operation
+(instruction ``0xfe``) if a runtime exception is encountered. In both cases, this causes
+the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect
+did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
+(or at least call) without effect.
 
 .. index:: ! assembly, ! asm, ! evmasm
 
@@ -626,6 +631,8 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 | return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
++-------------------------+------+-----------------------------------------------------------------+
+| invalid                 | `-`  | end execution with invalid instruction                          |
 +-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+

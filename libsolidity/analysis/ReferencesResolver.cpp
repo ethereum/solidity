@@ -87,7 +87,6 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 {
 	switch (_typeName.visibility())
 	{
-	case VariableDeclaration::Visibility::Default:
 	case VariableDeclaration::Visibility::Internal:
 	case VariableDeclaration::Visibility::External:
 		break;

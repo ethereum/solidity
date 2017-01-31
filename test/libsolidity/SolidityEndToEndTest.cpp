@@ -2505,6 +2505,16 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
 }
 
+BOOST_AUTO_TEST_CASE(internal_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function C() internal {}
+		}
+	)";
+	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "C").empty());
+}
+
 BOOST_AUTO_TEST_CASE(function_modifier)
 {
 	char const* sourceCode = R"(
@@ -2761,6 +2771,7 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 			}
 		}
 	)";
+
 	compileAndRun(sourceCode);
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
@@ -2790,6 +2801,104 @@ BOOST_AUTO_TEST_CASE(event_access_through_base_name)
 	BOOST_CHECK(m_logs[0].data.empty());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("x()")));
+}
+
+BOOST_AUTO_TEST_CASE(events_with_same_name)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit;
+			event Deposit(address _addr);
+			event Deposit(address _addr, uint _amount);
+			function deposit() returns (uint) {
+				Deposit();
+				return 1;
+			}
+			function deposit(address _addr) returns (uint) {
+				Deposit(_addr);
+				return 1;
+			}
+			function deposit(address _addr, uint _amount) returns (uint) {
+				Deposit(_addr, _amount);
+				return 1;
+			}
+		}
+	)";
+	u160 const c_loggedAddress = m_contractAddress;
+
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("deposit()") == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+
+	BOOST_CHECK(callContractFunction("deposit(address)", c_loggedAddress) == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
+
+	BOOST_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)) == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+}
+
+BOOST_AUTO_TEST_CASE(events_with_same_name_inherited)
+{
+	char const* sourceCode = R"(
+		contract A {
+			event Deposit;
+		}
+
+		contract B {
+			event Deposit(address _addr);
+		}
+
+		contract ClientReceipt is A, B {
+			event Deposit(address _addr, uint _amount);
+			function deposit() returns (uint) {
+				Deposit();
+				return 1;
+			}
+			function deposit(address _addr) returns (uint) {
+				Deposit(_addr);
+				return 1;
+			}
+			function deposit(address _addr, uint _amount) returns (uint) {
+				Deposit(_addr, _amount);
+				return 1;
+			}
+		}
+	)";
+	u160 const c_loggedAddress = m_contractAddress;
+
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("deposit()") == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+
+	BOOST_CHECK(callContractFunction("deposit(address)", c_loggedAddress) == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
+
+	BOOST_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)) == encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
 }
 
 BOOST_AUTO_TEST_CASE(event_anonymous)
@@ -8881,6 +8990,72 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	)";
 	compileAndRun(sourceCode, 0, "C1");
 	compileAndRun(sourceCode, 0, "C2");
+}
+
+BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
+{
+	char const* sourceCode = R"(
+		contract D {
+			bytes a = hex"1237651237125387136581271652831736512837126583171583712358126123765123712538713658127165283173651283712658317158371235812612376512371253871365812716528317365128371265831715837123581261237651237125387136581271652831736512837126583171583712358126";
+			bytes b = hex"1237651237125327136581271252831736512837126583171383712358126123765125712538713658127165253173651283712658357158371235812612376512371a5387136581271652a317365128371265a317158371235812612a765123712538a13658127165a83173651283712a58317158371235a126";
+			function D(uint) {}
+		}
+		contract Double {
+			function f() {
+				new D(2);
+			}
+			function g() {
+				new D(3);
+			}
+		}
+		contract Single {
+			function f() {
+				new D(2);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK_LE(
+		double(m_compiler.object("Double").bytecode.size()),
+		1.1 * double(m_compiler.object("Single").bytecode.size())
+	);
+}
+
+BOOST_AUTO_TEST_CASE(recursive_structs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S {
+				S[] x;
+			}
+			S sstorage;
+			function f() returns (uint) {
+				S memory s;
+				s.x = new S[](10);
+				delete s;
+				sstorage.x.length++;
+				delete sstorage;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_instruction)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					invalid
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

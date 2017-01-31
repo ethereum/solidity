@@ -260,8 +260,8 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
 	{
 		solAssert(*it, "");
-		// the declaration is functionDefinition or a VariableDeclaration while declarations > 1
-		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
+		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
+		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<EventDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
 			"Found overloading involving something not a function or a variable");
 
 		shared_ptr<FunctionType const> functionType { (*it)->functionType(false) };

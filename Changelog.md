@@ -1,3 +1,24 @@
+### 0.4.9 (2017-01-31)
+
+Features:
+ * Compiler interface: Contracts and libraries can be referenced with a ``file:`` prefix to make them unique.
+ * Compiler interface: Report source location for "stack too deep" errors.
+ * AST: Use deterministic node identifiers.
+ * Inline assembly: introduce ``invalid`` (EIP141) as an opcode.
+ * Type system: Introduce type identifier strings.
+ * Type checker: Warn about invalid checksum for addresses and deduce type from valid ones.
+ * Metadata: Do not include platform in the version number.
+ * Metadata: Add option to store sources as literal content.
+ * Code generator: Extract array utils into low-level functions.
+ * Code generator: Internal errors (array out of bounds, etc.) now cause a reversion by using an invalid
+   instruction (0xfe - EIP141) instead of an invalid jump. Invalid jump is still kept for explicit throws.
+
+Bugfixes:
+ * Code generator: Allow recursive structs.
+ * Inline assembly: Disallow variables named like opcodes.
+ * Type checker: Allow multiple events of the same name (but with different arities or argument types)
+ * Natspec parser: Fix error with ``@param`` parsing and whitespace.
+
 ### 0.4.8 (2017-01-13)
 
 Features:

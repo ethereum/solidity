@@ -40,7 +40,7 @@ void Assembly::append(Assembly const& _a)
 	auto newDeposit = m_deposit + _a.deposit();
 	for (AssemblyItem i: _a.m_items)
 	{
-		if (i.type() == Tag || i.type() == PushTag)
+		if (i.type() == Tag || (i.type() == PushTag && i != errorTag()))
 			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
 			i.setData(i.data() + m_subs.size());
@@ -94,7 +94,10 @@ unsigned Assembly::bytesRequired(unsigned subTagSize) const
 	}
 }
 
-string Assembly::locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const
+namespace
+{
+
+string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
 	if (_location.isEmpty() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
 		return "";
@@ -115,27 +118,92 @@ string Assembly::locationFromSources(StringMap const& _sourceCodes, SourceLocati
 	return cut;
 }
 
+class Functionalizer
+{
+public:
+	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes):
+		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes)
+	{}
+
+	void feed(AssemblyItem const& _item)
+	{
+		if (!_item.location().isEmpty() && _item.location() != m_location)
+		{
+			flush();
+			printLocation();
+			m_location = _item.location();
+		}
+		if (!(
+			_item.canBeFunctional() &&
+			_item.returnValues() <= 1 &&
+			_item.arguments() <= int(m_pending.size())
+		))
+		{
+			flush();
+			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << _item.toAssemblyText() << endl;
+			return;
+		}
+		string expression = _item.toAssemblyText();
+		if (_item.arguments() > 0)
+		{
+			expression += "(";
+			for (int i = 0; i < _item.arguments(); ++i)
+			{
+				expression += m_pending.back();
+				m_pending.pop_back();
+				if (i + 1 < _item.arguments())
+					expression += ", ";
+			}
+			expression += ")";
+		}
+
+		m_pending.push_back(expression);
+		if (_item.returnValues() != 1)
+			flush();
+	}
+
+	void flush()
+	{
+		for (string const& expression: m_pending)
+			m_out << m_prefix << "  " << expression << endl;
+		m_pending.clear();
+	}
+
+	void printLocation()
+	{
+		if (!m_location.sourceName && m_location.isEmpty())
+			return;
+		m_out << m_prefix << "    /*";
+		if (m_location.sourceName)
+			m_out << " \"" + *m_location.sourceName + "\"";
+		if (!m_location.isEmpty())
+			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
+		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
+		m_out << " */" << endl;
+	}
+
+private:
+	strings m_pending;
+	SourceLocation m_location;
+
+	ostream& m_out;
+	string const& m_prefix;
+	StringMap const& m_sourceCodes;
+};
+
+}
+
 ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
-	for (size_t i = 0; i < m_items.size(); ++i)
-	{
-		AssemblyItem const& item = m_items[i];
-		if (!item.location().isEmpty() && (i == 0 || m_items[i - 1].location() != item.location()))
-		{
-			_out << _prefix << "    /*";
-			if (item.location().sourceName)
-				_out << " \"" + *item.location().sourceName + "\"";
-			if (!item.location().isEmpty())
-				_out << ":" << to_string(item.location().start) + ":" + to_string(item.location().end);
-			_out << " */" << endl;
-		}
-		_out << _prefix << (item.type() == Tag ? "" : "  ") << item.toAssemblyText() << endl;
-	}
+	Functionalizer f(_out, _prefix, _sourceCodes);
+
+	for (auto const& i: m_items)
+		f.feed(i);
+	f.flush();
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
 		_out << _prefix << "stop" << endl;
-		Json::Value data;
 		for (auto const& i: m_data)
 			assertThrow(u256(i.first) < m_subs.size(), AssemblyException, "Data not yet implemented.");
 

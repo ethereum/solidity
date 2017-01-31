@@ -30,20 +30,6 @@ Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDe
 {
 	Json::Value abi(Json::arrayValue);
 
-	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
-	{
-		Json::Value params(Json::arrayValue);
-		solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
-		for (unsigned i = 0; i < _paramNames.size(); ++i)
-		{
-			Json::Value param;
-			param["name"] = _paramNames[i];
-			param["type"] = _paramTypes[i];
-			params.append(param);
-		}
-		return params;
-	};
-
 	for (auto it: _contractDef.interfaceFunctions())
 	{
 		auto externalFunctionType = it.second->interfaceFunctionType();
@@ -52,13 +38,15 @@ Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDe
 		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
 		method["payable"] = it.second->isPayable();
-		method["inputs"] = populateParameters(
+		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
-			externalFunctionType->parameterTypeNames(_contractDef.isLibrary())
+			externalFunctionType->parameterTypes(),
+			_contractDef.isLibrary()
 		);
-		method["outputs"] = populateParameters(
+		method["outputs"] = formatTypeList(
 			externalFunctionType->returnParameterNames(),
-			externalFunctionType->returnParameterTypeNames(_contractDef.isLibrary())
+			externalFunctionType->returnParameterTypes(),
+			_contractDef.isLibrary()
 		);
 		abi.append(method);
 	}
@@ -69,9 +57,10 @@ Json::Value InterfaceHandler::abiInterface(ContractDefinition const& _contractDe
 		auto externalFunction = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		method["payable"] = externalFunction->isPayable();
-		method["inputs"] = populateParameters(
+		method["inputs"] = formatTypeList(
 			externalFunction->parameterNames(),
-			externalFunction->parameterTypeNames(_contractDef.isLibrary())
+			externalFunction->parameterTypes(),
+			_contractDef.isLibrary()
 		);
 		abi.append(method);
 	}
@@ -177,6 +166,25 @@ Json::Value InterfaceHandler::devDocumentation(ContractDefinition const& _contra
 	doc["methods"] = methods;
 
 	return doc;
+}
+
+Json::Value InterfaceHandler::formatTypeList(
+	vector<string> const& _names,
+	vector<TypePointer> const& _types,
+	bool _forLibrary
+)
+{
+	Json::Value params(Json::arrayValue);
+	solAssert(_names.size() == _types.size(), "Names and types vector size does not match");
+	for (unsigned i = 0; i < _names.size(); ++i)
+	{
+		solAssert(_types[i], "");
+		Json::Value param;
+		param["name"] = _names[i];
+		param["type"] = _types[i]->canonicalName(_forLibrary);
+		params.append(param);
+	}
+	return params;
 }
 
 string InterfaceHandler::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)

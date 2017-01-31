@@ -57,6 +57,11 @@ public:
 	explicit ASTNode(SourceLocation const& _location);
 	virtual ~ASTNode();
 
+	/// @returns an identifier of this AST node that is unique for a single compilation run.
+	size_t id() const { return m_id; }
+	/// Resets the global ID counter. This invalidates all previous IDs.
+	static void resetID();
+
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
 	template <class T>
@@ -94,6 +99,7 @@ public:
 	///@}
 
 protected:
+	size_t const m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable ASTAnnotation* m_annotation = nullptr;
 
@@ -161,6 +167,7 @@ public:
 	/// @returns the source name this declaration is present in.
 	/// Can be combined with annotation().canonicalName to form a globally unique name.
 	std::string sourceUnitName() const;
+	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -601,7 +608,7 @@ private:
 
 /**
  * Declaration of a variable. This can be used in various places, e.g. in function parameter
- * lists, struct definitions and even function bodys.
+ * lists, struct definitions and even function bodies.
  */
 class VariableDeclaration: public Declaration
 {
@@ -862,7 +869,10 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
 
-	Declaration::Visibility visibility() const { return m_visibility; }
+	Declaration::Visibility visibility() const
+	{
+		return m_visibility == Declaration::Visibility::Default ? Declaration::Visibility::Internal : m_visibility;
+	}
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	bool isPayable() const { return m_isPayable; }
 
@@ -1573,6 +1583,11 @@ public:
 	ASTString const& value() const { return *m_value; }
 
 	SubDenomination subDenomination() const { return m_subDenomination; }
+
+	/// @returns true if this looks like a checksummed address.
+	bool looksLikeAddress() const;
+	/// @returns true if it passes the address checksum test.
+	bool passesAddressChecksum() const;
 
 private:
 	Token::Value m_token;

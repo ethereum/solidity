@@ -22,28 +22,8 @@
  */
 #include "CommandLineInterface.h"
 
-#ifdef _WIN32 // windows
-	#include <io.h>
-	#define isatty _isatty
-	#define fileno _fileno
-#else // unix
-	#include <unistd.h>
-#endif
-#include <string>
-#include <iostream>
-#include <fstream>
-
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string.hpp>
-
 #include "solidity/BuildInfo.h"
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
-#include <libevmasm/Instruction.h>
-#include <libevmasm/GasMeter.h>
+
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -54,8 +34,30 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/formal/Why3Translator.h>
+
+#include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+
+#ifdef _WIN32 // windows
+	#include <io.h>
+	#define isatty _isatty
+	#define fileno _fileno
+#else // unix
+	#include <unistd.h>
+#endif
+#include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -98,6 +100,7 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
+static string const g_strMetadataLiteral = "metadata-literal";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -126,6 +129,7 @@ static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argMetadataLiteral = g_strMetadataLiteral;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -186,7 +190,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin", m_compiler->object(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", m_compiler->object(_contract).toHex());
 		else
 		{
 			cout << "Binary: " << endl;
@@ -422,7 +426,9 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			auto colon = lib.find(':');
+			//search for last colon in string as our binaries output placeholders in the form of file:Name
+			//so we need to search for the second `:` in the string
+			auto colon = lib.rfind(':');
 			if (colon == string::npos)
 			{
 				cerr << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
@@ -432,6 +438,11 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			string addrString(lib.begin() + colon + 1, lib.end());
 			boost::trim(libName);
 			boost::trim(addrString);
+			if (!passesAddressChecksum(addrString, false))
+			{
+				cerr << "Invalid checksum on library address \"" << libName << "\": " << addrString << endl;
+				return false;
+			}
 			bytes binAddr = fromHex(addrString);
 			h160 address(binAddr, h160::AlignRight);
 			if (binAddr.size() > 20 || address == h160())
@@ -511,7 +522,8 @@ Allowed options)",
 			g_argLink.c_str(),
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
-		);
+		)
+		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -634,6 +646,8 @@ bool CommandLineInterface::processInput()
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
+		if (m_args.count(g_argMetadataLiteral) > 0)
+			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
@@ -907,7 +921,6 @@ void CommandLineInterface::writeLinkedFiles()
 
 bool CommandLineInterface::assemble()
 {
-	//@TODO later, we will use the convenience interface and should also remove the include above
 	bool successful = true;
 	map<string, shared_ptr<Scanner>> scanners;
 	for (auto const& src: m_sourceCodes)
@@ -921,6 +934,7 @@ bool CommandLineInterface::assemble()
 			m_assemblyStacks[src.first].assemble();
 	}
 	for (auto const& stack: m_assemblyStacks)
+	{
 		for (auto const& error: stack.second.errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
@@ -928,6 +942,9 @@ bool CommandLineInterface::assemble()
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
 			);
+		if (!Error::containsOnlyWarnings(stack.second.errors()))
+			successful = false;
+	}
 
 	return successful;
 }

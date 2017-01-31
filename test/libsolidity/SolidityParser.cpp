@@ -1479,7 +1479,6 @@ BOOST_AUTO_TEST_CASE(function_type_state_variable)
 	BOOST_CHECK(successParse(text));
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
