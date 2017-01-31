@@ -426,7 +426,9 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			auto colon = lib.find(':');
+			//search for last colon in string as our binaries output placeholders in the form of file:Name
+			//so we need to search for the second `:` in the string
+			auto colon = lib.rfind(':');
 			if (colon == string::npos)
 			{
 				cerr << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
