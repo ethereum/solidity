@@ -48,8 +48,9 @@ struct Label { SourceLocation location; std::string name; };
 struct Assignment { SourceLocation location; Identifier variableName; };
 struct FunctionalAssignment;
 struct VariableDeclaration;
+struct FunctionDefinition;
 struct Block;
-using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionalInstruction, VariableDeclaration, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 /// Functional assignment ("x := mload(20)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 struct FunctionalAssignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
@@ -59,6 +60,8 @@ struct FunctionalInstruction { SourceLocation location; Instruction instruction;
 struct VariableDeclaration { SourceLocation location; std::string name; std::shared_ptr<Statement> value; };
 /// Block that creates a scope (frees declared stack variables)
 struct Block { SourceLocation location; std::vector<Statement> statements; };
+/// Function definition ("function f(a, b) -> (d, e) { ... }")
+struct FunctionDefinition { SourceLocation location; std::string name; std::vector<std::string> arguments; std::vector<std::string> returns; Block body; };
 
 struct LocationExtractor: boost::static_visitor<SourceLocation>
 {

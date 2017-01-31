@@ -62,6 +62,8 @@ assembly::Statement Parser::parseStatement()
 	{
 	case Token::Let:
 		return parseVariableDeclaration();
+	case Token::Function:
+		return parseFunctionDefinition();
 	case Token::LBrace:
 		return parseBlock();
 	case Token::Assign:
@@ -214,15 +216,45 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
-	varDecl.name = m_scanner->currentLiteral();
-	if (instructions().count(varDecl.name))
-		fatalParserError("Cannot use instruction names for identifier names.");
-	expectToken(Token::Identifier);
+	varDecl.name = expectAsmIdentifier();
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
 	varDecl.value.reset(new Statement(parseExpression()));
 	varDecl.location.end = locationOf(*varDecl.value).end;
 	return varDecl;
+}
+
+assembly::FunctionDefinition Parser::parseFunctionDefinition()
+{
+	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
+	expectToken(Token::Function);
+	funDef.name = expectAsmIdentifier();
+	expectToken(Token::LParen);
+	while (m_scanner->currentToken() != Token::RParen)
+	{
+		funDef.arguments.push_back(expectAsmIdentifier());
+		if (m_scanner->currentToken() == Token::RParen)
+			break;
+		expectToken(Token::Comma);
+	}
+	expectToken(Token::RParen);
+	if (m_scanner->currentToken() == Token::Sub)
+	{
+		expectToken(Token::Sub);
+		expectToken(Token::GreaterThan);
+		expectToken(Token::LParen);
+		while (true)
+		{
+			funDef.returns.push_back(expectAsmIdentifier());
+			if (m_scanner->currentToken() == Token::RParen)
+				break;
+			expectToken(Token::Comma);
+		}
+		expectToken(Token::RParen);
+	}
+	funDef.body = parseBlock();
+	funDef.location.end = funDef.body.location.end;
+	return funDef;
 }
 
 FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
@@ -265,4 +297,13 @@ FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _
 		);
 	expectToken(Token::RParen);
 	return ret;
+}
+
+string Parser::expectAsmIdentifier()
+{
+	string name = m_scanner->currentLiteral();
+	if (instructions().count(name))
+		fatalParserError("Cannot use instruction names for identifier names.");
+	expectToken(Token::Identifier);
+	return name;
 }

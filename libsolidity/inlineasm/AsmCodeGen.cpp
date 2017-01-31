@@ -249,7 +249,10 @@ public:
 				_block.location
 			);
 		}
-
+	}
+	void operator()(assembly::FunctionDefinition const&)
+	{
+		solAssert(false, "Function definition not removed during desugaring phase.");
 	}
 
 private:
