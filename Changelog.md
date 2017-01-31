@@ -1,4 +1,4 @@
-### 0.4.9 (unreleased)
+### 0.4.9 (2017-01-31)
 
 Features:
  * Compiler interface: Contracts and libraries can be referenced with a ``file:`` prefix to make them unique.
