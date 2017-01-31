@@ -243,6 +243,12 @@ FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _
 	unsigned args = unsigned(instrInfo.args);
 	for (unsigned i = 0; i < args; ++i)
 	{
+		// workaround to support pop()
+		if ((i == 0) && (instr == solidity::Instruction::POP) && (m_scanner->currentToken() == Token::RParen))
+		{
+			break;
+		}
+
 		ret.arguments.emplace_back(parseExpression());
 		if (i != args - 1)
 		{
