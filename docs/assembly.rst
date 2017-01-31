@@ -37,8 +37,9 @@ arising when writing manual assembly by the following features:
 We now want to describe the inline assembly language in detail.
 
 .. warning::
-    Inline assembly is still a relatively new feature and might change if it does not prove useful,
-    so please try to keep up to date.
+    Inline assembly is a way to access the Ethereum Virtual Machine
+    at a low level. This discards several important safety
+    features of Solidity.
 
 Example
 -------
@@ -48,6 +49,8 @@ load it into a ``bytes`` variable. This is not possible at all with "plain Solid
 idea is that assembly libraries will be used to enhance the language in such ways.
 
 .. code::
+
+    pragma solidity ^0.4.0;
 
     library GetCode {
         function at(address _addr) returns (bytes o_code) {
@@ -69,10 +72,12 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 Inline assembly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
-the compiler does not perform checks, so you should use it only if
+the compiler does not perform checks, so you should use it for complex things only if
 you really know what you are doing.
 
 .. code::
+
+    pragma solidity ^0.4.0;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
@@ -104,7 +109,7 @@ these curly braces, the following can be used (see the later sections for more d
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcode in functional style, e.g. ``add(1, mlod(0))``
+ - opcodes in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
  - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
@@ -119,7 +124,7 @@ This document does not want to be a full description of the Ethereum virtual mac
 following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
-Note that the order of arguments can be seed to be reversed in non-functional style (explained below).
+Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
 special and all others push exactly one item onte the stack.
 
@@ -185,7 +190,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | pc                      |      | current position in code                                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| pop                     | `*`  | remove topmost stack slot                                       |
+| pop(x)                  | `-`  | remove the element pushed by x                                  |
 +-------------------------+------+-----------------------------------------------------------------+
 | dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -230,19 +235,22 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | create(v, p, s)         |      | create new contract with code mem[p..(p+s)) and send v wei      |
 |                         |      | and return the new address                                      |
 +-------------------------+------+-----------------------------------------------------------------+
-| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize)]      |
+| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize))      |
 | insize, out, outsize)   |      | providing g gas and v wei and output area                       |
-|                         |      | mem[out..(out+outsize)] returting 1 on error (out of gas)       |
+|                         |      | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
+|                         |      | and 1 on success                                                |
 +-------------------------+------+-----------------------------------------------------------------+
-| callcode(g, a, v, in,   |      | identical to call but only use the code from a and stay         |
+| callcode(g, a, v, in,   |      | identical to `call` but only use the code from a and stay       |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
 +-------------------------+------+-----------------------------------------------------------------+
-| delegatecall(g, a, in,  |      | identical to callcode but also keep ``caller``                  |
+| delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
-| return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| selfdestruct(a)         | `*`  | end execution, destroy current contract and send funds to a     |
+| selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
++-------------------------+------+-----------------------------------------------------------------+
+| invalid                 | `-`  | end execution with invalid instruction                          |
 +-------------------------+------+-----------------------------------------------------------------+
 | log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -331,6 +339,8 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint b;
         function f(uint x) returns (uint r) {
@@ -392,6 +402,10 @@ will have a wrong impression about the stack height at label ``two``:
         three:
     }
 
+.. note::
+
+    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
+    result in an invalid jump, effectively aborting execution of the code.
 
 Declaring Assembly-Local Variables
 ----------------------------------
@@ -404,6 +418,8 @@ is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         function f(uint x) returns (uint b) {
@@ -542,7 +558,7 @@ Conventions in Solidity
 
 In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
 e.g. ``uint24``. In order to make them more efficient, most arithmetic operations just
-treat them as 256 bit numbers and the higher-order bits are only cleaned at the
+treat them as 256-bit numbers and the higher-order bits are only cleaned at the
 point where it is necessary, i.e. just shortly before they are written to memory
 or before comparisons are performed. This means that if you access such a variable
 from within inline assembly, you might have to manually clean the higher order bits
