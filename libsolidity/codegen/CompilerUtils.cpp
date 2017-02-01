@@ -787,6 +787,20 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		if (_cleanupNeeded)
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		break;
+	case Type::Category::Function:
+	{
+		if (targetTypeCategory == Type::Category::Integer)
+		{
+			IntegerType const& targetType = dynamic_cast<IntegerType const&>(_targetType);
+			solAssert(targetType.isAddress(), "Function type can only be converted to address.");
+			FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
+			solAssert(typeOnStack.location() == FunctionType::Location::External, "Only external function type can be converted.");
+
+			// stack: <address> <function_id>
+			m_context << Instruction::POP;
+			break;
+		}
+	}
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");

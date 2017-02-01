@@ -1,5 +1,8 @@
 ### 0.4.10 (unreleased)
 
+Features:
+ * Type system: Support explicit conversion of external function to address.
+
 ### 0.4.9 (2017-01-31)
 
 Features:
