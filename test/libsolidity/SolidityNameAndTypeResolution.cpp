@@ -4746,7 +4746,19 @@ BOOST_AUTO_TEST_CASE(internal_function_type_to_address)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint) {
+				return uint(this.f);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
