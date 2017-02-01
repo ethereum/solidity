@@ -169,6 +169,11 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> (x, y) { } }"));
 }
 
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	BOOST_CHECK(successParse("{ g(1, 2, f(mul(2, 3))) x() }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Printing)

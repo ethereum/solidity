@@ -68,7 +68,7 @@ protected:
 	Statement parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	FunctionalInstruction parseFunctionalInstruction(Statement&& _instruction);
+	Statement parseFunctionalInstruction(Statement&& _instruction);
 	std::string expectAsmIdentifier();
 };
 

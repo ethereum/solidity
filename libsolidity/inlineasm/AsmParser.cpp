@@ -257,46 +257,67 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
+assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
 {
-	if (_instruction.type() != typeid(Instruction))
-		fatalParserError("Assembly instruction required in front of \"(\")");
-	FunctionalInstruction ret;
-	ret.instruction = std::move(boost::get<Instruction>(_instruction));
-	ret.location = ret.instruction.location;
-	solidity::Instruction instr = ret.instruction.instruction;
-	InstructionInfo instrInfo = instructionInfo(instr);
-	if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
-		fatalParserError("DUPi instructions not allowed for functional notation");
-	if (solidity::Instruction::SWAP1 <= instr && instr <= solidity::Instruction::SWAP16)
-		fatalParserError("SWAPi instructions not allowed for functional notation");
-
-	expectToken(Token::LParen);
-	unsigned args = unsigned(instrInfo.args);
-	for (unsigned i = 0; i < args; ++i)
+	if (_instruction.type() == typeid(Instruction))
 	{
-		ret.arguments.emplace_back(parseExpression());
-		if (i != args - 1)
+		FunctionalInstruction ret;
+		ret.instruction = std::move(boost::get<Instruction>(_instruction));
+		ret.location = ret.instruction.location;
+		solidity::Instruction instr = ret.instruction.instruction;
+		InstructionInfo instrInfo = instructionInfo(instr);
+		if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
+			fatalParserError("DUPi instructions not allowed for functional notation");
+		if (solidity::Instruction::SWAP1 <= instr && instr <= solidity::Instruction::SWAP16)
+			fatalParserError("SWAPi instructions not allowed for functional notation");
+		expectToken(Token::LParen);
+		unsigned args = unsigned(instrInfo.args);
+		for (unsigned i = 0; i < args; ++i)
 		{
-			if (m_scanner->currentToken() != Token::Comma)
-				fatalParserError(string(
-					"Expected comma (" +
-					instrInfo.name +
-					" expects " +
-					boost::lexical_cast<string>(args) +
-					" arguments)"
-				));
-			else
-				m_scanner->next();
+			ret.arguments.emplace_back(parseExpression());
+			if (i != args - 1)
+			{
+				if (m_scanner->currentToken() != Token::Comma)
+					fatalParserError(string(
+						"Expected comma (" +
+						instrInfo.name +
+						" expects " +
+						boost::lexical_cast<string>(args) +
+						" arguments)"
+					));
+				else
+					m_scanner->next();
+			}
 		}
+		ret.location.end = endPosition();
+		if (m_scanner->currentToken() == Token::Comma)
+			fatalParserError(
+				string("Expected ')' (" + instrInfo.name + " expects " + boost::lexical_cast<string>(args) + " arguments)")
+			);
+		expectToken(Token::RParen);
+		return ret;
 	}
-	ret.location.end = endPosition();
-	if (m_scanner->currentToken() == Token::Comma)
-		fatalParserError(
-			string("Expected ')' (" + instrInfo.name + " expects " + boost::lexical_cast<string>(args) + " arguments)")
-		);
-	expectToken(Token::RParen);
-	return ret;
+	else if (_instruction.type() == typeid(Identifier))
+	{
+		FunctionCall ret;
+		ret.functionName = std::move(boost::get<Identifier>(_instruction));
+		ret.location = ret.functionName.location;
+		expectToken(Token::LParen);
+		while (m_scanner->currentToken() != Token::RParen)
+		{
+			ret.arguments.emplace_back(parseExpression());
+			if (m_scanner->currentToken() == Token::RParen)
+				break;
+			expectToken(Token::Comma);
+		}
+		ret.location.end = endPosition();
+		expectToken(Token::RParen);
+		return ret;
+	}
+	else
+		fatalParserError("Assembly instruction or function name required in front of \"(\")");
+
+	return {};
 }
 
 string Parser::expectAsmIdentifier()
