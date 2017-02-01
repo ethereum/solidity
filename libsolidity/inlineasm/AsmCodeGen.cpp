@@ -91,6 +91,7 @@ public:
 	void operator()(T const& /*_item*/) { }
 	void operator()(Label const& _item)
 	{
+		solAssert(_item.stackInfo.empty(), "Labels with stack info not yet supported.");
 		if (m_state.labels.count(_item.name))
 			//@TODO secondary location
 			m_state.addError(

@@ -94,7 +94,11 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
-	return _label.name + ":";
+	return _label.name + (
+		!_label.stackInfo.empty() ?
+		"[" +  boost::algorithm::join(_label.stackInfo, ", ") + "]" :
+		string()
+	) + ":";
 }
 
 string AsmPrinter::operator()(assembly::Assignment const& _assignment)

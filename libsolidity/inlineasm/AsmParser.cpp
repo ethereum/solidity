@@ -121,6 +121,38 @@ assembly::Statement Parser::parseStatement()
 			return label;
 		}
 	}
+	case Token::LBrack:
+	{
+		if (statement.type() != typeid(assembly::Identifier))
+			fatalParserError("Label name must precede \"[\".");
+		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(statement);
+		Label label = createWithLocation<Label>(identifier.location);
+		label.name = identifier.name;
+		m_scanner->next();
+		if (m_scanner->currentToken() == Token::Number)
+		{
+			label.stackInfo.push_back(m_scanner->currentLiteral());
+			m_scanner->next();
+		}
+		else if (m_scanner->currentToken() == Token::Sub)
+		{
+			m_scanner->next();
+			label.stackInfo.push_back("-" + m_scanner->currentLiteral());
+			expectToken(Token::Number);
+		}
+		else
+			while (true)
+			{
+				label.stackInfo.push_back(expectAsmIdentifier());
+				if (m_scanner->currentToken() == Token::RBrack)
+					break;
+				expectToken(Token::Comma);
+			}
+		expectToken(Token::RBrack);
+		label.location.end = endPosition();
+		expectToken(Token::Colon);
+		return label;
+	}
 	default:
 		break;
 	}
