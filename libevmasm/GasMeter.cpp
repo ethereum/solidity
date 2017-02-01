@@ -165,6 +165,9 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			else
 				gas += GasCosts::expByteGas * 32;
 			break;
+		case Instruction::INVALID:
+			gas += GasConsumption::infinite();
+			break;
 		default:
 			break;
 		}
