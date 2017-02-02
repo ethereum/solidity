@@ -145,11 +145,11 @@ This means that cyclic creation dependencies are impossible.
 
 .. index:: ! visibility, external, public, private, internal
 
-.. _visibility-and-accessors:
+.. _visibility-and-getters:
 
-************************
-Visibility and Accessors
-************************
+**********************
+Visibility and Getters
+**********************
 
 Since Solidity knows two kinds of function calls (internal
 ones that do not create an actual EVM call (also called
@@ -173,7 +173,7 @@ and the default is ``internal``.
 ``public``:
     Public functions are part of the contract
     interface and can be either called internally or via
-    messages. For public state variables, an automatic accessor
+    messages. For public state variables, an automatic getter
     function (see below) is generated.
 
 ``internal``:
@@ -243,12 +243,12 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
         }
     }
 
-.. index:: ! accessor;function, ! function;accessor
+.. index:: ! getter;function, ! function;getter
 
-Accessor Functions
-==================
+Getter Functions
+================
 
-The compiler automatically creates accessor functions for
+The compiler automatically creates getter functions for
 all **public** state variables. For the contract given below, the compiler will
 generate a function called ``data`` that does not take any
 arguments and returns a ``uint``, the value of the state
@@ -271,7 +271,7 @@ be done at declaration.
         }
     }
 
-The accessor functions have external visibility. If the
+The getter functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
 it is evaluated as a state variable and if it is accessed externally
 (i.e. with ``this.``), it is evaluated as a function.
@@ -462,7 +462,7 @@ Functions can be declared constant. These functions promise not to modify the st
     }
 
 .. note::
-  Accessor methods are marked constant.
+  Getter methods are marked constant.
 
 .. warning::
   The compiler does not enforce yet that a constant method is not modifying state.
@@ -882,7 +882,7 @@ Inheriting Different Kinds of Members of the Same Name
 
 When the inheritance results in a contract with a function and a modifier of the same name, it is considered as an error.
 This error is produced also by an event and a modifier of the same name, and a function and an event of the same name.
-As an exception, a state variable accessor can override a public function.
+As an exception, a state variable getter can override a public function.
 
 .. index:: ! contract;abstract, ! abstract contract
 
