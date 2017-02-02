@@ -52,17 +52,33 @@ should be backwards compatible if possible.
 .. code-block:: none
 
     {
+      // Required
       sources:
       {
-        // the keys here are the "global" names of the source files, imports can use other files via remappings (see below)
-        "abc": "contract b{}", // specify source directly
-        // (axic) I think 'keccak' on its on is not enough. I would go perhaps with swarm: "0x12.." and ipfs: "Qma..." for simplicity
-        // (chriseth) Where the content is stored is a second component, but yes, we could give an indication there.
-        "def": {keccak: "0x123..."}, // source has to be retrieved by its hash
-        "ghi": {file: "/tmp/path/to/file.sol"}, // file on filesystem
-        // (axic) I'm inclined to think the source _must_ be provided in the JSON,
-
-        "dir/file.sol": "contract a {}"
+        // The keys here are the "global" names of the source files,
+        // imports can use other files via remappings (see below).
+        "myFile.sol":
+        {
+          // Optional: keccak256 hash of the source file
+          "keccak256": "0x123...",
+          // Required (unless "content" is used, see below): URL(s) to the source file.
+          // URL(s) should be imported in this order and the result checked against the
+          // keccak256 hash (if available). If the hash doesn't match or none of the
+          // URL(s) result in success, an error should be raised.
+          "urls":
+          [
+            "bzzr://56ab...",
+            "ipfs://Qma...",
+            "file:///tmp/path/to/file.sol"
+          ]
+        },
+        "mortal":
+        {
+          // Optional: keccak256 hash of the source file
+          "keccak256": "0x234...",
+          // Required (unless "urls" is used): literal contents of the source file
+          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+        }
       },
       settings:
       {
