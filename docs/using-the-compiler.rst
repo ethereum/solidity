@@ -42,7 +42,18 @@ Using the Compiler API
 
 The compiler API expects a JSON formatted input and outputs the compilations result in a JSON formatted output.
 
-TBD
+See the following pseudo-code:
+
+.. code-block:: none
+
+  // defined by the consumer of the API
+  importCallback(url:string) -> content:string
+
+  // invoking the compiler
+  solc.compile(inputJSON:string, importCallback:function) -> outputJSON:string
+
+The compiler will ask the ``importCallback`` for each URL defined for a source file and will stop when it succeeds.
+If all URLs failed, the compilation results in a failure.
 
 Compiler Input and Output JSON Description
 ******************************************
@@ -66,6 +77,7 @@ Input Description
         "myFile.sol":
         {
           // Optional: keccak256 hash of the source file
+          // It is used to verify the retrieved content if imported via URLs.
           "keccak256": "0x123...",
           // Required (unless "content" is used, see below): URL(s) to the source file.
           // URL(s) should be imported in this order and the result checked against the
