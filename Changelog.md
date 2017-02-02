@@ -3,6 +3,9 @@
 Features:
  * Type system: Support explicit conversion of external function to address.
 
+Bugfixes:
+ * Type system: Disallow arrays with negative length.
+
 ### 0.4.9 (2017-01-31)
 
 Features:

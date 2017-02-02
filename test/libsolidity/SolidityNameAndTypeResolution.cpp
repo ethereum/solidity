@@ -1919,6 +1919,16 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(array_with_negative_length)
+{
+	char const* text = R"(
+		contract c {
+			function f(uint a) { uint8[-1] x; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array with negative length specified");
+}
+
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
 {
 	char const* text = R"(
