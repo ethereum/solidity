@@ -201,7 +201,14 @@ Output Description
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
             abi: [],
             evm: {
-              assembly:
+              // Intermediate representation (string)
+              ir: "",
+              // Assembly (string)
+              assembly: "",
+              // Old-style assembly (string)
+              asm: "",
+              // Old-style assembly (JSON object)
+              asmJSON: [],
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
@@ -221,19 +228,39 @@ Output Description
               }
               // The same layout as above.
               deployedBytecode: { },
-              opcodes:
-              annotatedOpcodes: // (axic) see https://github.com/ethereum/solidity/issues/1178
-              gasEstimates:
+              // Opcodes list (string)
+              opcodes: "",
+              // The list of function hashes
+              methodIdentifiers: {
+                "5c19a95c": "delegate(address)",
+              },
+              // Function gas estimates
+              gasEstimates: {
+                creation: {
+                  dataCost: 420000,
+                  // -1 means infinite (aka. unknown)
+                  executionCost: -1
+                },
+                external: {
+                  "delegate(address)": 25000
+                },
+                internal: {
+                  "heavyLifting()": -1
+                }
+              }
             },
-            functionHashes:
-            metadata: // see the Metadata Output documentation
+            // See the Metadata Output documentation
+            metadata: {},
             ewasm: {
-              wast: // S-expression format
-              wasm: //
+              // S-expressions format
+              wast: "",
+              // Binary format (hex string)
+              wasm: ""
             },
-            userdoc: // Obsolete
-            devdoc: // Obsolete
-            natspec: // Combined dev+userdoc
+            // User documentation (natspec)
+            userdoc: {},
+            // Developer documentation (natspec)
+            devdoc: {}
           }
         }
       },
