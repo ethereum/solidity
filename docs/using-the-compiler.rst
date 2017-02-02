@@ -193,6 +193,15 @@ Output Description
           message: "Invalid keyword"
         }
       ],
+      // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
+      sources: {
+        "sourceFile.sol": {
+          // Identifier (used in source maps)
+          id: 1,
+          // The AST object
+          ast: {}
+        }
+      },
       // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
       contracts: {
         "sourceFile.sol": {
@@ -264,13 +273,6 @@ Output Description
           }
         }
       },
-      formal: {
-        "why3": "..."
-      },
-      sourceList: ["source1.sol", "source2.sol"], // this is important for source references both in the ast as well as in the srcmap in the contract
-      sources: {
-        "source1.sol": {
-          "AST": { ... }
-        }
-      }
+      // Why3 output (string)
+      why3: ""
     }
