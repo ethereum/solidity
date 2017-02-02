@@ -411,6 +411,9 @@ public:
 	/// @returns true if the value is not an integer.
 	bool isFractional() const { return m_value.denominator() != 1; }
 
+	/// @returns true if the value is negative.
+	bool isNegative() const { return m_value < 0; }
+
 private:
 	rational m_value;
 };
