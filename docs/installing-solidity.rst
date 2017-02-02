@@ -25,24 +25,25 @@ without connection to the Internet, you can go to
 https://github.com/ethereum/browser-solidity/tree/gh-pages and
 download the .ZIP file as explained on that page.
 
-
 npm / Node.js
 =============
 
 This is probably the most portable and most convenient way to install Solidity locally.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten for browser-solidity and there is also an npm
-package available.
+into JavaScript using Emscripten. It can be used in projects directly (such as Browser-Solidity).
+Please refer to the `solc-js <https://github.com/ethereum/solc-js>`_ repository for instructions.
 
-To install it, simply use
+It also contains a commandline tool called `solcjs`, which can be installed via npm:
 
 .. code:: bash
 
-    npm install solc
+    npm install -g solc
 
-Details about the usage of the Node.js package can be found in the
-`solc-js repository <https://github.com/ethereum/solc-js>`_.
+.. note::
+
+    The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
+    expecting the behaviour of `solc` will not work with `solcjs`.
 
 Docker
 ======
