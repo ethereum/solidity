@@ -202,28 +202,28 @@ inline unsigned getSwapNumber(Instruction _inst)
 /// @returns the PUSH<_number> instruction
 inline Instruction pushInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, "Invalid PUSH instruction requested.");
+	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, std::string("Invalid PUSH instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
 }
 
 /// @returns the DUP<_number> instruction
 inline Instruction dupInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid DUP instruction requested.");
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid DUP instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::DUP1) + _number - 1);
 }
 
 /// @returns the SWAP<_number> instruction
 inline Instruction swapInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid SWAP instruction requested.");
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid SWAP instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
 }
 
 /// @returns the LOG<_number> instruction
 inline Instruction logInstruction(unsigned _number)
 {
-	assertThrow(_number <= 4, InvalidOpcode, "Invalid LOG instruction requested.");
+	assertThrow(_number <= 4, InvalidOpcode, std::string("Invalid LOG instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
