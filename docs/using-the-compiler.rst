@@ -174,24 +174,27 @@ Output Description
 .. code-block:: none
 
     {
-      errors: ["error1", "error2"], // we might structure them
+      // Optional: not present if no errors/warnings were encountered
       errors: [
-          {
-              // (axic)
-              file: "sourceFile.sol", // optional?
-              contract: "contractName", // optional
-              line: 100, // optional - currently, we always have a byte range in the source file
-              // Errors/warnings originate in several components, most of them are not
-              // backend-specific. Currently, why3 errors are part of the why3 output.
-              // I think it is better to put code-generator-specific errors into the code-generator output
-              // area, and warnings and errors that are code-generator-agnostic into this general area,
-              // so that it is easier to determine whether some source code is invalid or only
-              // triggers errors/warnings in some backend that might only implement some part of solidity.
-              type: "evm" or "why3" or "ewasm" // maybe a better field name would be needed
-              severity: "warning" or "error" // mandatory
-              message: "Invalid keyword" // mandatory
-          }
-      ]
+        {
+          // Optional
+          file: "sourceFile.sol",
+          // Optional
+          contract: "contractName",
+          // Optional
+          line: 100,
+          // Optional
+          column: 0,
+          // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
+          type: "TypeError",
+          // Mandatory: Component where the error originated, such as "general", "why3", "ewasm", etc.
+          component: "general",
+          // Mandatory ("error" or "warning")
+          severity: "error",
+          // Mandatory
+          message: "Invalid keyword"
+        }
+      ],
       // This contains all the compiled outputs. It can be limited/filtered by the compilationTarget setting.
       contracts: {
         "sourceFile.sol:ContractName": {
