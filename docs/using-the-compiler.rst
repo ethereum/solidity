@@ -90,10 +90,6 @@ should be backwards compatible if possible.
           enabled: true,
           runs: 500
         },
-        // If given, only compiles the specified contracts.
-        compilationTarget: {
-          "myFile.sol": "MyContract"
-        },
         // Addresses of the libraries. If not all libraries are given here, it can result in unlinked objects whose output data is different.
         libraries: {
           // The top level key is the the name of the source file where the library is used.
@@ -103,30 +99,47 @@ should be backwards compatible if possible.
             "MyLib": "0x123123..."
           }
         }
-        // The following can be used to restrict the fields the compiler will output.
-        // (axic)
-        outputSelection: [
-            "abi", "evm.assembly", "evm.bytecode", ..., "why3", "ewasm.wasm"
-        ]
+        // The following can be used to select desired outputs.
+        // If this field is omitted, then the compiler loads and does type checking, but will not generate any outputs apart from errors.
+        // The first level key is the file name and the second is the contract name, where empty contract name refers to the file itself,
+        // while the star refers to all of the contracts.
+        //
+        // The available output types are as follows:
+        //   abi - ABI
+        //   ast - AST of all source files
+        //   why3 - Why3 translated output
+        //   devdoc - Developer documentation (natspec)
+        //   userdoc - User documentation (natspec)
+        //   metadata - Metadata
+        //   evm.ir - New assembly format before desugaring (not supported atm)
+        //   evm.assembly - New assembly format after desugaring (not supported atm)
+        //   evm.asm - Current assembly format (--asm)
+        //   evm.asmJSON - Current assembly format in JSON (--asm-json)
+        //   evm.opcodes - Opcodes list
+        //   evm.methodIdentifiers - The list of function hashes
+        //   evm.gasEstimates - Function gas estimates
+        //   evm.bytecode - Bytecode (--bin)
+        //   evm.deployedBytecode - Deployed bytecode (--bin-runtime)
+        //   evm.sourceMap - Source mapping (useful for debugging)
+        //   ewasm.wast - eWASM S-expressions format (not supported atm)
+        //   ewasm.wasm - eWASM binary format (not supported atm)
         outputSelection: {
-        abi,asm,ast,bin,bin-runtime,clone-bin,devdoc,interface,opcodes,srcmap,srcmap-runtime,userdoc
-
- --ast                 AST of all source files.
-  --ast-json            AST of all source files in JSON format.
-  --asm                 EVM assembly of the contracts.
-  --asm-json            EVM assembly of the contracts in JSON format.
-  --opcodes             Opcodes of the contracts.
-  --bin                 Binary of the contracts in hex.
-  --bin-runtime         Binary of the runtime part of the contracts in hex.
-  --clone-bin           Binary of the clone contracts in hex.
-  --abi                 ABI specification of the contracts.
-  --interface           Solidity interface of the contracts.
-  --hashes              Function signature hashes of the contracts.
-  --userdoc             Natspec user documentation of all contracts.
-  --devdoc              Natspec developer documentation of all contracts.
-  --formal              Translated source suitable for formal analysis.
-
-          // to be defined
+          // Enable the metadata and bytecode outputs of every single contract.
+          "*": {
+            "*": [ "metadata", "evm.bytecode" ]
+          },
+          // Enable the abi and opcodes output of MyContract defined in file def.
+          "def": {
+            "MyContract": [ "abi", "evm.opcodes" ]
+          },
+          // Enable the source map output of every single contract.
+          "*": {
+            "*": [ "evm.sourceMap" ]
+          },
+          // Enable the AST and Why3 output of every single file.
+          "*": {
+            "": [ "ast", "why3" ]
+          }
         }
       }
     }
