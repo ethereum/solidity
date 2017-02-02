@@ -204,22 +204,25 @@ Output Description
             abi: [],
             evm: {
               assembly:
-              bytecode:
-              runtimeBytecode:
+              // Bytecode and related details.
+              bytecode: {
+                // The bytecode as a hex string.
+                object: "00fe",
+                // The source mapping as a string. See the source mapping definition.
+                sourceMap: "",
+                // If given, this is an unlinked object.
+                linkReferences: {
+                  "libraryFile.sol": {
+                    // Byte offsets into the bytecode. Linking replaces the 20 bytes located there.
+                    "Library1": [1, 200, 80]
+                  }
+                }
+              }
+              // The same layout as above.
+              deployedBytecode: { },
               opcodes:
               annotatedOpcodes: // (axic) see https://github.com/ethereum/solidity/issues/1178
               gasEstimates:
-              sourceMap:
-              runtimeSourceMap:
-              // If given, this is an unlinked object (cannot be filtered out explicitly, might be
-              // filtered if both bytecode, runtimeBytecode, opcodes and others are filtered out)
-              linkReferences: {
-                "sourceFile.sol:Library1": [1, 200, 80] // byte offsets into bytecode. Linking replaces the 20 bytes there.
-              }
-              // the same for runtimeBytecode - I'm not sure it is a good idea to allow to link libraries differently for the runtime bytecode.
-              // furthermore, runtime bytecode is always a substring of the bytecode anyway.
-              runtimeLinkReferences: {
-              }
             },
             functionHashes:
             metadata: // see the Metadata Output documentation
