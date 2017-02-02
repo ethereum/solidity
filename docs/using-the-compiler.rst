@@ -1,8 +1,11 @@
+******************
+Using the compiler
+******************
+
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
 
 .. _commandline-compiler:
 
-******************************
 Using the Commandline Compiler
 ******************************
 
@@ -32,22 +35,25 @@ Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
+.. _compiler-api:
 
-*****************************************
-Standardized Input and Output Description
-*****************************************
+Using the Compiler API
+**********************
 
 The compiler API expects a JSON formatted input and outputs the compilations result in a JSON formatted output.
+
+TBD
+
+Compiler Input and Output JSON Description
+******************************************
+
+These JSON formats are used by the compiler API as well as are available through ``solc``. These are subject to change,
+some fields are optional (as noted), but it is aimed at to only make backwards compatible changes.
 
 Comments are of course not permitted and used here only for explanatory purposes.
 
 Input Description
 -----------------
-
-QUESTION: How to specific file-reading callback? - probably not as part of json input
-
-The input description is language-specific and could change with each compiler version, but it
-should be backwards compatible if possible.
 
 .. code-block:: none
 
@@ -150,8 +156,8 @@ should be backwards compatible if possible.
     }
 
 
-Regular Output
---------------
+Output Description
+------------------
 
 .. code-block:: none
 
