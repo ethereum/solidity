@@ -100,13 +100,6 @@ case $(uname -s) in
         brew install boost
         brew install cmake
 
-        # We should really 'brew install' our eth client here, but at the time of writing
-        # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
-        # the time being, which is good enough.   The cause of the breaks will go away
-        # when we commit the repository reorg changes anyway.
-        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/v1.3.0/cpp-ethereum-osx-mavericks-v1.3.0.zip
-        unzip cpp-ethereum-osx-mavericks-v1.3.0.zip
-
         ;;
 
 #------------------------------------------------------------------------------
@@ -158,8 +151,7 @@ case $(uname -s) in
                 # All our dependencies can be found in the Alpine Linux official repositories.
                 # See https://pkgs.alpinelinux.org/
 
-                apk update
-                apk add boost-dev build-base cmake
+                apk --no-cache --update add build-base cmake boost-dev git
 
                 ;;
 
@@ -207,7 +199,6 @@ case $(uname -s) in
                 # Install "normal packages"
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     g++ \
@@ -311,17 +302,10 @@ case $(uname -s) in
 
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     git \
                     libboost-all-dev
-
-                # Install 'eth', for use in the Solidity Tests-over-IPC.
-                sudo add-apt-repository -y ppa:ethereum/ethereum
-                sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-                sudo apt-get -y update
-                sudo apt-get -y install eth
 
                 ;;
 

@@ -33,105 +33,106 @@ branches:
         - develop
         - release
         - /^v[0-9]/
+
+env:
+    global:
+        - ENCRYPTION_LABEL="6d4541b72666"
+        - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        - TRAVIS_DOCS=Off
+        - TRAVIS_EMSCRIPTEN=Off
+        - TRAVIS_INSTALL_DEPS=On
+        - TRAVIS_RELEASE=On
+        - NON_IPC_TESTS=On
+        - DOCKER_SOLC=Off
+        - OS_VERSION=
+        - IPC_TESTS=Off
+
 matrix:
     include:
-        # Ubuntu 14.04 LTS "Trusty Tahr"
-        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
-        #
-        # TravisCI doesn't directly support any new Ubuntu releases.  These is
-        # some Docker support, which we should probably investigate, at least for
-        # Ubuntu 16.04 LTS "Xenial Xerus"
-        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          env:
-              - ZIP_SUFFIX=ubuntu-trusty
-
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: clang
-          env:
-              - ZIP_SUFFIX=ubuntu-trusty-clang
-
+        # Ubuntu 14.04 LTS "Trusty Tahr" clang compile
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+            - docker
+        compiler:
+          - clang
+        env:
+          - IPC_TESTS=On
+          - OS_VERSION="Ubuntu-Clang"
+        # Ubuntu 14.04 LTS "Trusty Tahr" gcc compile
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+            - docker
+        compiler:
+          - gcc
+        env:
+          - OS_VERSION="Ubuntu-Gcc"
+        # Docker image in Alpine
+      - os: linux
+        dist: trusty 
+        sudo: required
+        services:
+          - docker
+        env: 
+            - DOCKER_SOLC=On
+            - OS_VERSION="Docker"
+            - TRAVIS_RELEASE=Off
+            - TRAVIS_INSTALL_DEPS=Off
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          env:
-              - TRAVIS_DOCS=On
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
-
+      - os: linux
+        dist: trusty
+        sudo: required
+        before_install: apt-get -y install python-sphinx
+        env:
+            - TRAVIS_DOCS=On
+            - TRAVIS_RELEASE=Off
+            - TRAVIS_TESTS=Off
+            - TRAVIS_INSTALL_DEPS=Off
         # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
         # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
         # and in other Ethereum web-based development contexts.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          node_js: stable
-          services:
-              - docker
-          before_install:
-              - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
-          env:
-              - TRAVIS_EMSCRIPTEN=On
-              - TRAVIS_INSTALL_DEPS=Off
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
+      - os: linux
+        dist: trusty
+        sudo: required
+        compiler: gcc
+        node_js: stable
+        services:
+            - docker
+        before_install:
+            - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
+        env:
+            - TRAVIS_EMSCRIPTEN=On
+            - TRAVIS_INSTALL_DEPS=Off
+            - TRAVIS_RELEASE=Off
+            - TRAVIS_TESTS=Off
+        # OS X images (assumes clang)
 
-        # OS X Mavericks (10.9)
-        # https://en.wikipedia.org/wiki/OS_X_Mavericks
-        #
-# Disabled because of problems on travis.
-#        - os: osx
-#          osx_image: beta-xcode6.2
-#          env:
-#              - ZIP_SUFFIX=osx-mavericks
-
-        # OS X Yosemite (10.10)
-        # https://en.wikipedia.org/wiki/OS_X_Yosemite
-        #
-#        - os: osx
-#          osx_image: xcode7.1
-#          env:
-#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
-#              - ZIP_SUFFIX=osx-yosemite
-
-        # OS X El Capitan (10.11)
-        # https://en.wikipedia.org/wiki/OS_X_El_Capitan
-        #
-#        - os: osx
-#          osx_image: xcode7.3
-#          env:
-#              # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
-#              # See https://github.com/ethereum/webthree-umbrella/issues/565
-#              - TRAVIS_BUILD_TYPE=Debug
-#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
-#              - ZIP_SUFFIX=osx-elcapitan
-
-        # macOS Sierra (10.12)
-        # https://en.wikipedia.org/wiki/MacOS_Sierra
-        #
-#       - os: osx
-#          osx_image: xcode8
-#          env:
-#              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
-#              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
-#              - TRAVIS_BUILD_TYPE=Debug
-#              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
-#              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
-#              - ZIP_SUFFIX=macos-sierra
-
+        # Yosemite
+      - os: osx
+        osx_image: xcode6.4
+        env:
+          - OS_VERSION="OSX-xcode6.4"
+        # El Capitan
+      - os: osx
+        osx_image: xcode7.3
+        env:
+          - OS_VERSION="OSX-xcode7.3"
+      - os: osx
+        osx_image: xcode8
+        env:
+          - OS_VERSION="OSX-xcode8"
+        # Sierra
+      - os: osx
+        osx_image: xcode8.1
+        env:
+          - OS_VERSION="OSX-xcode8.1"
+      - os: osx
+        osx_image: xcode8.2
+        env:
+          - OS_VERSION="OSX-xcode8.2"
 git:
     depth: 2
 
@@ -143,42 +144,18 @@ cache:
         - $HOME/.local
 
 install:
-    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
-    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
+    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/travis/travis_install_deps.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
+    - test $IPC_TESTS != On || docker pull ethereum/client-cpp
+
 before_script:
-    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || (mkdir -p build
-      && cd build
-      && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
-      && make -j2
-      && cd ..
-      && ./scripts/release.sh $ZIP_SUFFIX
-      && ./scripts/create_source_tarball.sh )
+    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/travis/build_emscripten.sh
+    - test $TRAVIS_RELEASE != On || ./scripts/build.sh $TRAVIS_BUILD_TYPE
+    - test $DOCKER_SOLC != On || docker build --build-arg TEST=On --build-arg BUILD=$TRAVIS_BUILD_TYPE -t ethereum/solc:build -f ./scripts/Dockerfile $TRAVIS_BUILD_DIR
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
-
-    # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
-    # up to 3 times before giving up and declaring the tests as broken.
-    #
-    # We should aim to remove this "retry logic" as soon as we can, because it is a
-    # band-aid for issues which need solving at their root.  Some of those issues will be
-    # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
-    # itself is broken from the failure messages which we are seeing.
-    #
-    # More details on known issues at https://github.com/ethereum/solidity/issues/769
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
-env:
-    global:
-        - ENCRYPTION_LABEL="6d4541b72666"
-        - TRAVIS_BUILD_TYPE=RelWithDebInfo
-        - TRAVIS_DOCS=Off
-        - TRAVIS_EMSCRIPTEN=Off
-        - TRAVIS_INSTALL_DEPS=On
-        - TRAVIS_RELEASE=On
-        - TRAVIS_TESTS=On
-
+    - test $NON_IPC_TESTS != On || ./scripts/run_non_ipc_tests_and_collect_binaries.sh
+    - test $IPC_TESTS != On || ./scripts/run_ipc_tests.sh
 deploy:
     # This is the deploy target for the Emscripten build.
     # It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'

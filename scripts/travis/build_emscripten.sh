@@ -35,6 +35,6 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     else
         date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
     fi
-    ./scripts/travis-emscripten/install_deps.sh
-    docker run -v $(pwd):/src trzeci/emscripten:sdk-tag-1.35.4-64bit ./scripts/travis-emscripten/build_emscripten.sh
+    ./scripts/travis/travis-emscripten/install_deps.sh
+    docker run -v $(pwd):/src trzeci/emscripten:sdk-tag-1.35.4-64bit ./scripts/travis/travis-emscripten/build_emscripten.sh
 fi
