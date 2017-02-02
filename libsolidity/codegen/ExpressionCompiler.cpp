@@ -1460,7 +1460,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				<< Instruction::ISZERO;
 			// y, x, (x == 2 ** 255), (y == -1)
 			m_context << Instruction::AND;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 		}
 
 		if (_operator == Token::Div)
