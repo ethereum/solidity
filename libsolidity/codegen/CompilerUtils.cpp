@@ -200,6 +200,7 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
+			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using less variables.");
 		}
 		else
 		{
