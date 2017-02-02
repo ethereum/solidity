@@ -109,8 +109,7 @@ that does not allow any arithmetic operations. It is suitable for
 storing addresses of contracts or keypairs belonging to external
 persons. The keyword ``public`` automatically generates a function that
 allows you to access the current value of the state variable.
-Without this keyword, other contracts have no way to access the variable
-and only the code of this contract can write to it.
+Without this keyword, other contracts have no way to access the variable.
 The function will look something like this::
 
     function minter() returns (address) { return minter; }
