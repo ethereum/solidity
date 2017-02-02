@@ -90,6 +90,11 @@ should be backwards compatible if possible.
           enabled: true,
           runs: 500
         },
+        // Metadata settings (optional)
+        metadata: {
+          // Use only literal content and not URLs (false by default)
+          useLiteralContent: true
+        },
         // Addresses of the libraries. If not all libraries are given here, it can result in unlinked objects whose output data is different.
         libraries: {
           // The top level key is the the name of the source file where the library is used.
