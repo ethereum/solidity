@@ -195,13 +195,14 @@ Output Description
           message: "Invalid keyword"
         }
       ],
-      // This contains all the compiled outputs. It can be limited/filtered by the compilationTarget setting.
+      // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
       contracts: {
-        "sourceFile.sol:ContractName": {
-          // The Ethereum Contract ABI. If empty, it is represented as an empty array.
-          // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
-          abi: [],
-          evm: {
+        "sourceFile.sol": {
+          "ContractName": {
+            // The Ethereum Contract ABI. If empty, it is represented as an empty array.
+            // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
+            abi: [],
+            evm: {
               assembly:
               bytecode:
               runtimeBytecode:
@@ -219,16 +220,17 @@ Output Description
               // furthermore, runtime bytecode is always a substring of the bytecode anyway.
               runtimeLinkReferences: {
               }
-          },
-          functionHashes:
-          metadata: // see the Metadata Output documentation
-          ewasm: {
+            },
+            functionHashes:
+            metadata: // see the Metadata Output documentation
+            ewasm: {
               wast: // S-expression format
               wasm: //
-          },
-          userdoc: // Obsolete
-          devdoc: // Obsolete
-          natspec: // Combined dev+userdoc
+            },
+            userdoc: // Obsolete
+            devdoc: // Obsolete
+            natspec: // Combined dev+userdoc
+          }
         }
       },
       formal: {
