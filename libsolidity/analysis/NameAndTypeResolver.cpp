@@ -104,29 +104,18 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					}
 					else
 						for (Declaration const* declaration: declarations)
-						{
-							ASTString const* name = alias.second ? alias.second.get() : &declaration->name();
-							if (!target.registerDeclaration(*declaration, name))
-							{
-								m_errorReporter.declarationError(
-									imp->location(),
-									"Identifier \"" + *name + "\" already declared."
-								);
+							if (!DeclarationRegistrationHelper::registerDeclaration(
+								target, *declaration, alias.second.get(), &imp->location(), true, m_errorReporter
+							))
 								error = true;
-							}
-						}
 				}
 			else if (imp->name().empty())
 				for (auto const& nameAndDeclaration: scope->second->declarations())
 					for (auto const& declaration: nameAndDeclaration.second)
-						if (!target.registerDeclaration(*declaration, &nameAndDeclaration.first))
-						{
-							m_errorReporter.declarationError(
-								imp->location(),
-								"Identifier \"" + nameAndDeclaration.first + "\" already declared."
-							);
-							error = true;
-						}
+						if (!DeclarationRegistrationHelper::registerDeclaration(
+							target, *declaration, &nameAndDeclaration.first, &imp->location(), true, m_errorReporter
+						))
+							error =  true;
 		}
 	return !error;
 }
@@ -450,6 +439,75 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	solAssert(m_currentScope == _currentScope, "Scopes not correctly closed.");
 }
 
+bool DeclarationRegistrationHelper::registerDeclaration(
+	DeclarationContainer& _container,
+	Declaration const& _declaration,
+	string const* _name,
+	SourceLocation const* _errorLocation,
+	bool _warnOnShadow,
+	ErrorReporter& _errorReporter
+)
+{
+	if (!_errorLocation)
+		_errorLocation = &_declaration.location();
+
+	Declaration const* shadowedDeclaration = nullptr;
+	if (_warnOnShadow && !_declaration.name().empty())
+		for (auto const* decl: _container.resolveName(_declaration.name(), true))
+			if (decl != &_declaration)
+			{
+				shadowedDeclaration = decl;
+				break;
+			}
+
+	if (!_container.registerDeclaration(_declaration, _name, !_declaration.isVisibleInContract()))
+	{
+		SourceLocation firstDeclarationLocation;
+		SourceLocation secondDeclarationLocation;
+		Declaration const* conflictingDeclaration = _container.conflictingDeclaration(_declaration, _name);
+		solAssert(conflictingDeclaration, "");
+		bool const comparable =
+			_errorLocation->sourceName &&
+			conflictingDeclaration->location().sourceName &&
+			*_errorLocation->sourceName == *conflictingDeclaration->location().sourceName;
+		if (comparable && _errorLocation->start < conflictingDeclaration->location().start)
+		{
+			firstDeclarationLocation = *_errorLocation;
+			secondDeclarationLocation = conflictingDeclaration->location();
+		}
+		else
+		{
+			firstDeclarationLocation = conflictingDeclaration->location();
+			secondDeclarationLocation = *_errorLocation;
+		}
+
+		_errorReporter.declarationError(
+			secondDeclarationLocation,
+			SecondarySourceLocation().append("The previous declaration is here:", firstDeclarationLocation),
+			"Identifier already declared."
+		);
+		return false;
+	}
+	else if (shadowedDeclaration)
+	{
+		if (dynamic_cast<MagicVariableDeclaration const*>(shadowedDeclaration))
+			_errorReporter.warning(
+				_declaration.location(),
+				"This declaration shadows a builtin symbol."
+			);
+		else
+		{
+			auto shadowedLocation = shadowedDeclaration->location();
+			_errorReporter.warning(
+				_declaration.location(),
+				"This declaration shadows an existing declaration.",
+				SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation)
+			);
+		}
+	}
+	return true;
+}
+
 bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 {
 	if (!m_scopes[&_sourceUnit])
@@ -590,30 +648,21 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
 	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
-	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
-	{
-		SourceLocation firstDeclarationLocation;
-		SourceLocation secondDeclarationLocation;
-		Declaration const* conflictingDeclaration = m_scopes[m_currentScope]->conflictingDeclaration(_declaration);
-		solAssert(conflictingDeclaration, "");
 
-		if (_declaration.location().start < conflictingDeclaration->location().start)
-		{
-			firstDeclarationLocation = _declaration.location();
-			secondDeclarationLocation = conflictingDeclaration->location();
-		}
-		else
-		{
-			firstDeclarationLocation = conflictingDeclaration->location();
-			secondDeclarationLocation = _declaration.location();
-		}
+	bool warnAboutShadowing = true;
+	// Do not warn about shadowing for structs and enums because their members are
+	// not accessible without prefixes.
+	if (
+		dynamic_cast<StructDefinition const*>(m_currentScope) ||
+		dynamic_cast<EnumDefinition const*>(m_currentScope)
+	)
+		warnAboutShadowing = false;
+	// Do not warn about the constructor shadowing the contract.
+	if (auto fun = dynamic_cast<FunctionDefinition const*>(&_declaration))
+		if (fun->isConstructor())
+			warnAboutShadowing = false;
 
-		m_errorReporter.declarationError(
-			secondDeclarationLocation,
-			SecondarySourceLocation().append("The previous declaration is here:", firstDeclarationLocation),
-			"Identifier already declared."
-		);
-	}
+	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, m_errorReporter);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)

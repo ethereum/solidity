@@ -136,6 +136,15 @@ public:
 		ASTNode const* _currentScope = nullptr
 	);
 
+	static bool registerDeclaration(
+		DeclarationContainer& _container,
+		Declaration const& _declaration,
+		std::string const* _name,
+		SourceLocation const* _errorLocation,
+		bool _warnOnShadow,
+		ErrorReporter& _errorReporter
+	);
+
 private:
 	bool visit(SourceUnit& _sourceUnit) override;
 	void endVisit(SourceUnit& _sourceUnit) override;
