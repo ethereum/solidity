@@ -179,12 +179,10 @@ Output Description
         {
           // Optional
           file: "sourceFile.sol",
-          // Optional
-          contract: "contractName",
-          // Optional
-          line: 100,
-          // Optional
-          column: 0,
+          // Optional: Location within the source file.
+          sourceLocation: [
+            { start: 0, end: 100 },
+          ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
           type: "TypeError",
           // Mandatory: Component where the error originated, such as "general", "why3", "ewasm", etc.
