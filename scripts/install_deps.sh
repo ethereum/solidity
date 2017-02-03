@@ -57,7 +57,7 @@ detect_linux_distro() {
         # extract 'foo' from NAME=foo, only on the line with NAME=foo
         DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
     elif [ -f /etc/centos-release ]; then
-	DISTRO=CentOS
+    DISTRO=CentOS
     else
         DISTRO=''
     fi
@@ -93,19 +93,17 @@ case $(uname -s) in
 
         # Check for Homebrew install and abort if it is not installed.
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires a Homebrew install.  See http://brew.sh."; exit 1; }
-
         brew update
-        brew upgrade
-
         brew install boost
         brew install cmake
-
-        # We should really 'brew install' our eth client here, but at the time of writing
-        # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
-        # the time being, which is good enough.   The cause of the breaks will go away
-        # when we commit the repository reorg changes anyway.
-        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/v1.3.0/cpp-ethereum-osx-mavericks-v1.3.0.zip
-        unzip cpp-ethereum-osx-mavericks-v1.3.0.zip
+        if ["$CI" = true]; then
+            brew upgrade cmake
+            brew tap ethereum/ethereum
+            brew install cpp-ethereum
+            brew linkapps cpp-ethereum
+        else
+            brew upgrade
+        fi
 
         ;;
 
@@ -207,7 +205,6 @@ case $(uname -s) in
                 # Install "normal packages"
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     g++ \
@@ -311,17 +308,17 @@ case $(uname -s) in
 
                 sudo apt-get -y update
                 sudo apt-get -y install \
-                    python-sphinx \
                     build-essential \
                     cmake \
                     git \
                     libboost-all-dev
-
-                # Install 'eth', for use in the Solidity Tests-over-IPC.
-                sudo add-apt-repository -y ppa:ethereum/ethereum
-                sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-                sudo apt-get -y update
-                sudo apt-get -y install eth
+                if [ "$CI" = true ]; then
+                    # Install 'eth', for use in the Solidity Tests-over-IPC.
+                    sudo add-apt-repository -y ppa:ethereum/ethereum
+                    sudo add-apt-repository -y ppa:ethereum/ethereum-dev
+                    sudo apt-get -y update
+                    sudo apt-get -y install eth
+                fi
 
                 ;;
 
