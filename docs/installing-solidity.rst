@@ -201,7 +201,8 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
 or even easier:
 
 .. code:: bash
-
+    
+    #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
 
 And even for Windows:
