@@ -148,11 +148,7 @@ install:
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 before_script:
     - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || (mkdir -p build
-      && cd build
-      && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
-      && make -j2
-      && cd ..
+    - test $TRAVIS_RELEASE != On || (./scripts/build.sh $TRAVIS_BUILD_TYPE
       && ./scripts/release.sh $ZIP_SUFFIX
       && ./scripts/create_source_tarball.sh )
 script:
