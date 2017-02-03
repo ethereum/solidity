@@ -427,7 +427,7 @@ Tips and Tricks
 
 * Use ``delete`` on arrays to delete all its elements.
 * Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple SSTORE operations might be combined into a single (SSTORE costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
-* Make your state variables public - the compiler will create :ref:`getters <visibility-and-accessors>` for you for free.
+* Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you for free.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
 * Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
@@ -541,7 +541,7 @@ Function Visibility Specifiers
         return true;
     }
 
-- ``public``: visible externally and internally (creates accessor function for storage/state variables)
+- ``public``: visible externally and internally (creates getter function for storage/state variables)
 - ``private``: only visible in the current contract
 - ``external``: only visible externally (only for functions) - i.e. can only be message-called (via ``this.func``)
 - ``internal``: only visible internally

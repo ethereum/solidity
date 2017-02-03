@@ -393,7 +393,7 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If you convert a value too big or negative into an enum type.
 #. If you perform an external function call targeting a contract that contains no code.
 #. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public accessor function.
+#. If your contract receives Ether via a public getter function.
 #. If you call a zero-initialized variable of internal function type.
 
 Internally, Solidity performs an "invalid jump" when a user-provided exception is thrown. In contrast, it performs an invalid operation
