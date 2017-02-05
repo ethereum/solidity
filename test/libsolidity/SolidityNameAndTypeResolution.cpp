@@ -4506,7 +4506,7 @@ BOOST_AUTO_TEST_CASE(var_handle_divided_integers)
 			}
 		}
 	)";
-	CHECK_SUCCESS(text);	
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
@@ -6371,6 +6371,20 @@ BOOST_AUTO_TEST_CASE(modifiers_access_storage_pointer)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(using_this_in_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() {
+				this.f();
+			}
+			function f() {
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"this\" used in constructor");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
