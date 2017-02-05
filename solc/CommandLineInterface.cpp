@@ -200,7 +200,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argCloneBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
 		else
 		{
 			cout << "Clone Binary: " << endl;
@@ -210,7 +210,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
@@ -222,7 +222,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		cout << "Opcodes: " << endl;
@@ -249,7 +249,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".signatures", out);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
 		cout << "Function signatures: " << endl << out;
 }
@@ -261,7 +261,7 @@ void CommandLineInterface::handleOnChainMetadata(string const& _contract)
 
 	string data = m_compiler->onChainMetadata(_contract);
 	if (m_args.count("output-dir"))
-		createFile(_contract + "_meta.json", data);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
 		cout << "Metadata: " << endl << data << endl;
 }
@@ -302,7 +302,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 			output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
 
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + suffix, output);
+			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
 		else
 		{
 			cout << title << endl;
@@ -981,7 +981,7 @@ void CommandLineInterface::outputCompilationResults()
 			{
 				stringstream data;
 				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJson));
-				createFile(contract + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
+				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
 			}
 			else
 			{
