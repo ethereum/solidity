@@ -461,7 +461,9 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	namespace fs = boost::filesystem;
 	// create directory if not existent
 	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	fs::create_directories(p);
+	// Do not try creating the directory if the first item is . or ..
+	if (p.filename() != "." && p.filename() != "..")
+		fs::create_directories(p);
 	string pathName = (p / _fileName).string();
 	ofstream outFile(pathName);
 	outFile << _data;
