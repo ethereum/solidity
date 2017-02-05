@@ -1681,6 +1681,42 @@ BOOST_AUTO_TEST_CASE(send_ether)
 	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
+BOOST_AUTO_TEST_CASE(transfer_ether)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function A() payable {}
+			function a(address addr, uint amount) returns (uint) {
+				addr.transfer(amount);
+				return this.balance;
+			}
+			function b(address addr, uint amount) {
+				addr.transfer(amount);
+			}
+		}
+
+		contract B {
+		}
+
+		contract C {
+			function () payable {
+				throw;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+	u160 const nonPayableRecipient = m_contractAddress;
+	compileAndRun(sourceCode, 0, "C");
+	u160 const oogRecipient = m_contractAddress;
+	compileAndRun(sourceCode, 20, "A");
+	u160 payableRecipient(23);
+	BOOST_CHECK(callContractFunction("a(address,uint256)", payableRecipient, 10) == encodeArgs(10));
+	BOOST_CHECK_EQUAL(balanceAt(payableRecipient), 10);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
+	BOOST_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10) == encodeArgs());
+	BOOST_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10) == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(log0)
 {
 	char const* sourceCode = R"(
