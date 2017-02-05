@@ -1,4 +1,7 @@
 ### 0.4.12 (unreleased)
+
+Features:
+ * Type checker: Warn if using ``this`` in a constructor.
  * AST: export all attributes to Json format
 
 Bugfixes:
