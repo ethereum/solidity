@@ -177,11 +177,11 @@ Output Description
       // Optional: not present if no errors/warnings were encountered
       errors: [
         {
-          // Optional
-          file: "sourceFile.sol",
           // Optional: Location within the source file.
-          sourceLocation: [
-            { start: 0, end: 100 },
+          sourceLocation: {
+            file: "sourceFile.sol",
+            start: 0,
+            end: 100
           ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
           type: "TypeError",
