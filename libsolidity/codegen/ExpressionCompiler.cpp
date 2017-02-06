@@ -620,7 +620,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
-			m_context << u256(eth::GasCosts::callStipend);
+			if (!function.gasSet())
+				m_context << u256(eth::GasCosts::callStipend);
 			arguments.front()->accept(*this);
 			utils().convertType(
 				*arguments.front()->annotation().type,

@@ -1693,6 +1693,10 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 			function b(address addr, uint amount) {
 				addr.transfer(amount);
 			}
+			function c(address addr, uint amount, uint gas) returns (uint) {
+				addr.transfer.gas(gas)(amount);
+				return this.balance;
+			}
 		}
 
 		contract B {
@@ -1715,6 +1719,8 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
 	BOOST_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10) == encodeArgs());
 	BOOST_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10) == encodeArgs());
+	BOOST_CHECK(callContractFunction("c(address,uint256,uint256)", payableRecipient, 1, 9000) == encodeArgs(9));
+	BOOST_CHECK(callContractFunction("c(address,uint256,uint256)", payableRecipient, 1, 0) == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(log0)
