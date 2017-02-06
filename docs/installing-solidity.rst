@@ -83,6 +83,12 @@ If you want to use the cutting edge developer version:
     sudo apt-get update
     sudo apt-get install solc
 
+Arch Linux also has packages, albeit limited to the latest development version:
+
+.. code:: bash
+
+    pacman -S solidity-git
+
 Homebrew is missing pre-built bottles at the time of writing,
 following a Jenkins to TravisCI migration, but Homebrew
 should still work just fine as a means to build-from-source.
