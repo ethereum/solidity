@@ -200,7 +200,8 @@ struct UnreachableCode
 			it[0] != Instruction::RETURN &&
 			it[0] != Instruction::STOP &&
 			it[0] != Instruction::INVALID &&
-			it[0] != Instruction::SELFDESTRUCT
+			it[0] != Instruction::SELFDESTRUCT &&
+			it[0] != Instruction::REVERT
 		)
 			return false;
 
