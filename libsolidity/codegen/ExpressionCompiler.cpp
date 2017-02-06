@@ -650,6 +650,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
 			break;
+		case Location::Revert:
+			// memory offset returned - zero length
+			m_context << u256(0) << u256(0);
+			m_context << Instruction::REVERT;
+			break;
 		case Location::SHA3:
 		{
 			TypePointers argumentTypes;

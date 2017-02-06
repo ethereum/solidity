@@ -2095,6 +2095,7 @@ string FunctionType::identifier() const
 	case Location::Send: id += "send"; break;
 	case Location::SHA3: id += "sha3"; break;
 	case Location::Selfdestruct: id += "selfdestruct"; break;
+	case Location::Revert: id += "revert"; break;
 	case Location::ECRecover: id += "ecrecover"; break;
 	case Location::SHA256: id += "sha256"; break;
 	case Location::RIPEMD160: id += "ripemd160"; break;
