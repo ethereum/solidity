@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2016 solidity contributors.
+# (c) 2016-2017 solidity contributors.
 #------------------------------------------------------------------------------
 
 language: cpp
@@ -73,7 +73,7 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
-          node_js: stable
+          node_js: "5"
           services:
               - docker
           before_install:
