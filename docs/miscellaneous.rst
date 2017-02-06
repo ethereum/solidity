@@ -137,31 +137,6 @@ Different types have different rules for cleaning up invalid values:
 |               |               |will be thrown     |
 +---------------+---------------+-------------------+
 
-
-*****************
-Esoteric Features
-*****************
-
-There are some types in Solidity's type system that have no counterpart in the syntax. One of these types are the types of functions. But still, using ``var`` it is possible to have local variables of these types::
-
-    contract FunctionSelector {
-      function select(bool useB, uint x) returns (uint z) {
-        var f = a;
-        if (useB) f = b;
-        return f(x);
-      }
-
-      function a(uint x) returns (uint z) {
-        return x * x;
-      }
-
-      function b(uint x) returns (uint z) {
-        return 2 * x;
-      }
-    }
-
-Calling ``select(false, x)`` will compute ``x * x`` and ``select(true, x)`` will compute ``2 * x``.
-
 .. index:: optimizer, common subexpression elimination, constant propagation
 
 *************************
