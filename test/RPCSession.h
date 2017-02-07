@@ -92,6 +92,7 @@ public:
 		std::string gasUsed;
 		std::string contractAddress;
 		std::vector<LogEntry> logEntries;
+		std::string blockNumber;
 	};
 
 	static RPCSession& instance(std::string const& _path);

@@ -138,6 +138,7 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 	BOOST_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
+	receipt.blockNumber = result["blockNumber"].asString();
 	for (auto const& log: result["logs"])
 	{
 		LogEntry entry;
