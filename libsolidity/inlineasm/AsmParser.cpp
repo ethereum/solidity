@@ -152,8 +152,8 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 			s_instructions[name] = instruction.second;
 		}
 
-		// add alias for selfdestruct
-		s_instructions["selfdestruct"] = solidity::Instruction::SUICIDE;
+		// add alias for suicide
+		s_instructions["suicide"] = solidity::Instruction::SELFDESTRUCT;
 	}
 	return s_instructions;
 }

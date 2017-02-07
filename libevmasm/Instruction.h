@@ -178,7 +178,7 @@ enum class Instruction: uint8_t
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
 
 	INVALID = 0xfe,		///< invalid instruction for expressing runtime errors (e.g., division-by-zero)
-	SUICIDE = 0xff		///< halt execution and register account for later deletion
+	SELFDESTRUCT = 0xff	///< halt execution and register account for later deletion
 };
 
 /// @returns the number of PUSH Instruction _inst
