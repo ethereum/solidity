@@ -1482,9 +1482,12 @@ BOOST_AUTO_TEST_CASE(now)
 			}
 		}
 	)";
-	m_rpc.test_modifyTimestamp(0x776347e2);
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true, 0x776347e3));
+	u256 startBlock = m_blockNumber;
+	auto ret = callContractFunction("someInfo()");
+	u256 endBlock = m_blockNumber;
+	BOOST_CHECK(startBlock != endBlock);
+	BOOST_CHECK(ret == encodeArgs(true, blockTimestamp(endBlock)));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
