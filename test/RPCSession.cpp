@@ -111,7 +111,9 @@ string IPCSocket::sendRequest(string const& _req)
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
-	cerr << ".";  //Output for log activity
+	// This is needed for Appveyor, otherwise it may terminate
+	// the session due to the inactivity.
+	cerr << ".";
 	return returnStr;
 #else
 	send(m_socket, _req.c_str(), _req.length(), 0);
@@ -189,7 +191,7 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
-	rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) });
+	BOOST_CHECK(rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }) == true);
 }
 
 string RPCSession::personal_newAccount(string const& _password)
@@ -233,18 +235,18 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-	rpcCall("test_setChainParams", { _config });
+	BOOST_CHECK(rpcCall("test_setChainParams", { _config }) == true);
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-	rpcCall("test_rewindToBlock", { to_string(_blockNr) });
+	BOOST_CHECK(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
 }
 
 void RPCSession::test_mineBlocks(int _number)
 {
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-	rpcCall("test_mineBlocks", { to_string(_number) }, true);
+	BOOST_CHECK(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
 	bool mined = false;
 
@@ -283,7 +285,7 @@ void RPCSession::test_mineBlocks(int _number)
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-	rpcCall("test_modifyTimestamp", { to_string(_timestamp) });
+	BOOST_CHECK(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
