@@ -252,7 +252,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		docString,
 		baseContracts,
 		subNodes,
-		_isLibrary
+		_isLibrary ? ContractDefinition::ContractKind::Library : ContractDefinition::ContractKind::Contract
 	);
 }
 
