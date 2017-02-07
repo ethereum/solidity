@@ -354,6 +354,9 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_inheritance.location(), "Interfaces cannot inherit.");
+
 	if (base->isLibrary())
 		typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
@@ -396,6 +399,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 bool TypeChecker::visit(StructDefinition const& _struct)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_struct.location(), "Structs cannot be defined in interfaces.");
+
 	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		if (!type(*member)->canBeStored())
 			typeError(member->location(), "Type cannot be used in struct.");
@@ -452,12 +458,19 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			vector<ContractDefinition const*>()
 		);
 	if (_function.isImplemented())
+	{
+		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+			typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
 		_function.body().accept(*this);
+	}
 	return false;
 }
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_variable.location(), "Variables cannot be defined in interfaces.");
+
 	// Variables can be declared without type (with "var"), in which case the first assignment
 	// sets the type.
 	// Note that assignments before the first declaration are legal because of the special scoping
