@@ -57,7 +57,7 @@ detect_linux_distro() {
         # extract 'foo' from NAME=foo, only on the line with NAME=foo
         DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
     elif [ -f /etc/centos-release ]; then
-    DISTRO=CentOS
+        DISTRO=CentOS
     else
         DISTRO=''
     fi

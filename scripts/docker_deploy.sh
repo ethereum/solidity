@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-version=version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/CMakeLists.txt)
+version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/CMakeLists.txt)
 if [ "$TRAVIS_BRANCH" == "develop" ]; then
 	docker tag ethereum/solc:build ethereum/solc:nightly;
 	docker tag ethereum/solc:build ethereum/solc:nightly-"$version"-"$TRAVIS_COMMIT"
