@@ -648,7 +648,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
-			m_context << Instruction::SUICIDE;
+			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case Location::SHA3:
 		{
