@@ -302,7 +302,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	//cout << "Reply: " << reply << endl;
 
 	Json::Value result;
-	Json::Reader().parse(reply, result, false);
+	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
 
 	if (result.isMember("error"))
 	{
