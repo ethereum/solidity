@@ -75,6 +75,8 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
 
 	m_fp = fdopen(m_socket, "r");
+	if (!m_fp)
+		BOOST_FAIL("Error opening IPC socket: " << _path);
 #endif
 }
 
