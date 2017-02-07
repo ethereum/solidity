@@ -73,10 +73,6 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
-
-	m_fp = fdopen(m_socket, "r");
-	if (!m_fp)
-		BOOST_FAIL("Error opening IPC socket: " << _path);
 #endif
 }
 
@@ -113,11 +109,12 @@ string IPCSocket::sendRequest(string const& _req)
 
 	return returnStr;
 #else
-	send(m_socket, _req.c_str(), _req.length(), 0);
+	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
+		BOOST_FAIL("Writing on IPC failed");
 
 	char c;
 	string response;
-	while ((c = fgetc(m_fp)) != EOF)
+	while (recv(m_socket, &c, 1, 0) == 1)
 	{
 		if (c != '\n')
 			response += c;
