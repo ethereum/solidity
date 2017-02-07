@@ -55,12 +55,11 @@ class IPCSocket: public boost::noncopyable
 public:
 	IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { close(m_socket); fclose(m_fp); }
+	~IPCSocket() { close(m_socket); }
 
 	std::string const& path() const { return m_path; }
 
 private:
-	FILE *m_fp;
 	std::string m_path;
 	int m_socket;
 };
