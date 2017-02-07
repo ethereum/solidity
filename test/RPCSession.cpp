@@ -96,13 +96,13 @@ string IPCSocket::sendRequest(string const& _req)
 
 	// Read from the pipe.
 	fSuccess = ReadFile(
-		m_socket,  // pipe handle
-		chBuf,     // buffer to receive reply
-		c_buffsize,// size of buffer
-		&cbRead,   // number of bytes read
-		NULL);     // not overlapped
+		m_socket,          // pipe handle
+		m_readBuf,         // buffer to receive reply
+		sizeof(m_readBuf), // size of buffer
+		&cbRead,           // number of bytes read
+		NULL);             // not overlapped
 
-	returnStr += chBuf;
+	returnStr += m_readBuf;
 
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
@@ -115,16 +115,12 @@ string IPCSocket::sendRequest(string const& _req)
 	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
 		BOOST_FAIL("Writing on IPC failed");
 
-	char c;
-	string response;
-	while (recv(m_socket, &c, 1, 0) == 1)
-	{
-		if (c != '\n')
-			response += c;
-		else
-			break;
-	}
-	return response;
+	ssize_t ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+
+	if (ret < 0)
+		BOOST_FAIL("Reading on IPC failed");
+
+	return string(m_readBuf, m_readBuf + ret);
 #endif
 }
 

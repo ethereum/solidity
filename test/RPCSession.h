@@ -35,7 +35,6 @@
 #include <boost/test/unit_test.hpp>
 
 #if defined(_WIN32)
-const int c_buffsize = 5120000; //because windows pipe is broken and wont work as in examples. use larger buffer limit to receive whole package in one call
 class IPCSocket : public boost::noncopyable
 {
 public:
@@ -47,7 +46,8 @@ public:
 
 private:
 	std::string m_path;
-	HANDLE  m_socket;
+	HANDLE m_socket;
+	TCHAR m_readBuf[512000];
 };
 #else
 class IPCSocket: public boost::noncopyable
@@ -62,6 +62,7 @@ public:
 private:
 	std::string m_path;
 	int m_socket;
+	char m_readBuf[512000];
 };
 #endif
 
