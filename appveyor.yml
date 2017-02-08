@@ -62,7 +62,7 @@ test_script:
     - ps: Start-Sleep -s 100
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-    - soltest.exe -- --ipcpath \\.\pipe\geth.ipc
+    - soltest.exe --show-progress -- --ipcpath \\.\pipe\geth.ipc
 
 artifacts:
     - path: solidity-windows.zip
