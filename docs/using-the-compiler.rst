@@ -69,6 +69,8 @@ Input Description
 .. code-block:: none
 
     {
+      // Required: Source code language, such as "Solidity", "serpent", "lll", "assembly", etc.
+      language: "Solidity",
       // Required
       sources:
       {
@@ -205,6 +207,7 @@ Output Description
       // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
       contracts: {
         "sourceFile.sol": {
+          // If the language used has no contract names, this field should equal to an empty string.
           "ContractName": {
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
