@@ -37,29 +37,17 @@ If ``solc`` is called with the option ``--link``, all input files are interprete
 
 .. _compiler-api:
 
-Using the Compiler API
-**********************
-
-The compiler API expects a JSON formatted input and outputs the compilations result in a JSON formatted output.
-
-See the following pseudo-code:
-
-.. code-block:: none
-
-  // defined by the consumer of the API
-  importCallback(url:string) -> content:string
-
-  // invoking the compiler
-  solc.compile(inputJSON:string, importCallback:function) -> outputJSON:string
-
-The compiler will ask the ``importCallback`` for each URL defined for a source file and will stop when it succeeds.
-If all URLs failed, the compilation results in a failure.
-
 Compiler Input and Output JSON Description
 ******************************************
 
+.. warning::
+
+    This JSON interface is not yet supported by the Solidity compiler, but will be released in a future version.
+
 These JSON formats are used by the compiler API as well as are available through ``solc``. These are subject to change,
 some fields are optional (as noted), but it is aimed at to only make backwards compatible changes.
+
+The compiler API expects a JSON formatted input and outputs the compilation result in a JSON formatted output.
 
 Comments are of course not permitted and used here only for explanatory purposes.
 
