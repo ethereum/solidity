@@ -64,7 +64,7 @@ expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
 equivalent to ``x / 2**y``. This means that shifting negative numbers
 sign extends. Shifting by a negative amount throws a runtime exception.
 
-.. index:: address, balance, send, call, callcode, delegatecall
+.. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
 
@@ -101,6 +101,10 @@ and to send Ether (in units of wei) to an address using the ``send`` function:
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send`` or even better:
     Use a pattern where the recipient withdraws the money.
+
+* ``transfer``
+
+Transfer operates the same way as ``send``, with the exception that it will cause a exception if the transfer has failed.
 
 * ``call``, ``callcode`` and ``delegatecall``
 

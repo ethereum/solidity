@@ -130,6 +130,8 @@ Address Related
     balance of the :ref:`address` in Wei
 ``<address>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to :ref:`address`, returns ``false`` on failure
+``<address>.transfer(uint256 amount)``:
+    send given amount of Wei to :ref:`address`, throws on failure
 
 For more information, see the section on :ref:`address`.
 
