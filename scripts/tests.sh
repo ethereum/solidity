@@ -43,7 +43,8 @@ test "${output//[[:blank:]]/}" = "3"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     ETH_PATH="$REPO_ROOT/eth"
 else
-    ETH_PATH="eth"
+    mkdir -p /tmp/test
+    ETH_PATH="docker run --rm -v /tmp/test:/tmp/test -e HOME=/tmp/test/ --user $(id -u):$(id -g) ethereum/client-cpp"
 fi
 
 # This trailing ampersand directs the shell to run the command in the background,
@@ -52,6 +53,7 @@ fi
 # true and continue as normal, either processing further commands in a script
 # or returning the cursor focus back to the user in a Linux terminal.
 $ETH_PATH --test -d /tmp/test &
+ETH_PID=$!
 
 # Wait until the IPC endpoint is available.  That won't be available instantly.
 # The node needs to get a little way into its startup sequence before the IPC
@@ -66,7 +68,7 @@ echo "--> Running tests without optimizer..."
   echo "--> Running tests WITH optimizer..." && \
   "$REPO_ROOT"/build/test/soltest -- --optimize --ipcpath /tmp/test/geth.ipc
 ERROR_CODE=$?
-pkill eth || true
+pkill "$ETH_PID" || true
 sleep 4
-pgrep eth && pkill -9 eth || true
+pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
 exit $ERROR_CODE

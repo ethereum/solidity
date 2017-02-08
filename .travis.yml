@@ -46,6 +46,8 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
+          before_install:
+              - docker pull ethereum/client-cpp
           env:
               - ZIP_SUFFIX=ubuntu-trusty
 
@@ -53,6 +55,8 @@ matrix:
           dist: trusty
           sudo: required
           compiler: clang
+          before_install:
+              - docker pull ethereum/client-cpp
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
 
@@ -153,18 +157,7 @@ before_script:
       && ./scripts/create_source_tarball.sh )
 script:
     - test $TRAVIS_DOCS != On || ./scripts/docs.sh
-
-    # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
-    # up to 3 times before giving up and declaring the tests as broken.
-    #
-    # We should aim to remove this "retry logic" as soon as we can, because it is a
-    # band-aid for issues which need solving at their root.  Some of those issues will be
-    # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
-    # itself is broken from the failure messages which we are seeing.
-    #
-    # More details on known issues at https://github.com/ethereum/solidity/issues/769
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
+    - test $TRAVIS_TESTS != On || ./scripts/tests.sh
 env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
