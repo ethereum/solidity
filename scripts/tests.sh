@@ -43,7 +43,8 @@ test "${output//[[:blank:]]/}" = "3"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     ETH_PATH="$REPO_ROOT/eth"
 else
-    ETH_PATH="eth"
+    mkdir -p /tmp/test
+    ETH_PATH="docker run --rm -v /tmp/test:/tmp/test -e HOME=/tmp/test/ --user $(id -u):$(id -g) ethereum/client-cpp"
 fi
 
 # This trailing ampersand directs the shell to run the command in the background,
