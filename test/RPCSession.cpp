@@ -111,9 +111,6 @@ string IPCSocket::sendRequest(string const& _req)
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
-	// This is needed for Appveyor, otherwise it may terminate
-	// the session due to the inactivity.
-	cerr << ".";
 	return returnStr;
 #else
 	send(m_socket, _req.c_str(), _req.length(), 0);
