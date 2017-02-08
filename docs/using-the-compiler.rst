@@ -136,15 +136,14 @@ Input Description
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
-        //   evm.ir - New assembly format before desugaring (not supported atm)
-        //   evm.assembly - New assembly format after desugaring (not supported atm)
-        //   evm.asm - Current assembly format (--asm)
-        //   evm.asmJSON - Current assembly format in JSON (--asm-json)
+        //   evm.ir - New assembly format before desugaring
+        //   evm.assembly - New assembly format after desugaring
+        //   evm.legacyAssemblyJSON - Old-style assembly format in JSON
         //   evm.opcodes - Opcodes list
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   evm.bytecode - Bytecode (--bin)
-        //   evm.deployedBytecode - Deployed bytecode (--bin-runtime)
+        //   evm.bytecode - Bytecode
+        //   evm.deployedBytecode - Deployed bytecode
         //   evm.sourceMap - Source mapping (useful for debugging)
         //   ewasm.wast - eWASM S-expressions format (not supported atm)
         //   ewasm.wasm - eWASM binary format (not supported atm)
@@ -218,9 +217,7 @@ Output Description
               // Assembly (string)
               assembly: "",
               // Old-style assembly (string)
-              asm: "",
-              // Old-style assembly (JSON object)
-              asmJSON: [],
+              legacyAssemblyJSON: [],
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
