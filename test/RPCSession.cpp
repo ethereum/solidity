@@ -131,6 +131,12 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
 }
 
+Json::Value RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
+{
+	// NOTE: to_string() converts bool to 0 or 1
+	return rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
+}
+
 RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	TransactionReceipt receipt;
@@ -290,9 +296,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
 	++m_rpcSequence;
 
-	//cout << "Request: " << request << endl;
+	// cout << "Request: " << request << endl;
 	string reply = m_ipcSocket.sendRequest(request);
-	//cout << "Reply: " << reply << endl;
+	// cout << "Reply: " << reply << endl;
 
 	Json::Value result;
 	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
