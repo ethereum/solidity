@@ -89,7 +89,7 @@ string IPCSocket::sendRequest(string const& _req)
 		&cbWritten,             // bytes written
 		NULL);                  // not overlapped
 
-	if (!fSuccess)
+	if (!fSuccess || (_req.size() != cbWritten))
 		BOOST_FAIL("WriteFile to pipe failed");
 
 	// Read from the pipe.
