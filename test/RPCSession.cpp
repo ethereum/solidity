@@ -80,7 +80,7 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 string IPCSocket::sendRequest(string const& _req)
 {
 #if defined(_WIN32)
-	string returnStr;
+	// Write to the pipe.
 	DWORD cbWritten;
 	BOOL fSuccess = WriteFile(
 		m_socket,               // pipe handle
@@ -92,9 +92,8 @@ string IPCSocket::sendRequest(string const& _req)
 	if (!fSuccess)
 		BOOST_FAIL("WriteFile to pipe failed");
 
-	DWORD cbRead;
-
 	// Read from the pipe.
+	DWORD cbRead;
 	fSuccess = ReadFile(
 		m_socket,          // pipe handle
 		m_readBuf,         // buffer to receive reply
@@ -102,12 +101,10 @@ string IPCSocket::sendRequest(string const& _req)
 		&cbRead,           // number of bytes read
 		NULL);             // not overlapped
 
-	returnStr += m_readBuf;
-
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
-	return returnStr;
+	return string(m_readBuf, m_readBuf + cbRead);
 #else
 	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
 		BOOST_FAIL("Writing on IPC failed");
