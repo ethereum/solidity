@@ -112,6 +112,24 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 	return "let " + _variableDeclaration.name + " := " + boost::apply_visitor(*this, *_variableDeclaration.value);
 }
 
+string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
+{
+	string out = "function " + _functionDefinition.name + "(" + boost::algorithm::join(_functionDefinition.arguments, ", ") + ")";
+	if (!_functionDefinition.returns.empty())
+		out += " -> (" + boost::algorithm::join(_functionDefinition.returns, ", ") + ")";
+	return out + "\n" + (*this)(_functionDefinition.body);
+}
+
+string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
+{
+	return
+		(*this)(_functionCall.functionName) + "(" +
+		boost::algorithm::join(
+			_functionCall.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
+			", " ) +
+		")";
+}
+
 string AsmPrinter::operator()(Block const& _block)
 {
 	if (_block.statements.empty())
