@@ -73,10 +73,6 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
-
-	m_fp = fdopen(m_socket, "r");
-	if (!m_fp)
-		BOOST_FAIL("Error opening IPC socket: " << _path);
 #endif
 }
 
@@ -100,31 +96,28 @@ string IPCSocket::sendRequest(string const& _req)
 
 	// Read from the pipe.
 	fSuccess = ReadFile(
-		m_socket,  // pipe handle
-		chBuf,     // buffer to receive reply
-		c_buffsize,// size of buffer
-		&cbRead,   // number of bytes read
-		NULL);     // not overlapped
+		m_socket,          // pipe handle
+		m_readBuf,         // buffer to receive reply
+		sizeof(m_readBuf), // size of buffer
+		&cbRead,           // number of bytes read
+		NULL);             // not overlapped
 
-	returnStr += chBuf;
+	returnStr += m_readBuf;
 
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
 	return returnStr;
 #else
-	send(m_socket, _req.c_str(), _req.length(), 0);
+	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
+		BOOST_FAIL("Writing on IPC failed");
 
-	char c;
-	string response;
-	while ((c = fgetc(m_fp)) != EOF)
-	{
-		if (c != '\n')
-			response += c;
-		else
-			break;
-	}
-	return response;
+	ssize_t ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+
+	if (ret < 0)
+		BOOST_FAIL("Reading on IPC failed");
+
+	return string(m_readBuf, m_readBuf + ret);
 #endif
 }
 
@@ -298,9 +291,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
 	++m_rpcSequence;
 
-	//cout << "Request: " << request << endl;
+	cout << "Request: " << request << endl;
 	string reply = m_ipcSocket.sendRequest(request);
-	//cout << "Reply: " << reply << endl;
+	cout << "Reply: " << reply << endl;
 
 	Json::Value result;
 	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
