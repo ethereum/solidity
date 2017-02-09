@@ -221,45 +221,6 @@ This means the following source mappings represent the same information:
 
 ``1:2:1;:9;2::2;;``
 
-
-.. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
-
-.. _commandline-compiler:
-
-******************************
-Using the Commandline Compiler
-******************************
-
-One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
-Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
-
-The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide path redirects using ``context:prefix=path`` in the following way:
-
-::
-
-    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ =/usr/local/lib/fallback file.sol
-
-This essentially instructs the compiler to search for anything starting with
-``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin`` and if it does not
-find the file there, it will look at ``/usr/local/lib/fallback`` (the empty prefix
-always matches). ``solc`` will not read files from the filesystem that lie outside of
-the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/`` as a remapping.
-
-You can restrict remappings to only certain source files by prefixing a context.
-
-The section on :ref:`import` provides more details on remappings.
-
-If there are multiple matches due to remappings, the one with the longest common prefix is selected.
-
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__LibraryName______``. You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
-
-Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
-
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
-
 *****************
 Contract Metadata
 *****************
