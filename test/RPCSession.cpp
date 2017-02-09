@@ -114,7 +114,8 @@ string IPCSocket::sendRequest(string const& _req)
 
 	ssize_t ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
 
-	if (ret < 0)
+	// Also consider closed socket an error.
+	if (ret <= 0)
 		BOOST_FAIL("Reading on IPC failed");
 
 	return string(m_readBuf, m_readBuf + ret);
