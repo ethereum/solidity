@@ -21,12 +21,17 @@
  */
 
 #include <libsolidity/inlineasm/AsmStack.h>
-#include <memory>
-#include <libevmasm/Assembly.h>
-#include <libevmasm/SourceLocation.h>
-#include <libsolidity/parsing/Scanner.h>
+
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmPrinter.h>
+
+#include <libsolidity/parsing/Scanner.h>
+
+#include <libevmasm/Assembly.h>
+#include <libevmasm/SourceLocation.h>
+
+#include <memory>
 
 using namespace std;
 using namespace dev;
@@ -42,6 +47,11 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 		return false;
 	*m_parserResult = std::move(*result);
 	return true;
+}
+
+string InlineAssemblyStack::print()
+{
+	return AsmPrinter()(*m_parserResult);
 }
 
 eth::Assembly InlineAssemblyStack::assemble()
