@@ -863,6 +863,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::POP;
 			break;
 		}
+		case Location::Assert:
+		{
+			arguments.front()->accept(*this);
+			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
+			m_context << Instruction::ISZERO;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
+			break;
+		}
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}
