@@ -73,7 +73,7 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
-          node_js: "5"
+          node_js: "6"
           services:
               - docker
           before_install:
