@@ -58,7 +58,7 @@ $ETH_PATH --test -d /tmp/test &
 # is available and is ready for the unit-tests to start talking to it.
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
 echo "--> IPC available."
-
+sleep 2
 # And then run the Solidity unit-tests (once without optimization, once with),
 # pointing to that IPC endpoint.
 echo "--> Running tests without optimizer..."

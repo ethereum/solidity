@@ -33,6 +33,18 @@ branches:
         - develop
         - release
         - /^v[0-9]/
+
+env:
+    global:
+        - ENCRYPTION_LABEL="6d4541b72666"
+        - SOLC_BUILD_TYPE=RelWithDebInfo
+        - SOLC_DOCS=Off
+        - SOLC_EMSCRIPTEN=Off
+        - SOLC_INSTALL_DEPS_TRAVIS=On
+        - SOLC_RELEASE=On
+        - SOLC_TESTS=On
+        - SOLC_DOCKER=Off
+
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -61,10 +73,23 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
+          before_install:
+            - sudo apt-get -y install python-sphinx 
           env:
-              - TRAVIS_DOCS=On
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
+              - SOLC_DOCS=On
+              - SOLC_RELEASE=Off
+              - SOLC_TESTS=Off
+        # Docker target, which generates a statically linked alpine image
+        - os: linux
+          dist: trusty
+          sudo: required
+          services:
+            - docker
+          env:
+            - SOLC_DOCKER=On
+            - SOLC_INSTALL_DEPS_TRAVIS=Off
+            - SOLC_RELEASE=Off
+            - SOLC_TESTS=Off
 
         # Emscripten target, which compiles 'solc' to javascript and uploads the resulting .js
         # files to https://github.com/ethereum/solc-bin.  These binaries are used in Browser-Solidity
@@ -79,10 +104,10 @@ matrix:
           before_install:
               - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
           env:
-              - TRAVIS_EMSCRIPTEN=On
-              - TRAVIS_INSTALL_DEPS=Off
-              - TRAVIS_RELEASE=Off
-              - TRAVIS_TESTS=Off
+              - SOLC_EMSCRIPTEN=On
+              - SOLC_INSTALL_DEPS_TRAVIS=Off
+              - SOLC_RELEASE=Off
+              - SOLC_TESTS=Off
 
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
@@ -143,37 +168,18 @@ cache:
         - $HOME/.local
 
 install:
-    - test $TRAVIS_INSTALL_DEPS != On || ./scripts/install_deps.sh
+    - test $SOLC_INSTALL_DEPS_TRAVIS != On || ./scripts/install_deps.sh
     - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
+    - test $SOLC_DOCKER != On || docker build -t ethereum/solc:build -f ./scripts/Dockerfile .
 before_script:
-    - test $TRAVIS_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $TRAVIS_RELEASE != On || (./scripts/build.sh $TRAVIS_BUILD_TYPE
+    - test $SOLC_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
+    - test $SOLC_RELEASE != On || (./scripts/build.sh $SOLC_BUILD_TYPE
       && ./scripts/release.sh $ZIP_SUFFIX
       && ./scripts/create_source_tarball.sh )
 script:
-    - test $TRAVIS_DOCS != On || ./scripts/docs.sh
-
-    # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
-    # up to 3 times before giving up and declaring the tests as broken.
-    #
-    # We should aim to remove this "retry logic" as soon as we can, because it is a
-    # band-aid for issues which need solving at their root.  Some of those issues will be
-    # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
-    # itself is broken from the failure messages which we are seeing.
-    #
-    # More details on known issues at https://github.com/ethereum/solidity/issues/769
-    - test $TRAVIS_TESTS != On || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
-env:
-    global:
-        - ENCRYPTION_LABEL="6d4541b72666"
-        - TRAVIS_BUILD_TYPE=RelWithDebInfo
-        - TRAVIS_DOCS=Off
-        - TRAVIS_EMSCRIPTEN=Off
-        - TRAVIS_INSTALL_DEPS=On
-        - TRAVIS_RELEASE=On
-        - TRAVIS_TESTS=On
+    - test $SOLC_DOCS != On || ./scripts/docs.sh
+    - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh )
 
 deploy:
     # This is the deploy target for the Emscripten build.
@@ -182,14 +188,24 @@ deploy:
     # Both the build and deploy steps for Emscripten are only run within the Ubuntu
     # configurations (not for macOS).  That is controlled by conditionals within the bash
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
+   
     - provider: script
-      script: test $TRAVIS_EMSCRIPTEN != On || scripts/release_emscripten.sh
+      script: test $SOLC_EMSCRIPTEN == On || scripts/release_emscripten.sh
       skip_cleanup: true
       on:
           branch:
             - develop
             - release
-
+    # This is the deploy target for the dockerfile. If we are pushing into a develop branch, it will be tagged
+    # as a nightly and appended the commit of the branch it was pushed in. If we are pushing to master it will
+    # be tagged as "stable" and given the version tag as well.
+    - provider: script
+      script: test $SOLC_DOCKER != On || ./scripts/docker_deploy.sh
+      skip_cleanup: true
+      on:
+          branch:
+            - develop
+            - release
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit and the source tarball.
     #
@@ -207,4 +223,4 @@ deploy:
       on:
           all_branches: true
           tags: true
-          condition: $TRAVIS_RELEASE == On
+          condition: $SOLC_RELEASE == On
