@@ -1484,10 +1484,13 @@ BOOST_AUTO_TEST_CASE(now)
 	)";
 	compileAndRun(sourceCode);
 	u256 startBlock = m_blockNumber;
+	size_t startTime = blockTimestamp(startBlock);
 	auto ret = callContractFunction("someInfo()");
 	u256 endBlock = m_blockNumber;
+	size_t endTime = blockTimestamp(endBlock);
 	BOOST_CHECK(startBlock != endBlock);
-	BOOST_CHECK(ret == encodeArgs(true, blockTimestamp(endBlock)));
+	BOOST_CHECK(startTime != endTime);
+	BOOST_CHECK(ret == encodeArgs(true, endTime));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
