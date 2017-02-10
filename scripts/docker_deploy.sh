@@ -10,7 +10,7 @@ if [ "$TRAVIS_BRANCH" == "develop" ]; then
 elif [ "$TRAVIS_BRANCH" == "release"]; then
 	docker tag ethereum/solc:build ethereum/solc:stable;
 	docker push ethereum/solc:stable;
-elif [ "$TRAVIS_BRANCH" == v"$version"]; then
+elif [ "$TRAVIS_TAG" == v"$version"]; then
 	docker tag ethereum/solc:build ethereum/solc:"$version";
 	docker push ethereum/solc:"$version";
 fi
