@@ -627,7 +627,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				*arguments.front()->annotation().type,
 				*function.parameterTypes().front(), true
 			);
-			if (function.location() != Location::Transfer)
+			if (!function.gasSet())
 			{
 				// gas <- gas * !value
 				m_context << Instruction::SWAP1 << Instruction::DUP2;
