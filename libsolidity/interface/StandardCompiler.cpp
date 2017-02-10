@@ -21,11 +21,143 @@
  */
 
 #include <libsolidity/interface/StandardCompiler.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <libevmasm/Instruction.h>
+#include <libdevcore/JSON.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+Json::Value StandardCompiler::compile(Json::Value const& _input)
+{
+	m_compilerStack.reset(false);
+
+	Json::Value const& sources = _input["sources"];
+	if (!sources)
+	{
+		// @TODO report error
+		return Json::Value();
+	}
+
+	for (auto const& sourceName: sources.getMemberNames())
+		m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
+
+	// @TODO parse settings
+	bool optimize = false;
+	unsigned optimizeRuns = 200;
+	map<string, h160> libraries;
+
+	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
+
+	try
+	{
+		// @TODO check return value and parse errors
+		m_compilerStack.compile(optimize, optimizeRuns, libraries);
+	}
+	catch (Error const& _error)
+	{
+		if (_error.type() == Error::Type::DocstringParsingError)
+			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
+		else
+			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), scannerFromSourceName);
+
+		return Json::Value();
+	}
+	catch (CompilerError const& _exception)
+	{
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", scannerFromSourceName);
+		return Json::Value();
+	}
+	catch (InternalCompilerError const& _exception)
+	{
+		cerr << "Internal compiler error during compilation:" << endl
+			<< boost::diagnostic_information(_exception);
+		return Json::Value();
+	}
+	catch (UnimplementedFeatureError const& _exception)
+	{
+		cerr << "Unimplemented feature:" << endl
+			<< boost::diagnostic_information(_exception);
+		return Json::Value();
+	}
+	catch (Exception const& _exception)
+	{
+		cerr << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
+		return Json::Value();
+	}
+	catch (...)
+	{
+		cerr << "Unknown exception during compilation." << endl;
+		return Json::Value();
+	}
+
+	Json::Value output = Json::objectValue;
+
+	Json::Value contractsOutput = Json::objectValue;
+	for (string const& contractName: m_compilerStack.contractNames())
+	{
+		// ABI, documentation and metadata
+		Json::Value contractData(Json::objectValue);
+		contractData["abi"] = dev::jsonCompactPrint(m_compilerStack.metadata(contractName, DocumentationType::ABIInterface));
+		contractData["metadata"] = m_compilerStack.onChainMetadata(contractName);
+		contractData["userdoc"] = dev::jsonCompactPrint(m_compilerStack.metadata(contractName, DocumentationType::NatspecUser));
+		contractData["devdoc"] = dev::jsonCompactPrint(m_compilerStack.metadata(contractName, DocumentationType::NatspecDev));
+
+		// EVM
+		Json::Value evmData(Json::objectValue);
+		// @TODO: add ir
+		// @TODO: add assembly
+		// @TODO: add legacyAssemblyJSON
+		evmData["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
+		// @TODO: add methodIdentifiers
+		// @TODO: add gasEstimates
+
+		// EVM bytecode
+		Json::Value bytecode(Json::objectValue);
+		bytecode["object"] = m_compilerStack.object(contractName).toHex();
+		auto sourceMap = m_compilerStack.sourceMapping(contractName);
+		bytecode["sourceMap"] = sourceMap ? *sourceMap : "";
+		// @TODO: add linkReferences
+		evmData["bytecode"] = bytecode;
+
+		// EVM deployed bytecode
+		Json::Value deployedBytecode(Json::objectValue);
+		deployedBytecode["object"] = m_compilerStack.runtimeObject(contractName).toHex();
+		auto runtimeSourceMap = m_compilerStack.runtimeSourceMapping(contractName);
+		deployedBytecode["sourceMap"] = runtimeSourceMap ? *runtimeSourceMap : "";
+		// @TODO: add linkReferences
+		evmData["deployedBytecode"] = deployedBytecode;
+
+		contractData["evm"] = evmData;
+
+		contractsOutput[contractName] = contractData;
+	}
+	output["contracts"] = Json::objectValue;
+	output["contracts"][""] = contractsOutput;
+
+	return output;
+}
+
 string StandardCompiler::compile(string const& _input)
 {
+	Json::Value input;
+
+	if (!Json::Reader().parse(_input, input, false))
+	{
+		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
+	}
+
+	// cout << "Input: " << input.toStyledString() << endl;
+	Json::Value output = compile(input);
+	// cout << "Output: " << output.toStyledString() << endl;
+
+	try
+	{
+		return jsonCompactPrint(output);
+	}
+	catch(...)
+	{
+		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
+	}
 }
