@@ -866,7 +866,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::Assert:
 		{
 			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
+			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
 			m_context << Instruction::ISZERO;
 			m_context.appendConditionalJumpTo(m_context.errorTag());
 			break;
