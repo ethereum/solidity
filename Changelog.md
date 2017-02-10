@@ -1,6 +1,7 @@
 ### 0.4.10 (unreleased)
 
 Features:
+ * Add ``assert(condition)``, which throws if condition is false.
  * Type system: Support explicit conversion of external function to address.
 
 Bugfixes:

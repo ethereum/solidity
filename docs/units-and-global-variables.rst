@@ -79,11 +79,13 @@ Block and Transaction Properties
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
 
-.. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
 Mathematical and Cryptographic Functions
 ----------------------------------------
 
+``assert(bool condition)``:
+    throws if the condition is not met.
 ``addmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:

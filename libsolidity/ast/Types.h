@@ -819,8 +819,8 @@ public:
 	{
 		Internal, ///< stack-call using plain JUMP
 		External, ///< external call using CALL
-		CallCode, ///< extercnal call using CALLCODE, i.e. not exchanging the storage
-		DelegateCall, ///< extercnal call using DELEGATECALL, i.e. not exchanging the storage
+		CallCode, ///< external call using CALLCODE, i.e. not exchanging the storage
+		DelegateCall, ///< external call using DELEGATECALL, i.e. not exchanging the storage
 		Bare, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
 		BareDelegateCall, ///< DELEGATECALL without function hash
@@ -844,7 +844,8 @@ public:
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
-		ObjectCreation ///< array creation using new
+		ObjectCreation, ///< array creation using new
+		Assert ///< assert()
 	};
 
 	virtual Category category() const override { return Category::Function; }
