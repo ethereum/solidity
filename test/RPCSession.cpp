@@ -18,6 +18,7 @@
 */
 /** @file RPCSession.cpp
  * @author Dimtiry Khokhlov <dimitry@ethdev.com>
+ * @author Alex Beregszaszi
  * @date 2016
  */
 
@@ -73,17 +74,13 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
-
-	m_fp = fdopen(m_socket, "r");
-	if (!m_fp)
-		BOOST_FAIL("Error opening IPC socket: " << _path);
 #endif
 }
 
 string IPCSocket::sendRequest(string const& _req)
 {
 #if defined(_WIN32)
-	string returnStr;
+	// Write to the pipe.
 	DWORD cbWritten;
 	BOOL fSuccess = WriteFile(
 		m_socket,               // pipe handle
@@ -92,39 +89,33 @@ string IPCSocket::sendRequest(string const& _req)
 		&cbWritten,             // bytes written
 		NULL);                  // not overlapped
 
-	if (!fSuccess)
+	if (!fSuccess || (_req.size() != cbWritten))
 		BOOST_FAIL("WriteFile to pipe failed");
 
-	DWORD  cbRead;
-	TCHAR  chBuf[c_buffsize];
-
 	// Read from the pipe.
+	DWORD cbRead;
 	fSuccess = ReadFile(
-		m_socket,  // pipe handle
-		chBuf,     // buffer to receive reply
-		c_buffsize,// size of buffer
-		&cbRead,   // number of bytes read
-		NULL);     // not overlapped
-
-	returnStr += chBuf;
+		m_socket,          // pipe handle
+		m_readBuf,         // buffer to receive reply
+		sizeof(m_readBuf), // size of buffer
+		&cbRead,           // number of bytes read
+		NULL);             // not overlapped
 
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
-	return returnStr;
+	return string(m_readBuf, m_readBuf + cbRead);
 #else
-	send(m_socket, _req.c_str(), _req.length(), 0);
+	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
+		BOOST_FAIL("Writing on IPC failed");
 
-	char c;
-	string response;
-	while ((c = fgetc(m_fp)) != EOF)
-	{
-		if (c != '\n')
-			response += c;
-		else
-			break;
-	}
-	return response;
+	ssize_t ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+
+	// Also consider closed socket an error.
+	if (ret <= 0)
+		BOOST_FAIL("Reading on IPC failed");
+
+	return string(m_readBuf, m_readBuf + ret);
 #endif
 }
 
