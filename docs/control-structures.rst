@@ -396,6 +396,10 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If your contract receives Ether via a public getter function.
 #. If you call a zero-initialized variable of internal function type.
 
+While a user-provided exception is generated in the following situations:
+#. Calling ``throw``.
+#. The condition of ``assert(condition)`` is not met.
+
 Internally, Solidity performs an "invalid jump" when a user-provided exception is thrown. In contrast, it performs an invalid operation
 (instruction ``0xfe``) if a runtime exception is encountered. In both cases, this causes
 the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect
