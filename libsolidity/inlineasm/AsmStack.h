@@ -64,6 +64,7 @@ public:
 private:
 	std::shared_ptr<Block> m_parserResult;
 	ErrorList m_errors;
+	bool m_desugared = false;
 };
 
 }

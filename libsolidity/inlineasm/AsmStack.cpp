@@ -25,6 +25,7 @@
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libsolidity/inlineasm/AsmDesugar.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 
 #include <libsolidity/parsing/Scanner.h>
@@ -59,6 +60,14 @@ string InlineAssemblyStack::toString()
 
 eth::Assembly InlineAssemblyStack::assemble()
 {
+	if (!m_desugared)
+	{
+		cout << "Before desugar: " << endl << print() << endl;
+		//@TODO move?
+		*m_parserResult = AsmDesugar().run(*m_parserResult);
+		m_desugared = true;
+		cout << "After desugar: " << endl << print() << endl;
+	}
 	CodeGenerator codeGen(*m_parserResult, m_errors);
 	return codeGen.assemble();
 }
@@ -74,6 +83,9 @@ bool InlineAssemblyStack::parseAndAssemble(
 	auto parserResult = Parser(errors).parse(scanner);
 	if (!errors.empty())
 		return false;
+	print();
+	//@TODO move?
+	*parserResult = AsmDesugar().run(*parserResult);
 
 	CodeGenerator(*parserResult, errors).assemble(_assembly, _identifierAccess);
 
