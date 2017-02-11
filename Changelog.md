@@ -1,5 +1,8 @@
 ### 0.4.11 (unreleased)
 
+Features:
+ * Support ``interface`` contracts.
+
 ### 0.4.10 (2017-03-15)
 
 Features:
