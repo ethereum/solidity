@@ -168,18 +168,18 @@ cache:
         - $HOME/.local
 
 install:
-    - test $SOLC_INSTALL_DEPS_TRAVIS != On || ./scripts/install_deps.sh
-    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
+    - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
+    - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test $SOLC_DOCKER != On || docker build -t ethereum/solc:build -f ./scripts/Dockerfile .
+    - test $SOLC_DOCKER != On || (docker build -t ethereum/solc:build -f scripts/Dockerfile .)
 before_script:
-    - test $SOLC_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $SOLC_RELEASE != On || (./scripts/build.sh $SOLC_BUILD_TYPE
-      && ./scripts/release.sh $ZIP_SUFFIX
-      && ./scripts/create_source_tarball.sh )
+    - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
+    - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE
+      && scripts/release.sh $ZIP_SUFFIX
+      && scripts/create_source_tarball.sh)
 script:
-    - test $SOLC_DOCS != On || ./scripts/docs.sh
-    - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh )
+    - test $SOLC_DOCS != On || (scripts/docs.sh)
+    - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
 
 deploy:
     # This is the deploy target for the Emscripten build.
@@ -190,7 +190,7 @@ deploy:
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
    
     - provider: script
-      script: test $SOLC_EMSCRIPTEN == On || scripts/release_emscripten.sh
+      script: test $SOLC_EMSCRIPTEN == On || (scripts/release_emscripten.sh)
       skip_cleanup: true
       on:
           branch:
@@ -200,7 +200,7 @@ deploy:
     # as a nightly and appended the commit of the branch it was pushed in. If we are pushing to master it will
     # be tagged as "stable" and given the version tag as well.
     - provider: script
-      script: test $SOLC_DOCKER != On || ./scripts/docker_deploy.sh
+      script: test $SOLC_DOCKER != On || (scripts/docker_deploy.sh)
       skip_cleanup: true
       on:
           branch:
