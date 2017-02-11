@@ -25,6 +25,7 @@
 #------------------------------------------------------------------------------
 
 language: cpp
+
 branches:
     # We need to whitelist the branches which we want to have "push" automation,
     # this includes tags (which are treated as branches by travis).
@@ -79,6 +80,7 @@ matrix:
               - SOLC_DOCS=On
               - SOLC_RELEASE=Off
               - SOLC_TESTS=Off
+
         # Docker target, which generates a statically linked alpine image
         - os: linux
           dist: trusty
@@ -126,7 +128,7 @@ matrix:
 #          env:
 #              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
 #              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
+#              - SOLC_TESTS=Off
 #              - ZIP_SUFFIX=osx-yosemite
 
         # OS X El Capitan (10.11)
@@ -137,10 +139,10 @@ matrix:
 #          env:
 #              # The use of Debug config here ONLY for El Capitan is a workaround for "The Heisenbug"
 #              # See https://github.com/ethereum/webthree-umbrella/issues/565
-#              - TRAVIS_BUILD_TYPE=Debug
+#              - SOLC_BUILD_TYPE=Debug
 #              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
 #              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
+#              - SOLC_TESTS=Off
 #              - ZIP_SUFFIX=osx-elcapitan
 
         # macOS Sierra (10.12)
@@ -151,10 +153,10 @@ matrix:
 #          env:
 #              # Look like "The Heisenbug" is occurring here too, so we'll do the same workaround.
 #              # See https://travis-ci.org/ethereum/solidity/jobs/150240930
-#              - TRAVIS_BUILD_TYPE=Debug
+#              - SOLC_BUILD_TYPE=Debug
 #              # Workaround for "macOS - Yosemite, El Capitan and Sierra hanging?"
 #              # https://github.com/ethereum/solidity/issues/894
-#              - TRAVIS_TESTS=Off
+#              - SOLC_TESTS=Off
 #              - ZIP_SUFFIX=macos-sierra
 
 git:
@@ -168,18 +170,20 @@ cache:
         - $HOME/.local
 
 install:
-    - test $SOLC_INSTALL_DEPS_TRAVIS != On || ./scripts/install_deps.sh
-    - test "$TRAVIS_OS_NAME" != "linux" || ./scripts/install_cmake.sh
+    - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
+    - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test $SOLC_DOCKER != On || docker build -t ethereum/solc:build -f ./scripts/Dockerfile .
+    - test $SOLC_DOCKER != On || (docker build -t ethereum/solc:build -f scripts/Dockerfile .)
+
 before_script:
-    - test $SOLC_EMSCRIPTEN != On || ./scripts/build_emscripten.sh
-    - test $SOLC_RELEASE != On || (./scripts/build.sh $SOLC_BUILD_TYPE
-      && ./scripts/release.sh $ZIP_SUFFIX
-      && ./scripts/create_source_tarball.sh )
+    - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
+    - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE
+      && scripts/release.sh $ZIP_SUFFIX
+      && scripts/create_source_tarball.sh)
+
 script:
-    - test $SOLC_DOCS != On || ./scripts/docs.sh
-    - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh )
+    - test $SOLC_DOCS != On || (scripts/docs.sh)
+    - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
 
 deploy:
     # This is the deploy target for the Emscripten build.
@@ -190,7 +194,7 @@ deploy:
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
    
     - provider: script
-      script: test $SOLC_EMSCRIPTEN == On || scripts/release_emscripten.sh
+      script: test $SOLC_EMSCRIPTEN == On || (scripts/release_emscripten.sh)
       skip_cleanup: true
       on:
           branch:
@@ -200,7 +204,7 @@ deploy:
     # as a nightly and appended the commit of the branch it was pushed in. If we are pushing to master it will
     # be tagged as "stable" and given the version tag as well.
     - provider: script
-      script: test $SOLC_DOCKER != On || ./scripts/docker_deploy.sh
+      script: test $SOLC_DOCKER != On || (scripts/docker_deploy.sh)
       skip_cleanup: true
       on:
           branch:
