@@ -1967,7 +1967,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
-	m_location(_isInternal ? Location::Internal : Location::External),
+	m_kind(_isInternal ? Kind::Internal : Kind::External),
 	m_isConstant(_function.isDeclaredConst()),
 	m_isPayable(_isInternal ? false : _function.isPayable()),
 	m_declaration(&_function)
@@ -1998,7 +1998,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_location(Location::External), m_isConstant(true), m_declaration(&_varDecl)
+	m_kind(Kind::External), m_isConstant(true), m_declaration(&_varDecl)
 {
 	TypePointers paramTypes;
 	vector<string> paramNames;
@@ -2058,7 +2058,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
-	m_location(Location::Event), m_isConstant(true), m_declaration(&_event)
+	m_kind(Kind::Event), m_isConstant(true), m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -2074,19 +2074,19 @@ FunctionType::FunctionType(EventDefinition const& _event):
 }
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
-	m_location(_typeName.visibility() == VariableDeclaration::Visibility::External ? Location::External : Location::Internal),
+	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
 	m_isConstant(_typeName.isDeclaredConst()),
 	m_isPayable(_typeName.isPayable())
 {
 	if (_typeName.isPayable())
 	{
-		solAssert(m_location == Location::External, "Internal payable function type used.");
+		solAssert(m_kind == Kind::External, "Internal payable function type used.");
 		solAssert(!m_isConstant, "Payable constant function");
 	}
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
-		if (m_location == Location::External)
+		if (m_kind == Kind::External)
 			solAssert(
 				t->annotation().type->canBeUsedExternally(false),
 				"Internal type used as parameter for external function."
@@ -2096,7 +2096,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	for (auto const& t: _typeName.returnParameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for return parameter.");
-		if (m_location == Location::External)
+		if (m_kind == Kind::External)
 			solAssert(
 				t->annotation().type->canBeUsedExternally(false),
 				"Internal type used as return parameter for external function."
@@ -2126,7 +2126,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		TypePointers{make_shared<ContractType>(_contract)},
 		parameterNames,
 		strings{""},
-		Location::Creation,
+		Kind::Creation,
 		false,
 		nullptr,
 		false,
@@ -2151,38 +2151,38 @@ TypePointers FunctionType::parameterTypes() const
 string FunctionType::identifier() const
 {
 	string id = "t_function_";
-	switch (location())
+	switch (m_kind)
 	{
-	case Location::Internal: id += "internal"; break;
-	case Location::External: id += "external"; break;
-	case Location::CallCode: id += "callcode"; break;
-	case Location::DelegateCall: id += "delegatecall"; break;
-	case Location::Bare: id += "bare"; break;
-	case Location::BareCallCode: id += "barecallcode"; break;
-	case Location::BareDelegateCall: id += "baredelegatecall"; break;
-	case Location::Creation: id += "creation"; break;
-	case Location::Send: id += "send"; break;
-	case Location::Transfer: id += "transfer"; break;
-	case Location::SHA3: id += "sha3"; break;
-	case Location::Selfdestruct: id += "selfdestruct"; break;
-	case Location::Revert: id += "revert"; break;
-	case Location::ECRecover: id += "ecrecover"; break;
-	case Location::SHA256: id += "sha256"; break;
-	case Location::RIPEMD160: id += "ripemd160"; break;
-	case Location::Log0: id += "log0"; break;
-	case Location::Log1: id += "log1"; break;
-	case Location::Log2: id += "log2"; break;
-	case Location::Log3: id += "log3"; break;
-	case Location::Log4: id += "log4"; break;
-	case Location::Event: id += "event"; break;
-	case Location::SetGas: id += "setgas"; break;
-	case Location::SetValue: id += "setvalue"; break;
-	case Location::BlockHash: id += "blockhash"; break;
-	case Location::AddMod: id += "addmod"; break;
-	case Location::MulMod: id += "mulmod"; break;
-	case Location::ArrayPush: id += "arraypush"; break;
-	case Location::ByteArrayPush: id += "bytearraypush"; break;
-	case Location::ObjectCreation: id += "objectcreation"; break;
+	case Kind::Internal: id += "internal"; break;
+	case Kind::External: id += "external"; break;
+	case Kind::CallCode: id += "callcode"; break;
+	case Kind::DelegateCall: id += "delegatecall"; break;
+	case Kind::Bare: id += "bare"; break;
+	case Kind::BareCallCode: id += "barecallcode"; break;
+	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
+	case Kind::Creation: id += "creation"; break;
+	case Kind::Send: id += "send"; break;
+	case Kind::Transfer: id += "transfer"; break;
+	case Kind::SHA3: id += "sha3"; break;
+	case Kind::Selfdestruct: id += "selfdestruct"; break;
+	case Kind::Revert: id += "revert"; break;
+	case Kind::ECRecover: id += "ecrecover"; break;
+	case Kind::SHA256: id += "sha256"; break;
+	case Kind::RIPEMD160: id += "ripemd160"; break;
+	case Kind::Log0: id += "log0"; break;
+	case Kind::Log1: id += "log1"; break;
+	case Kind::Log2: id += "log2"; break;
+	case Kind::Log3: id += "log3"; break;
+	case Kind::Log4: id += "log4"; break;
+	case Kind::Event: id += "event"; break;
+	case Kind::SetGas: id += "setgas"; break;
+	case Kind::SetValue: id += "setvalue"; break;
+	case Kind::BlockHash: id += "blockhash"; break;
+	case Kind::AddMod: id += "addmod"; break;
+	case Kind::MulMod: id += "mulmod"; break;
+	case Kind::ArrayPush: id += "arraypush"; break;
+	case Kind::ByteArrayPush: id += "bytearraypush"; break;
+	case Kind::ObjectCreation: id += "objectcreation"; break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	if (isConstant())
@@ -2203,7 +2203,7 @@ bool FunctionType::operator==(Type const& _other) const
 		return false;
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
 
-	if (m_location != other.m_location)
+	if (m_kind != other.m_kind)
 		return false;
 	if (m_isConstant != other.isConstant())
 		return false;
@@ -2231,7 +2231,7 @@ bool FunctionType::operator==(Type const& _other) const
 
 bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_location == Location::External && _convertTo.category() == Category::Integer)
+	if (m_kind == Kind::External && _convertTo.category() == Category::Integer)
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
 		if (convertTo.isAddress())
@@ -2249,7 +2249,7 @@ TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
 
 string FunctionType::canonicalName(bool) const
 {
-	solAssert(m_location == Location::External, "");
+	solAssert(m_kind == Kind::External, "");
 	return "function";
 }
 
@@ -2263,7 +2263,7 @@ string FunctionType::toString(bool _short) const
 		name += " constant";
 	if (m_isPayable)
 		name += " payable";
-	if (m_location == Location::External)
+	if (m_kind == Kind::External)
 		name += " external";
 	if (!m_returnParameterTypes.empty())
 	{
@@ -2285,7 +2285,7 @@ unsigned FunctionType::calldataEncodedSize(bool _padded) const
 
 u256 FunctionType::storageSize() const
 {
-	if (m_location == Location::External || m_location == Location::Internal)
+	if (m_kind == Kind::External || m_kind == Kind::Internal)
 		return 1;
 	else
 		BOOST_THROW_EXCEPTION(
@@ -2295,9 +2295,9 @@ u256 FunctionType::storageSize() const
 
 unsigned FunctionType::storageBytes() const
 {
-	if (m_location == Location::External)
+	if (m_kind == Kind::External)
 		return 20 + 4;
-	else if (m_location == Location::Internal)
+	else if (m_kind == Kind::Internal)
 		return 8; // it should really not be possible to create larger programs
 	else
 		BOOST_THROW_EXCEPTION(
@@ -2307,21 +2307,21 @@ unsigned FunctionType::storageBytes() const
 
 unsigned FunctionType::sizeOnStack() const
 {
-	Location location = m_location;
-	if (m_location == Location::SetGas || m_location == Location::SetValue)
+	Kind kind = m_kind;
+	if (m_kind == Kind::SetGas || m_kind == Kind::SetValue)
 	{
 		solAssert(m_returnParameterTypes.size() == 1, "");
-		location = dynamic_cast<FunctionType const&>(*m_returnParameterTypes.front()).m_location;
+		kind = dynamic_cast<FunctionType const&>(*m_returnParameterTypes.front()).m_kind;
 	}
 
 	unsigned size = 0;
-	if (location == Location::External || location == Location::CallCode || location == Location::DelegateCall)
+	if (kind == Kind::External || kind == Kind::CallCode || kind == Kind::DelegateCall)
 		size = 2;
-	else if (location == Location::Bare || location == Location::BareCallCode || location == Location::BareDelegateCall)
+	else if (kind == Kind::Bare || kind == Kind::BareCallCode || kind == Kind::BareDelegateCall)
 		size = 1;
-	else if (location == Location::Internal)
+	else if (kind == Kind::Internal)
 		size = 1;
-	else if (location == Location::ArrayPush || location == Location::ByteArrayPush)
+	else if (kind == Kind::ArrayPush || kind == Kind::ByteArrayPush)
 		size = 1;
 	if (m_gasSet)
 		size++;
@@ -2362,26 +2362,26 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	return make_shared<FunctionType>(
 		paramTypes, retParamTypes,
 		m_parameterNames, m_returnParameterNames,
-		m_location, m_arbitraryParameters,
+		m_kind, m_arbitraryParameters,
 		m_declaration, m_isConstant, m_isPayable
 	);
 }
 
 MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) const
 {
-	switch (m_location)
+	switch (m_kind)
 	{
-	case Location::External:
-	case Location::Creation:
-	case Location::ECRecover:
-	case Location::SHA256:
-	case Location::RIPEMD160:
-	case Location::Bare:
-	case Location::BareCallCode:
-	case Location::BareDelegateCall:
+	case Kind::External:
+	case Kind::Creation:
+	case Kind::ECRecover:
+	case Kind::SHA256:
+	case Kind::RIPEMD160:
+	case Kind::Bare:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
 	{
 		MemberList::MemberMap members;
-		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
+		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
 		{
 			if (m_isPayable)
 				members.push_back(MemberList::Member(
@@ -2391,7 +2391,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						TypePointers{copyAndSetGasOrValue(false, true)},
 						strings(),
 						strings(),
-						Location::SetValue,
+						Kind::SetValue,
 						false,
 						nullptr,
 						false,
@@ -2401,7 +2401,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					)
 				));
 		}
-		if (m_location != Location::Creation)
+		if (m_kind != Kind::Creation)
 			members.push_back(MemberList::Member(
 				"gas",
 				make_shared<FunctionType>(
@@ -2409,7 +2409,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					TypePointers{copyAndSetGasOrValue(true, false)},
 					strings(),
 					strings(),
-					Location::SetGas,
+					Kind::SetGas,
 					false,
 					nullptr,
 					false,
@@ -2428,7 +2428,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 TypePointer FunctionType::encodingType() const
 {
 	// Only external functions can be encoded, internal functions cannot leave code boundaries.
-	if (m_location == Location::External)
+	if (m_kind == Kind::External)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -2436,7 +2436,7 @@ TypePointer FunctionType::encodingType() const
 
 TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
 {
-	if (m_location == Location::External)
+	if (m_kind == Kind::External)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -2478,14 +2478,14 @@ bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
 
 bool FunctionType::isBareCall() const
 {
-	switch (m_location)
+	switch (m_kind)
 	{
-	case Location::Bare:
-	case Location::BareCallCode:
-	case Location::BareDelegateCall:
-	case Location::ECRecover:
-	case Location::SHA256:
-	case Location::RIPEMD160:
+	case Kind::Bare:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
+	case Kind::ECRecover:
+	case Kind::SHA256:
+	case Kind::RIPEMD160:
 		return true;
 	default:
 		return false;
@@ -2520,13 +2520,13 @@ u256 FunctionType::externalIdentifier() const
 bool FunctionType::isPure() const
 {
 	return
-		m_location == Location::SHA3 ||
-		m_location == Location::ECRecover ||
-		m_location == Location::SHA256 ||
-		m_location == Location::RIPEMD160 ||
-		m_location == Location::AddMod ||
-		m_location == Location::MulMod ||
-		m_location == Location::ObjectCreation;
+		m_kind == Kind::SHA3 ||
+		m_kind == Kind::ECRecover ||
+		m_kind == Kind::SHA256 ||
+		m_kind == Kind::RIPEMD160 ||
+		m_kind == Kind::AddMod ||
+		m_kind == Kind::MulMod ||
+		m_kind == Kind::ObjectCreation;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -2545,7 +2545,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
-		m_location,
+		m_kind,
 		m_arbitraryParameters,
 		m_declaration,
 		m_isConstant,
@@ -2571,18 +2571,18 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			parameterTypes.push_back(t);
 	}
 
-	Location location = m_location;
+	Kind kind = m_kind;
 	if (_inLibrary)
 	{
 		solAssert(!!m_declaration, "Declaration has to be available.");
 		if (!m_declaration->isPublic())
-			location = Location::Internal; // will be inlined
+			kind = Kind::Internal; // will be inlined
 		else
-			location = Location::DelegateCall;
+			kind = Kind::DelegateCall;
 	}
 
 	TypePointers returnParameterTypes = m_returnParameterTypes;
-	if (location != Location::Internal)
+	if (kind != Kind::Internal)
 	{
 		// Alter dynamic types to be non-accessible.
 		for (auto& param: returnParameterTypes)
@@ -2595,7 +2595,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
-		location,
+		kind,
 		m_arbitraryParameters,
 		m_declaration,
 		m_isConstant,
