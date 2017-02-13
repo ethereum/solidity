@@ -262,6 +262,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
 	size_t currentTimestamp();
+	size_t blockTimestamp(u256 number);
 
 	/// @returns the (potentially newly created) _ith address.
 	Address account(size_t _i);
@@ -284,6 +285,7 @@ protected:
 	bool m_showMessages = false;
 	Address m_sender;
 	Address m_contractAddress;
+	u256 m_blockNumber;
 	u256 const m_gasPrice = 100 * szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
