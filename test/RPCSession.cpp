@@ -243,22 +243,20 @@ void RPCSession::test_mineBlocks(int _number)
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
 	BOOST_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
-	bool mined = false;
-
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
 
 	unsigned startTime = boost::posix_time::microsec_clock::local_time();
 	unsigned sleepTime = m_sleepTime;
 	size_t tries = 0;
-	for (; !mined; ++tries)
+	for (; ; ++tries)
 	{
 		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
 		boost::posix_time::time_duration timeSpent = boost::posix_time::microsec_clock::local_time() - startTime;
 		if (timeSpent > m_maxMiningTime)
-			break;
+			BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
-			mined = true;
+			break;
 		else
 			sleepTime *= 2;
 	}
@@ -277,9 +275,6 @@ void RPCSession::test_mineBlocks(int _number)
 				m_sleepTime--;
 		}
 	}
-
-	if (!mined)
-		BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 }
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
