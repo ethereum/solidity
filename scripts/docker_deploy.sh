@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/../CMakeLists.txt)
 if [ "$TRAVIS_BRANCH" == "develop" ]; then
