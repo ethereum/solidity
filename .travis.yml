@@ -105,6 +105,8 @@ matrix:
           services:
               - docker
           before_install:
+              - nvm install 6
+              - nvm use 6
               - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
           env:
               - SOLC_EMSCRIPTEN=On
