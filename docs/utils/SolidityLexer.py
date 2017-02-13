@@ -54,11 +54,10 @@ class SolidityLexer(RegexLexer):
              r'(<<|>>>?|==?|!=?|[-<>+*%&\|\^/])=?', Operator, 'slashstartsregex'),
             (r'[{(\[;,]', Punctuation, 'slashstartsregex'),
             (r'[})\].]', Punctuation),
-            (r'(for|in|while|do|break|return|continue|switch|case|default|if|else|'
-             r'throw|try|catch|finally|new|delete|typeof|instanceof|void|'
-             r'this|import|mapping|returns|private|public|external|internal|'
-             r'constant|memory|storage|payable)\b', Keyword, 'slashstartsregex'),
-            (r'(var|let|with|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
+            (r'(anonymous|as|assembly|break|constant|continue|do|else|external|hex|if|'
+             r'indexed|internal|import|is|mapping|memory|new|payable|public|pragma|'
+             r'private|return|returns|storage|super|this|throw|using|while)\b', Keyword, 'slashstartsregex'),
+            (r'(var|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
             (r'(bytes|string|address|uint|int|bool|byte|' +
              '|'.join(
                  ['uint%d' % (i + 8) for i in range(0, 256, 8)] +
@@ -68,16 +67,11 @@ class SolidityLexer(RegexLexer):
                  ['fixed%dx%d' % ((i), (j + 8)) for i in range(0, 256, 8) for j in range(0, 256 - i, 8)]
              ) + r')\b', Keyword.Type, 'slashstartsregex'),
             (r'(wei|szabo|finney|ether|seconds|minutes|hours|days|weeks|years)\b', Keyword.Type, 'slashstartsregex'),
-            (r'(abstract|boolean|byte|char|class|const|debugger|double|enum|export|'
-             r'extends|final|float|goto|implements|int|interface|long|native|'
-             r'package|private|protected|public|short|static|super|synchronized|throws|'
-             r'transient|volatile)\b', Keyword.Reserved),
-            (r'(true|false|null|NaN|Infinity|undefined)\b', Keyword.Constant),
-            (r'(Array|Boolean|Date|Error|Function|Math|netscape|'
-             r'Number|Object|Packages|RegExp|String|sun|decodeURI|'
-             r'decodeURIComponent|encodeURI|encodeURIComponent|'
-             r'Error|eval|isFinite|isNaN|parseFloat|parseInt|document|this|'
-             r'window)\b', Name.Builtin),
+            (r'(abstract|after|case|catch|default|final|in|inline|interface|let|match|'
+             r'null|of|pure|relocatable|static|switch|try|type|typeof|view)\b', Keyword.Reserved),
+            (r'(true|false)\b', Keyword.Constant),
+            (r'(block|msg|tx|now|suicide|selfdestruct|addmod|mulmod|sha3|keccak256|log[0-4]|'
+             r'sha256|ecrecover|ripemd160|assert|revert)', Name.Builtin),
             (r'[$a-zA-Z_][a-zA-Z0-9_]*', Name.Other),
             (r'[0-9][0-9]*\.[0-9]+([eE][0-9]+)?[fd]?', Number.Float),
             (r'0x[0-9a-fA-F]+', Number.Hex),
