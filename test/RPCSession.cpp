@@ -246,13 +246,14 @@ void RPCSession::test_mineBlocks(int _number)
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
 
-	unsigned startTime = boost::posix_time::microsec_clock::local_time();
+	auto startTime = std::chrono::steady_clock::now();
 	unsigned sleepTime = m_sleepTime;
 	size_t tries = 0;
 	for (; ; ++tries)
 	{
 		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
-		boost::posix_time::time_duration timeSpent = boost::posix_time::microsec_clock::local_time() - startTime;
+		auto endTime = std::chrono::steady_clock::now();
+		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
 			BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
