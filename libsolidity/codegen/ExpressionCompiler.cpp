@@ -650,6 +650,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
 			break;
+		case Location::Revert:
+			// memory offset returned - zero length
+			m_context << u256(0) << u256(0);
+			m_context << Instruction::REVERT;
+			break;
 		case Location::SHA3:
 		{
 			TypePointers argumentTypes;
@@ -867,8 +872,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
-			m_context << Instruction::ISZERO;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			// jump if condition was met
+			m_context << Instruction::ISZERO << Instruction::ISZERO;
+			auto success = m_context.appendConditionalJump();
+			// condition was not met, abort
+			m_context << u256(0) << u256(0);
+			m_context << Instruction::REVERT;
+			// the success branch
+			m_context << success;
 			break;
 		}
 		default:

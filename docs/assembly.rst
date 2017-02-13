@@ -248,6 +248,8 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
+| revert(p, s)            | `-`  | end execution, revert state changes, return data mem[p..(p+s))  |
++-------------------------+------+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-`  | end execution, destroy current contract and send funds to a     |
 +-------------------------+------+-----------------------------------------------------------------+
 | invalid                 | `-`  | end execution with invalid instruction                          |

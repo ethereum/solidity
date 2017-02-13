@@ -762,7 +762,9 @@ bool ContractCompiler::visit(Return const& _return)
 bool ContractCompiler::visit(Throw const& _throw)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _throw);
-	m_context.appendJumpTo(m_context.errorTag());
+	// Do not send back an error detail.
+	m_context << u256(0) << u256(0);
+	m_context << Instruction::REVERT;
 	return false;
 }
 

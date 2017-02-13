@@ -80,6 +80,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			gas += GasCosts::sloadGas;
 			break;
 		case Instruction::RETURN:
+		case Instruction::REVERT:
 			gas += memoryGas(0, -1);
 			break;
 		case Instruction::MLOAD:

@@ -205,6 +205,11 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 	BOOST_CHECK(!successAssemble("{ gas := 2 }"));
 }
 
+BOOST_AUTO_TEST_CASE(revert)
+{
+	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

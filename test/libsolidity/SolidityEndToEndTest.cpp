@@ -9102,6 +9102,30 @@ BOOST_AUTO_TEST_CASE(assert)
 	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(revert)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a = 42;
+			function f() {
+				a = 1;
+				revert();
+			}
+			function g() {
+				a = 1;
+				assembly {
+					revert(0, 0)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(42)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
