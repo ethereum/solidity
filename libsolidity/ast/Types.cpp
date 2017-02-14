@@ -595,10 +595,13 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 
 			x = bigint(string(_literal.value().begin(), expPoint));
 			if (exp < 0)
+			{
+				exp *= -1;
 				x /= boost::multiprecision::pow(
 					bigint(10),
-					abs(exp).convert_to<int32_t>()
+					exp.convert_to<int32_t>()
 				);
+			}
 			else
 				x *= boost::multiprecision::pow(
 					bigint(10),
