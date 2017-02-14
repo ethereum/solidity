@@ -52,9 +52,7 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 		if (c == '\\')
 			out += "\\\\";
 		else if (c == '"')
-			out += "\\";
-		else if (c == '\'')
-			out += "\\'";
+			out += "\\\"";
 		else if (c == '\b')
 			out += "\\b";
 		else if (c == '\f')
@@ -70,7 +68,7 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 		else if (!isprint(c, locale::classic()))
 		{
 			ostringstream o;
-			o << std::hex << setfill('0') << setw(2) << unsigned(c);
+			o << std::hex << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
 			out += "\\x" + o.str();
 		}
 		else
@@ -86,7 +84,7 @@ string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
 {
 	return
-		(*this)(_functionalInstruction.instruction); +
+		(*this)(_functionalInstruction.instruction) +
 		"(" +
 		boost::algorithm::join(
 			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
@@ -116,6 +114,8 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 
 string AsmPrinter::operator()(Block const& _block)
 {
+	if (_block.statements.empty())
+		return "{\n}";
 	string body = boost::algorithm::join(
 		_block.statements | boost::adaptors::transformed(boost::apply_visitor(*this)),
 		"\n"
