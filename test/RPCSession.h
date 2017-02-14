@@ -126,7 +126,8 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_sleepTime = 10;
+	unsigned m_maxMiningTime = 15000; // 15 seconds
+	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 
 	std::vector<std::string> m_accounts;
