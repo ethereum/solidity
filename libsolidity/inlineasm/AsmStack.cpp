@@ -49,7 +49,7 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 	return true;
 }
 
-string InlineAssemblyStack::print()
+string InlineAssemblyStack::toString()
 {
 	return AsmPrinter()(*m_parserResult);
 }

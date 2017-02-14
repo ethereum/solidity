@@ -71,11 +71,11 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 		{
 			ostringstream o;
 			o << std::hex << setfill('0') << setw(2) << unsigned(c);
-			out += "0x" + o.str();
+			out += "\\x" + o.str();
 		}
 		else
 			out += c;
-	return out;
+	return "\"" + out + "\"";
 }
 
 string AsmPrinter::operator()(assembly::Identifier const& _identifier)

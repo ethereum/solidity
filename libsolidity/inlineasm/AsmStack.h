@@ -48,7 +48,7 @@ public:
 	bool parse(std::shared_ptr<Scanner> const& _scanner);
 	/// Converts the parser result back into a string form (not necessarily the same form
 	/// as the source form, but it should parse into the same parsed form again).
-	std::string print();
+	std::string toString();
 
 	eth::Assembly assemble();
 
