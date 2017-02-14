@@ -224,6 +224,16 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 	parsePrintCompare(parsed);
 }
 
+BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
+{
+	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> (x, y)\n    {\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	parsePrintCompare("{\n    g(1, mul(2, x), f(mul(2, 3)))\n    x()\n}");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Analysis)
