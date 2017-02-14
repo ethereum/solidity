@@ -139,7 +139,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsi
 			solAssert(!!m_currentScope, "");
 
 			for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
-				if (!resolveNamesAndTypes(*baseContract, false))
+				if (!resolveNamesAndTypes(*baseContract, true))
 					success = false;
 
 			m_currentScope = m_scopes[contract].get();

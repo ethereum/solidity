@@ -42,6 +42,9 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
+	/// Creates the resolver with the given declarations added to the global scope.
+	/// @param _scopes mapping of scopes to be used (usually default constructed), these
+	/// are filled during the lifetime of this object.
 	NameAndTypeResolver(
 		std::vector<Declaration const*> const& _globals,
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
@@ -57,7 +60,7 @@ public:
 	/// Resolves all names and types referenced from the given AST Node.
 	/// This is usually only called at the contract level, but with a bit of care, it can also
 	/// be called at deeper levels.
-	/// @param _avoidCode if false, does not descend into nodes that contain code.
+	/// @param _resolveInsideCode if false, does not descend into nodes that contain code.
 	/// @returns false in case of error.
 	bool resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode = true);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations

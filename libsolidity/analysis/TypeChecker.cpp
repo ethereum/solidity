@@ -427,12 +427,9 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = false;
-	if (
+	bool isLibraryFunction =
 		dynamic_cast<ContractDefinition const*>(_function.scope()) &&
-		dynamic_cast<ContractDefinition const*>(_function.scope())->isLibrary()
-	)
-		isLibraryFunction = true;
+		dynamic_cast<ContractDefinition const*>(_function.scope())->isLibrary();
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)
