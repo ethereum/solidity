@@ -584,8 +584,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		if (expPoint != _literal.value().end())
 		{
 			if (
-				!all_of(_literal.value().begin(), expPoint, ::isdigit) ||
-				!all_of(expPoint + 1, _literal.value().end(), ::isdigit)
+				!all_of(_literal.value().begin(), expPoint, ::isdigit)
 			)
 				return make_tuple(false, rational(0));
 
@@ -595,10 +594,16 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				return make_tuple(false, rational(0));
 
 			x = bigint(string(_literal.value().begin(), expPoint));
-			x *= boost::multiprecision::pow(
-				bigint(10),
-				exp.convert_to<int32_t>()
-			);
+			if (exp < 0)
+				x /= boost::multiprecision::pow(
+					bigint(10),
+					abs(exp).convert_to<int32_t>()
+				);
+			else
+				x *= boost::multiprecision::pow(
+					bigint(10),
+					exp.convert_to<int32_t>()
+				);
 		}
 		else if (radixPoint != _literal.value().end())
 		{
