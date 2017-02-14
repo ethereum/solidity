@@ -66,7 +66,8 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 			return make_pair(sourceUnit, errors.at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(globalContext->declarations(), errors);
+		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
+		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errors);
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
@@ -1080,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 			modifier mod(uint a) { _; return 7; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, TypeError, "Return arguments not allowed.");
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)

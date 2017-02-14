@@ -42,15 +42,27 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
-	/// Registers all declarations found in the source unit.
+	/// Creates the resolver with the given declarations added to the global scope.
+	/// @param _scopes mapping of scopes to be used (usually default constructed), these
+	/// are filled during the lifetime of this object.
+	NameAndTypeResolver(
+		std::vector<Declaration const*> const& _globals,
+		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
+		ErrorList& _errors
+	);
+	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
-	bool registerDeclarations(SourceUnit& _sourceUnit);
+	/// @param _currentScope should be nullptr but can be used to inject new declarations into
+	/// existing scopes, used by the snippets feature.
+	bool registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope = nullptr);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
-	/// Resolves all names and types referenced from the given contract.
+	/// Resolves all names and types referenced from the given AST Node.
+	/// This is usually only called at the contract level, but with a bit of care, it can also
+	/// be called at deeper levels.
+	/// @param _resolveInsideCode if false, does not descend into nodes that contain code.
 	/// @returns false in case of error.
-	bool resolveNamesAndTypes(ContractDefinition& _contract);
+	bool resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode = true);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
 	/// @returns false in case of error.
@@ -77,8 +89,6 @@ public:
 	);
 
 private:
-	void reset();
-
 	/// Imports all members declared directly in the given contract (i.e. does not import inherited members)
 	/// into the current scope if they are not present already.
 	void importInheritedScope(ContractDefinition const& _base);
@@ -112,7 +122,7 @@ private:
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
 	/// Aliases (for example `import "x" as y;`) create multiple pointers to the same scope.
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;
@@ -125,13 +135,20 @@ private:
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
+	/// Registers declarations in their scopes and creates new scopes as a side-effect
+	/// of construction.
+	/// @param _currentScope should be nullptr if we start at SourceUnit, but can be different
+	/// to inject new declarations into an existing scope, used by snippets.
 	DeclarationRegistrationHelper(
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		ASTNode& _astRoot,
-		ErrorList& _errors
+		ErrorList& _errors,
+		ASTNode const* _currentScope = nullptr
 	);
 
 private:
+	bool visit(SourceUnit& _sourceUnit) override;
+	void endVisit(SourceUnit& _sourceUnit) override;
 	bool visit(ImportDirective& _declaration) override;
 	bool visit(ContractDefinition& _contract) override;
 	void endVisit(ContractDefinition& _contract) override;

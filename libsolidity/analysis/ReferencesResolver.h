@@ -45,12 +45,10 @@ public:
 	ReferencesResolver(
 		ErrorList& _errors,
 		NameAndTypeResolver& _resolver,
-		ParameterList const* _returnParameters,
 		bool _resolveInsideCode = false
 	):
 		m_errors(_errors),
 		m_resolver(_resolver),
-		m_returnParameters(_returnParameters),
 		m_resolveInsideCode(_resolveInsideCode)
 	{}
 
@@ -61,6 +59,10 @@ private:
 	virtual bool visit(Block const&) override { return m_resolveInsideCode; }
 	virtual bool visit(Identifier const& _identifier) override;
 	virtual bool visit(ElementaryTypeName const& _typeName) override;
+	virtual bool visit(FunctionDefinition const& _functionDefinition) override;
+	virtual void endVisit(FunctionDefinition const& _functionDefinition) override;
+	virtual bool visit(ModifierDefinition const& _modifierDefinition) override;
+	virtual void endVisit(ModifierDefinition const& _modifierDefinition) override;
 	virtual void endVisit(UserDefinedTypeName const& _typeName) override;
 	virtual void endVisit(FunctionTypeName const& _typeName) override;
 	virtual void endVisit(Mapping const& _typeName) override;
@@ -83,7 +85,8 @@ private:
 
 	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;
-	ParameterList const* m_returnParameters;
+	/// Stack of return parameters.
+	std::vector<ParameterList const*> m_returnParameters;
 	bool const m_resolveInsideCode;
 	bool m_errorOccurred = false;
 };

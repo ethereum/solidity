@@ -32,11 +32,11 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-bool TypeChecker::checkTypeRequirements(ContractDefinition const& _contract)
+bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
 	try
 	{
-		visit(_contract);
+		_contract.accept(*this);
 	}
 	catch (FatalError const&)
 	{
@@ -427,7 +427,9 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*_function.scope()).isLibrary();
+	bool isLibraryFunction =
+		dynamic_cast<ContractDefinition const*>(_function.scope()) &&
+		dynamic_cast<ContractDefinition const*>(_function.scope())->isLibrary();
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)
