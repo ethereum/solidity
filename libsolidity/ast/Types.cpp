@@ -576,11 +576,31 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 	rational x;
 	try
 	{
-		rational numerator;
-		rational denominator(1);
-		
+		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
+		if (expPoint == _literal.value().end())
+			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
 		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
-		if (radixPoint != _literal.value().end())
+
+		if (expPoint != _literal.value().end())
+		{
+			if (
+				!all_of(_literal.value().begin(), expPoint, ::isdigit) ||
+				!all_of(expPoint + 1, _literal.value().end(), ::isdigit)
+			)
+				return make_tuple(false, rational(0));
+
+			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
+
+			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
+				return make_tuple(false, rational(0));
+
+			x = bigint(string(_literal.value().begin(), expPoint));
+			x *= boost::multiprecision::pow(
+				bigint(10),
+				exp.convert_to<int32_t>()
+			);
+		}
+		else if (radixPoint != _literal.value().end())
 		{
 			if (
 				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
@@ -593,6 +613,9 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				_literal.value().end(), 
 				[](char const& a) { return a == '0'; }
 			);
+
+			rational numerator;
+			rational denominator(1);
 
 			denominator = bigint(string(fractionalBegin, _literal.value().end()));
 			denominator /= boost::multiprecision::pow(
