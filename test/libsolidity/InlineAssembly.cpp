@@ -73,10 +73,21 @@ bool successAssemble(string const& _source, bool _allowWarnings = true)
 	return successParse(_source, true, _allowWarnings);
 }
 
+void parsePrintCompare(string const& _source)
+{
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	BOOST_CHECK_EQUAL(stack.toString(), _source);
+}
+
 }
 
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
+
+
+BOOST_AUTO_TEST_SUITE(Parsing)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -148,6 +159,49 @@ BOOST_AUTO_TEST_CASE(blocks)
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Printing)
+
+BOOST_AUTO_TEST_CASE(print_smoke)
+{
+	parsePrintCompare("{\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_instructions)
+{
+	parsePrintCompare("{\n    7\n    8\n    mul\n    dup10\n    add\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_subblock)
+{
+	parsePrintCompare("{\n    {\n        dup4\n        add\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_functional)
+{
+	parsePrintCompare("{\n    mul(sload(0x12), 7)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_label)
+{
+	parsePrintCompare("{\n    loop:\n    jump(loop)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_assignments)
+{
+	parsePrintCompare("{\n    let x := mul(2, 3)\n    7\n    =: x\n    x := add(1, 2)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_string_literals)
+{
+	parsePrintCompare("{\n    \"\\n'\\xab\\x95\\\"\"\n}");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Analysis)
+
 BOOST_AUTO_TEST_CASE(string_literals)
 {
 	BOOST_CHECK(successAssemble("{ let x := \"12345678901234567890123456789012\" }"));
@@ -209,6 +263,8 @@ BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
