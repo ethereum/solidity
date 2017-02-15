@@ -198,6 +198,17 @@ BOOST_AUTO_TEST_CASE(print_string_literals)
 	parsePrintCompare("{\n    \"\\n'\\xab\\x95\\\"\"\n}");
 }
 
+BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
+{
+	string source = "{ \"\\u1bac\" }";
+	string parsed = "{\n    \"\\xe1\\xae\\xac\"\n}";
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	BOOST_CHECK_EQUAL(stack.toString(), parsed);
+	parsePrintCompare(parsed);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Analysis)
