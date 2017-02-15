@@ -55,6 +55,8 @@ public:
 
 	explicit Error(Type _type);
 
+	Error(Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation());
+
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
 

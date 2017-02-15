@@ -148,6 +148,10 @@ assembly::Statement Parser::parseStatement()
 					break;
 				expectToken(Token::Comma);
 			}
+		// Push an empty string to signify that there were brackets, like in
+		// "name[]:", which just resets the stack height to the height of the local variables.
+		if (label.stackInfo.empty())
+			label.stackInfo.push_back("");
 		expectToken(Token::RBrack);
 		label.location.end = endPosition();
 		expectToken(Token::Colon);
