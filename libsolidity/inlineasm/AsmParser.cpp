@@ -140,7 +140,7 @@ assembly::Statement Parser::parseStatement()
 			label.stackInfo.push_back("-" + m_scanner->currentLiteral());
 			expectToken(Token::Number);
 		}
-		else
+		else if (m_scanner->currentToken() != Token::RBrack)
 			while (true)
 			{
 				label.stackInfo.push_back(expectAsmIdentifier());

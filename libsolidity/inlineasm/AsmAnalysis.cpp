@@ -36,7 +36,7 @@ using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
 
-bool Scope::registerLabel(const string& _name, size_t _id)
+bool Scope::registerLabel(string const& _name, size_t _id)
 {
 	if (lookup(_name))
 		return false;
@@ -45,7 +45,7 @@ bool Scope::registerLabel(const string& _name, size_t _id)
 }
 
 
-bool Scope::registerVariable(const string& _name)
+bool Scope::registerVariable(string const& _name)
 {
 	if (lookup(_name))
 		return false;
@@ -125,23 +125,22 @@ bool AsmAnalyzer::operator()(Label const& _item)
 			}
 		label.resetStackHeight = true;
 		for (auto const& stackItem: _item.stackInfo)
-		{
-			if (!m_currentScope->registerVariable(stackItem))
-			{
-				//@TODO secondary location
-				m_errors.push_back(make_shared<Error>(
-					Error::Type::DeclarationError,
-					"Variable name " + stackItem + " already taken in this scope.",
-					_item.location
-				));
-				success = false;
-			}
-		}
+			if (!stackItem.empty())
+				if (!m_currentScope->registerVariable(stackItem))
+				{
+					//@TODO secondary location
+					m_errors.push_back(make_shared<Error>(
+						Error::Type::DeclarationError,
+						"Variable name " + stackItem + " already taken in this scope.",
+						_item.location
+					));
+					success = false;
+				}
 	}
 	return success;
 }
 
-bool AsmAnalyzer::operator()(const FunctionalAssignment& _assignment)
+bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 {
 	return boost::apply_visitor(*this, *_assignment.value);
 }

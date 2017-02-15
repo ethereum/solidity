@@ -593,7 +593,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
+	if (!codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return false;
@@ -641,8 +641,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				return false;
 		}
 		return true;
-	});
-	return false;
+	}))
+		return false;
+	return true;
 }
 
 bool TypeChecker::visit(IfStatement const& _ifStatement)
