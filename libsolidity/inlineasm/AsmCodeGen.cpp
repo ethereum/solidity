@@ -153,6 +153,10 @@ public:
 				else if (_label.id == Scope::Label::errorLabelId)
 					_label.id = size_t(m_state.assembly.errorTag().data());
 				m_state.assembly.append(eth::AssemblyItem(eth::PushTag, _label.id));
+			},
+			[=](Scope::Function&)
+			{
+				solAssert(false, "Not yet implemented");
 			}
 		)))
 		{
@@ -258,6 +262,13 @@ private:
 				m_state.addError(
 					Error::Type::DeclarationError,
 					"Label \"" + string(_variableName.name) + "\" used as variable."
+				);
+			},
+			[=](Scope::Function const&)
+			{
+				m_state.addError(
+					Error::Type::DeclarationError,
+					"Function \"" + string(_variableName.name) + "\" used as variable."
 				);
 			}
 		)))

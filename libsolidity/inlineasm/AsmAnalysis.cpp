@@ -38,7 +38,7 @@ using namespace dev::solidity::assembly;
 
 bool Scope::registerLabel(string const& _name, size_t _id)
 {
-	if (lookup(_name))
+	if (exists(_name))
 		return false;
 	identifiers[_name] = Scope::Label(_id);
 	return true;
@@ -47,9 +47,17 @@ bool Scope::registerLabel(string const& _name, size_t _id)
 
 bool Scope::registerVariable(string const& _name)
 {
-	if (lookup(_name))
+	if (exists(_name))
 		return false;
 	identifiers[_name] = Variable();
+	return true;
+}
+
+bool Scope::registerFunction(string const& _name, size_t _arguments, size_t _returns)
+{
+	if (exists(_name))
+		return false;
+	identifiers[_name] = Function(_arguments, _returns);
 	return true;
 }
 
@@ -57,10 +65,20 @@ Scope::Identifier* Scope::lookup(string const& _name)
 {
 	if (identifiers.count(_name))
 		return &identifiers[_name];
-	else if (superScope)
+	else if (superScope && !closedScope)
 		return superScope->lookup(_name);
 	else
 		return nullptr;
+}
+
+bool Scope::exists(string const& _name)
+{
+	if (identifiers.count(_name))
+		return true;
+	else if (superScope)
+		return superScope->exists(_name);
+	else
+		return false;
 }
 
 AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors):
@@ -159,6 +177,18 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 		success = false;
 	}
 	return success;
+}
+
+bool AsmAnalyzer::operator()(assembly::FunctionDefinition const&)
+{
+	// TODO - we cannot throw an exception here because of some tests.
+	return true;
+}
+
+bool AsmAnalyzer::operator()(assembly::FunctionCall const&)
+{
+	// TODO - we cannot throw an exception here because of some tests.
+	return true;
 }
 
 bool AsmAnalyzer::operator()(Block const& _block)

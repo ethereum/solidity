@@ -43,6 +43,8 @@ struct VariableDeclaration;
 struct Instruction;
 struct Identifier;
 struct Assignment;
+struct FunctionDefinition;
+struct FunctionCall;
 
 template <class...>
 struct GenericVisitor{};
@@ -87,18 +89,27 @@ struct Scope
 		static const size_t unassignedLabelId = 0;
 	};
 
-	using Identifier = boost::variant<Variable, Label>;
-	using Visitor = GenericVisitor<Variable const, Label const>;
-	using NonconstVisitor = GenericVisitor<Variable, Label>;
+	struct Function
+	{
+		Function(size_t _arguments, size_t _returns): arguments(_arguments), returns(_returns) {}
+		size_t arguments = 0;
+		size_t returns = 0;
+	};
+
+	using Identifier = boost::variant<Variable, Label, Function>;
+	using Visitor = GenericVisitor<Variable const, Label const, Function const>;
+	using NonconstVisitor = GenericVisitor<Variable, Label, Function>;
 
 	bool registerVariable(std::string const& _name);
 	bool registerLabel(std::string const& _name, size_t _id);
+	bool registerFunction(std::string const& _name, size_t _arguments, size_t _returns);
 
-	/// Looks up the identifier in this or super scopes and returns a valid pointer if
-	/// found or a nullptr if not found.
+	/// Looks up the identifier in this or super scopes (stops and function and assembly boundaries)
+	/// and returns a valid pointer if found or a nullptr if not found.
 	/// The pointer will be invalidated if the scope is modified.
 	Identifier* lookup(std::string const& _name);
-	/// Looks up the identifier in this and super scopes and calls the visitor, returns false if not found.
+	/// Looks up the identifier in this and super scopes (stops and function and assembly boundaries)
+	/// and calls the visitor, returns false if not found.
 	template <class V>
 	bool lookup(std::string const& _name, V const& _visitor)
 	{
@@ -110,8 +121,13 @@ struct Scope
 		else
 			return false;
 	}
-
+	/// @returns true if the name exists in this scope or in super scopes (also searches
+	/// across function and assembly boundaries).
+	bool exists(std::string const& _name);
 	Scope* superScope = nullptr;
+	/// If true, identifiers from the super scope are not visible here, but they are still
+	/// taken into account to prevent shadowing.
+	bool closedScope = false;
 	std::map<std::string, Identifier> identifiers;
 };
 
@@ -130,6 +146,8 @@ public:
 	bool operator()(assembly::Assignment const&) { return true; }
 	bool operator()(assembly::FunctionalAssignment const& _functionalAssignment);
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
+	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
+	bool operator()(assembly::FunctionCall const& _functionCall);
 	bool operator()(assembly::Block const& _block);
 
 private:
