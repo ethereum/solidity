@@ -44,6 +44,31 @@ struct Instruction;
 struct Identifier;
 struct Assignment;
 
+template <class...>
+struct GenericVisitor{};
+
+template <class Visitable, class... Others>
+struct GenericVisitor<Visitable, Others...>: public GenericVisitor<Others...>
+{
+	using GenericVisitor<Others...>::operator ();
+	explicit GenericVisitor(
+		std::function<void(Visitable&)> _visitor,
+		std::function<void(Others&)>... _otherVisitors
+	):
+		GenericVisitor<Others...>(_otherVisitors...),
+		m_visitor(_visitor)
+	{}
+
+	void operator()(Visitable& _v) const { m_visitor(_v); }
+
+	std::function<void(Visitable&)> m_visitor;
+};
+template <>
+struct GenericVisitor<>: public boost::static_visitor<> {
+	void operator()() const {}
+};
+
+
 struct Scope
 {
 	struct Variable
@@ -63,43 +88,11 @@ struct Scope
 	};
 
 	using Identifier = boost::variant<Variable, Label>;
-
-	struct Visitor: public boost::static_visitor<>
-	{
-		Visitor(
-			std::function<void(Variable const&)> _varVisitor,
-			std::function<void(Label const&)> _labelVisitor
-		):
-			m_varVisitor(std::move(_varVisitor)),
-			m_labelVisitor(std::move(_labelVisitor))
-		{}
-
-		void operator()(Variable const& _var) const { m_varVisitor(_var); }
-		void operator()(Label const& _label) const { m_labelVisitor(_label); }
-
-		std::function<void(Variable const&)> m_varVisitor;
-		std::function<void(Label const&)> m_labelVisitor;
-	};
-	struct NonconstVisitor: public boost::static_visitor<>
-	{
-		NonconstVisitor(
-			std::function<void(Variable&)> _varVisitor,
-			std::function<void(Label&)> _labelVisitor
-		):
-			m_varVisitor(std::move(_varVisitor)),
-			m_labelVisitor(std::move(_labelVisitor))
-		{}
-
-		void operator()(Variable& _var) const { m_varVisitor(_var); }
-		void operator()(Label& _label) const { m_labelVisitor(_label); }
-
-		std::function<void(Variable&)> m_varVisitor;
-		std::function<void(Label&)> m_labelVisitor;
-	};
-
-	bool registerLabel(std::string const& _name, size_t _id);
+	using Visitor = GenericVisitor<Variable const, Label const>;
+	using NonconstVisitor = GenericVisitor<Variable, Label>;
 
 	bool registerVariable(std::string const& _name);
+	bool registerLabel(std::string const& _name, size_t _id);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if
 	/// found or a nullptr if not found.
@@ -117,8 +110,6 @@ struct Scope
 		else
 			return false;
 	}
-
-
 
 	Scope* superScope = nullptr;
 	std::map<std::string, Identifier> identifiers;
