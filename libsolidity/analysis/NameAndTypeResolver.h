@@ -89,6 +89,9 @@ public:
 	);
 
 private:
+	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
+	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
+
 	/// Imports all members declared directly in the given contract (i.e. does not import inherited members)
 	/// into the current scope if they are not present already.
 	void importInheritedScope(ContractDefinition const& _base);
