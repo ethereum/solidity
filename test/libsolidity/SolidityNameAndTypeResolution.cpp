@@ -5079,6 +5079,22 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 	CHECK_WARNING(text, "checksum");
 }
 
+BOOST_AUTO_TEST_CASE(early_exit_on_fatal_errors)
+{
+	// This tests a crash that occured because we did not stop for fatal errors.
+	char const* text = R"(
+		contract C {
+			struct S {
+				ftring a;
+			}
+			S public s;
+			function s() s {
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
