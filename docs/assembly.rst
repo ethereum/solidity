@@ -361,7 +361,9 @@ Labels
 
 Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
 which can change easily. Solidity inline assembly provides labels to make the use of
-jumps easier. The following code computes an element in the Fibonacci series.
+jumps easier. Note that labels are a low-level feature and it is possible to write
+efficient assembly without labels, just using assembly functions, loops and switch instructions
+(see below). The following code computes an element in the Fibonacci series.
 
 .. code::
 
@@ -391,12 +393,35 @@ will have a wrong impression about the stack height at label ``two``:
 .. code::
 
     {
+        let x := 8
         jump(two)
         one:
-            // Here the stack height is 1 (because we pushed 7),
-            // but the assembler thinks it is 0 because it reads
+            // Here the stack height is 2 (because we pushed x and 7),
+            // but the assembler thinks it is 1 because it reads
             // from top to bottom.
-            // Accessing stack variables here will lead to errors.
+            // Accessing the stack variable x here will lead to errors.
+            x := 9
+            jump(three)
+        two:
+            7 // push something onto the stack
+            jump(one)
+        three:
+    }
+
+This problem can be fixed by manually adjusting the stack height for the
+assembler - you can provide a stack height delta that is added
+to the stack height just prior to the label.
+Note that you will not have to care about these things if you just use
+loops and assembly-level functions.
+
+.. code::
+
+    {
+        let x := 8
+        jump(two)
+        one[1]:
+            // Now the stack height is correctly adjusted.
+            x := 9
             jump(three)
         two:
             7 // push something onto the stack
@@ -464,6 +489,9 @@ is performed by replacing the variable's value on the stack by the new value.
 Switch
 ------
 
+.. note::
+    Switch is not yet implemented.
+
 You can use a switch statement as a very basic version of "if/else".
 It takes the value of an expression and compares it to several constants.
 The branch corresponding to the matching constant is taken. Contrary to the
@@ -491,6 +519,9 @@ case does require them.
 Loops
 -----
 
+.. note::
+    Loops are not yet implemented.
+
 Assembly supports a simple for-style loop. For-style loops have
 a header containing an initializing part, a condition and a post-iteration
 part. The condition has to be a functional-style expression, while
@@ -511,6 +542,9 @@ The following example computes the sum of an area in memory.
 
 Functions
 ---------
+
+.. note::
+    Functions are not yet implemented.
 
 Assembly allows the definition of low-level functions. These take their
 arguments (and a return PC) from the stack and also put the results onto the
@@ -610,8 +644,7 @@ which follow very simple and regular scoping rules and cleanup of local variable
 Scoping: An identifier that is declared (label, variable, function, assembly)
 is only visible in the block where it was declared (including nested blocks
 inside the current block). It is not legal to access local variables across
-function borders, even if they would be in scope. Shadowing is allowed, but
-two identifiers with the same name cannot be declared in the same block.
+function borders, even if they would be in scope. Shadowing is not allowed.
 Local variables cannot be accessed before they were declared, but labels,
 functions and assemblies can. Assemblies are special blocks that are used
 for e.g. returning runtime code or creating contracts. No identifier from an
@@ -624,7 +657,7 @@ flow path. Whenever a local variable is referenced, the code generator needs
 to know its current relative position in the stack and thus it needs to
 keep track of the current so-called stack height.
 At the end of a block, this implicit stack height is always reduced by the number
-of local variables whether ther is a continuing control flow or not.
+of local variables whether there is a continuing control flow or not.
 
 This means that the stack height before and after the block should be the same.
 If this is not the case, a warning is issued,
@@ -805,7 +838,7 @@ Grammar::
     IdentifierOrList = Identifier | '(' IdentifierList ')'
     IdentifierList = Identifier ( ',' Identifier)*
     AssemblyAssignment = '=:' Identifier
-    LabelDefinition = Identifier ( '[' ( IdentifierList | NumberLiteral ) ']' )? ':'
+    LabelDefinition = Identifier ( '[' ( IdentifierList? | NumberLiteral ) ']' )? ':'
     AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
         ( 'default' ':' AssemblyBlock )?
     AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
@@ -947,11 +980,14 @@ Pseudocode::
       POP
     LabelDefinition(name [id1, ..., idn] :) ->
       JUMPDEST
-      // register new variables id1, ..., idn and set the stack height to
-      // stack_height_at_block_start + number_of_local_variables
+      // register new variables id1, ..., idn and adjust the assumed stack
+      // height such that it matches the stack height at the beginning of
+      // the block plus all local variables including the just registered
+      // ones where idn is at the stack top. If n is zero, resets the stack
+      // height to just the local variables.
     LabelDefinition(name [number] :) ->
       JUMPDEST
-      // adjust stack height by +number (can be negative)
+      // adjust stack height by the relative amount "number" (can be negative)
     NumberLiteral(num) ->
       PUSH<num interpreted as decimal and right-aligned>
     HexLiteral(lit) ->
