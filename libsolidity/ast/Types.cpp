@@ -1652,6 +1652,7 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 	{
 		TypePointer type = variable->annotation().type;
+		solAssert(type, "");
 		// Skip all mapping members if we are not in storage.
 		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 			continue;
@@ -1964,6 +1965,8 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		for (auto const& member: structType->members(nullptr))
+		{
+			solAssert(member.type, "");
 			if (member.type->category() != Category::Mapping)
 			{
 				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
@@ -1972,6 +1975,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				retParams.push_back(member.type);
 				retParamNames.push_back(member.name);
 			}
+		}
 	}
 	else
 	{

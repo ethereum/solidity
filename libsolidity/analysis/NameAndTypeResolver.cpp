@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/Exceptions.h>
@@ -130,62 +131,9 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 
 bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode)
 {
-	bool success = true;
 	try
 	{
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(&_node))
-		{
-			m_currentScope = m_scopes[contract->scope()].get();
-			solAssert(!!m_currentScope, "");
-
-			for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
-				if (!resolveNamesAndTypes(*baseContract, true))
-					success = false;
-
-			m_currentScope = m_scopes[contract].get();
-
-			if (success)
-			{
-				linearizeBaseContracts(*contract);
-				vector<ContractDefinition const*> properBases(
-					++contract->annotation().linearizedBaseContracts.begin(),
-					contract->annotation().linearizedBaseContracts.end()
-				);
-
-				for (ContractDefinition const* base: properBases)
-					importInheritedScope(*base);
-			}
-
-			// these can contain code, only resolve parameters for now
-			for (ASTPointer<ASTNode> const& node: contract->subNodes())
-			{
-				m_currentScope = m_scopes[contract].get();
-				if (!resolveNamesAndTypes(*node, false))
-					success = false;
-			}
-
-			if (!success)
-				return false;
-
-			if (!_resolveInsideCode)
-				return success;
-
-			m_currentScope = m_scopes[contract].get();
-
-			// now resolve references inside the code
-			for (ASTPointer<ASTNode> const& node: contract->subNodes())
-			{
-				m_currentScope = m_scopes[contract].get();
-				if (!resolveNamesAndTypes(*node, true))
-					success = false;
-			}
-		}
-		else
-		{
-			if (m_scopes.count(&_node))
-				m_currentScope = m_scopes[&_node].get();
-			return ReferencesResolver(m_errors, *this, _resolveInsideCode).resolve(_node);
-		}
+		return resolveNamesAndTypesInternal(_node, _resolveInsideCode);
 	}
 	catch (FatalError const&)
 	{
@@ -193,7 +141,6 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsi
 			throw; // Something is weird here, rather throw again.
 		return false;
 	}
-	return success;
 }
 
 bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
@@ -249,21 +196,25 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	solAssert(_declarations.size() > 1, "");
 	vector<Declaration const*> uniqueFunctions;
 
-	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
+	for (Declaration const* declaration: _declarations)
 	{
-		solAssert(*it, "");
+		solAssert(declaration, "");
 		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
-		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<EventDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
-			"Found overloading involving something not a function or a variable");
+		solAssert(
+			dynamic_cast<FunctionDefinition const*>(declaration) ||
+			dynamic_cast<EventDefinition const*>(declaration) ||
+			dynamic_cast<VariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function or a variable."
+		);
 
-		shared_ptr<FunctionType const> functionType { (*it)->functionType(false) };
+		FunctionTypePointer functionType { declaration->functionType(false) };
 		if (!functionType)
-			functionType = (*it)->functionType(true);
-		solAssert(functionType, "failed to determine the function type of the overloaded");
+			functionType = declaration->functionType(true);
+		solAssert(functionType, "Failed to determine the function type of the overloaded.");
 
 		for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
 			if (!parameter)
-				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context.");
 
 		if (uniqueFunctions.end() == find_if(
 			uniqueFunctions.begin(),
@@ -276,9 +227,71 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
 			}
 		))
-			uniqueFunctions.push_back(*it);
+			uniqueFunctions.push_back(declaration);
 	}
 	return uniqueFunctions;
+}
+
+bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode)
+{
+	if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(&_node))
+	{
+		bool success = true;
+		m_currentScope = m_scopes[contract->scope()].get();
+		solAssert(!!m_currentScope, "");
+
+		for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
+			if (!resolveNamesAndTypes(*baseContract, true))
+				success = false;
+
+		m_currentScope = m_scopes[contract].get();
+
+		if (success)
+		{
+			linearizeBaseContracts(*contract);
+			vector<ContractDefinition const*> properBases(
+				++contract->annotation().linearizedBaseContracts.begin(),
+				contract->annotation().linearizedBaseContracts.end()
+			);
+
+			for (ContractDefinition const* base: properBases)
+				importInheritedScope(*base);
+		}
+
+		// these can contain code, only resolve parameters for now
+		for (ASTPointer<ASTNode> const& node: contract->subNodes())
+		{
+			m_currentScope = m_scopes[contract].get();
+			if (!resolveNamesAndTypes(*node, false))
+			{
+				success = false;
+				break;
+			}
+		}
+
+		if (!success)
+			return false;
+
+		if (!_resolveInsideCode)
+			return success;
+
+		m_currentScope = m_scopes[contract].get();
+
+		// now resolve references inside the code
+		for (ASTPointer<ASTNode> const& node: contract->subNodes())
+		{
+			m_currentScope = m_scopes[contract].get();
+			if (!resolveNamesAndTypes(*node, true))
+				success = false;
+		}
+		return success;
+	}
+	else
+	{
+		if (m_scopes.count(&_node))
+			m_currentScope = m_scopes[&_node].get();
+		return ReferencesResolver(m_errors, *this, _resolveInsideCode).resolve(_node);
+	}
 }
 
 void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)

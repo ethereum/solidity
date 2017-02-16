@@ -52,7 +52,7 @@ public:
 		m_resolveInsideCode(_resolveInsideCode)
 	{}
 
-	/// @returns true if no errors during resolving
+	/// @returns true if no errors during resolving and throws exceptions on fatal errors.
 	bool resolve(ASTNode const& _root);
 
 private:

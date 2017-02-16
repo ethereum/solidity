@@ -9,6 +9,7 @@ Features:
 Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
+ * Type system: Fix a crash caused by continuing on fatal errors in the code.
  * Type system: Disallow arrays with negative length.
 
 ### 0.4.9 (2017-01-31)
