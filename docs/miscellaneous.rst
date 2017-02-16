@@ -461,7 +461,7 @@ Global Variables
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``
-- ``assert(bool condition)``: throws if the condition is false
+- ``assert(bool condition)``: throws if the condition is false (using an invalid opcode)
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
