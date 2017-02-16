@@ -140,28 +140,11 @@ public:
 		if (m_scope.lookup(_identifier.name, Scope::NonconstVisitor(
 			[=](Scope::Variable& _var)
 			{
-				if (!_var.active)
-				{
-					m_state.addError(
-						Error::Type::TypeError,
-						"Variable used before it was declared",
-						_identifier.location
-					);
-					m_state.assembly.append(u256(0));
-					return;
-				}
-				int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
-				if (heightDiff <= 0 || heightDiff > 16)
-				{
-					m_state.addError(
-						Error::Type::TypeError,
-						"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-						_identifier.location
-					);
-					m_state.assembly.append(u256(0));
-				}
-				else
+				if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
 					m_state.assembly.append(solidity::dupInstruction(heightDiff));
+				else
+					// Store something to balance the stack
+					m_state.assembly.append(u256(0));
 			},
 			[=](Scope::Label& _label)
 			{
@@ -266,25 +249,8 @@ private:
 		if (m_scope.lookup(_variableName.name, Scope::Visitor(
 			[=](Scope::Variable const& _var)
 			{
-				if (!_var.active)
-				{
-					m_state.addError(
-						Error::Type::TypeError,
-						"Variable used before it was declared",
-						_location
-					);
-					m_state.assembly.append(u256(0));
-					return;
-				}
-				int heightDiff = m_state.assembly.deposit() - _var.stackHeight - 1;
-				if (heightDiff <= 0 || heightDiff > 16)
-					m_state.addError(
-						Error::Type::TypeError,
-						"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-						_location
-					);
-				else
-					m_state.assembly.append(solidity::swapInstruction(heightDiff));
+				if (int heightDiff = variableHeightDiff(_var, _location, true))
+					m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
 				m_state.assembly.append(solidity::Instruction::POP);
 			},
 			[=](Scope::Label const&)
@@ -302,6 +268,30 @@ private:
 				Error::Type::DeclarationError,
 				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
 			);
+	}
+
+	/// Determines the stack height difference to the given variables. Automatically generates
+	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
+	/// errors and the (positive) stack height difference otherwise.
+	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
+	{
+		if (!_var.active)
+		{
+			m_state.addError( Error::Type::TypeError, "Variable used before it was declared", _location);
+			return 0;
+		}
+		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
+		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
+		{
+			m_state.addError(
+				Error::Type::TypeError,
+				"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
+				_location
+			);
+			return 0;
+		}
+		else
+			return heightDiff;
 	}
 
 	void expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
