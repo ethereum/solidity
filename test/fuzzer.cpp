@@ -55,14 +55,14 @@ int main()
 	if (!Json::Reader().parse(outputString, outputJson))
 	{
 		cout << "Compiler produced invalid JSON output." << endl;
-		return -1;
+		abort();
 	}
 	if (outputJson.isMember("errors"))
 	{
 		if (!outputJson["errors"].isArray())
 		{
 			cout << "Output JSON has \"errors\" but it is not an array." << endl;
-			return -1;
+			abort();
 		}
 		for (Json::Value const& error: outputJson["errors"])
 		{
@@ -79,14 +79,14 @@ int main()
 			if (!invalid.empty())
 			{
 				cout << "Invalid error: \"" << invalid << "\"" << endl;
-				return -1;
+				abort();
 			}
 		}
 	}
 	else if (!outputJson.isMember("contracts"))
 	{
 		cout << "Output JSON has neither \"errors\" nor \"contracts\"." << endl;
-		return -1;
+		abort();
 	}
 	return 0;
 }
