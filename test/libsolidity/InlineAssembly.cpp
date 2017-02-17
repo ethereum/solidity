@@ -63,7 +63,7 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _ass
 	}
 	if (!success)
 	{
-		BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+		BOOST_REQUIRE_EQUAL(stack.errors().size(), 1);
 		return *stack.errors().front();
 	}
 	else
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(vardecl)
 
 BOOST_AUTO_TEST_CASE(assignment)
 {
-	BOOST_CHECK(successParse("{ 7 8 add =: x }"));
+	BOOST_CHECK(successParse("{ let x := 2 7 8 add =: x }"));
 }
 
 BOOST_AUTO_TEST_CASE(label)
@@ -177,22 +177,28 @@ BOOST_AUTO_TEST_CASE(label_complex)
 
 BOOST_AUTO_TEST_CASE(functional)
 {
-	BOOST_CHECK(successParse("{ add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let x := 2 add(7, mul(6, x)) mul(7, 8) add }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_assignment)
 {
-	BOOST_CHECK(successParse("{ x := 7 }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := 7 }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_assignment_complex)
 {
-	BOOST_CHECK(successParse("{ x := add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := add(7, mul(6, x)) mul(7, 8) add }"));
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
-	BOOST_CHECK(successParse("{ let x := add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let y := 2 let x := add(7, mul(6, y)) add mul(7, 8) }"));
+}
+
+BOOST_AUTO_TEST_CASE(variable_use_before_decl)
+{
+	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
+	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
@@ -212,7 +218,28 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	BOOST_CHECK(successParse("{ g(1, 2, f(mul(2, 3))) x() }"));
+	BOOST_CHECK(successParse("{ function f(a) {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
+}
+
+BOOST_AUTO_TEST_CASE(opcode_for_functions)
+{
+	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use instruction names for identifier names.");
+}
+
+BOOST_AUTO_TEST_CASE(opcode_for_function_args)
+{
+	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function f() -> (gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes)
+{
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
+{
+	CHECK_PARSE_ERROR("{ let x := 2 function g() { x } }", DeclarationError, "Identifier not found.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -272,7 +299,9 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	parsePrintCompare("{\n    g(1, mul(2, x), f(mul(2, 3)))\n    x()\n}");
+	parsePrintCompare(
+		"{\n    function y()\n    {\n    }\n    function f(a)\n    {\n    }\n    function g(a, b, c)\n    {\n    }\n    g(1, mul(2, address), f(mul(2, caller)))\n    y()\n}"
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -296,8 +325,8 @@ BOOST_AUTO_TEST_CASE(assignment_after_tag)
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found or not unique");
-	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found or not unique");
+	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
 }
 
