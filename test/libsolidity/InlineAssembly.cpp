@@ -20,14 +20,19 @@
  * Unit tests for inline assembly.
  */
 
-#include <string>
-#include <memory>
-#include <libevmasm/Assembly.h>
-#include <libsolidity/parsing/Scanner.h>
+#include "../TestHelper.h"
+
 #include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
-#include "../TestHelper.h"
+#include <test/libsolidity/ErrorCheck.h>
+#include <libevmasm/Assembly.h>
+
+#include <boost/optional.hpp>
+
+#include <string>
+#include <memory>
 
 using namespace std;
 
@@ -41,36 +46,57 @@ namespace test
 namespace
 {
 
-bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _assemble = false, bool _allowWarnings = true)
 {
 	assembly::InlineAssemblyStack stack;
+	bool success = false;
 	try
 	{
-		if (!stack.parse(std::make_shared<Scanner>(CharStream(_source))))
-			return false;
-		if (_assemble)
-		{
+		success = stack.parse(std::make_shared<Scanner>(CharStream(_source)));
+		if (success && _assemble)
 			stack.assemble();
-			if (!stack.errors().empty())
-				if (!_allowWarnings || !Error::containsOnlyWarnings(stack.errors()))
-					return false;
+	}
+	catch (FatalError const& e)
+	{
+		BOOST_FAIL("Fatal error leaked.");
+		success = false;
+	}
+	if (!success)
+	{
+		BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+		return *stack.errors().front();
+	}
+	else
+	{
+		// If success is true, there might still be an error in the assembly stage.
+		if (_allowWarnings && Error::containsOnlyWarnings(stack.errors()))
+			return {};
+		else if (!stack.errors().empty())
+		{
+			if (!_allowWarnings)
+				BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+			return *stack.errors().front();
 		}
 	}
-	catch (FatalError const&)
-	{
-		if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
-			return false;
-	}
-	if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
-		return false;
+	return {};
+}
 
-	BOOST_CHECK(Error::containsOnlyWarnings(stack.errors()));
-	return true;
+bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+{
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings);
 }
 
 bool successAssemble(string const& _source, bool _allowWarnings = true)
 {
 	return successParse(_source, true, _allowWarnings);
+}
+
+Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
+{
+
+	auto error = parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	BOOST_REQUIRE(error);
+	return *error;
 }
 
 void parsePrintCompare(string const& _source)
@@ -82,6 +108,21 @@ void parsePrintCompare(string const& _source)
 }
 
 }
+
+#define CHECK_ERROR(text, assemble, typ, substring) \
+do \
+{ \
+	Error err = expectError((text), (assemble), false); \
+	BOOST_CHECK(err.type() == (Error::Type::typ)); \
+	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+} while(0)
+
+#define CHECK_PARSE_ERROR(text, type, substring) \
+CHECK_ERROR(text, false, type, substring)
+
+#define CHECK_ASSEMBLE_ERROR(text, type, substring) \
+CHECK_ERROR(text, true, type, substring)
+
 
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
@@ -255,8 +296,8 @@ BOOST_AUTO_TEST_CASE(assignment_after_tag)
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	BOOST_CHECK(!successAssemble("{ this }"));
-	BOOST_CHECK(!successAssemble("{ ecrecover }"));
+	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found or not unique");
+	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found or not unique");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
 }
 
@@ -279,20 +320,17 @@ BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
-	// Error message: "Cannot use instruction names for identifier names."
-	BOOST_CHECK(!successAssemble("{ let gas := 1 }"));
+	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use instruction names for identifier names.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 {
-	// Error message: "Identifier expected, got instruction name."
-	BOOST_CHECK(!successAssemble("{ 2 =: gas }"));
+	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got instruction name.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 {
-	// Error message: "Cannot use instruction names for identifier names."
-	BOOST_CHECK(!successAssemble("{ gas := 2 }"));
+	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Label name / variable name must precede \":\"");
 }
 
 BOOST_AUTO_TEST_CASE(revert)
