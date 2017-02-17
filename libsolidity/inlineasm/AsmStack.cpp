@@ -49,7 +49,7 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 
 	*m_parserResult = std::move(*result);
 	AsmAnalyzer::Scopes scopes;
-	return (AsmAnalyzer(scopes, m_errors))(*m_parserResult);
+	return (AsmAnalyzer(scopes, m_errors, false)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
