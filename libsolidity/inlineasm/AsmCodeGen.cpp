@@ -66,7 +66,7 @@ struct GeneratorState
 		return size_t(id);
 	}
 
-	std::map<assembly::Block const*, shared_ptr<Scope>> scopes;
+	AsmAnalyzer::Scopes scopes;
 	ErrorList& errors;
 	eth::Assembly& assembly;
 };

@@ -62,12 +62,22 @@ bool Scope::registerFunction(string const& _name, size_t _arguments, size_t _ret
 
 Scope::Identifier* Scope::lookup(string const& _name)
 {
-	if (identifiers.count(_name))
-		return &identifiers[_name];
-	else if (superScope && !closedScope)
-		return superScope->lookup(_name);
-	else
-		return nullptr;
+	bool crossedFunctionBoundary = false;
+	for (Scope* s = this; s; s = s->superScope)
+	{
+		auto id = identifiers.find(_name);
+		if (id != identifiers.end())
+		{
+			if (crossedFunctionBoundary && id->second.type() == typeid(Scope::Variable))
+				return nullptr;
+			else
+				return &id->second;
+		}
+
+		if (s->functionScope)
+			crossedFunctionBoundary = true;
+	}
+	return nullptr;
 }
 
 bool Scope::exists(string const& _name)
@@ -84,11 +94,10 @@ AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors):
 	m_scopes(_scopes), m_errors(_errors)
 {
 	// Make the Solidity ErrorTag available to inline assembly
-	m_scopes[nullptr] = make_shared<Scope>();
 	Scope::Label errorLabel;
 	errorLabel.id = Scope::Label::errorLabelId;
-	m_scopes[nullptr]->identifiers["invalidJumpLabel"] = errorLabel;
-	m_currentScope = m_scopes[nullptr].get();
+	scope(nullptr).identifiers["invalidJumpLabel"] = errorLabel;
+	m_currentScope = &scope(nullptr);
 }
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
@@ -138,38 +147,52 @@ bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 {
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
-	if (!m_currentScope->registerVariable(_varDecl.name))
+	if (!registerVariable(_varDecl.name, _varDecl.location, *m_currentScope))
+		success = false;
+	return success;
+}
+
+bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
+{
+	bool success = true;
+	if (!m_currentScope->registerFunction(_funDef.name, _funDef.arguments.size(), _funDef.returns.size()))
 	{
 		//@TODO secondary location
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::DeclarationError,
-			"Variable name " + _varDecl.name + " already taken in this scope.",
-			_varDecl.location
+			"Function name " + _funDef.name + " already taken in this scope.",
+			_funDef.location
 		));
 		success = false;
 	}
+	Scope& body = scope(&_funDef.body);
+	body.superScope = m_currentScope;
+	body.functionScope = true;
+	for (auto const& var: _funDef.arguments + _funDef.returns)
+		if (!registerVariable(var, _funDef.location, body))
+			success = false;
+
+	(*this)(_funDef.body);
+
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::FunctionDefinition const&)
+bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 {
-	// TODO - we cannot throw an exception here because of some tests.
-	return true;
-}
-
-bool AsmAnalyzer::operator()(assembly::FunctionCall const&)
-{
-	// TODO - we cannot throw an exception here because of some tests.
-	return true;
+	bool success = true;
+	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
+		if (!boost::apply_visitor(*this, arg))
+			success = false;
+	// TODO actually look up the function (can only be done in a second pass)
+	// and check that the number of arguments and of returns matches the context
+	return success;
 }
 
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;
-	auto scope = make_shared<Scope>();
-	scope->superScope = m_currentScope;
-	m_scopes[&_block] = scope;
-	m_currentScope = scope.get();
+	scope(&_block).superScope = m_currentScope;
+	m_currentScope = &scope(&_block);
 
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
@@ -177,4 +200,27 @@ bool AsmAnalyzer::operator()(Block const& _block)
 
 	m_currentScope = m_currentScope->superScope;
 	return success;
+}
+
+bool AsmAnalyzer::registerVariable(string const& _name, SourceLocation const& _location, Scope& _scope)
+{
+	if (!_scope.registerVariable(_name))
+	{
+		//@TODO secondary location
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Variable name " + _name + " already taken in this scope.",
+			_location
+		));
+		return false;
+	}
+	return true;
+}
+
+Scope& AsmAnalyzer::scope(Block const* _block)
+{
+	auto& scope = m_scopes[_block];
+	if (!scope)
+		scope = make_shared<Scope>();
+	return *scope;
 }
