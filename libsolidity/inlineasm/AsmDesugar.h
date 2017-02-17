@@ -51,6 +51,8 @@ struct FunctionCall;
 struct Block;
 using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 
+struct Scope;
+
 struct ASTNodeReplacement
 {
 	ASTNodeReplacement() = default;
@@ -58,15 +60,22 @@ struct ASTNodeReplacement
 	ASTNodeReplacement(ASTNodeReplacement&&) = default;
 	ASTNodeReplacement& operator=(ASTNodeReplacement const&) = default;
 	ASTNodeReplacement& operator=(ASTNodeReplacement&&) = default;
-	ASTNodeReplacement(assembly::Statement&& _statement):
-		node(std::move(_statement))
-	{}
-	ASTNodeReplacement(assembly::Statement const& _statement):
-		node(_statement)
-	{}
-	ASTNodeReplacement(assembly::Statement const& _st1, assembly::Statement const& _st2):
-		node(_st1), secondNode(_st2), secondValid(true)
-	{}
+	ASTNodeReplacement(assembly::Statement&& _statement)
+	{
+		statements.push_back(std::move(_statement));
+	}
+	ASTNodeReplacement(assembly::Statement const& _statement)
+	{
+		statements.push_back(_statement);
+	}
+	ASTNodeReplacement(std::vector<assembly::Statement>&& _statements):
+		statements(std::move(_statements))
+	{ }
+	ASTNodeReplacement(assembly::Statement const& _st1, assembly::Statement const& _st2)
+	{
+		statements.push_back(_st1);
+		statements.push_back(_st2);
+	}
 	operator assembly::Statement() &&;
 	/// Converts to single node (throws if secondValid) and MOVES contents there.
 	assembly::Statement asStatement();
@@ -74,14 +83,15 @@ struct ASTNodeReplacement
 	/// @returns true iff the node is a single block.
 	bool isBlock() const;
 
-	assembly::Statement node;
-	assembly::Statement secondNode;
-	bool secondValid = false;
+	std::vector<assembly::Statement> statements;
 };
 
 class AsmDesugar: public boost::static_visitor<ASTNodeReplacement>
 {
 public:
+	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
+	AsmDesugar(Scopes const& _scopes): m_scopes(_scopes) {}
+
 	Block run(Block const& _in);
 
 	ASTNodeReplacement operator()(assembly::Instruction const& _instruction);
@@ -95,6 +105,9 @@ public:
 	ASTNodeReplacement operator()(assembly::FunctionDefinition const& _functionDefinition);
 	ASTNodeReplacement operator()(assembly::FunctionCall const& _functionCall);
 	ASTNodeReplacement operator()(assembly::Block const& _block);
+private:
+	Scopes const& m_scopes;
+	Scope const* m_currentScope = nullptr;
 };
 
 }

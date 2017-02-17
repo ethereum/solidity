@@ -68,6 +68,11 @@ Scope::Identifier* Scope::lookup(string const& _name)
 	return nullptr;
 }
 
+Scope::Identifier const* Scope::lookup(string const& _name) const
+{
+	return const_cast<Scope*>(this)->lookup(_name);
+}
+
 bool Scope::exists(string const& _name)
 {
 	if (identifiers.count(_name))

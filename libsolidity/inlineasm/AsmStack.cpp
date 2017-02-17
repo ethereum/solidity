@@ -49,8 +49,8 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 		return false;
 
 	*m_parserResult = std::move(*result);
-	AsmAnalyzer::Scopes scopes;
-	return (AsmAnalyzer(scopes, m_errors, false)).analyze(*m_parserResult);
+	m_scopes.clear();
+	return (AsmAnalyzer(m_scopes, m_errors, false)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
@@ -61,15 +61,18 @@ string InlineAssemblyStack::toString()
 eth::Assembly InlineAssemblyStack::assemble()
 {
 	if (!m_desugared)
-	{
-		cout << "Before desugar: " << endl << print() << endl;
-		//@TODO move?
-		*m_parserResult = AsmDesugar().run(*m_parserResult);
-		m_desugared = true;
-		cout << "After desugar: " << endl << print() << endl;
-	}
+		desugar();
 	CodeGenerator codeGen(*m_parserResult, m_errors);
 	return codeGen.assemble();
+}
+
+void InlineAssemblyStack::desugar()
+{
+	solAssert(!m_scopes.empty(), "");
+	*m_parserResult = AsmDesugar(m_scopes).run(*m_parserResult);
+	// Pointing to invalid data since parserResult is overwritten.
+	m_scopes.clear();
+	m_desugared = true;
 }
 
 bool InlineAssemblyStack::parseAndAssemble(
@@ -78,19 +81,17 @@ bool InlineAssemblyStack::parseAndAssemble(
 	CodeGenerator::IdentifierAccess const& _identifierAccess
 )
 {
-	ErrorList errors;
 	auto scanner = make_shared<Scanner>(CharStream(_input), "--CODEGEN--");
-	auto parserResult = Parser(errors).parse(scanner);
-	if (!errors.empty())
+	parse(scanner);
+	if (!m_errors.empty())
 		return false;
-	print();
-	//@TODO move?
-	*parserResult = AsmDesugar().run(*parserResult);
+	// @todo make this optional in the future.
+	desugar();
 
-	CodeGenerator(*parserResult, errors).assemble(_assembly, _identifierAccess);
+	CodeGenerator(*m_parserResult, m_errors).assemble(_assembly, _identifierAccess);
 
-	// At this point, the assembly might be messed up, but we should throw an
+	// If there is an error, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.
-	return errors.empty();
+	return m_errors.empty();
 }
 

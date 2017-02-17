@@ -39,6 +39,7 @@ class Scanner;
 namespace assembly
 {
 struct Block;
+struct Scope;
 
 class InlineAssemblyStack
 {
@@ -52,6 +53,8 @@ public:
 
 	eth::Assembly assemble();
 
+	void desugar();
+
 	/// Parse and assemble a string in one run - for use in Solidity code generation itself.
 	bool parseAndAssemble(
 		std::string const& _input,
@@ -63,6 +66,7 @@ public:
 
 private:
 	std::shared_ptr<Block> m_parserResult;
+	std::map<assembly::Block const*, std::shared_ptr<Scope>> m_scopes;
 	ErrorList m_errors;
 	bool m_desugared = false;
 };

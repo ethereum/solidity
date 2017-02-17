@@ -23,6 +23,9 @@
 #include <libsolidity/inlineasm/AsmDesugar.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmScope.h>
+
+#include <libsolidity/interface/Utils.h>
 
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -39,20 +42,20 @@ using namespace dev::solidity::assembly;
 
 Statement ASTNodeReplacement::asStatement()
 {
-	assertThrow(!secondValid, DesugaringError, "Tried to convert pair of statements to single.");
-	return std::move(node);
+	assertThrow(statements.size() == 1, DesugaringError, "Tried to convert multiple statements to single.");
+	return statements.front();
 }
 
 bool ASTNodeReplacement::isBlock() const
 {
-	assertThrow(!secondValid, DesugaringError, "Expected single statement but was pair.");
-	return node.type() == typeid(assembly::Block);
+	assertThrow(statements.size() == 1, DesugaringError, "Expected single statement but was multiple.");
+	return statements.front().type() == typeid(assembly::Block);
 }
 
 ASTNodeReplacement::operator assembly::Statement() &&
 {
-	assertThrow(!secondValid, DesugaringError, "Tried to convert pair of statements to single.");
-	return std::move(node);
+	assertThrow(statements.size() == 1, DesugaringError, "Tried to convert multiple statements to single.");
+	return statements.front();
 }
 
 Block AsmDesugar::run(Block const& _in)
@@ -91,7 +94,7 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionalInstruction const&
 		block.location = _functionalInstruction.location;
 		std::move(arguments.rbegin(), arguments.rend(), std::back_inserter(block.statements));
 		block.statements.push_back(_functionalInstruction.instruction);
-		return {block};
+		return {std::move(block)};
 	}
 	else
 	{
@@ -99,7 +102,7 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionalInstruction const&
 		result.location = _functionalInstruction.location;
 		result.instruction = _functionalInstruction.instruction;
 		std::move(arguments.begin(), arguments.end(), std::back_inserter(result.arguments));
-		return {result};
+		return {std::move(result)};
 	}
 }
 
@@ -124,7 +127,7 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionalAssignment const& 
 		result.location = _functionalAssignment.location;
 		result.variableName = _functionalAssignment.variableName;
 		result.value = make_shared<Statement>(value.asStatement());
-		return {result};
+		return {std::move(result)};
 	}
 }
 
@@ -145,14 +148,19 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::VariableDeclaration const& _
 		result.location = _variableDeclaration.location;
 		result.name = _variableDeclaration.name;
 		result.value = make_shared<Statement>(value.asStatement());
-		return {result};
+		return {std::move(result)};
 	}
 }
 
 ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
-	auto loc = _functionDefinition.location;
 	//@TODO make labels unique
+	auto loc = _functionDefinition.location;
+
+	vector<Statement> result;
+	result.push_back(FunctionalInstruction{loc, Instruction{loc, solidity::Instruction::JUMP}, {Identifier{loc, "$" + _functionDefinition.name + "_after"}}});
+	result.push_back(Label{loc, _functionDefinition.name, {}});
+
 	Block body = boost::get<Block>((*this)(_functionDefinition.body).asStatement());
 	Block env{loc, {}};
 	env.statements.push_back(Label{loc, "$" + _functionDefinition.name + "_start", _functionDefinition.arguments});
@@ -191,12 +199,14 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionDefinition const& _f
 		assertThrow(stackTargetPos[i] == int(i), DesugaringError, "Invalid stack reshuffling.");
 	env.statements.push_back(Instruction{loc, solidity::Instruction::JUMP});
 
-	return {Label{loc, _functionDefinition.name, {}}, env};
+	result.push_back(std::move(env));
+	result.push_back(Label{loc, "$" + _functionDefinition.name + "_after", {}});
+
+	return {std::move(result)};
 }
 
 ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionCall const& _functionCall)
 {
-	//@TODO check that the number of arguments and return values match up
 	//@TOOD Make the identifiers unique
 	auto loc = _functionCall.location;
 	string retlabel = "$funcall_" + _functionCall.functionName.name + "_return";
@@ -205,22 +215,30 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionCall const& _functio
 	for (auto const& arg: _functionCall.arguments | boost::adaptors::reversed)
 		ret.statements.push_back(boost::apply_visitor(*this, arg).asStatement());
 	ret.statements.push_back(FunctionalInstruction{loc, Instruction{loc, solidity::Instruction::JUMP}, {_functionCall.functionName}});
-	//@TODO add proper stack info here
-	ret.statements.push_back(Label{loc, retlabel, {}});
+	Scope::Identifier const* function = m_currentScope->lookup(_functionCall.functionName.name);
+	solAssert(function, "");
+	size_t arguments = boost::get<Scope::Function>(*function).arguments;
+	size_t returns = boost::get<Scope::Function>(*function).returns;
+	ret.statements.push_back(Label{loc, retlabel, {boost::lexical_cast<string>(int(arguments) - int(returns) - 1)}});
 
-	return {ret};
+	return {std::move(ret)};
 }
 
 ASTNodeReplacement AsmDesugar::operator()(Block const& _block)
 {
+	auto previousScope = m_currentScope;
+	m_currentScope = m_scopes.at(&_block).get();
 	Block block{_block.location, {}};
 	for (auto const& statement: _block.statements)
 	{
 		ASTNodeReplacement replacement = boost::apply_visitor(*this, statement);
-		block.statements.push_back(std::move(replacement.node));
-		if (replacement.secondValid)
-			block.statements.push_back(std::move(replacement.secondNode));
+		std::move(
+			replacement.statements.begin(),
+			replacement.statements.end(),
+			std::back_inserter(block.statements)
+		);
 	}
+	m_currentScope = previousScope;
 	return {block};
 }
 

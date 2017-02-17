@@ -98,6 +98,7 @@ struct Scope
 	/// The pointer will be invalidated if the scope is modified.
 	/// @param _crossedFunction if true, we already crossed a function boundary during recursive lookup
 	Identifier* lookup(std::string const& _name);
+	Identifier const* lookup(std::string const& _name) const;
 	/// Looks up the identifier in this and super scopes (will not find variables across function
 	/// boundaries and generally stops at assembly boundaries) and calls the visitor, returns
 	/// false if not found.
