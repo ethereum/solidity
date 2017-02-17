@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Analysis part of inline assembly.
+ * Module responsible for registering identifiers inside their scopes.
  */
 
 #pragma once
@@ -49,26 +49,21 @@ struct FunctionCall;
 struct Scope;
 
 /**
- * Performs the full analysis stage, calls the ScopeFiller internally, then resolves
- * references and performs other checks.
- * @todo Does not yet check for stack height issues.
+ * Fills scopes with identifiers and checks for name clashes.
+ * Does not resolve references.
  */
-class AsmAnalyzer: public boost::static_visitor<bool>
+class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
 	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	/// @param _allowFailedLookups if true, allow failed lookups for variables (they
-	/// will be provided from the environment later on)
-	AsmAnalyzer(Scopes& _scopes, ErrorList& _errors, bool _allowFailedLookups);
-
-	bool analyze(assembly::Block const& _block);
+	ScopeFiller(Scopes& _scopes, ErrorList& _errors);
 
 	bool operator()(assembly::Instruction const&) { return true; }
-	bool operator()(assembly::Literal const& _literal);
-	bool operator()(assembly::Identifier const&);
+	bool operator()(assembly::Literal const&) { return true; }
+	bool operator()(assembly::Identifier const&) { return true; }
 	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
-	bool operator()(assembly::Label const&) { return true; }
-	bool operator()(assembly::Assignment const&);
+	bool operator()(assembly::Label const& _label);
+	bool operator()(assembly::Assignment const&) { return true; }
 	bool operator()(assembly::FunctionalAssignment const& _functionalAssignment);
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
@@ -76,10 +71,14 @@ public:
 	bool operator()(assembly::Block const& _block);
 
 private:
-	bool checkAssignment(assembly::Identifier const& _assignment);
+	bool registerVariable(
+		std::string const& _name,
+		SourceLocation const& _location,
+		Scope& _scope
+	);
+
 	Scope& scope(assembly::Block const* _block);
 
-	bool m_allowFailedLookups = false;
 	Scope* m_currentScope = nullptr;
 	Scopes& m_scopes;
 	ErrorList& m_errors;

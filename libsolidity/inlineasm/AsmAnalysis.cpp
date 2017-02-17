@@ -21,6 +21,8 @@
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmScopeFiller.h>
+#include <libsolidity/inlineasm/AsmScope.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/Utils.h>
@@ -36,68 +38,16 @@ using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
 
-bool Scope::registerLabel(string const& _name)
+AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors, bool _allowFailedLookups):
+	m_allowFailedLookups(_allowFailedLookups), m_scopes(_scopes), m_errors(_errors)
 {
-	if (exists(_name))
+}
+
+bool AsmAnalyzer::analyze(Block const& _block)
+{
+	if (!(ScopeFiller(m_scopes, m_errors))(_block))
 		return false;
-	identifiers[_name] = Label();
-	return true;
-}
-
-bool Scope::registerVariable(string const& _name)
-{
-	if (exists(_name))
-		return false;
-	identifiers[_name] = Variable();
-	return true;
-}
-
-bool Scope::registerFunction(string const& _name, size_t _arguments, size_t _returns)
-{
-	if (exists(_name))
-		return false;
-	identifiers[_name] = Function(_arguments, _returns);
-	return true;
-}
-
-Scope::Identifier* Scope::lookup(string const& _name)
-{
-	bool crossedFunctionBoundary = false;
-	for (Scope* s = this; s; s = s->superScope)
-	{
-		auto id = identifiers.find(_name);
-		if (id != identifiers.end())
-		{
-			if (crossedFunctionBoundary && id->second.type() == typeid(Scope::Variable))
-				return nullptr;
-			else
-				return &id->second;
-		}
-
-		if (s->functionScope)
-			crossedFunctionBoundary = true;
-	}
-	return nullptr;
-}
-
-bool Scope::exists(string const& _name)
-{
-	if (identifiers.count(_name))
-		return true;
-	else if (superScope)
-		return superScope->exists(_name);
-	else
-		return false;
-}
-
-AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors):
-	m_scopes(_scopes), m_errors(_errors)
-{
-	// Make the Solidity ErrorTag available to inline assembly
-	Scope::Label errorLabel;
-	errorLabel.id = Scope::Label::errorLabelId;
-	scope(nullptr).identifiers["invalidJumpLabel"] = errorLabel;
-	m_currentScope = &scope(nullptr);
+	return (*this)(_block);
 }
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
@@ -113,6 +63,47 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	return true;
 }
 
+bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
+{
+	bool success = true;
+	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
+		[&](Scope::Variable const& _var)
+		{
+			if (!_var.active)
+			{
+				m_errors.push_back(make_shared<Error>(
+					Error::Type::DeclarationError,
+					"Variable " + _identifier.name + " used before it was declared.",
+					_identifier.location
+				));
+				success = false;
+			}
+		},
+		[&](Scope::Label const&) {},
+		[&](Scope::Function const&)
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::TypeError,
+				"Function " + _identifier.name + " used without being called.",
+			_identifier.location
+			));
+			success = false;
+		}
+	)))
+	{
+	}
+	else if (!m_allowFailedLookups)
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Identifier not found.",
+			_identifier.location
+		));
+		success = false;
+	}
+	return success;
+}
+
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
 	bool success = true;
@@ -124,74 +115,100 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(Label const& _item)
+bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
-	if (!m_currentScope->registerLabel(_item.name))
-	{
-		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Label name " + _item.name + " already taken in this scope.",
-			_item.location
-		));
-		return false;
-	}
-	return true;
+	return checkAssignment(_assignment.variableName);
 }
 
 bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 {
-	return boost::apply_visitor(*this, *_assignment.value);
+	bool success = boost::apply_visitor(*this, *_assignment.value);
+	if (!checkAssignment(_assignment.variableName))
+		success = false;
+	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 {
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
-	if (!registerVariable(_varDecl.name, _varDecl.location, *m_currentScope))
-		success = false;
+	boost::get<Scope::Variable>(m_currentScope->identifiers.at(_varDecl.name)).active = true;
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
-	bool success = true;
-	if (!m_currentScope->registerFunction(_funDef.name, _funDef.arguments.size(), _funDef.returns.size()))
-	{
-		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Function name " + _funDef.name + " already taken in this scope.",
-			_funDef.location
-		));
-		success = false;
-	}
-	Scope& body = scope(&_funDef.body);
-	body.superScope = m_currentScope;
-	body.functionScope = true;
+	Scope& bodyScope = scope(&_funDef.body);
 	for (auto const& var: _funDef.arguments + _funDef.returns)
-		if (!registerVariable(var, _funDef.location, body))
-			success = false;
+		boost::get<Scope::Variable>(bodyScope.identifiers.at(var)).active = true;
 
-	(*this)(_funDef.body);
-
-	return success;
+	return (*this)(_funDef.body);
 }
 
 bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 {
 	bool success = true;
+	size_t arguments = 0;
+	size_t returns = 0;
+	if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
+		[&](Scope::Variable const&)
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::TypeError,
+				"Attempt to call variable instead of function.",
+				_funCall.functionName.location
+			));
+			success = false;
+		},
+		[&](Scope::Label const&)
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::TypeError,
+				"Attempt to call label instead of function.",
+				_funCall.functionName.location
+				));
+			success = false;
+		},
+		[&](Scope::Function const& _fun)
+		{
+			arguments = _fun.arguments;
+			returns = _fun.returns;
+		}
+	)))
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Function not found.",
+			_funCall.functionName.location
+		));
+		success = false;
+	}
+	if (success)
+	{
+		if (_funCall.arguments.size() != arguments)
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::TypeError,
+				"Expected " +
+				boost::lexical_cast<string>(arguments) +
+				" arguments but got " +
+				boost::lexical_cast<string>(_funCall.arguments.size()) +
+				".",
+				_funCall.functionName.location
+				));
+			success = false;
+		}
+		//@todo check the number of returns - depends on context and should probably
+		// be only done once we have stack height checks
+	}
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!boost::apply_visitor(*this, arg))
 			success = false;
-	// TODO actually look up the function (can only be done in a second pass)
-	// and check that the number of arguments and of returns matches the context
 	return success;
 }
 
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;
-	scope(&_block).superScope = m_currentScope;
 	m_currentScope = &scope(&_block);
 
 	for (auto const& s: _block.statements)
@@ -202,25 +219,29 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	return success;
 }
 
-bool AsmAnalyzer::registerVariable(string const& _name, SourceLocation const& _location, Scope& _scope)
+bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable)
 {
-	if (!_scope.registerVariable(_name))
-	{
-		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Variable name " + _name + " already taken in this scope.",
-			_location
-		));
+	if (!(*this)(_variable))
 		return false;
+	else if (!m_allowFailedLookups)
+	{
+		// Check that it is a variable
+		if (m_currentScope->lookup(_variable.name)->type() != typeid(Scope::Variable))
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::TypeError,
+				"Assignment requires variable.",
+				_variable.location
+			));
+			return false;
+		}
 	}
 	return true;
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
 {
-	auto& scope = m_scopes[_block];
-	if (!scope)
-		scope = make_shared<Scope>();
-	return *scope;
+	auto scopePtr = m_scopes.at(_block);
+	solAssert(scopePtr, "Scope requested but not present.");
+	return *scopePtr;
 }

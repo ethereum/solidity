@@ -24,6 +24,7 @@
 
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 
 #include <libevmasm/Assembly.h>
@@ -153,12 +154,14 @@ public:
 			},
 			[=](Scope::Function&)
 			{
-				solAssert(false, "Not yet implemented");
+				solAssert(false, "Function not removed during desugaring.");
 			}
 		)))
 		{
+			return;
 		}
-		else if (!m_identifierAccess || !m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
+		solAssert(m_identifierAccess, "Identifier not found and no external access available.");
+		if (!m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
 		{
 			m_state.addError(
 				Error::Type::DeclarationError,
@@ -186,7 +189,7 @@ public:
 	{
 		m_state.assembly.setSourceLocation(_label.location);
 		solAssert(m_scope.identifiers.count(_label.name), "");
-		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers[_label.name]);
+		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers.at(_label.name));
 		assignLabelIdIfUnset(label);
 		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
 	}
@@ -208,8 +211,7 @@ public:
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(1, height, locationOf(*_varDecl.value));
-		solAssert(m_scope.identifiers.count(_varDecl.name), "");
-		auto& var = boost::get<Scope::Variable>(m_scope.identifiers[_varDecl.name]);
+		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.name));
 		var.stackHeight = height;
 		var.active = true;
 	}
@@ -225,31 +227,17 @@ public:
 private:
 	void generateAssignment(assembly::Identifier const& _variableName, SourceLocation const& _location)
 	{
-		if (m_scope.lookup(_variableName.name, Scope::Visitor(
-			[=](Scope::Variable const& _var)
-			{
-				if (int heightDiff = variableHeightDiff(_var, _location, true))
-					m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
-				m_state.assembly.append(solidity::Instruction::POP);
-			},
-			[=](Scope::Label const&)
-			{
-				m_state.addError(
-					Error::Type::DeclarationError,
-					"Label \"" + string(_variableName.name) + "\" used as variable."
-				);
-			},
-			[=](Scope::Function const&)
-			{
-				m_state.addError(
-					Error::Type::DeclarationError,
-					"Function \"" + string(_variableName.name) + "\" used as variable."
-				);
-			}
-		)))
+		auto var = m_scope.lookup(_variableName.name);
+		if (var)
 		{
+			Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
+			if (int heightDiff = variableHeightDiff(_var, _location, true))
+				m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
+			m_state.assembly.append(solidity::Instruction::POP);
+			return;
 		}
-		else if (!m_identifierAccess || !m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
+		solAssert(m_identifierAccess, "Identifier not found and no external access available.");
+		if (!m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
 			m_state.addError(
 				Error::Type::DeclarationError,
 				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
@@ -261,11 +249,6 @@ private:
 	/// errors and the (positive) stack height difference otherwise.
 	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
 	{
-		if (!_var.active)
-		{
-			m_state.addError( Error::Type::TypeError, "Variable used before it was declared", _location);
-			return 0;
-		}
 		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
 		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 		{
@@ -314,7 +297,7 @@ bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAcces
 	size_t initialErrorLen = m_errors.size();
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
 		return false;
 	CodeTransform(state, m_parsedData, _identifierAccess);
 	return m_errors.size() == initialErrorLen;
@@ -324,7 +307,7 @@ eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::Identif
 {
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 	return assembly;
@@ -333,7 +316,7 @@ eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::Identif
 void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
 	GeneratorState state(m_errors, _assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 }
