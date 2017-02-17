@@ -99,6 +99,15 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 	return *error;
 }
 
+string desugar(string const& _source)
+{
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	stack.desugar();
+	return stack.toString();
+}
+
 void parsePrintCompare(string const& _source)
 {
 	assembly::InlineAssemblyStack stack;
@@ -366,6 +375,32 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Desugaring)
+
+BOOST_AUTO_TEST_CASE(smoke)
+{
+	BOOST_CHECK_EQUAL(desugar("{\n    let x := mul(2, 3)\n}"), "{\n    let x := mul(2, 3)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(function_definition)
+{
+	BOOST_CHECK_EQUAL(desugar("{ function f() { } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ function f(a, b, c) { } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ function f() -> (a, b, c) { } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ function f(x, y) -> (a, b, c) { } }"), "");
+}
+
+BOOST_AUTO_TEST_CASE(function_call)
+{
+	BOOST_CHECK_EQUAL(desugar("{ square(3) function square(x) -> (y) { y := mul(x, x) } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ let z := square(3) function square(x) -> (y) { y := mul(x, x) } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ let z := 0 square(3) =: z function square(x) -> (y) { y := mul(x, x) } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ let z := mul(square(add(1, 2)), add(1, 2)) function square(x) -> (y) { y := mul(x, x) } }"), "");
+	BOOST_CHECK_EQUAL(desugar("{ square(3) function square(x) -> (y) { y := square(add(x, 1)) } }"), "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
