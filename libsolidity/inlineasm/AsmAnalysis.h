@@ -101,12 +101,15 @@ struct Scope
 	bool registerLabel(std::string const& _name);
 	bool registerFunction(std::string const& _name, size_t _arguments, size_t _returns);
 
-	/// Looks up the identifier in this or super scopes (stops and function and assembly boundaries)
-	/// and returns a valid pointer if found or a nullptr if not found.
+	/// Looks up the identifier in this or super scopes and returns a valid pointer if found
+	/// or a nullptr if not found. Variable lookups up across function boundaries will fail, as
+	/// will any lookups across assembly boundaries.
 	/// The pointer will be invalidated if the scope is modified.
+	/// @param _crossedFunction if true, we already crossed a function boundary during recursive lookup
 	Identifier* lookup(std::string const& _name);
-	/// Looks up the identifier in this and super scopes (stops and function and assembly boundaries)
-	/// and calls the visitor, returns false if not found.
+	/// Looks up the identifier in this and super scopes (will not find variables across function
+	/// boundaries and generally stops at assembly boundaries) and calls the visitor, returns
+	/// false if not found.
 	template <class V>
 	bool lookup(std::string const& _name, V const& _visitor)
 	{
@@ -122,9 +125,9 @@ struct Scope
 	/// across function and assembly boundaries).
 	bool exists(std::string const& _name);
 	Scope* superScope = nullptr;
-	/// If true, identifiers from the super scope are not visible here, but they are still
-	/// taken into account to prevent shadowing.
-	bool closedScope = false;
+	/// If true, variables from the super scope are not visible here (other identifiers are),
+	/// but they are still taken into account to prevent shadowing.
+	bool functionScope = false;
 	std::map<std::string, Identifier> identifiers;
 };
 
@@ -148,6 +151,14 @@ public:
 	bool operator()(assembly::Block const& _block);
 
 private:
+	bool registerVariable(
+		std::string const& _name,
+		SourceLocation const& _location,
+		Scope& _scope
+	);
+
+	Scope& scope(assembly::Block const* _block);
+
 	Scope* m_currentScope = nullptr;
 	Scopes& m_scopes;
 	ErrorList& m_errors;
