@@ -42,7 +42,7 @@ test "${output//[[:blank:]]/}" = "3"
 # instead.  This will go away soon.
 if [[ "$OSTYPE" == "darwin"* ]]; then
     ETH_PATH="$REPO_ROOT/eth"
-else if [ -z $CI ]; then
+elif [ -z $CI ]; then
     ETH_PATH="eth"
 else
     mkdir -p /tmp/test
