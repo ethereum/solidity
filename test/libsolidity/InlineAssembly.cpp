@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(string_literals)
 
 BOOST_AUTO_TEST_CASE(oversize_string_literals)
 {
-	BOOST_CHECK(!successAssemble("{ let x := \"123456789012345678901234567890123\" }"));
+	CHECK_ASSEMBLE_ERROR("{ let x := \"123456789012345678901234567890123\" }", TypeError, "String literal too long");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_after_tag)
@@ -304,7 +304,8 @@ BOOST_AUTO_TEST_CASE(magic_variables)
 BOOST_AUTO_TEST_CASE(imbalanced_stack)
 {
 	BOOST_CHECK(successAssemble("{ 1 2 mul pop }", false));
-	BOOST_CHECK(!successAssemble("{ 1 }", false));
+	CHECK_ASSEMBLE_ERROR("{ 1 }", Warning, "Inline assembly block is not balanced. It leaves");
+	CHECK_ASSEMBLE_ERROR("{ pop }", Warning, "Inline assembly block is not balanced. It takes");
 	BOOST_CHECK(successAssemble("{ let x := 4 7 add }", false));
 }
 
