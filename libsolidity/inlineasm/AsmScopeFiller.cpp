@@ -42,7 +42,7 @@ ScopeFiller::ScopeFiller(ScopeFiller::Scopes& _scopes, ErrorList& _errors):
 	// Make the Solidity ErrorTag available to inline assembly
 	Scope::Label errorLabel;
 	errorLabel.id = Scope::Label::errorLabelId;
-	scope(nullptr).identifiers["invalidJumpLabel"] = errorLabel;
+	createScope(nullptr, nullptr).identifiers["invalidJumpLabel"] = errorLabel;
 	m_currentScope = &scope(nullptr);
 }
 
@@ -98,8 +98,7 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 		));
 		success = false;
 	}
-	Scope& body = scope(&_funDef.body);
-	body.superScope = m_currentScope;
+	Scope& body = createScope(&_funDef.body, m_currentScope);
 	body.functionScope = true;
 	for (auto const& var: _funDef.arguments + _funDef.returns)
 		if (!registerVariable(var, _funDef.location, body))
@@ -123,14 +122,14 @@ bool ScopeFiller::operator()(assembly::FunctionCall const& _funCall)
 bool ScopeFiller::operator()(Block const& _block)
 {
 	bool success = true;
-	scope(&_block).superScope = m_currentScope;
-	m_currentScope = &scope(&_block);
+	Scope* previous = m_currentScope;
+	m_currentScope = &createScope(&_block, m_currentScope);
 
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
 			success = false;
 
-	m_currentScope = m_currentScope->superScope;
+	m_currentScope = previous;
 	return success;
 }
 
@@ -151,8 +150,23 @@ bool ScopeFiller::registerVariable(string const& _name, SourceLocation const& _l
 
 Scope& ScopeFiller::scope(Block const* _block)
 {
-	auto& scope = m_scopes[_block];
-	if (!scope)
-		scope = make_shared<Scope>();
+	auto& scope = m_scopes.at(_block);
+	solAssert(scope, "Scope not found.");
 	return *scope;
+}
+
+Scope& ScopeFiller::createScope(assembly::Block const* _forBlock, Scope* _superScope)
+{
+	auto& s = m_scopes[_forBlock];
+	if (!s)
+		s = make_shared<Scope>();
+	if (s->superScope == nullptr)
+	{
+		s->superScope = _superScope;
+		if (_superScope)
+			_superScope->subScopes.push_back(s.get());
+	}
+	else
+		solAssert(s->superScope == _superScope, "Scope created twice in different superscopes.");
+	return *s;
 }

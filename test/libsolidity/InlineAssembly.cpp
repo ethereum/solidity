@@ -30,6 +30,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/optional.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
 
 #include <string>
 #include <memory>
@@ -105,7 +106,12 @@ string desugar(string const& _source)
 	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
 	BOOST_REQUIRE(stack.errors().empty());
 	stack.desugar();
-	return stack.toString();
+	// Reduce whitespace to single space
+	return boost::replace_all_copy(
+		boost::trim_all_copy_if(stack.toString(), boost::is_any_of("\n\t ")),
+		"\n",
+		" "
+	);
 }
 
 void parsePrintCompare(string const& _source)
@@ -383,25 +389,55 @@ BOOST_AUTO_TEST_SUITE(Desugaring)
 
 BOOST_AUTO_TEST_CASE(smoke)
 {
-	BOOST_CHECK_EQUAL(desugar("{\n    let x := mul(2, 3)\n}"), "{\n    let x := mul(2, 3)\n}");
+	BOOST_CHECK_EQUAL(desugar("{ }"), "{ }");
+	BOOST_CHECK_EQUAL(desugar("{ let x := mul(2, 3) }"), "{ let x := mul(2, 3) }");
 }
 
 BOOST_AUTO_TEST_CASE(function_definition)
 {
-	BOOST_CHECK_EQUAL(desugar("{ function f() { } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ function f(a, b, c) { } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ function f() -> (a, b, c) { } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ function f(x, y) -> (a, b, c) { } }"), "");
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f() { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret]: { } jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f(a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret, c, b, a]: { } pop pop pop jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f() -> (a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret]: let c := 0 let b := 0 let a := 0 { } swap1 swap2 swap3 jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f(x, y) -> (a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret, y, x]: let c := 0 let b := 0 let a := 0 { } swap3 pop swap3 pop swap3 jump } $after_f: }"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(function_call)
 {
-	BOOST_CHECK_EQUAL(desugar("{ square(3) function square(x) -> (y) { y := mul(x, x) } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ let z := square(3) function square(x) -> (y) { y := mul(x, x) } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ let z := 0 square(3) =: z function square(x) -> (y) { y := mul(x, x) } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ let z := mul(square(add(1, 2)), add(1, 2)) function square(x) -> (y) { y := mul(x, x) } }"), "");
-	BOOST_CHECK_EQUAL(desugar("{ square(3) function square(x) -> (y) { y := square(add(x, 1)) } }"), "");
+	BOOST_CHECK_EQUAL(
+		desugar("{ square(3) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := square(3) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: $z_[z]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := 0 square(3) =: z function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ let z := 0 $returnFrom_square 3 jump(square) $returnFrom_square[-1]: =: z jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := mul(square(add(1, 2)), add(1, 2)) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ add(1, 2) $returnFrom_square add(1, 2) jump(square) $returnFrom_square[-1]: mul $z_[z]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ square(3) function square(x) -> (y) { y := square(add(x, 1)) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { $returnFrom_square_1 add(x, 1) jump(square) $returnFrom_square_1[-1]: =: y } swap2 swap1 pop jump } $after_square: }"
+	);
 }
+
+// @TODO test identifier clashes
 
 BOOST_AUTO_TEST_SUITE_END()
 

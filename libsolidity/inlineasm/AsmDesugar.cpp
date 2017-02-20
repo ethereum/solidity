@@ -46,11 +46,17 @@ Statement ASTNodeReplacement::asStatement()
 	return statements.front();
 }
 
-bool ASTNodeReplacement::isBlock() const
+void ASTNodeReplacement::moveAppend(std::vector<Statement>& _target)
 {
-	assertThrow(statements.size() == 1, DesugaringError, "Expected single statement but was multiple.");
-	return statements.front().type() == typeid(assembly::Block);
+	std::move(statements.begin(), statements.end(), std::back_inserter(_target));
 }
+
+bool ASTNodeReplacement::isMultipleOrBlock() const
+{
+	assertThrow(statements.size() > 0, DesugaringError, "Invalid empty replacement.");
+	return statements.size() > 1 || statements.front().type() == typeid(assembly::Block);
+}
+
 
 ASTNodeReplacement::operator assembly::Statement() &&
 {
@@ -85,16 +91,16 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionalInstruction const&
 	for (auto const& arg: _functionalInstruction.arguments)
 	{
 		arguments.push_back(std::move(boost::apply_visitor(*this, arg)));
-		if (arguments.back().isBlock())
+		if (arguments.back().isMultipleOrBlock())
 			haveToExplode = true;
 	}
 	if (haveToExplode)
 	{
-		assembly::Block block;
-		block.location = _functionalInstruction.location;
-		std::move(arguments.rbegin(), arguments.rend(), std::back_inserter(block.statements));
-		block.statements.push_back(_functionalInstruction.instruction);
-		return {std::move(block)};
+		vector<assembly::Statement> statements;
+		for (ASTNodeReplacement& rep: arguments | boost::adaptors::reversed)
+			rep.moveAppend(statements);
+		statements.push_back(_functionalInstruction.instruction);
+		return {std::move(statements)};
 	}
 	else
 	{
@@ -119,8 +125,13 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::Assignment const& _assignmen
 ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionalAssignment const& _functionalAssignment)
 {
 	ASTNodeReplacement value = boost::apply_visitor(*this, *_functionalAssignment.value);
-	if (value.isBlock())
-		return {value.asStatement(), Assignment{_functionalAssignment.location, _functionalAssignment.variableName}};
+	if (value.isMultipleOrBlock())
+	{
+		vector<assembly::Statement> statements;
+		value.moveAppend(statements);
+		statements.push_back(Assignment{_functionalAssignment.location, _functionalAssignment.variableName});
+		return {std::move(statements)};
+	}
 	else
 	{
 		FunctionalAssignment result;
@@ -135,13 +146,17 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::VariableDeclaration const& _
 {
 	//@TODO handle special case of `let x := f()` where return label and variable introduction label can be combined.
 	ASTNodeReplacement value = boost::apply_visitor(*this, *_variableDeclaration.value);
-	if (value.isBlock())
-		//@TODO make the name unique
-		return {value.asStatement(), Label{
+	if (value.isMultipleOrBlock())
+	{
+		vector<Statement> statements;
+		value.moveAppend(statements);
+		statements.push_back(Label{
 			_variableDeclaration.location,
-			"$introduce_" + _variableDeclaration.name,
+			generateIdentifier("$" + _variableDeclaration.name + "_"),
 			{_variableDeclaration.name}
-		}};
+		});
+		return {std::move(statements)};
+	}
 	else
 	{
 		VariableDeclaration result;
@@ -154,32 +169,42 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::VariableDeclaration const& _
 
 ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
-	//@TODO make labels unique
 	auto loc = _functionDefinition.location;
 
+	string afterFunction = generateIdentifier("$after_" + _functionDefinition.name);
 	vector<Statement> result;
-	result.push_back(FunctionalInstruction{loc, Instruction{loc, solidity::Instruction::JUMP}, {Identifier{loc, "$" + _functionDefinition.name + "_after"}}});
-	result.push_back(Label{loc, _functionDefinition.name, {}});
+	result.push_back(FunctionalInstruction{
+		loc,
+		Instruction{loc, solidity::Instruction::JUMP},
+		{Identifier{loc, afterFunction}}
+	});
+	result.push_back(Label{loc, _functionDefinition.name, {""}});
 
 	Block body = boost::get<Block>((*this)(_functionDefinition.body).asStatement());
 	Block env{loc, {}};
-	env.statements.push_back(Label{loc, "$" + _functionDefinition.name + "_start", _functionDefinition.arguments});
-	for (auto const& r: _functionDefinition.returns)
+	vector<string> arguments(1, generateIdentifier("$ret"));
+	copy(_functionDefinition.arguments.rbegin(), _functionDefinition.arguments.rend(), back_inserter(arguments));
+	env.statements.push_back(Label{
+		loc,
+		generateIdentifier("$" + _functionDefinition.name + "_start"),
+		arguments
+	});
+	for (auto const& r: _functionDefinition.returns | boost::adaptors::reversed)
 		env.statements.push_back(VariableDeclaration{loc, r, make_shared<Statement>(Literal{loc, true, "0"})});
 	env.statements.push_back(std::move(body));
 
 	size_t const args = _functionDefinition.arguments.size();
 	size_t const rets = _functionDefinition.returns.size();
 	// Reorganise stack from
-	// retpc arg1 ... argn ret1 ... retm
+	// retpc argn ... arg1 retm ... ret1
 	// to
-	// ret1 ... retm retpc
+	// retm ... ret1 retpc
 	// Current layout with indices showing the target index (-1 means pop), i.e. should be
 	// m -1 ... -1 0 1 ... (m-1)
 	vector<int> stackTargetPos(1 + args + rets, -1);
 	stackTargetPos[0] = rets;
 	for (size_t i = 0; i < rets; ++i)
-			stackTargetPos[1 + args + i] = i;
+		stackTargetPos[1 + args + i] = i;
 
 	while (stackTargetPos.back() != int(stackTargetPos.size() - 1))
 		if (stackTargetPos.back() < 0)
@@ -200,26 +225,25 @@ ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionDefinition const& _f
 	env.statements.push_back(Instruction{loc, solidity::Instruction::JUMP});
 
 	result.push_back(std::move(env));
-	result.push_back(Label{loc, "$" + _functionDefinition.name + "_after", {}});
+	result.push_back(Label{loc, afterFunction, {}});
 
 	return {std::move(result)};
 }
 
 ASTNodeReplacement AsmDesugar::operator()(assembly::FunctionCall const& _functionCall)
 {
-	//@TOOD Make the identifiers unique
 	auto loc = _functionCall.location;
-	string retlabel = "$funcall_" + _functionCall.functionName.name + "_return";
-	Block ret{loc, {}};
-	ret.statements.push_back(Identifier{loc, retlabel});
+	string retlabel = generateIdentifier("$returnFrom_" + _functionCall.functionName.name);
+	vector<assembly::Statement> ret;
+	ret.push_back(Identifier{loc, retlabel});
 	for (auto const& arg: _functionCall.arguments | boost::adaptors::reversed)
-		ret.statements.push_back(boost::apply_visitor(*this, arg).asStatement());
-	ret.statements.push_back(FunctionalInstruction{loc, Instruction{loc, solidity::Instruction::JUMP}, {_functionCall.functionName}});
+		boost::apply_visitor(*this, arg).moveAppend(ret);
+	ret.push_back(FunctionalInstruction{loc, Instruction{loc, solidity::Instruction::JUMP}, {_functionCall.functionName}});
 	Scope::Identifier const* function = m_currentScope->lookup(_functionCall.functionName.name);
 	solAssert(function, "");
 	size_t arguments = boost::get<Scope::Function>(*function).arguments;
 	size_t returns = boost::get<Scope::Function>(*function).returns;
-	ret.statements.push_back(Label{loc, retlabel, {boost::lexical_cast<string>(int(arguments) - int(returns) - 1)}});
+	ret.push_back(Label{loc, retlabel, {boost::lexical_cast<string>(int(arguments) - int(returns) - 1)}});
 
 	return {std::move(ret)};
 }
@@ -230,16 +254,28 @@ ASTNodeReplacement AsmDesugar::operator()(Block const& _block)
 	m_currentScope = m_scopes.at(&_block).get();
 	Block block{_block.location, {}};
 	for (auto const& statement: _block.statements)
-	{
-		ASTNodeReplacement replacement = boost::apply_visitor(*this, statement);
-		std::move(
-			replacement.statements.begin(),
-			replacement.statements.end(),
-			std::back_inserter(block.statements)
-		);
-	}
+		boost::apply_visitor(*this, statement).moveAppend(block.statements);
 	m_currentScope = previousScope;
 	return {block};
 }
 
+string AsmDesugar::generateIdentifier(string const& _hint, Scope const* _scope)
+{
+	if (_scope == nullptr)
+		_scope = m_currentScope;
+	for (size_t counter = 0; counter < 100000; ++counter)
+	{
+		string identifier = _hint + (counter > 0 ? "_" + boost::lexical_cast<string>(counter) : "");
 
+		if (
+			!m_generatedIdentifiers.count(identifier) &&
+			!_scope->exists(identifier) &&
+			!_scope->existsIncludingSubscopes(identifier)
+		)
+		{
+			m_generatedIdentifiers.insert(identifier);
+			return identifier;
+		}
+	}
+	solAssert(false, "Unable to find suitable new identifier.");
+}

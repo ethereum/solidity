@@ -79,10 +79,13 @@ struct ASTNodeReplacement
 	operator assembly::Statement() &&;
 	/// Converts to single node (throws if secondValid) and MOVES contents there.
 	assembly::Statement asStatement();
+	/// Move-appends the statements to the given vector.
+	void moveAppend(std::vector<assembly::Statement>& _target);
 
-	/// @returns true iff the node is a single block.
-	bool isBlock() const;
+	/// @returns true iff the node contains multiple statements or a single block.
+	bool isMultipleOrBlock() const;
 
+private:
 	std::vector<assembly::Statement> statements;
 };
 
@@ -105,9 +108,19 @@ public:
 	ASTNodeReplacement operator()(assembly::FunctionDefinition const& _functionDefinition);
 	ASTNodeReplacement operator()(assembly::FunctionCall const& _functionCall);
 	ASTNodeReplacement operator()(assembly::Block const& _block);
+
 private:
+	/// Generates a new identifier that starts with @a _hint and may have an additional suffix
+	/// so that it does not clash with identifiers in @a _scope, including super- and subscopes.
+	/// If _scope is null, it defaults to the current scope.
+	std::string generateIdentifier(std::string const& _hint, Scope const* _scope = nullptr);
+
 	Scopes const& m_scopes;
 	Scope const* m_currentScope = nullptr;
+
+	/// Set of all newly generated identifiers as part of the translation. Used to avoid
+	/// name clashes.
+	std::set<std::string> m_generatedIdentifiers;
 };
 
 }

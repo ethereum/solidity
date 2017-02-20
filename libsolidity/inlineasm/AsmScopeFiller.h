@@ -78,6 +78,7 @@ private:
 	);
 
 	Scope& scope(assembly::Block const* _block);
+	Scope& createScope(assembly::Block const* _forBlock, Scope* _superScope);
 
 	Scope* m_currentScope = nullptr;
 	Scopes& m_scopes;

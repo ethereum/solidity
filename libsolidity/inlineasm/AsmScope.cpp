@@ -20,6 +20,8 @@
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
+#include <queue>
+
 using namespace std;
 using namespace dev::solidity::assembly;
 
@@ -73,7 +75,7 @@ Scope::Identifier const* Scope::lookup(string const& _name) const
 	return const_cast<Scope*>(this)->lookup(_name);
 }
 
-bool Scope::exists(string const& _name)
+bool Scope::exists(string const& _name) const
 {
 	if (identifiers.count(_name))
 		return true;
@@ -81,4 +83,14 @@ bool Scope::exists(string const& _name)
 		return superScope->exists(_name);
 	else
 		return false;
+}
+
+bool Scope::existsIncludingSubscopes(string const& _name) const
+{
+	if (identifiers.count(_name))
+		return true;
+	for (Scope const* s: subScopes)
+		if (s->exists(_name))
+			return true;
+	return false;
 }

@@ -214,13 +214,14 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;
+	Scope *previous = m_currentScope;
 	m_currentScope = &scope(&_block);
 
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
 			success = false;
 
-	m_currentScope = m_currentScope->superScope;
+	m_currentScope = previous;
 	return success;
 }
 

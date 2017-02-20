@@ -115,8 +115,13 @@ struct Scope
 	}
 	/// @returns true if the name exists in this scope or in super scopes (also searches
 	/// across function and assembly boundaries).
-	bool exists(std::string const& _name);
+	bool exists(std::string const& _name) const;
+	/// @returns true if the name exists in this scope or in sub-scopes
+	/// (also searches across function and assembly boundaries).
+	bool existsIncludingSubscopes(std::string const& _name) const;
+
 	Scope* superScope = nullptr;
+	std::vector<Scope*> subScopes;
 	/// If true, variables from the super scope are not visible here (other identifiers are),
 	/// but they are still taken into account to prevent shadowing.
 	bool functionScope = false;
