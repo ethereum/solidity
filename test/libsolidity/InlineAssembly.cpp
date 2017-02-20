@@ -56,7 +56,7 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _ass
 		if (success && _assemble)
 			stack.assemble();
 	}
-	catch (FatalError const& e)
+	catch (FatalError const&)
 	{
 		BOOST_FAIL("Fatal error leaked.");
 		success = false;
