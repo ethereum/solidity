@@ -4852,6 +4852,19 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
 	CHECK_WARNING(text, "Inline assembly block is not balanced");
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
+{
+	char const* text = R"(
+		contract c {
+			uint8 x;
+			function f() {
+				assembly { x pop }
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Inline assembly block is not balanced");
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
 {
 	char const* text = R"(
