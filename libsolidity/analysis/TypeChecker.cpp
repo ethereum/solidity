@@ -611,7 +611,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
 				if (var->isLocalVariable())
 					pushes = var->type()->sizeOnStack();
-				else if (var->type()->isValueType())
+				else if (!var->type()->isValueType())
 					pushes = 1;
 				else
 					pushes = 2; // slot number, intra slot offset
