@@ -1453,13 +1453,10 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		// Test for (minInt) / (-1)
 		if (c_isSigned && _operator == Token::Div)
 		{
-			m_context << Instruction::DUP1 // x
-				<< (u256(1) << 255) << Instruction::EQ;
-			// y, x, (x == 2 ** 255)
-			m_context << Instruction::DUP3 << Instruction::NOT //y
-				<< Instruction::ISZERO;
-			// y, x, (x == 2 ** 255), (y == -1)
-			m_context << Instruction::AND;
+			m_context.appendInlineAssembly(R"(
+				and(eq(x, u256(1) << 255), eq(y, -1))
+			)",
+			{ "x", "y" });
 			m_context.appendConditionalInvalid();
 		}
 
