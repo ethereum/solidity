@@ -102,6 +102,22 @@ We will re-add the pre-built bottles soon.
     brew install solidity
     brew linkapps solidity
 
+If you need a specific version of Solidity you can install a 
+Homebrew formula directly from Github.
+
+View 
+`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
+
+Follow the history links until you have a raw file link of a 
+specific commit of ``solidity.rb``.
+
+Install it using ``brew``:
+
+.. code:: bash
+
+    brew unlink solidity
+    # Install 0.4.8
+    brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
 .. _building-from-source:
 
