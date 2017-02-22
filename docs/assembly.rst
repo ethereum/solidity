@@ -333,11 +333,12 @@ push their entry label (with virtual function resolution applied). The calling s
 in solidity are:
 
  - the caller pushes return label, arg1, arg2, ..., argn
- - the call returns with ret1, ret2, ..., retn
+ - the call returns with ret1, ret2, ..., retm
 
 This feature is still a bit cumbersome to use, because the stack offset essentially
 changes during the call, and thus references to local variables will be wrong.
-It is planned that the stack height changes can be specified in inline assembly.
+The assumed stack height can be changed by using labels: ``funreturn[-2]:``
+The number in brackets should be `m - n - 1`.
 
 .. code::
 
@@ -939,8 +940,16 @@ Pseudocode::
 Opcode Stream Generation
 ------------------------
 
-During opcode stream generation, we keep track of the current stack height,
-so that accessing stack variables by name is possible.
+During opcode stream generation, we keep track of the current stack height
+in a counter,
+so that accessing stack variables by name is possible. The stack height is modified with every opcode
+that modifies the stack and with every label that is annotated with a stack
+adjustment. Every time a new
+local variable is introduced, it is registered together with the current
+stack height. If a variable is accessed (either for copying its value or for
+assignment), the appropriate DUP or SWAP instruction is selected depending
+on the difference bitween the current stack height and the
+stack height at the point the variable was introduced.
 
 Pseudocode::
 
@@ -980,7 +989,7 @@ Pseudocode::
       POP
     LabelDefinition(name [id1, ..., idn] :) ->
       JUMPDEST
-      // register new variables id1, ..., idn and adjust the assumed stack
+      // register new local variables id1, ..., idn and adjust the stack
       // height such that it matches the stack height at the beginning of
       // the block plus all local variables including the just registered
       // ones where idn is at the stack top. If n is zero, resets the stack
