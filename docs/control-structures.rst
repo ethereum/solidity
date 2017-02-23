@@ -400,11 +400,7 @@ While a user-provided exception is generated in the following situations:
 #. Calling ``throw``.
 
 Internally, Solidity performs a revert operation (instruction ``0xfd``) when a user-provided exception is thrown. In contrast, it performs an invalid operation
-(instruction ``0xfe``) if a runtime exception is encountered or the condition of an ``assert`` call is not met. In both cases, this causes
+(instruction ``0xfe``) if a runtime exception is encountered. In both cases, this causes
 the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
 (or at least call) without effect.
-
-If contracts are written so that ``assert`` is only used to test internal conditions and ``throw`` or
-``revert`` is used in case of malformed input, a formal analysis tool that verifies that the invalid
-opcode can never be reached can be used to check for the absence of errors assuming valid inputs.
