@@ -81,8 +81,7 @@ struct Scope
 
 	struct Label
 	{
-		Label(size_t _id): id(_id) {}
-		size_t id = 0;
+		size_t id = unassignedLabelId;
 		int stackAdjustment = 0;
 		bool resetStackHeight = false;
 		static const size_t errorLabelId = -1;
@@ -101,7 +100,7 @@ struct Scope
 	using NonconstVisitor = GenericVisitor<Variable, Label, Function>;
 
 	bool registerVariable(std::string const& _name);
-	bool registerLabel(std::string const& _name, size_t _id);
+	bool registerLabel(std::string const& _name);
 	bool registerFunction(std::string const& _name, size_t _arguments, size_t _returns);
 
 	/// Looks up the identifier in this or super scopes (stops and function and assembly boundaries)

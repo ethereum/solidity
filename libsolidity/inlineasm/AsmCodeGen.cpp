@@ -148,10 +148,7 @@ public:
 			},
 			[=](Scope::Label& _label)
 			{
-				if (_label.id == Scope::Label::unassignedLabelId)
-					_label.id = m_state.newLabelId();
-				else if (_label.id == Scope::Label::errorLabelId)
-					_label.id = size_t(m_state.assembly.errorTag().data());
+				assignLabelIdIfUnset(_label);
 				m_state.assembly.append(eth::AssemblyItem(eth::PushTag, _label.id));
 			},
 			[=](Scope::Function&)
@@ -190,10 +187,7 @@ public:
 		m_state.assembly.setSourceLocation(_label.location);
 		solAssert(m_scope.identifiers.count(_label.name), "");
 		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers[_label.name]);
-		if (label.id == Scope::Label::unassignedLabelId)
-			label.id = m_state.newLabelId();
-		else if (label.id == Scope::Label::errorLabelId)
-			label.id = size_t(m_state.assembly.errorTag().data());
+		assignLabelIdIfUnset(label);
 		if (label.resetStackHeight)
 		{
 			size_t numVariables = boost::range::count_if(
@@ -318,6 +312,16 @@ private:
 			);
 	}
 
+	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
+	void assignLabelIdIfUnset(Scope::Label& _label)
+	{
+		if (_label.id == Scope::Label::unassignedLabelId)
+			_label.id = m_state.newLabelId();
+		else if (_label.id == Scope::Label::errorLabelId)
+			_label.id = size_t(m_state.assembly.errorTag().data());
+	}
+
+
 	GeneratorState& m_state;
 	Scope& m_scope;
 	int const m_initialDeposit;
@@ -352,4 +356,3 @@ void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeG
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 }
-

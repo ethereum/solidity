@@ -36,14 +36,13 @@ using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
 
-bool Scope::registerLabel(string const& _name, size_t _id)
+bool Scope::registerLabel(string const& _name)
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Scope::Label(_id);
+	identifiers[_name] = Label();
 	return true;
 }
-
 
 bool Scope::registerVariable(string const& _name)
 {
@@ -86,7 +85,9 @@ AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors):
 {
 	// Make the Solidity ErrorTag available to inline assembly
 	m_scopes[nullptr] = make_shared<Scope>();
-	m_scopes[nullptr]->identifiers["invalidJumpLabel"] = Scope::Label(Scope::Label::errorLabelId);
+	Scope::Label errorLabel;
+	errorLabel.id = Scope::Label::errorLabelId;
+	m_scopes[nullptr]->identifiers["invalidJumpLabel"] = errorLabel;
 	m_currentScope = m_scopes[nullptr].get();
 }
 
@@ -116,7 +117,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(Label const& _item)
 {
-	if (!m_currentScope->registerLabel(_item.name, Scope::Label::unassignedLabelId))
+	if (!m_currentScope->registerLabel(_item.name))
 	{
 		//@TODO secondary location
 		m_errors.push_back(make_shared<Error>(
