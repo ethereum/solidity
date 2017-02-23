@@ -592,8 +592,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// Inline assembly does not have its own type-checking phase, so we just run the
 	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	if (!codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
+	auto identifierAccess = [&](
+		assembly::Identifier const& _identifier,
+		eth::Assembly& _assembly,
+		assembly::CodeGenerator::IdentifierContext _context
+	)
+	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return false;
@@ -641,7 +645,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				return false;
 		}
 		return true;
-	}))
+	};
+	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
+	if (!codeGen.typeCheck(identifierAccess))
 		return false;
 	return true;
 }
