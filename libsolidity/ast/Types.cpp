@@ -252,9 +252,9 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 {
 	if (!_a || !_b)
 		return TypePointer();
-	else if (_b->isImplicitlyConvertibleTo(*_a->mobileType()))
+	else if (_a->mobileType() && _b->isImplicitlyConvertibleTo(*_a->mobileType()))
 		return _a->mobileType();
-	else if (_a->isImplicitlyConvertibleTo(*_b->mobileType()))
+	else if (_b->mobileType() && _a->isImplicitlyConvertibleTo(*_b->mobileType()))
 		return _b->mobileType();
 	else
 		return TypePointer();
@@ -1897,7 +1897,10 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 		size_t si = fillRight ? i : components().size() - i - 1;
 		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
 		if (components()[si] && targetComponents[ti])
+		{
 			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[ti]);
+			solAssert(tempComponents[ti], "");
+		}
 	}
 	return make_shared<TupleType>(tempComponents);
 }

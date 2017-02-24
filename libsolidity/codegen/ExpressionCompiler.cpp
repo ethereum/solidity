@@ -220,6 +220,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		rightIntermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
 			_assignment.leftHandSide().annotation().type
 		);
+	solAssert(rightIntermediateType, "");
 	utils().convertType(*_assignment.rightHandSide().annotation().type, *rightIntermediateType, cleanupNeeded);
 
 	_assignment.leftHandSide().accept(*this);
@@ -395,6 +396,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 		TypePointer leftTargetType = commonType;
 		TypePointer rightTargetType = Token::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
+		solAssert(rightTargetType, "");
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
@@ -815,6 +817,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			solAssert(type, "");
 			utils().convertType(*arguments[0]->annotation().type, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
