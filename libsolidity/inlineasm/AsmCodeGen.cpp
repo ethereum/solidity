@@ -194,19 +194,20 @@ public:
 				 m_scope.identifiers | boost::adaptors::map_values,
 				[](Scope::Identifier const& var) { return var.type() == typeid(Scope::Variable) && boost::get<Scope::Variable>(var).active; }
 			);
-			for (auto const& identifier: _label.stackInfo)
-				if (!identifier.empty())
-				{
-					solAssert(m_scope.identifiers.count(identifier), "");
-					Scope::Variable& var = boost::get<Scope::Variable>(m_scope.identifiers[identifier]);
-					var.active = true;
-					var.stackHeight = m_initialDeposit + numVariables;
-					numVariables++;
-				}
+			numVariables += boost::count_if(_label.stackInfo, [](string const& s) { return !s.empty(); });
 			m_state.assembly.setDeposit(m_initialDeposit + numVariables);
 		}
 		else if (label.stackAdjustment != 0)
 			m_state.assembly.adjustDeposit(label.stackAdjustment);
+		int height = m_state.assembly.deposit();
+		for (auto const& identifier: _label.stackInfo | boost::adaptors::reversed)
+			if (!identifier.empty())
+			{
+				solAssert(m_scope.identifiers.count(identifier), "");
+				Scope::Variable& var = boost::get<Scope::Variable>(m_scope.identifiers[identifier]);
+				var.active = true;
+				var.stackHeight = --height;
+			}
 		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
 	}
 	void operator()(assembly::Assignment const& _assignment)
