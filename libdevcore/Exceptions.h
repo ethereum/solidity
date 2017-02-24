@@ -41,6 +41,9 @@ struct Exception: virtual std::exception, virtual boost::exception
 	Exception(std::string _message = std::string()): m_message(std::move(_message)) {}
 	const char* what() const noexcept override { return m_message.empty() ? std::exception::what() : m_message.c_str(); }
 
+	/// @returns "FileName:LineNumber" referring to the point where the exception was thrown.
+	std::string lineInfo() const;
+
 private:
 	std::string m_message;
 };
