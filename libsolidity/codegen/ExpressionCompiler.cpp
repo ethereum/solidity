@@ -616,6 +616,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			break;
 		case Location::Send:
+		case Location::Transfer:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -644,6 +645,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
+			if (function.location() == Location::Transfer)
+			{
+				// Check if zero (out of stack or not enough balance).
+				m_context << Instruction::ISZERO;
+				m_context.appendConditionalInvalid();
+			}
 			break;
 		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
@@ -960,6 +967,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Location::Bare:
 				case FunctionType::Location::BareCallCode:
 				case FunctionType::Location::BareDelegateCall:
+				case FunctionType::Location::Transfer:
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
@@ -1041,7 +1049,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
-		else if ((set<string>{"send", "call", "callcode", "delegatecall"}).count(member))
+		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				IntegerType(0, IntegerType::Modifier::Address),

@@ -464,7 +464,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true, false, true)},
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true, false, true)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareDelegateCall, true)},
-			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
+			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)},
+			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Location::Transfer)}
 		};
 	else
 		return MemberList::MemberMap();
@@ -2097,6 +2098,7 @@ string FunctionType::identifier() const
 	case Location::BareDelegateCall: id += "baredelegatecall"; break;
 	case Location::Creation: id += "creation"; break;
 	case Location::Send: id += "send"; break;
+	case Location::Transfer: id += "transfer"; break;
 	case Location::SHA3: id += "sha3"; break;
 	case Location::Selfdestruct: id += "selfdestruct"; break;
 	case Location::Revert: id += "revert"; break;

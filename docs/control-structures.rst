@@ -395,6 +395,7 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
 #. If your contract receives Ether via a public getter function.
 #. If you call a zero-initialized variable of internal function type.
+#. If a ``.transfer()`` fails.
 
 While a user-provided exception is generated in the following situations:
 #. Calling ``throw``.

@@ -826,6 +826,7 @@ public:
 		BareDelegateCall, ///< DELEGATECALL without function hash
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
+		Transfer, ///< CALL, but without data and throws on error
 		SHA3, ///< SHA3
 		Selfdestruct, ///< SELFDESTRUCT
 		Revert, ///< REVERT
