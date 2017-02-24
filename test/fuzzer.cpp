@@ -77,7 +77,7 @@ int main()
 			});
 			if (!invalid.empty())
 			{
-				cout << "Invalid error: \"" << invalid << "\"" << endl;
+				cout << "Invalid error: \"" << error.asString() << "\"" << endl;
 				abort();
 			}
 		}
