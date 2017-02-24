@@ -16,19 +16,20 @@
 
 	The Implementation originally from https://msdn.microsoft.com/en-us/library/windows/desktop/aa365592(v=vs.85).aspx
 */
-/** @file RPCSession.cpp
- * @author Dimtiry Khokhlov <dimitry@ethdev.com>
- * @author Alex Beregszaszi
- * @date 2016
- */
+/// @file RPCSession.cpp
+/// Low-level IPC communication between the test framework and the Ethereum node.
+
+#include "RPCSession.h"
+
+#include <libdevcore/CommonData.h>
+
+#include <json/reader.h>
+#include <json/writer.h>
 
 #include <string>
 #include <stdio.h>
 #include <thread>
-#include <libdevcore/CommonData.h>
-#include <json/reader.h>
-#include <json/writer.h>
-#include "RPCSession.h"
+#include <chrono>
 
 using namespace std;
 using namespace dev;
@@ -107,13 +108,23 @@ string IPCSocket::sendRequest(string const& _req)
 	return string(m_readBuf, m_readBuf + cbRead);
 #else
 	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
-		BOOST_FAIL("Writing on IPC failed");
+		BOOST_FAIL("Writing on IPC failed.");
 
-	ssize_t ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+	auto start = chrono::steady_clock::now();
+	ssize_t ret;
+	do
+	{
+		ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+		// Also consider closed socket an error.
+		if (ret < 0)
+			BOOST_FAIL("Reading on IPC failed.");
+	} while (
+		ret == 0 &&
+		chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < m_readTimeOutMS
+	);
 
-	// Also consider closed socket an error.
-	if (ret <= 0)
-		BOOST_FAIL("Reading on IPC failed");
+	if (ret == 0)
+		BOOST_FAIL("Timeout reading on IPC.");
 
 	return string(m_readBuf, m_readBuf + ret);
 #endif
