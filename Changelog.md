@@ -9,8 +9,11 @@ Features:
 Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
+ * Type system: Fix a crash caused by continuing on fatal errors in the code.
  * Type system: Disallow arrays with negative length.
  * Type system: Fix a crash related to invalid binary operators.
+ * Inline assembly: Charge one stack slot for non-value types during analysis.
+ * Assembly output: Print source location before the operation it refers to instead of after.
 
 ### 0.4.9 (2017-01-31)
 

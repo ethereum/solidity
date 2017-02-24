@@ -67,7 +67,9 @@ protected:
 	std::map<std::string, dev::solidity::Instruction> const& instructions();
 	Statement parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
-	FunctionalInstruction parseFunctionalInstruction(Statement&& _instruction);
+	FunctionDefinition parseFunctionDefinition();
+	Statement parseFunctionalInstruction(Statement&& _instruction);
+	std::string expectAsmIdentifier();
 };
 
 }

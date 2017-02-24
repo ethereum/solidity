@@ -35,14 +35,7 @@ using namespace dev::solidity;
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
-	try
-	{
-		_root.accept(*this);
-	}
-	catch (FatalError const&)
-	{
-		solAssert(m_errorOccurred, "");
-	}
+	_root.accept(*this);
 	return !m_errorOccurred;
 }
 

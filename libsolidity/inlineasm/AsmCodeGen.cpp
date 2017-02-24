@@ -190,6 +190,10 @@ public:
 		}
 		(*this)(_instr.instruction);
 	}
+	void operator()(assembly::FunctionCall const&)
+	{
+		solAssert(false, "Function call not removed during desugaring phase.");
+	}
 	void operator()(Label const& _label)
 	{
 		m_state.assembly.setSourceLocation(_label.location);
@@ -249,7 +253,10 @@ public:
 				_block.location
 			);
 		}
-
+	}
+	void operator()(assembly::FunctionDefinition const&)
+	{
+		solAssert(false, "Function definition not removed during desugaring phase.");
 	}
 
 private:
