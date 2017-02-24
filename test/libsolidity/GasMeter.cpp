@@ -261,8 +261,8 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2)});
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("h(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_CASE(balance_gas)
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
+	testRunTimeGas("lookup_balance(address)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
 }
 
 BOOST_AUTO_TEST_CASE(selfdestruct_gas)
