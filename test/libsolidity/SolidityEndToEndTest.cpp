@@ -1693,10 +1693,6 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 			function b(address addr, uint amount) {
 				addr.transfer(amount);
 			}
-			function c(address addr, uint amount, uint gas) returns (uint) {
-				addr.transfer.gas(gas)(amount);
-				return this.balance;
-			}
 		}
 
 		contract B {
@@ -1707,22 +1703,11 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 				throw;
 			}
 		}
-
-		contract D {
-			// This takes about ~3600 gas, which exceeds the 2300 gas stipend.
-			function () payable {
-				bytes32 tmp = 1;
-				for (uint i = 0; i < 20; i++)
-					tmp = sha3(tmp);
-			}
-		}
 	)";
 	compileAndRun(sourceCode, 0, "B");
 	u160 const nonPayableRecipient = m_contractAddress;
 	compileAndRun(sourceCode, 0, "C");
 	u160 const oogRecipient = m_contractAddress;
-	compileAndRun(sourceCode, 0, "D");
-	u160 const expensiveRecipient = m_contractAddress;
 	compileAndRun(sourceCode, 20, "A");
 	u160 payableRecipient(23);
 	BOOST_CHECK(callContractFunction("a(address,uint256)", payableRecipient, 10) == encodeArgs(10));
@@ -1730,8 +1715,6 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
 	BOOST_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10) == encodeArgs());
 	BOOST_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10) == encodeArgs());
-	BOOST_CHECK(callContractFunction("c(address,uint256,uint256)", expensiveRecipient, 1, 9000) == encodeArgs(9));
-	BOOST_CHECK(callContractFunction("c(address,uint256,uint256)", expensiveRecipient, 1, 0) == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(log0)

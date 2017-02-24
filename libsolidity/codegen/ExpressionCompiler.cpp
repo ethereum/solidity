@@ -620,19 +620,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
-			if (!function.gasSet())
-				m_context << u256(eth::GasCosts::callStipend);
+			m_context << u256(eth::GasCosts::callStipend);
 			arguments.front()->accept(*this);
 			utils().convertType(
 				*arguments.front()->annotation().type,
 				*function.parameterTypes().front(), true
 			);
-			if (!function.gasSet())
-			{
-				// gas <- gas * !value
-				m_context << Instruction::SWAP1 << Instruction::DUP2;
-				m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
-			}
+			// gas <- gas * !value
+			m_context << Instruction::SWAP1 << Instruction::DUP2;
+			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
 			appendExternalFunctionCall(
 				FunctionType(
 					TypePointers{},

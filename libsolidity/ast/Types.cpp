@@ -2315,10 +2315,9 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Location::Bare:
 	case Location::BareCallCode:
 	case Location::BareDelegateCall:
-	case Location::Transfer:
 	{
 		MemberList::MemberMap members;
-		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall && m_location != Location::Transfer)
+		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
 		{
 			if (m_isPayable)
 				members.push_back(MemberList::Member(
