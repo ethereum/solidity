@@ -12,6 +12,7 @@ Bugfixes:
  * Type system: Fix a crash caused by continuing on fatal errors in the code.
  * Type system: Disallow arrays with negative length.
  * Inline assembly: Charge one stack slot for non-value types during analysis.
+ * Assembly output: Print source location before the operation it refers to instead of after.
 
 ### 0.4.9 (2017-01-31)
 
