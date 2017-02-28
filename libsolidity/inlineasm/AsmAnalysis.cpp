@@ -127,36 +127,7 @@ bool AsmAnalyzer::operator()(Label const& _item)
 		));
 		return false;
 	}
-	bool success = true;
-	if (!_item.stackInfo.empty())
-	{
-		Scope::Label& label = boost::get<Scope::Label>(m_currentScope->identifiers[_item.name]);
-		if (_item.stackInfo.size() == 1)
-			try
-			{
-				label.stackAdjustment = boost::lexical_cast<int>(_item.stackInfo[0]);
-				label.resetStackHeight = false;
-				return true;
-			}
-			catch (boost::bad_lexical_cast const&)
-			{
-				// Interpret as variable name
-			}
-		label.resetStackHeight = true;
-		for (auto const& stackItem: _item.stackInfo)
-			if (!stackItem.empty())
-				if (!m_currentScope->registerVariable(stackItem))
-				{
-					//@TODO secondary location
-					m_errors.push_back(make_shared<Error>(
-						Error::Type::DeclarationError,
-						"Variable name " + stackItem + " already taken in this scope.",
-						_item.location
-					));
-					success = false;
-				}
-	}
-	return success;
+	return true;
 }
 
 bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)

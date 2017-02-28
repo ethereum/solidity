@@ -42,8 +42,8 @@ struct Literal { SourceLocation location; bool isNumber; std::string value; };
 /// External / internal identifier or label reference
 struct Identifier { SourceLocation location; std::string name; };
 struct FunctionalInstruction;
-/// Jump label ("name:" or "name [x, y, z]:" or "name [-3]:")
-struct Label { SourceLocation location; std::string name; std::vector<std::string> stackInfo; };
+/// Jump label ("name:")
+struct Label { SourceLocation location; std::string name; };
 /// Assignemnt (":= x", moves stack top into x, potentially multiple slots)
 struct Assignment { SourceLocation location; Identifier variableName; };
 struct FunctionalAssignment;

@@ -200,11 +200,6 @@ BOOST_AUTO_TEST_CASE(blocks)
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
 }
 
-BOOST_AUTO_TEST_CASE(labels_with_stack_info)
-{
-	BOOST_CHECK(successParse("{ x[-1]: y[a]: z[d, e]: h[100]: g[]: }"));
-}
-
 BOOST_AUTO_TEST_CASE(function_definitions)
 {
 	BOOST_CHECK(successParse("{ function f() { } function g(a) -> (x) { } }"));
@@ -247,11 +242,6 @@ BOOST_AUTO_TEST_CASE(print_functional)
 BOOST_AUTO_TEST_CASE(print_label)
 {
 	parsePrintCompare("{\n    loop:\n    jump(loop)\n}");
-}
-
-BOOST_AUTO_TEST_CASE(print_label_with_stack)
-{
-	parsePrintCompare("{\n    loop[x, y]:\n    other[-2]:\n    third[10]:\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_assignments)

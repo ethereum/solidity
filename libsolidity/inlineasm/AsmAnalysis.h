@@ -82,8 +82,6 @@ struct Scope
 	struct Label
 	{
 		size_t id = unassignedLabelId;
-		int stackAdjustment = 0;
-		bool resetStackHeight = false;
 		static const size_t errorLabelId = -1;
 		static const size_t unassignedLabelId = 0;
 	};
