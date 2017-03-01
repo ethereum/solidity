@@ -2493,7 +2493,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 	{
 		auto refType = dynamic_cast<ReferenceType const*>(t.get());
 		if (refType && refType->location() == DataLocation::CallData)
-			parameterTypes.push_back(refType->copyForLocation(DataLocation::Memory, false));
+			parameterTypes.push_back(refType->copyForLocation(DataLocation::Memory, true));
 		else
 			parameterTypes.push_back(t);
 	}
