@@ -1466,7 +1466,10 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	}
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
-	// although every subexpression is, so leaving this to false for now.
+	// although every subexpression is, so leaving this limited for now.
+	if (auto tt = dynamic_cast<TypeType const*>(exprType.get()))
+		if (tt->actualType()->category() == Type::Category::Enum)
+			annotation.isPure = true;
 
 	return false;
 }

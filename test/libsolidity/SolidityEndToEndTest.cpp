@@ -4542,7 +4542,6 @@ BOOST_AUTO_TEST_CASE(simple_constant_variables_test)
 
 BOOST_AUTO_TEST_CASE(constant_variables)
 {
-	//for now constant specifier is valid only for uint, bytesXX, string and enums
 	char const* sourceCode = R"(
 		contract Foo {
 			uint constant x = 56;
