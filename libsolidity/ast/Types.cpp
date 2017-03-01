@@ -2456,6 +2456,18 @@ u256 FunctionType::externalIdentifier() const
 	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
 }
 
+bool FunctionType::isPure() const
+{
+	return
+		m_location == Location::SHA3 ||
+		m_location == Location::ECRecover ||
+		m_location == Location::SHA256 ||
+		m_location == Location::RIPEMD160 ||
+		m_location == Location::AddMod ||
+		m_location == Location::MulMod ||
+		m_location == Location::ObjectCreation;
+}
+
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
 	TypePointers pointers;

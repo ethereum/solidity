@@ -2180,7 +2180,18 @@ BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
 			address constant x = msg.sender;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Expression is not compile-time constant.");
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+{
+	char const* text = R"(
+		contract C {
+			function () constant returns (uint) x;
+			uint constant y = x();
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
@@ -2197,7 +2208,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_expression)
 {
 	char const* text = R"(
 		contract C {
-			uint constant x = 0x123 + 9x456;
+			uint constant x = 0x123 + 0x456;
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -2207,7 +2218,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_keccak)
 {
 	char const* text = R"(
 		contract C {
-			bytes32 constant x = keccak("abc");
+			bytes32 constant x = keccak256("abc");
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -2217,22 +2228,21 @@ BOOST_AUTO_TEST_CASE(assignment_to_const_array_vars)
 {
 	char const* text = R"(
 		contract C {
-			uint[3] memory constant x = [1, 2, 3];
+			uint[3] constant x = [uint(1), 2, 3];
 		}
 	)";
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(complex_const_variable)
+BOOST_AUTO_TEST_CASE(constant_struct)
 {
-	//for now constant specifier is valid only for uint bytesXX and enums
 	char const* text = R"(
-		contract Foo {
-			mapping(uint => bool) x;
-			mapping(uint => bool) constant mapVar = x;
+		contract C {
+			struct S { uint x; uint[] y; }
+			S constant x = S(5, new uint[](4));
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_const_variable)

@@ -467,27 +467,20 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// TypeChecker at the VariableDeclarationStatement level.
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Failed to infer variable type.");
+	if (_variable.value())
+		expectType(*_variable.value(), *varType);
 	if (_variable.isConstant())
 	{
-		if (!dynamic_cast<ContractDefinition const*>(_variable.scope()))
+		if (!_variable.isStateVariable())
 			typeError(_variable.location(), "Illegal use of \"constant\" specifier.");
 		if (!_variable.value())
 			typeError(_variable.location(), "Uninitialized \"constant\" variable.");
-		if (!varType->isValueType())
-		{
-			bool constImplemented = false;
-			if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
-				constImplemented = arrayType->isByteArray();
-			if (!constImplemented)
-				typeError(
-					_variable.location(),
-					"Illegal use of \"constant\" specifier. \"constant\" "
-					"is not yet implemented for this type."
-				);
-		}
+		else if (!_variable.value()->annotation().isPure)
+			typeError(
+				_variable.value()->location(),
+				"Initial value for constant variable has to be compile-time constant."
+			);
 	}
-	if (_variable.value())
-		expectType(*_variable.value(), *varType);
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -928,6 +921,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	}
 
 	_conditional.annotation().type = commonType;
+	_conditional.annotation().isPure =
+		_conditional.condition().annotation().isPure &&
+		_conditional.trueExpression().annotation().isPure &&
+		_conditional.falseExpression().annotation().isPure;
 
 	if (_conditional.annotation().lValueRequested)
 		typeError(
@@ -1009,6 +1006,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
+		bool isPure = true;
 		TypePointer inlineArrayType;
 		for (size_t i = 0; i < components.size(); ++i)
 		{
@@ -1031,10 +1029,13 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					else if (inlineArrayType)
 						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 				}
+				if (!components[i]->annotation().isPure)
+					isPure = false;
 			}
 			else
 				types.push_back(TypePointer());
 		}
+		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
 		{
 			if (!inlineArrayType) 
@@ -1061,7 +1062,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 {
 	// Inc, Dec, Add, Sub, Not, BitNot, Delete
 	Token::Value op = _operation.getOperator();
-	if (op == Token::Value::Inc || op == Token::Value::Dec || op == Token::Value::Delete)
+	bool const modifying = (op == Token::Value::Inc || op == Token::Value::Dec || op == Token::Value::Delete);
+	if (modifying)
 		requireLValue(_operation.subExpression());
 	else
 		_operation.subExpression().accept(*this);
@@ -1079,6 +1081,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		t = subExprType;
 	}
 	_operation.annotation().type = t;
+	_operation.annotation().isPure = !modifying && _operation.subExpression().annotation().isPure;
 	return false;
 }
 
@@ -1105,6 +1108,10 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		Token::isCompareOp(_operation.getOperator()) ?
 		make_shared<BoolType>() :
 		commonType;
+	_operation.annotation().isPure =
+		_operation.leftExpression().annotation().isPure &&
+		_operation.rightExpression().annotation().isPure;
+
 	if (_operation.getOperator() == Token::Exp)
 	{
 		if (
@@ -1133,6 +1140,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
 	vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.names();
 
+	bool isPure = true;
+
 	// We need to check arguments' type first as they will be needed for overload resolution.
 	shared_ptr<TypePointers> argumentTypes;
 	if (isPositionalCall)
@@ -1140,6 +1149,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	for (ASTPointer<Expression const> const& argument: arguments)
 	{
 		argument->accept(*this);
+		if (!argument->annotation().isPure)
+			isPure = false;
 		// only store them for positional calls
 		if (isPositionalCall)
 			argumentTypes->push_back(type(*argument));
@@ -1177,6 +1188,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				typeError(_functionCall.location(), "Explicit type conversion not allowed.");
 		}
 		_functionCall.annotation().type = resultType;
+		_functionCall.annotation().isPure = isPure;
 
 		return false;
 	}
@@ -1193,9 +1205,16 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
 		functionType = structType.constructorType();
 		membersRemovedForStructConstructor = structType.membersMissingInMemory();
+		_functionCall.annotation().isPure = isPure;
 	}
 	else
+	{
 		functionType = dynamic_pointer_cast<FunctionType const>(expressionType);
+		_functionCall.annotation().isPure =
+			isPure &&
+			_functionCall.expression().annotation().isPure &&
+			functionType->isPure();
+	}
 
 	if (!functionType)
 	{
@@ -1360,6 +1379,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			strings(),
 			FunctionType::Location::ObjectCreation
 		);
+		_newExpression.annotation().isPure = true;
 	}
 	else
 		fatalTypeError(_newExpression.location(), "Contract or array type expected.");
@@ -1445,6 +1465,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	}
 
+	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
+	// although every subexpression is, so leaving this to false for now.
+
 	return false;
 }
 
@@ -1454,6 +1477,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	TypePointer baseType = type(_access.baseExpression());
 	TypePointer resultType;
 	bool isLValue = false;
+	bool isPure = _access.baseExpression().annotation().isPure;
 	Expression const* index = _access.indexExpression();
 	switch (baseType->category())
 	{
@@ -1535,6 +1559,9 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	}
 	_access.annotation().type = move(resultType);
 	_access.annotation().isLValue = isLValue;
+	if (index && !index->annotation().isPure)
+		isPure = false;
+	_access.annotation().isPure = isPure;
 
 	return false;
 }
@@ -1589,18 +1616,22 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		!!annotation.referencedDeclaration,
 		"Referenced declaration is null after overload resolution."
 	);
-	auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
-	annotation.isConstant = variableDeclaration != nullptr && variableDeclaration->isConstant();
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
 		fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
+	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
+		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
+	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
+		if (auto functionType = dynamic_cast<FunctionType const*>(annotation.type.get()))
+			annotation.isPure = functionType->isPure();
 	return false;
 }
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
 	_expr.annotation().type = make_shared<TypeType>(Type::fromElementaryTypeName(_expr.typeName()));
+	_expr.annotation().isPure = true;
 }
 
 void TypeChecker::endVisit(Literal const& _literal)
@@ -1620,6 +1651,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 			);
 	}
 	_literal.annotation().type = Type::forLiteral(_literal);
+	_literal.annotation().isPure = true;
 	if (!_literal.annotation().type)
 		fatalTypeError(_literal.location(), "Invalid literal value.");
 }

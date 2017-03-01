@@ -972,6 +972,10 @@ public:
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
 	bool isConstant() const { return m_isConstant; }
+	/// @returns true if the the result of this function only depends on its arguments
+	/// and it does not modify the state.
+	/// Currently, this will only return true for internal functions like keccak and ecrecover.
+	bool isPure() const;
 	bool isPayable() const { return m_isPayable; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
