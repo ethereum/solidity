@@ -4736,6 +4736,23 @@ BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(external_function_to_function_type_calldata_parameter)
+{
+	// This is a test that checks that the type of the `bytes` parameter is
+	// correctly changed from its own type `bytes calldata` to `bytes memory`
+	// when converting to a function type.
+	char const* text = R"(
+		contract C {
+			function f(function(bytes memory x) external g) { }
+			function callback(bytes x) external {}
+			function g() {
+				f(this.callback);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(external_function_type_to_address)
 {
 	char const* text = R"(
