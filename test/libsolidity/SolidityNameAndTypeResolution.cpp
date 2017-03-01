@@ -2950,6 +2950,19 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(tuple_assignment_from_void_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() { }
+			function g() {
+				var (x,) = (f(), f());
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cannot declare variable with void (empty tuple) type.");
+}
+
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 {
 	char const* text = R"(
