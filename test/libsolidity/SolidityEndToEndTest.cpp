@@ -4553,6 +4553,56 @@ BOOST_AUTO_TEST_CASE(constant_variables)
 	compileAndRun(sourceCode);
 }
 
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_expression)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint constant x = 0x123 + 0x456;
+			function f() returns (uint) { return x + 1; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0x123 + 0x456 + 1));
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_keccak)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes32 constant x = keccak256("abc");
+			function f() returns (bytes32) { return x; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(dev::keccak256("abc")));
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_array_vars)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[3] constant x = [uint(1), 2, 3];
+			uint constant y = x[0] + x[1] + x[2];
+			function f() returns (uint) { return y; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 + 2 + 3));
+}
+
+BOOST_AUTO_TEST_CASE(constant_struct)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint x; uint[] y; }
+			S constant x = S(5, new uint[](4));
+			function f() returns (uint) { return x.x; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(5));
+}
+
 BOOST_AUTO_TEST_CASE(packed_storage_structs_uint)
 {
 	char const* sourceCode = R"(
