@@ -17,6 +17,7 @@ Bugfixes:
  * Type system: Detect cyclic dependencies between constants.
  * Type system: Disallow arrays with negative length.
  * Type system: Fix a crash related to invalid binary operators.
+ * Type system: Only allow compile-time constants for constant state variables.
  * Type system: Disallow ``var`` declaration with empty tuple type.
  * Type system: Correctly convert function argument types to pointers for member functions.
  * Type system: Move privateness of constructor into AST itself.
