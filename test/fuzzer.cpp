@@ -67,7 +67,6 @@ int main()
 		for (Json::Value const& error: outputJson["errors"])
 		{
 			string invalid = contains(error.asString(), vector<string>{
-				"Compiler error",
 				"Internal compiler error",
 				"Exception during compilation",
 				"Unknown exception during compilation",
@@ -78,7 +77,7 @@ int main()
 			});
 			if (!invalid.empty())
 			{
-				cout << "Invalid error: \"" << invalid << "\"" << endl;
+				cout << "Invalid error: \"" << error.asString() << "\"" << endl;
 				abort();
 			}
 		}

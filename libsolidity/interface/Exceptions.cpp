@@ -23,6 +23,7 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/Utils.h>
 
+using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
@@ -55,4 +56,17 @@ Error::Error(Type _type): m_type(_type)
 		solAssert(false, "");
 		break;
 	}
+}
+
+string Exception::lineInfo() const
+{
+	char const* const* file = boost::get_error_info<boost::throw_file>(*this);
+	int const* line = boost::get_error_info<boost::throw_line>(*this);
+	string ret;
+	if (file)
+		ret += *file;
+	ret += ':';
+	if (line)
+		ret += boost::lexical_cast<string>(*line);
+	return ret;
 }
