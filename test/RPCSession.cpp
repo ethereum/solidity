@@ -197,12 +197,17 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
-	BOOST_REQUIRE(rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }) == true);
+	BOOST_REQUIRE_MESSAGE(
+		rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }),
+		"Error unlocking account " + _address
+	);
 }
 
 string RPCSession::personal_newAccount(string const& _password)
 {
-	return rpcCall("personal_newAccount", { quote(_password) }).asString();
+	string addr = rpcCall("personal_newAccount", { quote(_password) }).asString();
+	BOOST_MESSAGE("Created account " + addr);
+	return addr;
 }
 
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
