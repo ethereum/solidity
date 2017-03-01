@@ -2173,6 +2173,56 @@ BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
+{
+	char const* text = R"(
+		contract C {
+			address constant x = msg.sender;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Expression is not compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
+{
+	char const* text = R"(
+		contract C {
+			C constant x = C(0x123);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_expression)
+{
+	char const* text = R"(
+		contract C {
+			uint constant x = 0x123 + 9x456;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_keccak)
+{
+	char const* text = R"(
+		contract C {
+			bytes32 constant x = keccak("abc");
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_array_vars)
+{
+	char const* text = R"(
+		contract C {
+			uint[3] memory constant x = [1, 2, 3];
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(complex_const_variable)
 {
 	//for now constant specifier is valid only for uint bytesXX and enums
