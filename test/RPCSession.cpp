@@ -118,7 +118,8 @@ string IPCSocket::sendRequest(string const& _req)
 		// Also consider closed socket an error.
 		if (ret < 0)
 			BOOST_FAIL("Reading on IPC failed.");
-	} while (
+	}
+	while (
 		ret == 0 &&
 		chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < m_readTimeOutMS
 	);
