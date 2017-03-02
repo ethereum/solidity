@@ -428,8 +428,10 @@ change by overriding).
 Constant State Variables
 ************************
 
-State variables can be declared as constant (this is not yet implemented
-for array and struct types and not possible for mapping types).
+State variables can be declared as constant. In this case, they have to be
+assigned a value or expression which is a constant at compile time. The compiler does
+not reserve a storage slot for these variables and every occurrence is
+replaced by their constant value (which might be computed by the optimizer).
 
 ::
 
@@ -438,12 +440,9 @@ for array and struct types and not possible for mapping types).
     contract C {
         uint constant x = 32**22 + 8;
         string constant text = "abc";
+        bytes32 constant myHash = keccak256("abc");
     }
 
-This has the effect that the compiler does not reserve a storage slot
-for these variables and every occurrence is replaced by their constant value.
-
-The value expression can only contain integer arithmetics.
 
 ******************
 Constant Functions
