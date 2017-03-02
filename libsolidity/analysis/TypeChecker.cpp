@@ -824,6 +824,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				else
 					solAssert(false, "");
 			}
+			else if (*var.annotation().type == TupleType())
+				typeError(
+					var.location(),
+					"Cannot declare variable with void (empty tuple) type."
+				);
 			var.accept(*this);
 		}
 		else
