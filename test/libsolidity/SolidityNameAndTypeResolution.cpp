@@ -2501,6 +2501,30 @@ BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
 	CHECK_ERROR(sourceCode, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint => uint) x;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, TypeError, "Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable");
+}
+
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint => uint)[] x;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "Uninitialized storage pointer");
+}
+
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 {
 	char const* sourceCode = R"(
