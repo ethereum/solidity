@@ -5156,6 +5156,34 @@ BOOST_AUTO_TEST_CASE(address_methods)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
+{
+	char const* text = R"(
+		contract C {
+			uint constant a = a;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "cyclic dependency via a");
+	text = R"(
+		contract C {
+			uint constant a = b * c;
+			uint constant b = 7;
+			uint constant c = b + uint(sha3(d));
+			uint constant d = 2 + a;
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "a has a cyclic dependency via c");
+	text = R"(
+		contract C {
+			uint constant a = b * c;
+			uint constant b = 7;
+			uint constant c = 4 + uint(sha3(d));
+			uint constant d = 2 + b;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
