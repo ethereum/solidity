@@ -36,6 +36,9 @@ namespace solidity
 
 /**
  * The module that performs static analysis on the AST.
+ * In this context, static analysis is anything that can produce warnings which can help
+ * programmers write cleaner code. For every warning generated eher, it has to be possible to write
+ * equivalent code that does generate the warning.
  */
 class StaticAnalyzer: private ASTConstVisitor
 {

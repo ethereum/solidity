@@ -20,19 +20,23 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-#include <string>
+#include <test/libsolidity/ErrorCheck.h>
 
-#include <libdevcore/SHA3.h>
+#include <test/TestHelper.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
+#include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include "../TestHelper.h"
-#include "ErrorCheck.h"
+
+#include <libdevcore/SHA3.h>
+
+#include <string>
 
 using namespace std;
 
@@ -93,10 +97,11 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					BOOST_CHECK(success || !errors.empty());
 				}
 		if (success)
-		{
-			StaticAnalyzer staticAnalyzer(errors);
-			staticAnalyzer.analyze(*sourceUnit);
-		}
+			if (!PostTypeChecker(errors).check(*sourceUnit))
+				success = false;
+		if (success)
+			if (!StaticAnalyzer(errors).analyze(*sourceUnit))
+				success = false;
 		if (errors.size() > 1 && !_allowMultipleErrors)
 			BOOST_FAIL("Multiple errors found");
 		for (auto const& currentError: errors)
