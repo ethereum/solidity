@@ -7083,14 +7083,14 @@ BOOST_AUTO_TEST_CASE(sdiv_minint_by_negone)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function minInt() returns (int) {
+			function minInt() external returns (int) {
 				return -2**255;
 			}
 			function div(int a, int b) returns (int) {
 				return a / b;
 			}
 			function test() returns (int) {
-				return div(minInt(), -1);
+				return div(this.minInt(), -1);
 			}
 		}
 	)";
