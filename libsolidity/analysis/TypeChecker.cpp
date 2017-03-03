@@ -473,6 +473,14 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	{
 		if (!_variable.isStateVariable())
 			typeError(_variable.location(), "Illegal use of \"constant\" specifier.");
+		if (!_variable.type()->isValueType())
+		{
+			bool allowed = false;
+			if (auto arrayType = dynamic_cast<ArrayType const*>(_variable.type().get()))
+				allowed = arrayType->isString();
+			if (!allowed)
+				typeError(_variable.location(), "Constants of non-value type not yet implemented.");
+		}
 		if (!_variable.value())
 			typeError(_variable.location(), "Uninitialized \"constant\" variable.");
 		else if (!_variable.value()->annotation().isPure)

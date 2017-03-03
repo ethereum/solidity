@@ -433,6 +433,9 @@ assigned a value or expression which is a constant at compile time. The compiler
 not reserve a storage slot for these variables and every occurrence is
 replaced by their constant value (which might be computed by the optimizer).
 
+Not all types for constants are implemented at this time. The only supported types are
+value types and strings.
+
 ::
 
     pragma solidity ^0.4.0;
