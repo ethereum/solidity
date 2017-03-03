@@ -53,7 +53,11 @@ public:
 		Warning
 	};
 
-	explicit Error(Type _type);
+	explicit Error(
+		Type _type,
+		SourceLocation const& _location = SourceLocation(),
+		std::string const& _description = std::string()
+	);
 
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
