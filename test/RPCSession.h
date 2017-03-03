@@ -28,11 +28,13 @@
 #include <sys/un.h>
 #endif
 
+#include <json/value.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include <string>
 #include <stdio.h>
 #include <map>
-#include <json/value.h>
-#include <boost/test/unit_test.hpp>
 
 #if defined(_WIN32)
 class IPCSocket : public boost::noncopyable
@@ -60,8 +62,12 @@ public:
 	std::string const& path() const { return m_path; }
 
 private:
+
 	std::string m_path;
 	int m_socket;
+	/// Socket read timeout in milliseconds. Needs to be large because the key generation routine
+	/// might take long.
+	unsigned static constexpr m_readTimeOutMS = 15000;
 	char m_readBuf[512000];
 };
 #endif
