@@ -97,7 +97,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	{
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::TypeError,
-			"string literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
 		));
 		return false;
 	}
