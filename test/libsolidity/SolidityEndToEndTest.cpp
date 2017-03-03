@@ -9119,24 +9119,24 @@ BOOST_AUTO_TEST_CASE(invalid_instruction)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
 }
 
-BOOST_AUTO_TEST_CASE(assert)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() {
-				assert(false);
-			}
-			function g(bool val) returns (bool) {
-				assert(val == true);
-				return true;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
-	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs());
-	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(true));
-}
+//BOOST_AUTO_TEST_CASE(assert)
+//{
+//	char const* sourceCode = R"(
+//		contract C {
+//			function f() {
+//				assert(false);
+//			}
+//			function g(bool val) returns (bool) {
+//				assert(val == true);
+//				return true;
+//			}
+//		}
+//	)";
+//	compileAndRun(sourceCode, 0, "C");
+//	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+//	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs());
+//	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(true));
+//}
 
 BOOST_AUTO_TEST_CASE(revert)
 {

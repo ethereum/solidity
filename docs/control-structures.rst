@@ -399,7 +399,6 @@ Currently, Solidity automatically generates a runtime exception in the following
 
 While a user-provided exception is generated in the following situations:
 #. Calling ``throw``.
-#. The condition of ``assert(condition)`` is not met.
 
 Internally, Solidity performs a revert operation (instruction ``0xfd``) when a user-provided exception is thrown. In contrast, it performs an invalid operation
 (instruction ``0xfe``) if a runtime exception is encountered. In both cases, this causes

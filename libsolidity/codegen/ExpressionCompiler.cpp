@@ -885,9 +885,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
-			// condition was not met, abort
-			m_context << u256(0) << u256(0);
-			m_context << Instruction::REVERT;
+			// condition was not met, flag an error
+			m_context << Instruction::INVALID;
 			// the success branch
 			m_context << success;
 			break;
