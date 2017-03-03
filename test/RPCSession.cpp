@@ -207,7 +207,7 @@ void RPCSession::personal_unlockAccount(string const& _address, string const& _p
 string RPCSession::personal_newAccount(string const& _password)
 {
 	string addr = rpcCall("personal_newAccount", { quote(_password) }).asString();
-	BOOST_MESSAGE("Created account " + addr);
+	BOOST_TEST_MESSAGE("Created account " + addr);
 	return addr;
 }
 
