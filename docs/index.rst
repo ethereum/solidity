@@ -39,6 +39,9 @@ Available Solidity Integrations
 * `Ethereum Studio <https://live.ether.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
+* `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
+    Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
+
 * `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
     Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
 
