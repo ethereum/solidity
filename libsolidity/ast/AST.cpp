@@ -83,7 +83,7 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new SourceUnitAnnotation();
-	return static_cast<SourceUnitAnnotation&>(*m_annotation);
+	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
 }
 
 string Declaration::sourceUnitName() const
@@ -99,7 +99,7 @@ ImportAnnotation& ImportDirective::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ImportAnnotation();
-	return static_cast<ImportAnnotation&>(*m_annotation);
+	return dynamic_cast<ImportAnnotation&>(*m_annotation);
 }
 
 TypePointer ImportDirective::type() const
@@ -255,14 +255,14 @@ ContractDefinitionAnnotation& ContractDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ContractDefinitionAnnotation();
-	return static_cast<ContractDefinitionAnnotation&>(*m_annotation);
+	return dynamic_cast<ContractDefinitionAnnotation&>(*m_annotation);
 }
 
 TypeNameAnnotation& TypeName::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new TypeNameAnnotation();
-	return static_cast<TypeNameAnnotation&>(*m_annotation);
+	return dynamic_cast<TypeNameAnnotation&>(*m_annotation);
 }
 
 TypePointer StructDefinition::type() const
@@ -274,7 +274,7 @@ TypeDeclarationAnnotation& StructDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new TypeDeclarationAnnotation();
-	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
 TypePointer EnumValue::type() const
@@ -293,7 +293,7 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new TypeDeclarationAnnotation();
-	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
 shared_ptr<FunctionType> FunctionDefinition::functionType(bool _internal) const
@@ -349,7 +349,7 @@ FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new FunctionDefinitionAnnotation();
-	return static_cast<FunctionDefinitionAnnotation&>(*m_annotation);
+	return dynamic_cast<FunctionDefinitionAnnotation&>(*m_annotation);
 }
 
 TypePointer ModifierDefinition::type() const
@@ -361,7 +361,7 @@ ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ModifierDefinitionAnnotation();
-	return static_cast<ModifierDefinitionAnnotation&>(*m_annotation);
+	return dynamic_cast<ModifierDefinitionAnnotation&>(*m_annotation);
 }
 
 TypePointer EventDefinition::type() const
@@ -381,14 +381,14 @@ EventDefinitionAnnotation& EventDefinition::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new EventDefinitionAnnotation();
-	return static_cast<EventDefinitionAnnotation&>(*m_annotation);
+	return dynamic_cast<EventDefinitionAnnotation&>(*m_annotation);
 }
 
 UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new UserDefinedTypeNameAnnotation();
-	return static_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
+	return dynamic_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
 }
 
 bool VariableDeclaration::isLValue() const
@@ -460,70 +460,70 @@ VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new VariableDeclarationAnnotation();
-	return static_cast<VariableDeclarationAnnotation&>(*m_annotation);
+	return dynamic_cast<VariableDeclarationAnnotation&>(*m_annotation);
 }
 
 StatementAnnotation& Statement::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new StatementAnnotation();
-	return static_cast<StatementAnnotation&>(*m_annotation);
+	return dynamic_cast<StatementAnnotation&>(*m_annotation);
 }
 
 InlineAssemblyAnnotation& InlineAssembly::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new InlineAssemblyAnnotation();
-	return static_cast<InlineAssemblyAnnotation&>(*m_annotation);
+	return dynamic_cast<InlineAssemblyAnnotation&>(*m_annotation);
 }
 
 ReturnAnnotation& Return::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ReturnAnnotation();
-	return static_cast<ReturnAnnotation&>(*m_annotation);
+	return dynamic_cast<ReturnAnnotation&>(*m_annotation);
 }
 
 VariableDeclarationStatementAnnotation& VariableDeclarationStatement::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new VariableDeclarationStatementAnnotation();
-	return static_cast<VariableDeclarationStatementAnnotation&>(*m_annotation);
+	return dynamic_cast<VariableDeclarationStatementAnnotation&>(*m_annotation);
 }
 
 ExpressionAnnotation& Expression::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ExpressionAnnotation();
-	return static_cast<ExpressionAnnotation&>(*m_annotation);
+	return dynamic_cast<ExpressionAnnotation&>(*m_annotation);
 }
 
 MemberAccessAnnotation& MemberAccess::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new MemberAccessAnnotation();
-	return static_cast<MemberAccessAnnotation&>(*m_annotation);
+	return dynamic_cast<MemberAccessAnnotation&>(*m_annotation);
 }
 
 BinaryOperationAnnotation& BinaryOperation::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new BinaryOperationAnnotation();
-	return static_cast<BinaryOperationAnnotation&>(*m_annotation);
+	return dynamic_cast<BinaryOperationAnnotation&>(*m_annotation);
 }
 
 FunctionCallAnnotation& FunctionCall::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new FunctionCallAnnotation();
-	return static_cast<FunctionCallAnnotation&>(*m_annotation);
+	return dynamic_cast<FunctionCallAnnotation&>(*m_annotation);
 }
 
 IdentifierAnnotation& Identifier::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new IdentifierAnnotation();
-	return static_cast<IdentifierAnnotation&>(*m_annotation);
+	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
 bool Literal::looksLikeAddress() const
