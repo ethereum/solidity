@@ -15,6 +15,7 @@ Bugfixes:
  * Type system: Fix a crash related to invalid binary operators.
  * Type system: Disallow ``var`` declaration with empty tuple type.
  * Type system: Correctly convert function argument types to pointers for member functions.
+ * Type system: Move privateness of constructor into AST itself.
  * Inline assembly: Charge one stack slot for non-value types during analysis.
  * Assembly output: Print source location before the operation it refers to instead of after.
 
