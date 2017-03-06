@@ -132,6 +132,12 @@ FunctionDefinition const* ContractDefinition::constructor() const
 	return nullptr;
 }
 
+bool ContractDefinition::constructorIsPublic() const
+{
+	FunctionDefinition const* f = constructor();
+	return !f || f->isPublic();
+}
+
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
