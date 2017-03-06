@@ -730,13 +730,16 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
-			{
 				warning(
 					varDecl.location(),
 					"Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?"
 				);
-			}
 		}
+		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))
+			typeError(
+				varDecl.location(),
+				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable."
+			);
 		varDecl.accept(*this);
 		return false;
 	}

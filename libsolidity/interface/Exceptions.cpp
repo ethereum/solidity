@@ -27,7 +27,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Error::Error(Type _type): m_type(_type)
+Error::Error(Type _type, SourceLocation const& _location, string const& _description):
+	m_type(_type)
 {
 	switch(m_type)
 	{
@@ -56,6 +57,11 @@ Error::Error(Type _type): m_type(_type)
 		solAssert(false, "");
 		break;
 	}
+
+	if (!_location.isEmpty())
+		*this << errinfo_sourceLocation(_location);
+	if (!_description.empty())
+		*this << errinfo_comment(_description);
 }
 
 string Exception::lineInfo() const
