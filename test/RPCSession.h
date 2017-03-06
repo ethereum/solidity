@@ -30,6 +30,7 @@
 
 #include <json/value.h>
 
+#include <boost/noncopyable.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <string>
