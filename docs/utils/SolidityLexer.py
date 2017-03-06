@@ -54,7 +54,7 @@ class SolidityLexer(RegexLexer):
              r'(<<|>>>?|==?|!=?|[-<>+*%&\|\^/])=?', Operator, 'slashstartsregex'),
             (r'[{(\[;,]', Punctuation, 'slashstartsregex'),
             (r'[})\].]', Punctuation),
-            (r'(anonymous|as|assembly|break|constant|continue|do|else|external|hex|if|'
+            (r'(anonymous|as|assembly|break|constant|continue|do|delete|else|external|for|hex|if|'
              r'indexed|internal|import|is|mapping|memory|new|payable|public|pragma|'
              r'private|return|returns|storage|super|this|throw|using|while)\b', Keyword, 'slashstartsregex'),
             (r'(var|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
