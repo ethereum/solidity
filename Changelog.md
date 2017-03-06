@@ -11,6 +11,7 @@ Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
  * Type system: Fix a crash caused by continuing on fatal errors in the code.
+ * Type system: Detect cyclic dependencies between constants.
  * Type system: Disallow arrays with negative length.
  * Type system: Fix a crash related to invalid binary operators.
  * Type system: Disallow ``var`` declaration with empty tuple type.

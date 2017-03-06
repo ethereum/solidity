@@ -34,6 +34,7 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
+#include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/InterfaceHandler.h>
@@ -216,6 +217,14 @@ bool CompilerStack::parse()
 				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
+
+	if (noErrors)
+	{
+		PostTypeChecker postTypeChecker(m_errors);
+		for (Source const* source: m_sourceOrder)
+			if (!postTypeChecker.check(*source->ast))
+				noErrors = false;
+	}
 
 	if (noErrors)
 	{
