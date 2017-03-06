@@ -7260,6 +7260,20 @@ BOOST_AUTO_TEST_CASE(inline_array_return)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1, 2, 3, 4, 5));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_singleton)
+{
+	// This caused a failure since the type was not converted to its mobile type.
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				return [4][0];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(4)));
+}
+
 BOOST_AUTO_TEST_CASE(inline_long_string_return)
 {
 		char const* sourceCode = R"(
