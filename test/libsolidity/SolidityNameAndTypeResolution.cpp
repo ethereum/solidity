@@ -1658,6 +1658,36 @@ BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 	CHECK_ERROR(sourceCode, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				uint8 x = 100;
+				return 10**x;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "might overflow");
+	sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				uint8 x = 100;
+				return uint8(10)**x;
+			}
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
+	sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return 2**80;
+			}
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
+}
+
 BOOST_AUTO_TEST_CASE(enum_member_access)
 {
 	char const* text = R"(
