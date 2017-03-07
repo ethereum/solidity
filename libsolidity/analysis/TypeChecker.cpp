@@ -1092,6 +1092,26 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		Token::isCompareOp(_operation.getOperator()) ?
 		make_shared<BoolType>() :
 		commonType;
+	if (_operation.getOperator() == Token::Exp)
+	{
+		if (
+			leftType->category() == Type::Category::RationalNumber &&
+			rightType->category() != Type::Category::RationalNumber
+		)
+			if ((
+				commonType->category() == Type::Category::Integer &&
+				dynamic_cast<IntegerType const&>(*commonType).numBits() != 256
+			) || (
+				commonType->category() == Type::Category::FixedPoint &&
+				dynamic_cast<FixedPointType const&>(*commonType).numBits() != 256
+			))
+				warning(
+					_operation.location(),
+					"Result of exponentiation has type " + commonType->toString() + " and thus "
+					"might overflow. Silence this warning by converting the literal to the "
+					"expected type."
+				);
+	}
 }
 
 bool TypeChecker::visit(FunctionCall const& _functionCall)

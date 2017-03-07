@@ -6,6 +6,7 @@ Features:
  * Code generator: Support ``revert()`` to abort with rolling back, but not consuming all gas.
  * Inline assembly: Support ``revert`` (EIP140) as an opcode.
  * Type system: Support explicit conversion of external function to address.
+ * Type system: Warn if base of exponentiation is literal (result type might be unexpected).
 
 Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
