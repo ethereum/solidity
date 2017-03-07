@@ -97,6 +97,24 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(octal_numbers)
+{
+	Scanner scanner(CharStream("07"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	scanner.reset(CharStream("007"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	scanner.reset(CharStream("-07"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	scanner.reset(CharStream("-.07"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	scanner.reset(CharStream("0"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	scanner.reset(CharStream("0.1"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+}
+
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
 	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9;"));

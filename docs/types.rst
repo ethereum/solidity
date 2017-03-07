@@ -197,10 +197,9 @@ Rational and Integer Literals
 
 Integer literals are formed from a sequence of numbers in the range 0-9.
 They are interpreted as decimals. For example, ``69`` means sixty nine.
-Octal literals do not exist in Solidity and leading zeros are ignored.
-For example, ``0100`` means one hundred.
+Octal literals do not exist in Solidity and leading zeros are invalid.
 
-Decimal literals are formed by a ``.`` with at least one number on
+Decimal fraction literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by

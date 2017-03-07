@@ -758,6 +758,9 @@ Token::Value Scanner::scanNumber(char _charSeen)
 				while (isHexDigit(m_char))
 					addLiteralCharAndAdvance();
 			}
+			else if (isDecimalDigit(m_char))
+				// We do not allow octal numbers
+				return Token::Illegal;
 		}
 		// Parse decimal digits and allow trailing fractional part.
 		if (kind == DECIMAL)
