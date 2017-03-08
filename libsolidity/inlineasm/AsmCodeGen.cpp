@@ -21,14 +21,23 @@
  */
 
 #include <libsolidity/inlineasm/AsmCodeGen.h>
-#include <memory>
-#include <functional>
-#include <libdevcore/CommonIO.h>
+
+#include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
+
 #include <libevmasm/Assembly.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmData.h>
+
+#include <libdevcore/CommonIO.h>
+
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/count_if.hpp>
+
+#include <memory>
+#include <functional>
 
 using namespace std;
 using namespace dev;
@@ -42,71 +51,24 @@ struct GeneratorState
 
 	void addError(Error::Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation())
 	{
-		auto err = make_shared<Error>(_type);
-		if (!_location.isEmpty())
-			*err << errinfo_sourceLocation(_location);
-		*err << errinfo_comment(_description);
-		errors.push_back(err);
+		errors.push_back(make_shared<Error>(_type, _description, _location));
 	}
 
-	int const* findVariable(string const& _variableName) const
+	size_t newLabelId()
 	{
-		auto localVariable = find_if(
-			variables.rbegin(),
-			variables.rend(),
-			[&](pair<string, int> const& _var) { return _var.first == _variableName; }
-		);
-		return localVariable != variables.rend() ? &localVariable->second : nullptr;
-	}
-	eth::AssemblyItem const* findLabel(string const& _labelName) const
-	{
-		auto label = find_if(
-			labels.begin(),
-			labels.end(),
-			[&](pair<string, eth::AssemblyItem> const& _label) { return _label.first == _labelName; }
-		);
-		return label != labels.end() ? &label->second : nullptr;
+		return assemblyTagToIdentifier(assembly.newTag());
 	}
 
-	map<string, eth::AssemblyItem> labels;
-	vector<pair<string, int>> variables; ///< name plus stack height
+	size_t assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
+	{
+		u256 id = _tag.data();
+		solAssert(id <= std::numeric_limits<size_t>::max(), "Tag id too large.");
+		return size_t(id);
+	}
+
+	std::map<assembly::Block const*, shared_ptr<Scope>> scopes;
 	ErrorList& errors;
 	eth::Assembly& assembly;
-};
-
-/**
- * Scans the inline assembly data for labels, creates tags in the assembly and searches for
- * duplicate labels.
- */
-class LabelOrganizer: public boost::static_visitor<>
-{
-public:
-	LabelOrganizer(GeneratorState& _state): m_state(_state)
-	{
-		// Make the Solidity ErrorTag available to inline assembly
-		m_state.labels.insert(make_pair("invalidJumpLabel", m_state.assembly.errorTag()));
-	}
-
-	template <class T>
-	void operator()(T const& /*_item*/) { }
-	void operator()(Label const& _item)
-	{
-		if (m_state.labels.count(_item.name))
-			//@TODO secondary location
-			m_state.addError(
-				Error::Type::DeclarationError,
-				"Label " + _item.name + " declared twice.",
-				_item.location
-			);
-		m_state.labels.insert(make_pair(_item.name, m_state.assembly.newTag()));
-	}
-	void operator()(assembly::Block const& _block)
-	{
-		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-	}
-
-private:
-	GeneratorState& m_state;
 };
 
 class CodeTransform: public boost::static_visitor<>
@@ -117,14 +79,42 @@ public:
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	explicit CodeTransform(
 		GeneratorState& _state,
+		assembly::Block const& _block,
 		assembly::CodeGenerator::IdentifierAccess const& _identifierAccess = assembly::CodeGenerator::IdentifierAccess()
 	):
-		m_state(_state)
+		m_state(_state),
+		m_scope(*m_state.scopes.at(&_block)),
+		m_initialDeposit(m_state.assembly.deposit()),
+		m_identifierAccess(_identifierAccess)
 	{
-		if (_identifierAccess)
-			m_identifierAccess = _identifierAccess;
-		else
-			m_identifierAccess = [](assembly::Identifier const&, eth::Assembly&, CodeGenerator::IdentifierContext) { return false; };
+		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
+
+		m_state.assembly.setSourceLocation(_block.location);
+
+		// pop variables
+		for (auto const& identifier: m_scope.identifiers)
+			if (identifier.second.type() == typeid(Scope::Variable))
+				m_state.assembly.append(solidity::Instruction::POP);
+
+		int deposit = m_state.assembly.deposit() - m_initialDeposit;
+
+		// issue warnings for stack height discrepancies
+		if (deposit < 0)
+		{
+			m_state.addError(
+				Error::Type::Warning,
+				"Inline assembly block is not balanced. It takes " + toString(-deposit) + " item(s) from the stack.",
+				_block.location
+			);
+		}
+		else if (deposit > 0)
+		{
+			m_state.addError(
+				Error::Type::Warning,
+				"Inline assembly block is not balanced. It leaves " + toString(deposit) + " item(s) on the stack.",
+				_block.location
+			);
+		}
 	}
 
 	void operator()(assembly::Instruction const& _instruction)
@@ -137,40 +127,38 @@ public:
 		m_state.assembly.setSourceLocation(_literal.location);
 		if (_literal.isNumber)
 			m_state.assembly.append(u256(_literal.value));
-		else if (_literal.value.size() > 32)
-		{
-			m_state.addError(
-				Error::Type::TypeError,
-				"String literal too long (" + boost::lexical_cast<string>(_literal.value.size()) + " > 32)"
-			);
-			m_state.assembly.append(u256(0));
-		}
 		else
+		{
+			solAssert(_literal.value.size() <= 32, "");
 			m_state.assembly.append(_literal.value);
+		}
 	}
 	void operator()(assembly::Identifier const& _identifier)
 	{
 		m_state.assembly.setSourceLocation(_identifier.location);
-		// First search local variables, then labels, then externals.
-		if (int const* stackHeight = m_state.findVariable(_identifier.name))
-		{
-			int heightDiff = m_state.assembly.deposit() - *stackHeight;
-			if (heightDiff <= 0 || heightDiff > 16)
+		// First search internals, then externals.
+		if (m_scope.lookup(_identifier.name, Scope::NonconstVisitor(
+			[=](Scope::Variable& _var)
 			{
-				m_state.addError(
-					Error::Type::TypeError,
-					"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-					_identifier.location
-				);
-				m_state.assembly.append(u256(0));
+				if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
+					m_state.assembly.append(solidity::dupInstruction(heightDiff));
+				else
+					// Store something to balance the stack
+					m_state.assembly.append(u256(0));
+			},
+			[=](Scope::Label& _label)
+			{
+				assignLabelIdIfUnset(_label);
+				m_state.assembly.append(eth::AssemblyItem(eth::PushTag, _label.id));
+			},
+			[=](Scope::Function&)
+			{
+				solAssert(false, "Not yet implemented");
 			}
-			else
-				m_state.assembly.append(solidity::dupInstruction(heightDiff));
-			return;
+		)))
+		{
 		}
-		else if (eth::AssemblyItem const* label = m_state.findLabel(_identifier.name))
-			m_state.assembly.append(label->pushTag());
-		else if (!m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
+		else if (!m_identifierAccess || !m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
 		{
 			m_state.addError(
 				Error::Type::DeclarationError,
@@ -197,7 +185,10 @@ public:
 	void operator()(Label const& _label)
 	{
 		m_state.assembly.setSourceLocation(_label.location);
-		m_state.assembly.append(m_state.labels.at(_label.name));
+		solAssert(m_scope.identifiers.count(_label.name), "");
+		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers[_label.name]);
+		assignLabelIdIfUnset(label);
+		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
 	}
 	void operator()(assembly::Assignment const& _assignment)
 	{
@@ -217,42 +208,14 @@ public:
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(1, height, locationOf(*_varDecl.value));
-		m_state.variables.push_back(make_pair(_varDecl.name, height));
+		solAssert(m_scope.identifiers.count(_varDecl.name), "");
+		auto& var = boost::get<Scope::Variable>(m_scope.identifiers[_varDecl.name]);
+		var.stackHeight = height;
+		var.active = true;
 	}
 	void operator()(assembly::Block const& _block)
 	{
-		size_t numVariables = m_state.variables.size();
-		int deposit = m_state.assembly.deposit();
-		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-
-		// pop variables
-		while (m_state.variables.size() > numVariables)
-		{
-			m_state.assembly.append(solidity::Instruction::POP);
-			m_state.variables.pop_back();
-		}
-
-		m_state.assembly.setSourceLocation(_block.location);
-
-		deposit = m_state.assembly.deposit() - deposit;
-
-		// issue warnings for stack height discrepancies
-		if (deposit < 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It takes " + toString(-deposit) + " item(s) from the stack.",
-				_block.location
-			);
-		}
-		else if (deposit > 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It leaves " + toString(deposit) + " item(s) on the stack.",
-				_block.location
-			);
-		}
+		CodeTransform(m_state, _block, m_identifierAccess);
 	}
 	void operator()(assembly::FunctionDefinition const&)
 	{
@@ -262,25 +225,59 @@ public:
 private:
 	void generateAssignment(assembly::Identifier const& _variableName, SourceLocation const& _location)
 	{
-		if (int const* stackHeight = m_state.findVariable(_variableName.name))
-		{
-			int heightDiff = m_state.assembly.deposit() - *stackHeight - 1;
-			if (heightDiff <= 0 || heightDiff > 16)
+		if (m_scope.lookup(_variableName.name, Scope::Visitor(
+			[=](Scope::Variable const& _var)
+			{
+				if (int heightDiff = variableHeightDiff(_var, _location, true))
+					m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
+				m_state.assembly.append(solidity::Instruction::POP);
+			},
+			[=](Scope::Label const&)
+			{
 				m_state.addError(
-					Error::Type::TypeError,
-					"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-					_location
+					Error::Type::DeclarationError,
+					"Label \"" + string(_variableName.name) + "\" used as variable."
 				);
-			else
-				m_state.assembly.append(solidity::swapInstruction(heightDiff));
-			m_state.assembly.append(solidity::Instruction::POP);
-			return;
+			},
+			[=](Scope::Function const&)
+			{
+				m_state.addError(
+					Error::Type::DeclarationError,
+					"Function \"" + string(_variableName.name) + "\" used as variable."
+				);
+			}
+		)))
+		{
 		}
-		else if (!m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
+		else if (!m_identifierAccess || !m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
 			m_state.addError(
 				Error::Type::DeclarationError,
 				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
 			);
+	}
+
+	/// Determines the stack height difference to the given variables. Automatically generates
+	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
+	/// errors and the (positive) stack height difference otherwise.
+	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
+	{
+		if (!_var.active)
+		{
+			m_state.addError( Error::Type::TypeError, "Variable used before it was declared", _location);
+			return 0;
+		}
+		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
+		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
+		{
+			m_state.addError(
+				Error::Type::TypeError,
+				"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
+				_location
+			);
+			return 0;
+		}
+		else
+			return heightDiff;
 	}
 
 	void expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
@@ -296,7 +293,19 @@ private:
 			);
 	}
 
+	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
+	void assignLabelIdIfUnset(Scope::Label& _label)
+	{
+		if (_label.id == Scope::Label::unassignedLabelId)
+			_label.id = m_state.newLabelId();
+		else if (_label.id == Scope::Label::errorLabelId)
+			_label.id = size_t(m_state.assembly.errorTag().data());
+	}
+
+
 	GeneratorState& m_state;
+	Scope& m_scope;
+	int const m_initialDeposit;
 	assembly::CodeGenerator::IdentifierAccess m_identifierAccess;
 };
 
@@ -305,8 +314,9 @@ bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAcces
 	size_t initialErrorLen = m_errors.size();
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	(LabelOrganizer(state))(m_parsedData);
-	(CodeTransform(state, _identifierAccess))(m_parsedData);
+	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+		return false;
+	CodeTransform(state, m_parsedData, _identifierAccess);
 	return m_errors.size() == initialErrorLen;
 }
 
@@ -314,15 +324,16 @@ eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::Identif
 {
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	(LabelOrganizer(state))(m_parsedData);
-	(CodeTransform(state, _identifierAccess))(m_parsedData);
+	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+		solAssert(false, "Assembly error");
+	CodeTransform(state, m_parsedData, _identifierAccess);
 	return assembly;
 }
 
 void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
 	GeneratorState state(m_errors, _assembly);
-	(LabelOrganizer(state))(m_parsedData);
-	(CodeTransform(state, _identifierAccess))(m_parsedData);
+	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
+		solAssert(false, "Assembly error");
+	CodeTransform(state, m_parsedData, _identifierAccess);
 }
-

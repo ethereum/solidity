@@ -64,6 +64,14 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 		*this << errinfo_comment(_description);
 }
 
+Error::Error(Error::Type _type, const std::string& _description, const SourceLocation& _location):
+	Error(_type)
+{
+	if (!_location.isEmpty())
+		*this << errinfo_sourceLocation(_location);
+	*this << errinfo_comment(_description);
+}
+
 string Exception::lineInfo() const
 {
 	char const* const* file = boost::get_error_info<boost::throw_file>(*this);

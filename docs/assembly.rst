@@ -333,11 +333,10 @@ push their entry label (with virtual function resolution applied). The calling s
 in solidity are:
 
  - the caller pushes return label, arg1, arg2, ..., argn
- - the call returns with ret1, ret2, ..., retn
+ - the call returns with ret1, ret2, ..., retm
 
 This feature is still a bit cumbersome to use, because the stack offset essentially
 changes during the call, and thus references to local variables will be wrong.
-It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
@@ -361,7 +360,9 @@ Labels
 
 Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
 which can change easily. Solidity inline assembly provides labels to make the use of
-jumps easier. The following code computes an element in the Fibonacci series.
+jumps easier. Note that labels are a low-level feature and it is possible to write
+efficient assembly without labels, just using assembly functions, loops and switch instructions
+(see below). The following code computes an element in the Fibonacci series.
 
 .. code::
 
@@ -391,17 +392,44 @@ will have a wrong impression about the stack height at label ``two``:
 .. code::
 
     {
+        let x := 8
         jump(two)
         one:
-            // Here the stack height is 1 (because we pushed 7),
-            // but the assembler thinks it is 0 because it reads
+            // Here the stack height is 2 (because we pushed x and 7),
+            // but the assembler thinks it is 1 because it reads
             // from top to bottom.
-            // Accessing stack variables here will lead to errors.
+            // Accessing the stack variable x here will lead to errors.
+            x := 9
             jump(three)
         two:
             7 // push something onto the stack
             jump(one)
         three:
+    }
+
+This problem can be fixed by manually adjusting the stack height for the
+assembler - you can provide a stack height delta that is added
+to the stack height just prior to the label.
+Note that you will not have to care about these things if you just use
+loops and assembly-level functions.
+
+As an example how this can be done in extreme cases, please see the following.
+
+.. code::
+
+    {
+        let x := 8
+        jump(two)
+        0 // This code is unreachable but will adjust the stack height correctly
+        one:
+            x := 9 // Now x can be accessed properly.
+            jump(three)
+            pop // Similar negative correction.
+        two:
+            7 // push something onto the stack
+            jump(one)
+        three:
+        pop // We have to pop the manually pushed value here again.
     }
 
 .. note::
@@ -464,6 +492,9 @@ is performed by replacing the variable's value on the stack by the new value.
 Switch
 ------
 
+.. note::
+    Switch is not yet implemented.
+
 You can use a switch statement as a very basic version of "if/else".
 It takes the value of an expression and compares it to several constants.
 The branch corresponding to the matching constant is taken. Contrary to the
@@ -491,6 +522,9 @@ case does require them.
 Loops
 -----
 
+.. note::
+    Loops are not yet implemented.
+
 Assembly supports a simple for-style loop. For-style loops have
 a header containing an initializing part, a condition and a post-iteration
 part. The condition has to be a functional-style expression, while
@@ -511,6 +545,9 @@ The following example computes the sum of an area in memory.
 
 Functions
 ---------
+
+.. note::
+    Functions are not yet implemented.
 
 Assembly allows the definition of low-level functions. These take their
 arguments (and a return PC) from the stack and also put the results onto the
@@ -610,25 +647,19 @@ which follow very simple and regular scoping rules and cleanup of local variable
 Scoping: An identifier that is declared (label, variable, function, assembly)
 is only visible in the block where it was declared (including nested blocks
 inside the current block). It is not legal to access local variables across
-function borders, even if they would be in scope. Shadowing is allowed, but
-two identifiers with the same name cannot be declared in the same block.
+function borders, even if they would be in scope. Shadowing is not allowed.
 Local variables cannot be accessed before they were declared, but labels,
 functions and assemblies can. Assemblies are special blocks that are used
 for e.g. returning runtime code or creating contracts. No identifier from an
 outer assembly is visible in a sub-assembly.
 
 If control flow passes over the end of a block, pop instructions are inserted
-that match the number of local variables declared in that block, unless the
-``}`` is directly preceded by an opcode that does not have a continuing control
-flow path. Whenever a local variable is referenced, the code generator needs
+that match the number of local variables declared in that block.
+Whenever a local variable is referenced, the code generator needs
 to know its current relative position in the stack and thus it needs to
-keep track of the current so-called stack height.
-At the end of a block, this implicit stack height is always reduced by the number
-of local variables whether ther is a continuing control flow or not.
-
-This means that the stack height before and after the block should be the same.
-If this is not the case, a warning is issued,
-unless the last instruction in the block did not have a continuing control flow path.
+keep track of the current so-called stack height. Since all local variables
+are removed at the end of a block, the stack height before and after the block
+should be the same. If this is not the case, a warning is issued.
 
 Why do we use higher-level constructs like ``switch``, ``for`` and functions:
 
@@ -640,10 +671,9 @@ verification and optimization.
 Furthermore, if manual jumps are allowed, computing the stack height is rather complicated.
 The position of all local variables on the stack needs to be known, otherwise
 neither references to local variables nor removing local variables automatically
-from the stack at the end of a block will work properly. Because of that,
-every label that is preceded by an instruction that ends or diverts control flow
-should be annotated with the current stack layout. This annotation is performed
-automatically during the desugaring phase.
+from the stack at the end of a block will work properly. The desugaring
+mechanism correctly inserts operations at unreachable blocks that adjust the
+stack height properly in case of jumps that do not have a continuing control flow.
 
 Example:
 
@@ -696,17 +726,21 @@ After the desugaring phase it looks as follows::
         $case1:
         {
           // the function call - we put return label and arguments on the stack
-          $ret1 calldataload(4) jump($fun_f)
-          $ret1 [r]: // a label with a [...]-annotation resets the stack height
-                    // to "current block + number of local variables". It also
-                    // introduces a variable, r:
-                    // r is at top of stack, $0 is below (from enclosing block)
-          $ret2 0x20 jump($fun_allocate)
-          $ret2 [ret]: // stack here: $0, r, ret (top)
+          $ret1 calldataload(4) jump(f)
+          // This is unreachable code. Opcodes are added that mirror the
+          // effect of the function on the stack height: Arguments are
+          // removed and return values are introduced.
+          pop pop
+          let r := 0
+          $ret1: // the actual return point
+          $ret2 0x20 jump($allocate)
+          pop pop let ret := 0
+          $ret2:
           mstore(ret, r)
           return(ret, 0x20)
           // although it is useless, the jump is automatically inserted,
-          // since the desugaring process does not analyze control-flow
+          // since the desugaring process is a purely syntactic operation that
+          // does not analyze control-flow
           jump($endswitch)
         }
         $caseDefault:
@@ -717,20 +751,29 @@ After the desugaring phase it looks as follows::
         $endswitch:
       }
       jump($afterFunction)
-      $fun_allocate:
+      allocate:
       {
-        $start[$retpos, size]:
-        // output variables live in the same scope as the arguments.
+        // we jump over the unreachable code that introduces the function arguments
+        jump($start)
+        let $retpos := 0 let size := 0
+        $start:
+        // output variables live in the same scope as the arguments and is
+        // actually allocated.
         let pos := 0
         {
           pos := mload(0x40)
           mstore(0x40, add(pos, size))
         }
+        // This code replaces the arguments by the return values and jumps back.
         swap1 pop swap1 jump
+        // Again unreachable code that corrects stack height.
+        0 0
       }
-      $fun_f:
+      f:
       {
-        start [$retpos, x]:
+        jump($start)
+        let $retpos := 0 let x := 0
+        $start:
         let y := 0
         {
           let i := 0
@@ -743,8 +786,9 @@ After the desugaring phase it looks as follows::
           { i := add(i, 1) }
           jump($for_begin)
           $for_end:
-        } // Here, a pop instruction is inserted for i
+        } // Here, a pop instruction will be inserted for i
         swap1 pop swap1 jump
+        0 0
       }
       $afterFunction:
       stop
@@ -805,7 +849,7 @@ Grammar::
     IdentifierOrList = Identifier | '(' IdentifierList ')'
     IdentifierList = Identifier ( ',' Identifier)*
     AssemblyAssignment = '=:' Identifier
-    LabelDefinition = Identifier ( '[' ( IdentifierList | NumberLiteral ) ']' )? ':'
+    LabelDefinition = Identifier ':'
     AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
         ( 'default' ':' AssemblyBlock )?
     AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
@@ -838,11 +882,14 @@ Pseudocode::
     AssemblyFunctionDefinition('function' name '(' arg1, ..., argn ')' '->' ( '(' ret1, ..., retm ')' body) ->
       <name>:
       {
-        $<name>_start [$retPC, $argn, ..., arg1]:
+        jump($<name>_start)
+        let $retPC := 0 let argn := 0 ... let arg1 := 0
+        $<name>_start:
         let ret1 := 0 ... let retm := 0
         { desugar(body) }
-        swap and pop items so that only ret1, ... retn, $retPC are left on the stack
-        jump 
+        swap and pop items so that only ret1, ... retm, $retPC are left on the stack
+        jump
+        0 (1 + n times) to compensate removal of arg1, ..., argn and $retPC
       }
     AssemblyFor('for' { init } condition post body) ->
       {
@@ -862,6 +909,7 @@ Pseudocode::
         pop all local variables that are defined at the current point
         but not at $forI_end
         jump($forI_end)
+        0 (as many as variables were removed above)
       }
     'continue' ->
       {
@@ -869,6 +917,7 @@ Pseudocode::
         pop all local variables that are defined at the current point
         but not at $forI_continue
         jump($forI_continue)
+        0 (as many as variables were removed above)
       }
     AssemblySwitch(switch condition cases ( default: defaultBlock )? ) ->
       {
@@ -890,10 +939,13 @@ Pseudocode::
           {
             // find I such that $funcallI_* does not exist
             $funcallI_return argn  ... arg2 arg1 jump(<name>)
+            pop (n + 1 times)
             if the current context is `let (id1, ..., idm) := f(...)` ->
-              $funcallI_return [id1, ..., idm]:
+              let id1 := 0 ... let idm := 0
+              $funcallI_return:
             else ->
-              $funcallI_return[m - n - 1]:
+              0 (m times)
+              $funcallI_return:
               turn the functional expression that leads to the function call
               into a statement stream
           }
@@ -906,8 +958,16 @@ Pseudocode::
 Opcode Stream Generation
 ------------------------
 
-During opcode stream generation, we keep track of the current stack height,
-so that accessing stack variables by name is possible.
+During opcode stream generation, we keep track of the current stack height
+in a counter,
+so that accessing stack variables by name is possible. The stack height is modified with every opcode
+that modifies the stack and with every label that is annotated with a stack
+adjustment. Every time a new
+local variable is introduced, it is registered together with the current
+stack height. If a variable is accessed (either for copying its value or for
+assignment), the appropriate DUP or SWAP instruction is selected depending
+on the difference bitween the current stack height and the
+stack height at the point the variable was introduced.
 
 Pseudocode::
 
@@ -945,13 +1005,8 @@ Pseudocode::
       look up id in the syntactic stack of blocks, assert that it is a variable
       SWAPi where i = 1 + stack_height - stack_height_of_identifier(id)
       POP
-    LabelDefinition(name [id1, ..., idn] :) ->
+    LabelDefinition(name:) ->
       JUMPDEST
-      // register new variables id1, ..., idn and set the stack height to
-      // stack_height_at_block_start + number_of_local_variables
-    LabelDefinition(name [number] :) ->
-      JUMPDEST
-      // adjust stack height by +number (can be negative)
     NumberLiteral(num) ->
       PUSH<num interpreted as decimal and right-aligned>
     HexLiteral(lit) ->
