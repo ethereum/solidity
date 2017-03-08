@@ -194,7 +194,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 		// Is not always better, try literal and decomposition method.
 		AssemblyItems routine{u256(_value)};
 		bigint bestGas = gasNeeded(routine);
-		for (unsigned bits = 255; bits > 8; --bits)
+		for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
 		{
 			unsigned gapDetector = unsigned(_value >> (bits - 8)) & 0x1ff;
 			if (gapDetector != 0xff && gapDetector != 0x100)
@@ -219,6 +219,8 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			else if (lowerPart < 0)
 				newRoutine.push_back(Instruction::SUB);
 
+			if (m_maxSteps > 0)
+				m_maxSteps--;
 			bigint newGas = gasNeeded(newRoutine);
 			if (newGas < bestGas)
 			{

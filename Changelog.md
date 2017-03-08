@@ -18,6 +18,7 @@ Bugfixes:
  * Type system: Correctly convert function argument types to pointers for member functions.
  * Inline assembly: Charge one stack slot for non-value types during analysis.
  * Assembly output: Print source location before the operation it refers to instead of after.
+ * Optimizer: Stop trying to optimize tricky constants after a while.
 
 ### 0.4.9 (2017-01-31)
 
