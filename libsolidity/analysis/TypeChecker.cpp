@@ -947,6 +947,11 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	_assignment.annotation().type = t;
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
 	{
+		if (_assignment.assignmentOperator() != Token::Assign)
+			typeError(
+				_assignment.location(),
+				"Compound assignment is not allowed for tuple types."
+			);
 		// Sequenced assignments of tuples is not valid, make the result a "void" type.
 		_assignment.annotation().type = make_shared<TupleType>();
 		expectType(_assignment.rightHandSide(), *tupleType);

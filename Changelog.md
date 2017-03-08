@@ -12,6 +12,7 @@ Bugfixes:
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
  * Parser: Disallow octal literals.
  * Type system: Fix a crash caused by continuing on fatal errors in the code.
+ * Type system: Disallow compound assignment for tuples.
  * Type system: Detect cyclic dependencies between constants.
  * Type system: Disallow arrays with negative length.
  * Type system: Fix a crash related to invalid binary operators.

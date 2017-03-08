@@ -2992,6 +2992,18 @@ BOOST_AUTO_TEST_CASE(tuple_assignment_from_void_function)
 	CHECK_ERROR(text, TypeError, "Cannot declare variable with void (empty tuple) type.");
 }
 
+BOOST_AUTO_TEST_CASE(tuple_compound_assignment)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint a, uint b) {
+				(a, b) += (1, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Compound assignment is not allowed for tuple types.");
+}
+
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 {
 	char const* text = R"(
