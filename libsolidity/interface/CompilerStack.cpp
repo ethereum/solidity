@@ -637,7 +637,7 @@ void CompilerStack::compileContract(
 	if (
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().isFullyImplemented ||
-		!_contract.annotation().hasPublicConstructor
+		!_contract.constructorIsPublic()
 	)
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)

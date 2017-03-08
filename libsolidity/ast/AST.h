@@ -356,6 +356,8 @@ public:
 
 	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* constructor() const;
+	/// @returns true iff the constructor of this contract is public (or non-existing).
+	bool constructorIsPublic() const;
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 

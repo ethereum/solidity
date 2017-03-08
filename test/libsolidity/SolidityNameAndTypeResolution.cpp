@@ -5101,6 +5101,24 @@ BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor)
 	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
 }
 
+BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor_inverted)
+{
+	// Previously, the type information for A was not yet available at the point of
+	// "new A".
+	char const* text = R"(
+		contract B {
+			A a;
+			function B() {
+				a = new A(this);
+			}
+		}
+		contract A {
+			function A(address a) internal {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
+}
+
 BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 {
 	char const* text = R"(

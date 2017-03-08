@@ -77,8 +77,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	FunctionDefinition const* function = _contract.constructor();
 	if (function)
 	{
-		if (!function->isPublic())
-			_contract.annotation().hasPublicConstructor = false;
 		if (!function->returnParameters().empty())
 			typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 		if (function->isDeclaredConst())
@@ -1305,7 +1303,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (!contract->annotation().isFullyImplemented)
 			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
-		if (!contract->annotation().hasPublicConstructor)
+		if (!contract->constructorIsPublic())
 			typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
 		solAssert(!!m_scope, "");
