@@ -429,8 +429,15 @@ Constant State Variables
 ************************
 
 State variables can be declared as constant. In this case, they have to be
-assigned a value or expression which is a constant at compile time. The compiler does
-not reserve a storage slot for these variables and every occurrence is
+assigned a value or expression which is a constant at compile time. Expressions
+that might have a side-effect on memory allocation are allowed, but those that
+might have a side-effect on other memory objects are not. This makes it possible
+to create constant memory arrays as lookup-tables
+(although this is not yet fully implemented).
+Expressions that depend on blockchain data like `now`, `this.balance` or
+`block.number` or perform any storage access are disallowed.
+
+The compiler does not reserve a storage slot for these variables and every occurrence is
 replaced by their constant value (which might be computed by the optimizer).
 
 Not all types for constants are implemented at this time. The only supported types are
