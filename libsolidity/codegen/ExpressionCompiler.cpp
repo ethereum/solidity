@@ -879,14 +879,18 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case Location::Assert:
+		case Location::Require:
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
-			// condition was not met, flag an error
-			m_context << Instruction::INVALID;
+			if (function.location() == Location::Assert)
+				// condition was not met, flag an error
+				m_context << Instruction::INVALID;
+			else
+				m_context << u256(0) << u256(0) << Instruction::REVERT;
 			// the success branch
 			m_context << success;
 			break;

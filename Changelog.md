@@ -1,8 +1,9 @@
 ### 0.4.10 (unreleased)
 
 Features:
+ * Add ``assert(condition)``, which throws if condition is false (meant for internal errors).
+ * Add ``require(condition)``, which throws if condition is false (meant for invalid input).
  * Commandline interface: Do not overwrite files unless forced.
- * Add ``assert(condition)``, which throws if condition is false.
  * Introduce ``.transfer(value)`` for sending Ether.
  * Code generator: Support ``revert()`` to abort with rolling back, but not consuming all gas.
  * Inline assembly: Support ``revert`` (EIP140) as an opcode.

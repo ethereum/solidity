@@ -66,9 +66,10 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{make_shared<
 							make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Location::ECRecover)),
 					make_shared<MagicVariableDeclaration>("ripemd160",
 							make_shared<FunctionType>(strings(), strings{"bytes20"}, FunctionType::Location::RIPEMD160, true)),
-// Disabled until decision about semantics of assert is made.
-//					make_shared<MagicVariableDeclaration>("assert",
-//							make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Location::Assert)),
+					make_shared<MagicVariableDeclaration>("assert",
+							make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Location::Assert)),
+					make_shared<MagicVariableDeclaration>("require",
+							make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Location::Require)),
 					make_shared<MagicVariableDeclaration>("revert",
 							make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Revert))})
 {
