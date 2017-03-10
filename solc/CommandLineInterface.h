@@ -47,7 +47,8 @@ public:
 	/// Parse the files and create source code objects
 	bool processInput();
 	/// Perform actions on the input depending on provided compiler arguments
-	void actOnInput();
+	/// @returns true on success.
+	bool actOnInput();
 
 private:
 	bool link();
@@ -80,6 +81,8 @@ private:
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
+
+	bool m_error = false; ///< If true, some error occurred.
 
 	bool m_onlyAssemble = false;
 	bool m_onlyLink = false;
