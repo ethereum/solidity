@@ -50,9 +50,23 @@ echo "Testing library checksum..."
 echo '' | "$SOLC" --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222
 ! echo '' | "$SOLC" --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 2>/dev/null
 
+echo "Testing overwriting files"
+TMPDIR=$(mktemp -d)
+(
+    set -e
+    # First time it works
+    echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    # Second time it fails
+    ! echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    # Unless we force
+    echo 'contract C {} ' | "$SOLC" --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+)
+rm -rf "$TMPDIR"
+
 echo "Testing soljson via the fuzzer..."
 TMPDIR=$(mktemp -d)
 (
+    set -e
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
     cd "$TMPDIR"
