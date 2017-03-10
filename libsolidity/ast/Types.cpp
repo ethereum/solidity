@@ -650,12 +650,12 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() == Category::Integer)
 	{
 		auto targetType = dynamic_cast<IntegerType const*>(&_convertTo);
-		if (m_value == 0)
+		if (m_value == rational(0))
 			return true;
 		if (isFractional())
 			return false;
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_value > 0)
+		if (m_value > rational(0))
 		{
 			if (m_value.numerator() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
 				return true;
@@ -776,13 +776,13 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			value = m_value * other.m_value;
 			break;
 		case Token::Div:
-			if (other.m_value == 0)
+			if (other.m_value == rational(0))
 				return TypePointer();
 			else
 				value = m_value / other.m_value;
 			break;
 		case Token::Mod:
-			if (other.m_value == 0)
+			if (other.m_value == rational(0))
 				return TypePointer();
 			else if (fractional)
 			{
@@ -887,7 +887,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
 	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
 
-	if (m_value >= 0)
+	if (m_value >= rational(0))
 		value = u256(shiftedValue);
 	else
 		value = s2u(s256(shiftedValue));
