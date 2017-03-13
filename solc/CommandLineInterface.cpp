@@ -93,6 +93,7 @@ static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOutputDir = "output-dir";
+static string const g_strOverwrite = "overwrite";
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
@@ -465,6 +466,12 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	if (p.filename() != "." && p.filename() != "..")
 		fs::create_directories(p);
 	string pathName = (p / _fileName).string();
+	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
+	{
+		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
+		m_error = true;
+		return;
+	}
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
@@ -510,6 +517,7 @@ Allowed options)",
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
 		)
+		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
 		(
 			g_argCombinedJson.c_str(),
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
@@ -858,7 +866,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	}
 }
 
-void CommandLineInterface::actOnInput()
+bool CommandLineInterface::actOnInput()
 {
 	if (m_onlyAssemble)
 		outputAssembly();
@@ -866,6 +874,7 @@ void CommandLineInterface::actOnInput()
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
+	return !m_error;
 }
 
 bool CommandLineInterface::link()
