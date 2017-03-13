@@ -428,17 +428,22 @@ change by overriding).
 Constant State Variables
 ************************
 
-State variables can be declared as constant. In this case, they have to be
-assigned a value or expression which is a constant at compile time. Expressions
+State variables can be declared as ``constant``. In this case, they have to be
+assigned from an expression which is a constant at compile time. Any expression
+that accesses storage, blockchain data (e.g. ``now``, ``this.balance`` or
+``block.number``) or
+execution data (``msg.gas``) or make calls to external contracts are disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
-might have a side-effect on other memory objects are not. This makes it possible
-to create constant memory arrays as lookup-tables
-(although this is not yet fully implemented).
-Expressions that depend on blockchain data like `now`, `this.balance` or
-`block.number` or perform any storage access are disallowed.
+might have a side-effect on other memory objects are not. The built-in functions
+``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
+are allowed (ever though they do call external contracts).
+
+The reason behind allowing side-effects on the memory allocator is that it
+should be possible to construct complex objects like e.g. lookup-tables.
+This feature is not yet fully usable.
 
 The compiler does not reserve a storage slot for these variables and every occurrence is
-replaced by their constant value (which might be computed by the optimizer).
+replaced by the respective constant expression (which might be computed to a single value by the optimizer).
 
 Not all types for constants are implemented at this time. The only supported types are
 value types and strings.
