@@ -117,8 +117,14 @@ struct Identifier; // forward
 
 struct InlineAssemblyAnnotation: StatementAnnotation
 {
-	/// Mapping containing resolved references to external identifiers.
-	std::map<assembly::Identifier const*, Declaration const*> externalReferences;
+	struct ExternalIdentifierInfo
+	{
+		Declaration const* declaration = nullptr;
+		size_t valueSize = size_t(-1);
+	};
+
+	/// Mapping containing resolved references to external identifiers and their value size
+	std::map<assembly::Identifier const*, ExternalIdentifierInfo> externalReferences;
 };
 
 struct ReturnAnnotation: StatementAnnotation

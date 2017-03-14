@@ -81,7 +81,7 @@ public:
 	explicit CodeTransform(
 		GeneratorState& _state,
 		assembly::Block const& _block,
-		assembly::CodeGenerator::IdentifierAccess const& _identifierAccess = assembly::CodeGenerator::IdentifierAccess()
+		assembly::ExternalIdentifierAccess const& _identifierAccess = assembly::ExternalIdentifierAccess()
 	):
 		m_state(_state),
 		m_scope(*m_state.scopes.at(&_block)),
@@ -160,15 +160,23 @@ public:
 		{
 			return;
 		}
-		solAssert(m_identifierAccess, "Identifier not found and no external access available.");
-		if (!m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
+		solAssert(
+			m_identifierAccess.resolve && m_identifierAccess.generateCode,
+			"Identifier not found and no external access available."
+		);
+		// @TODO refactor: Store resolved identifier.
+		size_t size = m_identifierAccess.resolve(_identifier, IdentifierContext::RValue);
+		if (size != size_t(-1))
+			m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
+		else
 		{
 			m_state.addError(
 				Error::Type::DeclarationError,
 				"Identifier not found or not unique",
 				_identifier.location
 			);
-			m_state.assembly.append(u256(0));
+			for (size_t i = 0; i < size; ++i)
+				m_state.assembly.append(u256(0));
 		}
 	}
 	void operator()(FunctionalInstruction const& _instr)
@@ -236,12 +244,20 @@ private:
 			m_state.assembly.append(solidity::Instruction::POP);
 			return;
 		}
-		solAssert(m_identifierAccess, "Identifier not found and no external access available.");
-		if (!m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
+		solAssert(
+			m_identifierAccess.resolve && m_identifierAccess.generateCode,
+			"Identifier not found and no external access available."
+		);
+		size_t size = m_identifierAccess.resolve(_variableName, IdentifierContext::LValue);
+		if (size != size_t(-1))
+			m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_state.assembly);
+		else
+		{
 			m_state.addError(
 				Error::Type::DeclarationError,
 				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
 			);
+		}
 	}
 
 	/// Determines the stack height difference to the given variables. Automatically generates
@@ -289,34 +305,34 @@ private:
 	GeneratorState& m_state;
 	Scope& m_scope;
 	int const m_initialDeposit;
-	assembly::CodeGenerator::IdentifierAccess m_identifierAccess;
+	ExternalIdentifierAccess m_identifierAccess;
 };
 
-bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+bool assembly::CodeGenerator::typeCheck(ExternalIdentifierAccess const& _identifierAccess)
 {
 	size_t initialErrorLen = m_errors.size();
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
 		return false;
 	CodeTransform(state, m_parsedData, _identifierAccess);
 	return m_errors.size() == initialErrorLen;
 }
 
-eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+eth::Assembly assembly::CodeGenerator::assemble(ExternalIdentifierAccess const& _identifierAccess)
 {
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 	return assembly;
 }
 
-void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, ExternalIdentifierAccess const& _identifierAccess)
 {
 	GeneratorState state(m_errors, _assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess)).analyze(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 }

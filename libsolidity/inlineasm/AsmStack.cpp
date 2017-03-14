@@ -66,7 +66,7 @@ eth::Assembly InlineAssemblyStack::assemble()
 bool InlineAssemblyStack::parseAndAssemble(
 	string const& _input,
 	eth::Assembly& _assembly,
-	CodeGenerator::IdentifierAccess const& _identifierAccess
+	ExternalIdentifierAccess const& _identifierAccess
 )
 {
 	ErrorList errors;

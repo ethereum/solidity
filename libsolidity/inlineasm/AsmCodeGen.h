@@ -22,8 +22,10 @@
 
 #pragma once
 
-#include <functional>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/inlineasm/AsmStack.h>
+
+#include <functional>
 
 namespace dev
 {
@@ -36,27 +38,19 @@ namespace solidity
 namespace assembly
 {
 struct Block;
-struct Identifier;
 
 class CodeGenerator
 {
 public:
-	enum class IdentifierContext { LValue, RValue };
-	/// Function type that is called for external identifiers. Such a function should search for
-	/// the identifier and append appropriate assembly items to the assembly. If in lvalue context,
-	/// the value to assign is assumed to be on the stack and an assignment is to be performed.
-	/// If in rvalue context, the function is assumed to append instructions to
-	/// push the value of the identifier onto the stack. On error, the function should return false.
-	using IdentifierAccess = std::function<bool(assembly::Identifier const&, eth::Assembly&, IdentifierContext)>;
 	CodeGenerator(Block const& _parsedData, ErrorList& _errors):
 		m_parsedData(_parsedData), m_errors(_errors) {}
 	/// Performs type checks and @returns false on error.
 	/// Actually runs the full code generation but discards the result.
-	bool typeCheck(IdentifierAccess const& _identifierAccess = IdentifierAccess());
+	bool typeCheck(ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
 	/// Performs code generation and @returns the result.
-	eth::Assembly assemble(IdentifierAccess const& _identifierAccess = IdentifierAccess());
+	eth::Assembly assemble(ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
 	/// Performs code generation and appends generated to to _assembly.
-	void assemble(eth::Assembly& _assembly, IdentifierAccess const& _identifierAccess = IdentifierAccess());
+	void assemble(eth::Assembly& _assembly, ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
 
 private:
 	Block const& m_parsedData;

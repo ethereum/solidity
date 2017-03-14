@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <libsolidity/interface/Exceptions.h>
+
 #include <string>
 #include <functional>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
 
 namespace dev
 {
@@ -39,6 +39,22 @@ class Scanner;
 namespace assembly
 {
 struct Block;
+struct Identifier;
+
+enum class IdentifierContext { LValue, RValue };
+
+/// Object that is used to resolve references and generate code for access to identifiers external
+/// to inline assembly (not used in standalone assembly mode).
+struct ExternalIdentifierAccess
+{
+	/// Resolve a an external reference given by the identifier in the given context.
+	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
+	std::function<size_t(assembly::Identifier const&, IdentifierContext)> resolve;
+	/// Generate code for retrieving the value (rvalue context) or storing the value (lvalue context)
+	/// of an identifier. The code should be appended to the assembly. In rvalue context, the value is supposed
+	/// to be put onto the stack, in lvalue context, the value is assumed to be at the top of the stack.
+	std::function<void(assembly::Identifier const&, IdentifierContext, eth::Assembly&)> generateCode;
+};
 
 class InlineAssemblyStack
 {
@@ -56,7 +72,7 @@ public:
 	bool parseAndAssemble(
 		std::string const& _input,
 		eth::Assembly& _assembly,
-		CodeGenerator::IdentifierAccess const& _identifierAccess = CodeGenerator::IdentifierAccess()
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
 	);
 
 	ErrorList const& errors() const { return m_errors; }

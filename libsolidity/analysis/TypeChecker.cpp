@@ -628,47 +628,44 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
-	// Inline assembly does not have its own type-checking phase, so we just run the
-	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
-	auto identifierAccess = [&](
+	// We run the resolve step again regardless.
+	assembly::ExternalIdentifierAccess identifierAccess;
+	identifierAccess.resolve = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
-		assembly::CodeGenerator::IdentifierContext _context
+		assembly::IdentifierContext _context
 	)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
-			return false;
-		Declaration const* declaration = ref->second;
+			return size_t(-1);
+		size_t valueSize = size_t(-1);
+		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
-		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		if (_context == assembly::IdentifierContext::RValue)
 		{
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
-			unsigned pushes = 0;
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
-				pushes = 1;
+				valueSize = 1;
 			else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
 				if (var->isConstant())
 					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
 				if (var->isLocalVariable())
-					pushes = var->type()->sizeOnStack();
+					valueSize = var->type()->sizeOnStack();
 				else if (!var->type()->isValueType())
-					pushes = 1;
+					valueSize = 1;
 				else
-					pushes = 2; // slot number, intra slot offset
+					valueSize = 2; // slot number, intra slot offset
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 			{
 				if (!contract->isLibrary())
-					return false;
-				pushes = 1;
+					return size_t(-1);
+				valueSize = 1;
 			}
 			else
-				return false;
-			for (unsigned i = 0; i < pushes; ++i)
-				_assembly.append(u256(0)); // just to verify the stack height
+				return size_t(-1);
 		}
 		else
 		{
@@ -676,14 +673,14 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
 				if (!varDecl->isLocalVariable())
-					return false; // only local variables are inline-assemlby lvalues
-				for (unsigned i = 0; i < declaration->type()->sizeOnStack(); ++i)
-					_assembly.append(Instruction::POP); // remove value just to verify the stack height
+					return size_t(-1); // only local variables are inline-assembly lvalues
+				valueSize = size_t(declaration->type()->sizeOnStack());
 			}
 			else
-				return false;
+				return size_t(-1);
 		}
-		return true;
+		ref->second.valueSize = valueSize;
+		return valueSize;
 	};
 	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
 	if (!codeGen.typeCheck(identifierAccess))

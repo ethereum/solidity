@@ -158,21 +158,22 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
-	// We need to perform a full code generation pass here as inline assembly does not distinguish
-	// reference resolution and code generation.
 	// Errors created in this stage are completely ignored because we do not yet know
 	// the type and size of external identifiers, which would result in false errors.
+	// The only purpose of this step is to fill the inline assembly annotation with
+	// external references.
 	ErrorList errorsIgnored;
 	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), errorsIgnored);
-	codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly&, assembly::CodeGenerator::IdentifierContext) {
+	assembly::ExternalIdentifierAccess identifierAccess;
+	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
 		if (declarations.size() != 1)
-			return false;
-		_inlineAssembly.annotation().externalReferences[&_identifier] = declarations.front();
-		// At this stage we neither know the code to generate nor the stack size of the identifier,
-		// so we do not modify assembly.
-		return true;
-	});
+			return size_t(-1);
+		_inlineAssembly.annotation().externalReferences[&_identifier].declaration = declarations.front();
+		// At this stage we do not yet know the stack size of the identifier, so we just return 1.
+		return size_t(1);
+	};
+	codeGen.typeCheck(identifierAccess);
 	return false;
 }
 
