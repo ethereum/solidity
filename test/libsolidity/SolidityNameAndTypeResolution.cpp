@@ -2180,7 +2180,8 @@ BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
 			address constant x = msg.sender;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
+	// Change to TypeError for 0.5.0.
+	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
@@ -2207,7 +2208,8 @@ BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
 			uint constant y = x();
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
+	// Change to TypeError for 0.5.0.
+	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
