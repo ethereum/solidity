@@ -420,7 +420,16 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
-	string data = fs::is_regular_file(_input) ? contentsString(_input) : _input;
+	string data = _input;
+	try
+	{
+		if (fs::is_regular_file(_input))
+			data = contentsString(_input);
+	}
+	catch (fs::filesystem_error const&)
+	{
+		// Thrown e.g. if path is too long.
+	}
 
 	vector<string> libraries;
 	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);

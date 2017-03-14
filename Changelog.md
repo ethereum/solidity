@@ -12,6 +12,7 @@ Features:
 Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
  * Commandline interface: Do not try creating paths ``.`` and ``..``.
+ * Commandline interface: Allow long library names.
  * Parser: Disallow octal literals.
  * Type system: Fix a crash caused by continuing on fatal errors in the code.
  * Type system: Disallow compound assignment for tuples.
