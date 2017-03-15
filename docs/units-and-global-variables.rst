@@ -128,17 +128,23 @@ Address Related
 
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
-``<address>.send(uint256 amount) returns (bool)``:
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure
 ``<address>.transfer(uint256 amount)``:
     send given amount of Wei to :ref:`address`, throws on failure
+``<address>.send(uint256 amount) returns (bool)``:
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure
+``<address>.call(...) returns (bool)``:
+    issue low-level ``CALL``, returns ``false`` on failure
+``<address>.callcode(...) returns (bool)``:
+    issue low-level ``CALLCODE``, returns ``false`` on failure
+``<address>.delegatecall(...) returns (bool)``:
+    issue low-level ``DELEGATECALL``, returns ``false`` on failure
 
 For more information, see the section on :ref:`address`.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     Use a pattern where the recipient withdraws the money.
 
 .. index:: this, selfdestruct
