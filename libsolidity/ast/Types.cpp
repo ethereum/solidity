@@ -582,7 +582,12 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
 		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
 
-		if (!boost::starts_with(_literal.value(), "0x") && (expPoint != _literal.value().end()))
+		if (boost::starts_with(_literal.value(), "0x"))
+		{
+			// process as hex
+			x = bigint(_literal.value());
+		}
+		else if (expPoint != _literal.value().end())
 		{
 			if (
 				!all_of(_literal.value().begin(), expPoint, ::isdigit)
