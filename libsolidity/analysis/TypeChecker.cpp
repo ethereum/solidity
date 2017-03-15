@@ -517,6 +517,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	return false;
 }
 
+bool TypeChecker::visit(EnumDefinition const& _enum)
+{
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_enum.location(), "Enumerable cannot be declared in interfaces.");
+	return false;
+}
+
 void TypeChecker::visitManually(
 	ModifierInvocation const& _modifier,
 	vector<ContractDefinition const*> const& _bases

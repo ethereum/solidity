@@ -5411,6 +5411,16 @@ BOOST_AUTO_TEST_CASE(interface_variables)
 	CHECK_ERROR(text, TypeError, "Variables cannot be declared in interfaces");
 }
 
+BOOST_AUTO_TEST_CASE(interface_enums)
+{
+	char const* text = R"(
+		interface I {
+			enum A { B, C }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Enumerable cannot be declared in interfaces");
+}
+
 BOOST_AUTO_TEST_CASE(using_interface)
 {
 	char const* text = R"(
