@@ -1487,6 +1487,7 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 			uint256 b = 2E10;
 			uint256 c = 200e-2;
 			uint256 d = 2E10 wei;
+			uint256 e = 2.5e10;
 		}
 	)";
 	BOOST_CHECK(successParse(text));

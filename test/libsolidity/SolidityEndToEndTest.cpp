@@ -9186,11 +9186,15 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 			function g() returns (uint) {
 				return 200e-2 wei;
 			}
+			function h() returns (uint) {
+				return 2.5e1;
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(20000000000)));
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(25)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
