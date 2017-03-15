@@ -574,7 +574,7 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 
 tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
 {
-	rational x;
+	rational value;
 	try
 	{
 		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
@@ -585,7 +585,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		if (boost::starts_with(_literal.value(), "0x"))
 		{
 			// process as hex
-			x = bigint(_literal.value());
+			value = bigint(_literal.value());
 		}
 		else if (expPoint != _literal.value().end())
 		{
@@ -599,17 +599,18 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
 
-			x = bigint(string(_literal.value().begin(), expPoint));
+			value = bigint(string(_literal.value().begin(), expPoint));
+
 			if (exp < 0)
 			{
 				exp *= -1;
-				x /= boost::multiprecision::pow(
+				value /= boost::multiprecision::pow(
 					bigint(10),
 					exp.convert_to<int32_t>()
 				);
 			}
 			else
-				x *= boost::multiprecision::pow(
+				value *= boost::multiprecision::pow(
 					bigint(10),
 					exp.convert_to<int32_t>()
 				);
@@ -637,10 +638,10 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				distance(radixPoint + 1, _literal.value().end())
 			);
 			numerator = bigint(string(_literal.value().begin(), radixPoint));
-			x = numerator + denominator;
+			value = numerator + denominator;
 		}
 		else
-			x = bigint(_literal.value());
+			value = bigint(_literal.value());
 	}
 	catch (...)
 	{
@@ -653,33 +654,33 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		case Literal::SubDenomination::Second:
 			break;
 		case Literal::SubDenomination::Szabo:
-			x *= bigint("1000000000000");
+			value *= bigint("1000000000000");
 			break;
 		case Literal::SubDenomination::Finney:
-			x *= bigint("1000000000000000");
+			value *= bigint("1000000000000000");
 			break;
 		case Literal::SubDenomination::Ether:
-			x *= bigint("1000000000000000000");
+			value *= bigint("1000000000000000000");
 			break;
 		case Literal::SubDenomination::Minute:
-			x *= bigint("60");
+			value *= bigint("60");
 			break;
 		case Literal::SubDenomination::Hour:
-			x *= bigint("3600");
+			value *= bigint("3600");
 			break;
 		case Literal::SubDenomination::Day:
-			x *= bigint("86400");
+			value *= bigint("86400");
 			break;
 		case Literal::SubDenomination::Week:
-			x *= bigint("604800");
+			value *= bigint("604800");
 			break;
 		case Literal::SubDenomination::Year:
-			x *= bigint("31536000");
+			value *= bigint("31536000");
 			break;
 	}
 
 
-	return make_tuple(true, x);
+	return make_tuple(true, value);
 }
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
