@@ -164,7 +164,7 @@ Functions should be grouped according to their visibility and ordered:
 - internal
 - private
 
-Within a grouping, place the `constant` functions last.
+Within a grouping, place the ``constant`` functions last.
 
 Yes::
 

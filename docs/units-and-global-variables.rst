@@ -93,7 +93,7 @@ Mathematical and Cryptographic Functions
 ``keccak256(...) returns (bytes32)``:
     compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
 ``sha3(...) returns (bytes32)``:
-    alias to `keccak256()`
+    alias to ``keccak256()``
 ``sha256(...) returns (bytes32)``:
     compute the SHA-256 hash of the (tightly packed) arguments
 ``ripemd160(...) returns (bytes20)``:
