@@ -202,6 +202,9 @@ Octal literals do not exist in Solidity and leading zeros are invalid.
 Decimal fraction literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
+Scientific notation is also supported, where the base can have fractions, while the exponent cannot.
+Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
+
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).
 This means that computations do not overflow and divisions do not truncate
