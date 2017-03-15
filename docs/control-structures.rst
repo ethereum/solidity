@@ -113,8 +113,8 @@ actual contract has not been created yet.
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
 
-When calling functions
-of other contracts, the amount of Wei sent with the call and the gas can be specified::
+When calling functions of other contracts, the amount of Wei sent with the call and
+the gas can be specified with special options ``.value()`` and ``.gas()``, respectively::
 
     contract InfoFeed {
         function info() payable returns (uint ret) { return 42; }
@@ -235,7 +235,7 @@ creation-dependencies are not possible.
         }
     }
 
-As seen in the example, it is possible to forward Ether to the creation,
+As seen in the example, it is possible to forward Ether to the creation using the ``.value()`` option,
 but it is not possible to limit the amount of gas. If the creation fails
 (due to out-of-stack, not enough balance or other problems), an exception
 is thrown.

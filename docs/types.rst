@@ -123,6 +123,8 @@ In a similar way, the function ``delegatecall`` can be used: The difference is t
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
+The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
+
 .. note::
     All contracts inherit the members of address, so it is possible to query the balance of the
     current contract using ``this.balance``.
