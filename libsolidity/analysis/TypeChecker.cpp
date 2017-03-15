@@ -891,10 +891,11 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			if (
 				location == Location::Bare ||
 				location == Location::BareCallCode ||
-				location == Location::BareDelegateCall ||
-				location == Location::Send
+				location == Location::BareDelegateCall
 			)
 				warning(_statement.location(), "Return value of low-level calls not used.");
+			else if (location == Location::Send)
+				warning(_statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 		}
 	}
 }
