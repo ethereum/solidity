@@ -32,6 +32,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -581,7 +582,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
 		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
 
-		if (expPoint != _literal.value().end())
+		if (!boost::starts_with(_literal.value(), "0x") && (expPoint != _literal.value().end()))
 		{
 			if (
 				!all_of(_literal.value().begin(), expPoint, ::isdigit)
