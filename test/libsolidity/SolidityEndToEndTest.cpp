@@ -9233,6 +9233,39 @@ BOOST_AUTO_TEST_CASE(revert)
 	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(scientific_notation)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				return 2e10 wei;
+			}
+			function g() returns (uint) {
+				return 200e-2 wei;
+			}
+			function h() returns (uint) {
+				return 2.5e1;
+			}
+			function i() returns (int) {
+				return -2e10;
+			}
+			function j() returns (int) {
+				return -200e-2;
+			}
+			function k() returns (int) {
+				return -2.5e1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(20000000000)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(25)));
+	BOOST_CHECK(callContractFunction("i()") == encodeArgs(u256(-20000000000)));
+	BOOST_CHECK(callContractFunction("j()") == encodeArgs(u256(-2)));
+	BOOST_CHECK(callContractFunction("k()") == encodeArgs(u256(-25)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

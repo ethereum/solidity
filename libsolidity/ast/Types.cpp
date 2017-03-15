@@ -32,6 +32,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -571,39 +572,99 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	return commonType;
 }
 
-tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
+tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 {
-	rational x;
+	rational value;
 	try
 	{
-		rational numerator;
-		rational denominator(1);
-		
-		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
-		if (radixPoint != _literal.value().end())
+		auto radixPoint = find(_value.begin(), _value.end(), '.');
+
+		if (radixPoint != _value.end())
 		{
 			if (
-				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
-				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
+				!all_of(radixPoint + 1, _value.end(), ::isdigit) ||
+				!all_of(_value.begin(), radixPoint, ::isdigit)
 			)
 				return make_tuple(false, rational(0));
-			//Only decimal notation allowed here, leading zeros would switch to octal.
+
+			// Only decimal notation allowed here, leading zeros would switch to octal.
 			auto fractionalBegin = find_if_not(
-				radixPoint + 1, 
-				_literal.value().end(), 
+				radixPoint + 1,
+				_value.end(),
 				[](char const& a) { return a == '0'; }
 			);
 
-			denominator = bigint(string(fractionalBegin, _literal.value().end()));
+			rational numerator;
+			rational denominator(1);
+
+			denominator = bigint(string(fractionalBegin, _value.end()));
 			denominator /= boost::multiprecision::pow(
-				bigint(10), 
-				distance(radixPoint + 1, _literal.value().end())
+				bigint(10),
+				distance(radixPoint + 1, _value.end())
 			);
-			numerator = bigint(string(_literal.value().begin(), radixPoint));
-			x = numerator + denominator;
+			numerator = bigint(string(_value.begin(), radixPoint));
+			value = numerator + denominator;
 		}
 		else
-			x = bigint(_literal.value());
+			value = bigint(_value);
+		return make_tuple(true, value);
+	}
+	catch (...)
+	{
+		return make_tuple(false, rational(0));
+	}
+}
+
+tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
+{
+	rational value;
+	try
+	{
+		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
+		if (expPoint == _literal.value().end())
+			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
+
+		if (boost::starts_with(_literal.value(), "0x"))
+		{
+			// process as hex
+			value = bigint(_literal.value());
+		}
+		else if (expPoint != _literal.value().end())
+		{
+			// parse the exponent
+			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
+
+			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
+				return make_tuple(false, rational(0));
+
+			// parse the base
+			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
+			if (!get<0>(base))
+				return make_tuple(false, rational(0));
+			value = get<1>(base);
+
+			if (exp < 0)
+			{
+				exp *= -1;
+				value /= boost::multiprecision::pow(
+					bigint(10),
+					exp.convert_to<int32_t>()
+				);
+			}
+			else
+				value *= boost::multiprecision::pow(
+					bigint(10),
+					exp.convert_to<int32_t>()
+				);
+		}
+		else
+		{
+			// parse as rational number
+			tuple<bool, rational> tmp = parseRational(_literal.value());
+			if (!get<0>(tmp))
+				return tmp;
+			value = get<1>(tmp);
+		}
 	}
 	catch (...)
 	{
@@ -616,33 +677,33 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		case Literal::SubDenomination::Second:
 			break;
 		case Literal::SubDenomination::Szabo:
-			x *= bigint("1000000000000");
+			value *= bigint("1000000000000");
 			break;
 		case Literal::SubDenomination::Finney:
-			x *= bigint("1000000000000000");
+			value *= bigint("1000000000000000");
 			break;
 		case Literal::SubDenomination::Ether:
-			x *= bigint("1000000000000000000");
+			value *= bigint("1000000000000000000");
 			break;
 		case Literal::SubDenomination::Minute:
-			x *= bigint("60");
+			value *= bigint("60");
 			break;
 		case Literal::SubDenomination::Hour:
-			x *= bigint("3600");
+			value *= bigint("3600");
 			break;
 		case Literal::SubDenomination::Day:
-			x *= bigint("86400");
+			value *= bigint("86400");
 			break;
 		case Literal::SubDenomination::Week:
-			x *= bigint("604800");
+			value *= bigint("604800");
 			break;
 		case Literal::SubDenomination::Year:
-			x *= bigint("31536000");
+			value *= bigint("31536000");
 			break;
 	}
 
 
-	return make_tuple(true, x);
+	return make_tuple(true, value);
 }
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const

@@ -416,6 +416,9 @@ public:
 
 private:
 	rational m_value;
+
+	/// @returns true if the literal is a valid rational number.
+	static std::tuple<bool, rational> parseRational(std::string const& _value);
 };
 
 /**

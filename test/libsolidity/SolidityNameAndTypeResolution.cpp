@@ -2790,18 +2790,6 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
-{
-	char const* text = R"(
-		contract Foo {
-			function f() {
-				var x = 1e2;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "");
-}
-
 BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
 {
 	char const* text = R"(
@@ -4949,18 +4937,6 @@ BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
-}
-
-BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
-{
-	char const* text = R"(
-		contract A {
-			function a() {
-				.8E0;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
