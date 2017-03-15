@@ -220,6 +220,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		rightIntermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
 			_assignment.leftHandSide().annotation().type
 		);
+	solAssert(rightIntermediateType, "");
 	utils().convertType(*_assignment.rightHandSide().annotation().type, *rightIntermediateType, cleanupNeeded);
 
 	_assignment.leftHandSide().accept(*this);
@@ -395,6 +396,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 		TypePointer leftTargetType = commonType;
 		TypePointer rightTargetType = Token::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
+		solAssert(rightTargetType, "");
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
@@ -616,6 +618,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			break;
 		case Location::Send:
+		case Location::Transfer:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -644,11 +647,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
+			if (function.location() == Location::Transfer)
+			{
+				// Check if zero (out of stack or not enough balance).
+				m_context << Instruction::ISZERO;
+				m_context.appendConditionalInvalid();
+			}
 			break;
 		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
-			m_context << Instruction::SUICIDE;
+			m_context << Instruction::SELFDESTRUCT;
+			break;
+		case Location::Revert:
+			// memory offset returned - zero length
+			m_context << u256(0) << u256(0);
+			m_context << Instruction::REVERT;
 			break;
 		case Location::SHA3:
 		{
@@ -803,6 +817,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			solAssert(type, "");
 			utils().convertType(*arguments[0]->annotation().type, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
@@ -861,6 +876,23 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			m_context << skipInit;
 			m_context << Instruction::POP;
+			break;
+		}
+		case Location::Assert:
+		case Location::Require:
+		{
+			arguments.front()->accept(*this);
+			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			// jump if condition was met
+			m_context << Instruction::ISZERO << Instruction::ISZERO;
+			auto success = m_context.appendConditionalJump();
+			if (function.location() == Location::Assert)
+				// condition was not met, flag an error
+				m_context << Instruction::INVALID;
+			else
+				m_context << u256(0) << u256(0) << Instruction::REVERT;
+			// the success branch
+			m_context << success;
 			break;
 		}
 		default:
@@ -941,6 +973,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Location::Bare:
 				case FunctionType::Location::BareCallCode:
 				case FunctionType::Location::BareDelegateCall:
+				case FunctionType::Location::Transfer:
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
@@ -1022,7 +1055,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
-		else if ((set<string>{"send", "call", "callcode", "delegatecall"}).count(member))
+		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				IntegerType(0, IntegerType::Modifier::Address),

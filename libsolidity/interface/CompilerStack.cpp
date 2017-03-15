@@ -34,6 +34,7 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
+#include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/InterfaceHandler.h>
@@ -88,6 +89,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();
+	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errors.clear();
@@ -165,7 +167,7 @@ bool CompilerStack::parse()
 			noErrors = false;
 
 	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
@@ -215,6 +217,14 @@ bool CompilerStack::parse()
 				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
+
+	if (noErrors)
+	{
+		PostTypeChecker postTypeChecker(m_errors);
+		for (Source const* source: m_sourceOrder)
+			if (!postTypeChecker.check(*source->ast))
+				noErrors = false;
+	}
 
 	if (noErrors)
 	{
@@ -627,7 +637,7 @@ void CompilerStack::compileContract(
 	if (
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().isFullyImplemented ||
-		!_contract.annotation().hasPublicConstructor
+		!_contract.constructorIsPublic()
 	)
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)

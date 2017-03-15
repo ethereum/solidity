@@ -32,6 +32,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -252,9 +253,9 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 {
 	if (!_a || !_b)
 		return TypePointer();
-	else if (_b->isImplicitlyConvertibleTo(*_a->mobileType()))
+	else if (_a->mobileType() && _b->isImplicitlyConvertibleTo(*_a->mobileType()))
 		return _a->mobileType();
-	else if (_a->isImplicitlyConvertibleTo(*_b->mobileType()))
+	else if (_b->mobileType() && _a->isImplicitlyConvertibleTo(*_b->mobileType()))
 		return _b->mobileType();
 	else
 		return TypePointer();
@@ -464,7 +465,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true, false, true)},
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true, false, true)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareDelegateCall, true)},
-			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
+			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)},
+			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Location::Transfer)}
 		};
 	else
 		return MemberList::MemberMap();
@@ -570,39 +572,99 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	return commonType;
 }
 
-tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
+tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 {
-	rational x;
+	rational value;
 	try
 	{
-		rational numerator;
-		rational denominator(1);
-		
-		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
-		if (radixPoint != _literal.value().end())
+		auto radixPoint = find(_value.begin(), _value.end(), '.');
+
+		if (radixPoint != _value.end())
 		{
 			if (
-				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
-				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
+				!all_of(radixPoint + 1, _value.end(), ::isdigit) ||
+				!all_of(_value.begin(), radixPoint, ::isdigit)
 			)
 				return make_tuple(false, rational(0));
-			//Only decimal notation allowed here, leading zeros would switch to octal.
+
+			// Only decimal notation allowed here, leading zeros would switch to octal.
 			auto fractionalBegin = find_if_not(
-				radixPoint + 1, 
-				_literal.value().end(), 
+				radixPoint + 1,
+				_value.end(),
 				[](char const& a) { return a == '0'; }
 			);
 
-			denominator = bigint(string(fractionalBegin, _literal.value().end()));
+			rational numerator;
+			rational denominator(1);
+
+			denominator = bigint(string(fractionalBegin, _value.end()));
 			denominator /= boost::multiprecision::pow(
-				bigint(10), 
-				distance(radixPoint + 1, _literal.value().end())
+				bigint(10),
+				distance(radixPoint + 1, _value.end())
 			);
-			numerator = bigint(string(_literal.value().begin(), radixPoint));
-			x = numerator + denominator;
+			numerator = bigint(string(_value.begin(), radixPoint));
+			value = numerator + denominator;
 		}
 		else
-			x = bigint(_literal.value());
+			value = bigint(_value);
+		return make_tuple(true, value);
+	}
+	catch (...)
+	{
+		return make_tuple(false, rational(0));
+	}
+}
+
+tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
+{
+	rational value;
+	try
+	{
+		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
+		if (expPoint == _literal.value().end())
+			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
+
+		if (boost::starts_with(_literal.value(), "0x"))
+		{
+			// process as hex
+			value = bigint(_literal.value());
+		}
+		else if (expPoint != _literal.value().end())
+		{
+			// parse the exponent
+			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
+
+			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
+				return make_tuple(false, rational(0));
+
+			// parse the base
+			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
+			if (!get<0>(base))
+				return make_tuple(false, rational(0));
+			value = get<1>(base);
+
+			if (exp < 0)
+			{
+				exp *= -1;
+				value /= boost::multiprecision::pow(
+					bigint(10),
+					exp.convert_to<int32_t>()
+				);
+			}
+			else
+				value *= boost::multiprecision::pow(
+					bigint(10),
+					exp.convert_to<int32_t>()
+				);
+		}
+		else
+		{
+			// parse as rational number
+			tuple<bool, rational> tmp = parseRational(_literal.value());
+			if (!get<0>(tmp))
+				return tmp;
+			value = get<1>(tmp);
+		}
 	}
 	catch (...)
 	{
@@ -615,33 +677,33 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		case Literal::SubDenomination::Second:
 			break;
 		case Literal::SubDenomination::Szabo:
-			x *= bigint("1000000000000");
+			value *= bigint("1000000000000");
 			break;
 		case Literal::SubDenomination::Finney:
-			x *= bigint("1000000000000000");
+			value *= bigint("1000000000000000");
 			break;
 		case Literal::SubDenomination::Ether:
-			x *= bigint("1000000000000000000");
+			value *= bigint("1000000000000000000");
 			break;
 		case Literal::SubDenomination::Minute:
-			x *= bigint("60");
+			value *= bigint("60");
 			break;
 		case Literal::SubDenomination::Hour:
-			x *= bigint("3600");
+			value *= bigint("3600");
 			break;
 		case Literal::SubDenomination::Day:
-			x *= bigint("86400");
+			value *= bigint("86400");
 			break;
 		case Literal::SubDenomination::Week:
-			x *= bigint("604800");
+			value *= bigint("604800");
 			break;
 		case Literal::SubDenomination::Year:
-			x *= bigint("31536000");
+			value *= bigint("31536000");
 			break;
 	}
 
 
-	return make_tuple(true, x);
+	return make_tuple(true, value);
 }
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -649,12 +711,12 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() == Category::Integer)
 	{
 		auto targetType = dynamic_cast<IntegerType const*>(&_convertTo);
-		if (m_value == 0)
+		if (m_value == rational(0))
 			return true;
 		if (isFractional())
 			return false;
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_value > 0)
+		if (m_value > rational(0))
 		{
 			if (m_value.numerator() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
 				return true;
@@ -775,13 +837,13 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			value = m_value * other.m_value;
 			break;
 		case Token::Div:
-			if (other.m_value == 0)
+			if (other.m_value == rational(0))
 				return TypePointer();
 			else
 				value = m_value / other.m_value;
 			break;
 		case Token::Mod:
-			if (other.m_value == 0)
+			if (other.m_value == rational(0))
 				return TypePointer();
 			else if (fractional)
 			{
@@ -886,7 +948,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
 	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
 
-	if (m_value >= 0)
+	if (m_value >= rational(0))
 		value = u256(shiftedValue);
 	else
 		value = s2u(s256(shiftedValue));
@@ -1652,6 +1714,7 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 	{
 		TypePointer type = variable->annotation().type;
+		solAssert(type, "");
 		// Skip all mapping members if we are not in storage.
 		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 			continue;
@@ -1895,7 +1958,10 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 		size_t si = fillRight ? i : components().size() - i - 1;
 		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
 		if (components()[si] && targetComponents[ti])
+		{
 			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[ti]);
+			solAssert(tempComponents[ti], "");
+		}
 	}
 	return make_shared<TupleType>(tempComponents);
 }
@@ -1964,6 +2030,8 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		for (auto const& member: structType->members(nullptr))
+		{
+			solAssert(member.type, "");
 			if (member.type->category() != Category::Mapping)
 			{
 				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
@@ -1972,6 +2040,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				retParams.push_back(member.type);
 				retParamNames.push_back(member.name);
 			}
+		}
 	}
 	else
 	{
@@ -2093,8 +2162,10 @@ string FunctionType::identifier() const
 	case Location::BareDelegateCall: id += "baredelegatecall"; break;
 	case Location::Creation: id += "creation"; break;
 	case Location::Send: id += "send"; break;
+	case Location::Transfer: id += "transfer"; break;
 	case Location::SHA3: id += "sha3"; break;
 	case Location::Selfdestruct: id += "selfdestruct"; break;
+	case Location::Revert: id += "revert"; break;
 	case Location::ECRecover: id += "ecrecover"; break;
 	case Location::SHA256: id += "sha256"; break;
 	case Location::RIPEMD160: id += "ripemd160"; break;
@@ -2156,6 +2227,17 @@ bool FunctionType::operator==(Type const& _other) const
 	if (bound() && *selfType() != *other.selfType())
 		return false;
 	return true;
+}
+
+bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (m_location == Location::External && _convertTo.category() == Category::Integer)
+	{
+		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
+		if (convertTo.isAddress())
+			return true;
+	}
+	return _convertTo.category() == category();
 }
 
 TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
@@ -2435,6 +2517,18 @@ u256 FunctionType::externalIdentifier() const
 	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
 }
 
+bool FunctionType::isPure() const
+{
+	return
+		m_location == Location::SHA3 ||
+		m_location == Location::ECRecover ||
+		m_location == Location::SHA256 ||
+		m_location == Location::RIPEMD160 ||
+		m_location == Location::AddMod ||
+		m_location == Location::MulMod ||
+		m_location == Location::ObjectCreation;
+}
+
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
 	TypePointers pointers;
@@ -2472,7 +2566,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 	{
 		auto refType = dynamic_cast<ReferenceType const*>(t.get());
 		if (refType && refType->location() == DataLocation::CallData)
-			parameterTypes.push_back(refType->copyForLocation(DataLocation::Memory, false));
+			parameterTypes.push_back(refType->copyForLocation(DataLocation::Memory, true));
 		else
 			parameterTypes.push_back(t);
 	}

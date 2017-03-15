@@ -35,7 +35,7 @@ echo "Running commandline tests..."
 
 echo "Checking that StandardToken.sol, owned.sol and mortal.sol produce bytecode..."
 output=$("$REPO_ROOT"/build/solc/solc --bin "$REPO_ROOT"/std/*.sol 2>/dev/null | grep "ffff" | wc -l)
-test "$output" = "3"
+test "${output//[[:blank:]]/}" = "3"
 
 # This conditional is only needed because we don't have a working Homebrew
 # install for `eth` at the time of writing, so we unzip the ZIP file locally
@@ -52,21 +52,22 @@ fi
 # true and continue as normal, either processing further commands in a script
 # or returning the cursor focus back to the user in a Linux terminal.
 $ETH_PATH --test -d /tmp/test &
+ETH_PID=$!
 
 # Wait until the IPC endpoint is available.  That won't be available instantly.
 # The node needs to get a little way into its startup sequence before the IPC
 # is available and is ready for the unit-tests to start talking to it.
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
 echo "--> IPC available."
-
+sleep 2
 # And then run the Solidity unit-tests (once without optimization, once with),
 # pointing to that IPC endpoint.
 echo "--> Running tests without optimizer..."
-  "$REPO_ROOT"/build/test/soltest -- --ipcpath /tmp/test/geth.ipc && \
+  "$REPO_ROOT"/build/test/soltest --show-progress -- --ipcpath /tmp/test/geth.ipc && \
   echo "--> Running tests WITH optimizer..." && \
-  "$REPO_ROOT"/build/test/soltest -- --optimize --ipcpath /tmp/test/geth.ipc
+  "$REPO_ROOT"/build/test/soltest --show-progress -- --optimize --ipcpath /tmp/test/geth.ipc
 ERROR_CODE=$?
-pkill eth || true
+pkill "$ETH_PID" || true
 sleep 4
-pgrep eth && pkill -9 eth || true
+pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
 exit $ERROR_CODE

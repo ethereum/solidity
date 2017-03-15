@@ -143,6 +143,8 @@ protected:
 	AssemblyItems findRepresentation(u256 const& _value);
 	bigint gasNeeded(AssemblyItems const& _routine);
 
+	/// Counter for the complexity of optimization, will stop when it reaches zero.
+	size_t m_maxSteps = 10000;
 	AssemblyItems m_routine;
 };
 

@@ -52,6 +52,7 @@ namespace solidity
 
 // forward declarations
 class Scanner;
+class ASTNode;
 class ContractDefinition;
 class FunctionDefinition;
 class SourceUnit;
@@ -59,6 +60,7 @@ class Compiler;
 class GlobalContext;
 class InterfaceHandler;
 class Error;
+class DeclarationContainer;
 
 enum class DocumentationType: uint8_t
 {
@@ -271,6 +273,7 @@ private:
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;

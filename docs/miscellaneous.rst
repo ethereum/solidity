@@ -137,31 +137,6 @@ Different types have different rules for cleaning up invalid values:
 |               |               |will be thrown     |
 +---------------+---------------+-------------------+
 
-
-*****************
-Esoteric Features
-*****************
-
-There are some types in Solidity's type system that have no counterpart in the syntax. One of these types are the types of functions. But still, using ``var`` it is possible to have local variables of these types::
-
-    contract FunctionSelector {
-      function select(bool useB, uint x) returns (uint z) {
-        var f = a;
-        if (useB) f = b;
-        return f(x);
-      }
-
-      function a(uint x) returns (uint z) {
-        return x * x;
-      }
-
-      function b(uint x) returns (uint z) {
-        return 2 * x;
-      }
-    }
-
-Calling ``select(false, x)`` will compute ``x * x`` and ``select(true, x)`` will compute ``2 * x``.
-
 .. index:: optimizer, common subexpression elimination, constant propagation
 
 *************************
@@ -245,45 +220,6 @@ This means the following source mappings represent the same information:
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
 ``1:2:1;:9;2::2;;``
-
-
-.. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
-
-.. _commandline-compiler:
-
-******************************
-Using the Commandline Compiler
-******************************
-
-One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
-Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
-
-The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide path redirects using ``context:prefix=path`` in the following way:
-
-::
-
-    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ =/usr/local/lib/fallback file.sol
-
-This essentially instructs the compiler to search for anything starting with
-``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin`` and if it does not
-find the file there, it will look at ``/usr/local/lib/fallback`` (the empty prefix
-always matches). ``solc`` will not read files from the filesystem that lie outside of
-the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/`` as a remapping.
-
-You can restrict remappings to only certain source files by prefixing a context.
-
-The section on :ref:`import` provides more details on remappings.
-
-If there are multiple matches due to remappings, the one with the longest common prefix is selected.
-
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__LibraryName______``. You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
-
-Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
-
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
 *****************
 Contract Metadata
@@ -427,7 +363,7 @@ Tips and Tricks
 
 * Use ``delete`` on arrays to delete all its elements.
 * Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple SSTORE operations might be combined into a single (SSTORE costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
-* Make your state variables public - the compiler will create :ref:`getters <visibility-and-accessors>` for you for free.
+* Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you for free.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
 * Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
@@ -499,7 +435,7 @@ The following is the order of precedence for operators, listed in order of evalu
 | *16*       | Comma operator                      | ``,``                                      |
 +------------+-------------------------------------+--------------------------------------------+
 
-.. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
 Global Variables
 ================
@@ -517,6 +453,9 @@ Global Variables
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
+- ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
+- ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input)
+- ``revert()``: abort execution and revert state changes
 - ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
 - ``sha3(...) returns (bytes32)``: an alias to `keccak256()`
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
@@ -527,8 +466,9 @@ Global Variables
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
-- ``<address>.balance`` (``uint256``): balance of the address in Wei
-- ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to address, returns ``false`` on failure
+- ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
+- ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
+- ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
 
 .. index:: visibility, public, private, external, internal
 
@@ -541,7 +481,7 @@ Function Visibility Specifiers
         return true;
     }
 
-- ``public``: visible externally and internally (creates accessor function for storage/state variables)
+- ``public``: visible externally and internally (creates getter function for storage/state variables)
 - ``private``: only visible in the current contract
 - ``external``: only visible externally (only for functions) - i.e. can only be message-called (via ``this.func``)
 - ``internal``: only visible internally

@@ -16,18 +16,20 @@
 
 	The Implementation originally from https://msdn.microsoft.com/en-us/library/windows/desktop/aa365592(v=vs.85).aspx
 */
-/** @file RPCSession.cpp
- * @author Dimtiry Khokhlov <dimitry@ethdev.com>
- * @date 2016
- */
+/// @file RPCSession.cpp
+/// Low-level IPC communication between the test framework and the Ethereum node.
+
+#include "RPCSession.h"
+
+#include <libdevcore/CommonData.h>
+
+#include <json/reader.h>
+#include <json/writer.h>
 
 #include <string>
 #include <stdio.h>
 #include <thread>
-#include <libdevcore/CommonData.h>
-#include <json/reader.h>
-#include <json/writer.h>
-#include "RPCSession.h"
+#include <chrono>
 
 using namespace std;
 using namespace dev;
@@ -73,15 +75,13 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
-
-	m_fp = fdopen(m_socket, "r");
 #endif
 }
 
 string IPCSocket::sendRequest(string const& _req)
 {
 #if defined(_WIN32)
-	string returnStr;
+	// Write to the pipe.
 	DWORD cbWritten;
 	BOOL fSuccess = WriteFile(
 		m_socket,               // pipe handle
@@ -90,40 +90,44 @@ string IPCSocket::sendRequest(string const& _req)
 		&cbWritten,             // bytes written
 		NULL);                  // not overlapped
 
-	if (!fSuccess)
+	if (!fSuccess || (_req.size() != cbWritten))
 		BOOST_FAIL("WriteFile to pipe failed");
 
-	DWORD  cbRead;
-	TCHAR  chBuf[c_buffsize];
-
 	// Read from the pipe.
+	DWORD cbRead;
 	fSuccess = ReadFile(
-		m_socket,  // pipe handle
-		chBuf,     // buffer to receive reply
-		c_buffsize,// size of buffer
-		&cbRead,   // number of bytes read
-		NULL);     // not overlapped
-
-	returnStr += chBuf;
+		m_socket,          // pipe handle
+		m_readBuf,         // buffer to receive reply
+		sizeof(m_readBuf), // size of buffer
+		&cbRead,           // number of bytes read
+		NULL);             // not overlapped
 
 	if (!fSuccess)
 		BOOST_FAIL("ReadFile from pipe failed");
 
-	cerr << ".";  //Output for log activity
-	return returnStr;
+	return string(m_readBuf, m_readBuf + cbRead);
 #else
-	send(m_socket, _req.c_str(), _req.length(), 0);
+	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
+		BOOST_FAIL("Writing on IPC failed.");
 
-	char c;
-	string response;
-	while ((c = fgetc(m_fp)) != EOF)
+	auto start = chrono::steady_clock::now();
+	ssize_t ret;
+	do
 	{
-		if (c != '\n')
-			response += c;
-		else
-			break;
+		ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+		// Also consider closed socket an error.
+		if (ret < 0)
+			BOOST_FAIL("Reading on IPC failed.");
 	}
-	return response;
+	while (
+		ret == 0 &&
+		chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < m_readTimeOutMS
+	);
+
+	if (ret == 0)
+		BOOST_FAIL("Timeout reading on IPC.");
+
+	return string(m_readBuf, m_readBuf + ret);
 #endif
 }
 
@@ -139,6 +143,12 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
 }
 
+Json::Value RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
+{
+	// NOTE: to_string() converts bool to 0 or 1
+	return rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
+}
+
 RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	TransactionReceipt receipt;
@@ -146,6 +156,7 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 	BOOST_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
+	receipt.blockNumber = result["blockNumber"].asString();
 	for (auto const& log: result["logs"])
 	{
 		LogEntry entry;
@@ -187,12 +198,17 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
-	rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) });
+	BOOST_REQUIRE_MESSAGE(
+		rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }),
+		"Error unlocking account " + _address
+	);
 }
 
 string RPCSession::personal_newAccount(string const& _password)
 {
-	return rpcCall("personal_newAccount", { quote(_password) }).asString();
+	string addr = rpcCall("personal_newAccount", { quote(_password) }).asString();
+	BOOST_TEST_MESSAGE("Created account " + addr);
+	return addr;
 }
 
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
@@ -231,40 +247,43 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-	rpcCall("test_setChainParams", { _config });
+	BOOST_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-	rpcCall("test_rewindToBlock", { to_string(_blockNr) });
+	BOOST_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
 }
 
 void RPCSession::test_mineBlocks(int _number)
 {
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-	rpcCall("test_mineBlocks", { to_string(_number) }, true);
-
-	bool mined = false;
+	BOOST_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
 
+	auto startTime = std::chrono::steady_clock::now();
 	unsigned sleepTime = m_sleepTime;
-	size_t polls = 0;
-	for (; polls < 14 && !mined; ++polls)
+	size_t tries = 0;
+	for (; ; ++tries)
 	{
 		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
+		auto endTime = std::chrono::steady_clock::now();
+		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+		if (timeSpent > m_maxMiningTime)
+			BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
-			mined = true;
+			break;
 		else
 			sleepTime *= 2;
 	}
-	if (polls > 1)
+	if (tries > 1)
 	{
 		m_successfulMineRuns = 0;
 		m_sleepTime += 2;
 	}
-	else if (polls == 1)
+	else if (tries == 1)
 	{
 		m_successfulMineRuns++;
 		if (m_successfulMineRuns > 5)
@@ -274,14 +293,11 @@ void RPCSession::test_mineBlocks(int _number)
 				m_sleepTime--;
 		}
 	}
-
-	if (!mined)
-		BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 }
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-	rpcCall("test_modifyTimestamp", { to_string(_timestamp) });
+	BOOST_REQUIRE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -297,12 +313,12 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
 	++m_rpcSequence;
 
-	//cout << "Request: " << request << endl;
+	// cout << "Request: " << request << endl;
 	string reply = m_ipcSocket.sendRequest(request);
-	//cout << "Reply: " << reply << endl;
+	// cout << "Reply: " << reply << endl;
 
 	Json::Value result;
-	Json::Reader().parse(reply, result, false);
+	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
 
 	if (result.isMember("error"))
 	{

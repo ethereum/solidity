@@ -23,10 +23,12 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/Utils.h>
 
+using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Error::Error(Type _type): m_type(_type)
+Error::Error(Type _type, SourceLocation const& _location, string const& _description):
+	m_type(_type)
 {
 	switch(m_type)
 	{
@@ -55,4 +57,30 @@ Error::Error(Type _type): m_type(_type)
 		solAssert(false, "");
 		break;
 	}
+
+	if (!_location.isEmpty())
+		*this << errinfo_sourceLocation(_location);
+	if (!_description.empty())
+		*this << errinfo_comment(_description);
+}
+
+Error::Error(Error::Type _type, const std::string& _description, const SourceLocation& _location):
+	Error(_type)
+{
+	if (!_location.isEmpty())
+		*this << errinfo_sourceLocation(_location);
+	*this << errinfo_comment(_description);
+}
+
+string Exception::lineInfo() const
+{
+	char const* const* file = boost::get_error_info<boost::throw_file>(*this);
+	int const* line = boost::get_error_info<boost::throw_line>(*this);
+	string ret;
+	if (file)
+		ret += *file;
+	ret += ':';
+	if (line)
+		ret += boost::lexical_cast<string>(*line);
+	return ret;
 }

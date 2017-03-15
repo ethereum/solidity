@@ -20,14 +20,19 @@
  * Unit tests for inline assembly.
  */
 
-#include <string>
-#include <memory>
-#include <libevmasm/Assembly.h>
-#include <libsolidity/parsing/Scanner.h>
+#include "../TestHelper.h"
+
 #include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
-#include "../TestHelper.h"
+#include <test/libsolidity/ErrorCheck.h>
+#include <libevmasm/Assembly.h>
+
+#include <boost/optional.hpp>
+
+#include <string>
+#include <memory>
 
 using namespace std;
 
@@ -41,31 +46,44 @@ namespace test
 namespace
 {
 
-bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _assemble = false, bool _allowWarnings = true)
 {
 	assembly::InlineAssemblyStack stack;
+	bool success = false;
 	try
 	{
-		if (!stack.parse(std::make_shared<Scanner>(CharStream(_source))))
-			return false;
-		if (_assemble)
-		{
+		success = stack.parse(std::make_shared<Scanner>(CharStream(_source)));
+		if (success && _assemble)
 			stack.assemble();
-			if (!stack.errors().empty())
-				if (!_allowWarnings || !Error::containsOnlyWarnings(stack.errors()))
-					return false;
-		}
 	}
 	catch (FatalError const&)
 	{
-		if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
-			return false;
+		BOOST_FAIL("Fatal error leaked.");
+		success = false;
 	}
-	if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
-		return false;
+	if (!success)
+	{
+		BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+		return *stack.errors().front();
+	}
+	else
+	{
+		// If success is true, there might still be an error in the assembly stage.
+		if (_allowWarnings && Error::containsOnlyWarnings(stack.errors()))
+			return {};
+		else if (!stack.errors().empty())
+		{
+			if (!_allowWarnings)
+				BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+			return *stack.errors().front();
+		}
+	}
+	return {};
+}
 
-	BOOST_CHECK(Error::containsOnlyWarnings(stack.errors()));
-	return true;
+bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+{
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings);
 }
 
 bool successAssemble(string const& _source, bool _allowWarnings = true)
@@ -73,10 +91,44 @@ bool successAssemble(string const& _source, bool _allowWarnings = true)
 	return successParse(_source, true, _allowWarnings);
 }
 
+Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
+{
+
+	auto error = parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	BOOST_REQUIRE(error);
+	return *error;
 }
+
+void parsePrintCompare(string const& _source)
+{
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	BOOST_CHECK_EQUAL(stack.toString(), _source);
+}
+
+}
+
+#define CHECK_ERROR(text, assemble, typ, substring) \
+do \
+{ \
+	Error err = expectError((text), (assemble), false); \
+	BOOST_CHECK(err.type() == (Error::Type::typ)); \
+	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+} while(0)
+
+#define CHECK_PARSE_ERROR(text, type, substring) \
+CHECK_ERROR(text, false, type, substring)
+
+#define CHECK_ASSEMBLE_ERROR(text, type, substring) \
+CHECK_ERROR(text, true, type, substring)
+
 
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
+
+
+BOOST_AUTO_TEST_SUITE(Parsing)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -148,6 +200,85 @@ BOOST_AUTO_TEST_CASE(blocks)
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
 }
 
+BOOST_AUTO_TEST_CASE(function_definitions)
+{
+	BOOST_CHECK(successParse("{ function f() { } function g(a) -> (x) { } }"));
+}
+
+BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
+{
+	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> (x, y) { } }"));
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	BOOST_CHECK(successParse("{ g(1, 2, f(mul(2, 3))) x() }"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Printing)
+
+BOOST_AUTO_TEST_CASE(print_smoke)
+{
+	parsePrintCompare("{\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_instructions)
+{
+	parsePrintCompare("{\n    7\n    8\n    mul\n    dup10\n    add\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_subblock)
+{
+	parsePrintCompare("{\n    {\n        dup4\n        add\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_functional)
+{
+	parsePrintCompare("{\n    mul(sload(0x12), 7)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_label)
+{
+	parsePrintCompare("{\n    loop:\n    jump(loop)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_assignments)
+{
+	parsePrintCompare("{\n    let x := mul(2, 3)\n    7\n    =: x\n    x := add(1, 2)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_string_literals)
+{
+	parsePrintCompare("{\n    \"\\n'\\xab\\x95\\\"\"\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
+{
+	string source = "{ \"\\u1bac\" }";
+	string parsed = "{\n    \"\\xe1\\xae\\xac\"\n}";
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	BOOST_CHECK_EQUAL(stack.toString(), parsed);
+	parsePrintCompare(parsed);
+}
+
+BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
+{
+	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> (x, y)\n    {\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	parsePrintCompare("{\n    g(1, mul(2, x), f(mul(2, 3)))\n    x()\n}");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Analysis)
+
 BOOST_AUTO_TEST_CASE(string_literals)
 {
 	BOOST_CHECK(successAssemble("{ let x := \"12345678901234567890123456789012\" }"));
@@ -155,7 +286,7 @@ BOOST_AUTO_TEST_CASE(string_literals)
 
 BOOST_AUTO_TEST_CASE(oversize_string_literals)
 {
-	BOOST_CHECK(!successAssemble("{ let x := \"123456789012345678901234567890123\" }"));
+	CHECK_ASSEMBLE_ERROR("{ let x := \"123456789012345678901234567890123\" }", TypeError, "String literal too long");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_after_tag)
@@ -165,15 +296,16 @@ BOOST_AUTO_TEST_CASE(assignment_after_tag)
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	BOOST_CHECK(!successAssemble("{ this }"));
-	BOOST_CHECK(!successAssemble("{ ecrecover }"));
+	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found or not unique");
+	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found or not unique");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
 }
 
 BOOST_AUTO_TEST_CASE(imbalanced_stack)
 {
 	BOOST_CHECK(successAssemble("{ 1 2 mul pop }", false));
-	BOOST_CHECK(!successAssemble("{ 1 }", false));
+	CHECK_ASSEMBLE_ERROR("{ 1 }", Warning, "Inline assembly block is not balanced. It leaves");
+	CHECK_ASSEMBLE_ERROR("{ pop }", Warning, "Inline assembly block is not balanced. It takes");
 	BOOST_CHECK(successAssemble("{ let x := 4 7 add }", false));
 }
 
@@ -189,21 +321,25 @@ BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
-	// Error message: "Cannot use instruction names for identifier names."
-	BOOST_CHECK(!successAssemble("{ let gas := 1 }"));
+	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use instruction names for identifier names.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 {
-	// Error message: "Identifier expected, got instruction name."
-	BOOST_CHECK(!successAssemble("{ 2 =: gas }"));
+	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got instruction name.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 {
-	// Error message: "Cannot use instruction names for identifier names."
-	BOOST_CHECK(!successAssemble("{ gas := 2 }"));
+	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Label name / variable name must precede \":\"");
 }
+
+BOOST_AUTO_TEST_CASE(revert)
+{
+	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 

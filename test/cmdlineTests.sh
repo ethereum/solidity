@@ -31,7 +31,7 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 SOLC="$REPO_ROOT/build/solc/solc"
 
- # Compile all files in std and examples.
+# Compile all files in std and examples.
 
 for f in "$REPO_ROOT"/std/*.sol
 do
@@ -46,6 +46,38 @@ do
     test -z "$output" -a "$failed" -eq 0
 done
 
-# Test library checksum
-echo 'contact C {}' | "$SOLC" --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222
-! echo 'contract C {}' | "$SOLC" --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 2>/dev/null
+echo "Testing library checksum..."
+echo '' | "$SOLC" --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222
+! echo '' | "$SOLC" --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 2>/dev/null
+
+echo "Testing long library names..."
+echo '' | "$SOLC" --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222
+
+echo "Testing overwriting files"
+TMPDIR=$(mktemp -d)
+(
+    set -e
+    # First time it works
+    echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    # Second time it fails
+    ! echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    # Unless we force
+    echo 'contract C {} ' | "$SOLC" --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+)
+rm -rf "$TMPDIR"
+
+echo "Testing soljson via the fuzzer..."
+TMPDIR=$(mktemp -d)
+(
+    set -e
+    cd "$REPO_ROOT"
+    REPO_ROOT=$(pwd) # make it absolute
+    cd "$TMPDIR"
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/contracts/* "$REPO_ROOT"/test/libsolidity/*EndToEnd*
+    for f in *.sol
+    do
+        "$REPO_ROOT"/build/test/solfuzzer < "$f"
+    done
+)
+rm -rf "$TMPDIR"
+echo "Done."

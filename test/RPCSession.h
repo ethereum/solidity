@@ -28,14 +28,16 @@
 #include <sys/un.h>
 #endif
 
+#include <json/value.h>
+
+#include <boost/noncopyable.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include <string>
 #include <stdio.h>
 #include <map>
-#include <json/value.h>
-#include <boost/test/unit_test.hpp>
 
 #if defined(_WIN32)
-const int c_buffsize = 5120000; //because windows pipe is broken and wont work as in examples. use larger buffer limit to receive whole package in one call
 class IPCSocket : public boost::noncopyable
 {
 public:
@@ -47,7 +49,8 @@ public:
 
 private:
 	std::string m_path;
-	HANDLE  m_socket;
+	HANDLE m_socket;
+	TCHAR m_readBuf[512000];
 };
 #else
 class IPCSocket: public boost::noncopyable
@@ -55,14 +58,18 @@ class IPCSocket: public boost::noncopyable
 public:
 	IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { close(m_socket); fclose(m_fp); }
+	~IPCSocket() { close(m_socket); }
 
 	std::string const& path() const { return m_path; }
 
 private:
-	FILE *m_fp;
+
 	std::string m_path;
 	int m_socket;
+	/// Socket read timeout in milliseconds. Needs to be large because the key generation routine
+	/// might take long.
+	unsigned static constexpr m_readTimeOutMS = 15000;
+	char m_readBuf[512000];
 };
 #endif
 
@@ -92,11 +99,13 @@ public:
 		std::string gasUsed;
 		std::string contractAddress;
 		std::vector<LogEntry> logEntries;
+		std::string blockNumber;
 	};
 
 	static RPCSession& instance(std::string const& _path);
 
 	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
+	Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_call(TransactionData const& _td, std::string const& _blockNumber);
 	TransactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
 	std::string eth_sendTransaction(TransactionData const& _transactionData);
@@ -124,7 +133,8 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_sleepTime = 10;
+	unsigned m_maxMiningTime = 15000; // 15 seconds
+	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 
 	std::vector<std::string> m_accounts;

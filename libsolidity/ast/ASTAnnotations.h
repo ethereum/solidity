@@ -80,8 +80,6 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 {
 	/// Whether all functions are implemented.
 	bool isFullyImplemented = true;
-	/// Whether a public constructor (even the default one) is available.
-	bool hasPublicConstructor = true;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
@@ -158,6 +156,8 @@ struct ExpressionAnnotation: ASTAnnotation
 	TypePointer type;
 	/// Whether the expression is a constant variable
 	bool isConstant = false;
+	/// Whether the expression is pure, i.e. compile-time constant.
+	bool isPure = false;
 	/// Whether it is an LValue (i.e. something that can be assigned to).
 	bool isLValue = false;
 	/// Whether the expression is used in a context where the LValue is actually required.

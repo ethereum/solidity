@@ -79,11 +79,13 @@ Block and Transaction Properties
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
 
-.. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, revert, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
 Mathematical and Cryptographic Functions
 ----------------------------------------
 
+``assert(bool condition)``:
+    throws if the condition is not met.
 ``addmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
@@ -98,6 +100,8 @@ Mathematical and Cryptographic Functions
     compute RIPEMD-160 hash of the (tightly packed) arguments
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
+``revert()``:
+    abort execution and revert state changes
 
 In the above, "tightly packed" means that the arguments are concatenated without padding.
 This means that the following are all identical::
@@ -126,6 +130,8 @@ Address Related
     balance of the :ref:`address` in Wei
 ``<address>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to :ref:`address`, returns ``false`` on failure
+``<address>.transfer(uint256 amount)``:
+    send given amount of Wei to :ref:`address`, throws on failure
 
 For more information, see the section on :ref:`address`.
 

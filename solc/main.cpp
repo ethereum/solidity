@@ -58,15 +58,16 @@ int main(int argc, char** argv)
 		return 1;
 	if (!cli.processInput())
 		return 1;
+	bool success = false;
 	try
 	{
-		cli.actOnInput();
+		success = cli.actOnInput();
 	}
 	catch (boost::exception const& _exception)
 	{
 		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
-		return 1;
+		success = false;
 	}
 
-	return 0;
+	return success ? 0 : 1;
 }

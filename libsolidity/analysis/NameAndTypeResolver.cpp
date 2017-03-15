@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/Exceptions.h>
@@ -34,8 +35,10 @@ namespace solidity
 
 NameAndTypeResolver::NameAndTypeResolver(
 	vector<Declaration const*> const& _globals,
+	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ErrorList& _errors
 ) :
+	m_scopes(_scopes),
 	m_errors(_errors)
 {
 	if (!m_scopes[nullptr])
@@ -44,18 +47,12 @@ NameAndTypeResolver::NameAndTypeResolver(
 		m_scopes[nullptr]->registerDeclaration(*declaration);
 }
 
-bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
+bool NameAndTypeResolver::registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope)
 {
-	if (!m_scopes[&_sourceUnit])
-		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
-	m_currentScope = m_scopes[&_sourceUnit].get();
-
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
-		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
-		_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
+		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors, _currentScope);
 	}
 	catch (FatalError const&)
 	{
@@ -132,68 +129,11 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 	return !error;
 }
 
-bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
+bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode)
 {
 	try
 	{
-		m_currentScope = m_scopes[_contract.scope()].get();
-		solAssert(!!m_currentScope, "");
-
-		ReferencesResolver resolver(m_errors, *this, nullptr);
-		bool success = true;
-		for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.baseContracts())
-			if (!resolver.resolve(*baseContract))
-				success = false;
-
-		m_currentScope = m_scopes[&_contract].get();
-
-		if (success)
-		{
-			linearizeBaseContracts(_contract);
-			vector<ContractDefinition const*> properBases(
-				++_contract.annotation().linearizedBaseContracts.begin(),
-				_contract.annotation().linearizedBaseContracts.end()
-			);
-
-			for (ContractDefinition const* base: properBases)
-				importInheritedScope(*base);
-		}
-
-		// these can contain code, only resolve parameters for now
-		for (ASTPointer<ASTNode> const& node: _contract.subNodes())
-		{
-			m_currentScope = m_scopes[m_scopes.count(node.get()) ? node.get() : &_contract].get();
-			if (!resolver.resolve(*node))
-				success = false;
-		}
-
-		if (!success)
-			return false;
-
-		m_currentScope = m_scopes[&_contract].get();
-
-		// now resolve references inside the code
-		for (ModifierDefinition const* modifier: _contract.functionModifiers())
-		{
-			m_currentScope = m_scopes[modifier].get();
-			ReferencesResolver resolver(m_errors, *this, nullptr, true);
-			if (!resolver.resolve(*modifier))
-				success = false;
-		}
-
-		for (FunctionDefinition const* function: _contract.definedFunctions())
-		{
-			m_currentScope = m_scopes[function].get();
-			if (!ReferencesResolver(
-				m_errors,
-				*this,
-				function->returnParameterList().get(),
-				true
-			).resolve(*function))
-				success = false;
-		}
-		if (!success)
-			return false;
+		return resolveNamesAndTypesInternal(_node, _resolveInsideCode);
 	}
 	catch (FatalError const&)
 	{
@@ -201,7 +141,6 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			throw; // Something is weird here, rather throw again.
 		return false;
 	}
-	return true;
 }
 
 bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
@@ -257,21 +196,25 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 	solAssert(_declarations.size() > 1, "");
 	vector<Declaration const*> uniqueFunctions;
 
-	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
+	for (Declaration const* declaration: _declarations)
 	{
-		solAssert(*it, "");
+		solAssert(declaration, "");
 		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
-		solAssert(dynamic_cast<FunctionDefinition const*>(*it) || dynamic_cast<EventDefinition const*>(*it) || dynamic_cast<VariableDeclaration const*>(*it),
-			"Found overloading involving something not a function or a variable");
+		solAssert(
+			dynamic_cast<FunctionDefinition const*>(declaration) ||
+			dynamic_cast<EventDefinition const*>(declaration) ||
+			dynamic_cast<VariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function or a variable."
+		);
 
-		shared_ptr<FunctionType const> functionType { (*it)->functionType(false) };
+		FunctionTypePointer functionType { declaration->functionType(false) };
 		if (!functionType)
-			functionType = (*it)->functionType(true);
-		solAssert(functionType, "failed to determine the function type of the overloaded");
+			functionType = declaration->functionType(true);
+		solAssert(functionType, "Failed to determine the function type of the overloaded.");
 
 		for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
 			if (!parameter)
-				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context");
+				reportFatalDeclarationError(_identifier.location(), "Function type can not be used in this context.");
 
 		if (uniqueFunctions.end() == find_if(
 			uniqueFunctions.begin(),
@@ -284,9 +227,71 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
 			}
 		))
-			uniqueFunctions.push_back(*it);
+			uniqueFunctions.push_back(declaration);
 	}
 	return uniqueFunctions;
+}
+
+bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode)
+{
+	if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(&_node))
+	{
+		bool success = true;
+		m_currentScope = m_scopes[contract->scope()].get();
+		solAssert(!!m_currentScope, "");
+
+		for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
+			if (!resolveNamesAndTypes(*baseContract, true))
+				success = false;
+
+		m_currentScope = m_scopes[contract].get();
+
+		if (success)
+		{
+			linearizeBaseContracts(*contract);
+			vector<ContractDefinition const*> properBases(
+				++contract->annotation().linearizedBaseContracts.begin(),
+				contract->annotation().linearizedBaseContracts.end()
+			);
+
+			for (ContractDefinition const* base: properBases)
+				importInheritedScope(*base);
+		}
+
+		// these can contain code, only resolve parameters for now
+		for (ASTPointer<ASTNode> const& node: contract->subNodes())
+		{
+			m_currentScope = m_scopes[contract].get();
+			if (!resolveNamesAndTypes(*node, false))
+			{
+				success = false;
+				break;
+			}
+		}
+
+		if (!success)
+			return false;
+
+		if (!_resolveInsideCode)
+			return success;
+
+		m_currentScope = m_scopes[contract].get();
+
+		// now resolve references inside the code
+		for (ASTPointer<ASTNode> const& node: contract->subNodes())
+		{
+			m_currentScope = m_scopes[contract].get();
+			if (!resolveNamesAndTypes(*node, true))
+				success = false;
+		}
+		return success;
+	}
+	else
+	{
+		if (m_scopes.count(&_node))
+			m_currentScope = m_scopes[&_node].get();
+		return ReferencesResolver(m_errors, *this, _resolveInsideCode).resolve(_node);
+	}
 }
 
 void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
@@ -459,14 +464,30 @@ void NameAndTypeResolver::reportFatalTypeError(Error const& _e)
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
-	ErrorList& _errors
+	ErrorList& _errors,
+	ASTNode const* _currentScope
 ):
 	m_scopes(_scopes),
-	m_currentScope(&_astRoot),
+	m_currentScope(_currentScope),
 	m_errors(_errors)
 {
-	solAssert(!!m_scopes.at(m_currentScope), "");
 	_astRoot.accept(*this);
+	solAssert(m_currentScope == _currentScope, "Scopes not correctly closed.");
+}
+
+bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
+{
+	if (!m_scopes[&_sourceUnit])
+		// By importing, it is possible that the container already exists.
+		m_scopes[&_sourceUnit].reset(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
+	m_currentScope = &_sourceUnit;
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(SourceUnit& _sourceUnit)
+{
+	_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
+	closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
@@ -587,12 +608,13 @@ void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declara
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	solAssert(m_currentScope, "Closed non-existing scope.");
+	solAssert(m_currentScope && m_scopes.count(m_currentScope), "Closed non-existing scope.");
 	m_currentScope = m_scopes[m_currentScope]->enclosingNode();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
+	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
 	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
 	{
 		SourceLocation firstDeclarationLocation;

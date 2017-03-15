@@ -42,7 +42,7 @@ class StackHeightChecker
 public:
 	StackHeightChecker(CompilerContext const& _context):
 		m_context(_context), stackHeight(m_context.stackHeight()) {}
-	void check() { solAssert(m_context.stackHeight() == stackHeight, "I sense a disturbance in the stack."); }
+	void check() { solAssert(m_context.stackHeight() == stackHeight, std::string("I sense a disturbance in the stack: ") + std::to_string(m_context.stackHeight()) + " vs " + std::to_string(stackHeight)); }
 private:
 	CompilerContext const& m_context;
 	unsigned stackHeight;
@@ -762,7 +762,9 @@ bool ContractCompiler::visit(Return const& _return)
 bool ContractCompiler::visit(Throw const& _throw)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _throw);
-	m_context.appendJumpTo(m_context.errorTag());
+	// Do not send back an error detail.
+	m_context << u256(0) << u256(0);
+	m_context << Instruction::REVERT;
 	return false;
 }
 

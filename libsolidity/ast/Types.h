@@ -411,8 +411,14 @@ public:
 	/// @returns true if the value is not an integer.
 	bool isFractional() const { return m_value.denominator() != 1; }
 
+	/// @returns true if the value is negative.
+	bool isNegative() const { return m_value < 0; }
+
 private:
 	rational m_value;
+
+	/// @returns true if the literal is a valid rational number.
+	static std::tuple<bool, rational> parseRational(std::string const& _value);
 };
 
 /**
@@ -816,15 +822,17 @@ public:
 	{
 		Internal, ///< stack-call using plain JUMP
 		External, ///< external call using CALL
-		CallCode, ///< extercnal call using CALLCODE, i.e. not exchanging the storage
-		DelegateCall, ///< extercnal call using DELEGATECALL, i.e. not exchanging the storage
+		CallCode, ///< external call using CALLCODE, i.e. not exchanging the storage
+		DelegateCall, ///< external call using DELEGATECALL, i.e. not exchanging the storage
 		Bare, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
 		BareDelegateCall, ///< DELEGATECALL without function hash
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
+		Transfer, ///< CALL, but without data and throws on error
 		SHA3, ///< SHA3
 		Selfdestruct, ///< SELFDESTRUCT
+		Revert, ///< REVERT
 		ECRecover, ///< CALL to special contract for ecrecover
 		SHA256, ///< CALL to special contract for sha256
 		RIPEMD160, ///< CALL to special contract for ripemd160
@@ -841,7 +849,9 @@ public:
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
-		ObjectCreation ///< array creation using new
+		ObjectCreation, ///< array creation using new
+		Assert, ///< assert()
+		Require ///< require()
 	};
 
 	virtual Category category() const override { return Category::Function; }
@@ -922,6 +932,7 @@ public:
 
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
 	virtual std::string toString(bool _short) const override;
@@ -965,6 +976,10 @@ public:
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
 	bool isConstant() const { return m_isConstant; }
+	/// @returns true if the the result of this function only depends on its arguments
+	/// and it does not modify the state.
+	/// Currently, this will only return true for internal functions like keccak and ecrecover.
+	bool isPure() const;
 	bool isPayable() const { return m_isPayable; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation

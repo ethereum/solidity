@@ -1,3 +1,34 @@
+### 0.4.10 (2017-03-15)
+
+Features:
+ * Add ``assert(condition)``, which throws if condition is false (meant for internal errors).
+ * Add ``require(condition)``, which throws if condition is false (meant for invalid input).
+ * Commandline interface: Do not overwrite files unless forced.
+ * Introduce ``.transfer(value)`` for sending Ether.
+ * Code generator: Support ``revert()`` to abort with rolling back, but not consuming all gas.
+ * Inline assembly: Support ``revert`` (EIP140) as an opcode.
+ * Parser: Support scientific notation in numbers (e.g. ``2e8`` and ``200e-2``).
+ * Type system: Support explicit conversion of external function to address.
+ * Type system: Warn if base of exponentiation is literal (result type might be unexpected).
+ * Type system: Warn if constant state variables are not compile-time constants.
+
+Bugfixes:
+ * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
+ * Commandline interface: Do not try creating paths ``.`` and ``..``.
+ * Commandline interface: Allow long library names.
+ * Parser: Disallow octal literals.
+ * Type system: Fix a crash caused by continuing on fatal errors in the code.
+ * Type system: Disallow compound assignment for tuples.
+ * Type system: Detect cyclic dependencies between constants.
+ * Type system: Disallow arrays with negative length.
+ * Type system: Fix a crash related to invalid binary operators.
+ * Type system: Disallow ``var`` declaration with empty tuple type.
+ * Type system: Correctly convert function argument types to pointers for member functions.
+ * Type system: Move privateness of constructor into AST itself.
+ * Inline assembly: Charge one stack slot for non-value types during analysis.
+ * Assembly output: Print source location before the operation it refers to instead of after.
+ * Optimizer: Stop trying to optimize tricky constants after a while.
+
 ### 0.4.9 (2017-01-31)
 
 Features:

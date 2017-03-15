@@ -81,7 +81,7 @@ This is as opposed to the more intuitive sending pattern:
             mostSent = msg.value;
         }
 
-        function becomeRichest() returns (bool) {
+        function becomeRichest() payable returns (bool) {
             if (msg.value > mostSent) {
                 // Check if call succeeds to prevent an attacker
                 // from trapping the previous person's funds in

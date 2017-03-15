@@ -159,8 +159,9 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{ "CALLCODE", Instruction::CALLCODE },
 	{ "RETURN", Instruction::RETURN },
 	{ "DELEGATECALL", Instruction::DELEGATECALL },
+	{ "REVERT", Instruction::REVERT },
 	{ "INVALID", Instruction::INVALID },
-	{ "SUICIDE", Instruction::SUICIDE }
+	{ "SELFDESTRUCT", Instruction::SELFDESTRUCT }
 };
 
 static const std::map<Instruction, InstructionInfo> c_instructionInfo =
@@ -293,9 +294,10 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::CALL,		{ "CALL",			0, 7, 1, true, Tier::Special } },
 	{ Instruction::CALLCODE,	{ "CALLCODE",		0, 7, 1, true, Tier::Special } },
 	{ Instruction::RETURN,		{ "RETURN",			0, 2, 0, true, Tier::Zero } },
-	{ Instruction::DELEGATECALL,{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
+	{ Instruction::DELEGATECALL,	{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
+	{ Instruction::REVERT,          { "REVERT",             0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },
-	{ Instruction::SUICIDE,		{ "SUICIDE",		0, 1, 0, true, Tier::Zero } }
+	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Zero } }
 };
 
 void dev::solidity::eachInstruction(

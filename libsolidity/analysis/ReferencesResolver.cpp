@@ -35,14 +35,7 @@ using namespace dev::solidity;
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
-	try
-	{
-		_root.accept(*this);
-	}
-	catch (FatalError const&)
-	{
-		solAssert(m_errorOccurred, "");
-	}
+	_root.accept(*this);
 	return !m_errorOccurred;
 }
 
@@ -63,6 +56,30 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
 	_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
 	return true;
+}
+
+bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
+{
+	m_returnParameters.push_back(_functionDefinition.returnParameterList().get());
+	return true;
+}
+
+void ReferencesResolver::endVisit(FunctionDefinition const&)
+{
+	solAssert(!m_returnParameters.empty(), "");
+	m_returnParameters.pop_back();
+}
+
+bool ReferencesResolver::visit(ModifierDefinition const&)
+{
+	m_returnParameters.push_back(nullptr);
+	return true;
+}
+
+void ReferencesResolver::endVisit(ModifierDefinition const&)
+{
+	solAssert(!m_returnParameters.empty(), "");
+	m_returnParameters.pop_back();
 }
 
 void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
@@ -130,6 +147,8 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
 		if (!lengthType || lengthType->isFractional())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
+		else if (lengthType->isNegative())
+			fatalTypeError(length->location(), "Array with negative length specified.");
 		else
 			_typeName.annotation().type = make_shared<ArrayType>(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 	}
@@ -159,7 +178,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 bool ReferencesResolver::visit(Return const& _return)
 {
-	_return.annotation().functionReturnParameters = m_returnParameters;
+	solAssert(!m_returnParameters.empty(), "");
+	_return.annotation().functionReturnParameters = m_returnParameters.back();
 	return true;
 }
 

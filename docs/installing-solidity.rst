@@ -25,24 +25,25 @@ without connection to the Internet, you can go to
 https://github.com/ethereum/browser-solidity/tree/gh-pages and
 download the .ZIP file as explained on that page.
 
-
 npm / Node.js
 =============
 
 This is probably the most portable and most convenient way to install Solidity locally.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten for browser-solidity and there is also an npm
-package available.
+into JavaScript using Emscripten. It can be used in projects directly (such as Browser-Solidity).
+Please refer to the `solc-js <https://github.com/ethereum/solc-js>`_ repository for instructions.
 
-To install it, simply use
+It also contains a commandline tool called `solcjs`, which can be installed via npm:
 
 .. code:: bash
 
-    npm install solc
+    npm install -g solc
 
-Details about the usage of the Node.js package can be found in the
-`solc-js repository <https://github.com/ethereum/solc-js>`_.
+.. note::
+
+    The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
+    expecting the behaviour of `solc` will not work with `solcjs`.
 
 Docker
 ======
@@ -82,6 +83,12 @@ If you want to use the cutting edge developer version:
     sudo apt-get update
     sudo apt-get install solc
 
+Arch Linux also has packages, albeit limited to the latest development version:
+
+.. code:: bash
+
+    pacman -S solidity-git
+
 Homebrew is missing pre-built bottles at the time of writing,
 following a Jenkins to TravisCI migration, but Homebrew
 should still work just fine as a means to build-from-source.
@@ -95,6 +102,22 @@ We will re-add the pre-built bottles soon.
     brew install solidity
     brew linkapps solidity
 
+If you need a specific version of Solidity you can install a 
+Homebrew formula directly from Github.
+
+View 
+`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
+
+Follow the history links until you have a raw file link of a 
+specific commit of ``solidity.rb``.
+
+Install it using ``brew``:
+
+.. code:: bash
+
+    brew unlink solidity
+    # Install 0.4.8
+    brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
 .. _building-from-source:
 
@@ -197,7 +220,14 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
     cd build
     cmake .. && make
 
-And even on Windows:
+or even easier:
+
+.. code:: bash
+    
+    #note: this will install binaries solc and soltest at usr/local/bin
+    ./scripts/build.sh
+
+And even for Windows:
 
 .. code:: bash
 

@@ -109,8 +109,7 @@ that does not allow any arithmetic operations. It is suitable for
 storing addresses of contracts or keypairs belonging to external
 persons. The keyword ``public`` automatically generates a function that
 allows you to access the current value of the state variable.
-Without this keyword, other contracts have no way to access the variable
-and only the code of this contract can write to it.
+Without this keyword, other contracts have no way to access the variable.
 The function will look something like this::
 
     function minter() returns (address) { return minter; }
@@ -132,7 +131,7 @@ too far, though, as it is neither possible to obtain a list of all keys of
 a mapping, nor a list of all values. So either keep in mind (or
 better, keep a list or use a more advanced data type) what you
 added to the mapping or use it in a context where this is not needed,
-like this one. The accessor function created by the ``public`` keyword
+like this one. The getter function created by the ``public`` keyword
 is a bit more complex in this case. It roughly looks like the
 following::
 

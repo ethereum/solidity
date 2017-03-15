@@ -28,7 +28,7 @@ State variables are values which are permanently stored in contract storage.
   }
 
 See the :ref:`types` section for valid state variable types and
-:ref:`visibility-and-accessors` for possible choices for
+:ref:`visibility-and-getters` for possible choices for
 visibility.
 
 .. _structure-functions:
@@ -49,7 +49,7 @@ Functions are the executable units of code within a contract.
   }
 
 :ref:`function-calls` can happen internally or externally
-and have different levels of visibility (:ref:`visibility-and-accessors`)
+and have different levels of visibility (:ref:`visibility-and-getters`)
 towards other contracts.
 
 .. _structure-function-modifiers:

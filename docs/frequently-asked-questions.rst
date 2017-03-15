@@ -641,7 +641,7 @@ Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic 
 If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
 ===========================================================================================================================
 
-The automatic accessor function for a public state variable of array type only returns
+The automatic getter function for a public state variable of array type only returns
 individual elements. If you want to return the complete array, you have to
 manually write a function to do that.
 
@@ -659,16 +659,6 @@ https://github.com/ethereum/wiki/wiki/Subtleties
 
 After a successful CREATE operation's sub-execution, if the operation returns x, 5 * len(x) gas is subtracted from the remaining gas before the contract is created. If the remaining gas is less than 5 * len(x), then no gas is subtracted, the code of the created contract becomes the empty string, but this is not treated as an exceptional condition - no reverts happen.
 
-
-How do I use ``.send()``?
-=========================
-
-If you want to send 20 Ether from a contract to the address ``x``, you use ``x.send(20 ether);``.
-Here, ``x`` can be a plain address or a contract. If the contract already explicitly defines
-a function ``send`` (and thus overwrites the special function), you can use ``address(x).send(20 ether);``.
-
-Note that the call to ``send`` may fail in certain conditions, such as if you have insufficient funds, so you should always check the return value.
-``send`` returns ``true`` if the send was successful and ``false`` otherwise.
 
 What does the following strange check do in the Custom Token contract?
 ======================================================================

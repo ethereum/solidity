@@ -130,8 +130,8 @@ public:
 		if (!_item.location().isEmpty() && _item.location() != m_location)
 		{
 			flush();
-			printLocation();
 			m_location = _item.location();
+			printLocation();
 		}
 		if (!(
 			_item.canBeFunctional() &&

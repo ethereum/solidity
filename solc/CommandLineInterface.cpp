@@ -93,6 +93,7 @@ static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOutputDir = "output-dir";
+static string const g_strOverwrite = "overwrite";
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
@@ -200,7 +201,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argCloneBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
 		else
 		{
 			cout << "Clone Binary: " << endl;
@@ -210,7 +211,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
@@ -222,7 +223,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		cout << "Opcodes: " << endl;
@@ -249,7 +250,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".signatures", out);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
 		cout << "Function signatures: " << endl << out;
 }
@@ -261,7 +262,7 @@ void CommandLineInterface::handleOnChainMetadata(string const& _contract)
 
 	string data = m_compiler->onChainMetadata(_contract);
 	if (m_args.count("output-dir"))
-		createFile(_contract + "_meta.json", data);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
 		cout << "Metadata: " << endl << data << endl;
 }
@@ -302,7 +303,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 			output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
 
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + suffix, output);
+			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
 		else
 		{
 			cout << title << endl;
@@ -419,7 +420,16 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
-	string data = fs::is_regular_file(_input) ? contentsString(_input) : _input;
+	string data = _input;
+	try
+	{
+		if (fs::is_regular_file(_input))
+			data = contentsString(_input);
+	}
+	catch (fs::filesystem_error const&)
+	{
+		// Thrown e.g. if path is too long.
+	}
 
 	vector<string> libraries;
 	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
@@ -461,8 +471,16 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	namespace fs = boost::filesystem;
 	// create directory if not existent
 	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	fs::create_directories(p);
+	// Do not try creating the directory if the first item is . or ..
+	if (p.filename() != "." && p.filename() != "..")
+		fs::create_directories(p);
 	string pathName = (p / _fileName).string();
+	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
+	{
+		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
+		m_error = true;
+		return;
+	}
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
@@ -508,6 +526,7 @@ Allowed options)",
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
 		)
+		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
 		(
 			g_argCombinedJson.c_str(),
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
@@ -856,7 +875,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	}
 }
 
-void CommandLineInterface::actOnInput()
+bool CommandLineInterface::actOnInput()
 {
 	if (m_onlyAssemble)
 		outputAssembly();
@@ -864,6 +883,7 @@ void CommandLineInterface::actOnInput()
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
+	return !m_error;
 }
 
 bool CommandLineInterface::link()
@@ -981,7 +1001,7 @@ void CommandLineInterface::outputCompilationResults()
 			{
 				stringstream data;
 				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJson));
-				createFile(contract + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
+				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
 			}
 			else
 			{
