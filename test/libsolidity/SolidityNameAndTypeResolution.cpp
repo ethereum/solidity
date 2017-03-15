@@ -4420,7 +4420,7 @@ BOOST_AUTO_TEST_CASE(unused_return_value_send)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Return value of low-level calls not used");
+	CHECK_WARNING(text, "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_call)
