@@ -1,4 +1,4 @@
-### 0.4.10 (unreleased)
+### 0.4.10 (2017-03-15)
 
 Features:
  * Add ``assert(condition)``, which throws if condition is false (meant for internal errors).
@@ -10,6 +10,7 @@ Features:
  * Parser: Support scientific notation in numbers (e.g. ``2e8`` and ``200e-2``).
  * Type system: Support explicit conversion of external function to address.
  * Type system: Warn if base of exponentiation is literal (result type might be unexpected).
+ * Type system: Warn if constant state variables are not compile-time constants.
 
 Bugfixes:
  * Commandline interface: Always escape filenames (replace ``/``, ``:`` and ``.`` with ``_``).
@@ -21,7 +22,6 @@ Bugfixes:
  * Type system: Detect cyclic dependencies between constants.
  * Type system: Disallow arrays with negative length.
  * Type system: Fix a crash related to invalid binary operators.
- * Type system: Warn if constant state variables are not compile-time constants.
  * Type system: Disallow ``var`` declaration with empty tuple type.
  * Type system: Correctly convert function argument types to pointers for member functions.
  * Type system: Move privateness of constructor into AST itself.
