@@ -572,6 +572,49 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	return commonType;
 }
 
+tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
+{
+	rational value;
+	try
+	{
+		auto radixPoint = find(_value.begin(), _value.end(), '.');
+
+		if (radixPoint != _value.end())
+		{
+			if (
+				!all_of(radixPoint + 1, _value.end(), ::isdigit) ||
+				!all_of(_value.begin(), radixPoint, ::isdigit)
+			)
+				return make_tuple(false, rational(0));
+
+			// Only decimal notation allowed here, leading zeros would switch to octal.
+			auto fractionalBegin = find_if_not(
+				radixPoint + 1,
+				_value.end(),
+				[](char const& a) { return a == '0'; }
+			);
+
+			rational numerator;
+			rational denominator(1);
+
+			denominator = bigint(string(fractionalBegin, _value.end()));
+			denominator /= boost::multiprecision::pow(
+				bigint(10),
+				distance(radixPoint + 1, _value.end())
+			);
+			numerator = bigint(string(_value.begin(), radixPoint));
+			value = numerator + denominator;
+		}
+		else
+			value = bigint(_value);
+		return make_tuple(true, value);
+	}
+	catch (...)
+	{
+		return make_tuple(false, rational(0));
+	}
+}
+
 tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
 {
 	rational value;
@@ -580,7 +623,6 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
 		if (expPoint == _literal.value().end())
 			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
-		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
 
 		if (boost::starts_with(_literal.value(), "0x"))
 		{
@@ -589,17 +631,17 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		}
 		else if (expPoint != _literal.value().end())
 		{
-			if (
-				!all_of(_literal.value().begin(), expPoint, ::isdigit)
-			)
-				return make_tuple(false, rational(0));
-
+			// parse the exponent
 			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
 
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
 
-			value = bigint(string(_literal.value().begin(), expPoint));
+			// parse the base
+			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
+			if (!get<0>(base))
+				return make_tuple(false, rational(0));
+			value = get<1>(base);
 
 			if (exp < 0)
 			{
@@ -615,33 +657,14 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 					exp.convert_to<int32_t>()
 				);
 		}
-		else if (radixPoint != _literal.value().end())
-		{
-			if (
-				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
-				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
-			)
-				return make_tuple(false, rational(0));
-			//Only decimal notation allowed here, leading zeros would switch to octal.
-			auto fractionalBegin = find_if_not(
-				radixPoint + 1, 
-				_literal.value().end(), 
-				[](char const& a) { return a == '0'; }
-			);
-
-			rational numerator;
-			rational denominator(1);
-
-			denominator = bigint(string(fractionalBegin, _literal.value().end()));
-			denominator /= boost::multiprecision::pow(
-				bigint(10), 
-				distance(radixPoint + 1, _literal.value().end())
-			);
-			numerator = bigint(string(_literal.value().begin(), radixPoint));
-			value = numerator + denominator;
-		}
 		else
-			value = bigint(_literal.value());
+		{
+			// parse as rational number
+			tuple<bool, rational> tmp = parseRational(_literal.value());
+			if (!get<0>(tmp))
+				return tmp;
+			value = get<1>(tmp);
+		}
 	}
 	catch (...)
 	{
