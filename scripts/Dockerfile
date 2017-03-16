@@ -14,3 +14,5 @@ make solc && install -s  solc/solc /usr/bin	&&\
 cd / && rm -rf solidity &&\
 apk del sed build-base git make cmake gcc g++ musl-dev curl-dev boost-dev &&\
 rm -rf /var/cache/apk/*
+
+ENTRYPOINT ["/usr/bin/solc"]
