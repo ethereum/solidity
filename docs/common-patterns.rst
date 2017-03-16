@@ -23,7 +23,7 @@ contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
 
 In the following contract, if you are usurped as the richest,
-you will recieve the funds of the person who has gone on to
+you will receive the funds of the person who has gone on to
 become the new richest.
 
 ::
