@@ -280,4 +280,4 @@ Example:
 3. a breaking change is introduced - version is bumped to 0.5.0
 4. the 0.5.0 release is made
 
-This behaviour works well with the version pragma.
+This behaviour works well with the  :ref:`version pragma <version_pragma>`.

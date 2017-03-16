@@ -7,6 +7,8 @@ and pragma directives.
 
 .. index:: ! pragma, version
 
+.. _version_pragma:
+
 Version Pragma
 ==============
 
