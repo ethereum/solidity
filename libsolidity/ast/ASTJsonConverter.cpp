@@ -204,12 +204,11 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("constant", _node.isConstant()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
 		make_pair("visibility", visibility(_node.visibility()))
-        };
+	};
 	if (m_inEvent)
 		attributes.push_back(make_pair("indexed", _node.isIndexed()));
 	addJsonNode(_node, "VariableDeclaration", attributes, true);
 	return true;
-
 }
 
 bool ASTJsonConverter::visit(ModifierDefinition const& _node)
@@ -231,7 +230,7 @@ bool ASTJsonConverter::visit(TypeName const&)
 
 bool ASTJsonConverter::visit(EventDefinition const& _node)
 {
-	m_inEvent = true; //flag for adding isIndexed to variable declarations
+	m_inEvent = true;
 	addJsonNode(_node, "EventDefinition", { make_pair("name", _node.name()) }, true);
 	return true;
 }
