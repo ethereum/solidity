@@ -135,7 +135,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 	else if (
 		_type.category() == Type::Category::Function &&
-		dynamic_cast<FunctionType const&>(_type).location() == FunctionType::Location::External
+		dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External
 	)
 	{
 		solUnimplementedAssert(_padToWordBoundaries, "Non-padded store for function not implemented.");
@@ -795,7 +795,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			IntegerType const& targetType = dynamic_cast<IntegerType const&>(_targetType);
 			solAssert(targetType.isAddress(), "Function type can only be converted to address.");
 			FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
-			solAssert(typeOnStack.location() == FunctionType::Location::External, "Only external function type can be converted.");
+			solAssert(typeOnStack.kind() == FunctionType::Kind::External, "Only external function type can be converted.");
 
 			// stack: <address> <function_id>
 			m_context << Instruction::POP;
@@ -820,7 +820,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 {
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 	{
-		if (funType->location() == FunctionType::Location::Internal)
+		if (funType->kind() == FunctionType::Kind::Internal)
 		{
 			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
 				_context.appendInvalid();
@@ -983,7 +983,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool isExternalFunctionType = false;
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
-		if (funType->location() == FunctionType::Location::External)
+		if (funType->kind() == FunctionType::Kind::External)
 			isExternalFunctionType = true;
 	if (numBytes == 0)
 	{

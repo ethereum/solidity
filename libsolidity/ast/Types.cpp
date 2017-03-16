@@ -462,11 +462,11 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true, false, true)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true, false, true)},
-			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareDelegateCall, true)},
-			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)},
-			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Location::Transfer)}
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::Bare, true, false, true)},
+			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, false, true)},
+			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
+			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
+			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
 		};
 	else
 		return MemberList::MemberMap();
@@ -1466,7 +1466,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 				TypePointers{make_shared<IntegerType>(256)},
 				strings{string()},
 				strings{string()},
-				isByteArray() ? FunctionType::Location::ByteArrayPush : FunctionType::Location::ArrayPush
+				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			)});
 	}
 	return members;
@@ -1766,7 +1766,7 @@ FunctionTypePointer StructType::constructorType() const
 		TypePointers{copyForLocation(DataLocation::Memory, false)},
 		paramNames,
 		strings(),
-		FunctionType::Location::Internal
+		FunctionType::Kind::Internal
 	);
 }
 
@@ -2821,7 +2821,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		return MemberList::MemberMap({
 			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
-			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
+			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash)},
 			{"difficulty", make_shared<IntegerType>(256)},
 			{"number", make_shared<IntegerType>(256)},
 			{"gaslimit", make_shared<IntegerType>(256)}

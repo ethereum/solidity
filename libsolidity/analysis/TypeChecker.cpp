@@ -582,7 +582,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
-	if (fun.location() == FunctionType::Location::External)
+	if (fun.kind() == FunctionType::Kind::External)
 		if (!fun.canBeUsedExternally(false))
 			typeError(_funType.location(), "External function type uses internal types.");
 }
@@ -886,15 +886,14 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 	{
 		if (auto callType = dynamic_cast<FunctionType const*>(type(call->expression()).get()))
 		{
-			using Location = FunctionType::Location;
-			Location location = callType->location();
+			auto kind = callType->kind();
 			if (
-				location == Location::Bare ||
-				location == Location::BareCallCode ||
-				location == Location::BareDelegateCall
+				kind == FunctionType::Kind::Bare ||
+				kind == FunctionType::Kind::BareCallCode ||
+				kind == FunctionType::Kind::BareDelegateCall
 			)
 				warning(_statement.location(), "Return value of low-level calls not used.");
-			else if (location == Location::Send)
+			else if (kind == FunctionType::Kind::Send)
 				warning(_statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 		}
 	}
@@ -1387,7 +1386,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			TypePointers{type},
 			strings(),
 			strings(),
-			FunctionType::Location::ObjectCreation
+			FunctionType::Kind::ObjectCreation
 		);
 		_newExpression.annotation().isPure = true;
 	}
