@@ -1,5 +1,5 @@
-.commit_hash.txt
-.prerelease.txt
+commit_hash.txt
+prerelease.txt
 
 # Compiled Object files
 *.slo
