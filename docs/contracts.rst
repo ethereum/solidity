@@ -1101,7 +1101,7 @@ Restrictions for libraries in comparison to contracts:
 
 - No state variables
 - Cannot inherit nor be inherited
-- Cannot recieve Ether
+- Cannot receive Ether
 
 (These might be lifted at a later point.)
 
