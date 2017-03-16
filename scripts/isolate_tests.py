@@ -7,23 +7,27 @@
 # scripts/isolate_tests.py test/libsolidity/*
 
 import sys
+import re
 
 
 def extract_cases(path):
     lines = open(path).read().splitlines()
 
     inside = False
+    delimiter = ''
     tests = []
 
     for l in lines:
       if inside:
-        if l.strip().endswith(')";'):
+        if l.strip().endswith(')' + delimiter + '";'):
           inside = False
         else:
           tests[-1] += l + '\n'
       else:
-        if l.strip().endswith('R"('):
+        m = re.search(r'R"([^(]*)\($', l.strip())
+        if m:
           inside = True
+          delimiter = m.group(1)
           tests += ['']
 
     return tests
