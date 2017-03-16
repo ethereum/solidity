@@ -527,13 +527,13 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 				result = m_readFile(importPath);
 
 			if (result.success)
-				newSources[importPath] = result.contentsOrErrorMesage;
+				newSources[importPath] = result.contentsOrErrorMessage;
 			else
 			{
 				auto err = make_shared<Error>(Error::Type::ParserError);
 				*err <<
 					errinfo_sourceLocation(import->location()) <<
-					errinfo_comment("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMesage);
+					errinfo_comment("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage);
 				m_errors.push_back(std::move(err));
 				continue;
 			}

@@ -80,7 +80,7 @@ public:
 	struct ReadFileResult
 	{
 		bool success;
-		std::string contentsOrErrorMesage;
+		std::string contentsOrErrorMessage;
 	};
 
 	/// File reading callback.
