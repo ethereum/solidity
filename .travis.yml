@@ -176,7 +176,12 @@ install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test $SOLC_DOCKER != On || (docker build -t ethereum/solc:build -f scripts/Dockerfile .)
+    - test $SOLC_DOCKER != On || (
+        docker build -t ethereum/solc:build -f scripts/Dockerfile .
+        tmp_container=$(docker create brainbot-com/solidity-static sh)
+        mkdir -p upload
+        docker cp ${tmp_container}:/usr/local/bin/solc upload/
+      )
 
 before_script:
     - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
@@ -223,11 +228,8 @@ deploy:
 
       overwrite: true
       file_glob: true
-      file:
-          - $TRAVIS_BUILD_DIR/solidity*.zip
-          - $TRAVIS_BUILD_DIR/solidity*tar.gz
+      file: $TRAVIS_BUILD_DIR/upload/*
       skip_cleanup: true
       on:
           all_branches: true
           tags: true
-          condition: $SOLC_RELEASE == On
