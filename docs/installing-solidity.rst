@@ -250,6 +250,7 @@ The version string in detail
 ============================
 
 The Solidity version string contains four parts:
+
 - the version number
 - pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
 - commit in the format of ``commit.GITHASH``

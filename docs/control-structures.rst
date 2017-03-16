@@ -399,6 +399,7 @@ Currently, Solidity automatically generates a runtime exception in the following
 #. If you call ``assert`` with an argument that evaluates to false.
 
 While a user-provided exception is generated in the following situations:
+
 #. Calling ``throw``.
 #. Calling ``require`` with an argument that evaluates to ``false``.
 
