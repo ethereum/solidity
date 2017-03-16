@@ -127,8 +127,8 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
         function callFeed() { feed.info.value(10).gas(800)(); }
     }
 
-The modifier ``payable`` has to be used for ``info``, because otherwise,
-we would not be able to send Ether to it in the call ``feed.info.value(10).gas(800)()``.
+The modifier ``payable`` has to be used for ``info``, because otherwise, the `.value()`
+option would not be available.
 
 Note that the expression ``InfoFeed(addr)`` performs an explicit type conversion stating
 that "we know that the type of the contract at the given address is ``InfoFeed``" and
