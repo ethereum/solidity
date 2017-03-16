@@ -68,7 +68,7 @@ creator. Save it. Then ``selfdestruct(creator);`` to kill and return funds.
 
 Note that if you ``import "mortal"`` at the top of your contracts and declare
 ``contract SomeContract is mortal { ...`` and compile with a compiler that already
-has it (which includes `browser-solidity <https://ethereum.github.io/browser-solidity/>`_), then
+has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``kill()`` is taken care of for you. Once a contract is "mortal", then you can
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.

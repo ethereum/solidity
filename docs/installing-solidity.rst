@@ -15,11 +15,11 @@ are not guaranteed to be working and despite best efforts they might contain und
 and/or broken changes. We recommend using the latest release. Package installers below
 will use the latest release.
 
-Browser-Solidity
-================
+Remix
+=====
 
 If you just want to try Solidity for small contracts, you
-can try `browser-solidity <https://ethereum.github.io/browser-solidity>`_
+can try `Remix <https://remix.ethereum.org/>`_
 which does not need any installation. If you want to use it
 without connection to the Internet, you can go to
 https://github.com/ethereum/browser-solidity/tree/gh-pages and
@@ -31,7 +31,7 @@ npm / Node.js
 This is probably the most portable and most convenient way to install Solidity locally.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten. It can be used in projects directly (such as Browser-Solidity).
+into JavaScript using Emscripten. It can be used in projects directly (such as Remix).
 Please refer to the `solc-js <https://github.com/ethereum/solc-js>`_ repository for instructions.
 
 It also contains a commandline tool called `solcjs`, which can be installed via npm:

@@ -151,9 +151,9 @@ remapping ``=/``.
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
 
-**browser-solidity**:
+**Remix**:
 
-The `browser-based compiler <https://ethereum.github.io/browser-solidity>`_
+`Remix <https://remix.ethereum.org/>`_
 provides an automatic remapping for github and will also automatically retrieve
 the file over the network:
 You can import the iterable mapping by e.g.
