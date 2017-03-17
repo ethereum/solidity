@@ -176,7 +176,10 @@ enum class Instruction: uint8_t
 	CALLCODE,			///< message-call with another account's code only
 	RETURN,				///< halt execution returning output data
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
-	SUICIDE = 0xff		///< halt execution and register account for later deletion
+
+	REVERT = 0xfd,		///< halt execution, revert state and return output data
+	INVALID = 0xfe,		///< invalid instruction for expressing runtime errors (e.g., division-by-zero)
+	SELFDESTRUCT = 0xff	///< halt execution and register account for later deletion
 };
 
 /// @returns the number of PUSH Instruction _inst
@@ -200,42 +203,42 @@ inline unsigned getSwapNumber(Instruction _inst)
 /// @returns the PUSH<_number> instruction
 inline Instruction pushInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, "Invalid PUSH instruction requested.");
+	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, std::string("Invalid PUSH instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
 }
 
 /// @returns the DUP<_number> instruction
 inline Instruction dupInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid DUP instruction requested.");
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid DUP instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::DUP1) + _number - 1);
 }
 
 /// @returns the SWAP<_number> instruction
 inline Instruction swapInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid SWAP instruction requested.");
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid SWAP instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
 }
 
 /// @returns the LOG<_number> instruction
 inline Instruction logInstruction(unsigned _number)
 {
-	assertThrow(_number <= 4, InvalidOpcode, "Invalid LOG instruction requested.");
+	assertThrow(_number <= 4, InvalidOpcode, std::string("Invalid LOG instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
-enum Tier
+enum class Tier : unsigned
 {
-	ZeroTier = 0,	// 0, Zero
-	BaseTier,		// 2, Quick
-	VeryLowTier,	// 3, Fastest
-	LowTier,		// 5, Fast
-	MidTier,		// 8, Mid
-	HighTier,		// 10, Slow
-	ExtTier,		// 20, Ext
-	SpecialTier,	// multiparam or otherwise special
-	InvalidTier		// Invalid.
+	Zero = 0,	// 0, Zero
+	Base,		// 2, Quick
+	VeryLow,	// 3, Fastest
+	Low,		// 5, Fast
+	Mid,		// 8, Mid
+	High,		// 10, Slow
+	Ext,		// 20, Ext
+	Special,	// multiparam or otherwise special
+	Invalid		// Invalid.
 };
 
 /// Information structure for a particular instruction.
@@ -246,7 +249,7 @@ struct InstructionInfo
 	int args;			///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
 	int ret;			///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
 	bool sideEffects;	///< false if the only effect on the execution environment (apart from gas usage) is a change to a topmost segment of the stack
-	int gasPriceTier;	///< Tier for gas pricing.
+	Tier gasPriceTier;	///< Tier for gas pricing.
 };
 
 /// Information on all the instructions.

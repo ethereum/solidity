@@ -29,6 +29,7 @@
 #include <vector>
 #include <functional>
 #include <boost/noncopyable.hpp>
+#include <boost/filesystem.hpp>
 #include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
@@ -51,6 +52,7 @@ namespace solidity
 
 // forward declarations
 class Scanner;
+class ASTNode;
 class ContractDefinition;
 class FunctionDefinition;
 class SourceUnit;
@@ -58,6 +60,7 @@ class Compiler;
 class GlobalContext;
 class InterfaceHandler;
 class Error;
+class DeclarationContainer;
 
 enum class DocumentationType: uint8_t
 {
@@ -147,6 +150,10 @@ public:
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
+
+	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
+	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
 	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
 	/// does not have runtime code.
@@ -172,6 +179,7 @@ public:
 	/// Can be one of 4 types defined at @c DocumentationType
 	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
 	std::string const& onChainMetadata(std::string const& _contractName) const;
+	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
@@ -229,17 +237,16 @@ private:
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
-	/// Checks whether there are libraries with the same name, reports that as an error and
-	/// @returns false in this case.
-	bool checkLibraryNameClashes();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
+	/// Helper function to return path converted strings.
+	std::string sanitizePath(std::string const& _path) const { return boost::filesystem::path(_path).generic_string(); }
+
 	/// Compile a single contract and put the result in @a _compiledContracts.
 	void compileContract(
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 	);
-
 	void link();
 
 	Contract const& contract(std::string const& _contractName = "") const;
@@ -266,10 +273,12 @@ private:
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;
 	ErrorList m_errors;
+	bool m_metadataLiteralSources = false;
 };
 
 }

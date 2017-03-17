@@ -16,4 +16,5 @@ If something is missing here, please contact us on
    units-and-global-variables.rst
    control-structures.rst
    contracts.rst
+   assembly.rst
    miscellaneous.rst

@@ -2,7 +2,7 @@ Solidity
 ========
 
 Solidity is a contract-oriented, high-level language whose syntax is similar to that of JavaScript
-and it is designed to target the Ethereum Virtual Machine.
+and it is designed to target the Ethereum Virtual Machine (EVM).
 
 Solidity is statically typed, supports inheritance, libraries and complex
 user-defined types among other features.
@@ -11,8 +11,8 @@ As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
 .. note::
-    The best way to try out Solidity right now is using the
-    `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
+    The best way to try out Solidity right now is using
+    `Remix <https://remix.ethereum.org/>`_
     (it can take a while to load, please be patient).
 
 Useful links
@@ -33,11 +33,14 @@ Useful links
 Available Solidity Integrations
 -------------------------------
 
-* `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
+* `Remix <https://remix.ethereum.org/>`_
     Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
 * `Ethereum Studio <https://live.ether.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
+
+* `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
+    Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
 
 * `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
     Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
@@ -106,7 +109,7 @@ and the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
 The next section will explain several *features* of Solidity by giving
 useful :ref:`example contracts <voting>`
 Remember that you can always try out the contracts
-`in your browser <https://ethereum.github.io/browser-solidity>`_!
+`in your browser <https://remix.ethereum.org>`_!
 
 The last and most extensive section will cover all aspects of Solidity in depth.
 
@@ -130,6 +133,7 @@ Contents
    solidity-by-example.rst
    solidity-in-depth.rst
    security-considerations.rst
+   using-the-compiler.rst
    style-guide.rst
    common-patterns.rst
    contributing.rst

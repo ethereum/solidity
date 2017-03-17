@@ -7,6 +7,8 @@ and pragma directives.
 
 .. index:: ! pragma, version
 
+.. _version_pragma:
+
 Version Pragma
 ==============
 
@@ -79,8 +81,9 @@ Paths
 -----
 
 In the above, ``filename`` is always treated as a path with ``/`` as directory separator,
-``.`` as the current and ``..`` as the parent directory. Path names that do not start
-with ``.`` are treated as absolute paths.
+``.`` as the current and ``..`` as the parent directory.  When ``.`` or ``..`` is followed by a character except ``/``,
+it is not considered as the current or the parent directory.
+All path names are treated as absolute paths unless they start with the current ``.`` or the parent directory ``..``.
 
 To import a file ``x`` from the same directory as the current file, use ``import "./x" as x;``.
 If you use ``import "x" as x;`` instead, a different file could be referenced
@@ -150,9 +153,9 @@ remapping ``=/``.
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
 
-**browser-solidity**:
+**Remix**:
 
-The `browser-based compiler <https://ethereum.github.io/browser-solidity>`_
+`Remix <https://remix.ethereum.org/>`_
 provides an automatic remapping for github and will also automatically retrieve
 the file over the network:
 You can import the iterable mapping by e.g.

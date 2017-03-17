@@ -184,15 +184,15 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	}
 	catch (CompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Compiler error", scannerFromSourceName));
+		errors.append(formatError(exception, "Compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Internal compiler error", scannerFromSourceName));
+		errors.append(formatError(exception, "Internal compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (UnimplementedFeatureError const& exception)
 	{
-		errors.append(formatError(exception, "Unimplemented feature", scannerFromSourceName));
+		errors.append(formatError(exception, "Unimplemented feature (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (Exception const& exception)
 	{

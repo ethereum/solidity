@@ -220,6 +220,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		rightIntermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
 			_assignment.leftHandSide().annotation().type
 		);
+	solAssert(rightIntermediateType, "");
 	utils().convertType(*_assignment.rightHandSide().annotation().type, *rightIntermediateType, cleanupNeeded);
 
 	_assignment.leftHandSide().accept(*this);
@@ -250,7 +251,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		}
 		if (lvalueSize > 0)
 		{
-			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
+			if (itemSize + lvalueSize > 16)
+				BOOST_THROW_EXCEPTION(
+					CompilerError() <<
+					errinfo_sourceLocation(_assignment.location()) <<
+					errinfo_comment("Stack too deep, try removing local variables.")
+				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;
@@ -390,6 +396,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 		TypePointer leftTargetType = commonType;
 		TypePointer rightTargetType = Token::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
+		solAssert(rightTargetType, "");
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
@@ -551,20 +558,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arg->accept(*this);
 				argumentTypes.push_back(arg->annotation().type);
 			}
-			ContractDefinition const& contract =
-				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
-			// copy the contract's code into memory
-			eth::Assembly const& assembly = m_context.compiledContract(contract);
-			utils().fetchFreeMemoryPointer();
-			// TODO we create a copy here, which is actually what we want.
-			// This should be revisited at the point where we fix
-			// https://github.com/ethereum/solidity/issues/1092
-			// pushes size
-			auto subroutine = m_context.addSubroutine(make_shared<eth::Assembly>(assembly));
-			m_context << Instruction::DUP1 << subroutine;
-			m_context << Instruction::DUP4 << Instruction::CODECOPY;
-
-			m_context << Instruction::ADD;
+			ContractDefinition const* contract =
+				&dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
+			m_context.callLowLevelFunction(
+				"$copyContractCreationCodeToMemory_" + contract->type()->identifier(),
+				0,
+				1,
+				[contract](CompilerContext& _context)
+				{
+					// copy the contract's code into memory
+					eth::Assembly const& assembly = _context.compiledContract(*contract);
+					CompilerUtils(_context).fetchFreeMemoryPointer();
+					// pushes size
+					auto subroutine = _context.addSubroutine(make_shared<eth::Assembly>(assembly));
+					_context << Instruction::DUP1 << subroutine;
+					_context << Instruction::DUP4 << Instruction::CODECOPY;
+					_context << Instruction::ADD;
+				}
+			);
 			utils().encodeToMemory(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
@@ -576,7 +587,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalJumpTo(m_context.errorTag());
+			m_context.appendConditionalInvalid();
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -607,6 +618,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			break;
 		case Location::Send:
+		case Location::Transfer:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -635,11 +647,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
+			if (function.location() == Location::Transfer)
+			{
+				// Check if zero (out of stack or not enough balance).
+				m_context << Instruction::ISZERO;
+				m_context.appendConditionalInvalid();
+			}
 			break;
 		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
-			m_context << Instruction::SUICIDE;
+			m_context << Instruction::SELFDESTRUCT;
+			break;
+		case Location::Revert:
+			// memory offset returned - zero length
+			m_context << u256(0) << u256(0);
+			m_context << Instruction::REVERT;
 			break;
 		case Location::SHA3:
 		{
@@ -794,6 +817,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			solAssert(type, "");
 			utils().convertType(*arguments[0]->annotation().type, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
@@ -854,6 +878,23 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::POP;
 			break;
 		}
+		case Location::Assert:
+		case Location::Require:
+		{
+			arguments.front()->accept(*this);
+			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			// jump if condition was met
+			m_context << Instruction::ISZERO << Instruction::ISZERO;
+			auto success = m_context.appendConditionalJump();
+			if (function.location() == Location::Assert)
+				// condition was not met, flag an error
+				m_context << Instruction::INVALID;
+			else
+				m_context << u256(0) << u256(0) << Instruction::REVERT;
+			// the success branch
+			m_context << success;
+			break;
+		}
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}
@@ -892,7 +933,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				solAssert(funType->location() == FunctionType::Location::DelegateCall, "");
 				auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
 				solAssert(contract && contract->isLibrary(), "");
-				m_context.appendLibraryAddress(contract->name());
+				m_context.appendLibraryAddress(contract->fullyQualifiedName());
 				m_context << funType->externalIdentifier();
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
 			}
@@ -932,6 +973,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Location::Bare:
 				case FunctionType::Location::BareCallCode:
 				case FunctionType::Location::BareDelegateCall:
+				case FunctionType::Location::Transfer:
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
@@ -1013,7 +1055,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
-		else if ((set<string>{"send", "call", "callcode", "delegatecall"}).count(member))
+		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				IntegerType(0, IntegerType::Modifier::Address),
@@ -1225,7 +1267,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		m_context << u256(fixedBytesType.numBytes());
 		m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
 		// out-of-bounds access throws exception
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 
 		m_context << Instruction::BYTE;
 		m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
@@ -1270,7 +1312,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		if (contract->isLibrary())
-			m_context.appendLibraryAddress(contract->name());
+			m_context.appendLibraryAddress(contract->fullyQualifiedName());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
@@ -1299,6 +1341,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	{
 	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
+	case Type::Category::Integer:
 		m_context << type->literalValue(&_literal);
 		break;
 	case Type::Category::StringLiteral:
@@ -1406,7 +1449,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	{
 		// Test for division by zero
 		m_context << Instruction::DUP2 << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 
 		if (_operator == Token::Div)
 			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
@@ -1467,7 +1510,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 	if (c_amountSigned)
 	{
 		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 	}
 
 	switch (_operator)
@@ -1653,7 +1696,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionKind::External || funKind == FunctionKind::CallCode || funKind == FunctionKind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 		existenceChecked = true;
 	}
 
@@ -1689,7 +1732,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
+		m_context.appendConditionalInvalid();
 	}
 
 	utils().popStackSlots(remainsSize);

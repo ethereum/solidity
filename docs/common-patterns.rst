@@ -23,7 +23,7 @@ contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
 
 In the following contract, if you are usurped as the richest,
-you will recieve the funds of the person who has gone on to
+you will receive the funds of the person who has gone on to
 become the new richest.
 
 ::
@@ -81,7 +81,7 @@ This is as opposed to the more intuitive sending pattern:
             mostSent = msg.value;
         }
 
-        function becomeRichest() returns (bool) {
+        function becomeRichest() payable returns (bool) {
             if (msg.value > mostSent) {
                 // Check if call succeeds to prevent an attacker
                 // from trapping the previous person's funds in

@@ -20,19 +20,23 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-#include <string>
+#include <test/libsolidity/ErrorCheck.h>
 
-#include <libdevcore/SHA3.h>
+#include <test/TestHelper.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
+#include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include "../TestHelper.h"
-#include "ErrorCheck.h"
+
+#include <libdevcore/SHA3.h>
+
+#include <string>
 
 using namespace std;
 
@@ -66,7 +70,8 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 			return make_pair(sourceUnit, errors.at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(globalContext->declarations(), errors);
+		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
+		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errors);
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
@@ -92,10 +97,11 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					BOOST_CHECK(success || !errors.empty());
 				}
 		if (success)
-		{
-			StaticAnalyzer staticAnalyzer(errors);
-			staticAnalyzer.analyze(*sourceUnit);
-		}
+			if (!PostTypeChecker(errors).check(*sourceUnit))
+				success = false;
+		if (success)
+			if (!StaticAnalyzer(errors).analyze(*sourceUnit))
+				success = false;
 		if (errors.size() > 1 && !_allowMultipleErrors)
 			BOOST_FAIL("Multiple errors found");
 		for (auto const& currentError: errors)
@@ -1056,7 +1062,9 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) { } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	// Error: Identifier already declared.
+	// Error: Override changes modifier to function.
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1065,7 +1073,9 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	// Error: Identifier already declared.
+	// Error: Override changes function to modifier.
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -1076,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 			modifier mod(uint a) { _; return 7; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, TypeError, "Return arguments not allowed.");
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
@@ -1098,25 +1108,25 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	auto returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "uint256");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	auto params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	auto params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
-	params = function->parameterTypeNames(false);
-	BOOST_CHECK_EQUAL(params.at(0), "uint256");
-	BOOST_CHECK_EQUAL(params.at(1), "uint256");
-	returnParams = function->returnParameterTypeNames(false);
-	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
+	params = function->parameterTypes();
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(false), "uint256");
+	returnParams = function->returnParameterTypes();
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
 	BOOST_CHECK(function->isConstant());
 }
 
@@ -1361,6 +1371,17 @@ BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name)
+{
+	char const* text = R"(
+		contract TestIt {
+			event A();
+			event A(uint i);
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
@@ -1370,6 +1391,53 @@ BOOST_AUTO_TEST_CASE(event_call)
 		}
 	)";
 	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(event_function_inheritance_clash)
+{
+	char const* text = R"(
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract B {
+			event dup();
+		}
+		contract C is A, B {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_inheritance_clash)
+{
+	char const* text = R"(
+		contract B {
+			event dup();
+		}
+		contract A {
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+		contract C is B, A {
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+}
+
+BOOST_AUTO_TEST_CASE(function_event_in_contract_clash)
+{
+	char const* text = R"(
+		contract A {
+			event dup();
+			function dup() returns (uint) {
+				return 1;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
 }
 
 BOOST_AUTO_TEST_CASE(event_inheritance)
@@ -1593,6 +1661,36 @@ BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 		}
 	)";
 	CHECK_ERROR(sourceCode, TypeError, "");
+}
+
+BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				uint8 x = 100;
+				return 10**x;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "might overflow");
+	sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				uint8 x = 100;
+				return uint8(10)**x;
+			}
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
+	sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return 2**80;
+			}
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -1857,6 +1955,16 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 	CHECK_ERROR(text, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(array_with_negative_length)
+{
+	char const* text = R"(
+		contract c {
+			function f(uint a) { uint8[-1] x; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array with negative length specified");
+}
+
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
 {
 	char const* text = R"(
@@ -2065,16 +2173,94 @@ BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 	CHECK_ERROR(text, TypeError, "");
 }
 
-BOOST_AUTO_TEST_CASE(complex_const_variable)
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
 {
-	//for now constant specifier is valid only for uint bytesXX and enums
 	char const* text = R"(
-		contract Foo {
-			mapping(uint => bool) x;
-			mapping(uint => bool) constant mapVar = x;
+		contract C {
+			address constant x = msg.sender;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	// Change to TypeError for 0.5.0.
+	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
+{
+	char const* text = R"(
+		contract Test {
+			string constant x = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
+			function f() {
+				x[0] = "f";
+			}
+		}
+	)";
+
+	// Even if this is made possible in the future, we should not allow assignment
+	// to elements of constant arrays.
+	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
+}
+
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+{
+	char const* text = R"(
+		contract C {
+			function () constant returns (uint) x;
+			uint constant y = x();
+		}
+	)";
+	// Change to TypeError for 0.5.0.
+	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
+{
+	char const* text = R"(
+		contract C {
+			C constant x = C(0x123);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_expression)
+{
+	char const* text = R"(
+		contract C {
+			uint constant x = 0x123 + 0x456;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_keccak)
+{
+	char const* text = R"(
+		contract C {
+			bytes32 constant x = keccak256("abc");
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_const_array_vars)
+{
+	char const* text = R"(
+		contract C {
+			uint[3] constant x = [uint(1), 2, 3];
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "implemented");
+}
+
+BOOST_AUTO_TEST_CASE(constant_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint x; uint[] y; }
+			S constant x = S(5, new uint[](4));
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "implemented");
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_const_variable)
@@ -2428,6 +2614,30 @@ BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
 	CHECK_ERROR(sourceCode, TypeError, "");
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint => uint) x;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, TypeError, "Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable");
+}
+
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint => uint)[] x;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "Uninitialized storage pointer");
+}
+
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 {
 	char const* sourceCode = R"(
@@ -2578,18 +2788,6 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
-{
-	char const* text = R"(
-		contract Foo {
-			function f() {
-				var x = 1e2;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "");
 }
 
 BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
@@ -2875,6 +3073,31 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "");
+}
+
+BOOST_AUTO_TEST_CASE(tuple_assignment_from_void_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() { }
+			function g() {
+				var (x,) = (f(), f());
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cannot declare variable with void (empty tuple) type.");
+}
+
+BOOST_AUTO_TEST_CASE(tuple_compound_assignment)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint a, uint b) {
+				(a, b) += (1, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Compound assignment is not allowed for tuple types.");
 }
 
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
@@ -4185,7 +4408,7 @@ BOOST_AUTO_TEST_CASE(unused_return_value_send)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Return value of low-level calls not used");
+	CHECK_WARNING(text, "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_call)
@@ -4303,6 +4526,25 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 	)";
 	CHECK_ERROR(text, TypeError, "");
 }
+
+BOOST_AUTO_TEST_CASE(function_variable_mixin)
+{
+       // bug #1798 (cpp-ethereum), related to #1286 (solidity)
+       char const* text = R"(
+               contract attribute {
+                       bool ok = false;
+               }
+               contract func {
+                       function ok() returns (bool) { return true; }
+               }
+
+               contract attr_func is attribute, func {
+                       function checkOk() returns (bool) { return ok(); }
+               }
+       )";
+       CHECK_ERROR(text, DeclarationError, "");
+}
+
 
 BOOST_AUTO_TEST_CASE(payable_constant_conflict)
 {
@@ -4644,16 +4886,57 @@ BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
 	CHECK_ERROR(text, TypeError, "");
 }
 
-BOOST_AUTO_TEST_CASE(invalid_fixed_point_literal)
+BOOST_AUTO_TEST_CASE(external_function_to_function_type_calldata_parameter)
 {
+	// This is a test that checks that the type of the `bytes` parameter is
+	// correctly changed from its own type `bytes calldata` to `bytes memory`
+	// when converting to a function type.
 	char const* text = R"(
-		contract A {
-			function a() {
-				.8E0;
+		contract C {
+			function f(function(bytes memory x) external g) { }
+			function callback(bytes x) external {}
+			function g() {
+				f(this.callback);
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_to_address)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (address) {
+				return address(this.f);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(internal_function_type_to_address)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (address) {
+				return address(f);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
+}
+
+BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint) {
+				return uint(this.f);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
 }
 
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
@@ -4718,6 +5001,19 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
 				assembly {
 					pop
 				}
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Inline assembly block is not balanced");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
+{
+	char const* text = R"(
+		contract c {
+			uint8 x;
+			function f() {
+				assembly { x pop }
 			}
 		}
 	)";
@@ -4874,6 +5170,161 @@ BOOST_AUTO_TEST_CASE(assignment_to_constant)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
+}
+
+BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D {
+			function f() { var x = new C(); }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
+}
+
+BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor_inverted)
+{
+	// Previously, the type information for A was not yet available at the point of
+	// "new A".
+	char const* text = R"(
+		contract B {
+			A a;
+			function B() {
+				a = new A(this);
+			}
+		}
+		contract A {
+			function A(address a) internal {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
+}
+
+BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() internal {}
+		}
+		contract D is C {
+			function D() { }
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				x.send(2);
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_length)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(early_exit_on_fatal_errors)
+{
+	// This tests a crash that occured because we did not stop for fatal errors.
+	char const* text = R"(
+		contract C {
+			struct S {
+				ftring a;
+			}
+			S public s;
+			function s() s {
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique");
+}
+
+BOOST_AUTO_TEST_CASE(address_methods)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				address addr;
+				uint balance = addr.balance;
+				bool callRet = addr.call();
+				bool callcodeRet = addr.callcode();
+				bool delegatecallRet = addr.delegatecall();
+				bool sendRet = addr.send(1);
+				addr.transfer(1);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
+{
+	char const* text = R"(
+		contract C {
+			uint constant a = a;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "cyclic dependency via a");
+	text = R"(
+		contract C {
+			uint constant a = b * c;
+			uint constant b = 7;
+			uint constant c = b + uint(sha3(d));
+			uint constant d = 2 + a;
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "a has a cyclic dependency via c");
+	text = R"(
+		contract C {
+			uint constant a = b * c;
+			uint constant b = 7;
+			uint constant c = 4 + uint(sha3(d));
+			uint constant d = 2 + b;
+		}
+	)";
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

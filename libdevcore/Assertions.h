@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @file Assertions.h
@@ -73,27 +73,19 @@ inline bool assertEqualAux(A const& _a, B const& _b, char const* _aStr, char con
 /// Use it as assertThrow(1 == 1, ExceptionType, "Mathematics is wrong.");
 /// Do NOT supply an exception object as the second parameter.
 #define assertThrow(_condition, _ExceptionType, _description) \
-	::dev::assertThrowAux<_ExceptionType>(!!(_condition), _description, __LINE__, __FILE__, ETH_FUNC)
+	do \
+	{ \
+		if (!(_condition)) \
+			::boost::throw_exception( \
+				_ExceptionType() << \
+				::dev::errinfo_comment(_description) << \
+				::boost::throw_function(ETH_FUNC) << \
+				::boost::throw_file(__FILE__) << \
+				::boost::throw_line(__LINE__) \
+			); \
+	} \
+	while (false)
 
 using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
-
-template <class _ExceptionType>
-inline void assertThrowAux(
-	bool _condition,
-	::std::string const& _errorDescription,
-	unsigned _line,
-	char const* _file,
-	char const* _function
-)
-{
-	if (!_condition)
-		::boost::throw_exception(
-			_ExceptionType() <<
-			::dev::errinfo_comment(_errorDescription) <<
-			::boost::throw_function(_function) <<
-			::boost::throw_file(_file) <<
-			::boost::throw_line(_line)
-		);
-}
 
 }

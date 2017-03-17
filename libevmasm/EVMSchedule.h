@@ -47,7 +47,7 @@ struct EVMSchedule
 	unsigned callStipend = 2300;
 	unsigned callValueTransferGas = 9000;
 	unsigned callNewAccountGas = 25000;
-	unsigned suicideRefundGas = 24000;
+	unsigned selfdestructRefundGas = 24000;
 	unsigned memoryGas = 3;
 	unsigned quadCoeffDiv = 512;
 	unsigned createDataGas = 200;

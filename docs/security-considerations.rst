@@ -117,7 +117,7 @@ Sending and Receiving Ether
   During the execution of the fallback function, the contract can only rely
   on the "gas stipend" (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
   To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function
-  (for example in the "details" section in browser-solidity).
+  (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
   ``addr.call.value(x)()``. This is essentially the same as ``addr.send(x)``,

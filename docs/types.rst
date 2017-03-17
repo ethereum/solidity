@@ -64,7 +64,7 @@ expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
 equivalent to ``x / 2**y``. This means that shifting negative numbers
 sign extends. Shifting by a negative amount throws a runtime exception.
 
-.. index:: address, balance, send, call, callcode, delegatecall
+.. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
 
@@ -80,27 +80,31 @@ Operators:
 Members of Addresses
 ^^^^^^^^^^^^^^^^^^^^
 
-* ``balance`` and ``send``
+* ``balance`` and ``transfer``
 
 For a quick reference, see :ref:`address_related`.
 
 It is possible to query the balance of an address using the property ``balance``
-and to send Ether (in units of wei) to an address using the ``send`` function:
+and to send Ether (in units of wei) to an address using the ``transfer`` function:
 
 ::
 
     address x = 0x123;
     address myAddress = this;
-    if (x.balance < 10 && myAddress.balance >= 10) x.send(10);
+    if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
 .. note::
-    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``send`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, ``send`` returns ``false``.
+    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``transfer`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
+
+* ``send``
+
+Send is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send`` or even better:
-    Use a pattern where the recipient withdraws the money.
+    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
+    use a pattern where the recipient withdraws the money.
 
 * ``call``, ``callcode`` and ``delegatecall``
 
@@ -118,6 +122,8 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 In a similar way, the function ``delegatecall`` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+
+The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
     All contracts inherit the members of address, so it is possible to query the balance of the
@@ -171,6 +177,19 @@ Fixed Point Numbers
 
 **COMING SOON...**
 
+.. index:: address, literal;address
+
+.. _address_literals:
+
+Address Literals
+----------------
+
+Hexadecimal literals that pass the address checksum test, for example
+``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address`` type.
+Hexadecimal literals that are between 39 and 41 digits
+long and do not pass the checksum test produce
+a warning and are treated as regular rational number literals.
+
 .. index:: literal, literal;rational
 
 .. _rational_literals:
@@ -180,11 +199,13 @@ Rational and Integer Literals
 
 Integer literals are formed from a sequence of numbers in the range 0-9.
 They are interpreted as decimals. For example, ``69`` means sixty nine.
-Octal literals do not exist in Solidity and leading zeros are ignored.
-For example, ``0100`` means one hundred.
+Octal literals do not exist in Solidity and leading zeros are invalid.
 
-Decimal literals are formed by a ``.`` with at least one number on
+Decimal fraction literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
+
+Scientific notation is also supported, where the base can have fractions, while the exponent cannot.
+Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).
@@ -213,7 +234,7 @@ a non-rational number).
     Integer literals and rational number literals belong to number literal types.
     Moreover, all number literal expressions (i.e. the expressions that
     contain only number literals and operators) belong to number literal
-    types.  So the number literal expressions `1 + 2` and `2 + 1` both
+    types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
     belong to the same number literal type for the rational number three.
 
 .. note::
@@ -242,7 +263,7 @@ a non-rational number).
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; `"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
@@ -530,8 +551,8 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
-It is possible to mark arrays ``public`` and have Solidity create an accessor.
-The numeric index will become a required parameter for the accessor.
+It is possible to mark arrays ``public`` and have Solidity create a getter.
+The numeric index will become a required parameter for the getter.
 
 .. index:: ! array;allocating, new
 
@@ -779,11 +800,11 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
-It is possible to mark mappings ``public`` and have Solidity create an accessor.
-The ``_KeyType`` will become a required parameter for the accessor and it will
+It is possible to mark mappings ``public`` and have Solidity create a getter.
+The ``_KeyType`` will become a required parameter for the getter and it will
 return ``_ValueType``.
 
-The ``_ValueType`` can be a mapping too. The accessor will have one parameter
+The ``_ValueType`` can be a mapping too. The getter will have one parameter
 for each ``_KeyType``, recursively.
 
 ::

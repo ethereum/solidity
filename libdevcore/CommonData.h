@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+	This file is part of solidity.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
+	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
+	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file CommonData.h
  * @author Gav Wood <i@gavwood.com>
@@ -178,5 +178,10 @@ bool contains(T const& _t, V const& _v)
 {
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
 }
+
+/// @returns true iff @a _str passess the hex address checksum test.
+/// @param _strict if false, hex strings with only uppercase or only lowercase letters
+/// are considered valid.
+bool passesAddressChecksum(std::string const& _str, bool _strict);
 
 }

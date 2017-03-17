@@ -22,28 +22,8 @@
  */
 #include "CommandLineInterface.h"
 
-#ifdef _WIN32 // windows
-	#include <io.h>
-	#define isatty _isatty
-	#define fileno _fileno
-#else // unix
-	#include <unistd.h>
-#endif
-#include <string>
-#include <iostream>
-#include <fstream>
-
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string.hpp>
-
 #include "solidity/BuildInfo.h"
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
-#include <libevmasm/Instruction.h>
-#include <libevmasm/GasMeter.h>
+
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -54,8 +34,30 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/formal/Why3Translator.h>
+
+#include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/JSON.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+
+#ifdef _WIN32 // windows
+	#include <io.h>
+	#define isatty _isatty
+	#define fileno _fileno
+#else // unix
+	#include <unistd.h>
+#endif
+#include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -91,6 +93,7 @@ static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOutputDir = "output-dir";
+static string const g_strOverwrite = "overwrite";
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
@@ -98,6 +101,7 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
+static string const g_strMetadataLiteral = "metadata-literal";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -126,6 +130,7 @@ static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argMetadataLiteral = g_strMetadataLiteral;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -186,7 +191,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin", m_compiler->object(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", m_compiler->object(_contract).toHex());
 		else
 		{
 			cout << "Binary: " << endl;
@@ -196,7 +201,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argCloneBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
 		else
 		{
 			cout << "Clone Binary: " << endl;
@@ -206,7 +211,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
@@ -218,7 +223,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		cout << "Opcodes: " << endl;
@@ -245,7 +250,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
 	if (m_args.count(g_argOutputDir))
-		createFile(_contract + ".signatures", out);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
 		cout << "Function signatures: " << endl << out;
 }
@@ -257,7 +262,7 @@ void CommandLineInterface::handleOnChainMetadata(string const& _contract)
 
 	string data = m_compiler->onChainMetadata(_contract);
 	if (m_args.count("output-dir"))
-		createFile(_contract + "_meta.json", data);
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
 		cout << "Metadata: " << endl << data << endl;
 }
@@ -298,7 +303,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 			output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
 
 		if (m_args.count(g_argOutputDir))
-			createFile(_contract + suffix, output);
+			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
 		else
 		{
 			cout << title << endl;
@@ -415,14 +420,25 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
-	string data = fs::is_regular_file(_input) ? contentsString(_input) : _input;
+	string data = _input;
+	try
+	{
+		if (fs::is_regular_file(_input))
+			data = contentsString(_input);
+	}
+	catch (fs::filesystem_error const&)
+	{
+		// Thrown e.g. if path is too long.
+	}
 
 	vector<string> libraries;
 	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			auto colon = lib.find(':');
+			//search for last colon in string as our binaries output placeholders in the form of file:Name
+			//so we need to search for the second `:` in the string
+			auto colon = lib.rfind(':');
 			if (colon == string::npos)
 			{
 				cerr << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
@@ -432,6 +448,11 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			string addrString(lib.begin() + colon + 1, lib.end());
 			boost::trim(libName);
 			boost::trim(addrString);
+			if (!passesAddressChecksum(addrString, false))
+			{
+				cerr << "Invalid checksum on library address \"" << libName << "\": " << addrString << endl;
+				return false;
+			}
 			bytes binAddr = fromHex(addrString);
 			h160 address(binAddr, h160::AlignRight);
 			if (binAddr.size() > 20 || address == h160())
@@ -450,8 +471,16 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	namespace fs = boost::filesystem;
 	// create directory if not existent
 	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	fs::create_directories(p);
+	// Do not try creating the directory if the first item is . or ..
+	if (p.filename() != "." && p.filename() != "..")
+		fs::create_directories(p);
 	string pathName = (p / _fileName).string();
+	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
+	{
+		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
+		m_error = true;
+		return;
+	}
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
@@ -497,6 +526,7 @@ Allowed options)",
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
 		)
+		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
 		(
 			g_argCombinedJson.c_str(),
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
@@ -511,7 +541,8 @@ Allowed options)",
 			g_argLink.c_str(),
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
-		);
+		)
+		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -634,6 +665,8 @@ bool CommandLineInterface::processInput()
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
+		if (m_args.count(g_argMetadataLiteral) > 0)
+			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
@@ -842,7 +875,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	}
 }
 
-void CommandLineInterface::actOnInput()
+bool CommandLineInterface::actOnInput()
 {
 	if (m_onlyAssemble)
 		outputAssembly();
@@ -850,6 +883,7 @@ void CommandLineInterface::actOnInput()
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
+	return !m_error;
 }
 
 bool CommandLineInterface::link()
@@ -907,7 +941,6 @@ void CommandLineInterface::writeLinkedFiles()
 
 bool CommandLineInterface::assemble()
 {
-	//@TODO later, we will use the convenience interface and should also remove the include above
 	bool successful = true;
 	map<string, shared_ptr<Scanner>> scanners;
 	for (auto const& src: m_sourceCodes)
@@ -921,6 +954,7 @@ bool CommandLineInterface::assemble()
 			m_assemblyStacks[src.first].assemble();
 	}
 	for (auto const& stack: m_assemblyStacks)
+	{
 		for (auto const& error: stack.second.errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
@@ -928,6 +962,9 @@ bool CommandLineInterface::assemble()
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
 			);
+		if (!Error::containsOnlyWarnings(stack.second.errors()))
+			successful = false;
+	}
 
 	return successful;
 }
@@ -964,7 +1001,7 @@ void CommandLineInterface::outputCompilationResults()
 			{
 				stringstream data;
 				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJson));
-				createFile(contract + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
+				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
 			}
 			else
 			{

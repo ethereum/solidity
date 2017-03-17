@@ -1153,9 +1153,9 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	else if (m_scanner->currentToken() == Token::New)
 	{
 		expectToken(Token::New);
-		ASTPointer<TypeName> contractName(parseTypeName(false));
-		nodeFactory.setEndPositionFromNode(contractName);
-		expression = nodeFactory.createNode<NewExpression>(contractName);
+		ASTPointer<TypeName> typeName(parseTypeName(false));
+		nodeFactory.setEndPositionFromNode(typeName);
+		expression = nodeFactory.createNode<NewExpression>(typeName);
 	}
 	else
 		expression = parsePrimaryExpression();

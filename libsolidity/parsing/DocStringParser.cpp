@@ -1,14 +1,19 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
-#include <boost/range/irange.hpp>
 #include <libsolidity/interface/Utils.h>
+
+#include <boost/range/irange.hpp>
+#include <boost/range/algorithm.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
 
-static inline string::const_iterator skipLineOrEOS(
+namespace
+{
+
+string::const_iterator skipLineOrEOS(
 	string::const_iterator _nlPos,
 	string::const_iterator _end
 )
@@ -16,14 +21,34 @@ static inline string::const_iterator skipLineOrEOS(
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }
 
-static inline string::const_iterator firstSpaceOrNl(
+string::const_iterator firstSpaceOrTab(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
 {
-	auto spacePos = find(_pos, _end, ' ');
-	auto nlPos = find(_pos, _end, '\n');
-	return (spacePos < nlPos) ? spacePos : nlPos;
+	return boost::range::find_first_of(make_pair(_pos, _end), " \t");
+}
+
+string::const_iterator firstWhitespaceOrNewline(
+	string::const_iterator _pos,
+	string::const_iterator _end
+)
+{
+	return boost::range::find_first_of(make_pair(_pos, _end), " \t\n");
+}
+
+
+string::const_iterator skipWhitespace(
+	string::const_iterator _pos,
+	string::const_iterator _end
+)
+{
+	auto currPos = _pos;
+	while (currPos != _end && (*currPos == ' ' || *currPos == '\t'))
+		currPos += 1;
+	return currPos;
+}
+
 }
 
 bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
@@ -43,7 +68,7 @@ bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = firstSpaceOrNl(tagPos, end);
+			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
 				appendError("End of tag " + string(tagPos, tagNameEndPos) + "not found");
@@ -75,27 +100,40 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 {
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
-	if (_appending && _pos < _end && *_pos != ' ')
+	if (_appending && _pos < _end && *_pos != ' ' && *_pos != '\t')
 		m_lastTag->content += " ";
+	else if (!_appending)
+		_pos = skipWhitespace(_pos, _end);
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	return skipLineOrEOS(nlPos, _end);
 }
 
 DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 {
-	// find param name
-	auto currPos = find(_pos, _end, ' ');
-	if (currPos == _end)
+	// find param name start
+	auto nameStartPos = skipWhitespace(_pos, _end);
+	if (nameStartPos == _end)
 	{
-		appendError("End of param name not found" + string(_pos, _end));
+		appendError("No param name given");
+		return _end;
+	}
+	auto nameEndPos = firstSpaceOrTab(nameStartPos, _end);
+	if (nameEndPos == _end)
+	{
+		appendError("End of param name not found: " + string(nameStartPos, _end));
+		return _end;
+	}
+	auto paramName = string(nameStartPos, nameEndPos);
+
+	auto descStartPos = skipWhitespace(nameEndPos, _end);
+	if (descStartPos == _end)
+	{
+		appendError("No description given for param " + paramName);
 		return _end;
 	}
 
-	auto paramName = string(_pos, currPos);
-
-	currPos += 1;
-	auto nlPos = find(currPos, _end, '\n');
-	auto paramDesc = string(currPos, nlPos);
+	auto nlPos = find(descStartPos, _end, '\n');
+	auto paramDesc = string(descStartPos, nlPos);
 	newTag("param");
 	m_lastTag->paramName = paramName;
 	m_lastTag->content = paramDesc;

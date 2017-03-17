@@ -50,6 +50,13 @@ BOOST_AUTO_TEST_CASE(bare_panic)
 	BOOST_REQUIRE(m_output.empty());
 }
 
+BOOST_AUTO_TEST_CASE(panic)
+{
+	char const* sourceCode = "{ (panic) }";
+	compileAndRunWithoutCheck(sourceCode);
+	BOOST_REQUIRE(m_output.empty());
+}
+
 BOOST_AUTO_TEST_CASE(exp_operator_const)
 {
 	char const* sourceCode = R"(

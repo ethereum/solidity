@@ -34,6 +34,9 @@ class SemVerError: dev::Exception
 {
 };
 
+#undef major
+#undef minor
+
 struct SemVerVersion
 {
 	unsigned numbers[3];

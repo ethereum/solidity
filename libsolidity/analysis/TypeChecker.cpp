@@ -32,11 +32,11 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-bool TypeChecker::checkTypeRequirements(ContractDefinition const& _contract)
+bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
 	try
 	{
-		visit(_contract);
+		_contract.accept(*this);
 	}
 	catch (FatalError const&)
 	{
@@ -75,7 +75,8 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	checkContractAbstractConstructors(_contract);
 
 	FunctionDefinition const* function = _contract.constructor();
-	if (function) {
+	if (function)
+	{
 		if (!function->returnParameters().empty())
 			typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 		if (function->isDeclaredConst())
@@ -424,7 +425,9 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*_function.scope()).isLibrary();
+	bool isLibraryFunction =
+		dynamic_cast<ContractDefinition const*>(_function.scope()) &&
+		dynamic_cast<ContractDefinition const*>(_function.scope())->isLibrary();
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)
@@ -464,27 +467,29 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// TypeChecker at the VariableDeclarationStatement level.
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Failed to infer variable type.");
-	if (_variable.isConstant())
-	{
-		if (!dynamic_cast<ContractDefinition const*>(_variable.scope()))
-			typeError(_variable.location(), "Illegal use of \"constant\" specifier.");
-		if (!_variable.value())
-			typeError(_variable.location(), "Uninitialized \"constant\" variable.");
-		if (!varType->isValueType())
-		{
-			bool constImplemented = false;
-			if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
-				constImplemented = arrayType->isByteArray();
-			if (!constImplemented)
-				typeError(
-					_variable.location(),
-					"Illegal use of \"constant\" specifier. \"constant\" "
-					"is not yet implemented for this type."
-				);
-		}
-	}
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
+	if (_variable.isConstant())
+	{
+		if (!_variable.isStateVariable())
+			typeError(_variable.location(), "Illegal use of \"constant\" specifier.");
+		if (!_variable.type()->isValueType())
+		{
+			bool allowed = false;
+			if (auto arrayType = dynamic_cast<ArrayType const*>(_variable.type().get()))
+				allowed = arrayType->isString();
+			if (!allowed)
+				typeError(_variable.location(), "Constants of non-value type not yet implemented.");
+		}
+		if (!_variable.value())
+			typeError(_variable.location(), "Uninitialized \"constant\" variable.");
+		else if (!_variable.value()->annotation().isPure)
+			warning(
+				_variable.value()->location(),
+				"Initial value for constant variable has to be compile-time constant. "
+				"This will fail to compile with the next breaking version change."
+			);
+	}
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -587,8 +592,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// Inline assembly does not have its own type-checking phase, so we just run the
 	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	codeGen.typeCheck([&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
+	auto identifierAccess = [&](
+		assembly::Identifier const& _identifier,
+		eth::Assembly& _assembly,
+		assembly::CodeGenerator::IdentifierContext _context
+	)
+	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return false;
@@ -606,7 +615,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
 				if (var->isLocalVariable())
 					pushes = var->type()->sizeOnStack();
-				else if (var->type()->isValueType())
+				else if (!var->type()->isValueType())
 					pushes = 1;
 				else
 					pushes = 2; // slot number, intra slot offset
@@ -636,8 +645,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				return false;
 		}
 		return true;
-	});
-	return false;
+	};
+	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
+	if (!codeGen.typeCheck(identifierAccess))
+		return false;
+	return true;
 }
 
 bool TypeChecker::visit(IfStatement const& _ifStatement)
@@ -725,13 +737,16 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
-			{
 				warning(
 					varDecl.location(),
 					"Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?"
 				);
-			}
 		}
+		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))
+			typeError(
+				varDecl.location(),
+				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable."
+			);
 		varDecl.accept(*this);
 		return false;
 	}
@@ -819,6 +834,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				else
 					solAssert(false, "");
 			}
+			else if (*var.annotation().type == TupleType())
+				typeError(
+					var.location(),
+					"Cannot declare variable with void (empty tuple) type."
+				);
 			var.accept(*this);
 		}
 		else
@@ -871,10 +891,11 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			if (
 				location == Location::Bare ||
 				location == Location::BareCallCode ||
-				location == Location::BareDelegateCall ||
-				location == Location::Send
+				location == Location::BareDelegateCall
 			)
 				warning(_statement.location(), "Return value of low-level calls not used.");
+			else if (location == Location::Send)
+				warning(_statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 		}
 	}
 }
@@ -910,6 +931,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	}
 
 	_conditional.annotation().type = commonType;
+	_conditional.annotation().isPure =
+		_conditional.condition().annotation().isPure &&
+		_conditional.trueExpression().annotation().isPure &&
+		_conditional.falseExpression().annotation().isPure;
 
 	if (_conditional.annotation().lValueRequested)
 		typeError(
@@ -927,6 +952,11 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	_assignment.annotation().type = t;
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
 	{
+		if (_assignment.assignmentOperator() != Token::Assign)
+			typeError(
+				_assignment.location(),
+				"Compound assignment is not allowed for tuple types."
+			);
 		// Sequenced assignments of tuples is not valid, make the result a "void" type.
 		_assignment.annotation().type = make_shared<TupleType>();
 		expectType(_assignment.rightHandSide(), *tupleType);
@@ -986,6 +1016,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
+		bool isPure = true;
 		TypePointer inlineArrayType;
 		for (size_t i = 0; i < components.size(); ++i)
 		{
@@ -1004,14 +1035,17 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 						fatalTypeError(components[i]->location(), "Invalid mobile type.");
 
 					if (i == 0)
-						inlineArrayType = types[i];
+						inlineArrayType = types[i]->mobileType();
 					else if (inlineArrayType)
 						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 				}
+				if (!components[i]->annotation().isPure)
+					isPure = false;
 			}
 			else
 				types.push_back(TypePointer());
 		}
+		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
 		{
 			if (!inlineArrayType) 
@@ -1038,7 +1072,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 {
 	// Inc, Dec, Add, Sub, Not, BitNot, Delete
 	Token::Value op = _operation.getOperator();
-	if (op == Token::Value::Inc || op == Token::Value::Dec || op == Token::Value::Delete)
+	bool const modifying = (op == Token::Value::Inc || op == Token::Value::Dec || op == Token::Value::Delete);
+	if (modifying)
 		requireLValue(_operation.subExpression());
 	else
 		_operation.subExpression().accept(*this);
@@ -1056,6 +1091,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		t = subExprType;
 	}
 	_operation.annotation().type = t;
+	_operation.annotation().isPure = !modifying && _operation.subExpression().annotation().isPure;
 	return false;
 }
 
@@ -1082,6 +1118,30 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		Token::isCompareOp(_operation.getOperator()) ?
 		make_shared<BoolType>() :
 		commonType;
+	_operation.annotation().isPure =
+		_operation.leftExpression().annotation().isPure &&
+		_operation.rightExpression().annotation().isPure;
+
+	if (_operation.getOperator() == Token::Exp)
+	{
+		if (
+			leftType->category() == Type::Category::RationalNumber &&
+			rightType->category() != Type::Category::RationalNumber
+		)
+			if ((
+				commonType->category() == Type::Category::Integer &&
+				dynamic_cast<IntegerType const&>(*commonType).numBits() != 256
+			) || (
+				commonType->category() == Type::Category::FixedPoint &&
+				dynamic_cast<FixedPointType const&>(*commonType).numBits() != 256
+			))
+				warning(
+					_operation.location(),
+					"Result of exponentiation has type " + commonType->toString() + " and thus "
+					"might overflow. Silence this warning by converting the literal to the "
+					"expected type."
+				);
+	}
 }
 
 bool TypeChecker::visit(FunctionCall const& _functionCall)
@@ -1090,6 +1150,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
 	vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.names();
 
+	bool isPure = true;
+
 	// We need to check arguments' type first as they will be needed for overload resolution.
 	shared_ptr<TypePointers> argumentTypes;
 	if (isPositionalCall)
@@ -1097,6 +1159,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	for (ASTPointer<Expression const> const& argument: arguments)
 	{
 		argument->accept(*this);
+		if (!argument->annotation().isPure)
+			isPure = false;
 		// only store them for positional calls
 		if (isPositionalCall)
 			argumentTypes->push_back(type(*argument));
@@ -1134,6 +1198,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				typeError(_functionCall.location(), "Explicit type conversion not allowed.");
 		}
 		_functionCall.annotation().type = resultType;
+		_functionCall.annotation().isPure = isPure;
 
 		return false;
 	}
@@ -1150,9 +1215,16 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
 		functionType = structType.constructorType();
 		membersRemovedForStructConstructor = structType.membersMissingInMemory();
+		_functionCall.annotation().isPure = isPure;
 	}
 	else
+	{
 		functionType = dynamic_pointer_cast<FunctionType const>(expressionType);
+		_functionCall.annotation().isPure =
+			isPure &&
+			_functionCall.expression().annotation().isPure &&
+			functionType->isPure();
+	}
 
 	if (!functionType)
 	{
@@ -1280,6 +1352,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (!contract->annotation().isFullyImplemented)
 			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
+		if (!contract->constructorIsPublic())
+			typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
 		solAssert(!!m_scope, "");
 		m_scope->annotation().contractDependencies.insert(contract);
@@ -1315,6 +1389,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			strings(),
 			FunctionType::Location::ObjectCreation
 		);
+		_newExpression.annotation().isPure = true;
 	}
 	else
 		fatalTypeError(_newExpression.location(), "Contract or array type expected.");
@@ -1400,6 +1475,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	}
 
+	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
+	// although every subexpression is, so leaving this limited for now.
+	if (auto tt = dynamic_cast<TypeType const*>(exprType.get()))
+		if (tt->actualType()->category() == Type::Category::Enum)
+			annotation.isPure = true;
+
 	return false;
 }
 
@@ -1409,6 +1490,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	TypePointer baseType = type(_access.baseExpression());
 	TypePointer resultType;
 	bool isLValue = false;
+	bool isPure = _access.baseExpression().annotation().isPure;
 	Expression const* index = _access.indexExpression();
 	switch (baseType->category())
 	{
@@ -1490,6 +1572,9 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	}
 	_access.annotation().type = move(resultType);
 	_access.annotation().isLValue = isLValue;
+	if (index && !index->annotation().isPure)
+		isPure = false;
+	_access.annotation().isPure = isPure;
 
 	return false;
 }
@@ -1500,8 +1585,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (!annotation.referencedDeclaration)
 	{
 		if (!annotation.argumentTypes)
-			fatalTypeError(_identifier.location(), "Unable to determine overloaded type.");
-		if (annotation.overloadedDeclarations.empty())
+		{
+			// The identifier should be a public state variable shadowing other functions
+			vector<Declaration const*> candidates;
+
+			for (Declaration const* declaration: annotation.overloadedDeclarations)
+			{
+				if (VariableDeclaration const* variableDeclaration = dynamic_cast<decltype(variableDeclaration)>(declaration))
+					candidates.push_back(declaration);
+			}
+			if (candidates.empty())
+				fatalTypeError(_identifier.location(), "No matching declaration found after variable lookup.");
+			else if (candidates.size() == 1)
+				annotation.referencedDeclaration = candidates.front();
+			else
+				fatalTypeError(_identifier.location(), "No unique declaration found after variable lookup.");
+		}
+		else if (annotation.overloadedDeclarations.empty())
 			fatalTypeError(_identifier.location(), "No candidates for overload resolution found.");
 		else if (annotation.overloadedDeclarations.size() == 1)
 			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
@@ -1529,23 +1629,42 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		!!annotation.referencedDeclaration,
 		"Referenced declaration is null after overload resolution."
 	);
-	auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
-	annotation.isConstant = variableDeclaration != nullptr && variableDeclaration->isConstant();
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
 		fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
+	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
+		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
+	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
+		if (auto functionType = dynamic_cast<FunctionType const*>(annotation.type.get()))
+			annotation.isPure = functionType->isPure();
 	return false;
 }
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
 	_expr.annotation().type = make_shared<TypeType>(Type::fromElementaryTypeName(_expr.typeName()));
+	_expr.annotation().isPure = true;
 }
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	if (_literal.looksLikeAddress())
+	{
+		if (_literal.passesAddressChecksum())
+		{
+			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+			return;
+		}
+		else
+			warning(
+				_literal.location(),
+				"This looks like an address but has an invalid checksum. "
+				"If this is not used as an address, please prepend '00'."
+			);
+	}
 	_literal.annotation().type = Type::forLiteral(_literal);
+	_literal.annotation().isPure = true;
 	if (!_literal.annotation().type)
 		fatalTypeError(_literal.location(), "Invalid literal value.");
 }
