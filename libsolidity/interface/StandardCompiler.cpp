@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Json::Value StandardCompiler::compile(Json::Value const& _input)
+Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
 	m_compilerStack.reset(false);
 
@@ -137,6 +137,18 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	output["contracts"][""] = contractsOutput;
 
 	return output;
+}
+
+Json::Value StandardCompiler::compile(Json::Value const& _input)
+{
+	try
+	{
+		return compileInternal(_input);
+	}
+	catch (...)
+	{
+		return "{\"errors\":\"[{\"type\":\"InternalCompilerError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Internal exception in StandardCompiler::compilerInternal\"}]}";
+	}
 }
 
 string StandardCompiler::compile(string const& _input)

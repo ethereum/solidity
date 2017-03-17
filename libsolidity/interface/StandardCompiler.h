@@ -52,6 +52,8 @@ public:
 	std::string compile(std::string const& _input);
 
 private:
+	Json::Value compileInternal(Json::Value const& _input);
+
 	CompilerStack m_compilerStack;
 };
 
