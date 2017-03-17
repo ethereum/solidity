@@ -694,7 +694,7 @@ string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
 	}
 }
 
-string ASTJsonConverter::location( VariableDeclaration::Location _location)
+string ASTJsonConverter::location(VariableDeclaration::Location _location)
 {
 	switch (_location)
 	{

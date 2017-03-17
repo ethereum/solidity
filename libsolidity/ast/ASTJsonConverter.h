@@ -168,7 +168,7 @@ private:
 		m_jsonNodePtrs.pop();
 	}
 
-	bool m_inEvent = false;
+	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	bool processed = false;
 	Json::Value m_astJson;
 	std::stack<Json::Value*> m_jsonNodePtrs;
