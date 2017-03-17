@@ -177,10 +177,10 @@ install:
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
     - test $SOLC_DOCKER != On || (
-        docker build -t ethereum/solc:build -f scripts/Dockerfile .
-        tmp_container=$(docker create brainbot-com/solidity-static sh)
+        docker build -t tmp -f scripts/Dockerfile .
+        tmp_container=$(docker create tmp sh)
         mkdir -p upload
-        docker cp ${tmp_container}:/usr/local/bin/solc upload/
+        docker cp ${tmp_container}:/usr/bin/solc upload/
       )
 
 before_script:
