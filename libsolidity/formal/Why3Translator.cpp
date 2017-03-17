@@ -588,14 +588,14 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		return true;
 	}
 	FunctionType const& function = dynamic_cast<FunctionType const&>(*_node.expression().annotation().type);
-	switch (function.location())
+	switch (function.kind())
 	{
-	case FunctionType::Location::AddMod:
-	case FunctionType::Location::MulMod:
+	case FunctionType::Kind::AddMod:
+	case FunctionType::Kind::MulMod:
 	{
 		//@todo require that third parameter is not zero
 		add("(of_int (mod (Int.(");
-		add(function.location() == FunctionType::Location::AddMod ? "+" : "*");
+		add(function.kind() == FunctionType::Kind::AddMod ? "+" : "*");
 		add(") (to_int ");
 		_node.arguments().at(0)->accept(*this);
 		add(") (to_int ");
@@ -605,7 +605,7 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		add(")))");
 		return false;
 	}
-	case FunctionType::Location::Internal:
+	case FunctionType::Kind::Internal:
 	{
 		if (!_node.names().empty())
 		{
@@ -626,7 +626,7 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		add(")");
 		return false;
 	}
-	case FunctionType::Location::Bare:
+	case FunctionType::Kind::Bare:
 	{
 		if (!_node.arguments().empty())
 		{
@@ -654,7 +654,7 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		add(")");
 		return false;
 	}
-	case FunctionType::Location::SetValue:
+	case FunctionType::Kind::SetValue:
 	{
 		add("let amount = ");
 		solAssert(_node.arguments().size() == 1, "");

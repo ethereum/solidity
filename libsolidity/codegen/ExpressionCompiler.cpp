@@ -434,7 +434,6 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
-	using Location = FunctionType::Location;
 	if (_functionCall.annotation().isTypeConversion)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
@@ -499,10 +498,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		FunctionType const& function = *functionType;
 		if (function.bound())
 			// Only delegatecall and internal functions can be bound, this might be lifted later.
-			solAssert(function.location() == Location::DelegateCall || function.location() == Location::Internal, "");
-		switch (function.location())
+			solAssert(function.kind() == FunctionType::Kind::DelegateCall || function.kind() == FunctionType::Kind::Internal, "");
+		switch (function.kind())
 		{
-		case Location::Internal:
+		case FunctionType::Kind::Internal:
 		{
 			// Calling convention: Caller pushes return address and arguments
 			// Callee removes them and pushes return values
@@ -538,16 +537,16 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context.adjustStackOffset(returnParametersSize - parameterSize - 1);
 			break;
 		}
-		case Location::External:
-		case Location::CallCode:
-		case Location::DelegateCall:
-		case Location::Bare:
-		case Location::BareCallCode:
-		case Location::BareDelegateCall:
+		case FunctionType::Kind::External:
+		case FunctionType::Kind::CallCode:
+		case FunctionType::Kind::DelegateCall:
+		case FunctionType::Kind::Bare:
+		case FunctionType::Kind::BareCallCode:
+		case FunctionType::Kind::BareDelegateCall:
 			_functionCall.expression().accept(*this);
 			appendExternalFunctionCall(function, arguments);
 			break;
-		case Location::Creation:
+		case FunctionType::Kind::Creation:
 		{
 			_functionCall.expression().accept(*this);
 			solAssert(!function.gasSet(), "Gas limit set for contract creation.");
@@ -592,7 +591,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
 		}
-		case Location::SetGas:
+		case FunctionType::Kind::SetGas:
 		{
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.expression().accept(*this);
@@ -608,7 +607,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << Instruction::POP;
 			break;
 		}
-		case Location::SetValue:
+		case FunctionType::Kind::SetValue:
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.expression().accept(*this);
 			// Note that function is not the original function, but the ".value" function.
@@ -617,8 +616,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << Instruction::POP;
 			arguments.front()->accept(*this);
 			break;
-		case Location::Send:
-		case Location::Transfer:
+		case FunctionType::Kind::Send:
+		case FunctionType::Kind::Transfer:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -637,7 +636,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					strings(),
 					strings(),
-					Location::Bare,
+					FunctionType::Kind::Bare,
 					false,
 					nullptr,
 					false,
@@ -647,24 +646,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
-			if (function.location() == Location::Transfer)
+			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
 				m_context << Instruction::ISZERO;
 				m_context.appendConditionalInvalid();
 			}
 			break;
-		case Location::Selfdestruct:
+		case FunctionType::Kind::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
 			break;
-		case Location::Revert:
+		case FunctionType::Kind::Revert:
 			// memory offset returned - zero length
 			m_context << u256(0) << u256(0);
 			m_context << Instruction::REVERT;
 			break;
-		case Location::SHA3:
+		case FunctionType::Kind::SHA3:
 		{
 			TypePointers argumentTypes;
 			for (auto const& arg: arguments)
@@ -678,13 +677,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SHA3;
 			break;
 		}
-		case Location::Log0:
-		case Location::Log1:
-		case Location::Log2:
-		case Location::Log3:
-		case Location::Log4:
+		case FunctionType::Kind::Log0:
+		case FunctionType::Kind::Log1:
+		case FunctionType::Kind::Log2:
+		case FunctionType::Kind::Log3:
+		case FunctionType::Kind::Log4:
 		{
-			unsigned logNumber = int(function.location()) - int(Location::Log0);
+			unsigned logNumber = int(function.kind()) - int(FunctionType::Kind::Log0);
 			for (unsigned arg = logNumber; arg > 0; --arg)
 			{
 				arguments[arg]->accept(*this);
@@ -701,7 +700,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << logInstruction(logNumber);
 			break;
 		}
-		case Location::Event:
+		case FunctionType::Kind::Event:
 		{
 			_functionCall.expression().accept(*this);
 			auto const& event = dynamic_cast<EventDefinition const&>(function.declaration());
@@ -755,50 +754,50 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << logInstruction(numIndexed);
 			break;
 		}
-		case Location::BlockHash:
+		case FunctionType::Kind::BlockHash:
 		{
 			arguments[0]->accept(*this);
 			utils().convertType(*arguments[0]->annotation().type, *function.parameterTypes()[0], true);
 			m_context << Instruction::BLOCKHASH;
 			break;
 		}
-		case Location::AddMod:
-		case Location::MulMod:
+		case FunctionType::Kind::AddMod:
+		case FunctionType::Kind::MulMod:
 		{
 			for (unsigned i = 0; i < 3; i ++)
 			{
 				arguments[2 - i]->accept(*this);
 				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
 			}
-			if (function.location() == Location::AddMod)
+			if (function.kind() == FunctionType::Kind::AddMod)
 				m_context << Instruction::ADDMOD;
 			else
 				m_context << Instruction::MULMOD;
 			break;
 		}
-		case Location::ECRecover:
-		case Location::SHA256:
-		case Location::RIPEMD160:
+		case FunctionType::Kind::ECRecover:
+		case FunctionType::Kind::SHA256:
+		case FunctionType::Kind::RIPEMD160:
 		{
 			_functionCall.expression().accept(*this);
-			static const map<Location, u256> contractAddresses{{Location::ECRecover, 1},
-															   {Location::SHA256, 2},
-															   {Location::RIPEMD160, 3}};
-			m_context << contractAddresses.find(function.location())->second;
+			static const map<FunctionType::Kind, u256> contractAddresses{{FunctionType::Kind::ECRecover, 1},
+															   {FunctionType::Kind::SHA256, 2},
+															   {FunctionType::Kind::RIPEMD160, 3}};
+			m_context << contractAddresses.find(function.kind())->second;
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
 				m_context << swapInstruction(i);
 			appendExternalFunctionCall(function, arguments);
 			break;
 		}
-		case Location::ByteArrayPush:
-		case Location::ArrayPush:
+		case FunctionType::Kind::ByteArrayPush:
+		case FunctionType::Kind::ArrayPush:
 		{
 			_functionCall.expression().accept(*this);
 			solAssert(function.parameterTypes().size() == 1, "");
 			solAssert(!!function.parameterTypes()[0], "");
 			TypePointer paramType = function.parameterTypes()[0];
 			shared_ptr<ArrayType> arrayType =
-				function.location() == Location::ArrayPush ?
+				function.kind() == FunctionType::Kind::ArrayPush ?
 				make_shared<ArrayType>(DataLocation::Storage, paramType) :
 				make_shared<ArrayType>(DataLocation::Storage);
 			// get the current length
@@ -822,13 +821,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset
-			if (function.location() == Location::ArrayPush)
+			if (function.kind() == FunctionType::Kind::ArrayPush)
 				StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
 			else
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
-		case Location::ObjectCreation:
+		case FunctionType::Kind::ObjectCreation:
 		{
 			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
 			// type is dynamically sized.
@@ -878,15 +877,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::POP;
 			break;
 		}
-		case Location::Assert:
-		case Location::Require:
+		case FunctionType::Kind::Assert:
+		case FunctionType::Kind::Require:
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
-			if (function.location() == Location::Assert)
+			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context << Instruction::INVALID;
 			else
@@ -922,7 +921,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				*funType->selfType(),
 				true
 			);
-			if (funType->location() == FunctionType::Location::Internal)
+			if (funType->kind() == FunctionType::Kind::Internal)
 			{
 				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
 				utils().pushCombinedFunctionEntryLabel(funDef);
@@ -930,7 +929,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			}
 			else
 			{
-				solAssert(funType->location() == FunctionType::Location::DelegateCall, "");
+				solAssert(funType->kind() == FunctionType::Kind::DelegateCall, "");
 				auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
 				solAssert(contract && contract->isLibrary(), "");
 				m_context.appendLibraryAddress(contract->fullyQualifiedName());
@@ -949,9 +948,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
 			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
-				switch (funType->location())
+				switch (funType->kind())
 				{
-				case FunctionType::Location::Internal:
+				case FunctionType::Kind::Internal:
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing
 					// us to link against it although we actually do not need it.
@@ -960,31 +959,31 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					else
 						solAssert(false, "Function not found in member access");
 					break;
-				case FunctionType::Location::Event:
+				case FunctionType::Kind::Event:
 					if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
 						solAssert(false, "event not found");
 					// no-op, because the parent node will do the job
 					break;
-				case FunctionType::Location::External:
-				case FunctionType::Location::Creation:
-				case FunctionType::Location::DelegateCall:
-				case FunctionType::Location::CallCode:
-				case FunctionType::Location::Send:
-				case FunctionType::Location::Bare:
-				case FunctionType::Location::BareCallCode:
-				case FunctionType::Location::BareDelegateCall:
-				case FunctionType::Location::Transfer:
+				case FunctionType::Kind::External:
+				case FunctionType::Kind::Creation:
+				case FunctionType::Kind::DelegateCall:
+				case FunctionType::Kind::CallCode:
+				case FunctionType::Kind::Send:
+				case FunctionType::Kind::Bare:
+				case FunctionType::Kind::BareCallCode:
+				case FunctionType::Kind::BareDelegateCall:
+				case FunctionType::Kind::Transfer:
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
-				case FunctionType::Location::Log0:
-				case FunctionType::Location::Log1:
-				case FunctionType::Location::Log2:
-				case FunctionType::Location::Log3:
-				case FunctionType::Location::Log4:
-				case FunctionType::Location::ECRecover:
-				case FunctionType::Location::SHA256:
-				case FunctionType::Location::RIPEMD160:
+				case FunctionType::Kind::Log0:
+				case FunctionType::Kind::Log1:
+				case FunctionType::Kind::Log2:
+				case FunctionType::Kind::Log3:
+				case FunctionType::Kind::Log4:
+				case FunctionType::Kind::ECRecover:
+				case FunctionType::Kind::SHA256:
+				case FunctionType::Kind::RIPEMD160:
 				default:
 					solAssert(false, "unsupported member function");
 				}
@@ -1372,7 +1371,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	{
 		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
 		{
-			if (funType->location() == FunctionType::Location::Internal)
+			if (funType->kind() == FunctionType::Kind::Internal)
 			{
 				// We have to remove the upper bits (construction time value) because they might
 				// be "unknown" in one of the operands and not in the other.
@@ -1555,11 +1554,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (_functionType.bound())
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
-	using FunctionKind = FunctionType::Location;
-	FunctionKind funKind = _functionType.location();
-	bool returnSuccessCondition = funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode;
-	bool isCallCode = funKind == FunctionKind::BareCallCode || funKind == FunctionKind::CallCode;
-	bool isDelegateCall = funKind == FunctionKind::BareDelegateCall || funKind == FunctionKind::DelegateCall;
+	auto funKind = _functionType.kind();
+	bool returnSuccessCondition = funKind == FunctionType::Kind::Bare || funKind == FunctionType::Kind::BareCallCode;
+	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
+	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 
 	unsigned retSize = 0;
 	if (returnSuccessCondition)
@@ -1576,7 +1574,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId = false;
 	if (
-		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode || funKind == FunctionKind::BareDelegateCall) &&
+		(funKind == FunctionType::Kind::Bare || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
 		!_arguments.empty()
 	)
 	{
@@ -1611,7 +1609,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		argumentTypes.push_back(_arguments[i]->annotation().type);
 	}
 
-	if (funKind == FunctionKind::ECRecover)
+	if (funKind == FunctionType::Kind::ECRecover)
 	{
 		// Clears 32 bytes of currently free memory and advances free memory pointer.
 		// Output area will be "start of input area" - 32.
@@ -1667,7 +1665,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// put on stack: <size of output> <memory pos of output> <size of input> <memory pos of input>
 	m_context << u256(retSize);
 	utils().fetchFreeMemoryPointer(); // This is the start of input
-	if (funKind == FunctionKind::ECRecover)
+	if (funKind == FunctionType::Kind::ECRecover)
 	{
 		// In this case, output is 32 bytes before input and has already been cleared.
 		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
@@ -1693,7 +1691,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	bool existenceChecked = false;
 	// Check the the target contract exists (has code) for non-low-level calls.
-	if (funKind == FunctionKind::External || funKind == FunctionKind::CallCode || funKind == FunctionKind::DelegateCall)
+	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
 		m_context.appendConditionalInvalid();
@@ -1741,14 +1739,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		// already there
 	}
-	else if (funKind == FunctionKind::RIPEMD160)
+	else if (funKind == FunctionType::Kind::RIPEMD160)
 	{
 		// fix: built-in contract returns right-aligned data
 		utils().fetchFreeMemoryPointer();
 		utils().loadFromMemoryDynamic(IntegerType(160), false, true, false);
 		utils().convertType(IntegerType(160), FixedBytesType(20));
 	}
-	else if (funKind == FunctionKind::ECRecover)
+	else if (funKind == FunctionType::Kind::ECRecover)
 	{
 		// Output is 32 bytes before input / free mem pointer.
 		// Failing ecrecover cannot be detected, so we clear output before the call.
