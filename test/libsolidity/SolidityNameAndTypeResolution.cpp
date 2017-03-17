@@ -5343,7 +5343,7 @@ BOOST_AUTO_TEST_CASE(interface_constructor)
 			function I();
 		}
 	)";
-	success(text);
+	CHECK_ERROR(text, TypeError, "Constructor cannot be defined in interfaces");
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)

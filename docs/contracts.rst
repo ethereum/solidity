@@ -931,6 +931,7 @@ Interfaces
 Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
 
 #. Cannot inherit other contracts or interfaces.
+#. Cannot define constructor.
 #. Cannot define variables.
 #. Cannot define structs.
 #. Cannot define enums.
