@@ -40,6 +40,21 @@ void ASTJsonConverter::addJsonNode(
 	bool _hasChildren = false
 )
 {
+	ASTJsonConverter::addJsonNode(
+		_node,
+		_nodeName,
+		std::vector<pair<string const, Json::Value const>>(_attributes),
+		_hasChildren
+	);
+}
+  
+void ASTJsonConverter::addJsonNode(
+	ASTNode const& _node,
+	string const& _nodeName,
+	std::vector<pair<string const, Json::Value const>> const& _attributes,
+	bool _hasChildren = false
+)
+{
 	Json::Value node;
 
 	node["id"] = Json::UInt64(_node.id());
@@ -183,11 +198,18 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	addJsonNode(_node, "VariableDeclaration", {
+	std::vector<pair<string const, Json::Value const>> attributes = {
 		make_pair("name", _node.name()),
-		make_pair("type", type(_node))
-	}, true);
+		make_pair("type", type(_node)),
+		make_pair("constant", _node.isConstant()),
+		make_pair("storageLocation", location(_node.referenceLocation())),
+		make_pair("visibility", visibility(_node.visibility()))
+        };
+	if (m_inEvent)
+		attributes.push_back(make_pair("indexed", _node.isIndexed()));
+	addJsonNode(_node, "VariableDeclaration", attributes, true);
 	return true;
+
 }
 
 bool ASTJsonConverter::visit(ModifierDefinition const& _node)
@@ -209,6 +231,7 @@ bool ASTJsonConverter::visit(TypeName const&)
 
 bool ASTJsonConverter::visit(EventDefinition const& _node)
 {
+	m_inEvent = true;
 	addJsonNode(_node, "EventDefinition", { make_pair("name", _node.name()) }, true);
 	return true;
 }
@@ -502,6 +525,7 @@ void ASTJsonConverter::endVisit(ModifierInvocation const&)
 
 void ASTJsonConverter::endVisit(EventDefinition const&)
 {
+	m_inEvent = false;
 	goUp();
 }
 
@@ -667,6 +691,21 @@ string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
 		return "external";
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration visibility."));
+	}
+}
+
+string ASTJsonConverter::location(VariableDeclaration::Location _location)
+{
+	switch (_location)
+	{
+	case VariableDeclaration::Location::Default:
+		return "default";
+	case VariableDeclaration::Location::Storage:
+		return "storage";
+	case VariableDeclaration::Location::Memory:
+		return "memory";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration location."));
 	}
 }
 
