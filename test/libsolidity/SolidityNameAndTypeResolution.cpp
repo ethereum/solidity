@@ -5368,6 +5368,26 @@ BOOST_AUTO_TEST_CASE(interface_function_bodies)
 	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot have an implementation");
 }
 
+BOOST_AUTO_TEST_CASE(interface_function_internal)
+{
+	char const* text = R"(
+		interface I {
+			function f() internal;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot be internal or private.");
+}
+
+BOOST_AUTO_TEST_CASE(interface_function_private)
+{
+	char const* text = R"(
+		interface I {
+			function f() private;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot be internal or private.");
+}
+
 BOOST_AUTO_TEST_CASE(interface_events)
 {
 	char const* text = R"(

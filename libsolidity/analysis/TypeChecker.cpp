@@ -463,6 +463,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
 		_function.body().accept(*this);
 	}
+	if (_function.visibility() < FunctionDefinition::Visibility::Public)
+		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+			typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
 	if (_function.isConstructor())
 		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
 			typeError(_function.location(), "Constructor cannot be defined in interfaces.");
