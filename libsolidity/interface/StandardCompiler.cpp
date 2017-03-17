@@ -43,9 +43,12 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	for (auto const& sourceName: sources.getMemberNames())
 		m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
 
-	// @TODO parse settings
-	bool optimize = false;
-	unsigned optimizeRuns = 200;
+	Json::Value const& settings = _input.get("settings", Json::Value());
+
+	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
+	bool optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
+	unsigned optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+
 	map<string, h160> libraries;
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
