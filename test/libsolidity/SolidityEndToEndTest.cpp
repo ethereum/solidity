@@ -9266,6 +9266,41 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK(callContractFunction("k()") == encodeArgs(u256(-25)));
 }
 
+BOOST_AUTO_TEST_CASE(interface)
+{
+	char const* sourceCode = R"(
+		interface I {
+			event A();
+			function f() returns (bool);
+			function() payable;
+		}
+
+		contract A is I {
+			function f() returns (bool) {
+				return g();
+			}
+
+			function g() returns (bool) {
+				return true;
+			}
+
+			function() payable {
+			}
+		}
+
+		contract C {
+			function f(address _interfaceAddress) returns (bool) {
+				I i = I(_interfaceAddress);
+				return i.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "A");
+	u160 const recipient = m_contractAddress;
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(address)", recipient) == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

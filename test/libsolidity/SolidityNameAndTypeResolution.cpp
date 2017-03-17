@@ -5435,6 +5435,23 @@ BOOST_AUTO_TEST_CASE(using_interface)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(using_interface_complex)
+{
+	char const* text = R"(
+		interface I {
+			event A();
+			function f();
+			function g();
+			function();
+		}
+		contract C is I {
+			function f() {
+			}
+		}
+	)";
+	success(text);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
