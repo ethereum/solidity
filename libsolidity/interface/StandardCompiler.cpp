@@ -45,6 +45,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
 
+	vector<string> remappings;
+	for (auto const& remapping: settings.get("remappings", Json::Value()))
+		remappings.push_back(remapping.asString());
+	m_compilerStack.setRemappings(remappings);
+
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
 	bool optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
 	unsigned optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
