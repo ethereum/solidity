@@ -143,18 +143,18 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			if (!contents_c && !error_c)
 			{
 				result.success = false;
-				result.contentsOrErrorMesage = "File not found.";
+				result.contentsOrErrorMessage = "File not found.";
 			}
 			if (contents_c)
 			{
 				result.success = true;
-				result.contentsOrErrorMesage = string(contents_c);
+				result.contentsOrErrorMessage = string(contents_c);
 				free(contents_c);
 			}
 			if (error_c)
 			{
 				result.success = false;
-				result.contentsOrErrorMesage = string(error_c);
+				result.contentsOrErrorMessage = string(error_c);
 				free(error_c);
 			}
 			return result;
