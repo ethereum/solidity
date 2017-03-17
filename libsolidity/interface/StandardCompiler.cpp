@@ -50,6 +50,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	unsigned optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
 
 	map<string, h160> libraries;
+	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
+	for (auto const& sourceName: jsonLibraries.getMemberNames())
+	{
+		auto const& jsonSourceName = jsonLibraries[sourceName];
+		for (auto const& library: jsonSourceName.getMemberNames())
+			// @TODO use libraries only for the given source
+			libraries[library] = h160(jsonSourceName[library].asString());
+	}
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
