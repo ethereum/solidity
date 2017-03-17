@@ -69,18 +69,6 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
 
-        # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          before_install:
-            - sudo apt-get -y install python-sphinx 
-          env:
-              - SOLC_DOCS=On
-              - SOLC_RELEASE=Off
-              - SOLC_TESTS=Off
-
         # Docker target, which generates a statically linked alpine image
         - os: linux
           dist: trusty
@@ -113,7 +101,6 @@ matrix:
               - SOLC_INSTALL_DEPS_TRAVIS=Off
               - SOLC_RELEASE=Off
               - SOLC_TESTS=Off
-
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
         #
@@ -224,7 +211,8 @@ deploy:
     # This runs for each tag that is created and adds the corresponding files.
     - provider: releases
       api_key:
-          secure: PWH37xVBCF0XiSjl+eH7XIdkrfxZXjzvqF4PiBOnD3VnFz+odrdnIwBmCeBYTHTWF8efpp8fmzWJk2UVq1JcpyZiC+SVxO8dx91W2ia1a+wKrEQuDgkUrZBkl5IQNCv0QS81DDQhliyZEaYh8wHO/7RReyMpGpw2U2u85WkFiZ+LdlHEZPfzUeh9lxQ9n8qwFL8Rja+Q05d4cQ8zaVEtofJJT4T6DUWhc3TzuxDYxOmjwg37rC9CkGSLn6VadSh8b3j5R0SZupFsAEvBL/imBLP9r9ewoo7o4p6By3jwiIgH9yNg7LM618xbffcNaYF/KtLBi9uPHfqF7hRD4PlECz+D0PR78nQItOX5HKm1QMg5kCnghRVCA0IVjpV5fiYQnMLM7dCRv34I5b3zLpa69wQ/GLYB2FViqNUfvPeiZTEeIJ2OmATlFx8AH2JoqpY1XJknWb35+vMfa8LSiJJW++SLWeV+ncC92hrvyZ1cy3trepRRZIfyYepxHifnfdWMkddQUJk5b2WS5Fy/TJLZNPeombnpvRhUC38dsYItarKeXTc6k4oADCEDZ2rgGIcEiqRxXV11Y5xHJekLDWzUs+YJNcCuL4pnAP//LOnbnH2w9rLpwhQYSl0anCd097NivAXQJXO2JI/byIYz1kiCVQWnW6EM8+72mLOklf/Qr8k=
+          secure: kyDTn9taQWSzALK2CbtJ9VC1KhIO3DzIM1aIwpJexPsEq6h1Wnjp3PoyyzJGf+09AjWZLM5lNcHy6/F9AEINgnEeekdMVNT1YIYsGSJ76z/pDXB4AOZKqGXdZgLNvmxZy9dWQJykBSV65kGgEZlihW/5gF0/ouxyZafYOYlwseA7H2NDDTdIzf5uV9oIPo/y3phXG1nxGcmE3tOH/bEJL+dv0C6hI3dhL7mQhmmBCgyo/ZlAEsdj0hbBF332dxqojGwfPeuFDrxvnWLX4jhbJAkrqKgcU+1lnsr7aI+RBHu7mV3/Fj+XfTrs3J9HvCjVfe0d9s1dMsIhdY8xT8NnZX618AiZYMIoQ1gE89R8uL/mN5BpcYG7U654FDG/+OTIa6VBMDxB9J85kYdnLq3XBlcr1YoPMfTJ1UV7mpG4D1EDJObgToyCEDNbKS1Nf+osVcP8UcsrvhBCNXhPsFud8ZemaXmrVNhJOcf8sAHZx2N/HSfm7Im74ZFqJbHrWlx9aFKZ71BvSCPAbcp4hGw0A0Anynn9hOfxZjh5aqwxhz4ieTolCWaZCVyMveLJccu2ib2LVza2soHiSX2maFFlXqkoPd8h3vIGMR4CbqWfxAhXuxzMivOc24kPVHLEt5zq9635V519eOEEPYUs4X1ArZySKvJBbEcJ2RP+AZrZlj4=
+      file: $TRAVIS_BUILD_DIR/solidity-$ZIP_SUFFIX.zip
 
       overwrite: true
       file_glob: true
