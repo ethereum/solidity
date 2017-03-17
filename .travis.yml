@@ -176,15 +176,10 @@ install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test $SOLC_DOCKER != On || (
-        docker build -t tmp -f scripts/Dockerfile .
-        tmp_container=$(docker create tmp sh)
-        mkdir -p upload
-        docker cp ${tmp_container}:/usr/bin/solc upload/
-      )
 
 before_script:
     - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
+    - test $SOLC_DOCKER != On || (scripts/docker_build.sh)
     - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE
       && scripts/release.sh $ZIP_SUFFIX
       && scripts/create_source_tarball.sh)
