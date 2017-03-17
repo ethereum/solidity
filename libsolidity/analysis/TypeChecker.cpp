@@ -457,18 +457,17 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
 			vector<ContractDefinition const*>()
 		);
-	if (_function.isImplemented())
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
 	{
-		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		if (_function.isImplemented())
 			typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
-		_function.body().accept(*this);
-	}
-	if (_function.visibility() < FunctionDefinition::Visibility::Public)
-		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		if (_function.visibility() < FunctionDefinition::Visibility::Public)
 			typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
-	if (_function.isConstructor())
-		if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		if (_function.isConstructor())
 			typeError(_function.location(), "Constructor cannot be defined in interfaces.");
+	}
+	if (_function.isImplemented())
+		_function.body().accept(*this);
 	return false;
 }
 
