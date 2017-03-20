@@ -266,7 +266,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 				output["sourceList"].append(source);
 			output["sources"] = Json::Value(Json::objectValue);
 			for (auto const& source: compiler.sourceNames())
-				output["sources"][source]["AST"] = ASTJsonConverter(compiler.ast(source), compiler.sourceIndices()).json();
+				output["sources"][source]["AST"] = ASTJsonConverter(true, compiler.sourceIndices()).toJson(compiler.ast(source));
 		}
 		catch (...)
 		{
