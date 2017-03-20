@@ -835,9 +835,9 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(m_compiler->ast(sourceCode.first), m_compiler->sourceIndices());
+			ASTJsonConverter converter(true, m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
-			output[g_strSources][sourceCode.first]["AST"] = converter.json();
+			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
 	}
 	cout << dev::jsonCompactPrint(output) << endl;
@@ -880,8 +880,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
-					converter.print(data);
+					ASTJsonConverter(true).print(data, m_compiler->ast(sourceCode.first));
 					postfix += "_json";
 				}
 				boost::filesystem::path path(sourceCode.first);
@@ -905,8 +904,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
-					converter.print(cout);
+					ASTJsonConverter(true).print(cout, m_compiler->ast(sourceCode.first));
 				}
 			}
 		}
