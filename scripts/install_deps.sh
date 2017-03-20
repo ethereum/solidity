@@ -96,7 +96,7 @@ case $(uname -s) in
         brew update
         brew install boost
         brew install cmake
-        if ["$CI" = true]; then
+        if [ "$CI" = true ]; then
             brew upgrade cmake
             brew tap ethereum/ethereum
             brew install cpp-ethereum
