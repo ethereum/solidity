@@ -102,10 +102,13 @@ bool ASTJsonConverter::visit(SourceUnit const& _node)
 	setJsonNode(
 		_node,
 		"SourceUnit",
-		{{"nodes", toJson(_node.nodes())}}
+		{
+			make_pair("absolutePath", _node.annotation().path),
+			make_pair("nodes", toJson(_node.nodes()))
+		}
 	);
-	//@TODO add annotation data
-
+	//@TODO add annotation data -> path is included
+	//it does not need the annotation's exported symbols, right? -> will be included anyways
 	return false;
 }
 
@@ -124,7 +127,24 @@ bool ASTJsonConverter::visit(PragmaDirective const& _node)
 
 bool ASTJsonConverter::visit(ImportDirective const& _node)
 {
-	setJsonNode(_node, "ImportDirective", { make_pair("file", _node.path())});
+	std::vector<pair<string const, Json::Value>> attributes = {
+		make_pair("file", _node.path()),
+		make_pair("absolutePath", _node.annotation().absolutePath),
+		make_pair("SourceUnit", _node.annotation().sourceUnit->id())
+	};
+
+	attributes.push_back(make_pair("unitAlias", _node.name()));
+	Json::Value symbolAliases(Json::arrayValue);
+	for (auto const& symbolAlias: _node.symbolAliases())
+	{
+		Json::Value tuple(Json::objectValue);
+		solAssert(symbolAlias.first, "");
+		tuple["foreign"] = symbolAlias.first->id();
+		tuple["local"] =  symbolAlias.second ? Json::Value(*symbolAlias.second) : Json::nullValue;
+		symbolAliases.append(tuple);
+	}
+	attributes.push_back( make_pair("symbolAliases", symbolAliases));
+	setJsonNode(_node, "ImportDirective", std::move(attributes));
 	return false;
 }
 
@@ -133,11 +153,15 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 	Json::Value linearizedBaseContracts(Json::arrayValue);
 	for (auto const& baseContract: _node.annotation().linearizedBaseContracts)
 		linearizedBaseContracts.append(Json::UInt64(baseContract->id()));
+	Json::Value contractDependencies(Json::arrayValue);
+	for (auto const& dependentContract: _node.annotation().contractDependencies)
+		contractDependencies.append(Json::UInt64(dependentContract->id()));
 	setJsonNode(_node, "ContractDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("isLibrary", _node.isLibrary()),
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
 		make_pair("linearizedBaseContracts", linearizedBaseContracts),
+		make_pair("contractDependencies", contractDependencies)
 	});
 	return false;
 }
@@ -156,13 +180,25 @@ bool ASTJsonConverter::visit(UsingForDirective const& _node)
 
 bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
-	setJsonNode(_node, "StructDefinition", { make_pair("name", _node.name()) });
+	setJsonNode(_node, "StructDefinition", {
+		make_pair("name", _node.name()),
+		make_pair("canonicalName", _node.annotation().canonicalName),
+		//make_pair("members", toJson(_node.members()))
+		// this breaks because members is, (for mysterious reasons),
+		//of type (const std::vector<std::shared_ptr<dev::solidity::VariableDeclaration> >&)’
+		    //why shared Pointer, when its declared ASTPointer??
+
+	});
 	return false;
 }
 
 bool ASTJsonConverter::visit(EnumDefinition const& _node)
 {
-	setJsonNode(_node, "EnumDefinition", { make_pair("name", _node.name()) });
+	setJsonNode(_node, "EnumDefinition", {
+		make_pair("name", _node.name()),
+		//make_pair("members", toJson(_node.members()))
+		//same breakage here
+	});
 	return false;
 }
 
