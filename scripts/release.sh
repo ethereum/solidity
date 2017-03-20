@@ -88,5 +88,5 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.
-
-zip -j $REPO_ROOT/solidity-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+mkdir -p $REPO_ROOT/upload
+zip -j $REPO_ROOT/upload/solidity-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*

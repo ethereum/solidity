@@ -176,10 +176,10 @@ install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
-    - test $SOLC_DOCKER != On || (docker build -t ethereum/solc:build -f scripts/Dockerfile .)
 
 before_script:
     - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
+    - test $SOLC_DOCKER != On || (scripts/docker_build.sh)
     - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE
       && scripts/release.sh $ZIP_SUFFIX
       && scripts/create_source_tarball.sh)
@@ -223,11 +223,8 @@ deploy:
 
       overwrite: true
       file_glob: true
-      file:
-          - $TRAVIS_BUILD_DIR/solidity*.zip
-          - $TRAVIS_BUILD_DIR/solidity*tar.gz
+      file: $TRAVIS_BUILD_DIR/upload/*
       skip_cleanup: true
       on:
           all_branches: true
           tags: true
-          condition: $SOLC_RELEASE == On
