@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmStack.h>
+
 #include <libsolidity/interface/Exceptions.h>
 
 #include <boost/variant.hpp>
@@ -57,9 +59,7 @@ class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
 	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	/// @param _allowFailedLookups if true, allow failed lookups for variables (they
-	/// will be provided from the environment later on)
-	AsmAnalyzer(Scopes& _scopes, ErrorList& _errors, bool _allowFailedLookups);
+	AsmAnalyzer(Scopes& _scopes, ErrorList& _errors, ExternalIdentifierAccess::Resolver const& _resolver);
 
 	bool analyze(assembly::Block const& _block);
 
@@ -79,7 +79,7 @@ private:
 	bool checkAssignment(assembly::Identifier const& _assignment);
 	Scope& scope(assembly::Block const* _block);
 
-	bool m_allowFailedLookups = false;
+	ExternalIdentifierAccess::Resolver const& m_resolver;
 	Scope* m_currentScope = nullptr;
 	Scopes& m_scopes;
 	ErrorList& m_errors;

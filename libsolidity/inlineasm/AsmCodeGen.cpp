@@ -308,22 +308,11 @@ private:
 	ExternalIdentifierAccess m_identifierAccess;
 };
 
-bool assembly::CodeGenerator::typeCheck(ExternalIdentifierAccess const& _identifierAccess)
-{
-	size_t initialErrorLen = m_errors.size();
-	eth::Assembly assembly;
-	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
-		return false;
-	CodeTransform(state, m_parsedData, _identifierAccess);
-	return m_errors.size() == initialErrorLen;
-}
-
 eth::Assembly assembly::CodeGenerator::assemble(ExternalIdentifierAccess const& _identifierAccess)
 {
 	eth::Assembly assembly;
 	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, _identifierAccess.resolve)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 	return assembly;
@@ -332,7 +321,7 @@ eth::Assembly assembly::CodeGenerator::assemble(ExternalIdentifierAccess const& 
 void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, ExternalIdentifierAccess const& _identifierAccess)
 {
 	GeneratorState state(m_errors, _assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, !!_identifierAccess.resolve)).analyze(m_parsedData))
+	if (!(AsmAnalyzer(state.scopes, m_errors, _identifierAccess.resolve)).analyze(m_parsedData))
 		solAssert(false, "Assembly error");
 	CodeTransform(state, m_parsedData, _identifierAccess);
 }

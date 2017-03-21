@@ -5058,7 +5058,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "not found, not unique or not lvalue.");
+	CHECK_ERROR(text, DeclarationError, "Variable not found.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)

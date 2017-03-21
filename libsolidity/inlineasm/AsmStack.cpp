@@ -39,7 +39,10 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
+bool InlineAssemblyStack::parse(
+	shared_ptr<Scanner> const& _scanner,
+	ExternalIdentifierAccess::Resolver const& _resolver
+)
 {
 	m_parserResult = make_shared<Block>();
 	Parser parser(m_errors);
@@ -49,7 +52,7 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 
 	*m_parserResult = std::move(*result);
 	AsmAnalyzer::Scopes scopes;
-	return (AsmAnalyzer(scopes, m_errors, false)).analyze(*m_parserResult);
+	return (AsmAnalyzer(scopes, m_errors, _resolver)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()

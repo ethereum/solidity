@@ -47,13 +47,15 @@ enum class IdentifierContext { LValue, RValue };
 /// to inline assembly (not used in standalone assembly mode).
 struct ExternalIdentifierAccess
 {
+	using Resolver = std::function<size_t(assembly::Identifier const&, IdentifierContext)>;
 	/// Resolve a an external reference given by the identifier in the given context.
 	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
-	std::function<size_t(assembly::Identifier const&, IdentifierContext)> resolve;
+	Resolver resolve;
+	using CodeGenerator = std::function<void(assembly::Identifier const&, IdentifierContext, eth::Assembly&)>;
 	/// Generate code for retrieving the value (rvalue context) or storing the value (lvalue context)
 	/// of an identifier. The code should be appended to the assembly. In rvalue context, the value is supposed
 	/// to be put onto the stack, in lvalue context, the value is assumed to be at the top of the stack.
-	std::function<void(assembly::Identifier const&, IdentifierContext, eth::Assembly&)> generateCode;
+	CodeGenerator generateCode;
 };
 
 class InlineAssemblyStack
@@ -61,7 +63,10 @@ class InlineAssemblyStack
 public:
 	/// Parse the given inline assembly chunk starting with `{` and ending with the corresponding `}`.
 	/// @return false or error.
-	bool parse(std::shared_ptr<Scanner> const& _scanner);
+	bool parse(
+		std::shared_ptr<Scanner> const& _scanner,
+		ExternalIdentifierAccess::Resolver const& _externalIdentifierResolver = ExternalIdentifierAccess::Resolver()
+	);
 	/// Converts the parser result back into a string form (not necessarily the same form
 	/// as the source form, but it should parse into the same parsed form again).
 	std::string toString();

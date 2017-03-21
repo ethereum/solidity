@@ -24,8 +24,7 @@
 #include <memory>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
-#include <libevmasm/Assembly.h> // needed for inline assembly
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
 
 using namespace std;
 using namespace dev;
@@ -630,8 +629,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
-	assembly::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](
+	assembly::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		assembly::Identifier const& _identifier,
 		assembly::IdentifierContext _context
 	)
@@ -682,8 +680,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		ref->second.valueSize = valueSize;
 		return valueSize;
 	};
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	if (!codeGen.typeCheck(identifierAccess))
+	assembly::AsmAnalyzer::Scopes scopes;
+	assembly::AsmAnalyzer analyzer(scopes, m_errors, identifierAccess);
+	if (!analyzer.analyze(_inlineAssembly.operations()))
 		return false;
 	return true;
 }

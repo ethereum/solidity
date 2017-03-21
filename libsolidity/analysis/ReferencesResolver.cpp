@@ -25,7 +25,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
 using namespace std;
@@ -163,9 +163,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// The only purpose of this step is to fill the inline assembly annotation with
 	// external references.
 	ErrorList errorsIgnored;
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), errorsIgnored);
-	assembly::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext) {
+	assembly::ExternalIdentifierAccess::Resolver resolver =
+	[&](assembly::Identifier const& _identifier, assembly::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
 		if (declarations.size() != 1)
 			return size_t(-1);
@@ -173,7 +172,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		// At this stage we do not yet know the stack size of the identifier, so we just return 1.
 		return size_t(1);
 	};
-	codeGen.typeCheck(identifierAccess);
+	assembly::AsmAnalyzer::Scopes scopes;
+	assembly::AsmAnalyzer(scopes, errorsIgnored, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
 

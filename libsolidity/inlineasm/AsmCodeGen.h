@@ -44,9 +44,6 @@ class CodeGenerator
 public:
 	CodeGenerator(Block const& _parsedData, ErrorList& _errors):
 		m_parsedData(_parsedData), m_errors(_errors) {}
-	/// Performs type checks and @returns false on error.
-	/// Actually runs the full code generation but discards the result.
-	bool typeCheck(ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
 	/// Performs code generation and @returns the result.
 	eth::Assembly assemble(ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
 	/// Performs code generation and appends generated to to _assembly.

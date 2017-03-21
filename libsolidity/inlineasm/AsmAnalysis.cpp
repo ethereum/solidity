@@ -38,8 +38,12 @@ using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
 
-AsmAnalyzer::AsmAnalyzer(AsmAnalyzer::Scopes& _scopes, ErrorList& _errors, bool _allowFailedLookups):
-	m_allowFailedLookups(_allowFailedLookups), m_scopes(_scopes), m_errors(_errors)
+AsmAnalyzer::AsmAnalyzer(
+	AsmAnalyzer::Scopes& _scopes,
+	ErrorList& _errors,
+	ExternalIdentifierAccess::Resolver const& _resolver
+):
+	m_resolver(_resolver), m_scopes(_scopes), m_errors(_errors)
 {
 }
 
@@ -92,7 +96,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	)))
 	{
 	}
-	else if (!m_allowFailedLookups)
+	else if (!m_resolver || m_resolver(_identifier, IdentifierContext::RValue) == size_t(-1))
 	{
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::DeclarationError,
@@ -223,10 +227,11 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable)
 {
 	if (!(*this)(_variable))
 		return false;
-	else if (!m_allowFailedLookups)
+
+	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
 		// Check that it is a variable
-		if (m_currentScope->lookup(_variable.name)->type() != typeid(Scope::Variable))
+		if (var->type() != typeid(Scope::Variable))
 		{
 			m_errors.push_back(make_shared<Error>(
 				Error::Type::TypeError,
@@ -235,6 +240,15 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable)
 			));
 			return false;
 		}
+	}
+	else if (!m_resolver || m_resolver(_variable, IdentifierContext::LValue) == size_t(-1))
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Variable not found.",
+			_variable.location
+		));
+		return false;
 	}
 	return true;
 }
