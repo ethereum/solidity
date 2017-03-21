@@ -29,6 +29,21 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+Json::Value formatFatalError(string const& _type, string const& _description)
+{
+	Json::Value error = Json::objectValue;
+	error["type"] = _type;
+	error["component"] = "general";
+	error["severity"] = "error";
+	error["message"] = _description;
+
+	Json::Value output = Json::objectValue;
+	output["errors"] = Json::arrayValue;
+	output["errors"].append(error);
+
+	return output;
+}
+
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
 	m_compilerStack.reset(false);
