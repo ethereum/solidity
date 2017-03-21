@@ -3,6 +3,9 @@
 Features:
  * Support ``interface`` contracts.
 
+Bugfixes:
+ * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
+
 ### 0.4.10 (2017-03-15)
 
 Features:
