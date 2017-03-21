@@ -130,7 +130,6 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 		make_pair("absolutePath", _node.annotation().absolutePath),
 		make_pair("SourceUnit", _node.annotation().sourceUnit->id())
 	};
-
 	attributes.push_back(make_pair("unitAlias", _node.name()));
 	Json::Value symbolAliases(Json::arrayValue);
 	for (auto const& symbolAlias: _node.symbolAliases())
@@ -159,20 +158,31 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("isLibrary", _node.isLibrary()),
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
 		make_pair("linearizedBaseContracts", linearizedBaseContracts),
-		make_pair("contractDependencies", contractDependencies)
+		make_pair("contractDependencies", contractDependencies),
+		make_pair("nodes", toJson(_node.subNodes()))
 	});
 	return false;
 }
 
 bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 {
-	setJsonNode(_node, "InheritanceSpecifier", {});
+	setJsonNode(_node, "InheritanceSpecifier", {
+		//make_pair("baseName", _node.name()),
+		//-->BREAKS: error: use of deleted function ‘dev::solidity::UserDefinedTypeName::UserDefinedTypeName(const dev::solidity::UserDefinedTypeName&)’
+		//note: ‘dev::solidity::UserDefinedTypeName::UserDefinedTypeName(const dev::solidity::UserDefinedTypeName&)’ is implicitly deleted because the default definition would be ill-formed:
+		// class UserDefinedTypeName: public TypeName
+		make_pair("arguments", toJson(_node.arguments()))
+		//typeName (and declarations) classes work without problems
+		    });
 	return false;
 }
 
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
-	setJsonNode(_node, "UsingForDirective", {});
+	setJsonNode(_node, "UsingForDirective", {
+		//make_pair("libraryName", _node.libraryName()),//-> BREAKS same as above
+		make_pair("typename", _node.typeName())
+	});
 	return false;
 }
 
@@ -181,11 +191,7 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 	setJsonNode(_node, "StructDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("canonicalName", _node.annotation().canonicalName),
-		//make_pair("members", toJson(_node.members()))
-		// this breaks because members is, (for mysterious reasons),
-		//of type (const std::vector<std::shared_ptr<dev::solidity::VariableDeclaration> >&)’
-		    //why shared Pointer, when its declared ASTPointer??
-
+		make_pair("members", toJson(_node.members()))
 	});
 	return false;
 }
@@ -195,7 +201,6 @@ bool ASTJsonConverter::visit(EnumDefinition const& _node)
 	setJsonNode(_node, "EnumDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("members", toJson(_node.members()))
-		//same breakage here
 	});
 	return false;
 }
