@@ -64,8 +64,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_scope = &_contract;
 
-	// We force our own visiting order here.
-	//@TODO structs will be visited again below, but it is probably fine.
+	// We force our own visiting order here. The structs have to be excluded below.
+	set<ASTNode const*> visited;
+	for (auto const& s: _contract.definedStructs())
+		visited.insert(s);
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -113,7 +115,9 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			_contract.annotation().isFullyImplemented = false;
 	}
 
-	ASTNode::listAccept(_contract.subNodes(), *this);
+	for (auto const& n: _contract.subNodes())
+		if (!visited.count(n.get()))
+			n->accept(*this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
