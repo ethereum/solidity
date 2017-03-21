@@ -1493,6 +1493,15 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(interface)
+{
+	char const* text = R"(
+		interface Interface {
+			function f();
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

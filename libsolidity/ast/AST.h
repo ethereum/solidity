@@ -316,19 +316,21 @@ protected:
 class ContractDefinition: public Declaration, public Documented
 {
 public:
+	enum class ContractKind { Interface, Contract, Library };
+
 	ContractDefinition(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 		std::vector<ASTPointer<ASTNode>> const& _subNodes,
-		bool _isLibrary
+		ContractKind _contractKind = ContractKind::Contract
 	):
 		Declaration(_location, _name),
 		Documented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_subNodes(_subNodes),
-		m_isLibrary(_isLibrary)
+		m_contractKind(_contractKind)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -344,7 +346,7 @@ public:
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
-	bool isLibrary() const { return m_isLibrary; }
+	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
@@ -371,10 +373,12 @@ public:
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
 
+	ContractKind contractKind() const { return m_contractKind; }
+
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
-	bool m_isLibrary;
+	ContractKind m_contractKind;
 
 	// parsed Natspec documentation of the contract.
 	Json::Value m_userDocumentation;

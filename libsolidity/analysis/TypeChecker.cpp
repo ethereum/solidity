@@ -64,8 +64,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_scope = &_contract;
 
-	// We force our own visiting order here.
-	//@TODO structs will be visited again below, but it is probably fine.
+	// We force our own visiting order here. The structs have to be excluded below.
+	set<ASTNode const*> visited;
+	for (auto const& s: _contract.definedStructs())
+		visited.insert(s);
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -113,7 +115,9 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			_contract.annotation().isFullyImplemented = false;
 	}
 
-	ASTNode::listAccept(_contract.subNodes(), *this);
+	for (auto const& n: _contract.subNodes())
+		if (!visited.count(n.get()))
+			n->accept(*this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
@@ -354,6 +358,9 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_inheritance.location(), "Interfaces cannot inherit.");
+
 	if (base->isLibrary())
 		typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
@@ -396,6 +403,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 bool TypeChecker::visit(StructDefinition const& _struct)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_struct.location(), "Structs cannot be defined in interfaces.");
+
 	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		if (!type(*member)->canBeStored())
 			typeError(member->location(), "Type cannot be used in struct.");
@@ -451,6 +461,15 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
 			vector<ContractDefinition const*>()
 		);
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	{
+		if (_function.isImplemented())
+			typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
+		if (_function.visibility() < FunctionDefinition::Visibility::Public)
+			typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+		if (_function.isConstructor())
+			typeError(_function.location(), "Constructor cannot be defined in interfaces.");
+	}
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	return false;
@@ -458,6 +477,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_variable.location(), "Variables cannot be declared in interfaces.");
+
 	// Variables can be declared without type (with "var"), in which case the first assignment
 	// sets the type.
 	// Note that assignments before the first declaration are legal because of the special scoping
@@ -501,6 +523,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		!FunctionType(_variable).interfaceFunctionType()
 	)
 		typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+	return false;
+}
+
+bool TypeChecker::visit(EnumDefinition const& _enum)
+{
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_enum.location(), "Enumerable cannot be declared in interfaces.");
 	return false;
 }
 
