@@ -166,22 +166,33 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 
 bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 {
+	//??this node never shows up!
+	// assumed usage:
+	// import contract.sol <- with bar-contract
+	// contract foo is bar {...
 	setJsonNode(_node, "InheritanceSpecifier", {
-		//make_pair("baseName", _node.name()),
-		//-->BREAKS: error: use of deleted function ‘dev::solidity::UserDefinedTypeName::UserDefinedTypeName(const dev::solidity::UserDefinedTypeName&)’
-		//note: ‘dev::solidity::UserDefinedTypeName::UserDefinedTypeName(const dev::solidity::UserDefinedTypeName&)’ is implicitly deleted because the default definition would be ill-formed:
-		// class UserDefinedTypeName: public TypeName
+		//TODO:make_pair("baseName", &_node.name().annotation().referencedDeclaration->name()), //or maybe id()?
+		//this is only set during 'referenceresolutionstage', nullpointercheck needed?
+		// note: i decided not to include userDefinedTypeName.annotation.contractScope
 		make_pair("arguments", toJson(_node.arguments()))
-		//typeName (and declarations) classes work without problems
-		    });
+		//??this node never shows up! assumed usage contract foo is bar {...}
+	});
 	return false;
 }
 
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
+	Json::Value libraries(Json::arrayValue);
+	for (auto const& lib: _node.libraryName().namePath())
+		tmp.append(lib);
+	//note: namePath is a vector yet the using for directive only allows for one library
+	//design decision: show list, or just the first object
 	setJsonNode(_node, "UsingForDirective", {
-		//make_pair("libraryName", _node.libraryName()),//-> BREAKS same as above
-		make_pair("typename", _node.typeName())
+		make_pair("libraryNames", libraries),
+		make_pair("typeName", _node.typeName() ?
+			Json::Value(_node.typeName()->annotation().type->toString()) //or maybe use id()?
+			: Json::Value("*") )
+			    //do we break superlong lines?
 	});
 	return false;
 }
@@ -213,18 +224,26 @@ bool ASTJsonConverter::visit(EnumValue const& _node)
 
 bool ASTJsonConverter::visit(ParameterList const& _node)
 {
-	setJsonNode(_node, "ParameterList", {});
+	setJsonNode(_node, "ParameterList", {
+		make_pair("parameters", toJson(_node.parameters()))
+			    //todo write check
+		    });
 	return false;
 }
 
 bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
-	setJsonNode(_node, "FunctionDefinition", {
+	std::vector<pair<string const, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("constant", _node.isDeclaredConst()),
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", visibility(_node.visibility()))
-	});
+		//make_pair("parameters", toJson(_node.parameterList())),
+		//make_pair("returnParameters", toJson(_node.returnParameterList())),
+		//make_pair("modifiers", toJson(_node.modifiers()))
+		//make_pair("body", toJson(_node.body())
+	};
+	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
 }
 
