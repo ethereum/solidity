@@ -187,13 +187,20 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
 	map<string, vector<FunTypeAndFlag>> functions;
 
+	bool allBaseConstructorsImplemented = true;
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			// Take constructors out of overload hierarchy
 			if (function->isConstructor())
+			{
+				if (!function->isImplemented())
+					// Base contract's constructor is not fully implemented, no way to get
+					// out of this.
+					allBaseConstructorsImplemented = false;
 				continue;
+			}
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
@@ -210,6 +217,9 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			else if (function->isImplemented())
 				it->second = true;
 		}
+
+	if (!allBaseConstructorsImplemented)
+		_contract.annotation().isFullyImplemented = false;
 
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
