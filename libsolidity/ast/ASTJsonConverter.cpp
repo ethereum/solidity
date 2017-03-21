@@ -89,26 +89,24 @@ Json::Value ASTJsonConverter::toJson(ASTNode const& _node)
 	return std::move(m_currentValue);
 }
 
-Json::Value ASTJsonConverter::toJson(vector<ASTPointer<ASTNode>> const& _nodes)
-{
-	Json::Value ret(Json::arrayValue);
-	for (auto const& n: _nodes)
-		ret.append(n ? toJson(*n) : Json::nullValue);
-	return ret;
-}
-
 bool ASTJsonConverter::visit(SourceUnit const& _node)
 {
+	Json::Value exportedSymbols = Json::objectValue;
+	for (auto const& sym: _node.annotation().exportedSymbols)
+	{
+		exportedSymbols[sym.first] = Json::arrayValue;
+		for (Declaration const* overload: sym.second)
+			exportedSymbols[sym.first].append(overload->id());
+	}
 	setJsonNode(
 		_node,
 		"SourceUnit",
 		{
 			make_pair("absolutePath", _node.annotation().path),
+			make_pair("exportedSymbols", move(exportedSymbols)),
 			make_pair("nodes", toJson(_node.nodes()))
 		}
 	);
-	//@TODO add annotation data -> path is included
-	//it does not need the annotation's exported symbols, right? -> will be included anyways
 	return false;
 }
 
@@ -196,7 +194,7 @@ bool ASTJsonConverter::visit(EnumDefinition const& _node)
 {
 	setJsonNode(_node, "EnumDefinition", {
 		make_pair("name", _node.name()),
-		//make_pair("members", toJson(_node.members()))
+		make_pair("members", toJson(_node.members()))
 		//same breakage here
 	});
 	return false;

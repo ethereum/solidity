@@ -51,7 +51,14 @@ public:
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream, ASTNode const& _node);
 	Json::Value toJson(ASTNode const& _node);
-	Json::Value toJson(std::vector<ASTPointer<ASTNode>> const& _nodes);
+	template <class T>
+	Json::Value toJson(std::vector<ASTPointer<T>> const& _nodes)
+	{
+		Json::Value ret(Json::arrayValue);
+		for (auto const& n: _nodes)
+			ret.append(n ? toJson(*n) : Json::nullValue);
+		return ret;
+	}
 
 	bool visit(SourceUnit const& _node) override;
 	bool visit(PragmaDirective const& _node) override;
