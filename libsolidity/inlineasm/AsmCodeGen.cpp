@@ -50,11 +50,6 @@ struct GeneratorState
 	GeneratorState(ErrorList& _errors, eth::Assembly& _assembly):
 		errors(_errors), assembly(_assembly) {}
 
-	void addError(Error::Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation())
-	{
-		errors.push_back(make_shared<Error>(_type, _description, _location));
-	}
-
 	size_t newLabelId()
 	{
 		return assemblyTagToIdentifier(assembly.newTag());
@@ -99,23 +94,7 @@ public:
 
 		int deposit = m_state.assembly.deposit() - m_initialDeposit;
 
-		// issue warnings for stack height discrepancies
-		if (deposit < 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It takes " + toString(-deposit) + " item(s) from the stack.",
-				_block.location
-			);
-		}
-		else if (deposit > 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It leaves " + toString(deposit) + " item(s) on the stack.",
-				_block.location
-			);
-		}
+		solAssert(deposit == 0, "Invalid stack height at end of block.");
 	}
 
 	void operator()(assembly::Instruction const& _instruction)
@@ -161,23 +140,10 @@ public:
 			return;
 		}
 		solAssert(
-			m_identifierAccess.resolve && m_identifierAccess.generateCode,
+			m_identifierAccess.generateCode,
 			"Identifier not found and no external access available."
 		);
-		// @TODO refactor: Store resolved identifier.
-		size_t size = m_identifierAccess.resolve(_identifier, IdentifierContext::RValue);
-		if (size != size_t(-1))
-			m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
-		else
-		{
-			m_state.addError(
-				Error::Type::DeclarationError,
-				"Identifier not found or not unique",
-				_identifier.location
-			);
-			for (size_t i = 0; i < size; ++i)
-				m_state.assembly.append(u256(0));
-		}
+		m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
 	}
 	void operator()(FunctionalInstruction const& _instr)
 	{
@@ -242,21 +208,14 @@ private:
 			if (int heightDiff = variableHeightDiff(_var, _location, true))
 				m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
 			m_state.assembly.append(solidity::Instruction::POP);
-			return;
 		}
-		solAssert(
-			m_identifierAccess.resolve && m_identifierAccess.generateCode,
-			"Identifier not found and no external access available."
-		);
-		size_t size = m_identifierAccess.resolve(_variableName, IdentifierContext::LValue);
-		if (size != size_t(-1))
-			m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_state.assembly);
 		else
 		{
-			m_state.addError(
-				Error::Type::DeclarationError,
-				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
+			solAssert(
+				m_identifierAccess.generateCode,
+				"Identifier not found and no external access available."
 			);
+			m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_state.assembly);
 		}
 	}
 
@@ -268,11 +227,12 @@ private:
 		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
 		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 		{
-			m_state.addError(
+			//@TODO move this to analysis phase.
+			m_state.errors.push_back(make_shared<Error>(
 				Error::Type::TypeError,
 				"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
 				_location
-			);
+			));
 			return 0;
 		}
 		else
