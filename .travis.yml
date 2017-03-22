@@ -113,6 +113,7 @@ matrix:
               - SOLC_INSTALL_DEPS_TRAVIS=Off
               - SOLC_RELEASE=Off
               - SOLC_TESTS=Off
+              - ZIP_SUFFIX=emscripten
 
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
@@ -175,6 +176,7 @@ cache:
 install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
+    - if [ "$TRAVIS_BRANCH" = release ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 
 before_script:
