@@ -60,7 +60,8 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	{
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::TypeError,
-			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)",
+			_literal.location
 		));
 		return false;
 	}
@@ -89,7 +90,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 			m_errors.push_back(make_shared<Error>(
 				Error::Type::TypeError,
 				"Function " + _identifier.name + " used without being called.",
-			_identifier.location
+				_identifier.location
 			));
 			success = false;
 		}
