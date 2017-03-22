@@ -7474,6 +7474,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
 				assembly {
 					_x
 					jump(g)
+					pop
 				}
 			}
 		}
