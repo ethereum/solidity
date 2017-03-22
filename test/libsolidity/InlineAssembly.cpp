@@ -299,9 +299,21 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	parsePrintCompare(
-		"{\n    function y()\n    {\n    }\n    function f(a) -> (b)\n    {\n    }\n    function g(a, b, c)\n    {\n    }\n    g(1, mul(2, address), f(mul(2, caller)))\n    y()\n}"
-	);
+	string source = R"({
+	function y()
+	{
+	}
+	function f(a) -> (b)
+	{
+	}
+	function g(a, b, c)
+	{
+	}
+	g(1, mul(2, address), f(mul(2, caller)))
+	y()
+})";
+	boost::replace_all(source, "\t", "    ");
+	parsePrintCompare(source);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
