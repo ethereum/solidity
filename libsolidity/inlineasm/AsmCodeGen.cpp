@@ -185,7 +185,7 @@ public:
 		{
 			int height = m_state.assembly.deposit();
 			boost::apply_visitor(*this, *it);
-			expectDeposit(1, height, locationOf(*it));
+			expectDeposit(1, height);
 		}
 		(*this)(_instr.instruction);
 	}
@@ -210,7 +210,7 @@ public:
 	{
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_assignment.value);
-		expectDeposit(1, height, locationOf(*_assignment.value));
+		expectDeposit(1, height);
 		m_state.assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);
 	}
@@ -218,7 +218,7 @@ public:
 	{
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_varDecl.value);
-		expectDeposit(1, height, locationOf(*_varDecl.value));
+		expectDeposit(1, height);
 		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.name));
 		var.stackHeight = height;
 		var.active = true;
@@ -279,17 +279,9 @@ private:
 			return heightDiff;
 	}
 
-	void expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
+	void expectDeposit(int _deposit, int _oldHeight)
 	{
-		if (m_state.assembly.deposit() != _oldHeight + 1)
-			m_state.addError(Error::Type::TypeError,
-				"Expected instruction(s) to deposit " +
-				boost::lexical_cast<string>(_deposit) +
-				" item(s) to the stack, but did deposit " +
-				boost::lexical_cast<string>(m_state.assembly.deposit() - _oldHeight) +
-				" item(s).",
-				_location
-			);
+		solAssert(m_state.assembly.deposit() == _oldHeight + _deposit, "Invalid stack deposit.");
 	}
 
 	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.

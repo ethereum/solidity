@@ -51,11 +51,20 @@ bool AsmAnalyzer::analyze(Block const& _block)
 {
 	if (!(ScopeFiller(m_scopes, m_errors))(_block))
 		return false;
+
 	return (*this)(_block);
+}
+
+bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
+{
+	auto const& info = instructionInfo(_instruction.instruction);
+	m_stackHeight += info.ret - info.args;
+	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
+	++m_stackHeight;
 	if (!_literal.isNumber && _literal.value.size() > 32)
 	{
 		m_errors.push_back(make_shared<Error>(
@@ -83,8 +92,12 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 				));
 				success = false;
 			}
+			++m_stackHeight;
 		},
-		[&](Scope::Label const&) {},
+		[&](Scope::Label const&)
+		{
+			++m_stackHeight;
+		},
 		[&](Scope::Function const&)
 		{
 			m_errors.push_back(make_shared<Error>(
@@ -97,14 +110,21 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	)))
 	{
 	}
-	else if (!m_resolver || m_resolver(_identifier, IdentifierContext::RValue) == size_t(-1))
+	else
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Identifier not found.",
-			_identifier.location
-		));
-		success = false;
+		size_t stackSize(-1);
+		if (m_resolver)
+			stackSize = m_resolver(_identifier, IdentifierContext::RValue);
+		if (stackSize == size_t(-1))
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::DeclarationError,
+				"Identifier not found.",
+				_identifier.location
+			));
+			success = false;
+		}
+		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
 	}
 	return success;
 }
@@ -113,8 +133,14 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
+	{
+		int const stackHeight = m_stackHeight;
 		if (!boost::apply_visitor(*this, arg))
 			success = false;
+		if (!expectDeposit(1, stackHeight, locationOf(arg)))
+			success = false;
+	}
+	// Parser already checks that the number of arguments is correct.
 	if (!(*this)(_instr.instruction))
 		success = false;
 	return success;
@@ -122,13 +148,15 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
-	return checkAssignment(_assignment.variableName);
+	return checkAssignment(_assignment.variableName, size_t(-1));
 }
 
 bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 {
+	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_assignment.value);
-	if (!checkAssignment(_assignment.variableName))
+	solAssert(m_stackHeight >= stackHeight, "Negative value size.");
+	if (!checkAssignment(_assignment.variableName, m_stackHeight - stackHeight))
 		success = false;
 	return success;
 }
@@ -146,7 +174,14 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	for (auto const& var: _funDef.arguments + _funDef.returns)
 		boost::get<Scope::Variable>(bodyScope.identifiers.at(var)).active = true;
 
-	return (*this)(_funDef.body);
+	int const stackHeight = m_stackHeight;
+	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
+	m_virtualVariablesInNextBlock = m_stackHeight;
+
+	bool success = (*this)(_funDef.body);
+
+	m_stackHeight = stackHeight;
+	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
@@ -202,12 +237,16 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 				));
 			success = false;
 		}
-		//@todo check the number of returns - depends on context and should probably
-		// be only done once we have stack height checks
 	}
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
+	{
+		int const stackHeight = m_stackHeight;
 		if (!boost::apply_visitor(*this, arg))
 			success = false;
+		if (!expectDeposit(1, stackHeight, locationOf(arg)))
+			success = false;
+	}
+	m_stackHeight += returns - arguments;
 	return success;
 }
 
@@ -216,19 +255,42 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	bool success = true;
 	m_currentScope = &scope(&_block);
 
+	int const virtualVariablesInNextBlock = m_virtualVariablesInNextBlock;
+	m_virtualVariablesInNextBlock = 0;
+	int const initialStackHeight = m_stackHeight;
+
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
 			success = false;
+
+	for (auto const& identifier: scope(&_block).identifiers)
+		if (identifier.second.type() == typeid(Scope::Variable))
+			--m_stackHeight;
+
+	int const stackDiff = m_stackHeight - initialStackHeight + virtualVariablesInNextBlock;
+	if (stackDiff != 0)
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Unbalanced stack at the end of a block: " +
+			(
+				stackDiff > 0 ?
+				to_string(stackDiff) + string(" surplus item(s).") :
+				to_string(-stackDiff) + string(" missing item(s).")
+			),
+			_block.location
+		));
+		success = false;
+	}
 
 	m_currentScope = m_currentScope->superScope;
 	return success;
 }
 
-bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable)
+bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
-	if (!(*this)(_variable))
-		return false;
-
+	bool success = true;
+	size_t variableSize(-1);
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
 		// Check that it is a variable
@@ -239,19 +301,69 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable)
 				"Assignment requires variable.",
 				_variable.location
 			));
-			return false;
+			success = false;
 		}
+		else if (!boost::get<Scope::Variable>(*var).active)
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::DeclarationError,
+				"Variable " + _variable.name + " used before it was declared.",
+				_variable.location
+			));
+			success = false;
+		}
+		variableSize = 1;
 	}
-	else if (!m_resolver || m_resolver(_variable, IdentifierContext::LValue) == size_t(-1))
+	else if (m_resolver)
+		variableSize = m_resolver(_variable, IdentifierContext::LValue);
+	if (variableSize == size_t(-1))
 	{
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::DeclarationError,
-			"Variable not found.",
+			"Variable not found or variable not lvalue.",
 			_variable.location
+		));
+		success = false;
+	}
+	if (_valueSize == size_t(-1))
+		_valueSize = variableSize == size_t(-1) ? 1 : variableSize;
+
+	m_stackHeight -= _valueSize;
+
+	if (_valueSize != variableSize && variableSize != size_t(-1))
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::TypeError,
+			"Variable size (" +
+			to_string(variableSize) +
+			") and value size (" +
+			to_string(_valueSize) +
+			") do not match.",
+			_variable.location
+		));
+		success = false;
+	}
+	return success;
+}
+
+bool AsmAnalyzer::expectDeposit(int const _deposit, int const _oldHeight, SourceLocation const& _location)
+{
+	int stackDiff = m_stackHeight - _oldHeight;
+	if (stackDiff != _deposit)
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::TypeError,
+			"Expected instruction(s) to deposit " +
+			boost::lexical_cast<string>(_deposit) +
+			" item(s) to the stack, but did deposit " +
+			boost::lexical_cast<string>(stackDiff) +
+			" item(s).",
+			_location
 		));
 		return false;
 	}
-	return true;
+	else
+		return true;
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
