@@ -591,7 +591,9 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else
 				solAssert(false, "Invalid declaration type.");
-		} else {
+		}
+		else
+		{
 			// lvalue context
 			auto variable = dynamic_cast<VariableDeclaration const*>(decl);
 			solAssert(
@@ -606,7 +608,8 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
 					errinfo_comment("Stack too deep, try removing local variables.")
 				);
-			for (unsigned i = 0; i < size; ++i) {
+			for (unsigned i = 0; i < size; ++i)
+			{
 				_assembly.append(swapInstruction(stackDiff));
 				_assembly.append(Instruction::POP);
 			}

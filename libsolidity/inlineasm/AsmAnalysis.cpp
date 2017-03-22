@@ -246,7 +246,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		if (!expectDeposit(1, stackHeight, locationOf(arg)))
 			success = false;
 	}
-	m_stackHeight += returns - arguments;
+	m_stackHeight += int(returns) - int(arguments);
 	return success;
 }
 
@@ -255,9 +255,8 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	bool success = true;
 	m_currentScope = &scope(&_block);
 
-	int const virtualVariablesInNextBlock = m_virtualVariablesInNextBlock;
+	int const initialStackHeight = m_stackHeight - m_virtualVariablesInNextBlock;
 	m_virtualVariablesInNextBlock = 0;
-	int const initialStackHeight = m_stackHeight;
 
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
@@ -267,7 +266,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		if (identifier.second.type() == typeid(Scope::Variable))
 			--m_stackHeight;
 
-	int const stackDiff = m_stackHeight - initialStackHeight + virtualVariablesInNextBlock;
+	int const stackDiff = m_stackHeight - initialStackHeight;
 	if (stackDiff != 0)
 	{
 		m_errors.push_back(make_shared<Error>(

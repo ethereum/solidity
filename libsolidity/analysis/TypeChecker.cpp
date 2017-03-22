@@ -654,6 +654,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				else if (!var->type()->isValueType())
 					valueSize = 1;
 				else
+					// We cannot use `sizeOnStack()` here because we do not insert the value
+					// into inline assembly but rather the storage location.
 					valueSize = 2; // slot number, intra slot offset
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
