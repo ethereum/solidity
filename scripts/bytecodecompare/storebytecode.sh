@@ -49,23 +49,26 @@ var fs = require('fs')
 
 var compiler = require('solc/wrapper.js')(require('./soljson.js'))
 
-for (var filename of process.argv.slice(2))
+for (var optimize of [false, true])
 {
-    if (filename !== undefined)
+    for (var filename of process.argv.slice(2))
     {
-        var inputs = {}
-        inputs[filename] = fs.readFileSync(filename).toString()
-        var result = compiler.compile({sources: inputs})
-        if (!('contracts' in result) || Object.keys(result['contracts']).length === 0)
+        if (filename !== undefined)
         {
-            console.log(filename + ': ERROR')
-        }
-        else
-        {
-            for (var contractName in result['contracts'])
+            var inputs = {}
+            inputs[filename] = fs.readFileSync(filename).toString()
+            var result = compiler.compile({sources: inputs}, optimize)
+            if (!('contracts' in result) || Object.keys(result['contracts']).length === 0)
             {
-                console.log(contractName + ' ' + result['contracts'][contractName].bytecode)
-                console.log(contractName + ' ' + result['contracts'][contractName].metadata)
+                console.log(filename + ': ERROR')
+            }
+            else
+            {
+                for (var contractName in result['contracts'])
+                {
+                    console.log(contractName + ' ' + result['contracts'][contractName].bytecode)
+                    console.log(contractName + ' ' + result['contracts'][contractName].metadata)
+                }
             }
         }
     }
