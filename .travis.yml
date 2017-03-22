@@ -44,6 +44,7 @@ env:
         - SOLC_INSTALL_DEPS_TRAVIS=On
         - SOLC_RELEASE=On
         - SOLC_TESTS=On
+        - SOLC_STOREBYTECODE=Off
         - SOLC_DOCKER=Off
 
 matrix:
@@ -61,6 +62,7 @@ matrix:
           compiler: gcc
           env:
               - ZIP_SUFFIX=ubuntu-trusty
+              - SOLC_STOREBYTECODE=On
 
         - os: linux
           dist: trusty
@@ -68,6 +70,7 @@ matrix:
           compiler: clang
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
+              - SOLC_STOREBYTECODE=On
 
         # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
         - os: linux
@@ -114,6 +117,7 @@ matrix:
               - SOLC_RELEASE=Off
               - SOLC_TESTS=Off
               - ZIP_SUFFIX=emscripten
+              - SOLC_STOREBYTECODE=On
 
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks
@@ -189,6 +193,7 @@ before_script:
 script:
     - test $SOLC_DOCS != On || (scripts/docs.sh)
     - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
+    - test $SOLC_STOREBYTECODE != On || (cd $TRAVIS_BUILD_DIR && scripts/bytecodecompare/storebytecode.sh)
 
 deploy:
     # This is the deploy target for the Emscripten build.
