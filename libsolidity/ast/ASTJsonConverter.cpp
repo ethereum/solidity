@@ -78,6 +78,11 @@ string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location)
 	return std::to_string(_location.start) + ":" + std::to_string(length) + ":" + std::to_string(sourceIndex);
 }
 
+string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath) const //do we need this? eigentlich ist der boostbefehl doch ganz schoen
+{
+	return boost::algorithm::join(_namePath, ".");
+}
+
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
 	_stream << toJson(_node);
@@ -128,7 +133,8 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 	std::vector<pair<string const, Json::Value>> attributes = {
 		make_pair("file", _node.path()),
 		make_pair("absolutePath", _node.annotation().absolutePath),
-		make_pair("SourceUnit", _node.annotation().sourceUnit->id())
+		make_pair("SourceUnit", _node.annotation().sourceUnit->id()),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	};
 	attributes.push_back(make_pair("unitAlias", _node.name()));
 	Json::Value symbolAliases(Json::arrayValue);
@@ -159,7 +165,8 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
 		make_pair("linearizedBaseContracts", linearizedBaseContracts),
 		make_pair("contractDependencies", contractDependencies),
-		make_pair("nodes", toJson(_node.subNodes()))
+		make_pair("nodes", toJson(_node.subNodes())),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	});
 	return false;
 }
@@ -175,9 +182,8 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node) //2REVIEW
 	setJsonNode(_node, "InheritanceSpecifier", {
 		make_pair("baseName", toJson(_node.name())), //-> calls visit(UserDefinedTypename)
 		//&_node.name().annotation().referencedDeclaration->name()), //or maybe id()?
-		//check out how to use the visit(UserDefinedTypeName) fct!! below!
 		//this is only set during 'referenceresolutionstage', nullpointercheck needed?
-		// note: i decided not to include userDefinedTypeName.annotation.contractScope
+		//??: Do I include userDefinedTypeName.annotation.contractScope
 		make_pair("arguments", toJson(_node.arguments()))
 		//??this node never shows up! assumed usage contract foo is bar {...}
 	});
@@ -186,17 +192,9 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node) //2REVIEW
 
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
-	Json::Value libraries(Json::arrayValue);
-	for (auto const& lib: _node.libraryName().namePath())
-		libraries.append(lib);
-	//note: namePath is a vector yet the using for directive only allows for one library
-	//design decision: show list, or just the first object
 	setJsonNode(_node, "UsingForDirective", {
-		make_pair("libraryNames", libraries),
-		make_pair("typeName", _node.typeName() ?
-			Json::Value(_node.typeName()->annotation().type->toString()) //or maybe use id()?
-			: Json::Value("*") )
-			    //do we break superlong lines?
+		make_pair("libraryNames", toJson(_node.libraryName())),
+		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::Value("*"))
 	});
 	return false;
 }
@@ -205,8 +203,10 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
 	setJsonNode(_node, "StructDefinition", {
 		make_pair("name", _node.name()),
+		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("canonicalName", _node.annotation().canonicalName),
-		make_pair("members", toJson(_node.members()))
+		make_pair("members", toJson(_node.members())),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	});
 	return false;
 }
@@ -215,7 +215,10 @@ bool ASTJsonConverter::visit(EnumDefinition const& _node)
 {
 	setJsonNode(_node, "EnumDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("members", toJson(_node.members()))
+		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("canonicalName", _node.annotation().canonicalName),
+		make_pair("members", toJson(_node.members())),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	});
 	return false;
 }
@@ -223,15 +226,14 @@ bool ASTJsonConverter::visit(EnumDefinition const& _node)
 bool ASTJsonConverter::visit(EnumValue const& _node)
 {
 	setJsonNode(_node, "EnumValue", { make_pair("name", _node.name()) });
-	//no need to include the type here
 	return false;
 }
 
+//this node gets merged into the one above (e.g. functionDefinition->returnParameterList()),
+//so this method is never called
 bool ASTJsonConverter::visit(ParameterList const& _node)
 {
-	setJsonNode(_node, "ParameterList", {
-		make_pair("parameters",toJson(_node.parameters());//)
-	});
+	setJsonNode(_node, "ParameterList", {});
 	return false;
 }
 
@@ -242,10 +244,13 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		make_pair("constant", _node.isDeclaredConst()),
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", visibility(_node.visibility())),
-		make_pair("parameters",	toJson(_node.parameterList().parameters())),
+		make_pair("parameters",	toJson(_node.parameters())),
+		make_pair("isConstructor", _node.isConstructor()),
 		make_pair("returnParameters", toJson((_node.returnParameters()))),
 		make_pair("modifiers", toJson(_node.modifiers())),
-		make_pair("body", toJson(_node.body().statements()))
+		make_pair("body", toJson(_node.body().statements())),
+		make_pair("isImplemented", _node.isImplemented()),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	};
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
@@ -258,7 +263,10 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("type", type(_node)),
 		make_pair("constant", _node.isConstant()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
-		make_pair("visibility", visibility(_node.visibility()))
+		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("value", _node.value() ? toJson(*_node.value()) : Json::nullValue),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue),
+		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue) //no benefit over type
 	};
 	if (m_inEvent)
 		attributes.push_back(make_pair("indexed", _node.isIndexed()));
@@ -286,7 +294,8 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 	return false;
 }
 
-bool ASTJsonConverter::visit(TypeName const&) //TODO What piece of code would be that?
+bool ASTJsonConverter::visit(TypeName const&)
+//Review: TypeName is abstract, so this is never be called?
 {
 	return false;
 }
@@ -298,31 +307,40 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 		make_pair("name", _node.name()),
 		make_pair("visibility", visibility(_node.visibility())), //this is initialized with visibility::default, mention it anyways?
 		make_pair("parameters", toJson(_node.parameterList().parameters())),
-		make_pair("isAnonymous", _node.isAnonymous())
+		make_pair("isAnonymous", _node.isAnonymous()),
+		make_pair("scope", _node.scope() ? Json::Value(_node.scope()->id()) : Json::nullValue)
 	});
 	return false;
 }
 
-bool ASTJsonConverter::visit(ElementaryTypeName const& _node) //TODO
+bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
+//Review: I added nothing, but dont understand what the elementaryTypeNameTokenClass holds
+//(especcialy first and seconNumber....
 {
 	setJsonNode(_node, "ElementaryTypeName", { make_pair("name", _node.typeName().toString()) });
 	return false;
 }
 
-bool ASTJsonConverter::visit(UserDefinedTypeName const& _node) //TODO
+bool ASTJsonConverter::visit(UserDefinedTypeName const& _node) //review?
 {
 	setJsonNode(_node, "UserDefinedTypeName", {
-		make_pair("name", boost::algorithm::join(_node.namePath(), "."))
+		make_pair("name", namePathToString(_node.namePath())),
+		make_pair("referencedDeclaration", _node.annotation().referencedDeclaration ?
+			Json::Value(_node.annotation().referencedDeclaration->id()) : Json::nullValue),
+		make_pair("contractScope", _node.annotation().contractScope ? //how can a library have a context?
+			Json::Value(_node.annotation().contractScope->id()) : Json::nullValue)
 	});
 	return false;
 }
 
-bool ASTJsonConverter::visit(FunctionTypeName const& _node) //TODO
+bool ASTJsonConverter::visit(FunctionTypeName const& _node) //HELP when is this called??
 {
 	setJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", visibility(_node.visibility())),
-		make_pair("constant", _node.isDeclaredConst())
+		make_pair("constant", _node.isDeclaredConst()),
+		make_pair("parameterTypes", toJson(_node.parameterTypes())),
+		make_pair("returnParameterTypes", toJson(_node.returnParameterTypes()))
 	});
 	return false;
 }
@@ -330,19 +348,30 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node) //TODO
 bool ASTJsonConverter::visit(Mapping const& _node)
 {
 	setJsonNode(_node, "Mapping", {
+		make_pair("keyType", toJson(_node.keyType())),
+		make_pair("valueType", toJson(_node.valueType()))
 		    });
 	return false;
 }
 
 bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 {
-	setJsonNode(_node, "ArrayTypeName", {});
+	setJsonNode(_node, "ArrayTypeName", {
+		make_pair("baseType", toJson(_node.baseType())),
+		make_pair("length", _node.length() ? toJson(*_node.length()) : Json::nullValue)
+		    });
 	return false;
 }
 
-bool ASTJsonConverter::visit(InlineAssembly const& _node)
+bool ASTJsonConverter::visit(InlineAssembly const& _node) //HELP
 {
-	setJsonNode(_node, "InlineAssembly", {});
+	/*std::vector<ASTPointer<Statement>> tmp;
+	for (auto& s: _node.operations().statements)
+		tmp.append(&s);
+	*/
+	setJsonNode(_node, "InlineAssembly", {
+//		make_pair("operations", toJson(_node.operations().statements)) //toJson(tmp))
+	});
 	return false;
 }
 
@@ -393,7 +422,6 @@ bool ASTJsonConverter::visit(ForStatement const& _node)
 			_node.condition() ? toJson(*_node.condition()) : Json::nullValue),
 		make_pair("loopExpression",
 			_node.loopExpression() ? toJson(_node.loopExpression()->expression()) : Json::nullValue),
-		// <- this is leaving out the intermediate jsonNode "expressionStatement"
 		make_pair("body", toJson(_node.body()))
 	});
 	return false;
@@ -423,9 +451,22 @@ bool ASTJsonConverter::visit(Throw const& _node)
 	return false;
 }
 
-bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
+bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node) //HELP
 {
-	setJsonNode(_node, "VariableDeclarationStatement", {});
+
+	/*std::vector<ASTPointer<VariableDeclaration>> tmp;
+	for (auto const& n: _node.annotation().assignments)
+	{
+		if (n)
+		{
+			//tmp.push_back(&n);//error: no matching function for call to ‘std::vector<std::shared_ptr<dev::solidity::VariableDeclaration> >::push_back(const dev::solidity::VariableDeclaration* const*)’
+			//tmp.push_back(ASTPointer<VariableDeclaration>(*n));
+		}
+	}*/
+	setJsonNode(_node, "VariableDeclarationStatement", {
+		make_pair("declarations",toJson(_node.declarations())),// toJson(tmp)), //_node.annotation().assignments)), //declarations()
+		make_pair("initialValue", _node.initialValue() ? toJson(*_node.initialValue()) : Json::nullValue)
+	});
 	return false;
 }
 
@@ -477,9 +518,16 @@ bool ASTJsonConverter::visit(BinaryOperation const& _node)
 
 bool ASTJsonConverter::visit(FunctionCall const& _node)
 {
+	Json::Value names(Json::arrayValue);
+	for (auto const& name: _node.names())  //what
+		names.append(*name);
 	setJsonNode(_node, "FunctionCall", {
 		make_pair("type_conversion", _node.annotation().isTypeConversion),
-		make_pair("type", type(_node))
+		make_pair("isStructContstructorCall", _node.annotation().isStructConstructorCall),
+		make_pair("type", type(_node)),
+		make_pair("arguments", toJson(_node.arguments())),
+		make_pair("expression", toJson(_node.expression())),
+		make_pair("names", names)
 	});
 	return false;
 }

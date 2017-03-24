@@ -59,7 +59,6 @@ public:
 			ret.append(n ? toJson(*n) : Json::nullValue);
 		return ret;
 	}
-
 	bool visit(SourceUnit const& _node) override;
 	bool visit(PragmaDirective const& _node) override;
 	bool visit(ImportDirective const& _node) override;
@@ -120,6 +119,7 @@ private:
 		std::vector<std::pair<std::string const, Json::Value>>&& _attributes
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
+	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
 	std::string visibility(Declaration::Visibility const& _visibility);
 	std::string location(VariableDeclaration::Location _location);
 	std::string type(Expression const& _expression);
