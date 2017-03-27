@@ -436,7 +436,7 @@ execution data (``msg.gas``) or make calls to external contracts are disallowed.
 that might have a side-effect on memory allocation are allowed, but those that
 might have a side-effect on other memory objects are not. The built-in functions
 ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
-are allowed (ever though they do call external contracts).
+are allowed (even though they do call external contracts).
 
 The reason behind allowing side-effects on the memory allocator is that it
 should be possible to construct complex objects like e.g. lookup-tables.
