@@ -120,6 +120,14 @@ private:
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
 	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
+	Json::Value idOrNull(ASTNode const* _pt)
+	{
+		return _pt ? Json::Value(_pt->id()) : Json::nullValue;
+	}
+	Json::Value toJsonOrNull(ASTNode const* _node)
+	{
+		return _node ? toJson(*_node) : Json::nullValue;
+	}
 	std::string visibility(Declaration::Visibility const& _visibility);
 	std::string location(VariableDeclaration::Location _location);
 	std::string type(Expression const& _expression);
