@@ -105,10 +105,8 @@ No::
 
     contract A {
         function spam() {
-            ...
         }
         function ham() {
-            ...
         }
     }
 
