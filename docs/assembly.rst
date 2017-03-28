@@ -11,7 +11,7 @@ differs from standalone assembly and then specify assembly itself.
 
 TODO: Write about how scoping rules of inline assembly are a bit different
 and the complications that arise when for example using internal functions
-of libraries. Furhermore, write about the symbols defined by the compiler.
+of libraries. Furthermore, write about the symbols defined by the compiler.
 
 Inline Assembly
 ===============
