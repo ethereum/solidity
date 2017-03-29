@@ -210,6 +210,8 @@ Output Description
               bytecode: {
                 // The bytecode as a hex string.
                 object: "00fe",
+                // Opcodes list (string)
+                opcodes: "",
                 // The source mapping as a string. See the source mapping definition.
                 sourceMap: "",
                 // If given, this is an unlinked object.
@@ -222,11 +224,9 @@ Output Description
                     ]
                   }
                 }
-              }
+              },
               // The same layout as above.
               deployedBytecode: { },
-              // Opcodes list (string)
-              opcodes: "",
               // The list of function hashes
               methodIdentifiers: {
                 "5c19a95c": "delegate(address)",
