@@ -178,15 +178,21 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	}
 	catch (...)
 	{
-		return "{\"errors\":\"[{\"type\":\"InternalCompilerError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Internal exception in StandardCompiler::compilerInternal\"}]}";
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compilerInternal");
 	}
 }
 
 string StandardCompiler::compile(string const& _input)
 {
 	Json::Value input;
+	Json::Reader reader;
 
-	if (!Json::Reader().parse(_input, input, false))
+	try
+	{
+		if (!reader.parse(_input, input, false))
+			return jsonCompactPrint(formatFatalError("JSONError", reader.getFormattedErrorMessages()));
+	}
+	catch(...)
 	{
 		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
 	}
