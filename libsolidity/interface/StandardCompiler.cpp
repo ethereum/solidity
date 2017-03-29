@@ -44,6 +44,16 @@ Json::Value formatFatalError(string const& _type, string const& _description)
 	return output;
 }
 
+StringMap createSourceList(Json::Value const& _input)
+{
+	StringMap sources;
+	Json::Value const& jsonSources = _input["sources"];
+	if (jsonSources.isObject())
+		for (auto const& sourceName: jsonSources.getMemberNames())
+			sources[sourceName] = jsonSources[sourceName]["content"].asString();
+	return sources;
+}
+
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
 	m_compilerStack.reset(false);
@@ -139,7 +149,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
 		// @TODO: add assembly
-		// @TODO: add legacyAssemblyJSON
+		ostringstream unused;
+		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(unused, contractName, createSourceList(_input), true);
 		evmData["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
 		// @TODO: add methodIdentifiers
 		// @TODO: add gasEstimates
