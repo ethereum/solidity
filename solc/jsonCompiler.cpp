@@ -56,9 +56,7 @@ string formatError(
 	function<Scanner const&(string const&)> const& _scannerFromSourceName
 )
 {
-	ostringstream errorOutput;
-	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _scannerFromSourceName);
-	return errorOutput.str();
+	return SourceReferenceFormatter::formatExceptionInformation(_exception, _name, _scannerFromSourceName);
 }
 
 Json::Value functionHashes(ContractDefinition const& _contract)
