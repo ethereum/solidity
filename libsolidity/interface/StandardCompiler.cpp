@@ -61,10 +61,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value const& sources = _input["sources"];
 	if (!sources)
-	{
-		// @TODO report error
-		return Json::Value();
-	}
+		return formatFatalError("JSONError", "No input sources specified.");
 
 	for (auto const& sourceName: sources.getMemberNames())
 		m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
