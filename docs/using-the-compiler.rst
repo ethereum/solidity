@@ -201,8 +201,8 @@ Output Description
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
             abi: [],
-            // See the Metadata Output documentation
-            metadata: {},
+            // See the Metadata Output documentation (serialised JSON string)
+            metadata: "{...}",
             // User documentation (natspec)
             userdoc: {},
             // Developer documentation (natspec)
