@@ -199,6 +199,13 @@ Output Description
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
             abi: [],
+            // See the Metadata Output documentation
+            metadata: {},
+            // User documentation (natspec)
+            userdoc: {},
+            // Developer documentation (natspec)
+            devdoc: {},
+            // EVM-related outputs
             evm: {
               // Intermediate representation (string)
               ir: "",
@@ -246,18 +253,13 @@ Output Description
                 }
               }
             },
-            // See the Metadata Output documentation
-            metadata: {},
+            // eWASM related outputs
             ewasm: {
               // S-expressions format
               wast: "",
               // Binary format (hex string)
               wasm: ""
-            },
-            // User documentation (natspec)
-            userdoc: {},
-            // Developer documentation (natspec)
-            devdoc: {}
+            }
           }
         }
       },
