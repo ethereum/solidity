@@ -30,18 +30,31 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Json::Value formatFatalError(string const& _type, string const& _description)
+Json::Value formatError(
+	bool _warning,
+	string const& _type,
+	string const& _component,
+	string const& _message,
+	string const& _formattedMessage = "",
+	Json::Value const& _sourceLocation = Json::Value()
+)
 {
 	Json::Value error = Json::objectValue;
 	error["type"] = _type;
-	error["component"] = "general";
-	error["severity"] = "error";
-	error["message"] = _description;
+	error["component"] = _component;
+	error["severity"] = _warning ? "warning" : "error";
+	error["message"] = _message;
+	error["formattedMessage"] = (_formattedMessage.length() > 0) ? _formattedMessage : _message;
+	if (_sourceLocation.isObject())
+		error["sourceLocation"] = _sourceLocation;
+	return error;
+}
 
+Json::Value formatFatalError(string const& _type, string const& _message)
+{
 	Json::Value output = Json::objectValue;
 	output["errors"] = Json::arrayValue;
-	output["errors"].append(error);
-
+	output["errors"].append(formatError(false, _type, "general", _message));
 	return output;
 }
 
