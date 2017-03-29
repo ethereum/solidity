@@ -15,7 +15,7 @@ REPO_ROOT="$(dirname "$0")"/..
     then
         versionstring="$version"
     else
-        versionstring="$version-develop-$commitdate-$commithash"
+        versionstring="$version-nightly-$commitdate-$commithash"
     fi
 
     TEMPDIR=$(mktemp -d)

@@ -73,7 +73,7 @@ TMPDIR=$(mktemp -d)
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
     cd "$TMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/contracts/* "$REPO_ROOT"/test/libsolidity/*EndToEnd*
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     for f in *.sol
     do
         "$REPO_ROOT"/build/test/solfuzzer < "$f"
