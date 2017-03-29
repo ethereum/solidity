@@ -236,7 +236,7 @@ Output Description
               deployedBytecode: { },
               // The list of function hashes
               methodIdentifiers: {
-                "5c19a95c": "delegate(address)",
+                "delegate(address)": "5c19a95c"
               },
               // Function gas estimates
               gasEstimates: {
