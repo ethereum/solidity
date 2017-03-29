@@ -266,13 +266,13 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// @TODO: add assembly
 		ostringstream unused;
 		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(unused, contractName, createSourceList(_input), true);
-		evmData["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
 		evmData["methodIdentifiers"] = methodIdentifiers(m_compilerStack.contractDefinition(contractName));
 		// @TODO: add gasEstimates
 
 		// EVM bytecode
 		Json::Value bytecode(Json::objectValue);
 		bytecode["object"] = m_compilerStack.object(contractName).toHex();
+		bytecode["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
 		auto sourceMap = m_compilerStack.sourceMapping(contractName);
 		bytecode["sourceMap"] = sourceMap ? *sourceMap : "";
 		// @TODO: add linkReferences
@@ -281,6 +281,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// EVM deployed bytecode
 		Json::Value deployedBytecode(Json::objectValue);
 		deployedBytecode["object"] = m_compilerStack.runtimeObject(contractName).toHex();
+		deployedBytecode["opcodes"] = solidity::disassemble(m_compilerStack.runtimeObject(contractName).bytecode);
 		auto runtimeSourceMap = m_compilerStack.runtimeSourceMapping(contractName);
 		deployedBytecode["sourceMap"] = runtimeSourceMap ? *runtimeSourceMap : "";
 		// @TODO: add linkReferences
