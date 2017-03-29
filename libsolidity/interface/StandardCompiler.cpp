@@ -135,6 +135,16 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value output = Json::objectValue;
 
+	output["sources"] = Json::objectValue;
+	unsigned sourceIndex = 0;
+	for (auto const& source: m_compilerStack.sourceNames())
+	{
+		Json::Value sourceResult = Json::objectValue;
+		sourceResult["id"] = sourceIndex++;
+		// @TODO add ast
+		output["sources"][source] = sourceResult;
+	}
+
 	Json::Value contractsOutput = Json::objectValue;
 	for (string const& contractName: m_compilerStack.contractNames())
 	{
