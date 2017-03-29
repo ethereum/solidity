@@ -22,6 +22,7 @@
 
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
 
@@ -141,7 +142,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		// @TODO add ast
+		sourceResult["ast"] = ASTJsonConverter(m_compilerStack.ast(source), m_compilerStack.sourceIndices()).json();
 		output["sources"][source] = sourceResult;
 	}
 
