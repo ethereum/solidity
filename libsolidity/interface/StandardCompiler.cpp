@@ -280,6 +280,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value contractsOutput = Json::objectValue;
 	for (string const& contractName: m_compilerStack.contractNames())
 	{
+		size_t colon = contractName.find(':');
+		solAssert(colon != string::npos, "");
+		string file = contractName.substr(0, colon);
+		string name = contractName.substr(colon + 1);
+
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
 		contractData["abi"] = dev::jsonCompactPrint(m_compilerStack.metadata(contractName, DocumentationType::ABIInterface));
@@ -317,10 +322,12 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		contractData["evm"] = evmData;
 
-		contractsOutput[contractName] = contractData;
+		if (!contractsOutput.isMember(file))
+			contractsOutput[file] = Json::objectValue;
+
+		contractsOutput[file][name] = contractData;
 	}
-	output["contracts"] = Json::objectValue;
-	output["contracts"][""] = contractsOutput;
+	output["contracts"] = contractsOutput;
 
 	return output;
 }
