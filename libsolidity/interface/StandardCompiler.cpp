@@ -131,6 +131,62 @@ StringMap createSourceList(Json::Value const& _input)
 	return sources;
 }
 
+bool isTargetRequired(Json::Value const& _targets, string const& _target)
+{
+	for (auto const& target: _targets)
+		/// @TODO support sub-matching, e.g "evm" matches "evm.assembly"
+		if (target == "*" || target == _target)
+			return true;
+	return false;
+}
+
+///
+/// @a _targets is a JSON object containining a two-level hashmap, where the first level is the filename,
+/// the second level is the contract name and the value is an array of target names to be requested for that contract.
+/// @a _file is the current file
+/// @a _contract is the current contract
+/// @a _target is the current target name
+///
+/// @returns true if the @a _targets has a match for the requested target in the specific file / contract.
+///
+/// In @a _targets the use of '*' as a wildcard is permitted.
+///
+/// @TODO optimise this. Perhaps flatten the structure upfront.
+///
+bool isTargetRequired(Json::Value const& _targets, string const& _file, string const& _contract, string const& _target)
+{
+	if (!_targets.isObject())
+		return false;
+
+	for (auto const& file: { _file, string("*") })
+		if (_targets.isMember(file) && _targets[file].isObject())
+		{
+			if (_contract.empty())
+			{
+				/// Special case for SourceUnit-level targets (such as AST)
+				if (
+					_targets[file].isMember("") &&
+					_targets[file][""].isArray() &&
+					isTargetRequired(_targets[file][""], _target)
+				)
+					return true;
+			}
+			else
+			{
+				/// Regular case for Contract-level targets
+				for (auto const& contract: { _contract, string("*") })
+					if (
+						_targets[file].isMember(contract) &&
+						_targets[file][contract].isArray() &&
+						isTargetRequired(_targets[file][contract], _target)
+					)
+						return true;
+			}
+		}
+
+	return false;
+}
+
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
 	Json::Value ret(Json::objectValue);
