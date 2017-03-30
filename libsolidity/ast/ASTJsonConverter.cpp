@@ -83,6 +83,23 @@ string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePat
 	return boost::algorithm::join(_namePath, ".");
 }
 
+Json::Value ASTJsonConverter::typePointerToJson(TypePointer _tp)
+{
+	Json::Value typeDescriptions(Json::arrayValue);
+	Json::Value tuple(Json::objectValue);
+	tuple["typeString"] = Json::Value(_tp->toString());
+	tuple["typeIdentifier"] =  Json::Value(_tp->identifier());
+	typeDescriptions.append(tuple);
+	return typeDescriptions;
+}
+Json::Value ASTJsonConverter::typePointerToJson(std::vector<TypePointer> _tps)
+{
+	Json::Value arguments(Json::arrayValue);
+	for (auto const& tp : _tps)
+		arguments.append(typePointerToJson(tp));
+	return arguments;
+}
+
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
 	_stream << toJson(_node);
@@ -354,7 +371,7 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node) //2do identifier typest
 bool ASTJsonConverter::visit(InlineAssembly const& _node) //TODO > print
 {
 	setJsonNode(_node, "InlineAssembly", {
-//		make_pair("operations", toJson(_node.operations().toString()))
+//		make_pair("operations", toJson(_node.operations()))
 		//TODO add annotation
 	});
 	return false;
@@ -454,7 +471,7 @@ bool ASTJsonConverter::visit(ExpressionStatement const& _node) //a!
 {
 	setJsonNode(_node, "ExpressionStatement", {
 		make_pair("expression", toJson(_node.expression()))//,
-//		make_pair("argumentTypes")// TODO
+//		make_pair("argumentTypes")// TODO /> really?
 	});
 	return false;
 }
@@ -483,7 +500,12 @@ bool ASTJsonConverter::visit(Assignment const& _node) //expression
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
+		make_pair("lValueRequested", _node.annotation().lValueRequested),
+		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type)),
+		make_pair("argumentTypes",
+			    _node.annotation().argumentTypes ?
+			    typePointerToJson(*_node.annotation().argumentTypes)
+			    : Json::nullValue)
 	});
 	return false;
 }
@@ -496,7 +518,11 @@ bool ASTJsonConverter::visit(TupleExpression const& _node) //expressions
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
+		make_pair("lValueRequested", _node.annotation().lValueRequested),
+			    make_pair("argumentTypes",
+					_node.annotation().argumentTypes ?
+					typePointerToJson(*_node.annotation().argumentTypes)
+					: Json::nullValue)
 	});
 	return false;
 }
@@ -511,8 +537,12 @@ bool ASTJsonConverter::visit(UnaryOperation const& _node) //expression
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 	return false;
 }
 
@@ -550,8 +580,12 @@ bool ASTJsonConverter::visit(NewExpression const& _node) //expressionstuff neede
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 	return false;
 }
 
@@ -565,8 +599,12 @@ bool ASTJsonConverter::visit(MemberAccess const& _node) //expression
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 	return false;
 }
 
@@ -579,8 +617,12 @@ bool ASTJsonConverter::visit(IndexAccess const& _node)   //expression
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 
 	return false;
 }
@@ -607,9 +649,12 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node) //what 2
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-		//TODO how to include the arguments which are a list of typepointers?
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 	return false;
 }
 
@@ -634,8 +679,12 @@ bool ASTJsonConverter::visit(Literal const& _node) //expression
 		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
-		make_pair("lValueRequested", _node.annotation().lValueRequested)
-	});
+			    make_pair("lValueRequested", _node.annotation().lValueRequested),
+					make_pair("argumentTypes",
+						    _node.annotation().argumentTypes ?
+						    typePointerToJson(*_node.annotation().argumentTypes)
+						    : Json::nullValue)
+		    });
 	return false;
 }
 

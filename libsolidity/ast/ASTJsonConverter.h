@@ -136,6 +136,8 @@ private:
 	{
 		return _node.id();
 	}
+	Json::Value typePointerToJson(TypePointer _tp);
+	Json::Value typePointerToJson(std::vector<TypePointer> _tps);
 	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;
