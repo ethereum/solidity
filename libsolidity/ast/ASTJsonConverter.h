@@ -122,7 +122,7 @@ private:
 	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
 	Json::Value idOrNull(ASTNode const* _pt)
 	{
-		return _pt ? Json::Value(_pt->id()) : Json::nullValue;
+		return _pt ? Json::Value(nodeId(*_pt)) : Json::nullValue;
 	}
 	Json::Value toJsonOrNull(ASTNode const* _node)
 	{
@@ -132,7 +132,10 @@ private:
 	std::string location(VariableDeclaration::Location _location);
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
-
+	int nodeId(ASTNode const& _node)
+	{
+		return _node.id();
+	}
 	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;

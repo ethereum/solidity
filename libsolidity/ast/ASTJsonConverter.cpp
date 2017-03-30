@@ -60,7 +60,7 @@ void ASTJsonConverter::setJsonNode(
 )
 {
 	m_currentValue = Json::objectValue;
-	m_currentValue["id"] = Json::UInt64(_node.id());
+	m_currentValue["id"] = Json::UInt64(nodeId(_node));
 	m_currentValue["src"] = sourceLocationToString(_node.location());
 	m_currentValue["nodeType"] = _nodeType;
 	for (auto& e: _attributes)
@@ -78,7 +78,7 @@ string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location)
 	return std::to_string(_location.start) + ":" + std::to_string(length) + ":" + std::to_string(sourceIndex);
 }
 
-string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath) const //do we need this? eigentlich ist der boostbefehl doch ganz schoen
+string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath) const
 {
 	return boost::algorithm::join(_namePath, ".");
 }
@@ -101,7 +101,7 @@ bool ASTJsonConverter::visit(SourceUnit const& _node)
 	{
 		exportedSymbols[sym.first] = Json::arrayValue;
 		for (Declaration const* overload: sym.second)
-			exportedSymbols[sym.first].append(overload->id());
+			exportedSymbols[sym.first].append(nodeId(*overload));
 	}
 	setJsonNode(
 		_node,
@@ -120,11 +120,9 @@ bool ASTJsonConverter::visit(PragmaDirective const& _node)
 	Json::Value literals(Json::arrayValue);
 	for (auto const& literal: _node.literals())
 		literals.append(literal);
-	setJsonNode(
-		_node,
-		"PragmaDirective",
-		{{"literals", literals}}
-	);
+	setJsonNode( _node, "PragmaDirective", {
+		make_pair("literals", std::move(literals))
+	});
 	return false;
 }
 
@@ -133,7 +131,7 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 	std::vector<pair<string const, Json::Value>> attributes = {
 		make_pair("file", _node.path()),
 		make_pair("absolutePath", _node.annotation().absolutePath),
-		make_pair("SourceUnit", _node.annotation().sourceUnit->id()),
+		make_pair("SourceUnit", nodeId(*_node.annotation().sourceUnit)),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
 	attributes.push_back(make_pair("unitAlias", _node.name()));
@@ -142,25 +140,26 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 	{
 		Json::Value tuple(Json::objectValue);
 		solAssert(symbolAlias.first, "");
-		tuple["foreign"] = symbolAlias.first->id();
+		tuple["foreign"] = nodeId(*symbolAlias.first);
 		tuple["local"] =  symbolAlias.second ? Json::Value(*symbolAlias.second) : Json::nullValue;
 		symbolAliases.append(tuple);
 	}
-	attributes.push_back( make_pair("symbolAliases", symbolAliases));
+	attributes.push_back( make_pair("symbolAliases", std::move(symbolAliases)));
 	setJsonNode(_node, "ImportDirective", std::move(attributes));
 	return false;
 }
 
-bool ASTJsonConverter::visit(ContractDefinition const& _node) //todo add inheritancespecifier
+bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
 	Json::Value linearizedBaseContracts(Json::arrayValue);
 	for (auto const& baseContract: _node.annotation().linearizedBaseContracts)
-		linearizedBaseContracts.append(Json::UInt64(baseContract->id()));
+		linearizedBaseContracts.append(Json::UInt64(nodeId(*baseContract)));
 	Json::Value contractDependencies(Json::arrayValue);
 	for (auto const& dependentContract: _node.annotation().contractDependencies)
-		contractDependencies.append(Json::UInt64(dependentContract->id()));
+		contractDependencies.append(Json::UInt64(nodeId(*dependentContract)));
 	setJsonNode(_node, "ContractDefinition", {
 		make_pair("name", _node.name()),
+		make_pair("baseContracts", toJson(_node.baseContracts())),
 		make_pair("isLibrary", _node.isLibrary()),
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
 		make_pair("linearizedBaseContracts", linearizedBaseContracts),
@@ -173,12 +172,6 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node) //todo add inherit
 
 bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 {
-
-	//??this node never shows up!
-	cout << "imin" << endl; //apparently this function is not even entered....
-	// assumed usage:
-	// import contract.sol <- with bar-contract
-	// contract foo is bar {...
 	setJsonNode(_node, "InheritanceSpecifier", {
 		make_pair("baseName", toJson(_node.name())),
 		make_pair("arguments", toJson(_node.arguments()))
@@ -532,7 +525,7 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	return false;
 }
 
-bool ASTJsonConverter::visit(NewExpression const& _node) //expressionstuff
+bool ASTJsonConverter::visit(NewExpression const& _node) //expressionstuff needed here upwards
 {
 	setJsonNode(_node, "NewExpression", {
 		make_pair("type", type(_node)),
@@ -541,23 +534,31 @@ bool ASTJsonConverter::visit(NewExpression const& _node) //expressionstuff
 	return false;
 }
 
-bool ASTJsonConverter::visit(MemberAccess const& _node)
+bool ASTJsonConverter::visit(MemberAccess const& _node) //expression
 {
 	setJsonNode(_node, "MemberAccess", {
 		make_pair("memberName", _node.memberName()),
 		make_pair("type", type(_node)),
 		make_pair("expression", toJson(_node.expression())),
-		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration))
+		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 	return false;
 }
 
-bool ASTJsonConverter::visit(IndexAccess const& _node)   //expressionstuff?
+bool ASTJsonConverter::visit(IndexAccess const& _node)   //expression
 {
 	setJsonNode(_node, "IndexAccess", {
 		make_pair("type", type(_node)),
 		make_pair("baseExpression", toJson(_node.baseExpression())),
-		make_pair("indexExpression", toJsonOrNull(_node.indexExpression()))
+		make_pair("indexExpression", toJsonOrNull(_node.indexExpression())),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 
 	return false;
@@ -567,7 +568,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 {
 	Json::Value overloads(Json::arrayValue);
 	for (auto const& dec: _node.annotation().overloadedDeclarations)
-		overloads.append(Json::Value(dec->id()));
+		overloads.append(Json::Value(nodeId(*dec)));
 	setJsonNode(_node, "Identifier", {
 		make_pair("value", _node.name()),
 		make_pair("type", type(_node)),
@@ -582,7 +583,7 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node) //what 2
 	setJsonNode(_node, "ElementaryTypeNameExpression", {
 		make_pair("value", _node.typeName().toString()),
 		make_pair("type", type(_node)),
-		make_pair("isConstant", _node.annotation().isConstant),//entire expression part from here down
+		make_pair("isConstant", _node.annotation().isConstant),
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
 		make_pair("lValueRequested", _node.annotation().lValueRequested)
@@ -608,7 +609,12 @@ bool ASTJsonConverter::visit(Literal const& _node) //would need express annos
 			Json::nullValue :
 			Json::Value{Token::toString(subdenomination)}
 		),
-		make_pair("type", type(_node))
+		make_pair("type", type(_node)),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
+		//TODO how to include the arguments which are a list of typepointers?
 	});
 	return false;
 }
