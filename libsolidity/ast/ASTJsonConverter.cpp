@@ -162,8 +162,8 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("baseContracts", toJson(_node.baseContracts())),
 		make_pair("isLibrary", _node.isLibrary()),
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
-		make_pair("linearizedBaseContracts", linearizedBaseContracts),
-		make_pair("contractDependencies", contractDependencies),
+		make_pair("linearizedBaseContracts", std::move(linearizedBaseContracts)),
+		make_pair("contractDependencies", std::move(contractDependencies)),
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
 	});
@@ -183,7 +183,7 @@ bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
 	setJsonNode(_node, "UsingForDirective", {
 		make_pair("libraryNames", toJson(_node.libraryName())),
-		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::Value("*"))
+		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
 	});
 	return false;
 }
@@ -195,7 +195,7 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("canonicalName", _node.annotation().canonicalName),
 		make_pair("members", toJson(_node.members())),
-		make_pair("scope",idOrNull(_node.scope()))
+		make_pair("scope", idOrNull(_node.scope()))
 	});
 	return false;
 }
@@ -204,17 +204,17 @@ bool ASTJsonConverter::visit(EnumDefinition const& _node)
 {
 	setJsonNode(_node, "EnumDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("canonicalName", _node.annotation().canonicalName),
-		make_pair("members", toJson(_node.members())),
-		make_pair("scope", idOrNull(_node.scope()))
+		make_pair("members", toJson(_node.members()))
 	});
 	return false;
 }
 
 bool ASTJsonConverter::visit(EnumValue const& _node)
 {
-	setJsonNode(_node, "EnumValue", { make_pair("name", _node.name()) });
+	setJsonNode(_node, "EnumValue", {
+		make_pair("name", _node.name())
+	});
 	return false;
 }
 
@@ -284,7 +284,6 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 }
 
 bool ASTJsonConverter::visit(TypeName const&)
-//Review: TypeName is abstract, so this is never called?
 {
 	return false;
 }
@@ -295,21 +294,23 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 	setJsonNode(_node, "EventDefinition", {
 		make_pair("name", _node.name()),
 		make_pair("parameters", toJson(_node.parameterList())),
-		make_pair("isAnonymous", _node.isAnonymous()),
-		make_pair("scope", idOrNull(_node.scope()))
+		make_pair("isAnonymous", _node.isAnonymous())
+//		make_pair("scope", idOrNull(_node.scope()))
 	});
 	return false;
 }
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
-//Review: I added nothing, but dont understand what the elementaryTypeNameTokenClass holds
+//2Review: I added nothing, but dont understand enough of what the elementaryTypeNameTokenClass holds
 //(especcialy first and seconNumber....
 {
-	setJsonNode(_node, "ElementaryTypeName", { make_pair("name", _node.typeName().toString()) });
+	setJsonNode(_node, "ElementaryTypeName", {
+		make_pair("name", _node.typeName().toString())
+	});
 	return false;
 }
 
-bool ASTJsonConverter::visit(UserDefinedTypeName const& _node) //review?
+bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 {
 	setJsonNode(_node, "UserDefinedTypeName", {
 		make_pair("name", namePathToString(_node.namePath())),
@@ -340,7 +341,7 @@ bool ASTJsonConverter::visit(Mapping const& _node)
 	return false;
 }
 
-bool ASTJsonConverter::visit(ArrayTypeName const& _node)
+bool ASTJsonConverter::visit(ArrayTypeName const& _node) //2do identifier typestuff
 {
 	setJsonNode(_node, "ArrayTypeName", {
 		make_pair("baseType", toJson(_node.baseType())),
@@ -442,7 +443,7 @@ bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 		varDecs.append(idOrNull(v));
 	}
 	setJsonNode(_node, "VariableDeclarationStatement", {
-		make_pair("declarationIDs", varDecs),
+		make_pair("declarationIDs", std::move(varDecs)),
 		make_pair("declarations", toJson(_node.declarations())),
 		make_pair("initialValue", toJsonOrNull(_node.initialValue()))
 	});
@@ -464,7 +465,11 @@ bool ASTJsonConverter::visit(Conditional const& _node) //expression
 		make_pair("condition", toJson(_node.condition())),
 		make_pair("trueExpression", toJson(_node.trueExpression())),
 		make_pair("falseExpression", toJson(_node.falseExpression())),
-		    });
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
+	});
 	return false;
 }
 
@@ -475,6 +480,10 @@ bool ASTJsonConverter::visit(Assignment const& _node) //expression
 		make_pair("type", type(_node)),
 		make_pair("leftHandSide", toJson(_node.leftHandSide())),
 		make_pair("rightHandSide", toJson(_node.rightHandSide())),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 	return false;
 }
@@ -483,7 +492,11 @@ bool ASTJsonConverter::visit(TupleExpression const& _node) //expressions
 {
 	setJsonNode(_node, "TupleExpression",{
 		make_pair("isInlineArray", Json::Value(_node.isInlineArray())),
-		make_pair("components", toJson(_node.components()))
+		make_pair("components", toJson(_node.components())),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 	return false;
 }
@@ -494,7 +507,11 @@ bool ASTJsonConverter::visit(UnaryOperation const& _node) //expression
 		make_pair("prefix", _node.isPrefixOperation()),
 		make_pair("operator", Token::toString(_node.getOperator())),
 		make_pair("type", type(_node)),
-		make_pair("subExpression", toJson(_node.subExpression()))
+		make_pair("subExpression", toJson(_node.subExpression())),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 	return false;
 }
@@ -529,7 +546,11 @@ bool ASTJsonConverter::visit(NewExpression const& _node) //expressionstuff neede
 {
 	setJsonNode(_node, "NewExpression", {
 		make_pair("type", type(_node)),
-		make_pair("typeName", toJson(_node.typeName()))
+		make_pair("typeName", toJson(_node.typeName())),
+		make_pair("isConstant", _node.annotation().isConstant),
+		make_pair("isPure", _node.annotation().isPure),
+		make_pair("isLValue", _node.annotation().isLValue),
+		make_pair("lValueRequested", _node.annotation().lValueRequested)
 	});
 	return false;
 }
@@ -592,7 +613,7 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node) //what 2
 	return false;
 }
 
-bool ASTJsonConverter::visit(Literal const& _node) //would need express annos
+bool ASTJsonConverter::visit(Literal const& _node) //expression
 {
 	char const* tokenString = Token::toString(_node.token());
 	Json::Value value{_node.value()};
@@ -614,7 +635,6 @@ bool ASTJsonConverter::visit(Literal const& _node) //would need express annos
 		make_pair("isPure", _node.annotation().isPure),
 		make_pair("isLValue", _node.annotation().isLValue),
 		make_pair("lValueRequested", _node.annotation().lValueRequested)
-		//TODO how to include the arguments which are a list of typepointers?
 	});
 	return false;
 }
