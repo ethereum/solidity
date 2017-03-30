@@ -143,7 +143,12 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		return formatFatalError("JSONError", "No input sources specified.");
 
 	for (auto const& sourceName: sources.getMemberNames())
-		m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
+		if (sources[sourceName]["content"].isString())
+			m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
+		else if (sources[sourceName]["urls"].isArray())
+			return formatFatalError("UnimplementedFeatureError", "Input URLs not supported yet.");
+		else
+			return formatFatalError("JSONError", "Invalid input source specified.");
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
 
