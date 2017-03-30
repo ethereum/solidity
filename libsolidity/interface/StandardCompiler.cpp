@@ -107,6 +107,33 @@ Json::Value methodIdentifiers(ContractDefinition const& _contract)
 	return methodIdentifiers;
 }
 
+Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
+{
+	Json::Value ret(Json::objectValue);
+
+	for (auto const& ref: linkReferences)
+	{
+		string const& fullname = ref.second;
+		size_t colon = fullname.find(':');
+		solAssert(colon != string::npos, "");
+		string file = fullname.substr(0, colon);
+		string name = fullname.substr(colon + 1);
+
+		Json::Value fileObject = ret.get(file, Json::objectValue);
+		Json::Value libraryArray = fileObject.get(name, Json::arrayValue);
+
+		Json::Value entry = Json::objectValue;
+		entry["start"] = Json::UInt(ref.first);
+		entry["length"] = 20;
+
+		libraryArray.append(entry);
+		fileObject[name] = libraryArray;
+		ret[file] = fileObject;
+	}
+
+	return ret;
+}
+
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
 	m_compilerStack.reset(false);
@@ -276,7 +303,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		bytecode["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
 		auto sourceMap = m_compilerStack.sourceMapping(contractName);
 		bytecode["sourceMap"] = sourceMap ? *sourceMap : "";
-		// @TODO: add linkReferences
+		bytecode["linkReferences"] = formatLinkReferences(m_compilerStack.object(contractName).linkReferences);
 		evmData["bytecode"] = bytecode;
 
 		// EVM deployed bytecode
@@ -285,7 +312,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		deployedBytecode["opcodes"] = solidity::disassemble(m_compilerStack.runtimeObject(contractName).bytecode);
 		auto runtimeSourceMap = m_compilerStack.runtimeSourceMapping(contractName);
 		deployedBytecode["sourceMap"] = runtimeSourceMap ? *runtimeSourceMap : "";
-		// @TODO: add linkReferences
+		deployedBytecode["linkReferences"] = formatLinkReferences(m_compilerStack.runtimeObject(contractName).linkReferences);
 		evmData["deployedBytecode"] = deployedBytecode;
 
 		contractData["evm"] = evmData;
