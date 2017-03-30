@@ -166,6 +166,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			libraries[library] = h160(jsonSourceName[library].asString());
 	}
 
+	Json::Value metadataSettings = settings.get("metadata", Json::Value());
+	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
+
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
 	Json::Value errors = Json::arrayValue;
