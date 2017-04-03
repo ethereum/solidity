@@ -21,9 +21,12 @@
 
 #pragma once
 
-#include <vector>
+#include <libevmasm/Exceptions.h>
+
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
+
+#include <vector>
 
 namespace dev
 {
@@ -130,6 +133,8 @@ public:
 		ConstantOptimisationMethod(_params, _value)
 	{
 		m_routine = findRepresentation(m_value);
+		if (!checkRepresentation(m_value))
+			BOOST_THROW_EXCEPTION(AssemblyException());
 	}
 
 	virtual bigint gasNeeded() override { return gasNeeded(m_routine); }
@@ -141,6 +146,8 @@ public:
 protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
+	/// Recomputes the value from the calculated representation and checks for correctness.
+	bool checkRepresentation(u256 const& _value);
 	bigint gasNeeded(AssemblyItems const& _routine);
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
