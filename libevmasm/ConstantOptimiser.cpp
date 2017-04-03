@@ -203,8 +203,13 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			u256 powerOfTwo = u256(1) << bits;
 			u256 upperPart = _value >> bits;
 			bigint lowerPart = _value & (powerOfTwo - 1);
-			if (abs(powerOfTwo - lowerPart) < lowerPart)
+			if (powerOfTwo - lowerPart < lowerPart)
+			{
 				lowerPart = lowerPart - powerOfTwo; // make it negative
+				upperPart++;
+			}
+			if (upperPart == 0)
+				continue;
 			if (abs(lowerPart) >= (powerOfTwo >> 8))
 				continue;
 
@@ -212,7 +217,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (lowerPart != 0)
 				newRoutine += findRepresentation(u256(abs(lowerPart)));
 			newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
-			if (upperPart != 1 && upperPart != 0)
+			if (upperPart != 1)
 				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
