@@ -1,18 +1,116 @@
-#################
-Solidity Assembly
-#################
+#################################################
+Joyfully Universal Language for (Inline) Assembly
+#################################################
+
+.. _julia:
 
 .. index:: ! assembly, ! asm, ! evmasm
 
-Solidity defines an assembly language that can also be used without Solidity.
-This assembly language can also be used as "inline assembly" inside Solidity
-source code. We start with describing how to use inline assembly and how it
-differs from standalone assembly and then specify assembly itself.
+Julia is an intermediate language that can compile to various different backends
+(EVM 1.0, EVM 1.5 and eWASM are planned).
+Because of that, it is designed to be as featureless as possible.
+It can already be used for "inline assembly" inside Solidity and
+future versions of the Solidity compiler will even use Julia as intermediate
+language. It should also be easy to build high-level optimizer stages for Julia.
 
-.. note::
-    TODO: Write about how scoping rules of inline assembly are a bit different
-    and the complications that arise when for example using internal functions
-    of libraries. Furthermore, write about the symbols defined by the compiler.
+The core components of Julia are functions, blocks, variables, literals,
+for-loops, switch-statements, expressions and assignments to variables.
+
+Julia in itself does not even provide operators. If the EVM is targeted,
+opcodes will be available as built-in functions, but they can be reimplemented
+if the backend changes.
+
+The following example program assumes that the EVM opcodes ``mul``, ``div``
+and ``mod`` are available either natively or as functions and computes exponentiation.
+
+.. code::
+    {
+        function power(base, exponent) -> (result)
+        {
+            switch exponent
+            0: { result := 1 }
+            1: { result := base }
+            default:
+            {
+                result := power(mul(base, base), div(exponent, 2))
+                switch mod(exponent, 2)
+                    1: { result := mul(base, result) }
+            }
+        }
+    }
+
+It is also possible to implement the same function using a for-loop
+instead of recursion. Here, we need the EVM opcodes ``lt`` (less-than)
+and ``add`` to be available.
+
+.. code::
+    {
+        function power(base, exponent) -> (result)
+        {
+            result := 1
+            for { let i := 0 } lt(i, exponent) { i := add(i, 1) }
+            {
+                result := mul(result, base)
+            }
+        }
+    }
+
+Specification of Julia
+======================
+
+Grammar::
+
+    Block = '{' Statement* '}'
+    Statement =
+        Block |
+        FunctionDefinition |
+        VariableDeclaration |
+        Assignment |
+        Expression |
+        Switch |
+        ForLoop |
+        'break' | 'continue'
+        SubAssembly
+    FunctionDefinition =
+        'function' Identifier '(' IdentifierList? ')'
+        ( '->' '(' IdentifierList ')' )? Block
+    VariableDeclaration =
+        'let' IdentifierOrList ':=' Expression
+    Assignment =
+        IdentifierOrList ':=' Expression
+    Expression =
+        Identifier | Literal | FunctionCall
+    Switch =
+        'switch' Expression Case* ( 'default' ':' Block )?
+    Case =
+        'case' Expression ':' Block
+    ForLoop =
+        'for' Block Expression Block Block
+    SubAssembly =
+        'assembly' Identifier Block
+    FunctionCall =
+        Identifier '(' ( AssemblyItem ( ',' AssemblyItem )* )? ')'
+    IdentifierOrList = Identifier | '(' IdentifierList ')'
+    Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
+    IdentifierList = Identifier ( ',' Identifier)*
+    Literal =
+        NumberLiteral | StringLiteral | HexLiteral
+    NumberLiteral = HexNumber | DecimalNumber
+    HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+    StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+    HexNumber = '0x' [0-9a-fA-F]+
+    DecimalNumber = [0-9]+
+
+
+
+     | 'dataSize' '(' Identifier ')' |
+        LinkerSymbol |
+        'bytecodeSize' |
+
+Restriction for Expression: Functions can only return single item,
+top level has to return nothing.
+Restriction for VariableDeclaration and Assignment: Number of elements left and right needs to be the same
+continue and break only in for loop
 
 .. _inline-assembly:
 
@@ -40,6 +138,11 @@ We now want to describe the inline assembly language in detail.
     Inline assembly is a way to access the Ethereum Virtual Machine
     at a low level. This discards several important safety
     features of Solidity.
+
+.. note::
+    TODO: Write about how scoping rules of inline assembly are a bit different
+    and the complications that arise when for example using internal functions
+    of libraries. Furthermore, write about the symbols defined by the compiler.
 
 Example
 -------
