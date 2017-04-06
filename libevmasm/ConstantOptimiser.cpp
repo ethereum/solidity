@@ -182,6 +182,7 @@ AssemblyItems const& CodeCopyMethod::copyRoutine() const
 
 AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 {
+	cout << "Looking for " << _value << endl;
 	if (_value < 0x10000)
 		// Very small value, not worth computing
 		return AssemblyItems{_value};
