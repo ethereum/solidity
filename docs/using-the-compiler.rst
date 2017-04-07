@@ -185,6 +185,8 @@ Output Description
           severity: "error",
           // Mandatory
           message: "Invalid keyword"
+          // Optional: the message formatted with source location
+          formattedMessage: "sourceFile.sol:100: Invalid keyword"
         }
       ],
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
