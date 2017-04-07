@@ -126,7 +126,7 @@ Input Description
         //   metadata - Metadata
         //   ir - New assembly format before desugaring
         //   evm.assembly - New assembly format after desugaring
-        //   evm.legacyAssemblyJSON - Old-style assembly format in JSON
+        //   evm.legacyAssembly - Old-style assembly format in JSON
         //   evm.bytecode - All the evm.bytecode features from below
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
@@ -213,8 +213,8 @@ Output Description
             evm: {
               // Assembly (string)
               assembly: "",
-              // Old-style assembly (string)
-              legacyAssemblyJSON: [],
+              // Old-style assembly (object)
+              legacyAssembly: [],
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
