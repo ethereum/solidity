@@ -127,7 +127,6 @@ Input Description
         //   ir - New assembly format before desugaring
         //   evm.assembly - New assembly format after desugaring
         //   evm.legacyAssembly - Old-style assembly format in JSON
-        //   evm.bytecode - All the evm.bytecode features from below
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
         //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
@@ -137,6 +136,10 @@ Input Description
         //   evm.gasEstimates - Function gas estimates
         //   ewasm.wast - eWASM S-expressions format (not supported atm)
         //   ewasm.wasm - eWASM binary format (not supported atm)
+        //
+        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
+        // target part of that output.
+        //
         outputSelection: {
           // Enable the metadata and bytecode outputs of every single contract.
           "*": {
