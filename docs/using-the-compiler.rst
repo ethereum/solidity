@@ -124,7 +124,7 @@ Input Description
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
-        //   evm.ir - New assembly format before desugaring
+        //   ir - New assembly format before desugaring
         //   evm.assembly - New assembly format after desugaring
         //   evm.legacyAssemblyJSON - Old-style assembly format in JSON
         //   evm.bytecode - All the evm.bytecode features from below
@@ -207,10 +207,10 @@ Output Description
             userdoc: {},
             // Developer documentation (natspec)
             devdoc: {},
+            // Intermediate representation (string)
+            ir: "",
             // EVM-related outputs
             evm: {
-              // Intermediate representation (string)
-              ir: "",
               // Assembly (string)
               assembly: "",
               // Old-style assembly (string)
