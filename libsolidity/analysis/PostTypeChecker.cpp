@@ -58,6 +58,9 @@ void PostTypeChecker::endVisit(ContractDefinition const&)
 	for (auto declaration: m_constVariables)
 		if (auto identifier = findCycle(declaration))
 			typeError(declaration->location(), "The value of the constant " + declaration->name() + " has a cyclic dependency via " + identifier->name() + ".");
+
+	m_constVariables.clear();
+	m_constVariableDependencies.clear();
 }
 
 bool PostTypeChecker::visit(VariableDeclaration const& _variable)
