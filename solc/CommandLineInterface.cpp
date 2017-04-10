@@ -630,11 +630,11 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
-	CompilerStack::ReadFileCallback fileReader = [this](string const& _path)
+	ReadFile::Callback fileReader = [this](string const& _path)
 	{
 		auto path = boost::filesystem::path(_path);
 		if (!boost::filesystem::exists(path))
-			return CompilerStack::ReadFileResult{false, "File not found."};
+			return ReadFile::Result{false, "File not found."};
 		auto canonicalPath = boost::filesystem::canonical(path);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
@@ -650,14 +650,14 @@ bool CommandLineInterface::processInput()
 			}
 		}
 		if (!isAllowed)
-			return CompilerStack::ReadFileResult{false, "File outside of allowed directories."};
+			return ReadFile::Result{false, "File outside of allowed directories."};
 		else if (!boost::filesystem::is_regular_file(canonicalPath))
-			return CompilerStack::ReadFileResult{false, "Not a valid file."};
+			return ReadFile::Result{false, "Not a valid file."};
 		else
 		{
 			auto contents = dev::contentsString(canonicalPath.string());
 			m_sourceCodes[path.string()] = contents;
-			return CompilerStack::ReadFileResult{true, contents};
+			return ReadFile::Result{true, contents};
 		}
 	};
 

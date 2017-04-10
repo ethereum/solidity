@@ -130,7 +130,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 {
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
-	CompilerStack::ReadFileCallback readCallback;
+	ReadFile::Callback readCallback;
 	if (_readCallback)
 	{
 		readCallback = [=](string const& _path)
@@ -138,7 +138,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
 			_readCallback(_path.c_str(), &contents_c, &error_c);
-			CompilerStack::ReadFileResult result;
+			ReadFile::Result result;
 			result.success = true;
 			if (!contents_c && !error_c)
 			{
