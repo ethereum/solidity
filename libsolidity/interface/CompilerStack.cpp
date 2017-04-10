@@ -903,7 +903,8 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		Json::Value internalFunctions(Json::objectValue);
 		for (auto const& it: contract.definedFunctions())
 		{
-			if (it->isPartOfExternalInterface() || it->isConstructor())
+			/// Exclude externally visible functions, constructor and the fallback function
+			if (it->isPartOfExternalInterface() || it->isConstructor() || it->name().empty())
 				continue;
 
 			size_t entry = functionEntryPoint(_contractName, *it);
