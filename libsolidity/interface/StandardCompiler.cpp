@@ -308,7 +308,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		evmData["assembly"] = tmp.str();
 		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), true);
 		evmData["methodIdentifiers"] = methodIdentifiers(m_compilerStack.contractDefinition(contractName));
-		// @TODO: add gasEstimates
+		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
 		// EVM bytecode
 		Json::Value bytecode(Json::objectValue);
