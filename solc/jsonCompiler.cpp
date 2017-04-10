@@ -50,17 +50,6 @@ extern "C" {
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 }
 
-string formatError(
-	Exception const& _exception,
-	string const& _name,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
-)
-{
-	ostringstream errorOutput;
-	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _scannerFromSourceName);
-	return errorOutput.str();
-}
-
 Json::Value functionHashes(ContractDefinition const& _contract)
 {
 	Json::Value functionHashes(Json::objectValue);
@@ -170,7 +159,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		for (auto const& error: compiler.errors())
 		{
 			auto err = dynamic_pointer_cast<Error const>(error);
-			errors.append(formatError(
+			errors.append(SourceReferenceFormatter::formatExceptionInformation(
 				*error,
 				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
 				scannerFromSourceName
@@ -180,19 +169,19 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	}
 	catch (Error const& error)
 	{
-		errors.append(formatError(error, error.typeName(), scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(error, error.typeName(), scannerFromSourceName));
 	}
 	catch (CompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Internal compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Internal compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (UnimplementedFeatureError const& exception)
 	{
-		errors.append(formatError(exception, "Unimplemented feature (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Unimplemented feature (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (Exception const& exception)
 	{
@@ -245,7 +234,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			{
 				Json::Value errors(Json::arrayValue);
 				for (auto const& error: formalErrors)
-					errors.append(formatError(
+					errors.append(SourceReferenceFormatter::formatExceptionInformation(
 						*error,
 						(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 						scannerFromSourceName
