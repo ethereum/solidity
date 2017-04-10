@@ -124,17 +124,22 @@ Input Description
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
-        //   evm.ir - New assembly format before desugaring
+        //   ir - New assembly format before desugaring
         //   evm.assembly - New assembly format after desugaring
-        //   evm.legacyAssemblyJSON - Old-style assembly format in JSON
-        //   evm.opcodes - Opcodes list
+        //   evm.legacyAssembly - Old-style assembly format in JSON
+        //   evm.bytecode.object - Bytecode object
+        //   evm.bytecode.opcodes - Opcodes list
+        //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
+        //   evm.bytecode.linkReferences - Link references (if unlinked object)
+        //   evm.deployedBytecode* - Deployed bytecode (has the same options as evm.bytecode)
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   evm.bytecode - Bytecode
-        //   evm.deployedBytecode - Deployed bytecode
-        //   evm.sourceMap - Source mapping (useful for debugging)
         //   ewasm.wast - eWASM S-expressions format (not supported atm)
         //   ewasm.wasm - eWASM binary format (not supported atm)
+        //
+        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
+        // target part of that output.
+        //
         outputSelection: {
           // Enable the metadata and bytecode outputs of every single contract.
           "*": {
@@ -180,6 +185,8 @@ Output Description
           severity: "error",
           // Mandatory
           message: "Invalid keyword"
+          // Optional: the message formatted with source location
+          formattedMessage: "sourceFile.sol:100: Invalid keyword"
         }
       ],
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
@@ -199,17 +206,26 @@ Output Description
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
             abi: [],
+            // See the Metadata Output documentation (serialised JSON string)
+            metadata: "{...}",
+            // User documentation (natspec)
+            userdoc: {},
+            // Developer documentation (natspec)
+            devdoc: {},
+            // Intermediate representation (string)
+            ir: "",
+            // EVM-related outputs
             evm: {
-              // Intermediate representation (string)
-              ir: "",
               // Assembly (string)
               assembly: "",
-              // Old-style assembly (string)
-              legacyAssemblyJSON: [],
+              // Old-style assembly (object)
+              legacyAssembly: [],
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
                 object: "00fe",
+                // Opcodes list (string)
+                opcodes: "",
                 // The source mapping as a string. See the source mapping definition.
                 sourceMap: "",
                 // If given, this is an unlinked object.
@@ -222,14 +238,12 @@ Output Description
                     ]
                   }
                 }
-              }
+              },
               // The same layout as above.
               deployedBytecode: { },
-              // Opcodes list (string)
-              opcodes: "",
               // The list of function hashes
               methodIdentifiers: {
-                "5c19a95c": "delegate(address)",
+                "delegate(address)": "5c19a95c"
               },
               // Function gas estimates
               gasEstimates: {
@@ -246,18 +260,13 @@ Output Description
                 }
               }
             },
-            // See the Metadata Output documentation
-            metadata: {},
+            // eWASM related outputs
             ewasm: {
               // S-expressions format
               wast: "",
               // Binary format (hex string)
               wasm: ""
-            },
-            // User documentation (natspec)
-            userdoc: {},
-            // Developer documentation (natspec)
-            devdoc: {}
+            }
           }
         }
       },
