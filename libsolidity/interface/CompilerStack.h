@@ -36,6 +36,7 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ReadFile.h>
 
 namespace dev
 {
@@ -77,18 +78,9 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
-	struct ReadFileResult
-	{
-		bool success;
-		std::string contentsOrErrorMessage;
-	};
-
-	/// File reading callback.
-	using ReadFileCallback = std::function<ReadFileResult(std::string const&)>;
-
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Should return
-	explicit CompilerStack(ReadFileCallback const& _readFile = ReadFileCallback());
+	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback());
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
@@ -263,7 +255,7 @@ private:
 		std::string target;
 	};
 
-	ReadFileCallback m_readFile;
+	ReadFile::Callback m_readFile;
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
 	std::map<std::string, h160> m_libraries;

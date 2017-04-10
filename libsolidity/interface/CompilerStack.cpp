@@ -55,7 +55,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-CompilerStack::CompilerStack(ReadFileCallback const& _readFile):
+CompilerStack::CompilerStack(ReadFile::Callback const& _readFile):
 	m_readFile(_readFile), m_parseSuccessful(false) {}
 
 void CompilerStack::setRemappings(vector<string> const& _remappings)
@@ -522,7 +522,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 			if (m_sources.count(importPath) || newSources.count(importPath))
 				continue;
 
-			ReadFileResult result{false, string("File not supplied initially.")};
+			ReadFile::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
 				result = m_readFile(importPath);
 
