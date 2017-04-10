@@ -173,6 +173,9 @@ public:
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
+	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
+	Json::Value gasEstimates(std::string const& _contractName) const;
+
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
