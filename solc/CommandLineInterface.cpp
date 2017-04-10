@@ -322,7 +322,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
+		u256 bytecodeSize(m_compiler->object(_contract).bytecode.size());
 		cout << "construction:" << endl;
 		cout << "   " << gas << " + " << (bytecodeSize * eth::GasCosts::createDataGas) << " = ";
 		gas += bytecodeSize * eth::GasCosts::createDataGas;
