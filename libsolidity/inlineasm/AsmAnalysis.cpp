@@ -141,6 +141,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 			success = false;
 	}
 	// Parser already checks that the number of arguments is correct.
+	solAssert(instructionInfo(_instr.instruction).args == _instr.arguments.size(), "");
 	if (!(*this)(_instr.instruction))
 		success = false;
 	return success;
