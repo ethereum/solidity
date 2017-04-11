@@ -337,6 +337,30 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 	output["contracts"] = contractsOutput;
 
+	{
+		ErrorList formalErrors;
+		if (m_compilerStack.prepareFormalAnalysis(&formalErrors))
+			output["why3"] = m_compilerStack.formalTranslation();
+
+		for (auto const& error: formalErrors)
+		{
+			auto err = dynamic_pointer_cast<Error const>(error);
+
+			errors.append(formatErrorWithException(
+				*error,
+				err->type() == Error::Type::Warning,
+				err->typeName(),
+				"general",
+				"",
+				scannerFromSourceName
+			));
+		}
+
+		// FIXME!!
+		if (!formalErrors.empty())
+			output["errors"] = errors;
+	}
+
 	return output;
 }
 
