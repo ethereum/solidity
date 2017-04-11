@@ -557,33 +557,16 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
 			{
 				solAssert(!variable->isConstant(), "");
-				if (m_context.isLocalVariable(variable))
-				{
-					int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
-					if (stackDiff < 1 || stackDiff > 16)
-						BOOST_THROW_EXCEPTION(
-							CompilerError() <<
-							errinfo_sourceLocation(_inlineAssembly.location()) <<
-							errinfo_comment("Stack too deep, try removing local variables.")
-						);
-					for (unsigned i = 0; i < variable->type()->sizeOnStack(); ++i)
-						_assembly.append(dupInstruction(stackDiff));
-				}
-				else
-				{
-					solAssert(m_context.isStateVariable(variable), "Invalid variable type.");
-					auto const& location = m_context.storageLocationOfVariable(*variable);
-					if (!variable->type()->isValueType())
-					{
-						solAssert(location.second == 0, "Intra-slot offest assumed to be zero.");
-						_assembly.append(location.first);
-					}
-					else
-					{
-						_assembly.append(location.first);
-						_assembly.append(u256(location.second));
-					}
-				}
+				solAssert(m_context.isLocalVariable(variable), "");
+				int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
+				if (stackDiff < 1 || stackDiff > 16)
+					BOOST_THROW_EXCEPTION(
+						CompilerError() <<
+						errinfo_sourceLocation(_inlineAssembly.location()) <<
+						errinfo_comment("Stack too deep, try removing local variables.")
+					);
+				solAssert(variable->type()->sizeOnStack() == 1, "");
+				_assembly.append(dupInstruction(stackDiff));
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
 			{
@@ -602,19 +585,16 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				!!variable && m_context.isLocalVariable(variable),
 				"Can only assign to stack variables in inline assembly."
 			);
-			unsigned size = variable->type()->sizeOnStack();
-			int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable) - size;
+			solAssert(variable->type()->sizeOnStack() == 1, "");
+			int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable) - 1;
 			if (stackDiff > 16 || stackDiff < 1)
 				BOOST_THROW_EXCEPTION(
 					CompilerError() <<
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
 					errinfo_comment("Stack too deep, try removing local variables.")
 				);
-			for (unsigned i = 0; i < size; ++i)
-			{
-				_assembly.append(swapInstruction(stackDiff));
-				_assembly.append(Instruction::POP);
-			}
+			_assembly.append(swapInstruction(stackDiff));
+			_assembly.append(Instruction::POP);
 		}
 	};
 	codeGen.assemble(

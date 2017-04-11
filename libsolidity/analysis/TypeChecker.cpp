@@ -25,6 +25,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
 using namespace std;
 using namespace dev;
@@ -637,50 +638,59 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return size_t(-1);
-		size_t valueSize = size_t(-1);
 		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
+		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
+		{
+			if (!var->isLocalVariable())
+			{
+				typeError(_identifier.location, "Only local variables are supported.");
+				return size_t(-1);
+			}
+			if (var->type()->dataStoredIn(DataLocation::Storage))
+			{
+				typeError(_identifier.location, "Storage reference variables are not supported.");
+				return size_t(-1);
+			}
+			if (var->type()->sizeOnStack() != 1)
+			{
+				typeError(_identifier.location, "Only types that use one stack slot are supported.");
+				return size_t(-1);
+			}
+			if (var->isConstant())
+			{
+				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
+		}
+		else if (_context == assembly::IdentifierContext::LValue)
+		{
+			typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
+			return size_t(-1);
+		}
+
 		if (_context == assembly::IdentifierContext::RValue)
 		{
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
-				valueSize = 1;
-			else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
-				if (var->isConstant())
-					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
-				if (var->isLocalVariable())
-					valueSize = var->type()->sizeOnStack();
-				else if (!var->type()->isValueType())
-					valueSize = 1;
-				else
-					// We cannot use `sizeOnStack()` here because we do not insert the value
-					// into inline assembly but rather the storage location.
-					valueSize = 2; // slot number, intra slot offset
+			}
+			else if (dynamic_cast<VariableDeclaration const*>(declaration))
+			{
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 			{
 				if (!contract->isLibrary())
+				{
+					typeError(_identifier.location, "Expected a library.");
 					return size_t(-1);
-				valueSize = 1;
+				}
 			}
 			else
 				return size_t(-1);
 		}
-		else
-		{
-			// lvalue context
-			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-			{
-				if (!varDecl->isLocalVariable())
-					return size_t(-1); // only local variables are inline-assembly lvalues
-				valueSize = size_t(declaration->type()->sizeOnStack());
-			}
-			else
-				return size_t(-1);
-		}
-		ref->second.valueSize = valueSize;
-		return valueSize;
+		ref->second.valueSize = 1;
+		return size_t(1);
 	};
 	assembly::AsmAnalyzer::Scopes scopes;
 	assembly::AsmAnalyzer analyzer(scopes, m_errors, identifierAccess);
