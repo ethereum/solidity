@@ -270,7 +270,8 @@ void CompilerContext::appendInlineAssembly(
 	identifierAccess.resolve = [&](
 		assembly::Identifier const& _identifier,
 		assembly::IdentifierContext
-	) {
+	)
+	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
 		return it == _localVariables.end() ? size_t(-1) : 1;
 	};
@@ -278,7 +279,8 @@ void CompilerContext::appendInlineAssembly(
 		assembly::Identifier const& _identifier,
 		assembly::IdentifierContext _context,
 		eth::Assembly& _assembly
-	) {
+	)
+	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
 		solAssert(it != _localVariables.end(), "");
 		unsigned stackDepth = _localVariables.end() - it;

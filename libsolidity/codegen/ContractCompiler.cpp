@@ -538,6 +538,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(!!decl, "");
 		if (_context == assembly::IdentifierContext::RValue)
 		{
+			int const depositBefore = _assembly.deposit();
 			solAssert(!!decl->type(), "Type of declaration required but not yet determined.");
 			if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
 			{
@@ -591,6 +592,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else
 				solAssert(false, "Invalid declaration type.");
+			solAssert(_assembly.deposit() - depositBefore == ref->second.valueSize, "");
 		}
 		else
 		{

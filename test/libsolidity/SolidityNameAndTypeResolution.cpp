@@ -5078,6 +5078,36 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 	CHECK_ERROR(text, DeclarationError, "Variable not found or variable not lvalue.");
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 1;
+			function f() {
+				assembly {
+					x := 2
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Variable not found or variable not lvalue.");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 1;
+			function f() {
+				assembly {
+					let y := x
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not yet implemented for inline assembly");
+}
+
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 {
 	char const* text = R"(

@@ -342,6 +342,11 @@ BOOST_AUTO_TEST_CASE(magic_variables)
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover pop }"));
 }
 
+BOOST_AUTO_TEST_CASE(stack_variables)
+{
+	BOOST_CHECK(successAssemble("{ let y := 3 { 2 { let x := y } pop} }"));
+}
+
 BOOST_AUTO_TEST_CASE(imbalanced_stack)
 {
 	BOOST_CHECK(successAssemble("{ 1 2 mul pop }", false));
