@@ -46,17 +46,6 @@ ScopeFiller::ScopeFiller(ScopeFiller::Scopes& _scopes, ErrorList& _errors):
 	m_currentScope = &scope(nullptr);
 }
 
-bool ScopeFiller::operator()(FunctionalInstruction const& _instr)
-{
-	bool success = true;
-	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
-		if (!boost::apply_visitor(*this, arg))
-			success = false;
-	if (!(*this)(_instr.instruction))
-		success = false;
-	return success;
-}
-
 bool ScopeFiller::operator()(Label const& _item)
 {
 	if (!m_currentScope->registerLabel(_item.name))
@@ -72,17 +61,9 @@ bool ScopeFiller::operator()(Label const& _item)
 	return true;
 }
 
-bool ScopeFiller::operator()(FunctionalAssignment const& _assignment)
-{
-	return boost::apply_visitor(*this, *_assignment.value);
-}
-
 bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 {
-	bool success = boost::apply_visitor(*this, *_varDecl.value);
-	if (!registerVariable(_varDecl.name, _varDecl.location, *m_currentScope))
-		success = false;
-	return success;
+	return registerVariable(_varDecl.name, _varDecl.location, *m_currentScope);
 }
 
 bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
@@ -108,15 +89,6 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	if (!(*this)(_funDef.body))
 		success = false;
 
-	return success;
-}
-
-bool ScopeFiller::operator()(assembly::FunctionCall const& _funCall)
-{
-	bool success = true;
-	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
-		if (!boost::apply_visitor(*this, arg))
-			success = false;
 	return success;
 }
 

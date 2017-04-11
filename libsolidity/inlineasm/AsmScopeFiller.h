@@ -61,13 +61,13 @@ public:
 	bool operator()(assembly::Instruction const&) { return true; }
 	bool operator()(assembly::Literal const&) { return true; }
 	bool operator()(assembly::Identifier const&) { return true; }
-	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
+	bool operator()(assembly::FunctionalInstruction const&) { return true; }
 	bool operator()(assembly::Label const& _label);
 	bool operator()(assembly::Assignment const&) { return true; }
-	bool operator()(assembly::FunctionalAssignment const& _functionalAssignment);
+	bool operator()(assembly::FunctionalAssignment const&) { return true; }
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
-	bool operator()(assembly::FunctionCall const& _functionCall);
+	bool operator()(assembly::FunctionCall const&) { return true; }
 	bool operator()(assembly::Block const& _block);
 
 private:
