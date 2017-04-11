@@ -205,7 +205,8 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 	{
 		_out << _prefix << "stop" << endl;
 		for (auto const& i: m_data)
-			assertThrow(u256(i.first) < m_subs.size(), AssemblyException, "Data not yet implemented.");
+			if (u256(i.first) >= m_subs.size())
+				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << toHex(i.second) << endl;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{

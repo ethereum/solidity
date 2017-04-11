@@ -130,7 +130,7 @@ public:
 		else
 		{
 			solAssert(_literal.value.size() <= 32, "");
-			m_state.assembly.append(_literal.value);
+			m_state.assembly.append(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
 		}
 	}
 	void operator()(assembly::Identifier const& _identifier)

@@ -159,18 +159,25 @@ string AssemblyItem::toAssemblyText() const
 		text = toHex(toCompactBigEndian(data(), 1), 1, HexPrefix::Add);
 		break;
 	case PushString:
-		assertThrow(false, AssemblyException, "Push string assembly output not implemented.");
+		text = string("data_") + toHex(data());
 		break;
 	case PushTag:
-		assertThrow(data() < 0x10000, AssemblyException, "Sub-assembly tags not yet implemented.");
-		text = string("tag_") + to_string(size_t(data()));
+	{
+		size_t sub;
+		size_t tag;
+		tie(sub, tag) = splitForeignPushTag();
+		if (sub == size_t(-1))
+			text = string("tag_") + to_string(tag);
+		else
+			text = string("tag_") + to_string(sub) + "_" + to_string(tag);
 		break;
+	}
 	case Tag:
-		assertThrow(data() < 0x10000, AssemblyException, "Sub-assembly tags not yet implemented.");
+		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
 		text = string("tag_") + to_string(size_t(data())) + ":";
 		break;
 	case PushData:
-		assertThrow(false, AssemblyException, "Push data not implemented.");
+		text = string("data_") + toHex(data());
 		break;
 	case PushSub:
 		text = string("dataOffset(sub_") + to_string(size_t(data())) + ")";
