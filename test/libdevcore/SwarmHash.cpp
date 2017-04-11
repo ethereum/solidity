@@ -41,14 +41,14 @@ BOOST_AUTO_TEST_CASE(test_zeros)
 	BOOST_CHECK_EQUAL(swarmHashHex(string()), string("011b4d03dd8c01f1049143cf9c4c817e4b167f1d1b83e5c6f0f10d89ba1e7bce"));
 	BOOST_CHECK_EQUAL(swarmHashHex(string(0x1000 - 1, 0)), string("32f0faabc4265ac238cd945087133ce3d7e9bb2e536053a812b5373c54043adb"));
 	BOOST_CHECK_EQUAL(swarmHashHex(string(0x1000, 0)), string("411dd45de7246e94589ff5888362c41e85bd3e582a92d0fda8f0e90b76439bec"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x1000 + 1, 0)), string("69754a0098432bbc2e84fe1205276870748a61a065ab6ef44d6a2e7b13ce044d"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000 - 1, 0)), string("69ad3c581043404f775ffa8d6f1b25ad4a9ee812971190e90209c0966116a321"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000, 0)), string("f00222373ff82d0a178dc6271c78953e9c88f74130a52d401f5ec51475f63c43"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000 + 1, 0)), string("86d6773e79e02fd8145ee1aedba89ace0c15f2566db1249654000039a9a134bf"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x80000, 0)), string("cc0854fe2c6b98e920d5c14b1a88e6d4223e55b8f78883f60939aa2485e361bf"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x80020, 0)), string("ee9ffca246e70d3704740ba4df450fa6988d14a1c2439c7e734c7a77a4eb6fd3"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(0x800020, 0)), string("78b90b20c90559fb904535181a7c28929ea2f30a2329dbc25232de579709f12f"));
-	BOOST_CHECK_EQUAL(swarmHashHex(string(2095104, 0)), string("a9958184589fc11b4027a4c233e777ebe2e99c66f96b74aef2a0638a94dd5439"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x1000 + 1, 0)), string("e1adcce5812ca01b9dc1abab5429e393f2ee54575a9e3f4f1acc2827fbd48ef2"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000 - 1, 0)), string("ec8e9140197ef7707d897d6e870128913da7a75fe76a3aa40e11bbb5a9f4c304"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000, 0)), string("fe7c80b9383415132706adadb39c4982acca5fc969cb79af1105a34ac2dcffcc"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x2000 + 1, 0)), string("bb8668c849c2fa47997161b16b99fc5b6f3a96247f0af6ac68855a85bc718533"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x80000, 0)), string("4b37e998b558329ac806f69b492704b334103e66e2fe9f212dbb4cec58ff16d3"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x80020, 0)), string("0f86dcd141ae963f4e1ae23d8a0649a2a2dfaf9a768316420ad7ba5c81bd710c"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(0x800020, 0)), string("a6d51187334c169456b67c0798fe512efd97fa23ccfa811221f4c392b3676faf"));
+	BOOST_CHECK_EQUAL(swarmHashHex(string(2095104, 0)), string("abbc50e1168bfc68f214a94f0f5e23ab2a28789bc67b14b1e4a16912752ca1e1"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
