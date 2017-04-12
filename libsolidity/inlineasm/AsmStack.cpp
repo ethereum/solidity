@@ -62,8 +62,11 @@ string InlineAssemblyStack::toString()
 
 eth::Assembly InlineAssemblyStack::assemble()
 {
-	CodeGenerator codeGen(*m_parserResult, m_errors);
-	return codeGen.assemble();
+	AsmAnalyzer::Scopes scopes;
+	AsmAnalyzer analyzer(scopes, m_errors);
+	solAssert(analyzer.analyze(*m_parserResult), "");
+	CodeGenerator codeGen(m_errors);
+	return codeGen.assemble(*m_parserResult, scopes);
 }
 
 bool InlineAssemblyStack::parseAndAssemble(
@@ -78,7 +81,10 @@ bool InlineAssemblyStack::parseAndAssemble(
 	if (!errors.empty())
 		return false;
 
-	CodeGenerator(*parserResult, errors).assemble(_assembly, _identifierAccess);
+	AsmAnalyzer::Scopes scopes;
+	AsmAnalyzer analyzer(scopes, m_errors);
+	solAssert(analyzer.analyze(*m_parserResult), "");
+	CodeGenerator(errors).assemble(*parserResult, scopes, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.

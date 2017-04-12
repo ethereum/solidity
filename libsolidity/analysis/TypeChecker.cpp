@@ -692,8 +692,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		ref->second.valueSize = 1;
 		return size_t(1);
 	};
-	assembly::AsmAnalyzer::Scopes scopes;
-	assembly::AsmAnalyzer analyzer(scopes, m_errors, identifierAccess);
+	solAssert(_inlineAssembly.annotation().scopes.empty(), "");
+	assembly::AsmAnalyzer analyzer(_inlineAssembly.annotation().scopes, m_errors, identifierAccess);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
 		return false;
 	return true;

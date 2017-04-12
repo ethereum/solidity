@@ -47,8 +47,8 @@ using namespace dev::solidity::assembly;
 
 struct GeneratorState
 {
-	GeneratorState(ErrorList& _errors, eth::Assembly& _assembly):
-		errors(_errors), assembly(_assembly) {}
+	GeneratorState(ErrorList& _errors, AsmAnalyzer::Scopes& _scopes, eth::Assembly& _assembly):
+		errors(_errors), scopes(_scopes), assembly(_assembly) {}
 
 	size_t newLabelId()
 	{
@@ -62,8 +62,8 @@ struct GeneratorState
 		return size_t(id);
 	}
 
-	AsmAnalyzer::Scopes scopes;
 	ErrorList& errors;
+	AsmAnalyzer::Scopes scopes;
 	eth::Assembly& assembly;
 };
 
@@ -260,20 +260,25 @@ private:
 	ExternalIdentifierAccess m_identifierAccess;
 };
 
-eth::Assembly assembly::CodeGenerator::assemble(ExternalIdentifierAccess const& _identifierAccess)
+eth::Assembly assembly::CodeGenerator::assemble(
+	Block const& _parsedData,
+	AsmAnalyzer::Scopes& _scopes,
+	ExternalIdentifierAccess const& _identifierAccess
+)
 {
 	eth::Assembly assembly;
-	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, _identifierAccess.resolve)).analyze(m_parsedData))
-		solAssert(false, "Assembly error");
-	CodeTransform(state, m_parsedData, _identifierAccess);
+	GeneratorState state(m_errors, _scopes, assembly);
+	CodeTransform(state, _parsedData, _identifierAccess);
 	return assembly;
 }
 
-void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, ExternalIdentifierAccess const& _identifierAccess)
+void assembly::CodeGenerator::assemble(
+	Block const& _parsedData,
+	AsmAnalyzer::Scopes& _scopes,
+	eth::Assembly& _assembly,
+	ExternalIdentifierAccess const& _identifierAccess
+)
 {
-	GeneratorState state(m_errors, _assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors, _identifierAccess.resolve)).analyze(m_parsedData))
-		solAssert(false, "Assembly error");
-	CodeTransform(state, m_parsedData, _identifierAccess);
+	GeneratorState state(m_errors, _scopes, _assembly);
+	CodeTransform(state, _parsedData, _identifierAccess);
 }

@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/inlineasm/AsmStack.h>
 
 #include <functional>
 
@@ -42,15 +42,23 @@ struct Block;
 class CodeGenerator
 {
 public:
-	CodeGenerator(Block const& _parsedData, ErrorList& _errors):
-		m_parsedData(_parsedData), m_errors(_errors) {}
+	CodeGenerator(ErrorList& _errors):
+		m_errors(_errors) {}
 	/// Performs code generation and @returns the result.
-	eth::Assembly assemble(ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
+	eth::Assembly assemble(
+		Block const& _parsedData,
+		AsmAnalyzer::Scopes& _scopes,
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
+	);
 	/// Performs code generation and appends generated to to _assembly.
-	void assemble(eth::Assembly& _assembly, ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess());
+	void assemble(
+		Block const& _parsedData,
+		AsmAnalyzer::Scopes& _scopes,
+		eth::Assembly& _assembly,
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
+	);
 
 private:
-	Block const& m_parsedData;
 	ErrorList& m_errors;
 };
 

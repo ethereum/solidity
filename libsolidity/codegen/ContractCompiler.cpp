@@ -520,7 +520,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
 	ErrorList errors;
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), errors);
+	assembly::CodeGenerator codeGen(errors);
 	unsigned startStackHeight = m_context.stackHeight();
 	assembly::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext)
@@ -598,6 +598,8 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	codeGen.assemble(
+		_inlineAssembly.operations(),
+		_inlineAssembly.annotation().scopes,
 		m_context.nonConstAssembly(),
 		identifierAccess
 	);

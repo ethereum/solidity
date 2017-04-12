@@ -59,7 +59,11 @@ class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
 	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	AsmAnalyzer(Scopes& _scopes, ErrorList& _errors, ExternalIdentifierAccess::Resolver const& _resolver);
+	AsmAnalyzer(
+		Scopes& _scopes,
+		ErrorList& _errors,
+		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
+	);
 
 	bool analyze(assembly::Block const& _block);
 

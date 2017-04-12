@@ -113,6 +113,8 @@ struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 namespace assembly
 {
 struct Identifier; // forward
+struct Block; // forward
+struct Scope; // forward
 }
 
 struct InlineAssemblyAnnotation: StatementAnnotation
@@ -125,6 +127,8 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 
 	/// Mapping containing resolved references to external identifiers and their value size
 	std::map<assembly::Identifier const*, ExternalIdentifierInfo> externalReferences;
+	/// Mapping containing the scopes (the result of the analysis phase).
+	std::map<assembly::Block const*, std::shared_ptr<assembly::Scope>> scopes;
 };
 
 struct ReturnAnnotation: StatementAnnotation
