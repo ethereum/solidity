@@ -322,18 +322,9 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	{
 		Json::Value creation = estimates["creation"];
 		cout << "construction:" << endl;
-		if (creation["executionCost"].isNull())
-			cout << "   infinite";
-		else
-			cout << "   " << creation["executionCost"];
-		if (creation["codeDepositCost"].isNull())
-			cout << " + infinite";
-		else
-			cout << " + " << creation["codeDepositCost"];
-		if (creation["totalCost"].isNull())
-			cout << " = infinite";
-		else
-			cout << " = " << creation["totalCost"] << endl;
+		cout << "   " << creation["executionCost"].asString();
+		cout << " + " << creation["codeDepositCost"].asString();
+		cout << " = " << creation["totalCost"].asString() << endl;
 	}
 
 	if (estimates["external"].isObject())
@@ -346,10 +337,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 				cout << "   fallback:\t";
 			else
 				cout << "   " << name << ":\t";
-			if (externalFunctions[name].isNull())
-				cout << "infinite" << endl;
-			else
-				cout << externalFunctions[name] << endl;
+			cout << externalFunctions[name].asString() << endl;
 		}
 	}
 
@@ -360,10 +348,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 		for (auto const& name: internalFunctions.getMemberNames())
 		{
 			cout << "   " << name << ":\t";
-			if (internalFunctions[name].isNull())
-				cout << "infinite" << endl;
-			else
-				cout << internalFunctions[name] << endl;
+			cout << internalFunctions[name].asString() << endl;
 		}
 	}
 }

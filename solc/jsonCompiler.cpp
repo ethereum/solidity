@@ -58,6 +58,27 @@ Json::Value functionHashes(ContractDefinition const& _contract)
 	return functionHashes;
 }
 
+/// Translates a gas value as a string to a JSON number or null
+Json::Value gasToJson(Json::Value const& _value)
+{
+	if (_value.isObject())
+	{
+		Json::Value ret = Json::objectValue;
+		for (auto const& sig: _value.getMemberNames())
+			ret[sig] = gasToJson(_value[sig]);
+		return ret;
+	}
+
+	if (_value == "infinite")
+		return Json::Value(Json::nullValue);
+
+	u256 value(_value.asString());
+	if (value > std::numeric_limits<Json::LargestUInt>::max())
+		return Json::Value(Json::nullValue);
+	else
+		return Json::Value(Json::LargestUInt(value));
+}
+
 Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 {
 	Json::Value estimates = _compiler.gasEstimates(_contract);
@@ -66,14 +87,14 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	if (estimates["creation"].isObject())
 	{
 		Json::Value creation(Json::arrayValue);
-		creation[0] = estimates["creation"]["executionCost"];
-		creation[1] = estimates["creation"]["codeDepositCost"];
+		creation[0] = gasToJson(estimates["creation"]["executionCost"]);
+		creation[1] = gasToJson(estimates["creation"]["codeDepositCost"]);
 		output["creation"] = creation;
 	}
 	else
 		output["creation"] = Json::objectValue;
-	output["external"] = estimates.get("external", Json::objectValue);
-	output["internal"] = estimates.get("internal", Json::objectValue);
+	output["external"] = gasToJson(estimates.get("external", Json::objectValue));
+	output["internal"] = gasToJson(estimates.get("internal", Json::objectValue));
 
 	return output;
 }

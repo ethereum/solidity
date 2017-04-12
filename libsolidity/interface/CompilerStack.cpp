@@ -848,10 +848,10 @@ namespace
 
 Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
 {
-	if (_gas.isInfinite || _gas.value > std::numeric_limits<Json::LargestUInt>::max())
-		return Json::Value(Json::nullValue);
+	if (_gas.isInfinite)
+		return Json::Value("infinite");
 	else
-		return Json::Value(Json::LargestUInt(_gas.value));
+		return Json::Value(toString(_gas.value));
 }
 
 }
