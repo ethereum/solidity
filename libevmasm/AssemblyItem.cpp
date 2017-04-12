@@ -163,8 +163,8 @@ string AssemblyItem::toAssemblyText() const
 		break;
 	case PushTag:
 	{
-		size_t sub;
-		size_t tag;
+		size_t sub{0};
+		size_t tag{0};
 		tie(sub, tag) = splitForeignPushTag();
 		if (sub == size_t(-1))
 			text = string("tag_") + to_string(tag);
