@@ -7,7 +7,7 @@
         "fixed": "0.4.7"
     },
     {
-        "name": "StateKnowledgeNotResetForJumpdest",
+        "name": "OptimizerStateKnowledgeNotResetForJumpdest",
         "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
         "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was simplified to just use the empty state, but this implementation was not done properly. This bug can cause data corruption.",
         "severity": "medium",
@@ -27,7 +27,7 @@
         "fixed": "0.4.4"
     },
     {
-        "name": "StaleKnowledgeAboutSHA3",
+        "name": "OptimizerStaleKnowledgeAboutSHA3",
         "summary": "The optimizer did not properly reset its knowledge about SHA3 operations resulting in some hashes (also used for storage variable positions) not being calculated correctly.",
         "description": "The optimizer performs symbolic execution in order to save re-evaluating expressions whose value is already known. This knowledge was not properly reset across control flow paths and thus the optimizer sometimes thought that the result of a SHA3 operation is already present on the stack. This could result in data corruption by accessing the wrong storage slot.",
         "severity": "low/medium",
@@ -59,7 +59,7 @@
         "fixed": "0.3.6"
     },
     {
-        "name": "ClearStateOnCodePathJoin",
+        "name": "OptimizerClearStateOnCodePathJoin",
         "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
         "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was not done correctly. This bug can cause data corruption, but it is probably quite hard to use for targeted attacks.",
         "severity": "low",

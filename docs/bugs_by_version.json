@@ -2,10 +2,10 @@
     "0.1.0": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -15,10 +15,10 @@
     "0.1.1": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -28,10 +28,10 @@
     "0.1.2": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -41,10 +41,10 @@
     "0.1.3": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -54,10 +54,10 @@
     "0.1.4": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -67,10 +67,10 @@
     "0.1.5": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -81,10 +81,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -95,10 +95,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -109,10 +109,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -123,10 +123,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -137,10 +137,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits", 
             "AncientCompiler"
@@ -151,10 +151,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits", 
             "ArrayAccessCleanHigherOrderBits"
         ], 
@@ -164,10 +164,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits"
         ], 
         "released": "2016-03-31"
@@ -176,10 +176,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin", 
+            "OptimizerClearStateOnCodePathJoin", 
             "CleanBytesHigherOrderBits"
         ], 
         "released": "2016-04-18"
@@ -188,10 +188,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin"
+            "OptimizerClearStateOnCodePathJoin"
         ], 
         "released": "2016-05-27"
     }, 
@@ -199,10 +199,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin"
+            "OptimizerClearStateOnCodePathJoin"
         ], 
         "released": "2016-05-31"
     }, 
@@ -210,10 +210,10 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
             "DynamicAllocationInfiniteLoop", 
-            "ClearStateOnCodePathJoin"
+            "OptimizerClearStateOnCodePathJoin"
         ], 
         "released": "2016-06-10"
     }, 
@@ -221,7 +221,7 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther"
         ], 
         "released": "2016-08-10"
@@ -230,7 +230,7 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "LibrariesNotCallableFromPayableFunctions"
         ], 
         "released": "2016-09-08"
@@ -239,7 +239,7 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3", 
+            "OptimizerStaleKnowledgeAboutSHA3", 
             "LibrariesNotCallableFromPayableFunctions"
         ], 
         "released": "2016-09-09"
@@ -252,7 +252,7 @@
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
-            "StaleKnowledgeAboutSHA3"
+            "OptimizerStaleKnowledgeAboutSHA3"
         ], 
         "released": "2016-09-17"
     }, 
@@ -272,7 +272,7 @@
     "0.4.5": {
         "bugs": [
             "IdentityPrecompileReturnIgnored", 
-            "StateKnowledgeNotResetForJumpdest"
+            "OptimizerStateKnowledgeNotResetForJumpdest"
         ], 
         "released": "2016-11-21"
     }, 
