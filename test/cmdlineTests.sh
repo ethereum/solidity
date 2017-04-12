@@ -31,7 +31,10 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 SOLC="$REPO_ROOT/build/solc/solc"
 
-# Compile all files in std and examples.
+echo "Checking that the bug list is up to date..."
+"$REPO_ROOT"/scripts/update_bugs_by_version.py
+
+echo "Compiling all files in std and examples..."
 
 for f in "$REPO_ROOT"/std/*.sol
 do
