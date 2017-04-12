@@ -6,12 +6,32 @@
 List of Known Bugs
 ##################
 
-Below, you can find a JSON-formatted list of all known security-relevant bugs in the
+Below, you can find a JSON-formatted list of known security-relevant bugs in the
 Solidity compiler. The file itself is hosted in the `Github repository
 <https://github.com/ethereum/solidity/blob/develop/docs/bugs.json>`_.
 The list stretches back as far as version 0.3.0, bugs known to be present only
-in previous versions are not listed. The JSON file is an array of objects, one for
-each bug, with the following keys:
+in versions preceding that are not listed.
+
+There is another file called `bugs_by_version.json
+<https://github.com/ethereum/solidity/blob/develop/docs/bugs_by_version.json>`_,
+which can be used to check which bugs affect a specific version of the compiler.
+
+Contract source verification tools and also other tools interacting with
+contracts should consult this list according to the following criteria:
+
+ - It is mildly suspicious if a contract was compiled with a nightly
+   compiler version instead of a released version. These compiler versions
+   might contain undocumented bugs.
+ - It is also mildly suspicious if a contract was compiled with a version that was
+   not the most recent at the time the contract was created. For contracts
+   created from other contracts, you have to follow the creation chain
+   back to a transaction and use the date of that transaction as creation date.
+ - It is highly suspicious if a contract was compiled with a compiler that
+   contains a known bug and the contract was created at a time where a newer
+   compiler version containing a fix was already released.
+
+The JSON file of known bugs below is an array of objects, one for each bug,
+with the following keys:
 
 name
     Unique name given to the bug
