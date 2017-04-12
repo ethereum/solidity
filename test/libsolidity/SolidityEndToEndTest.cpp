@@ -7426,15 +7426,19 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access)
 			uint16 x;
 			uint16 public y;
 			uint public z;
-			function f() {
-				// we know that z is aligned because it is too large, so we just discard its
-				// intra-slot offset value
-				assembly { 7 z pop sstore }
+			function f() returns (bool) {
+				uint off;
+				assembly {
+					sstore(z$slot, 7)
+					off := z$offset
+				}
+				assert(off == 0);
+				return true;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
 }
 
