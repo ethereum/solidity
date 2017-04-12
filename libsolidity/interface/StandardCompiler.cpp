@@ -452,8 +452,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
-		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		if (isTargetRequired(outputSelection, sourceName, "", "ast"))
+			sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		if (isTargetRequired(outputSelection, sourceName, "", "legacyAST"))
+			sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
 		output["sources"][sourceName] = sourceResult;
 	}
 
@@ -467,28 +469,38 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
-		contractData["abi"] = m_compilerStack.contractABI(contractName);
-		contractData["metadata"] = m_compilerStack.metadata(contractName);
-		contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
-		contractData["devdoc"] = m_compilerStack.natspecDev(contractName);
+		if (isTargetRequired(outputSelection, file, name, "abi"))
+			contractData["abi"] = m_compilerStack.contractABI(contractName);
+		if (isTargetRequired(outputSelection, file, name, "metadata"))
+			contractData["metadata"] = m_compilerStack.metadata(contractName);
+		if (isTargetRequired(outputSelection, file, name, "userdoc"))
+			contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
+		if (isTargetRequired(outputSelection, file, name, "devdoc"))
+			contractData["devdoc"] = m_compilerStack.natspecDev(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
-		evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
-		evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
-		evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
-		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
+		if (isTargetRequired(outputSelection, file, name, "evm.assembly"))
+			evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
+		if (isTargetRequired(outputSelection, file, name, "evm.legacyAssembly"))
+			evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
+		if (isTargetRequired(outputSelection, file, name, "evm.methodIdentifiers"))
+			evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
+		if (isTargetRequired(outputSelection, file, name, "evm.gasEstimates"))
+			evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
-		evmData["bytecode"] = collectEVMObject(
-			m_compilerStack.object(contractName),
-			m_compilerStack.sourceMapping(contractName)
-		);
+		if (isTargetRequired(outputSelection, file, name, "evm.bytecode"))
+			evmData["bytecode"] = collectEVMObject(
+				m_compilerStack.object(contractName),
+				m_compilerStack.sourceMapping(contractName)
+			);
 
-		evmData["deployedBytecode"] = collectEVMObject(
-			m_compilerStack.runtimeObject(contractName),
-			m_compilerStack.runtimeSourceMapping(contractName)
-		);
+		if (isTargetRequired(outputSelection, file, name, "evm.deployedBytecode"))
+			evmData["deployedBytecode"] = collectEVMObject(
+				m_compilerStack.runtimeObject(contractName),
+				m_compilerStack.runtimeSourceMapping(contractName)
+			);
 
 		contractData["evm"] = evmData;
 
