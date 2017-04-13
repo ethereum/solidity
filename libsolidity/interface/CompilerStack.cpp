@@ -38,6 +38,7 @@
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Exceptions.h>
@@ -840,4 +841,89 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 		prevJump = jump;
 	}
 	return ret;
+}
+
+namespace
+{
+
+Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
+{
+	if (_gas.isInfinite)
+		return Json::Value("infinite");
+	else
+		return Json::Value(toString(_gas.value));
+}
+
+}
+
+Json::Value CompilerStack::gasEstimates(string const& _contractName) const
+{
+	if (!assemblyItems(_contractName) && !runtimeAssemblyItems(_contractName))
+		return Json::Value();
+
+	using Gas = GasEstimator::GasConsumption;
+	Json::Value output(Json::objectValue);
+
+	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
+	{
+		Gas executionGas = GasEstimator::functionalEstimation(*items);
+		u256 bytecodeSize(runtimeObject(_contractName).bytecode.size());
+		Gas codeDepositGas = bytecodeSize * eth::GasCosts::createDataGas;
+
+		Json::Value creation(Json::objectValue);
+		creation["codeDepositCost"] = gasToJson(codeDepositGas);
+		creation["executionCost"] = gasToJson(executionGas);
+		/// TODO: implement + overload to avoid the need of +=
+		executionGas += codeDepositGas;
+		creation["totalCost"] = gasToJson(executionGas);
+		output["creation"] = creation;
+	}
+
+	if (eth::AssemblyItems const* items = runtimeAssemblyItems(_contractName))
+	{
+		/// External functions
+		ContractDefinition const& contract = contractDefinition(_contractName);
+		Json::Value externalFunctions(Json::objectValue);
+		for (auto it: contract.interfaceFunctions())
+		{
+			string sig = it.second->externalSignature();
+			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
+		}
+
+		if (contract.fallbackFunction())
+			/// This needs to be set to an invalid signature in order to trigger the fallback,
+			/// without the shortcut (of CALLDATSIZE == 0), and therefore to receive the upper bound.
+			/// An empty string ("") would work to trigger the shortcut only.
+			externalFunctions[""] = gasToJson(GasEstimator::functionalEstimation(*items, "INVALID"));
+
+		if (!externalFunctions.empty())
+			output["external"] = externalFunctions;
+
+		/// Internal functions
+		Json::Value internalFunctions(Json::objectValue);
+		for (auto const& it: contract.definedFunctions())
+		{
+			/// Exclude externally visible functions, constructor and the fallback function
+			if (it->isPartOfExternalInterface() || it->isConstructor() || it->name().empty())
+				continue;
+
+			size_t entry = functionEntryPoint(_contractName, *it);
+			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
+			if (entry > 0)
+				gas = GasEstimator::functionalEstimation(*items, entry, *it);
+
+			FunctionType type(*it);
+			string sig = it->name() + "(";
+			auto paramTypes = type.parameterTypes();
+			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
+				sig += (*it)->toString() + (it + 1 == paramTypes.end() ? "" : ",");
+			sig += ")";
+			internalFunctions[sig] = gasToJson(gas);
+		}
+
+		if (!internalFunctions.empty())
+			output["internal"] = internalFunctions;
+	}
+
+	return output;
 }

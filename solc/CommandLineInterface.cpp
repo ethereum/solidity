@@ -315,49 +315,40 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 void CommandLineInterface::handleGasEstimation(string const& _contract)
 {
-	using Gas = GasEstimator::GasConsumption;
-	if (!m_compiler->assemblyItems(_contract) && !m_compiler->runtimeAssemblyItems(_contract))
-		return;
+	Json::Value estimates = m_compiler->gasEstimates(_contract);
 	cout << "Gas estimation:" << endl;
-	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
+
+	if (estimates["creation"].isObject())
 	{
-		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
+		Json::Value creation = estimates["creation"];
 		cout << "construction:" << endl;
-		cout << "   " << gas << " + " << (bytecodeSize * eth::GasCosts::createDataGas) << " = ";
-		gas += bytecodeSize * eth::GasCosts::createDataGas;
-		cout << gas << endl;
+		cout << "   " << creation["executionCost"].asString();
+		cout << " + " << creation["codeDepositCost"].asString();
+		cout << " = " << creation["totalCost"].asString() << endl;
 	}
-	if (eth::AssemblyItems const* items = m_compiler->runtimeAssemblyItems(_contract))
+
+	if (estimates["external"].isObject())
 	{
-		ContractDefinition const& contract = m_compiler->contractDefinition(_contract);
+		Json::Value externalFunctions = estimates["external"];
 		cout << "external:" << endl;
-		for (auto it: contract.interfaceFunctions())
+		for (auto const& name: externalFunctions.getMemberNames())
 		{
-			string sig = it.second->externalSignature();
-			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, sig);
-			cout << "   " << sig << ":\t" << gas << endl;
+			if (name.empty())
+				cout << "   fallback:\t";
+			else
+				cout << "   " << name << ":\t";
+			cout << externalFunctions[name].asString() << endl;
 		}
-		if (contract.fallbackFunction())
-		{
-			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, "INVALID");
-			cout << "   fallback:\t" << gas << endl;
-		}
+	}
+
+	if (estimates["internal"].isObject())
+	{
+		Json::Value internalFunctions = estimates["internal"];
 		cout << "internal:" << endl;
-		for (auto const& it: contract.definedFunctions())
+		for (auto const& name: internalFunctions.getMemberNames())
 		{
-			if (it->isPartOfExternalInterface() || it->isConstructor())
-				continue;
-			size_t entry = m_compiler->functionEntryPoint(_contract, *it);
-			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
-			if (entry > 0)
-				gas = GasEstimator::functionalEstimation(*items, entry, *it);
-			FunctionType type(*it);
-			cout << "   " << it->name() << "(";
-			auto paramTypes = type.parameterTypes();
-			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
-				cout << (*it)->toString() << (it + 1 == paramTypes.end() ? "" : ",");
-			cout << "):\t" << gas << endl;
+			cout << "   " << name << ":\t";
+			cout << internalFunctions[name].asString() << endl;
 		}
 	}
 }
