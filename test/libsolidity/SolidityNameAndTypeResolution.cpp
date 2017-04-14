@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	char const* text = R"(
 		contract test {
 			uint256 stateVariable1;
-			function fun(uint256 arg1) { uint256 y; }
+			function fun(uint256 arg1) { uint256 y; y = arg1; }
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -237,8 +237,8 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 {
 	char const* text = R"(
 		contract test {
-			function fun() { uint x; }
-			function fun() { uint x; }
+			function fun() { }
+			function fun() { }
 		}
 	)";
 	CHECK_ERROR(text, DeclarationError, "");
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(name_shadowing)
 	char const* text = R"(
 		contract test {
 			uint256 variable;
-			function f() { uint32 variable; }
+			function f() { uint32 variable; variable; }
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(name_references)
 	char const* text = R"(
 		contract test {
 			uint256 variable;
-			function f(uint256 arg) returns (uint out) { f(variable); test; out; }
+			function f(uint256) returns (uint out) { f(variable); test; out; }
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -404,8 +404,8 @@ BOOST_AUTO_TEST_CASE(type_checking_function_call)
 {
 	char const* text = R"(
 		contract test {
-			function f() returns (bool r) { return g(12, true) == 3; }
-			function g(uint256 a, bool b) returns (uint256 r) { }
+			function f() returns (bool) { return g(12, true) == 3; }
+			function g(uint256, bool) returns (uint256) { }
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -523,12 +523,12 @@ BOOST_AUTO_TEST_CASE(forward_function_reference)
 {
 	char const* text = R"(
 		contract First {
-			function fun() returns (bool ret) {
+			function fun() returns (bool) {
 				return Second(1).fun(1, true, 3) > 0;
 			}
 		}
 		contract Second {
-			function fun(uint a, bool b, uint c) returns (uint ret) {
+			function fun(uint, bool, uint) returns (uint) {
 				if (First(2).fun() == true) return 1;
 			}
 		}
@@ -636,10 +636,10 @@ BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
 {
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
-		contract BaseBase { function BaseBase(uint j); }
+		contract BaseBase { function BaseBase(uint); }
 		contract base is BaseBase { function foo(); }
 		contract derived is base {
-			function derived(uint i) {}
+			function derived(uint) {}
 			function foo() {}
 		}
 	)";
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
 		contract Test {
-			function boo(uint arg1, bytes32 arg2, address arg3) returns (uint ret) {
+			function boo(uint, bytes32, address) returns (uint ret) {
 				ret = 5;
 			}
 		}
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			uint a;
 		}
 		contract Test {
-			function boo(uint arg2, bool arg3, bytes8 arg4, bool[2] pairs, uint[] dynamic, C carg, address[] addresses) external returns (uint ret) {
+			function boo(uint, bool, bytes8, bool[2], uint[], C, address[]) external returns (uint ret) {
 				ret = 5;
 			}
 		}
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(complex_inheritance)
 {
 	char const* text = R"(
 		contract A { function f() { uint8 x = C(0).g(); } }
-		contract B { function f() {} function g() returns (uint8 r) {} }
+		contract B { function f() {} function g() returns (uint8) {} }
 		contract C is A, B { }
 	)";
 	CHECK_SUCCESS(text);
@@ -1672,7 +1672,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint d) {
+			function f() returns(uint) {
 				uint8 x = 100;
 				return 10**x;
 			}
@@ -1681,7 +1681,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_WARNING(sourceCode, "might overflow");
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint d) {
+			function f() returns(uint) {
 				uint8 x = 100;
 				return uint8(10)**x;
 			}
@@ -1690,7 +1690,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint d) {
+			function f() returns(uint) {
 				return 2**80;
 			}
 		}
@@ -1941,10 +1941,10 @@ BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
 {
 	char const* sourceCode = R"(
 		contract Vehicle {
-			function f(bytes _a) external returns (uint256 r) {r = 1;}
+			function f(bytes) external returns (uint256 r) {r = 1;}
 		}
 		contract Bike is Vehicle {
-			function f(bytes _a) external returns (uint256 r) {r = 42;}
+			function f(bytes) external returns (uint256 r) {r = 42;}
 		}
 	)";
 	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(sourceCode), "Parsing and Name Resolving failed");
@@ -2570,6 +2570,7 @@ BOOST_AUTO_TEST_CASE(storage_location_local_variables)
 				uint[] storage x;
 				uint[] memory y;
 				uint[] memory z;
+				x;y;z;
 			}
 		}
 	)";
@@ -2625,6 +2626,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_variable)
 		contract C {
 			function f() {
 				mapping(uint => uint) x;
+				x;
 			}
 		}
 	)";
@@ -2637,6 +2639,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 		contract C {
 			function f() {
 				mapping(uint => uint)[] x;
+				x;
 			}
 		}
 	)";
@@ -2789,6 +2792,7 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 			function f() {
 				string memory long = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 				string memory short = "123";
+				long; short;
 			}
 		}
 	)";
@@ -2865,7 +2869,7 @@ BOOST_AUTO_TEST_CASE(call_to_library_function)
 {
 	char const* text = R"(
 		library Lib {
-			function min(uint x, uint y) returns (uint);
+			function min(uint, uint) returns (uint);
 		}
 		contract Test {
 			function f() {
@@ -2963,9 +2967,9 @@ BOOST_AUTO_TEST_CASE(cyclic_binary_dependency_via_inheritance)
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
 {
 	char const* text = R"(
-		contract C { function f() { var (x,y); } }
+		contract C { function f() { var (x,y); x = 1; y = 1;} }
 	)";
-	CHECK_ERROR(text, TypeError, "");
+	CHECK_ERROR(text, TypeError, "Assignment necessary for type detection.");
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
@@ -2982,6 +2986,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
 				var (,e,g) = two();
 				var (,,) = three();
 				var () = none();
+				a;b;c;d;e;g;
 			}
 		}
 	)";
@@ -3040,6 +3045,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				var (b,) = (1,);
 				var (c,d) = (1, 2 + a);
 				var (e,) = (1, 2, b);
+				a;b;c;d;e;
 			}
 		}
 	)";
@@ -3197,7 +3203,7 @@ BOOST_AUTO_TEST_CASE(using_for_overload)
 		library D {
 			struct s { uint a; }
 			function mul(s storage self, uint x) returns (uint) { return self.a *= x; }
-			function mul(s storage self, bytes32 x) returns (bytes32) { }
+			function mul(s storage, bytes32) returns (bytes32) { }
 		}
 		contract C {
 			using D for D.s;
@@ -3309,6 +3315,7 @@ BOOST_AUTO_TEST_CASE(create_memory_arrays)
 				L.S[][] memory x = new L.S[][](10);
 				var y = new uint[](20);
 				var z = new bytes(size);
+				x;y;z;
 			}
 		}
 	)";
@@ -3355,8 +3362,8 @@ BOOST_AUTO_TEST_CASE(function_overload_array_type)
 {
 	char const* text = R"(
 			contract M {
-				function f(uint[] values);
-				function f(int[] values);
+				function f(uint[]);
+				function f(int[]);
 			}
 	)";
 	CHECK_SUCCESS(text);
@@ -3654,16 +3661,20 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				uint x;
 				uint y;
 				uint g = true ? x : y;
+				g += 1; // Avoid unused var warning
 
 				// integer constants
 				uint h = true ? 1 : 3;
+				h += 1; // Avoid unused var warning
 
 				// string literal
 				var i = true ? "hello" : "world";
+				i = "used"; //Avoid unused var warning
 			}
 			function f2() {
 				// bool
 				bool j = true ? true : false;
+				j = j && true; // Avoid unused var warning
 
 				// real is not there yet.
 
@@ -3671,15 +3682,19 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				byte[2] memory a;
 				byte[2] memory b;
 				var k = true ? a : b;
+				k[0] = 0; //Avoid unused var warning
 
 				bytes memory e;
 				bytes memory f;
 				var l = true ? e : f;
+				l[0] = 0; // Avoid unused var warning
 
 				// fixed bytes
 				bytes2 c;
 				bytes2 d;
 				var m = true ? c : d;
+				m &= m;
+
 			}
 			function f3() {
 				// contract doesn't fit in here
@@ -3689,7 +3704,7 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 
 				// function
 				var r = true ? fun_x : fun_y;
-
+				r(); // Avoid unused var warning
 				// enum
 				small enum_x;
 				small enum_y;
@@ -3697,13 +3712,13 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 
 				// tuple
 				var (n, o) = true ? (1, 2) : (3, 4);
-
+				(n, o) = (o, n); // Avoid unused var warning
 				// mapping
 				var p = true ? table1 : table2;
-
+				p[0] = 0; // Avoid unused var warning
 				// typetype
 				var q = true ? uint32(1) : uint32(2);
-
+				q += 1; // Avoid unused var warning
 				// modifier doesn't fit in here
 
 				// magic doesn't fit in here
@@ -3753,6 +3768,7 @@ BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
 				uint7 = 5;
 				string memory intM;
 				uint bytesM = 21;
+				intM; bytesM;
 			}
 		}
 	)";
@@ -3804,6 +3820,7 @@ BOOST_AUTO_TEST_CASE(int10abc_is_identifier)
 			function f() {
 				uint uint10abc = 3;
 				int int10abc = 4;
+				uint10abc; int10abc;
 			}
 		}
 	)";
@@ -3888,6 +3905,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
 				int128 b = 4;
 				fixed c = b;
 				ufixed d = a;
+				c; d;
 			}
 		}
 	)";
@@ -3901,6 +3919,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_rational_int_conversion)
 			function f() {
 				fixed c = 3;
 				ufixed d = 4;
+				c; d;
 			}
 		}
 	)";
@@ -3914,6 +3933,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_rational_fraction_conversion)
 			function f() {
 				fixed a = 4.5;
 				ufixed d = 2.5;
+				a; d;
 			}
 		}
 	)";
@@ -3927,6 +3947,7 @@ BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
 			function f() {
 				fixed a = 4.5;
 				int b = a;
+				a; b;
 			}
 		}
 	)";
@@ -3949,6 +3970,7 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 			function f() {
 				ufixed8x16 a = +3.25;
 				fixed8x16 b = -3.25;
+				a; b;
 			}
 		}
 	)";
@@ -3972,6 +3994,7 @@ BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
 				ufixed0x56 b = 0.0000000000000006661338147750939242541790008544921875;
 				fixed0x8 c = -0.5;
 				fixed0x56 d = -0.0000000000000006661338147750939242541790008544921875;
+				a; b; c; d;
 			}
 		}
 	)";
@@ -3989,6 +4012,7 @@ BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 				fixed248x8 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
 				fixed0x256 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
 				fixed0x256 g = -0.00011788606643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+				a; b; c; d; e; g;
 			}
 		}
 	)";
@@ -4028,6 +4052,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
 				ufixed0x256 a = ufixed0x256(1/3);
 				ufixed0x248 b = ufixed0x248(1/3);
 				ufixed0x8 c = ufixed0x8(1/3);
+				a; b; c;
 			}
 		}
 	)";
@@ -4159,6 +4184,7 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 				ufixed8x248 e = ufixed8x248(35.245 % 12.9);
 				ufixed8x248 f = ufixed8x248(1.2 % 2);
 				fixed g = 2 ** -2;
+				a; b; c; d; e; f; g;
 			}
 		}
 	)";
@@ -4269,6 +4295,7 @@ BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
 				var a = 0.12345678;
 				var b = 12345678.352;
 				var c = 0.00000009;
+				a; b; c;
 			}
 		}
 	)";
@@ -4281,6 +4308,7 @@ BOOST_AUTO_TEST_CASE(var_and_rational_with_tuple)
 		contract test {
 			function f() {
 				var (a, b) = (.5, 1/3);
+				a; b;
 			}
 		}
 	)";
@@ -4354,6 +4382,7 @@ BOOST_AUTO_TEST_CASE(zero_handling)
 			function f() {
 				fixed8x8 a = 0;
 				ufixed8x8 b = 0;
+				a; b;
 			}
 		}
 	)";
@@ -4859,6 +4888,7 @@ BOOST_AUTO_TEST_CASE(function_type_arrays)
 				function(uint) returns (uint)[10] storage b = y;
 				function(uint) external returns (uint)[] memory c;
 				c = new function(uint) external returns (uint)[](200);
+				a; b;
 			}
 		}
 	)";
@@ -4917,8 +4947,8 @@ BOOST_AUTO_TEST_CASE(external_function_to_function_type_calldata_parameter)
 	// when converting to a function type.
 	char const* text = R"(
 		contract C {
-			function f(function(bytes memory x) external g) { }
-			function callback(bytes x) external {}
+			function f(function(bytes memory) external g) { }
+			function callback(bytes) external {}
 			function g() {
 				f(this.callback);
 			}
@@ -5287,6 +5317,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 		contract C {
 			function f() {
 				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				x;
 			}
 		}
 	)";
@@ -5299,6 +5330,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 		contract C {
 			function f() {
 				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+				x;
 			}
 		}
 	)";
@@ -5311,6 +5343,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 		contract C {
 			function f() {
 				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				x;
 			}
 		}
 	)";
@@ -5345,6 +5378,7 @@ BOOST_AUTO_TEST_CASE(address_methods)
 				bool delegatecallRet = addr.delegatecall();
 				bool sendRet = addr.send(1);
 				addr.transfer(1);
+				callRet; callcodeRet; delegatecallRet; sendRet;
 			}
 		}
 	)";
@@ -5570,6 +5604,95 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 	)";
 	success(text);
 }
+
+BOOST_AUTO_TEST_CASE(warn_unused_local)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint a;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Unused");
+}
+
+BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var a = 1;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Unused");
+}
+
+BOOST_AUTO_TEST_CASE(warn_unused_param)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint a) {
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Unused");
+	text = R"(
+		contract C {
+			function f(uint) {
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(warn_unused_return_param)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint a) {
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Unused");
+	text = R"(
+		contract C {
+			function f() returns (uint) {
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(no_unused_warnings)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				uint c = 1;
+				b = a + c;
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+			a = 7;
+			uint a;
+			}
+		}
+	)";
+	success(text);
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

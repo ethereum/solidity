@@ -48,13 +48,52 @@ void StaticAnalyzer::endVisit(ContractDefinition const&)
 
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
+	if (_function.isImplemented())
+		m_inFunction = true;
+	m_localVarUseCount.clear();
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	return true;
 }
 
 void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
+	m_inFunction = false;
 	m_nonPayablePublic = false;
+	for (auto const& var: m_localVarUseCount)
+		if (var.second == 0)
+			warning(var.first->location(), "Unused local variable");
+}
+
+bool StaticAnalyzer::visit(Identifier const& _identifier)
+{
+	if (m_inFunction)
+	{
+		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		{
+			solAssert(!var->name().empty(), "");
+			if (var->isLocalVariable())
+				m_localVarUseCount[var] += 1;
+		}
+	}
+	return true;
+}
+
+bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
+{
+	if (m_inFunction)
+	{
+		solAssert(_variable.isLocalVariable(), "");
+		if (_variable.name() != "")
+		{
+			// The variable may have been used before reaching the
+			// declaration.  If it was, we must not reset the counter,
+			// but since [] will insert the default 0, we really just
+			// need to access the map here and let it do the rest on its
+			// own.
+			m_localVarUseCount[&_variable];
+		}
+	}
+	return true;
 }
 
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
