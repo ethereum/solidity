@@ -232,7 +232,7 @@ reached at a certain point in **time**.
 An example for this is a blind auction contract which
 starts in the stage "accepting blinded bids", then
 transitions to "revealing bids" which is ended by
-"determine auction autcome".
+"determine auction outcome".
 
 .. index:: function;modifier
 
