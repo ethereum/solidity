@@ -51,8 +51,7 @@ of votes.
         }
 
         // This is a type for a single proposal.
-        struct Proposal
-        {
+        struct Proposal {
             bytes32 name;   // short name (up to 32 bytes)
             uint voteCount; // number of accumulated votes
         }
@@ -285,7 +284,7 @@ activate themselves.
                 // highestBidder.send(highestBid) is a security risk
                 // because it can be prevented by the caller by e.g.
                 // raising the call stack to 1023. It is always safer
-                // to let the recipient withdraw their money themselves.
+                // to let the recipients withdraw their money themselves.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
