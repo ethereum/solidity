@@ -150,12 +150,13 @@ public:
 	AssemblyItems CFG(AssemblyItems const& _input)
 	{
 		AssemblyItems output = _input;
+		set<size_t> tagsPushedByParent;
 		// Running it four times should be enough for these tests.
 		for (unsigned i = 0; i < 4; ++i)
 		{
-			ControlFlowGraph cfg(output);
+			ControlFlowGraph cfg(output, tagsPushedByParent);
 			AssemblyItems optItems;
-			for (BasicBlock const& block: cfg.optimisedBlocks())
+			for (BasicBlock const& block: cfg.optimisedBlocks(true))
 				copy(output.begin() + block.begin, output.begin() + block.end,
 					 back_inserter(optItems));
 			output = move(optItems);

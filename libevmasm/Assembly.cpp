@@ -353,16 +353,28 @@ void Assembly::injectStart(AssemblyItem const& _i)
 
 Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
-	optimiseInternal(_enable, _isCreation, _runs);
+	optimiseInternal(_enable, _isCreation, _runs, set<size_t>{});
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_t _runs)
+map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_t _runs, set<size_t> const& _tagsPushedByParent)
 {
-	for (size_t subId = 0; subId < m_subs.size(); ++subId)
+	if (!m_subs.empty())
 	{
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(_enable, false, _runs);
-		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+		map<size_t, set<size_t>> pushedSubTags;
+		for (AssemblyItem const& item: m_items)
+			if (item.type() == PushTag)
+			{
+				auto subTag = item.splitForeignPushTag();
+				if (subTag.first >= m_subs.size())
+					continue;
+				pushedSubTags[subTag.first].insert(subTag.second);
+			}
+		for (size_t subId = 0; subId < m_subs.size(); ++subId)
+		{
+			map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(_enable, false, _runs, pushedSubTags[subId]);
+			BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+		}
 	}
 
 	map<u256, u256> tagReplacements;
@@ -385,19 +397,21 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 			count++;
 		}
 
+		// Control flow graph that resets knowledge at path joins.
+		ControlFlowGraph cfg(m_items, _tagsPushedByParent, false);
+		AssemblyItems optimisedItems;
+		// Disable the "gather knowledge" stage, it might not be 100% safe because of
+		// the "KnownState" mechanism.
+		for (BasicBlock const& block: cfg.optimisedBlocks(false))
 		{
-			// Control flow graph optimization has been here before but is disabled because it
-			// assumes we only jump to tags that are pushed. This is not the case anymore with
-			// function types that can be stored in storage.
-			AssemblyItems optimisedItems;
-
-			auto iter = m_items.begin();
-			while (iter != m_items.end())
+			auto iter = m_items.begin() + block.begin;
+			auto const end = m_items.begin() + block.end;
+			while (iter < end)
 			{
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator(emptyState);
 				auto orig = iter;
-				iter = eliminator.feedItems(iter, m_items.end());
+				iter = eliminator.feedItems(iter, end);
 				bool shouldReplace = false;
 				AssemblyItems optimisedChunk;
 				try
@@ -424,11 +438,11 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			if (optimisedItems.size() < m_items.size())
-			{
-				m_items = move(optimisedItems);
-				count++;
-			}
+		}
+		if (optimisedItems.size() < m_items.size())
+		{
+			m_items = move(optimisedItems);
+			count++;
 		}
 	}
 
@@ -445,10 +459,17 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 
 LinkerObject const& Assembly::assemble() const
 {
+	return assemble(0);
+}
+
+LinkerObject const& Assembly::assemble(size_t _additionalBytesPerTag) const
+{
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
 
-	size_t subTagSize = 1;
+	assertThrow(_additionalBytesPerTag < 3, AssemblyException, "Something went really wrong with tag size estimation.");
+
+	size_t subTagSize = 1 + _additionalBytesPerTag;
 	for (auto const& sub: m_subs)
 	{
 		sub->assemble();
@@ -456,7 +477,7 @@ LinkerObject const& Assembly::assemble() const
 			subTagSize = max(subTagSize, *max_element(sub->m_tagPositionsInBytecode.begin(), sub->m_tagPositionsInBytecode.end()));
 	}
 
-	LinkerObject& ret = m_assembledObject;
+	LinkerObject ret;
 
 	size_t bytesRequiredForCode = bytesRequired(subTagSize);
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
@@ -550,7 +571,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Tag:
 			assertThrow(i.data() != 0, AssemblyException, "");
-			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
+			assertThrow(!i.isForeignTag(), AssemblyException, "Foreign tag.");
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
 			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
@@ -589,6 +610,11 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");
+		if (dev::bytesRequired(pos) > bytesPerTag)
+		{
+			// This happens sometimes, not often, but it happens. Let's just re-try with more space.
+			return assemble(_additionalBytesPerTag + 1);
+		}
 		assertThrow(dev::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
@@ -613,5 +639,7 @@ LinkerObject const& Assembly::assemble() const
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
 		toBigEndian(ret.bytecode.size(), r);
 	}
-	return ret;
+
+	swap(ret, m_assembledObject);
+	return m_assembledObject;
 }

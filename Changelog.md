@@ -14,6 +14,7 @@ Features:
  * Commandline interface: Do not overwrite files unless forced.
  * Introduce ``.transfer(value)`` for sending Ether.
  * Code generator: Support ``revert()`` to abort with rolling back, but not consuming all gas.
+ * Code generator: Reactivate control flow graph optimizations.
  * Inline assembly: Support ``revert`` (EIP140) as an opcode.
  * Parser: Support scientific notation in numbers (e.g. ``2e8`` and ``200e-2``).
  * Type system: Support explicit conversion of external function to address.

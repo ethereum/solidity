@@ -50,6 +50,12 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(_tag + (u256(_subId + 1) << 64));
 }
 
+bool AssemblyItem::isForeignTag() const
+{
+	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	return data() >= (u256(1) << 64);
+}
+
 unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 {
 	switch (m_type)
@@ -162,11 +168,13 @@ string AssemblyItem::toAssemblyText() const
 		assertThrow(false, AssemblyException, "Push string assembly output not implemented.");
 		break;
 	case PushTag:
-		assertThrow(data() < 0x10000, AssemblyException, "Sub-assembly tags not yet implemented.");
-		text = string("tag_") + to_string(size_t(data()));
+		if (isForeignTag())
+			text = string("tag_sub_") + to_string(splitForeignPushTag().first) + "_" + to_string(splitForeignPushTag().second);
+		else
+			text = string("tag_") + to_string(size_t(data()));
 		break;
 	case Tag:
-		assertThrow(data() < 0x10000, AssemblyException, "Sub-assembly tags not yet implemented.");
+		assertThrow(data() < 0x10000, AssemblyException, "Sub-assembly tag used.");
 		text = string("tag_") + to_string(size_t(data())) + ":";
 		break;
 	case PushData:
