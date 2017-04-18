@@ -16,6 +16,10 @@ language. It should also be easy to build high-level optimizer stages for JULIA.
 The core components of JULIA are functions, blocks, variables, literals,
 for-loops, switch-statements, expressions and assignments to variables.
 
+JULIA is typed, both variables and literals must specify the type with postfix
+notation. The supported types are ``bool``, ``u8``, ``s8``, ``u32``, ``s32``,
+``u64``, ``s64``, ``u128``, ``s128``, ``u256`` and ``s256``.
+
 JULIA in itself does not even provide operators. If the EVM is targeted,
 opcodes will be available as built-in functions, but they can be reimplemented
 if the backend changes. For a list of mandatory built-in functions, see the section below.
