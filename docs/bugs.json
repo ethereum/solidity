@@ -30,7 +30,7 @@
         "name": "OptimizerStaleKnowledgeAboutSHA3",
         "summary": "The optimizer did not properly reset its knowledge about SHA3 operations resulting in some hashes (also used for storage variable positions) not being calculated correctly.",
         "description": "The optimizer performs symbolic execution in order to save re-evaluating expressions whose value is already known. This knowledge was not properly reset across control flow paths and thus the optimizer sometimes thought that the result of a SHA3 operation is already present on the stack. This could result in data corruption by accessing the wrong storage slot.",
-        "severity": "low/medium",
+        "severity": "medium",
         "fixed": "0.4.3",
         "conditions": {
             "optimizer": true

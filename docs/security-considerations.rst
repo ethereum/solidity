@@ -22,7 +22,8 @@ you should be more careful.
 This section will list some pitfalls and general security recommendations but
 can, of course, never be complete. Also, keep in mind that even if your
 smart contract code is bug-free, the compiler or the platform itself might
-have a bug. All known security-relevant bugs of the compiler can be found in the
+have a bug. A list of some publicly known security-relevant bugs of the compiler
+can be found in the
 :ref:`list of known bugs<known_bugs>`, which is also machine-readable. Note
 that there is a bug bounty program that covers the code generator of the
 Solidity compiler.
