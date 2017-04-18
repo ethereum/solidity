@@ -20,7 +20,8 @@ Contract source verification tools and also other tools interacting with
 contracts should consult this list according to the following criteria:
 
  - It is mildly suspicious if a contract was compiled with a nightly
-   compiler version instead of a released version
+   compiler version instead of a released version. This list does not keep
+   track of unreleased or nightly versions.
  - It is also mildly suspicious if a contract was compiled with a version that was
    not the most recent at the time the contract was created. For contracts
    created from other contracts, you have to follow the creation chain
