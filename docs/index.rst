@@ -136,5 +136,6 @@ Contents
    using-the-compiler.rst
    style-guide.rst
    common-patterns.rst
+   bugs.rst
    contributing.rst
    frequently-asked-questions.rst
