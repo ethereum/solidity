@@ -53,7 +53,7 @@ API, this is done as follows::
     var contractInstance = MyContract.new(
         10,
         11,
-        {from: myAccount, gas: 1000000}
+        {from: myAccount, data: 0x…, gas: 1000000}
     );
 
 .. index:: constructor;arguments
