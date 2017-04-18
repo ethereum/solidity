@@ -30,16 +30,16 @@ and ``mod`` are available either natively or as functions and computes exponenti
 .. code::
 
     {
-        function power(base, exponent) -> (result)
+        function power(base:u256, exponent:u256) -> (result:u256)
         {
             switch exponent
-            0: { result := 1 }
-            1: { result := base }
+            0:u256: { result := 1:u256 }
+            1:u256: { result := base }
             default:
             {
-                result := power(mul(base, base), div(exponent, 2))
-                switch mod(exponent, 2)
-                    1: { result := mul(base, result) }
+                result := power(mul(base, base), div(exponent, 2:u256))
+                switch mod(exponent, 2:u256)
+                    1:u256: { result := mul(base, result) }
             }
         }
     }
@@ -51,10 +51,10 @@ and ``add`` to be available.
 .. code::
 
     {
-        function power(base, exponent) -> (result)
+        function power(base:u256, exponent:u256) -> (result:u256)
         {
-            result := 1
-            for { let i := 0 } lt(i, exponent) { i := add(i, 1) }
+            result := 1:u256
+            for { let i := 0:u256 } lt(i, exponent) { i := add(i, 1:u256) }
             {
                 result := mul(result, base)
             }
