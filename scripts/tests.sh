@@ -46,7 +46,10 @@ elif [ -z $CI ]; then
     ETH_PATH="eth"
 else
     mkdir -p /tmp/test
-    ETH_PATH="docker run --rm -v /tmp/test:/tmp/test -e HOME=/tmp/test/ --user $(id -u):$(id -g) ethereum/client-cpp"
+    wget -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth
+    test "$(shasum /tmp/test/eth)" = "52ca66b90aae9886576f3cabe5ef232a36f9b6a4  /tmp/test/eth"
+    chmod +x /tmp/test/eth
+    ETH_PATH="/tmp/test/eth"
 fi
 
 # This trailing ampersand directs the shell to run the command in the background,

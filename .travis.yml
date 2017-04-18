@@ -60,8 +60,6 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
-          before_install:
-              - docker pull ethereum/client-cpp
           env:
               - ZIP_SUFFIX=ubuntu-trusty
               - SOLC_STOREBYTECODE=On
@@ -70,8 +68,6 @@ matrix:
           dist: trusty
           sudo: required
           compiler: clang
-          before_install:
-              - docker pull ethereum/client-cpp
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
               - SOLC_STOREBYTECODE=On
