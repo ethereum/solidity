@@ -80,22 +80,25 @@ EOF
         $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/build/solc/solc
     fi
 
-    openssl aes-256-cbc -K $encrypted_60701c962b9c_key -iv $encrypted_60701c962b9c_iv -in "$REPO_ROOT"/scripts/bytecodecompare/deploy_key.enc -out deploy_key -d
-    chmod 600 deploy_key
-    eval `ssh-agent -s`
-    ssh-add deploy_key
+    if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]
+    then
+        openssl aes-256-cbc -K $encrypted_60701c962b9c_key -iv $encrypted_60701c962b9c_iv -in "$REPO_ROOT"/scripts/bytecodecompare/deploy_key.enc -out deploy_key -d
+        chmod 600 deploy_key
+        eval `ssh-agent -s`
+        ssh-add deploy_key
 
-    git clone --depth 2 git@github.com:ethereum/solidity-test-bytecode.git
-    cd solidity-test-bytecode
-    git config user.name "travis"
-    git config user.email "chris@ethereum.org"
-    git clean -f -d -x
+        git clone --depth 2 git@github.com:ethereum/solidity-test-bytecode.git
+        cd solidity-test-bytecode
+        git config user.name "travis"
+        git config user.email "chris@ethereum.org"
+        git clean -f -d -x
 
-    mkdir -p "$TRAVIS_COMMIT"
-    REPORT="$TRAVIS_COMMIT/$ZIP_SUFFIX.txt"
-    cp ../report.txt "$REPORT"
-    git add "$REPORT"
-    git commit -a -m "Added report $REPORT"
-    git push origin
+        mkdir -p "$TRAVIS_COMMIT"
+        REPORT="$TRAVIS_COMMIT/$ZIP_SUFFIX.txt"
+        cp ../report.txt "$REPORT"
+        git add "$REPORT"
+        git commit -a -m "Added report $REPORT"
+        git push origin
+    fi
 )
 rm -rf "$TMPDIR"
