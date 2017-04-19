@@ -58,9 +58,9 @@ cp $REPO_ROOT/build/soltest/soltest  $ZIP_TEMP_DIR
 # See https://developer.apple.com/library/mac/qa/qa1118/_index.html.
 # See https://github.com/ethereum/webthree-umbrella/issues/495.
 
-cp $REPO_ROOT/build/libdevcore/*.$DLL_EXT   $ZIP_TEMP_DIR
-cp $REPO_ROOT/build/libevmasm/*.$DLL_EXT    $ZIP_TEMP_DIR
-cp $REPO_ROOT/build/libsolidity/*.$DLL_EXT  $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libsoldevcore/*.$DLL_EXT $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libevmasm/*.$DLL_EXT     $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libsolidity/*.$DLL_EXT   $ZIP_TEMP_DIR
 
 # For macOS, we also copy the dynamic libraries for our external dependencies.
 # When building from source on your own machine, these libraries will be installed
