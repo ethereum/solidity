@@ -87,7 +87,17 @@ BOOST_AUTO_TEST_SUITE(StandardCompiler)
 
 BOOST_AUTO_TEST_CASE(assume_object_input)
 {
-	Json::Value result = compile("");
+	Json::Value result;
+
+	/// Use the native JSON interface of StandardCompiler to trigger these
+	solidity::StandardCompiler compiler;
+	result = compiler.compile(Json::Value());
+	BOOST_CHECK(containsError(result, "JSONError", "Input is not a JSON object."));
+	result = compiler.compile(Json::Value("INVALID"));
+	BOOST_CHECK(containsError(result, "JSONError", "Input is not a JSON object."));
+
+	/// Use the string interface of StandardCompiler to trigger these
+	result = compile("");
 	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
 	result = compile("invalid");
 	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
