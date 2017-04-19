@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract WithdrawalContract {
         address public richest;
@@ -70,7 +70,7 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract SendContract {
         address public richest;
@@ -86,7 +86,7 @@ This is as opposed to the more intuitive sending pattern:
                 // Check if call succeeds to prevent an attacker
                 // from trapping the previous person's funds in
                 // this contract through a callstack attack
-                require(richest.send(msg.value));
+                assert(richest.transfer(msg.value));
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
@@ -133,7 +133,7 @@ restrictions highly readable.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -272,7 +272,7 @@ function finishes.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract StateMachine {
         enum Stages {
