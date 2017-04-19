@@ -757,7 +757,7 @@ shown in the following example:
                 return false;
             uint amount = c.amount;
             c.amount = 0;
-            require(c.beneficiary.send(amount));
+            require(c.beneficiary.transfer(amount));
             return true;
         }
     }
