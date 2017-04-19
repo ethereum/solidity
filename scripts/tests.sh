@@ -48,7 +48,9 @@ else
     mkdir -p /tmp/test
     wget -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth
     test "$(shasum /tmp/test/eth)" = "52ca66b90aae9886576f3cabe5ef232a36f9b6a4  /tmp/test/eth"
+    sync
     chmod +x /tmp/test/eth
+    sync # Otherwise we might get a "text file busy" error
     ETH_PATH="/tmp/test/eth"
 fi
 
