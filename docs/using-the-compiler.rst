@@ -121,7 +121,8 @@ Input Description
         //
         // The available output types are as follows:
         //   abi - ABI
-        //   ast - AST of all source files
+        //   ast - AST of all source files (not supported atm)
+        //   legacyAST - legacy AST of all source files
         //   why3 - Why3 translated output
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
@@ -155,9 +156,9 @@ Input Description
           "*": {
             "*": [ "evm.sourceMap" ]
           },
-          // Enable the AST and Why3 output of every single file.
+          // Enable the legacy AST and Why3 output of every single file.
           "*": {
-            "": [ "ast", "why3" ]
+            "": [ "legacyAST", "why3" ]
           }
         }
       }
@@ -197,7 +198,9 @@ Output Description
           // Identifier (used in source maps)
           id: 1,
           // The AST object
-          ast: {}
+          ast: {},
+          // The legacy AST object
+          legacyAST: {}
         }
       },
       // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
