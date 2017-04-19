@@ -420,7 +420,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.5;
+    pragma solidity ^0.4.11;
 
     contract Oracle {
       struct Request {
@@ -445,7 +445,7 @@ Another example that uses external function types::
         oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) {
-        if (msg.sender != address(oracle)) throw;
+        require(msg.sender == address(oracle));
         // Use the data
       }
     }
@@ -722,7 +722,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract CrowdFunding {
         // Defines a new type with two fields.
@@ -763,8 +763,7 @@ shown in the following example:
                 return false;
             uint amount = c.amount;
             c.amount = 0;
-            if (!c.beneficiary.send(amount))
-                throw;
+            c.beneficiary.transfer(amount);
             return true;
         }
     }

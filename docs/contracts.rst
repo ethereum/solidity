@@ -327,7 +327,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract owned {
         function owned() { owner = msg.sender; }
@@ -341,8 +341,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // function is executed and otherwise, an exception is
         // thrown.
         modifier onlyOwner {
-            if (msg.sender != owner)
-                throw;
+            require(msg.sender == owner);
             _;
         }
     }
@@ -390,7 +389,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
     contract Mutex {
         bool locked;
         modifier noReentrancy() {
-            if (locked) throw;
+            require(!locked);
             locked = true;
             _;
             locked = false;
@@ -401,7 +400,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         /// The `return 7` statement assigns 7 to the return value but still
         /// executes the statement `locked = false` in the modifier.
         function f() noReentrancy returns (uint) {
-            if (!msg.sender.call()) throw;
+            require(msg.sender.call());
             return 7;
         }
     }
@@ -989,7 +988,7 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     library Set {
       // We define a new struct datatype that will be used to
@@ -1035,8 +1034,7 @@ more advanced example to implement a set).
             // The library functions can be called without a
             // specific instance of the library, since the
             // "instance" will be the current contract.
-            if (!Set.insert(knownValues, value))
-                throw;
+            assert(Set.insert(knownValues, value));
         }
         // In this contract, we can also directly access knownValues.flags, if we want.
     }
@@ -1166,7 +1164,7 @@ available without having to add further code.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     // This is the same code as before, just without comments
     library Set {
@@ -1207,8 +1205,7 @@ Let us rewrite the set example from the
             // corresponding member functions.
             // The following function call is identical to
             // Set.insert(knownValues, value)
-            if (!knownValues.insert(value))
-                throw;
+            require(knownValues.insert(value));
         }
     }
 
