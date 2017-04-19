@@ -162,11 +162,43 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (!sources)
 		return formatFatalError("JSONError", "No input sources specified.");
 
+	Json::Value errors = Json::arrayValue;
+
 	for (auto const& sourceName: sources.getMemberNames())
 		if (sources[sourceName]["content"].isString())
 			m_compilerStack.addSource(sourceName, sources[sourceName]["content"].asString());
 		else if (sources[sourceName]["urls"].isArray())
-			return formatFatalError("UnimplementedFeatureError", "Input URLs not supported yet.");
+		{
+			if (!m_readFile)
+				return formatFatalError("JSONError", "No import callback supplied, but URL is requested.");
+
+			bool found = false;
+			vector<string> failures;
+
+			for (auto const& url: sources[sourceName]["urls"])
+			{
+				ReadFile::Result result = m_readFile(url.asString());
+				if (result.success)
+				{
+					m_compilerStack.addSource(sourceName, result.contentsOrErrorMessage);
+					found = true;
+					break;
+				}
+				else
+					failures.push_back("Cannot import url (\"" + url.asString() + "\"): " + result.contentsOrErrorMessage);
+			}
+
+			for (auto const& failure: failures)
+			{
+				/// If the import succeeded, let mark all the others as warnings, otherwise all of them are errors.
+				errors.append(formatError(
+					found ? true : false,
+					"IOError",
+					"general",
+					failure
+				));
+			}
+		}
 		else
 			return formatFatalError("JSONError", "Invalid input source specified.");
 
@@ -196,7 +228,6 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
-	Json::Value errors = Json::arrayValue;
 	bool success = false;
 
 	try

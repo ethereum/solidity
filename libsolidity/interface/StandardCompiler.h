@@ -40,7 +40,7 @@ public:
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback to used to read files for import statements. Should return
 	StandardCompiler(ReadFile::Callback const& _readFile = ReadFile::Callback())
-		: m_compilerStack(_readFile)
+		: m_compilerStack(_readFile), m_readFile(_readFile)
 	{
 	}
 
@@ -55,6 +55,7 @@ private:
 	Json::Value compileInternal(Json::Value const& _input);
 
 	CompilerStack m_compilerStack;
+	ReadFile::Callback const& m_readFile;
 };
 
 }
