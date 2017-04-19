@@ -353,3 +353,24 @@ The following functions must be available:
 +---------------------------------------------------------------------------------------------------------------+
 | sha3(p:256, s:256) -> v:256                 | keccak(mem[p...(p+s)))                                          |
 +---------------------------------------------------------------------------------------------------------------+
+
+Backends
+--------
+
+Backends or targets are the translators from JULIA to a specific bytecode. Each of the backends can expose functions
+prefixed with the name of the backend. We reserve ``evm_`` and ``ewasm_`` prefixes for the two proposed backends.
+
+Backend: EVM
+------------
+
+The EVM target will have all the underlying EVM opcodes exposed with the `evm_` prefix.
+
+Backend: "EVM 1.5"
+------------------
+
+TBD
+
+Backend: eWASM
+--------------
+
+TBD
