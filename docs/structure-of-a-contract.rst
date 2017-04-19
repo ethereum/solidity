@@ -68,7 +68,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
       address public seller;
 
       modifier onlySeller() { // Modifier
-          if (msg.sender != seller) throw;
+          assert(msg.sender != seller);
           _;
       }
 

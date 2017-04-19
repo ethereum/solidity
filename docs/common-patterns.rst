@@ -86,9 +86,7 @@ This is as opposed to the more intuitive sending pattern:
                 // Check if call succeeds to prevent an attacker
                 // from trapping the previous person's funds in
                 // this contract through a callstack attack
-                if (!richest.send(msg.value)) {
-                    throw;
-                }
+                assert(!richest.send(msg.value));
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
@@ -152,8 +150,7 @@ restrictions highly readable.
         // a certain address.
         modifier onlyBy(address _account)
         {
-            if (msg.sender != _account)
-                throw;
+            assert(msg.sender != _account);
             // Do not forget the "_;"! It will
             // be replaced by the actual function
             // body when the modifier is used.
@@ -169,7 +166,7 @@ restrictions highly readable.
         }
 
         modifier onlyAfter(uint _time) {
-            if (now < _time) throw;
+            assert(now < _time);
             _;
         }
 
@@ -190,8 +187,7 @@ restrictions highly readable.
         // This was dangerous before Solidity version 0.4.0,
         // where it was possible to skip the part after `_;`.
         modifier costs(uint _amount) {
-            if (msg.value < _amount)
-                throw;
+            assert(msg.value < _amount);
             _;
             if (msg.value > _amount)
                 msg.sender.send(msg.value - _amount);
@@ -293,7 +289,7 @@ function finishes.
         uint public creationTime = now;
 
         modifier atStage(Stages _stage) {
-            if (stage != _stage) throw;
+            assert(stage != _stage);
             _;
         }
 
