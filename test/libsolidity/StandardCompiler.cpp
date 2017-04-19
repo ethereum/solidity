@@ -21,8 +21,10 @@
 
 #include <string>
 #include <iostream>
+#include <regex>
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/StandardCompiler.h>
+#include <libdevcore/JSON.h>
 
 
 using namespace std;
@@ -70,6 +72,45 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	}
 
 	return true;
+}
+
+bool isValidMetadata(string const& _metadata)
+{
+	Json::Value metadata;
+	if (!Json::Reader().parse(_metadata, metadata, false))
+		return false;
+
+	if (
+		!metadata.isObject() ||
+		!metadata.isMember("version") ||
+		!metadata.isMember("language") ||
+		!metadata.isMember("compiler") ||
+		!metadata.isMember("settings") ||
+		!metadata.isMember("sources") ||
+		!metadata.isMember("output")
+	)
+		return false;
+
+	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
+		return false;
+
+	if (!metadata["language"].isString() || metadata["language"].asString() != "Solidity")
+		return false;
+
+	/// @TODO add more strict checks
+
+	return true;
+}
+
+Json::Value getContractResult(Json::Value const& _compilerResult, string const& _file, string const& _name)
+{
+	if (
+		!_compilerResult["contracts"].isObject() ||
+		!_compilerResult["contracts"][_file].isObject() ||
+		!_compilerResult["contracts"][_file][_name].isObject()
+	)
+		return Json::Value();
+	return _compilerResult["contracts"][_file][_name];
 }
 
 Json::Value compile(string const& _input)
@@ -156,6 +197,44 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	)";
 	Json::Value result = compile(input);
 	BOOST_CHECK(containsAtMostWarnings(result));
+}
+
+BOOST_AUTO_TEST_CASE(basic_compilation)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isString());
+	BOOST_CHECK(contract["abi"].asString() == "[]");
+	BOOST_CHECK(contract["devdoc"].isString());
+	BOOST_CHECK(contract["devdoc"].asString() == "{\"methods\":{}}");
+	BOOST_CHECK(contract["userdoc"].isString());
+	BOOST_CHECK(contract["userdoc"].asString() == "{\"methods\":{}}");
+	BOOST_CHECK(contract["evm"].isObject());
+	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
+	BOOST_CHECK(contract["evm"]["assembly"].isString());
+	BOOST_CHECK(contract["evm"]["assembly"].asString() ==
+		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
+		"  invalid\ntag_1:\ntag_2:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
+		"  return\nstop\n\nsub_0: assembly {\n        /* \"fileA\":0:14  contract A { } */\n"
+		"      mstore(0x40, 0x60)\n    tag_1:\n      invalid\n}\n");
+	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
+	BOOST_CHECK(dev::jsonCompactPrint(contract["evm"]["gasEstimates"]) ==
+		"{\"creation\":{\"codeDepositCost\":\"10200\",\"executionCost\":\"62\",\"totalCost\":\"10262\"}}");
+	BOOST_CHECK(contract["metadata"].isString());
+	BOOST_CHECK(isValidMetadata(contract["metadata"].asString()));
+	/// @TODO check "sources" (ast)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
