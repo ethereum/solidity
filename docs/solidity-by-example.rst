@@ -329,7 +329,7 @@ activate themselves.
             AuctionEnded(highestBidder, highestBid);
 
             // 3. Interaction
-            require(beneficiary.send(highestBid));
+            require(beneficiary.transfer(highestBid));
         }
     }
 
@@ -470,7 +470,7 @@ high or low invalid bids.
                 // the same deposit.
                 bid.blindedBid = 0;
             }
-            require(msg.sender.send(refund));
+            require(msg.sender.transfer(refund));
         }
 
         // This is an "internal" function which means that it
@@ -520,7 +520,7 @@ high or low invalid bids.
             ended = true;
             // We send all the money we have, because some
             // of the refunds might have failed.
-            require(beneficiary.send(this.balance));
+            require(beneficiary.transfer(this.balance));
         }
     }
 
@@ -580,7 +580,7 @@ Safe Remote Purchase
         {
             aborted();
             state = State.Inactive;
-            require(seller.send(this.balance));
+            require(seller.transfer(this.balance));
         }
 
         /// Confirm the purchase as buyer.
@@ -610,7 +610,7 @@ Safe Remote Purchase
             state = State.Inactive;
             // This actually allows both the buyer and the seller to
             // block the refund.
-            require(buyer.send(value) || seller.send(this.balance));
+            require(buyer.transfer(value) || seller.transfer(this.balance));
         }
     }
 
