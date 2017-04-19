@@ -136,6 +136,16 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	return ret;
 }
 
+Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _sourceMap)
+{
+	Json::Value output = Json::objectValue;
+	output["object"] = _object.toHex();
+	output["opcodes"] = solidity::disassemble(_object.bytecode);
+	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
+	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
+	return output;
+}
+
 }
 
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
@@ -314,23 +324,15 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		evmData["methodIdentifiers"] = methodIdentifiers(m_compilerStack.contractDefinition(contractName));
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
-		// EVM bytecode
-		Json::Value bytecode(Json::objectValue);
-		bytecode["object"] = m_compilerStack.object(contractName).toHex();
-		bytecode["opcodes"] = solidity::disassemble(m_compilerStack.object(contractName).bytecode);
-		auto sourceMap = m_compilerStack.sourceMapping(contractName);
-		bytecode["sourceMap"] = sourceMap ? *sourceMap : "";
-		bytecode["linkReferences"] = formatLinkReferences(m_compilerStack.object(contractName).linkReferences);
-		evmData["bytecode"] = bytecode;
+		evmData["bytecode"] = collectEVMObject(
+			m_compilerStack.object(contractName),
+			m_compilerStack.sourceMapping(contractName)
+		);
 
-		// EVM deployed bytecode
-		Json::Value deployedBytecode(Json::objectValue);
-		deployedBytecode["object"] = m_compilerStack.runtimeObject(contractName).toHex();
-		deployedBytecode["opcodes"] = solidity::disassemble(m_compilerStack.runtimeObject(contractName).bytecode);
-		auto runtimeSourceMap = m_compilerStack.runtimeSourceMapping(contractName);
-		deployedBytecode["sourceMap"] = runtimeSourceMap ? *runtimeSourceMap : "";
-		deployedBytecode["linkReferences"] = formatLinkReferences(m_compilerStack.runtimeObject(contractName).linkReferences);
-		evmData["deployedBytecode"] = deployedBytecode;
+		evmData["deployedBytecode"] = collectEVMObject(
+			m_compilerStack.runtimeObject(contractName),
+			m_compilerStack.runtimeSourceMapping(contractName)
+		);
 
 		contractData["evm"] = evmData;
 
