@@ -152,6 +152,12 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
 	m_compilerStack.reset(false);
 
+	if (!_input.isObject())
+		return formatFatalError("JSONError", "Input is not a JSON object.");
+
+	if (_input["language"] != "Solidity")
+		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
+
 	Json::Value const& sources = _input["sources"];
 	if (!sources)
 		return formatFatalError("JSONError", "No input sources specified.");
