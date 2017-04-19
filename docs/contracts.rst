@@ -988,7 +988,7 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     library Set {
       // We define a new struct datatype that will be used to
@@ -1034,7 +1034,7 @@ more advanced example to implement a set).
             // The library functions can be called without a
             // specific instance of the library, since the
             // "instance" will be the current contract.
-            require(Set.insert(knownValues, value));
+            assert(Set.insert(knownValues, value));
         }
         // In this contract, we can also directly access knownValues.flags, if we want.
     }
