@@ -30,6 +30,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace {
+
 Json::Value formatError(
 	bool _warning,
 	string const& _type,
@@ -132,6 +134,8 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	}
 
 	return ret;
+}
+
 }
 
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
