@@ -376,8 +376,7 @@ In the following example, we show how ``throw`` can be used to easily revert an 
 
     contract Sharer {
         function sendHalf(address addr) payable returns (uint balance) {
-            if (!addr.send(msg.value / 2))
-                throw; // also reverts the transfer to Sharer
+            assert(!addr.send(msg.value / 2)); // also reverts the transfer to Sharer
             return this.balance;
         }
     }

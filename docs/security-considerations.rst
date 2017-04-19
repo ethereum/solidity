@@ -88,8 +88,7 @@ outlined further below:
       function withdraw() {
           var share = shares[msg.sender];
           shares[msg.sender] = 0;
-          if (!msg.sender.send(share))
-              throw;
+          assert(!msg.sender.send(share));
       }
   }
 
@@ -173,8 +172,8 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
 
         function transfer(address dest, uint amount) {
-            if (tx.origin != owner) { throw; }
-            if (!dest.call.value(amount)()) throw;
+            assert(tx.origin != owner);
+            assert(!dest.call.value(amount)());
         }
     }
 
