@@ -716,7 +716,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract CrowdFunding {
         // Defines a new type with two fields.
