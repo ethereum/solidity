@@ -439,7 +439,7 @@ Another example that uses external function types::
         oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) {
-        if (msg.sender != address(oracle)) throw;
+        require(msg.sender == address(oracle));
         // Use the data
       }
     }
@@ -757,8 +757,7 @@ shown in the following example:
                 return false;
             uint amount = c.amount;
             c.amount = 0;
-            if (!c.beneficiary.send(amount))
-                throw;
+            require(c.beneficiary.send(amount));
             return true;
         }
     }
