@@ -29,7 +29,7 @@ Take care if you perform calendar calculations using these units, because
 not every year equals 365 days and not even every day has 24 hours
 because of `leap seconds <https://en.wikipedia.org/wiki/Leap_second>`_.
 Due to the fact that leap seconds cannot be predicted, an exact calendar
-library has to be updated by an external oracle.
+library has to be updated by an "external oracle".
 
 These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
