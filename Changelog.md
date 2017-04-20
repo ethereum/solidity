@@ -2,6 +2,8 @@
 
 Features:
  * Support ``interface`` contracts.
+ * Commandline interface: Support ``--allow-paths`` to define trusted import paths. Note: the
+   path(s) of the supplied source file(s) is always trusted.
 
 Bugfixes:
  * Type system: Contract inheriting from base with unimplemented constructor should be abstract.

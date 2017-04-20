@@ -102,6 +102,7 @@ static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strMetadataLiteral = "metadata-literal";
+static string const g_strAllowPaths = "allow-paths";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -131,6 +132,7 @@ static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
+static string const g_argAllowPaths = g_strAllowPaths;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -533,7 +535,12 @@ Allowed options)",
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
 		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.");
+		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
+		(
+			g_argAllowPaths.c_str(),
+			po::value<string>()->value_name("path(s)"),
+			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
+		);
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -601,6 +608,13 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
+	if (m_args.count(g_argAllowPaths))
+	{
+		vector<string> paths;
+		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+			m_allowedDirectories.push_back(boost::filesystem::path(path));
+	}
+
 	readInputFilesAndConfigureRemappings();
 
 	if (m_args.count(g_argLibraries))
