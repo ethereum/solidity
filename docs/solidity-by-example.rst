@@ -470,7 +470,7 @@ high or low invalid bids.
                 // the same deposit.
                 bid.blindedBid = 0;
             }
-            require(msg.sender.transfer(refund));
+            msg.sender.transfer(refund);
         }
 
         // This is an "internal" function which means that it
@@ -520,7 +520,7 @@ high or low invalid bids.
             ended = true;
             // We send all the money we have, because some
             // of the refunds might have failed.
-            require(beneficiary.transfer(this.balance));
+            beneficiary.transfer(this.balance);
         }
     }
 
@@ -580,7 +580,7 @@ Safe Remote Purchase
         {
             aborted();
             state = State.Inactive;
-            require(seller.transfer(this.balance));
+            seller.transfer(this.balance);
         }
 
         /// Confirm the purchase as buyer.
