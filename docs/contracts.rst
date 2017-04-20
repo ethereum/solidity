@@ -327,7 +327,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract owned {
         function owned() { owner = msg.sender; }
@@ -1164,7 +1164,7 @@ available without having to add further code.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     // This is the same code as before, just without comments
     library Set {
