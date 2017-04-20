@@ -660,8 +660,6 @@ bool CommandLineInterface::processInput()
 	ReadFile::Callback fileReader = [this](string const& _path)
 	{
 		auto path = boost::filesystem::path(_path);
-		if (!boost::filesystem::exists(path))
-			return ReadFile::Result{false, "File not found."};
 		auto canonicalPath = boost::filesystem::canonical(path);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
@@ -678,6 +676,8 @@ bool CommandLineInterface::processInput()
 		}
 		if (!isAllowed)
 			return ReadFile::Result{false, "File outside of allowed directories."};
+		else if (!boost::filesystem::exists(path))
+			return ReadFile::Result{false, "File not found."};
 		else if (!boost::filesystem::is_regular_file(canonicalPath))
 			return ReadFile::Result{false, "Not a valid file."};
 		else
