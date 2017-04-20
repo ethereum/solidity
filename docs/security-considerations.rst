@@ -79,7 +79,7 @@ outlined further below:
 
 ::
 
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.4.11;
 
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -161,7 +161,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
