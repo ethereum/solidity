@@ -86,7 +86,7 @@ This is as opposed to the more intuitive sending pattern:
                 // Check if call succeeds to prevent an attacker
                 // from trapping the previous person's funds in
                 // this contract through a callstack attack
-                assert(richest.transfer(msg.value));
+                richest.transfer(msg.value);
                 richest = msg.sender;
                 mostSent = msg.value;
                 return true;
@@ -166,7 +166,7 @@ restrictions highly readable.
         }
 
         modifier onlyAfter(uint _time) {
-            require(now > _time);
+            require(now >= _time);
             _;
         }
 
@@ -187,7 +187,7 @@ restrictions highly readable.
         // This was dangerous before Solidity version 0.4.0,
         // where it was possible to skip the part after `_;`.
         modifier costs(uint _amount) {
-            require(msg.value > _amount);
+            require(msg.value >= _amount);
             _;
             if (msg.value > _amount)
                 msg.sender.send(msg.value - _amount);
