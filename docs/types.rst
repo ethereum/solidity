@@ -414,7 +414,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.5;
+    pragma solidity ^0.4.11;
 
     contract Oracle {
       struct Request {
