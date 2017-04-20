@@ -255,7 +255,12 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"{\"creation\":{\"codeDepositCost\":\"10200\",\"executionCost\":\"62\",\"totalCost\":\"10262\"}}");
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(isValidMetadata(contract["metadata"].asString()));
-	/// @TODO check "sources" (ast)
+	BOOST_CHECK(result["sources"].isObject());
+	BOOST_CHECK(result["sources"]["fileA"].isObject());
+	BOOST_CHECK(result["sources"]["fileA"]["legacyAST"].isObject());
+	BOOST_CHECK(dev::jsonCompactPrint(result["sources"]["fileA"]["legacyAST"]) ==
+		"{\"children\":[{\"attributes\":{\"fullyImplemented\":true,\"isLibrary\":false,\"linearizedBaseContracts\":[1],"
+		"\"name\":\"A\"},\"children\":[],\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"name\":\"SourceUnit\"}");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
