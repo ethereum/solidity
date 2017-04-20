@@ -192,6 +192,19 @@ For ``(S1, z) = E(S, y)`` let ``(S2, w) = E(S1, x)``. TODO
     E(G, L, n: DecimalNumber) = G, L, dec(n),
         where dec is the decimal decoding function
 
+Type Conversion Functions
+-------------------------
+
+JULIA has no support for implicit type conversion and therefore functions exists to provide explicit conversion.
+When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
+
+The following type conversion functions must be available:
+- ``u32tobool(x:u32) -> (y:bool)``
+- ``booltou32(x:bool) -> (y:u32)``
+- ``u32tou64(x:u32) -> (y:u64)``
+- ``u64tou32(x:u64) -> (y:u32)``
+- etc. (TBD)
+
 Low-level Functions
 -------------------
 
