@@ -74,6 +74,23 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	return true;
 }
 
+string bytecodeSansMetadata(string const& _bytecode)
+{
+	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
+	/// /a165627a7a72305820([0-9a-f]{64})0029$/
+
+	if (_bytecode.size() < 88)
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
+		return _bytecode;
+
+	return _bytecode.substr(0, _bytecode.size() - 86);
+}
+
 bool isValidMetadata(string const& _metadata)
 {
 	Json::Value metadata;
@@ -223,6 +240,10 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["userdoc"].asString() == "{\"methods\":{}}");
 	BOOST_CHECK(contract["evm"].isObject());
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
+	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
+	BOOST_CHECK(bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()) ==
+		"60606040523415600b57fe5b5b60338060196000396000f30060606040525bfe00");
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString() ==
 		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
