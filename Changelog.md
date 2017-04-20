@@ -6,8 +6,11 @@ Features:
    path(s) of the supplied source file(s) is always trusted.
 
 Bugfixes:
- * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
  * Assembly output: Implement missing AssemblyItem types.
+ * Compiler interface: Fix a bug where source indexes could be inconsistent between Solidity compiled
+   with different compilers (clang vs. gcc) or compiler settings. The bug was visible in AST
+   and source mappings.
+ * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
 
 ### 0.4.10 (2017-03-15)
 

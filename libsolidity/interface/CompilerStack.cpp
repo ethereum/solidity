@@ -406,8 +406,9 @@ vector<string> CompilerStack::sourceNames() const
 map<string, unsigned> CompilerStack::sourceIndices() const
 {
 	map<string, unsigned> indices;
+	unsigned index = 0;
 	for (auto const& s: m_sources)
-		indices[s.first] = indices.size();
+		indices[s.first] = index++;
 	return indices;
 }
 
