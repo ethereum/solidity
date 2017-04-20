@@ -1,7 +1,10 @@
 ### 0.4.11 (unreleased)
 
 Features:
+ * Implement the Standard JSON Input / Output API
  * Support ``interface`` contracts.
+ * C API (``jsonCompiler``): Add the ``compileStandard()`` method to process a Standard JSON I/O.
+ * Commandline interface: Add the ``--standard-json`` parameter to process a Standard JSON I/O.
  * Commandline interface: Support ``--allow-paths`` to define trusted import paths. Note: the
    path(s) of the supplied source file(s) is always trusted.
 

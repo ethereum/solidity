@@ -32,6 +32,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
@@ -103,6 +104,7 @@ static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strAllowPaths = "allow-paths";
+static string const g_strStandardJSON = "standard-json";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -133,6 +135,7 @@ static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argAllowPaths = g_strAllowPaths;
+static string const g_argStandardJSON = g_strStandardJSON;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -527,6 +530,11 @@ Allowed options)",
 		)
 		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
 		(
+			g_argStandardJSON.c_str(),
+			"Switch to Standard JSON input / output mode, ignoring all options."
+			"It reads from standard input and provides the result on the standard output."
+		)
+		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options and assumes input is assembly."
 		)
@@ -613,6 +621,20 @@ bool CommandLineInterface::processInput()
 		vector<string> paths;
 		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
 			m_allowedDirectories.push_back(boost::filesystem::path(path));
+	}
+
+	if (m_args.count(g_argStandardJSON))
+	{
+		string input;
+		while (!cin.eof())
+		{
+			string tmp;
+			getline(cin, tmp);
+			input.append(tmp + "\n");
+		}
+		StandardCompiler compiler;
+		cout << compiler.compile(input) << endl;
+		return true;
 	}
 
 	readInputFilesAndConfigureRemappings();
@@ -882,7 +904,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_onlyAssemble)
+	if (m_args.count(g_argStandardJSON))
+		return true;
+	else if (m_onlyAssemble)
 		outputAssembly();
 	else if (m_onlyLink)
 		writeLinkedFiles();
