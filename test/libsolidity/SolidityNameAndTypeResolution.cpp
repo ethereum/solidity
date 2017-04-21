@@ -5505,6 +5505,19 @@ BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
 	CHECK_WARNING(text, "Statement has no effect.");
 }
 
+BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				for (uint x = 0; true; x++)
+				{}
+			}
+		}
+	)";
+	success(text);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
