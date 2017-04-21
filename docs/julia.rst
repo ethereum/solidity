@@ -90,7 +90,7 @@ Grammar::
     Switch =
         'switch' Expression Case* ( 'default' ':' Block )?
     Case =
-        'case' Expression ':' Block
+        'case' Literal ':' Block
     ForLoop =
         'for' Block Expression Block Block
     BreakContinue =
@@ -119,6 +119,11 @@ introduce new identifiers into these scopes. Identifiers are visible in
 the block they are defined in (including all sub-nodes and sub-blocks).
 Shadowing is disallowed, i.e. you cannot declare an identifier at a point
 where another identifier with the same name is also visible.
+
+Switches must have at least one (or the default) and at most one default case.
+If all possible values of the expression is covered, the default case should
+not be allowed (i.e. a switch with a ``bool`` expression and having both a
+true and false case should not allow a default case).
 
 In for-loops, identifiers declared in the first block (the init block)
 are visible in all other parts of the for loop (but not outside of the loop).
