@@ -164,7 +164,9 @@ bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 
 bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 {
+	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
+	solAssert(m_stackHeight - stackHeight == 1, "Invalid value size.");
 	boost::get<Scope::Variable>(m_currentScope->identifiers.at(_varDecl.name)).active = true;
 	return success;
 }
