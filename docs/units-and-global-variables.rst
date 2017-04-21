@@ -100,6 +100,7 @@ Mathematical and Cryptographic Functions
     compute RIPEMD-160 hash of the (tightly packed) arguments
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
+    (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
 ``revert()``:
     abort execution and revert state changes
 
