@@ -124,11 +124,12 @@ BOOST_AUTO_TEST_CASE(invalid_language)
 {
 	char const* input = R"(
 	{
-		"language": "INVALID"
+		"language": "INVALID",
+		"sources": { "name": { "content": "abc" } }
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\" is supported as a language."));
+	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(valid_language)
@@ -139,7 +140,7 @@ BOOST_AUTO_TEST_CASE(valid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(!containsError(result, "JSONError", "Only \"Solidity\" is supported as a language."));
+	BOOST_CHECK(!containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(no_sources)

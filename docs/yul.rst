@@ -15,6 +15,23 @@ It can already be used for "inline assembly" inside Solidity and
 future versions of the Solidity compiler will even use Yul as intermediate
 language. It should also be easy to build high-level optimizer stages for Yul.
 
+In its flavour of inline-assembly, Yul can be used as a language setting
+for the :ref:`standard-json interface <compiler-api>`:
+
+::
+
+    {
+        "language": "Yul",
+        "sources": { "input.yul": { "content": "{ sstore(0, 1) }" } },
+        "settings": {
+            "outputSelection": { "*": { "*": ["*"], "": [ "*" ] } },
+            "optimizer": { "enabled": true, "details": { "yul": true } }
+        }
+    }
+
+Furthermore, the commandline interface can be switched to Yul mode
+using ``solc --strict-assembly``.
+
 .. note::
 
     Note that the flavour used for "inline assembly" does not have types

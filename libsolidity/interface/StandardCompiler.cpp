@@ -23,6 +23,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libyul/AssemblyStack.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
@@ -37,6 +38,7 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
+using namespace yul;
 
 namespace {
 
@@ -354,7 +356,6 @@ boost::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSele
 
 	return boost::none;
 }
-
 /// Validates the optimizer settings and returns them in a parsed object.
 /// On error returns the json-formatted error message.
 boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value const& _jsonInput)
@@ -427,8 +428,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	if (auto result = checkRootKeys(_input))
 		return *result;
 
-	if (_input["language"] != "Solidity")
-		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
+	ret.language = _input["language"].asString();
 
 	Json::Value const& sources = _input["sources"];
 
@@ -850,15 +850,86 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	return output;
 }
 
+
+Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
+{
+	if (_inputsAndSettings.sources.size() != 1)
+		return formatFatalError("JSONError", "Yul mode only supports exactly one input file.");
+	if (!_inputsAndSettings.smtLib2Responses.empty())
+		return formatFatalError("JSONError", "Yul mode does not support smtlib2responses.");
+	if (!_inputsAndSettings.remappings.empty())
+		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
+	if (!_inputsAndSettings.libraries.empty())
+		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
+
+	Json::Value output = Json::objectValue;
+
+	AssemblyStack stack(_inputsAndSettings.evmVersion, AssemblyStack::Language::StrictAssembly);
+	string const& sourceName = _inputsAndSettings.sources.begin()->first;
+	string const& sourceContents = _inputsAndSettings.sources.begin()->second;
+	if (!stack.parseAndAnalyze(sourceName, sourceContents))
+	{
+		Json::Value errors = Json::arrayValue;
+		for (auto const& error: stack.errors())
+		{
+			auto err = dynamic_pointer_cast<Error const>(error);
+
+			errors.append(formatErrorWithException(
+				*error,
+				err->type() == Error::Type::Warning,
+				err->typeName(),
+				"general",
+				""
+			));
+		}
+		output["errors"] = errors;
+		return output;
+	}
+
+	string contractName = stack.parserResult()->name.str();
+
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir"))
+		output["contracts"][sourceName][contractName]["ir"] = stack.print();
+
+	if (_inputsAndSettings.optimiserSettings.runYulOptimiser)
+		stack.optimize();
+
+	MachineAssemblyObject object = stack.assemble(
+		AssemblyStack::Machine::EVM,
+		_inputsAndSettings.optimiserSettings.optimizeStackAllocation
+	);
+
+	if (isArtifactRequested(
+		_inputsAndSettings.outputSelection,
+		sourceName,
+		contractName,
+		{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" }
+	))
+		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, nullptr);
+
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized"))
+		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly"))
+		output["contracts"][sourceName][contractName]["evm"]["assembly"] = object.assembly;
+
+	return output;
+}
+
+
 Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 {
 	try
 	{
 		auto parsed = parseInput(_input);
-		if (parsed.type() == typeid(InputsAndSettings))
-			return compileSolidity(boost::get<InputsAndSettings>(std::move(parsed)));
-		else
+		if (parsed.type() == typeid(Json::Value))
 			return boost::get<Json::Value>(std::move(parsed));
+		InputsAndSettings settings = boost::get<InputsAndSettings>(std::move(parsed));
+		if (settings.language == "Solidity")
+			return compileSolidity(std::move(settings));
+		else if (settings.language == "Yul")
+			return compileYul(std::move(settings));
+		else
+			return formatFatalError("JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language.");
 	}
 	catch (Json::LogicError const& _exception)
 	{

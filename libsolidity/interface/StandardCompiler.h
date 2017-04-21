@@ -58,6 +58,7 @@ public:
 private:
 	struct InputsAndSettings
 	{
+		std::string language;
 		Json::Value errors;
 		std::map<std::string, std::string> sources;
 		std::map<h256, std::string> smtLib2Responses;
@@ -74,6 +75,7 @@ private:
 	boost::variant<InputsAndSettings, Json::Value> parseInput(Json::Value const& _input);
 
 	Json::Value compileSolidity(InputsAndSettings _inputsAndSettings);
+	Json::Value compileYul(InputsAndSettings _inputsAndSettings);
 
 	ReadCallback::Callback m_readFile;
 };

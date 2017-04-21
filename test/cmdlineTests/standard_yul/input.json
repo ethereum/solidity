@@ -1,0 +1,17 @@
+{
+	"language": "Yul",
+	"sources":
+	{
+		"A":
+		{
+			"content": "{ let x := mload(0) sstore(add(x, 0), 0) }"
+		}
+	},
+	"settings":
+	{
+		"outputSelection":
+		{
+			"*": { "*": ["*"], "": [ "*" ] }
+		}
+	}
+}
