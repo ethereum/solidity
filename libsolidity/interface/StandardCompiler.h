@@ -55,7 +55,7 @@ private:
 	Json::Value compileInternal(Json::Value const& _input);
 
 	CompilerStack m_compilerStack;
-	ReadFile::Callback const& m_readFile;
+	ReadFile::Callback m_readFile;
 };
 
 }
