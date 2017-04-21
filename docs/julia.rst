@@ -30,7 +30,7 @@ and ``mod`` are available either natively or as functions and computes exponenti
 .. code::
 
     {
-        function power(base:u256, exponent:u256) -> (result:u256)
+        function power(base:u256, exponent:u256) -> result:u256
         {
             switch exponent
             case 0:u256: { result := 1:u256 }
@@ -51,7 +51,7 @@ and ``add`` to be available.
 .. code::
 
     {
-        function power(base:u256, exponent:u256) -> (result:u256)
+        function power(base:u256, exponent:u256) -> result:u256
         {
             result := 1:u256
             for { let i := 0:u256 } lt(i, exponent) { i := add(i, 1:u256) }
@@ -79,7 +79,7 @@ Grammar::
         SubAssembly
     FunctionDefinition =
         'function' Identifier '(' IdentifierList? ')'
-        ( '->' '(' IdentifierList ')' )? Block
+        ( '->' IdentifierList )? Block
     VariableDeclaration =
         'let' IdentifierOrList ( ':=' Expression )?
     Assignment =
@@ -250,10 +250,10 @@ JULIA has no support for implicit type conversion and therefore functions exists
 When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
 
 The following type conversion functions must be available:
-- ``u32tobool(x:u32) -> (y:bool)``
-- ``booltou32(x:bool) -> (y:u32)``
-- ``u32tou64(x:u32) -> (y:u64)``
-- ``u64tou32(x:u64) -> (y:u32)``
+- ``u32tobool(x:u32) -> y:bool``
+- ``booltou32(x:bool) -> y:u32``
+- ``u32tou64(x:u32) -> y:u64``
+- ``u64tou32(x:u64) -> y:u32``
 - etc. (TBD)
 
 Low-level Functions
