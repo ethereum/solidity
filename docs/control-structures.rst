@@ -82,6 +82,47 @@ the same as the number of output parameters.
 
 .. _function-calls:
 
+Literals
+========
+
+Solidity includes three types of literals; these are expressions for specific, known values.
+
+.. index:: ! literal;integer, literal;decimal, literal;hex, literal;bytestring
+
+Integers
+--------
+
+Decimal literals are formed from a sequence of numbers in the range
+0-9. They are interpreted as decimals. Examples include ``69``
+and ``01000000``.
+
+Hex literals are formed by ``0x``
+followed directly by a sequence of pairs of hexadecimal numbers in
+the range 0-9 and a-f (not case sensitive). They are interpreted as
+hexadecimal-encoded numbers.
+
+Integer literals can express arbitrarily big numbers.  They retain
+exact values until they are converted into a type of finite size.
+
+Byte Strings
+------------
+
+Byte string literals are formed by a sequence of arbitrary characters
+contained between quote characters ("). They are generally interpreted
+as zero-terminated ASCII encoded text, similar to C. The terminating
+zero does not appear in the literal. An example would be::
+
+    var s = "Hello, World!";
+
+Reals
+-----
+
+Reals are formed similar to integers except that they include a
+decimal point and at least one number on either side of it. An example
+would be: 3.14159265 and 42.000001.  They retain exact values until
+they are converted into a type of finite size.
+
+
 Function Calls
 ==============
 
