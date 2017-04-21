@@ -81,7 +81,7 @@ Grammar::
         'function' Identifier '(' IdentifierList? ')'
         ( '->' '(' IdentifierList ')' )? Block
     VariableDeclaration =
-        'let' IdentifierOrList ':=' Expression
+        'let' IdentifierOrList ( ':=' Expression )?
     Assignment =
         IdentifierOrList ':=' Expression
     Expression =
@@ -113,18 +113,37 @@ Restrictions on the Grammar
 ---------------------------
 
 Scopes in JULIA are tied to Blocks and all declarations
-(``FunctionDefinition``, ``VariableDeclaration`` and ``SubAssembly``)
-introduce new identifiers into these scopes. Shadowing is disallowed
+(``FunctionDefinition``, ``VariableDeclaration``)
+introduce new identifiers into these scopes. Identifiers are visible in
+the block they are defined in (including all sub-nodes and sub-blocks).
+Shadowing is disallowed, i.e. you cannot declare an identifier at a point
+where another identifier with the same name is also visible.
 
-Talk about identifiers across functions etc
+In for-loops, identifiers declared in the first block (the init block)
+are visible in all other parts of the for loop (but not outside of the loop).
+Identifiers declared in the other parts of the for loop respect the regular
+syntatical scoping rules.
 
-Restriction for Expression: Statements have to return empty tuple
-Function arguments have to be single item
+Inside functions, it is not possible to access a variable that was declared
+outside of that function.
 
-Restriction for VariableDeclaration and Assignment: Number of elements left and right needs to be the same
-continue and break only in for loop
+Every expression evaluates to zero or more values. Literals evaluate to exactly
+one value and function calls evaluate to a number of values equal to the
+number of return values of the function called. An expression that is also
+a statement is invalid if it evaluates to more than one value, i.e. at the
+block-level, only expressions evaluating to zero values are allowed.
 
-Literals have to fit 32 bytes
+For variable declarations and assignments, the right-hand-side expression
+(if present) has to evaluate to a number of values equal to the number of
+variables on the left-hand-side.
+
+An expression used as an argument to a function call has to evaluate to exactly
+one value.
+
+The ``continue`` and ``break`` statements can only be used inside loop bodies.
+The condition part of the for-loop has to evaluate to exactly one value.
+
+Literals cannot be larger than 32 bytes.
 
 Formal Specification
 --------------------
@@ -139,9 +158,7 @@ segment of the stack in the EVM).
 
 The the evaluation function E takes a global state, a local state and
 a node of the AST and returns a new global state, a new local state
-and a variable number of values. The number of values is equal to the
-number of values of the expresison if the AST node is an expresison and
-zero otherwise.
+and a variable number of values.
 
 The exact nature of the global state is unspecified for this high level
 description. The local state `L` is a mapping of identifiers `i` to values `v`,
@@ -154,30 +171,65 @@ used yet.
     E(G, L, <{St1, ..., Stn}>: Block) =
         let L' be an extension of L to all variables v declared in Block
         (but not in its sub-blocks), such that L'[v] = ⊥.
-        G1, L'1 = E(G, L', St1)
-        G2, L'2 = E(G1, L'1, St2)
-        ...
-        Gn, L'n = E(G(n-1), L'(n-1), Stn)
-        let L'' be a restriction of L'n to the identifiers of L'
-        Gn, L''
+        let Gi, Li, mode = E(G, L', St1, ..., Stn)
+        let L'' be a restriction of Li to the identifiers of L
+        Gi, L'', mode
+    E(G, L, St1, ..., Stn: Statement) =
+        if n is zero:
+            G, L
+        else:
+            let G', L', mode = E(G, L, St1)
+            if mode is regular then
+                E(G', L', St2, ..., Stn)
+            otherwise
+                G', L', mode
     E(G, L, <function fname (param1, ..., paramn) -> (ret1, ..., retm) block>: FunctionDefinition) =
-        G, L
-    E(G, L, <let var1, ..., varn := value>: VariableDeclaration) =
-        E(G, L, <var1, ..., varn := value>: Assignment)
-    E(G, L, <var1, ..., varn := value>: Assignment) =
-        let G', L', v1, ..., vn = E(G, L, value)
+        G, L, regular
+    E(G, L, <let var1, ..., varn := rhs>: VariableDeclaration) =
+        E(G, L, <var1, ..., varn := rhs>: Assignment)
+    E(G, L, <let var1, ..., varn>: VariableDeclaration) =
+        let L' be a copy of L where L'[vi] = 0 for i = 1, ..., n
+        G, L', regular
+    E(G, L, <var1, ..., varn := rhs>: Assignment) =
+        let G', L', v1, ..., vn = E(G, L, rhs)
         let L'' be a copy of L' where L'[vi] = vi for i = 1, ..., n
-        G, L''
-    E(G, L, name: Identifier) =
-        G, L, L[name]
-    E(G, L, fname(arg1, ..., argn): FunctionCall) =
+        G, L'', regular
+    E(G, L, <for { i1, ..., in } condition post body>: ForLoop) =
+        if n >= 1:
+            let L' be an extension of L to all variables v declared in i1, ..., in
+            (but not in sub-blocks), such that L'[v] = ⊥.
+            let G'', L'', mode = E(G, L', i1, ..., in)
+            explode if mode is not regular
+            let G''', L''', mode = E(G'', L'', for {} condition post body)
+            explode if mode is not regular
+            let Lend be the restriction of L''' to only variables of L
+            G''', Lend
+        else:
+            let G', L', v = E(G, L, condition)
+            if v is false:
+                G', L', regular
+            else:
+                let G'', L'', mode = E(G, L, body)
+                if mode is break:
+                    G'', L'', regular
+                else:
+                    G''', L''', mode = E(G'', L'', post)
+                    E(G''', L''', for {} condition post body)
+    E(G, L, break: BreakContinue) =
+        G, L, break
+    E(G, L, continue: BreakContinue) =
+        G, L, continue
+
+    E(G, L, <name>: Identifier) =
+        G, L, regular, L[name]
+    E(G, L, <fname(arg1, ..., argn)>: FunctionCall) =
         G1, L1, vn = E(G, L, argn)
         ...
         G(n-1), L(n-1), v2 = E(G(n-2), L(n-2), arg2)
         Gn, Ln, v1 = E(G(n-1), L(n-1), arg1)
         Let <function fname (param1, ..., paramn) -> ret1, ..., retm block>
         be the function of name fname visible at the point of the call.
-        Let L' be a new local state such that 
+        Let L' be a new local state such that
         L'[parami] = vi and L'[reti] = 0 for all i.
         Let G'', L'', rv1, ..., rvm = E(Gn, L', block)
         G'', Ln, rv1, ..., rvm
