@@ -79,7 +79,8 @@ class CompilerStack: boost::noncopyable
 {
 public:
 	/// Creates a new compiler stack.
-	/// @param _readFile callback to used to read files for import statements. Should return
+	/// @param _readFile callback to used to read files for import statements. Must return
+	/// and must not emit exceptions.
 	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback());
 
 	/// Sets path remappings in the format "context:prefix=target"
