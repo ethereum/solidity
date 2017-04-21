@@ -139,32 +139,32 @@ segment of the stack in the EVM).
 
 The the evaluation function E takes a global state, a local state and
 a node of the AST and returns a new global state, a new local state
-and a value (if the AST node is an expression).
+and a variable number of values. The number of values is equal to the
+number of values of the expresison if the AST node is an expresison and
+zero otherwise.
 
-We use sequence numbers as a shorthand for the order of evaluation
-and how state is forwarded. For example, ``E2(x), E1(y)`` is a shorthand
-for
-
-For ``(S1, z) = E(S, y)`` let ``(S2, w) = E(S1, x)``. TODO
+The exact nature of the global state is unspecified for this high level
+description. The local state `L` is a mapping of identifiers `i` to values `v`,
+denoted as `L[i] = v`.
+The special value `⊥` is used to signify that a variable cannot be
+used yet.
 
 .. code::
 
     E(G, L, <{St1, ..., Stn}>: Block) =
-        let L' be a copy of L that adds a new inner scope which contains
-        all functions and variables declared in the block (but not its sub-blocks)
-        variables are marked inactive for now
-        TODO: more formal
+        let L' be an extension of L to all variables v declared in Block
+        (but not in its sub-blocks), such that L'[v] = ⊥.
         G1, L'1 = E(G, L', St1)
         G2, L'2 = E(G1, L'1, St2)
         ...
         Gn, L'n = E(G(n-1), L'(n-1), Stn)
-        let L'' be a copy of L'n where the innermost scope is removed
+        let L'' be a restriction of L'n to the identifiers of L'
         Gn, L''
     E(G, L, <function fname (param1, ..., paramn) -> (ret1, ..., retm) block>: FunctionDefinition) =
         G, L
-    E(G, L, <let (var1, ..., varn) := value>: VariableDeclaration) =
-        E(G, L, <(var1, ..., varn) := value>: Assignment)
-    E(G, L, <(var1, ..., varn) := value>: Assignment) =
+    E(G, L, <let var1, ..., varn := value>: VariableDeclaration) =
+        E(G, L, <var1, ..., varn := value>: Assignment)
+    E(G, L, <var1, ..., varn := value>: Assignment) =
         let G', L', v1, ..., vn = E(G, L, value)
         let L'' be a copy of L' where L'[vi] = vi for i = 1, ..., n
         G, L''
@@ -175,11 +175,10 @@ For ``(S1, z) = E(S, y)`` let ``(S2, w) = E(S1, x)``. TODO
         ...
         G(n-1), L(n-1), v2 = E(G(n-2), L(n-2), arg2)
         Gn, Ln, v1 = E(G(n-1), L(n-1), arg1)
-        Let <function fname (param1, ..., paramn) -> (ret1, ..., retm) block>
-        be the function L[fname].
-        Let L' be a copy of L that does not contain any variables in any scope,
-        but which has a new innermost scope such that
-        L'[parami] = vi and L'[reti] = 0
+        Let <function fname (param1, ..., paramn) -> ret1, ..., retm block>
+        be the function of name fname visible at the point of the call.
+        Let L' be a new local state such that 
+        L'[parami] = vi and L'[reti] = 0 for all i.
         Let G'', L'', rv1, ..., rvm = E(Gn, L', block)
         G'', Ln, rv1, ..., rvm
     E(G, L, l: HexLiteral) = G, L, hexString(l),
