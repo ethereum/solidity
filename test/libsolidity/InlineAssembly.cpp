@@ -30,6 +30,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/optional.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <string>
 #include <memory>
