@@ -60,7 +60,7 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
 	if (_statement.expression().annotation().isPure)
-		warning(_statement.location(), "Statement has no effects.");
+		warning(_statement.location(), "Statement has no effect.");
 	return true;
 }
 

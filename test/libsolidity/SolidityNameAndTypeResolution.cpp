@@ -5489,7 +5489,7 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Statement has no effects.");
+	CHECK_WARNING(text, "Statement has no effect.");
 }
 
 BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
@@ -5502,7 +5502,7 @@ BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Statement has no effects.");
+	CHECK_WARNING(text, "Statement has no effect.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
