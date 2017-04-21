@@ -616,47 +616,6 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	if (m_args.count(g_argAllowPaths))
-	{
-		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
-			m_allowedDirectories.push_back(boost::filesystem::path(path));
-	}
-
-	if (m_args.count(g_argStandardJSON))
-	{
-		string input;
-		while (!cin.eof())
-		{
-			string tmp;
-			getline(cin, tmp);
-			input.append(tmp + "\n");
-		}
-		StandardCompiler compiler;
-		cout << compiler.compile(input) << endl;
-		return true;
-	}
-
-	readInputFilesAndConfigureRemappings();
-
-	if (m_args.count(g_argLibraries))
-		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
-			if (!parseLibraryOption(library))
-				return false;
-
-	if (m_args.count(g_argAssemble))
-	{
-		// switch to assembly mode
-		m_onlyAssemble = true;
-		return assemble();
-	}
-	if (m_args.count(g_argLink))
-	{
-		// switch to linker mode
-		m_onlyLink = true;
-		return link();
-	}
-
 	ReadFile::Callback fileReader = [this](string const& _path)
 	{
 		auto path = boost::filesystem::path(_path);
@@ -687,6 +646,47 @@ bool CommandLineInterface::processInput()
 			return ReadFile::Result{true, contents};
 		}
 	};
+
+	if (m_args.count(g_argAllowPaths))
+	{
+		vector<string> paths;
+		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+			m_allowedDirectories.push_back(boost::filesystem::path(path));
+	}
+
+	if (m_args.count(g_argStandardJSON))
+	{
+		string input;
+		while (!cin.eof())
+		{
+			string tmp;
+			getline(cin, tmp);
+			input.append(tmp + "\n");
+		}
+		StandardCompiler compiler(fileReader);
+		cout << compiler.compile(input) << endl;
+		return true;
+	}
+
+	readInputFilesAndConfigureRemappings();
+
+	if (m_args.count(g_argLibraries))
+		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
+			if (!parseLibraryOption(library))
+				return false;
+
+	if (m_args.count(g_argAssemble))
+	{
+		// switch to assembly mode
+		m_onlyAssemble = true;
+		return assemble();
+	}
+	if (m_args.count(g_argLink))
+	{
+		// switch to linker mode
+		m_onlyLink = true;
+		return link();
+	}
 
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
