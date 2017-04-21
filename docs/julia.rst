@@ -71,8 +71,7 @@ Grammar::
         Expression |
         Switch |
         ForLoop |
-        BreakContinue |
-        SubAssembly
+        BreakContinue
     FunctionDefinition =
         'function' Identifier '(' TypedIdentifierList? ')'
         ( '->' TypedIdentifierList )? Block
@@ -90,8 +89,6 @@ Grammar::
         'for' Block Expression Block Block
     BreakContinue =
         'break' | 'continue'
-    SubAssembly =
-        'assembly' Identifier Block
     FunctionCall =
         Identifier '(' ( Expression ( ',' Expression )* )? ')'
     Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
