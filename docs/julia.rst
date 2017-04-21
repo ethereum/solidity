@@ -143,7 +143,7 @@ one value.
 The ``continue`` and ``break`` statements can only be used inside loop bodies.
 The condition part of the for-loop has to evaluate to exactly one value.
 
-Literals cannot be larger than 32 bytes.
+Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
 
 Formal Specification
 --------------------
