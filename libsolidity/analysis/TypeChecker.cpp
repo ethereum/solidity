@@ -642,22 +642,35 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(!!declaration, "");
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
-			if (!var->isLocalVariable())
+			if (ref->second.isSlot || ref->second.isOffset)
 			{
-				typeError(_identifier.location, "Only local variables are supported.");
+				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+				{
+					typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+					return size_t(-1);
+				}
+				else if (_context != assembly::IdentifierContext::RValue)
+				{
+					typeError(_identifier.location, "Storage variables cannot be assigned to.");
+					return size_t(-1);
+				}
+			}
+			else if (!var->isLocalVariable())
+			{
+				typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
 				return size_t(-1);
 			}
-			if (var->type()->dataStoredIn(DataLocation::Storage))
+			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				typeError(_identifier.location, "Storage reference variables are not supported.");
+				typeError(_identifier.location, "You have to use the _slot or _offset prefix to access storage reference variables.");
 				return size_t(-1);
 			}
-			if (var->type()->sizeOnStack() != 1)
+			else if (var->type()->sizeOnStack() != 1)
 			{
 				typeError(_identifier.location, "Only types that use one stack slot are supported.");
 				return size_t(-1);
 			}
-			if (var->isConstant())
+			else if (var->isConstant())
 			{
 				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
 				return size_t(-1);

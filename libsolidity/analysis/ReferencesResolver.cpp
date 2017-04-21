@@ -28,6 +28,8 @@
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -166,10 +168,26 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	assembly::ExternalIdentifierAccess::Resolver resolver =
 	[&](assembly::Identifier const& _identifier, assembly::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
+		bool isSlot = boost::algorithm::ends_with(_identifier.name, "_slot");
+		bool isOffset = boost::algorithm::ends_with(_identifier.name, "_offset");
+		if (isSlot || isOffset)
+		{
+			// special mode to access storage variables
+			if (!declarations.empty())
+				// the special identifier exists itself, we should not allow that.
+				return size_t(-1);
+			string realName = _identifier.name.substr(0,
+				_identifier.name.size() - isSlot ?
+				string("_slot").size() :
+				string("_offset").size()
+			);
+			declarations = m_resolver.nameFromCurrentScope(realName);
+		}
 		if (declarations.size() != 1)
 			return size_t(-1);
+		_inlineAssembly.annotation().externalReferences[&_identifier].isSlot = isSlot;
+		_inlineAssembly.annotation().externalReferences[&_identifier].isOffset = isOffset;
 		_inlineAssembly.annotation().externalReferences[&_identifier].declaration = declarations.front();
-		// At this stage we do not yet know the stack size of the identifier, so we just return 1.
 		return size_t(1);
 	};
 	assembly::AsmAnalyzer::Scopes scopes;

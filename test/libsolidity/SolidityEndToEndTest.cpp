@@ -7427,10 +7427,38 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access)
 			uint16 public y;
 			uint public z;
 			function f() returns (bool) {
+				uint off1;
+				uint off2;
+				assembly {
+					sstore(z_slot, 7)
+					off1 := z_offset
+					off2 := y_offset
+				}
+				assert(off1 == 0);
+				assert(off2 == 2);
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_via_pointer)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct Data { uint contents; }
+			uint public separator;
+			Data public a;
+			uint public separator2;
+			function f() returns (bool) {
+				Data x = a;
 				uint off;
 				assembly {
-					sstore(z$slot, 7)
-					off := z$offset
+					sstore(x_slot, 7)
+					off := x_offset
 				}
 				assert(off == 0);
 				return true;
@@ -7439,7 +7467,9 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(7)));
+	BOOST_CHECK(callContractFunction("separator()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("separator2()") == encodeArgs(u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_jumps)

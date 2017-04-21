@@ -542,6 +542,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(!!decl->type(), "Type of declaration required but not yet determined.");
 			if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
 			{
+				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
 				functionDef = &m_context.resolveVirtualFunction(*functionDef);
 				_assembly.append(m_context.functionEntryLabel(*functionDef).pushTag());
 				// If there is a runtime context, we have to merge both labels into the same
@@ -557,19 +558,42 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
 			{
 				solAssert(!variable->isConstant(), "");
-				solAssert(m_context.isLocalVariable(variable), "");
-				int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
-				if (stackDiff < 1 || stackDiff > 16)
-					BOOST_THROW_EXCEPTION(
-						CompilerError() <<
-						errinfo_sourceLocation(_inlineAssembly.location()) <<
-						errinfo_comment("Stack too deep, try removing local variables.")
-					);
-				solAssert(variable->type()->sizeOnStack() == 1, "");
-				_assembly.append(dupInstruction(stackDiff));
+				if (m_context.isStateVariable(decl))
+				{
+					auto const& location = m_context.storageLocationOfVariable(*decl);
+					if (ref->second.isSlot)
+						m_context << location.first;
+					else if (ref->second.isOffset)
+						m_context << u256(location.second);
+					else
+						solAssert(false, "");
+				}
+				else if (m_context.isLocalVariable(decl))
+				{
+					int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
+					if (ref->second.isSlot || ref->second.isOffset)
+					{
+						solAssert(variable->type()->sizeOnStack() == 2, "");
+						if (ref->second.isOffset)
+							stackDiff--;
+					}
+					else
+						solAssert(variable->type()->sizeOnStack() == 1, "");
+					if (stackDiff < 1 || stackDiff > 16)
+						BOOST_THROW_EXCEPTION(
+							CompilerError() <<
+							errinfo_sourceLocation(_inlineAssembly.location()) <<
+							errinfo_comment("Stack too deep, try removing local variables.")
+						);
+					solAssert(variable->type()->sizeOnStack() == 1, "");
+					_assembly.append(dupInstruction(stackDiff));
+				}
+				else
+					solAssert(false, "");
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
 			{
+				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
 				solAssert(contract->isLibrary(), "");
 				_assembly.appendLibraryAddress(contract->fullyQualifiedName());
 			}
@@ -580,6 +604,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		else
 		{
 			// lvalue context
+			solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
 			auto variable = dynamic_cast<VariableDeclaration const*>(decl);
 			solAssert(
 				!!variable && m_context.isLocalVariable(variable),
