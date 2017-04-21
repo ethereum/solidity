@@ -97,9 +97,11 @@ Grammar::
         Identifier '(' ( Expression ( ',' Expression )* )? ')'
     Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
     IdentifierList = Identifier ( ',' Identifier)*
-    TypedIdentifierList = Identifier ':' Identifier ( ',' Identifier ':' Identifier )*
+    TypeName = Identifier | BuiltinTypeName
+    BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
+    TypedIdentifierList = Identifier ':' TypeName ( ',' Identifier ':' TypeName )*
     Literal =
-        (NumberLiteral | StringLiteral | HexLiteral) ':' Identifier
+        (NumberLiteral | StringLiteral | HexLiteral) ':' TypeName
     NumberLiteral = HexNumber | DecimalNumber
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
