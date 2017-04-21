@@ -176,11 +176,11 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 			if (!declarations.empty())
 				// the special identifier exists itself, we should not allow that.
 				return size_t(-1);
-			string realName = _identifier.name.substr(0,
-				_identifier.name.size() - isSlot ?
+			string realName = _identifier.name.substr(0, _identifier.name.size() - (
+				isSlot ?
 				string("_slot").size() :
 				string("_offset").size()
-			);
+			));
 			declarations = m_resolver.nameFromCurrentScope(realName);
 		}
 		if (declarations.size() != 1)

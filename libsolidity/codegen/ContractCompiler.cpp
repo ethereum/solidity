@@ -599,7 +599,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else
 				solAssert(false, "Invalid declaration type.");
-			solAssert(_assembly.deposit() - depositBefore == ref->second.valueSize, "");
+			solAssert(_assembly.deposit() - depositBefore == int(ref->second.valueSize), "");
 		}
 		else
 		{
