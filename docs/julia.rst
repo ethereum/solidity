@@ -78,12 +78,12 @@ Grammar::
         BreakContinue |
         SubAssembly
     FunctionDefinition =
-        'function' Identifier '(' IdentifierList? ')'
-        ( '->' IdentifierList )? Block
+        'function' Identifier '(' TypedIdentifierList? ')'
+        ( '->' TypedIdentifierList )? Block
     VariableDeclaration =
-        'let' IdentifierOrList ( ':=' Expression )?
+        'let' TypedIdentifierList ( ':=' Expression )?
     Assignment =
-        IdentifierOrList ':=' Expression
+        IdentifierList ':=' Expression
     Expression =
         FunctionCall | Identifier | Literal
     Switch =
@@ -98,11 +98,11 @@ Grammar::
         'assembly' Identifier Block
     FunctionCall =
         Identifier '(' ( Expression ( ',' Expression )* )? ')'
-    IdentifierOrList = Identifier | '(' IdentifierList ')'
     Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
     IdentifierList = Identifier ( ',' Identifier)*
+    TypedIdentifierList = Identifier ':' Identifier ( ',' Identifier ':' Identifier )*
     Literal =
-        NumberLiteral | StringLiteral | HexLiteral
+        (NumberLiteral | StringLiteral | HexLiteral) ':' Identifier
     NumberLiteral = HexNumber | DecimalNumber
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
