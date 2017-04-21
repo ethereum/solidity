@@ -57,6 +57,13 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_nonPayablePublic = false;
 }
 
+bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
+{
+	if (_statement.expression().annotation().isPure)
+		warning(_statement.location(), "Statement has no effects.");
+	return true;
+}
+
 bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 {
 	if (m_nonPayablePublic && !m_library)

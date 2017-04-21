@@ -60,6 +60,8 @@ private:
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual void endVisit(FunctionDefinition const& _function) override;
 
+	virtual bool visit(ExpressionStatement const& _statement) override;
+
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 
 	ErrorList& m_errors;
