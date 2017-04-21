@@ -64,6 +64,8 @@ and ``add`` to be available.
 Specification of JULIA
 ======================
 
+JULIA code is described in this chapter. JULIA code is usually placed into a JULIA object, which is described in the following chapter.
+
 Grammar::
 
     Block = '{' Statement* '}'
@@ -445,3 +447,69 @@ Backend: eWASM
 --------------
 
 TBD
+
+Specification of JULIA Object
+=============================
+
+Grammar::
+
+    TopLevelObject = 'object' '{' Code? ( Object | Data )* '}'
+    Object = 'object' StringLiteral '{' Code? ( Object | Data )* '}'
+    Code = 'code' Block
+    Data = 'data' StringLiteral HexLiteral
+    HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+    StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+
+Above, ``Block`` refers to ``Block`` in the JULIA code grammar explained in the previous chapter.
+
+An example JULIA Object is shown below:
+
+..code::
+
+    // Code consists of a single object. A single "code" node is the code of the object.
+    // Every (other) named object or data section is serialized and
+    // made accessible to the special built-in functions datacopy / dataoffset / datasize
+    object {
+        code {
+            let size = datasize("runtime")
+            let offset = allocate(size)
+            // This will turn into a memory->memory copy for eWASM and
+            // a codecopy for EVM
+            datacopy(dataoffset("runtime"), offset, size)
+            // this is a constructor and the runtime code is returned
+            return(offset, size)
+        }
+
+        data "Table2" hex"4123"
+
+        object "runtime" {
+            code {
+                // runtime code
+
+                let size = datasize("Contract2")
+                let offset = allocate(size)
+                // This will turn into a memory->memory copy for eWASM and
+                // a codecopy for EVM
+                datacopy(dataoffset("Contract2"), offset, size)
+                // constructor parameter is a single number 0x1234
+                mstore(add(offset, size), 0x1234)
+                create(offset, add(size, 32))
+            }
+
+            // Embedded object. Use case is that the outside is a factory contract,
+            // and Contract2 is the code to be created by the factory
+            object "Contract2" {
+                code {
+                    // code here ...
+                }
+
+                object "runtime" {
+                    code {
+                        // code here ...
+                    }
+                 }
+
+                 data "Table1" hex"4123"
+            }
+        }
+    }
