@@ -181,6 +181,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	for (auto const& sourceName: sources.getMemberNames())
 	{
 		string hash;
+
+		if (!sources[sourceName].isObject())
+			return formatFatalError("JSONError", "Source input is not a JSON object.");
+
 		if (sources[sourceName]["keccak256"].isString())
 			hash = sources[sourceName]["keccak256"].asString();
 
