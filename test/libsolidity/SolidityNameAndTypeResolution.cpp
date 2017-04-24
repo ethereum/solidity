@@ -5492,6 +5492,14 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 	CHECK_WARNING(text, "Statement has no effect.");
 }
 
+BOOST_AUTO_TEST_CASE(bare_others)
+{
+	CHECK_WARNING("contract C { function f() { selfdestruct; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { assert; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { require; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { suicide; } }", "Statement has no effect.");
+}
+
 BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
 {
 	char const* text = R"(
