@@ -531,7 +531,7 @@ Allowed options)",
 		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
 		(
 			g_argStandardJSON.c_str(),
-			"Switch to Standard JSON input / output mode, ignoring all options."
+			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
 		(
