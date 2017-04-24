@@ -48,8 +48,8 @@ Available Solidity Integrations
 * `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
     Solidity syntax highlighting for SublimeText editor.
 
-* `Atom Ethereum interface <https://github.com/gmtDevs/atom-ethereum-interface>`_
-    Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
+* `Etheratom <https://github.com/0mkara/etheratom>`_
+    Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (Backend node & VM compatible).
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
