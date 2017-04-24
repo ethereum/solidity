@@ -458,6 +458,14 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	{
 		return compileInternal(_input);
 	}
+	catch (Json::LogicError const& _exception)
+	{
+		return formatFatalError("InternalCompilerError", string("JSON logic exception: ") + _exception.what());
+	}
+	catch (Json::RuntimeError const& _exception)
+	{
+		return formatFatalError("InternalCompilerError", string("JSON runtime exception: ") + _exception.what());
+	}
 	catch (Exception const& _exception)
 	{
 		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compileInternal: " + boost::diagnostic_information(_exception));
