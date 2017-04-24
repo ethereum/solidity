@@ -82,8 +82,8 @@ bool InlineAssemblyStack::parseAndAssemble(
 		return false;
 
 	AsmAnalyzer::Scopes scopes;
-	AsmAnalyzer analyzer(scopes, m_errors);
-	solAssert(analyzer.analyze(*m_parserResult), "");
+	AsmAnalyzer analyzer(scopes, errors);
+	solAssert(analyzer.analyze(*parserResult), "");
 	CodeGenerator(errors).assemble(*parserResult, scopes, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
