@@ -378,7 +378,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: m_compilerStack.contractNames())
+	for (string const& contractName: success ? m_compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.find(':');
 		solAssert(colon != string::npos, "");
@@ -454,9 +454,13 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	{
 		return compileInternal(_input);
 	}
+	catch (Exception const& _exception)
+	{
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compileInternal: " + boost::diagnostic_information(_exception));
+	}
 	catch (...)
 	{
-		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compilerInternal");
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compileInternal");
 	}
 }
 

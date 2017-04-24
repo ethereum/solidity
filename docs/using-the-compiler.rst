@@ -37,14 +37,12 @@ Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
+If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output.
+
 .. _compiler-api:
 
 Compiler Input and Output JSON Description
 ******************************************
-
-.. warning::
-
-    This JSON interface is not yet supported by the Solidity compiler, but will be released in a future version.
 
 These JSON formats are used by the compiler API as well as are available through ``solc``. These are subject to change,
 some fields are optional (as noted), but it is aimed at to only make backwards compatible changes.
