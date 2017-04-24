@@ -80,9 +80,10 @@ bool InlineAssemblyStack::parseAndAssemble(
 	auto parserResult = Parser(errors).parse(scanner);
 	if (!errors.empty())
 		return false;
+	solAssert(parserResult, "");
 
 	AsmAnalyzer::Scopes scopes;
-	AsmAnalyzer analyzer(scopes, errors);
+	AsmAnalyzer analyzer(scopes, errors, _identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "");
 	CodeGenerator(errors).assemble(*parserResult, scopes, _assembly, _identifierAccess);
 
