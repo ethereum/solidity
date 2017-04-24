@@ -1674,8 +1674,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
 		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
-		if (auto functionType = dynamic_cast<FunctionType const*>(annotation.type.get()))
-			annotation.isPure = functionType->isPure();
+		if (dynamic_cast<FunctionType const*>(annotation.type.get()))
+			annotation.isPure = true;
 	return false;
 }
 

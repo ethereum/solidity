@@ -3653,54 +3653,56 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				// integers
 				uint x;
 				uint y;
-				true ? x : y;
+				uint g = true ? x : y;
 
 				// integer constants
-				true ? 1 : 3;
+				uint h = true ? 1 : 3;
 
 				// string literal
-				true ? "hello" : "world";
-
+				var i = true ? "hello" : "world";
+			}
+			function f2() {
 				// bool
-				true ? true : false;
+				bool j = true ? true : false;
 
 				// real is not there yet.
 
 				// array
 				byte[2] memory a;
 				byte[2] memory b;
-				true ? a : b;
+				var k = true ? a : b;
 
 				bytes memory e;
 				bytes memory f;
-				true ? e : f;
+				var l = true ? e : f;
 
 				// fixed bytes
 				bytes2 c;
 				bytes2 d;
-				true ? c : d;
-
+				var m = true ? c : d;
+			}
+			function f3() {
 				// contract doesn't fit in here
 
 				// struct
-				true ? struct_x : struct_y;
+				struct_x = true ? struct_x : struct_y;
 
 				// function
-				true ? fun_x : fun_y;
+				var r = true ? fun_x : fun_y;
 
 				// enum
 				small enum_x;
 				small enum_y;
-				true ? enum_x : enum_y;
+				enum_x = true ? enum_x : enum_y;
 
 				// tuple
-				true ? (1, 2) : (3, 4);
+				var (n, o) = true ? (1, 2) : (3, 4);
 
 				// mapping
-				true ? table1 : table2;
+				var p = true ? table1 : table2;
 
 				// typetype
-				true ? uint32(1) : uint32(2);
+				var q = true ? uint32(1) : uint32(2);
 
 				// modifier doesn't fit in here
 
@@ -5471,6 +5473,53 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 		}
 		contract C is I {
 			function f() {
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(bare_revert)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint x) {
+				if (x > 7)
+					revert;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Statement has no effect.");
+}
+
+BOOST_AUTO_TEST_CASE(bare_others)
+{
+	CHECK_WARNING("contract C { function f() { selfdestruct; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { assert; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { require; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() { suicide; } }", "Statement has no effect.");
+}
+
+BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				for (uint x = 0; x < 10; true)
+					x++;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Statement has no effect.");
+}
+
+BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				for (uint x = 0; true; x++)
+				{}
 			}
 		}
 	)";
