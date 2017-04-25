@@ -181,6 +181,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	for (auto const& sourceName: sources.getMemberNames())
 	{
 		string hash;
+
+		if (!sources[sourceName].isObject())
+			return formatFatalError("JSONError", "Source input is not a JSON object.");
+
 		if (sources[sourceName]["keccak256"].isString())
 			hash = sources[sourceName]["keccak256"].asString();
 
@@ -453,6 +457,14 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	try
 	{
 		return compileInternal(_input);
+	}
+	catch (Json::LogicError const& _exception)
+	{
+		return formatFatalError("InternalCompilerError", string("JSON logic exception: ") + _exception.what());
+	}
+	catch (Json::RuntimeError const& _exception)
+	{
+		return formatFatalError("InternalCompilerError", string("JSON runtime exception: ") + _exception.what());
 	}
 	catch (Exception const& _exception)
 	{
