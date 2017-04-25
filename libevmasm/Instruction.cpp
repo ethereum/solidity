@@ -155,6 +155,7 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{ "LOG3", Instruction::LOG3 },
 	{ "LOG4", Instruction::LOG4 },
 	{ "CREATE", Instruction::CREATE },
+	{ "CREATEP2SH", Instruction::CREATEP2SH },
 	{ "CALL", Instruction::CALL },
 	{ "CALLCODE", Instruction::CALLCODE },
 	{ "RETURN", Instruction::RETURN },
@@ -291,13 +292,14 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::LOG3,		{ "LOG3",			0, 5, 0, true, Tier::Special } },
 	{ Instruction::LOG4,		{ "LOG4",			0, 6, 0, true, Tier::Special } },
 	{ Instruction::CREATE,		{ "CREATE",			0, 3, 1, true, Tier::Special } },
+	{ Instruction::CREATEP2SH,	{ "CREATEP2SH",		0, 3, 1, true, Tier::Special } },
 	{ Instruction::CALL,		{ "CALL",			0, 7, 1, true, Tier::Special } },
 	{ Instruction::CALLCODE,	{ "CALLCODE",		0, 7, 1, true, Tier::Special } },
 	{ Instruction::RETURN,		{ "RETURN",			0, 2, 0, true, Tier::Zero } },
-	{ Instruction::DELEGATECALL,	{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
-	{ Instruction::REVERT,          { "REVERT",             0, 2, 0, true, Tier::Zero } },
+	{ Instruction::DELEGATECALL,{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
+	{ Instruction::REVERT,		{ "REVERT",			0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },
-	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Zero } }
+	{ Instruction::SELFDESTRUCT,{ "SELFDESTRUCT",	0, 1, 0, true, Tier::Zero } }
 };
 
 void dev::solidity::eachInstruction(
