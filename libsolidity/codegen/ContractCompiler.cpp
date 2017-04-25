@@ -573,9 +573,24 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 					int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
 					if (ref->second.isSlot || ref->second.isOffset)
 					{
-						solAssert(variable->type()->sizeOnStack() == 2, "");
-						if (ref->second.isOffset)
-							stackDiff--;
+						solAssert(variable->type()->dataStoredIn(DataLocation::Storage), "");
+						unsigned size = variable->type()->sizeOnStack();
+						if (size == 2)
+						{
+							// slot plus offset
+							if (ref->second.isOffset)
+								stackDiff--;
+						}
+						else
+						{
+							solAssert(size == 1, "");
+							// only slot, offset is zero
+							if (ref->second.isOffset)
+							{
+								_assembly.append(u256(0));
+								return;
+							}
+						}
 					}
 					else
 						solAssert(variable->type()->sizeOnStack() == 1, "");
