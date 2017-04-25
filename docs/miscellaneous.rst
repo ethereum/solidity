@@ -317,6 +317,12 @@ Comments are of course also not permitted and used here only for explanatory pur
 .. note::
     Note the ABI definition above has no fixed order. It can change with compiler versions.
 
+.. note::
+    Since the bytecode of the resulting contract contains the metadata hash, any change to
+    the metadata will result in a change of the bytecode. Furthermore, since the metadata
+    includes a hash of all the sources used, a single whitespace change in any of the source
+    codes will result in a different metadata, and subsequently a different bytecode.
+
 Encoding of the Metadata Hash in the Bytecode
 =============================================
 
