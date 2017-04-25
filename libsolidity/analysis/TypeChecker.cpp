@@ -655,6 +655,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					return size_t(-1);
 				}
 			}
+			else if (var->isConstant())
+			{
+				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
 			else if (!var->isLocalVariable())
 			{
 				typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
@@ -668,11 +673,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			else if (var->type()->sizeOnStack() != 1)
 			{
 				typeError(_identifier.location, "Only types that use one stack slot are supported.");
-				return size_t(-1);
-			}
-			else if (var->isConstant())
-			{
-				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
 				return size_t(-1);
 			}
 		}

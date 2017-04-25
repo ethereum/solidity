@@ -5024,7 +5024,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Unbalanced stack at the end of a block: 1 surplus item(s).");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
@@ -5057,7 +5057,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Variable not found or variable not lvalue.");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
@@ -5075,7 +5075,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Variable not found or variable not lvalue.");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
@@ -5090,7 +5090,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Variable not found or variable not lvalue.");
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
@@ -5105,7 +5105,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constant variables not yet implemented for inline assembly");
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)

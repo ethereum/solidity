@@ -79,6 +79,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 
 bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 {
+	size_t numErrorsBefore = m_errors.size();
 	bool success = true;
 	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
 		[&](Scope::Variable const& _var)
@@ -117,11 +118,13 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 			stackSize = m_resolver(_identifier, IdentifierContext::RValue);
 		if (stackSize == size_t(-1))
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::DeclarationError,
-				"Identifier not found.",
-				_identifier.location
-			));
+			// Only add an error message if the callback did not do it.
+			if (numErrorsBefore == m_errors.size())
+				m_errors.push_back(make_shared<Error>(
+					Error::Type::DeclarationError,
+					"Identifier not found.",
+					_identifier.location
+				));
 			success = false;
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
@@ -292,6 +295,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
 	bool success = true;
+	size_t numErrorsBefore = m_errors.size();
 	size_t variableSize(-1);
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
@@ -320,11 +324,13 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		variableSize = m_resolver(_variable, IdentifierContext::LValue);
 	if (variableSize == size_t(-1))
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Variable not found or variable not lvalue.",
-			_variable.location
-		));
+		// Only add message if the callback did not.
+		if (numErrorsBefore == m_errors.size())
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::DeclarationError,
+				"Variable not found or variable not lvalue.",
+				_variable.location
+			));
 		success = false;
 	}
 	if (_valueSize == size_t(-1))
