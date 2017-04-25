@@ -136,10 +136,21 @@ private:
 	{
 		return _node.id();
 	}
+	template<class Container>
+	Json::Value getContainerIds(Container container)
+	{
+		Json::Value tmp(Json::arrayValue);
+		for (auto it = container.begin(); it != container.end(); ++it)
+		{
+			solAssert(*it, "");
+			tmp.append(nodeId(**it));
+		}
+		return tmp;
+	}
 	Json::Value typePointerToJson(TypePointer _tp);
 	Json::Value typePointerToJson(std::shared_ptr<std::vector<TypePointer>> _tps);
 	void appendExpressionAttributes(
-		std::vector<std::pair<std::string, Json::Value>> * _attributes,
+		std::vector<std::pair<std::string, Json::Value>> &_attributes,
 		ExpressionAnnotation const& _annotation
 	);
 	bool m_legacy = false; ///< if true, use legacy format
