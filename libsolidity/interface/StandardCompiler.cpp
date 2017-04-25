@@ -23,6 +23,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <liblll/Compiler.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
 #include <libdevcore/SHA3.h>
@@ -152,6 +153,43 @@ Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _so
 	return output;
 }
 
+Json::Value compileLLL(Json::Value const& _input)
+{
+	if (!_input["source"].isString())
+		return formatFatalError("JSONError", "Source missing.");
+
+	Json::Value const& settings = _input.get("settings", Json::Value());
+	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
+	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
+
+	vector<string> errorList;
+	Json::Value output;
+	output["contracts"] = Json::objectValue;
+	output["contracts"][""] = Json::objectValue;
+	output["contracts"][""][""] = Json::objectValue;
+	output["contracts"][""][""]["lll"] = Json::objectValue;
+	output["contracts"][""][""]["lll"]["parsed"] = dev::eth::parseLLL(_input["source"].asString());
+	output["contracts"][""][""]["evm"] = Json::objectValue;
+	output["contracts"][""][""]["evm"]["assembly"] = dev::eth::compileLLLToAsm(_input["source"].asString(), optimize, &errorList);
+	output["contracts"][""][""]["evm"]["bytecode"] = toHex(dev::eth::compileLLL(_input["source"].asString(), optimize, &errorList));
+
+	if (errorList.size() > 0)
+	{
+		Json::Value errors = Json::arrayValue;
+		for (auto const& error: errorList)
+			errors.append(formatError(
+				false,
+				"LLLError",
+				"general",
+				error
+			));
+
+		output["errors"] = errors;
+	}
+
+	return output;
+}
+
 }
 
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
@@ -161,8 +199,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (!_input.isObject())
 		return formatFatalError("JSONError", "Input is not a JSON object.");
 
+	if (_input["language"] == "LLL")
+		return compileLLL(_input);
+
 	if (_input["language"] != "Solidity")
-		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
+		return formatFatalError("JSONError", "Only \"Solidity\" and \"LLL\" is supported as a language.");
 
 	Json::Value const& sources = _input["sources"];
 	if (!sources)

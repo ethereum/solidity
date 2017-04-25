@@ -5,7 +5,7 @@ set(
 )
 
 add_executable(solc ${sources})
-target_link_libraries(solc PRIVATE solidity ${Boost_PROGRAM_OPTIONS_LIBRARIES})
+target_link_libraries(solc PRIVATE solidity lll ${Boost_PROGRAM_OPTIONS_LIBRARIES})
 
 include(GNUInstallDirs)
 install(TARGETS solc DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -16,7 +16,7 @@ if (EMSCRIPTEN)
 else()
 	add_library(soljson jsonCompiler.cpp)
 endif()
-target_link_libraries(soljson PRIVATE solidity)
+target_link_libraries(soljson PRIVATE solidity lll)
 
 if(SOLC_LINK_STATIC AND UNIX AND NOT APPLE)
 	# Produce solc as statically linked binary (includes C/C++ standard libraries)

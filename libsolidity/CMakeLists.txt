@@ -13,7 +13,7 @@ else()
 endif()
 
 add_library(solidity ${sources} ${headers})
-target_link_libraries(solidity PUBLIC evmasm devcore)
+target_link_libraries(solidity PUBLIC lll evmasm devcore)
 
 if (${Z3_FOUND})
   target_link_libraries(solidity PUBLIC ${Z3_LIBRARY})

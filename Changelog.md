@@ -1,6 +1,7 @@
 ### 0.4.18 (unreleased)
 
 Features:
+ * API: Support LLL via the Standard JSON I/O.
  * Parser: Better error message for unexpected trailing comma in parameter lists.
  * Syntax Checker: Unary ``+`` is now a syntax error as experimental 0.5.0 feature.
 
