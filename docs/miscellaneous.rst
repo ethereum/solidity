@@ -314,6 +314,8 @@ Comments are of course also not permitted and used here only for explanatory pur
       }
     }
 
+.. note::
+    Note the ABI definition above has no fixed order. It can change with compiler versions.
 
 Encoding of the Metadata Hash in the Bytecode
 =============================================
