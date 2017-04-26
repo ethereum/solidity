@@ -41,9 +41,10 @@ using namespace dev::solidity::assembly;
 AsmAnalyzer::AsmAnalyzer(
 	AsmAnalyzer::Scopes& _scopes,
 	ErrorList& _errors,
-	ExternalIdentifierAccess::Resolver const& _resolver
+	ExternalIdentifierAccess::Resolver const& _resolver,
+	StackHeightInfo* _stackHeightInfo
 ):
-	m_resolver(_resolver), m_scopes(_scopes), m_errors(_errors)
+	m_resolver(_resolver), m_scopes(_scopes), m_errors(_errors), m_stackHeightInfo(_stackHeightInfo)
 {
 }
 
@@ -55,10 +56,16 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	return (*this)(_block);
 }
 
+bool AsmAnalyzer::operator()(const Label& _label)
+{
+	storeStackHeight(_label); return true;
+}
+
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
+	storeStackHeight(_instruction);
 	return true;
 }
 
@@ -74,6 +81,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		));
 		return false;
 	}
+	storeStackHeight(_literal);
 	return true;
 }
 
@@ -129,6 +137,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
 	}
+	storeStackHeight(_identifier);
 	return success;
 }
 
@@ -147,13 +156,17 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
 	if (!(*this)(_instr.instruction))
 		success = false;
+	storeStackHeight(_instr);
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
-	return checkAssignment(_assignment.variableName, size_t(-1));
+	bool success = checkAssignment(_assignment.variableName, size_t(-1));
+	storeStackHeight(_assignment);
+	return success;
 }
+
 
 bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 {
@@ -162,6 +175,7 @@ bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
 	solAssert(m_stackHeight >= stackHeight, "Negative value size.");
 	if (!checkAssignment(_assignment.variableName, m_stackHeight - stackHeight))
 		success = false;
+	storeStackHeight(_assignment);
 	return success;
 }
 
@@ -171,6 +185,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
 	solAssert(m_stackHeight - stackHeight == 1, "Invalid value size.");
 	boost::get<Scope::Variable>(m_currentScope->identifiers.at(_varDecl.name)).active = true;
+	storeStackHeight(_varDecl);
 	return success;
 }
 
@@ -187,6 +202,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	bool success = (*this)(_funDef.body);
 
 	m_stackHeight = stackHeight;
+	storeStackHeight(_funDef);
 	return success;
 }
 
@@ -253,6 +269,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 			success = false;
 	}
 	m_stackHeight += int(returns) - int(arguments);
+	storeStackHeight(_funCall);
 	return success;
 }
 
@@ -289,6 +306,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	}
 
 	m_currentScope = m_currentScope->superScope;
+	storeStackHeight(_block);
 	return success;
 }
 
@@ -352,6 +370,12 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		success = false;
 	}
 	return success;
+}
+
+void AsmAnalyzer::storeStackHeight(const assembly::Statement& _statement)
+{
+	if (m_stackHeightInfo)
+		(*m_stackHeightInfo)[&_statement] = m_stackHeight;
 }
 
 bool AsmAnalyzer::expectDeposit(int const _deposit, int const _oldHeight, SourceLocation const& _location)
