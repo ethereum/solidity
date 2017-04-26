@@ -637,9 +637,10 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			_assembly.append(Instruction::POP);
 		}
 	};
+	solAssert(_inlineAssembly.annotation().analysisInfo, "");
 	codeGen.assemble(
 		_inlineAssembly.operations(),
-		_inlineAssembly.annotation().scopes,
+		*_inlineAssembly.annotation().analysisInfo,
 		m_context.nonConstAssembly(),
 		identifierAccess
 	);

@@ -50,8 +50,7 @@ struct FunctionCall;
 
 struct Scope;
 
-using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
-using StackHeightInfo = std::map<assembly::Statement const*, int>;
+struct AsmAnalysisInfo;
 
 /**
  * Performs the full analysis stage, calls the ScopeFiller internally, then resolves
@@ -61,12 +60,10 @@ using StackHeightInfo = std::map<assembly::Statement const*, int>;
 class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
-	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
 	AsmAnalyzer(
-		Scopes& _scopes,
+		AsmAnalysisInfo& _analysisInfo,
 		ErrorList& _errors,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
-		StackHeightInfo* _stackHeightInfo = nullptr
+		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	);
 
 	bool analyze(assembly::Block const& _block);
@@ -88,7 +85,6 @@ private:
 	/// as the value, @a _valueSize, unless that is equal to -1.
 	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
 	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
-	void storeStackHeight(assembly::Statement const& _statement);
 	Scope& scope(assembly::Block const* _block);
 
 	/// This is used when we enter the body of a function definition. There, the parameters
@@ -98,9 +94,8 @@ private:
 	int m_stackHeight = 0;
 	ExternalIdentifierAccess::Resolver const& m_resolver;
 	Scope* m_currentScope = nullptr;
-	Scopes& m_scopes;
+	AsmAnalysisInfo& m_info;
 	ErrorList& m_errors;
-	StackHeightInfo* m_stackHeightInfo;
 };
 
 }

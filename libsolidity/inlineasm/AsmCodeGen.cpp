@@ -26,6 +26,7 @@
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/SourceLocation.h>
@@ -47,8 +48,8 @@ using namespace dev::solidity::assembly;
 
 struct GeneratorState
 {
-	GeneratorState(ErrorList& _errors, AsmAnalyzer::Scopes& _scopes, eth::Assembly& _assembly):
-		errors(_errors), scopes(_scopes), assembly(_assembly) {}
+	GeneratorState(ErrorList& _errors, AsmAnalysisInfo& _analysisInfo, eth::Assembly& _assembly):
+		errors(_errors), info(_analysisInfo), assembly(_assembly) {}
 
 	size_t newLabelId()
 	{
@@ -63,7 +64,7 @@ struct GeneratorState
 	}
 
 	ErrorList& errors;
-	AsmAnalyzer::Scopes scopes;
+	AsmAnalysisInfo info;
 	eth::Assembly& assembly;
 };
 
@@ -79,7 +80,7 @@ public:
 		assembly::ExternalIdentifierAccess const& _identifierAccess = assembly::ExternalIdentifierAccess()
 	):
 		m_state(_state),
-		m_scope(*m_state.scopes.at(&_block)),
+		m_scope(*m_state.info.scopes.at(&_block)),
 		m_initialDeposit(m_state.assembly.deposit()),
 		m_identifierAccess(_identifierAccess)
 	{
@@ -262,23 +263,23 @@ private:
 
 eth::Assembly assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
-	AsmAnalyzer::Scopes& _scopes,
+	AsmAnalysisInfo& _analysisInfo,
 	ExternalIdentifierAccess const& _identifierAccess
 )
 {
 	eth::Assembly assembly;
-	GeneratorState state(m_errors, _scopes, assembly);
+	GeneratorState state(m_errors, _analysisInfo, assembly);
 	CodeTransform(state, _parsedData, _identifierAccess);
 	return assembly;
 }
 
 void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
-	AsmAnalyzer::Scopes& _scopes,
+	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
 	ExternalIdentifierAccess const& _identifierAccess
 )
 {
-	GeneratorState state(m_errors, _scopes, _assembly);
+	GeneratorState state(m_errors, _analysisInfo, _assembly);
 	CodeTransform(state, _parsedData, _identifierAccess);
 }

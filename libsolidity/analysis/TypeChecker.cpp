@@ -25,6 +25,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
 using namespace std;
@@ -705,8 +706,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		ref->second.valueSize = 1;
 		return size_t(1);
 	};
-	solAssert(_inlineAssembly.annotation().scopes.empty(), "");
-	assembly::AsmAnalyzer analyzer(_inlineAssembly.annotation().scopes, m_errors, identifierAccess);
+	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
+	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+	assembly::AsmAnalyzer analyzer(
+		*_inlineAssembly.annotation().analysisInfo,
+		m_errors,
+		identifierAccess
+	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
 		return false;
 	return true;

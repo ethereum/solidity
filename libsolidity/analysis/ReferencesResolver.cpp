@@ -26,6 +26,7 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
 #include <boost/algorithm/string.hpp>
@@ -190,8 +191,10 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.annotation().externalReferences[&_identifier].declaration = declarations.front();
 		return size_t(1);
 	};
-	assembly::AsmAnalyzer::Scopes scopes;
-	assembly::AsmAnalyzer(scopes, errorsIgnored, resolver).analyze(_inlineAssembly.operations());
+
+	// Will be re-generated later with correct information
+	assembly::AsmAnalysisInfo analysisInfo;
+	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
 

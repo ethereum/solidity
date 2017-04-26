@@ -26,6 +26,7 @@
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libsolidity/parsing/Scanner.h>
 
@@ -51,8 +52,8 @@ bool InlineAssemblyStack::parse(
 		return false;
 
 	*m_parserResult = std::move(*result);
-	AsmAnalyzer::Scopes scopes;
-	return (AsmAnalyzer(scopes, m_errors, _resolver)).analyze(*m_parserResult);
+	AsmAnalysisInfo analysisInfo;
+	return (AsmAnalyzer(analysisInfo, m_errors, _resolver)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
@@ -62,11 +63,11 @@ string InlineAssemblyStack::toString()
 
 eth::Assembly InlineAssemblyStack::assemble()
 {
-	AsmAnalyzer::Scopes scopes;
-	AsmAnalyzer analyzer(scopes, m_errors);
+	AsmAnalysisInfo analysisInfo;
+	AsmAnalyzer analyzer(analysisInfo, m_errors);
 	solAssert(analyzer.analyze(*m_parserResult), "");
 	CodeGenerator codeGen(m_errors);
-	return codeGen.assemble(*m_parserResult, scopes);
+	return codeGen.assemble(*m_parserResult, analysisInfo);
 }
 
 bool InlineAssemblyStack::parseAndAssemble(
@@ -82,10 +83,10 @@ bool InlineAssemblyStack::parseAndAssemble(
 		return false;
 	solAssert(parserResult, "");
 
-	AsmAnalyzer::Scopes scopes;
-	AsmAnalyzer analyzer(scopes, errors, _identifierAccess.resolve);
+	AsmAnalysisInfo analysisInfo;
+	AsmAnalyzer analyzer(analysisInfo, errors, _identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "");
-	CodeGenerator(errors).assemble(*parserResult, scopes, _assembly, _identifierAccess);
+	CodeGenerator(errors).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.

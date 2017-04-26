@@ -47,13 +47,13 @@ public:
 	/// Performs code generation and @returns the result.
 	eth::Assembly assemble(
 		Block const& _parsedData,
-		AsmAnalyzer::Scopes& _scopes,
+		AsmAnalysisInfo& _analysisInfo,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
 	);
 	/// Performs code generation and appends generated to to _assembly.
 	void assemble(
 		Block const& _parsedData,
-		AsmAnalyzer::Scopes& _scopes,
+		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
 	);
