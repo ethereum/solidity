@@ -209,17 +209,17 @@ BOOST_AUTO_TEST_CASE(blocks)
 
 BOOST_AUTO_TEST_CASE(function_definitions)
 {
-	BOOST_CHECK(successParse("{ function f() { } function g(a) -> (x) { } }"));
+	BOOST_CHECK(successParse("{ function f() { } function g(a) -> x { } }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 {
-	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> (x, y) { } }"));
+	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> x, y { } }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	BOOST_CHECK(successParse("{ function f(a) -> (b) {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
+	BOOST_CHECK(successParse("{ function f(a) -> b {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
 }
 
 BOOST_AUTO_TEST_CASE(opcode_for_functions)
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(opcode_for_functions)
 BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 {
 	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
-	CHECK_PARSE_ERROR("{ function f() -> (gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use instruction names for identifier names.");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes)
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 {
-	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> (x, y)\n    {\n    }\n}");
+	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> x, y\n    {\n    }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	function y()
 	{
 	}
-	function f(a) -> (b)
+	function f(a) -> b
 	{
 	}
 	function g(a, b, c)

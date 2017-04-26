@@ -29,7 +29,7 @@ arising when writing manual assembly by the following features:
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
 * switch statements: ``switch x case 0: { y := mul(x, 2) } default: { y := 0 }``
-* function calls: ``function f(x) -> (y) { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
+* function calls: ``function f(x) -> y { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
 
 .. note::
     Of the above, loops, function calls and switch statements are not yet implemented.
@@ -566,7 +566,7 @@ The following example implements the power function by square-and-multiply.
 .. code::
 
     assembly {
-        function power(base, exponent) -> (result) {
+        function power(base, exponent) -> result {
             switch exponent
             0: { result := 1 }
             1: { result := base }
@@ -701,12 +701,12 @@ The following assembly will be generated::
       }
       default: { jump(invalidJumpLabel) }
       // memory allocator
-      function $allocate(size) -> (pos) {
+      function $allocate(size) -> pos {
         pos := mload(0x40)
         mstore(0x40, add(pos, size))
       }
       // the contract function
-      function f(x) -> (y) {
+      function f(x) -> y {
         y := 1
         for { let i := 0 } lt(i, x) { i := add(i, 1) } {
           y := mul(2, y)

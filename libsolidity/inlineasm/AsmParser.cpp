@@ -242,15 +242,13 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	{
 		expectToken(Token::Sub);
 		expectToken(Token::GreaterThan);
-		expectToken(Token::LParen);
 		while (true)
 		{
 			funDef.returns.push_back(expectAsmIdentifier());
-			if (m_scanner->currentToken() == Token::RParen)
+			if (m_scanner->currentToken() == Token::LBrace)
 				break;
 			expectToken(Token::Comma);
 		}
-		expectToken(Token::RParen);
 	}
 	funDef.body = parseBlock();
 	funDef.location.end = funDef.body.location.end;
