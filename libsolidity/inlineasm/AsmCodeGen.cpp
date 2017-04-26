@@ -24,7 +24,9 @@
 
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/SourceLocation.h>
@@ -46,13 +48,8 @@ using namespace dev::solidity::assembly;
 
 struct GeneratorState
 {
-	GeneratorState(ErrorList& _errors, eth::Assembly& _assembly):
-		errors(_errors), assembly(_assembly) {}
-
-	void addError(Error::Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation())
-	{
-		errors.push_back(make_shared<Error>(_type, _description, _location));
-	}
+	GeneratorState(ErrorList& _errors, AsmAnalysisInfo& _analysisInfo, eth::Assembly& _assembly):
+		errors(_errors), info(_analysisInfo), assembly(_assembly) {}
 
 	size_t newLabelId()
 	{
@@ -66,8 +63,8 @@ struct GeneratorState
 		return size_t(id);
 	}
 
-	std::map<assembly::Block const*, shared_ptr<Scope>> scopes;
 	ErrorList& errors;
+	AsmAnalysisInfo info;
 	eth::Assembly& assembly;
 };
 
@@ -80,13 +77,24 @@ public:
 	explicit CodeTransform(
 		GeneratorState& _state,
 		assembly::Block const& _block,
-		assembly::CodeGenerator::IdentifierAccess const& _identifierAccess = assembly::CodeGenerator::IdentifierAccess()
+		assembly::ExternalIdentifierAccess const& _identifierAccess = assembly::ExternalIdentifierAccess()
+	): CodeTransform(_state, _block, _identifierAccess, _state.assembly.deposit())
+	{
+	}
+
+private:
+	CodeTransform(
+		GeneratorState& _state,
+		assembly::Block const& _block,
+		assembly::ExternalIdentifierAccess const& _identifierAccess,
+		int _initialDeposit
 	):
 		m_state(_state),
-		m_scope(*m_state.scopes.at(&_block)),
-		m_initialDeposit(m_state.assembly.deposit()),
-		m_identifierAccess(_identifierAccess)
+		m_scope(*m_state.info.scopes.at(&_block)),
+		m_identifierAccess(_identifierAccess),
+		m_initialDeposit(_initialDeposit)
 	{
+		int blockStartDeposit = m_state.assembly.deposit();
 		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
 
 		m_state.assembly.setSourceLocation(_block.location);
@@ -96,31 +104,16 @@ public:
 			if (identifier.second.type() == typeid(Scope::Variable))
 				m_state.assembly.append(solidity::Instruction::POP);
 
-		int deposit = m_state.assembly.deposit() - m_initialDeposit;
-
-		// issue warnings for stack height discrepancies
-		if (deposit < 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It takes " + toString(-deposit) + " item(s) from the stack.",
-				_block.location
-			);
-		}
-		else if (deposit > 0)
-		{
-			m_state.addError(
-				Error::Type::Warning,
-				"Inline assembly block is not balanced. It leaves " + toString(deposit) + " item(s) on the stack.",
-				_block.location
-			);
-		}
+		int deposit = m_state.assembly.deposit() - blockStartDeposit;
+		solAssert(deposit == 0, "Invalid stack height at end of block.");
 	}
 
+public:
 	void operator()(assembly::Instruction const& _instruction)
 	{
 		m_state.assembly.setSourceLocation(_instruction.location);
 		m_state.assembly.append(_instruction.instruction);
+		checkStackHeight(&_instruction);
 	}
 	void operator()(assembly::Literal const& _literal)
 	{
@@ -132,6 +125,7 @@ public:
 			solAssert(_literal.value.size() <= 32, "");
 			m_state.assembly.append(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
 		}
+		checkStackHeight(&_literal);
 	}
 	void operator()(assembly::Identifier const& _identifier)
 	{
@@ -153,20 +147,18 @@ public:
 			},
 			[=](Scope::Function&)
 			{
-				solAssert(false, "Not yet implemented");
+				solAssert(false, "Function not removed during desugaring.");
 			}
 		)))
 		{
+			return;
 		}
-		else if (!m_identifierAccess || !m_identifierAccess(_identifier, m_state.assembly, CodeGenerator::IdentifierContext::RValue))
-		{
-			m_state.addError(
-				Error::Type::DeclarationError,
-				"Identifier not found or not unique",
-				_identifier.location
-			);
-			m_state.assembly.append(u256(0));
-		}
+		solAssert(
+			m_identifierAccess.generateCode,
+			"Identifier not found and no external access available."
+		);
+		m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
+		checkStackHeight(&_identifier);
 	}
 	void operator()(FunctionalInstruction const& _instr)
 	{
@@ -174,9 +166,10 @@ public:
 		{
 			int height = m_state.assembly.deposit();
 			boost::apply_visitor(*this, *it);
-			expectDeposit(1, height, locationOf(*it));
+			expectDeposit(1, height);
 		}
 		(*this)(_instr.instruction);
+		checkStackHeight(&_instr);
 	}
 	void operator()(assembly::FunctionCall const&)
 	{
@@ -186,36 +179,39 @@ public:
 	{
 		m_state.assembly.setSourceLocation(_label.location);
 		solAssert(m_scope.identifiers.count(_label.name), "");
-		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers[_label.name]);
+		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers.at(_label.name));
 		assignLabelIdIfUnset(label);
 		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
+		checkStackHeight(&_label);
 	}
 	void operator()(assembly::Assignment const& _assignment)
 	{
 		m_state.assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);
+		checkStackHeight(&_assignment);
 	}
 	void operator()(FunctionalAssignment const& _assignment)
 	{
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_assignment.value);
-		expectDeposit(1, height, locationOf(*_assignment.value));
+		expectDeposit(1, height);
 		m_state.assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);
+		checkStackHeight(&_assignment);
 	}
 	void operator()(assembly::VariableDeclaration const& _varDecl)
 	{
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_varDecl.value);
-		expectDeposit(1, height, locationOf(*_varDecl.value));
-		solAssert(m_scope.identifiers.count(_varDecl.name), "");
-		auto& var = boost::get<Scope::Variable>(m_scope.identifiers[_varDecl.name]);
+		expectDeposit(1, height);
+		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.name));
 		var.stackHeight = height;
 		var.active = true;
 	}
 	void operator()(assembly::Block const& _block)
 	{
-		CodeTransform(m_state, _block, m_identifierAccess);
+		CodeTransform(m_state, _block, m_identifierAccess, m_initialDeposit);
+		checkStackHeight(&_block);
 	}
 	void operator()(assembly::FunctionDefinition const&)
 	{
@@ -225,35 +221,22 @@ public:
 private:
 	void generateAssignment(assembly::Identifier const& _variableName, SourceLocation const& _location)
 	{
-		if (m_scope.lookup(_variableName.name, Scope::Visitor(
-			[=](Scope::Variable const& _var)
-			{
-				if (int heightDiff = variableHeightDiff(_var, _location, true))
-					m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
-				m_state.assembly.append(solidity::Instruction::POP);
-			},
-			[=](Scope::Label const&)
-			{
-				m_state.addError(
-					Error::Type::DeclarationError,
-					"Label \"" + string(_variableName.name) + "\" used as variable."
-				);
-			},
-			[=](Scope::Function const&)
-			{
-				m_state.addError(
-					Error::Type::DeclarationError,
-					"Function \"" + string(_variableName.name) + "\" used as variable."
-				);
-			}
-		)))
+		auto var = m_scope.lookup(_variableName.name);
+		if (var)
 		{
+			Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
+			if (int heightDiff = variableHeightDiff(_var, _location, true))
+				m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
+			m_state.assembly.append(solidity::Instruction::POP);
 		}
-		else if (!m_identifierAccess || !m_identifierAccess(_variableName, m_state.assembly, CodeGenerator::IdentifierContext::LValue))
-			m_state.addError(
-				Error::Type::DeclarationError,
-				"Identifier \"" + string(_variableName.name) + "\" not found, not unique or not lvalue."
+		else
+		{
+			solAssert(
+				m_identifierAccess.generateCode,
+				"Identifier not found and no external access available."
 			);
+			m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_state.assembly);
+		}
 	}
 
 	/// Determines the stack height difference to the given variables. Automatically generates
@@ -261,36 +244,33 @@ private:
 	/// errors and the (positive) stack height difference otherwise.
 	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
 	{
-		if (!_var.active)
-		{
-			m_state.addError( Error::Type::TypeError, "Variable used before it was declared", _location);
-			return 0;
-		}
 		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
 		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 		{
-			m_state.addError(
+			//@TODO move this to analysis phase.
+			m_state.errors.push_back(make_shared<Error>(
 				Error::Type::TypeError,
 				"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
 				_location
-			);
+			));
 			return 0;
 		}
 		else
 			return heightDiff;
 	}
 
-	void expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
+	void expectDeposit(int _deposit, int _oldHeight)
 	{
-		if (m_state.assembly.deposit() != _oldHeight + 1)
-			m_state.addError(Error::Type::TypeError,
-				"Expected instruction(s) to deposit " +
-				boost::lexical_cast<string>(_deposit) +
-				" item(s) to the stack, but did deposit " +
-				boost::lexical_cast<string>(m_state.assembly.deposit() - _oldHeight) +
-				" item(s).",
-				_location
-			);
+		solAssert(m_state.assembly.deposit() == _oldHeight + _deposit, "Invalid stack deposit.");
+	}
+
+	void checkStackHeight(void const* _astElement)
+	{
+		solAssert(m_state.info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
+		solAssert(
+			m_state.info.stackHeightInfo.at(_astElement) == m_state.assembly.deposit() - m_initialDeposit,
+			"Stack height mismatch between analysis and code generation phase."
+		);
 	}
 
 	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
@@ -305,35 +285,29 @@ private:
 
 	GeneratorState& m_state;
 	Scope& m_scope;
+	ExternalIdentifierAccess m_identifierAccess;
 	int const m_initialDeposit;
-	assembly::CodeGenerator::IdentifierAccess m_identifierAccess;
 };
 
-bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
-{
-	size_t initialErrorLen = m_errors.size();
-	eth::Assembly assembly;
-	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
-		return false;
-	CodeTransform(state, m_parsedData, _identifierAccess);
-	return m_errors.size() == initialErrorLen;
-}
-
-eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+eth::Assembly assembly::CodeGenerator::assemble(
+	Block const& _parsedData,
+	AsmAnalysisInfo& _analysisInfo,
+	ExternalIdentifierAccess const& _identifierAccess
+)
 {
 	eth::Assembly assembly;
-	GeneratorState state(m_errors, assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
-		solAssert(false, "Assembly error");
-	CodeTransform(state, m_parsedData, _identifierAccess);
+	GeneratorState state(m_errors, _analysisInfo, assembly);
+	CodeTransform(state, _parsedData, _identifierAccess);
 	return assembly;
 }
 
-void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+void assembly::CodeGenerator::assemble(
+	Block const& _parsedData,
+	AsmAnalysisInfo& _analysisInfo,
+	eth::Assembly& _assembly,
+	ExternalIdentifierAccess const& _identifierAccess
+)
 {
-	GeneratorState state(m_errors, _assembly);
-	if (!(AsmAnalyzer(state.scopes, m_errors))(m_parsedData))
-		solAssert(false, "Assembly error");
-	CodeTransform(state, m_parsedData, _identifierAccess);
+	GeneratorState state(m_errors, _analysisInfo, _assembly);
+	CodeTransform(state, _parsedData, _identifierAccess);
 }

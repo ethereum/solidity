@@ -323,9 +323,12 @@ Access to External Variables and Functions
 ------------------------------------------
 
 Solidity variables and other identifiers can be accessed by simply using their name.
-For storage and memory variables, this will push the address and not the value onto the
-stack. Also note that non-struct and non-array storage variable addresses occupy two slots
-on the stack: One for the address and one for the byte offset inside the storage slot.
+For memory variables, this will push the address and not the value onto the
+stack. Storage variables are different: Values in storage might not occupy a
+full storage slot, so their "address" is composed of a slot and a byte-offset
+inside that slot. To retrieve the slot pointed to by the variable ``x``, you
+used ``x_slot`` and to retrieve the byte-offset you used ``x_offset``.
+
 In assignments (see below), we can even use local Solidity variables to assign to.
 
 Functions external to inline assembly can also be accessed: The assembly will
@@ -340,17 +343,13 @@ changes during the call, and thus references to local variables will be wrong.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract C {
         uint b;
         function f(uint x) returns (uint r) {
             assembly {
-                b pop // remove the offset, we know it is zero
-                sload
-                x
-                mul
-                =: r  // assign to return variable r
+                r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
             }
         }
     }

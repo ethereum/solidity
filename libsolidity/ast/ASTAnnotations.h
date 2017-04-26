@@ -22,11 +22,12 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+
 #include <map>
 #include <memory>
 #include <vector>
 #include <set>
-#include <libsolidity/ast/ASTForward.h>
 
 namespace dev
 {
@@ -112,13 +113,24 @@ struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 
 namespace assembly
 {
-struct Identifier; // forward
+	struct AsmAnalysisInfo;
+	struct Identifier;
 }
 
 struct InlineAssemblyAnnotation: StatementAnnotation
 {
-	/// Mapping containing resolved references to external identifiers.
-	std::map<assembly::Identifier const*, Declaration const*> externalReferences;
+	struct ExternalIdentifierInfo
+	{
+		Declaration const* declaration = nullptr;
+		bool isSlot = false; ///< Whether the storage slot of a variable is queried.
+		bool isOffset = false; ///< Whether the intra-slot offset of a storage variable is queried.
+		size_t valueSize = size_t(-1);
+	};
+
+	/// Mapping containing resolved references to external identifiers and their value size
+	std::map<assembly::Identifier const*, ExternalIdentifierInfo> externalReferences;
+	/// Information generated during analysis phase.
+	std::shared_ptr<assembly::AsmAnalysisInfo> analysisInfo;
 };
 
 struct ReturnAnnotation: StatementAnnotation

@@ -24,8 +24,9 @@
 #include <memory>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
-#include <libevmasm/Assembly.h> // needed for inline assembly
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
 using namespace std;
 using namespace dev;
@@ -628,65 +629,91 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
-	// Inline assembly does not have its own type-checking phase, so we just run the
-	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
-	auto identifierAccess = [&](
+	// We run the resolve step again regardless.
+	assembly::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
-		assembly::CodeGenerator::IdentifierContext _context
+		assembly::IdentifierContext _context
 	)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
-			return false;
-		Declaration const* declaration = ref->second;
+			return size_t(-1);
+		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
-		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
+		{
+			if (ref->second.isSlot || ref->second.isOffset)
+			{
+				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+				{
+					typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+					return size_t(-1);
+				}
+				else if (_context != assembly::IdentifierContext::RValue)
+				{
+					typeError(_identifier.location, "Storage variables cannot be assigned to.");
+					return size_t(-1);
+				}
+			}
+			else if (var->isConstant())
+			{
+				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
+			else if (!var->isLocalVariable())
+			{
+				typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
+				return size_t(-1);
+			}
+			else if (var->type()->dataStoredIn(DataLocation::Storage))
+			{
+				typeError(_identifier.location, "You have to use the _slot or _offset prefix to access storage reference variables.");
+				return size_t(-1);
+			}
+			else if (var->type()->sizeOnStack() != 1)
+			{
+				typeError(_identifier.location, "Only types that use one stack slot are supported.");
+				return size_t(-1);
+			}
+		}
+		else if (_context == assembly::IdentifierContext::LValue)
+		{
+			typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
+			return size_t(-1);
+		}
+
+		if (_context == assembly::IdentifierContext::RValue)
 		{
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
-			unsigned pushes = 0;
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
-				pushes = 1;
-			else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
-				if (var->isConstant())
-					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
-				if (var->isLocalVariable())
-					pushes = var->type()->sizeOnStack();
-				else if (!var->type()->isValueType())
-					pushes = 1;
-				else
-					pushes = 2; // slot number, intra slot offset
+			}
+			else if (dynamic_cast<VariableDeclaration const*>(declaration))
+			{
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 			{
 				if (!contract->isLibrary())
-					return false;
-				pushes = 1;
+				{
+					typeError(_identifier.location, "Expected a library.");
+					return size_t(-1);
+				}
 			}
 			else
-				return false;
-			for (unsigned i = 0; i < pushes; ++i)
-				_assembly.append(u256(0)); // just to verify the stack height
+				return size_t(-1);
 		}
-		else
-		{
-			// lvalue context
-			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-			{
-				if (!varDecl->isLocalVariable())
-					return false; // only local variables are inline-assemlby lvalues
-				for (unsigned i = 0; i < declaration->type()->sizeOnStack(); ++i)
-					_assembly.append(Instruction::POP); // remove value just to verify the stack height
-			}
-			else
-				return false;
-		}
-		return true;
+		ref->second.valueSize = 1;
+		return size_t(1);
 	};
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	if (!codeGen.typeCheck(identifierAccess))
+	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
+	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+	assembly::AsmAnalyzer analyzer(
+		*_inlineAssembly.annotation().analysisInfo,
+		m_errors,
+		identifierAccess
+	);
+	if (!analyzer.analyze(_inlineAssembly.operations()))
 		return false;
 	return true;
 }

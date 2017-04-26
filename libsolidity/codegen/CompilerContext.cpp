@@ -265,31 +265,40 @@ void CompilerContext::appendInlineAssembly(
 	}
 
 	unsigned startStackHeight = stackHeight();
-	auto identifierAccess = [&](
+
+	assembly::ExternalIdentifierAccess identifierAccess;
+	identifierAccess.resolve = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
-		assembly::CodeGenerator::IdentifierContext _context
-	) {
+		assembly::IdentifierContext
+	)
+	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
-		if (it == _localVariables.end())
-			return false;
+		return it == _localVariables.end() ? size_t(-1) : 1;
+	};
+	identifierAccess.generateCode = [&](
+		assembly::Identifier const& _identifier,
+		assembly::IdentifierContext _context,
+		eth::Assembly& _assembly
+	)
+	{
+		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
+		solAssert(it != _localVariables.end(), "");
 		unsigned stackDepth = _localVariables.end() - it;
 		int stackDiff = _assembly.deposit() - startStackHeight + stackDepth;
-		if (_context == assembly::CodeGenerator::IdentifierContext::LValue)
+		if (_context == assembly::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				CompilerError() <<
 				errinfo_comment("Stack too deep, try removing local variables.")
 			);
-		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		if (_context == assembly::IdentifierContext::RValue)
 			_assembly.append(dupInstruction(stackDiff));
 		else
 		{
 			_assembly.append(swapInstruction(stackDiff));
 			_assembly.append(Instruction::POP);
 		}
-		return true;
 	};
 
 	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "Failed to assemble inline assembly block.");

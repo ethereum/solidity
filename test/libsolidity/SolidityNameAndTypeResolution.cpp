@@ -4997,7 +4997,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Inline assembly block is not balanced");
+	CHECK_ERROR(text, DeclarationError, "Unbalanced stack at the end of a block: 1 surplus item(s).");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
@@ -5011,7 +5011,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Inline assembly block is not balanced");
+	CHECK_ERROR(text, DeclarationError, "Unbalanced stack at the end of a block: 1 missing item(s).");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
@@ -5024,7 +5024,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Inline assembly block is not balanced");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
@@ -5053,12 +5053,11 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 			function f() {
 				assembly {
 					x := 2
-					pop
 				}
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "not found, not unique or not lvalue.");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
@@ -5069,7 +5068,6 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 			modifier m {
 				assembly {
 					x := 2
-					pop
 				}
 				_;
 			}
@@ -5077,7 +5075,37 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "");
+	CHECK_ERROR(text, TypeError, "Only local variables are supported. To access storage variables,");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 1;
+			function f() {
+				assembly {
+					x := 2
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 1;
+			function f() {
+				assembly {
+					let y := x
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
