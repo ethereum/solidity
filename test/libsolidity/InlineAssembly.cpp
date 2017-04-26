@@ -30,6 +30,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/optional.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
 
 #include <string>
 #include <memory>
@@ -63,7 +64,7 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _ass
 	}
 	if (!success)
 	{
-		BOOST_CHECK_EQUAL(stack.errors().size(), 1);
+		BOOST_REQUIRE_EQUAL(stack.errors().size(), 1);
 		return *stack.errors().front();
 	}
 	else
@@ -97,6 +98,20 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 	auto error = parseAndReturnFirstError(_source, _assemble, _allowWarnings);
 	BOOST_REQUIRE(error);
 	return *error;
+}
+
+string desugar(string const& _source)
+{
+	assembly::InlineAssemblyStack stack;
+	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	BOOST_REQUIRE(stack.errors().empty());
+	stack.desugar();
+	// Reduce whitespace to single space
+	return boost::replace_all_copy(
+		boost::trim_all_copy_if(stack.toString(), boost::is_any_of("\n\t ")),
+		"\n",
+		" "
+	);
 }
 
 void parsePrintCompare(string const& _source)
@@ -162,7 +177,7 @@ BOOST_AUTO_TEST_CASE(vardecl)
 
 BOOST_AUTO_TEST_CASE(assignment)
 {
-	BOOST_CHECK(successParse("{ 7 8 add =: x }"));
+	BOOST_CHECK(successParse("{ let x := 2 7 8 add =: x }"));
 }
 
 BOOST_AUTO_TEST_CASE(label)
@@ -177,22 +192,28 @@ BOOST_AUTO_TEST_CASE(label_complex)
 
 BOOST_AUTO_TEST_CASE(functional)
 {
-	BOOST_CHECK(successParse("{ add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let x := 2 add(7, mul(6, x)) mul(7, 8) add }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_assignment)
 {
-	BOOST_CHECK(successParse("{ x := 7 }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := 7 }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_assignment_complex)
 {
-	BOOST_CHECK(successParse("{ x := add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := add(7, mul(6, x)) mul(7, 8) add }"));
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
-	BOOST_CHECK(successParse("{ let x := add(7, mul(6, x)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let y := 2 let x := add(7, mul(6, y)) add mul(7, 8) }"));
+}
+
+BOOST_AUTO_TEST_CASE(variable_use_before_decl)
+{
+	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
+	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
@@ -212,7 +233,28 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	BOOST_CHECK(successParse("{ g(1, 2, f(mul(2, 3))) x() }"));
+	BOOST_CHECK(successParse("{ function f(a) {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
+}
+
+BOOST_AUTO_TEST_CASE(opcode_for_functions)
+{
+	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use instruction names for identifier names.");
+}
+
+BOOST_AUTO_TEST_CASE(opcode_for_function_args)
+{
+	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function f() -> (gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes)
+{
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
+{
+	CHECK_PARSE_ERROR("{ let x := 2 function g() { x } }", DeclarationError, "Identifier not found.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -272,7 +314,9 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	parsePrintCompare("{\n    g(1, mul(2, x), f(mul(2, 3)))\n    x()\n}");
+	parsePrintCompare(
+		"{\n    function y()\n    {\n    }\n    function f(a)\n    {\n    }\n    function g(a, b, c)\n    {\n    }\n    g(1, mul(2, address), f(mul(2, caller)))\n    y()\n}"
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -296,8 +340,8 @@ BOOST_AUTO_TEST_CASE(assignment_after_tag)
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found or not unique");
-	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found or not unique");
+	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover }"));
 }
 
@@ -338,6 +382,62 @@ BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Desugaring)
+
+BOOST_AUTO_TEST_CASE(smoke)
+{
+	BOOST_CHECK_EQUAL(desugar("{ }"), "{ }");
+	BOOST_CHECK_EQUAL(desugar("{ let x := mul(2, 3) }"), "{ let x := mul(2, 3) }");
+}
+
+BOOST_AUTO_TEST_CASE(function_definition)
+{
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f() { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret]: { } jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f(a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret, c, b, a]: { } pop pop pop jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f() -> (a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret]: let c := 0 let b := 0 let a := 0 { } swap1 swap2 swap3 jump } $after_f: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ function f(x, y) -> (a, b, c) { } }"),
+		"{ jump($after_f) f[]: { $f_start[$ret, y, x]: let c := 0 let b := 0 let a := 0 { } swap3 pop swap3 pop swap3 jump } $after_f: }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(function_call)
+{
+	BOOST_CHECK_EQUAL(
+		desugar("{ square(3) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := square(3) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: $z_[z]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := 0 square(3) =: z function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ let z := 0 $returnFrom_square 3 jump(square) $returnFrom_square[-1]: =: z jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ let z := mul(square(add(1, 2)), add(1, 2)) function square(x) -> (y) { y := mul(x, x) } }"),
+		"{ add(1, 2) $returnFrom_square add(1, 2) jump(square) $returnFrom_square[-1]: mul $z_[z]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { y := mul(x, x) } swap2 swap1 pop jump } $after_square: }"
+	);
+	BOOST_CHECK_EQUAL(
+		desugar("{ square(3) function square(x) -> (y) { y := square(add(x, 1)) } }"),
+		"{ $returnFrom_square 3 jump(square) $returnFrom_square[-1]: jump($after_square) square[]: { $square_start[$ret, x]: let y := 0 { $returnFrom_square_1 add(x, 1) jump(square) $returnFrom_square_1[-1]: =: y } swap2 swap1 pop jump } $after_square: }"
+	);
+}
+
+// @TODO test identifier clashes
 
 BOOST_AUTO_TEST_SUITE_END()
 
