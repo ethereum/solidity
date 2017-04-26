@@ -14,6 +14,7 @@ Bugfixes:
  * Compiler interface: Fix a bug where source indexes could be inconsistent between Solidity compiled
    with different compilers (clang vs. gcc) or compiler settings. The bug was visible in AST
    and source mappings.
+ * Gas Estimator: Reflect the most recent fee schedule.
  * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
 
 ### 0.4.10 (2017-03-15)

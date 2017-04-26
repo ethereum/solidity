@@ -191,7 +191,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::SIGNEXTEND,	{ "SIGNEXTEND",		0, 2, 1, false, Tier::Low } },
 	{ Instruction::SHA3,		{ "SHA3",			0, 2, 1, false, Tier::Special } },
 	{ Instruction::ADDRESS,		{ "ADDRESS",		0, 0, 1, false, Tier::Base } },
-	{ Instruction::BALANCE,		{ "BALANCE",		0, 1, 1, false, Tier::Ext } },
+	{ Instruction::BALANCE,		{ "BALANCE",		0, 1, 1, false, Tier::Balance } },
 	{ Instruction::ORIGIN,		{ "ORIGIN",			0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLER,		{ "CALLER",			0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLVALUE,	{ "CALLVALUE",		0, 0, 1, false, Tier::Base } },
@@ -201,8 +201,8 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::CODESIZE,	{ "CODESIZE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::CODECOPY,	{ "CODECOPY",		0, 3, 0, true, Tier::VeryLow } },
 	{ Instruction::GASPRICE,	{ "GASPRICE",		0, 0, 1, false, Tier::Base } },
-	{ Instruction::EXTCODESIZE,	{ "EXTCODESIZE",	0, 1, 1, false, Tier::Ext } },
-	{ Instruction::EXTCODECOPY,	{ "EXTCODECOPY",	0, 4, 0, true, Tier::Ext } },
+	{ Instruction::EXTCODESIZE,	{ "EXTCODESIZE",	0, 1, 1, false, Tier::ExtCode } },
+	{ Instruction::EXTCODECOPY,	{ "EXTCODECOPY",	0, 4, 0, true, Tier::ExtCode } },
 	{ Instruction::BLOCKHASH,	{ "BLOCKHASH",		0, 1, 1, false, Tier::Ext } },
 	{ Instruction::COINBASE,	{ "COINBASE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::TIMESTAMP,	{ "TIMESTAMP",		0, 0, 1, false, Tier::Base } },
@@ -297,7 +297,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::DELEGATECALL,	{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
 	{ Instruction::REVERT,          { "REVERT",             0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },
-	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Zero } }
+	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Special } }
 };
 
 void dev::solidity::eachInstruction(

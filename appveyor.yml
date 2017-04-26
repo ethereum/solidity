@@ -69,12 +69,8 @@ build_script:
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
-    - cd deps\install\x64\eth
-    - ps: $ethProc = Start-Process eth.exe --test
-    - ps: Start-Sleep -s 100
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-    - soltest.exe --show-progress -- --ipcpath \\.\pipe\geth.ipc
+    - soltest.exe --show-progress -- --no-ipc
 
 artifacts:
     - path: solidity-windows.zip

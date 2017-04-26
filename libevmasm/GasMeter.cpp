@@ -149,6 +149,10 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			}
 			break;
 		}
+		case Instruction::SELFDESTRUCT:
+			gas = GasCosts::selfdestructGas;
+			gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
+			break;
 		case Instruction::CREATE:
 			if (_includeExternalCosts)
 				// We assume that we do not know the target contract and thus, the consumption is infinite.
@@ -232,6 +236,8 @@ unsigned GasMeter::runGas(Instruction _instruction)
 	case Tier::High:    return GasCosts::tier5Gas;
 	case Tier::Ext:     return GasCosts::tier6Gas;
 	case Tier::Special: return GasCosts::tier7Gas;
+	case Tier::ExtCode: return GasCosts::extCodeGas;
+	case Tier::Balance: return GasCosts::balanceGas;
 	default: break;
 	}
 	assertThrow(false, OptimizerException, "Invalid gas tier.");

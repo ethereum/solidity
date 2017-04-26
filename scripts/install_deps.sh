@@ -314,12 +314,12 @@ case $(uname -s) in
                     libboost-all-dev
                 if [ "$CI" = true ]; then
                     # Install 'eth', for use in the Solidity Tests-over-IPC.
+                    # We will not use this 'eth', but its dependencies
                     sudo add-apt-repository -y ppa:ethereum/ethereum
                     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
                     sudo apt-get -y update
                     sudo apt-get -y install eth
                 fi
-
                 ;;
 
 #------------------------------------------------------------------------------
