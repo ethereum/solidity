@@ -8,6 +8,7 @@ Features:
  * Commandline interface: Support ``--allow-paths`` to define trusted import paths. Note: the
    path(s) of the supplied source file(s) is always trusted.
  * Inline Assembly: Storage variable access using ``_slot`` and ``_offset`` suffixes.
+ * Inline Assembly: Disallow blocks with unbalanced stack.
  * Static analyzer: Warn about statements without effects.
 
 Bugfixes:
