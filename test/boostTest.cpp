@@ -21,10 +21,8 @@
  * Original code taken from boost sources.
  */
 
-#define BOOST_TEST_MODULE EthereumTests
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -36,3 +34,32 @@
 #endif
 
 #pragma GCC diagnostic pop
+
+#include <test/TestHelper.h>
+
+using namespace boost::unit_test;
+
+test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
+{
+	master_test_suite_t& master = framework::master_test_suite();
+	master.p_name.value = "SolidityTests";
+	if (dev::test::Options::get().disableIPC)
+	{
+		for (auto suite: {
+			"SolidityAuctionRegistrar",
+			"SolidityFixedFeeRegistrar",
+			"SolidityWallet",
+			"LLLEndToEndTest",
+			"GasMeterTests",
+			"SolidityEndToEndTest",
+			"SolidityOptimizer"
+		})
+		{
+			auto id = master.get(suite);
+			assert(id != INV_TEST_UNIT_ID);
+			master.remove(id);
+		}
+	}
+
+	return 0;
+}
