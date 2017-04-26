@@ -45,6 +45,8 @@ struct Block;
 class AsmPrinter: public boost::static_visitor<std::string>
 {
 public:
+	explicit AsmPrinter(bool _julia = false): m_julia(_julia) {}
+
 	std::string operator()(assembly::Instruction const& _instruction);
 	std::string operator()(assembly::Literal const& _literal);
 	std::string operator()(assembly::Identifier const& _identifier);
@@ -56,6 +58,9 @@ public:
 	std::string operator()(assembly::FunctionDefinition const& _functionDefinition);
 	std::string operator()(assembly::FunctionCall const& _functionCall);
 	std::string operator()(assembly::Block const& _block);
+
+private:
+	bool m_julia = false;
 };
 
 }
