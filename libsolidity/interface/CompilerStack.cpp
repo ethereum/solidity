@@ -128,14 +128,12 @@ bool CompilerStack::parse()
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
 		sourcesToParse.push_back(s.first);
-	map<string, SourceUnit const*> sourceUnitsByName;
 	for (size_t i = 0; i < sourcesToParse.size(); ++i)
 	{
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
 		source.ast = Parser(m_errors).parse(source.scanner);
-		sourceUnitsByName[path] = source.ast.get();
 		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
 		else
@@ -150,9 +148,14 @@ bool CompilerStack::parse()
 			}
 		}
 	}
-	if (!Error::containsOnlyWarnings(m_errors))
-		// errors while parsing. should stop before type checking
-		return false;
+	m_parseSuccessful = Error::containsOnlyWarnings(m_errors);
+	return m_parseSuccessful;
+}
+
+bool CompilerStack::analyze()
+{
+	if (m_sources.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("There are no sources to be analyzed."));
 
 	resolveImports();
 
@@ -173,6 +176,9 @@ bool CompilerStack::parse()
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
 
+	map<string, SourceUnit const*> sourceUnitsByName;
+	for (auto& source : m_sources)
+		sourceUnitsByName[source.first] = source.second.ast.get();
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.performImports(*source->ast, sourceUnitsByName))
 			return false;
@@ -245,6 +251,17 @@ bool CompilerStack::parse(string const& _sourceCode)
 	return parse();
 }
 
+bool CompilerStack::parseAndAnalyze()
+{
+	return parse() && analyze();
+}
+
+bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
+{
+	setSource(_sourceCode);
+	return parseAndAnalyze();
+}
+
 vector<string> CompilerStack::contractNames() const
 {
 	if (!m_parseSuccessful)
@@ -259,7 +276,7 @@ vector<string> CompilerStack::contractNames() const
 bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> const& _libraries)
 {
 	if (!m_parseSuccessful)
-		if (!parse())
+		if (!parseAndAnalyze())
 			return false;
 
 	m_optimize = _optimize;
@@ -277,7 +294,7 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> co
 
 bool CompilerStack::compile(string const& _sourceCode, bool _optimize, unsigned _runs)
 {
-	return parse(_sourceCode) && compile(_optimize, _runs);
+	return parseAndAnalyze(_sourceCode) && compile(_optimize, _runs);
 }
 
 void CompilerStack::link()
