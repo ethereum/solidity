@@ -78,12 +78,23 @@ public:
 		GeneratorState& _state,
 		assembly::Block const& _block,
 		assembly::ExternalIdentifierAccess const& _identifierAccess = assembly::ExternalIdentifierAccess()
+	): CodeTransform(_state, _block, _identifierAccess, _state.assembly.deposit())
+	{
+	}
+
+private:
+	CodeTransform(
+		GeneratorState& _state,
+		assembly::Block const& _block,
+		assembly::ExternalIdentifierAccess const& _identifierAccess,
+		int _initialDeposit
 	):
 		m_state(_state),
 		m_scope(*m_state.info.scopes.at(&_block)),
-		m_initialDeposit(m_state.assembly.deposit()),
-		m_identifierAccess(_identifierAccess)
+		m_identifierAccess(_identifierAccess),
+		m_initialDeposit(_initialDeposit)
 	{
+		int blockStartDeposit = m_state.assembly.deposit();
 		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
 
 		m_state.assembly.setSourceLocation(_block.location);
@@ -93,15 +104,16 @@ public:
 			if (identifier.second.type() == typeid(Scope::Variable))
 				m_state.assembly.append(solidity::Instruction::POP);
 
-		int deposit = m_state.assembly.deposit() - m_initialDeposit;
-
+		int deposit = m_state.assembly.deposit() - blockStartDeposit;
 		solAssert(deposit == 0, "Invalid stack height at end of block.");
 	}
 
+public:
 	void operator()(assembly::Instruction const& _instruction)
 	{
 		m_state.assembly.setSourceLocation(_instruction.location);
 		m_state.assembly.append(_instruction.instruction);
+		checkStackHeight(&_instruction);
 	}
 	void operator()(assembly::Literal const& _literal)
 	{
@@ -113,6 +125,7 @@ public:
 			solAssert(_literal.value.size() <= 32, "");
 			m_state.assembly.append(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
 		}
+		checkStackHeight(&_literal);
 	}
 	void operator()(assembly::Identifier const& _identifier)
 	{
@@ -145,6 +158,7 @@ public:
 			"Identifier not found and no external access available."
 		);
 		m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
+		checkStackHeight(&_identifier);
 	}
 	void operator()(FunctionalInstruction const& _instr)
 	{
@@ -155,6 +169,7 @@ public:
 			expectDeposit(1, height);
 		}
 		(*this)(_instr.instruction);
+		checkStackHeight(&_instr);
 	}
 	void operator()(assembly::FunctionCall const&)
 	{
@@ -167,11 +182,13 @@ public:
 		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers.at(_label.name));
 		assignLabelIdIfUnset(label);
 		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
+		checkStackHeight(&_label);
 	}
 	void operator()(assembly::Assignment const& _assignment)
 	{
 		m_state.assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);
+		checkStackHeight(&_assignment);
 	}
 	void operator()(FunctionalAssignment const& _assignment)
 	{
@@ -180,6 +197,7 @@ public:
 		expectDeposit(1, height);
 		m_state.assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);
+		checkStackHeight(&_assignment);
 	}
 	void operator()(assembly::VariableDeclaration const& _varDecl)
 	{
@@ -192,7 +210,8 @@ public:
 	}
 	void operator()(assembly::Block const& _block)
 	{
-		CodeTransform(m_state, _block, m_identifierAccess);
+		CodeTransform(m_state, _block, m_identifierAccess, m_initialDeposit);
+		checkStackHeight(&_block);
 	}
 	void operator()(assembly::FunctionDefinition const&)
 	{
@@ -245,6 +264,15 @@ private:
 		solAssert(m_state.assembly.deposit() == _oldHeight + _deposit, "Invalid stack deposit.");
 	}
 
+	void checkStackHeight(void const* _astElement)
+	{
+		solAssert(m_state.info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
+		solAssert(
+			m_state.info.stackHeightInfo.at(_astElement) == m_state.assembly.deposit() - m_initialDeposit,
+			"Stack height mismatch between analysis and code generation phase."
+		);
+	}
+
 	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
 	void assignLabelIdIfUnset(Scope::Label& _label)
 	{
@@ -257,8 +285,8 @@ private:
 
 	GeneratorState& m_state;
 	Scope& m_scope;
-	int const m_initialDeposit;
 	ExternalIdentifierAccess m_identifierAccess;
+	int const m_initialDeposit;
 };
 
 eth::Assembly assembly::CodeGenerator::assemble(
