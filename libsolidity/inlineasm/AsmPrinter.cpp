@@ -47,7 +47,7 @@ string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 string AsmPrinter::operator()(assembly::Literal const& _literal)
 {
 	if (_literal.isNumber)
-		return _literal.value;
+		return _literal.value + appendTypeName(_literal.type);
 	string out;
 	for (char c: _literal.value)
 		if (c == '\\')
@@ -74,7 +74,7 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 		}
 		else
 			out += c;
-	return "\"" + out + "\"";
+	return "\"" + out + "\"" + appendTypeName(_literal.type);
 }
 
 string AsmPrinter::operator()(assembly::Identifier const& _identifier)
@@ -113,14 +113,22 @@ string AsmPrinter::operator()(assembly::FunctionalAssignment const& _functionalA
 
 string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDeclaration)
 {
-	return "let " + _variableDeclaration.name + " := " + boost::apply_visitor(*this, *_variableDeclaration.value);
+	return "let " + _variableDeclaration.variable.name + appendTypeName(_variableDeclaration.variable.type) + " := " + boost::apply_visitor(*this, *_variableDeclaration.value);
 }
 
 string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
-	string out = "function " + _functionDefinition.name + "(" + boost::algorithm::join(_functionDefinition.arguments, ", ") + ")";
+	string out = "function " + _functionDefinition.name + "(";
+	for (auto const& argument: _functionDefinition.arguments)
+		out += argument.name + appendTypeName(argument.type) + ",";
+	out += ")";
 	if (!_functionDefinition.returns.empty())
-		out += " -> " + boost::algorithm::join(_functionDefinition.returns, ", ");
+	{
+		out += " -> ";
+		for (auto const& argument: _functionDefinition.returns)
+		    out += argument.name + appendTypeName(argument.type) + ",";
+	}
+
 	return out + "\n" + (*this)(_functionDefinition.body);
 }
 
@@ -144,4 +152,11 @@ string AsmPrinter::operator()(Block const& _block)
 	);
 	boost::replace_all(body, "\n", "\n    ");
 	return "{\n    " + body + "\n}";
+}
+
+string AsmPrinter::appendTypeName(std::string const& _type)
+{
+	if (m_julia)
+		return ":" + _type;
+	return "";
 }

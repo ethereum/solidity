@@ -34,6 +34,7 @@ namespace solidity
 namespace assembly
 {
 
+struct TypedName;
 struct Literal;
 struct Block;
 struct Label;
@@ -72,7 +73,7 @@ public:
 
 private:
 	bool registerVariable(
-		std::string const& _name,
+		TypedName const& _name,
 		SourceLocation const& _location,
 		Scope& _scope
 	);

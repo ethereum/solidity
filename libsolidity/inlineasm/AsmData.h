@@ -33,12 +33,17 @@ namespace solidity
 namespace assembly
 {
 
+using Type = std::string;
+
+struct TypedName { SourceLocation location; std::string name; Type type; };
+using TypedNameList = std::vector<TypedName>;
+
 /// What follows are the AST nodes for assembly.
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
-struct Literal { SourceLocation location; bool isNumber; std::string value; };
+struct Literal { SourceLocation location; bool isNumber; std::string value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { SourceLocation location; std::string name; };
 struct FunctionalInstruction;
@@ -52,18 +57,18 @@ struct FunctionDefinition;
 struct FunctionCall;
 struct Block;
 using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
-/// Functional assignment ("x := mload(20)", expects push-1-expression on the right hand
+/// Functional assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 struct FunctionalAssignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
-/// Functional instruction, e.g. "mul(mload(20), add(2, x))"
+/// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
 struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
 struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };
-/// Block-scope variable declaration ("let x := mload(20)"), non-hoisted
-struct VariableDeclaration { SourceLocation location; std::string name; std::shared_ptr<Statement> value; };
+/// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
+struct VariableDeclaration { SourceLocation location; TypedName variable; std::shared_ptr<Statement> value; };
 /// Block that creates a scope (frees declared stack variables)
 struct Block { SourceLocation location; std::vector<Statement> statements; };
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { SourceLocation location; std::string name; std::vector<std::string> arguments; std::vector<std::string> returns; Block body; };
+struct FunctionDefinition { SourceLocation location; std::string name; TypedNameList arguments; TypedNameList returns; Block body; };
 
 struct LocationExtractor: boost::static_visitor<SourceLocation>
 {

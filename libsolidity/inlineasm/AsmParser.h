@@ -69,6 +69,7 @@ protected:
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	Statement parseFunctionalInstruction(Statement&& _instruction);
+	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
 private:

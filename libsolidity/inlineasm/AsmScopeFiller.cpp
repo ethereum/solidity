@@ -59,13 +59,19 @@ bool ScopeFiller::operator()(Label const& _item)
 
 bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 {
-	return registerVariable(_varDecl.name, _varDecl.location, *m_currentScope);
+	return registerVariable(_varDecl.variable, _varDecl.location, *m_currentScope);
 }
 
 bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	bool success = true;
-	if (!m_currentScope->registerFunction(_funDef.name, _funDef.arguments.size(), _funDef.returns.size()))
+	vector<Scope::JuliaType> arguments;
+	for (auto const& _argument: _funDef.arguments)
+		arguments.push_back(_argument.type);
+	vector<Scope::JuliaType> returns;
+	for (auto const& _return: _funDef.returns)
+		returns.push_back(_return.type);
+	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
 	{
 		//@TODO secondary location
 		m_errors.push_back(make_shared<Error>(
@@ -102,14 +108,14 @@ bool ScopeFiller::operator()(Block const& _block)
 	return success;
 }
 
-bool ScopeFiller::registerVariable(string const& _name, SourceLocation const& _location, Scope& _scope)
+bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const& _location, Scope& _scope)
 {
-	if (!_scope.registerVariable(_name))
+	if (!_scope.registerVariable(_name.name, _name.type))
 	{
 		//@TODO secondary location
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::DeclarationError,
-			"Variable name " + _name + " already taken in this scope.",
+			"Variable name " + _name.name + " already taken in this scope.",
 			_location
 		));
 		return false;
