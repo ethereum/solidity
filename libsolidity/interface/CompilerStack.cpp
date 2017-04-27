@@ -664,15 +664,11 @@ void CompilerStack::compileContract(
 	}
 	catch(eth::OptimizerException const&)
 	{
-		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
-		*err << errinfo_comment("Assembly optimizer exception for bytecode");
-		m_errors.push_back(std::move(err);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for bytecode"));
 	}
 	catch(eth::AssemblyException const&)
 	{
-		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
-		*err << errinfo_comment("Assembly exception for bytecode");
-		m_errors.push_back(std::move(err);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for bytecode"));
 	}
 
 	try
@@ -681,15 +677,11 @@ void CompilerStack::compileContract(
 	}
 	catch(eth::OptimizerException const&)
 	{
-		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
-		*err << errinfo_comment("Assembly optimizer exception for deployed bytecode");
-		m_errors.push_back(std::move(err);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for deployed bytecode"));
 	}
 	catch(eth::AssemblyException const&)
 	{
-		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
-		*err << errinfo_comment("Assembly exception for deployed bytecode");
-		m_errors.push_back(std::move(err);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for deployed bytecode"));
 	}
 
 	compiledContract.onChainMetadata = onChainMetadata;
