@@ -104,7 +104,7 @@ public:
 	/// @returns false on error.
 	bool parse(std::string const& _sourceCode);
 	/// performs the analyisis steps (imports, scopesetting, syntaxCheck, referenceResolving,
-	///  typechecking, staticAnalysis) on the set sources
+	///  typechecking, staticAnalysis) on previously set sources
 	/// @returns false on error.
 	bool analyze();
 	/// Parses and analyzes all source units that were added
@@ -276,7 +276,7 @@ private:
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
-	bool m_parseSuccessful;
+	bool m_success;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;

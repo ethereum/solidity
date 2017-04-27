@@ -57,7 +57,7 @@ using namespace dev;
 using namespace dev::solidity;
 
 CompilerStack::CompilerStack(ReadFile::Callback const& _readFile):
-	m_readFile(_readFile), m_parseSuccessful(false) {}
+	m_readFile(_readFile), m_success(false) {}
 
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
@@ -79,7 +79,7 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 
 void CompilerStack::reset(bool _keepSources)
 {
-	m_parseSuccessful = false;
+	m_success = false;
 	if (_keepSources)
 		for (auto sourcePair: m_sources)
 			sourcePair.second.reset();
@@ -116,7 +116,7 @@ bool CompilerStack::parse()
 	//reset
 	m_errors.clear();
 	ASTNode::resetID();
-	m_parseSuccessful = false;
+	m_success = false;
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
 	{
@@ -148,8 +148,7 @@ bool CompilerStack::parse()
 			}
 		}
 	}
-	m_parseSuccessful = Error::containsOnlyWarnings(m_errors);
-	return m_parseSuccessful;
+	return Error::containsOnlyWarnings(m_errors);
 }
 
 bool CompilerStack::analyze()
@@ -241,8 +240,8 @@ bool CompilerStack::analyze()
 				noErrors = false;
 	}
 
-	m_parseSuccessful = noErrors;
-	return m_parseSuccessful;
+	m_success = noErrors;
+	return m_success;
 }
 
 bool CompilerStack::parse(string const& _sourceCode)
@@ -264,7 +263,7 @@ bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
 
 vector<string> CompilerStack::contractNames() const
 {
-	if (!m_parseSuccessful)
+	if (!m_success)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 	vector<string> contractNames;
 	for (auto const& contract: m_contracts)
@@ -275,7 +274,7 @@ vector<string> CompilerStack::contractNames() const
 
 bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> const& _libraries)
 {
-	if (!m_parseSuccessful)
+	if (!m_success)
 		if (!parseAndAnalyze())
 			return false;
 
@@ -436,7 +435,7 @@ Json::Value const& CompilerStack::interface(string const& _contractName) const
 
 Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
-	if (!m_parseSuccessful)
+	if (!m_success)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	return metadata(contract(_contractName), _type);
@@ -444,7 +443,7 @@ Json::Value const& CompilerStack::metadata(string const& _contractName, Document
 
 Json::Value const& CompilerStack::metadata(Contract const& _contract, DocumentationType _type) const
 {
-	if (!m_parseSuccessful)
+	if (!m_success)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	solAssert(_contract.contract, "");
@@ -475,7 +474,7 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 
 string const& CompilerStack::onChainMetadata(string const& _contractName) const
 {
-	if (!m_parseSuccessful)
+	if (!m_success)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	return contract(_contractName).onChainMetadata;
