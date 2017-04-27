@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <algorithm>
 #include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 using namespace dev;
@@ -73,7 +74,7 @@ assembly::Statement Parser::parseStatement()
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
 		assignment.variableName.name = m_scanner->currentLiteral();
-		if (instructions().count(assignment.variableName.name))
+		if (!m_julia && instructions().count(assignment.variableName.name))
 			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
@@ -105,7 +106,7 @@ assembly::Statement Parser::parseStatement()
 		{
 			// functional assignment
 			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
-			if (instructions().count(identifier.name))
+			if (!m_julia && instructions().count(identifier.name))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			m_scanner->next();
 			funAss.variableName = identifier;
@@ -180,7 +181,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		else
 			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.
-		if (instructions().count(literal))
+		if (!m_julia && instructions().count(literal))
 		{
 			dev::solidity::Instruction const& instr = instructions().at(literal);
 			if (_onlySinglePusher)
@@ -259,6 +260,7 @@ assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _in
 {
 	if (_instruction.type() == typeid(Instruction))
 	{
+		solAssert(!m_julia, "Instructions are invalid in JULIA");
 		FunctionalInstruction ret;
 		ret.instruction = std::move(boost::get<Instruction>(_instruction));
 		ret.location = ret.instruction.location;
@@ -321,7 +323,7 @@ assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _in
 string Parser::expectAsmIdentifier()
 {
 	string name = m_scanner->currentLiteral();
-	if (instructions().count(name))
+	if (!m_julia && instructions().count(name))
 		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	return name;
