@@ -135,7 +135,7 @@ public:
 	{
 		m_routine = findRepresentation(m_value);
 		assertThrow(
-			checkRepresentation(m_value),
+			checkRepresentation(m_value, m_routine),
 			OptimizerException,
 			"Invalid constant expression created."
 		);
@@ -151,7 +151,7 @@ protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
-	bool checkRepresentation(u256 const& _value);
+	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine);
 	bigint gasNeeded(AssemblyItems const& _routine);
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.

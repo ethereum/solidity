@@ -232,11 +232,11 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	}
 }
 
-bool ComputeMethod::checkRepresentation(u256 const& _value)
+bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine)
 {
 	// This is a tiny EVM that can only evaluate some instructions.
 	vector<u256> stack;
-	for (AssemblyItem const& item: m_routine)
+	for (AssemblyItem const& item: _routine)
 	{
 		switch (item.type())
 		{
