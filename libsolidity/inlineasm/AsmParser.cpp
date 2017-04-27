@@ -69,6 +69,8 @@ assembly::Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::Assign:
 	{
+		if (m_julia)
+			break;
 		assembly::Assignment assignment = createWithLocation<assembly::Assignment>();
 		m_scanner->next();
 		expectToken(Token::Colon);
