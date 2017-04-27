@@ -69,12 +69,14 @@ assembly::Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::Assign:
 	{
+		if (m_julia)
+			break;
 		assembly::Assignment assignment = createWithLocation<assembly::Assignment>();
 		m_scanner->next();
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
 		assignment.variableName.name = m_scanner->currentLiteral();
-		if (!m_julia && instructions().count(assignment.variableName.name))
+		if (instructions().count(assignment.variableName.name))
 			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
