@@ -23,6 +23,7 @@
 
 #include <libevmasm/Exceptions.h>
 
+#include <libdevcore/Assertions.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 
@@ -133,8 +134,11 @@ public:
 		ConstantOptimisationMethod(_params, _value)
 	{
 		m_routine = findRepresentation(m_value);
-		if (!checkRepresentation(m_value))
-			BOOST_THROW_EXCEPTION(AssemblyException());
+		assertThrow(
+			checkRepresentation(m_value),
+			OptimizerException,
+			"Invalid constant expression created."
+		);
 	}
 
 	virtual bigint gasNeeded() override { return gasNeeded(m_routine); }
