@@ -657,8 +657,33 @@ void CompilerStack::compileContract(
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
 	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	compiledContract.compiler = compiler;
-	compiledContract.object = compiler->assembledObject();
-	compiledContract.runtimeObject = compiler->runtimeObject();
+
+	try
+	{
+		compiledContract.object = compiler->assembledObject();
+	}
+	catch(eth::OptimizerException const&)
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for bytecode"));
+	}
+	catch(eth::AssemblyException const&)
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for bytecode"));
+	}
+
+	try
+	{
+		compiledContract.runtimeObject = compiler->runtimeObject();
+	}
+	catch(eth::OptimizerException const&)
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for deployed bytecode"));
+	}
+	catch(eth::AssemblyException const&)
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for deployed bytecode"));
+	}
+
 	compiledContract.onChainMetadata = onChainMetadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
