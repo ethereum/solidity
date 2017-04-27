@@ -1,6 +1,7 @@
 {
     "0.1.0": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -14,6 +15,7 @@
     }, 
     "0.1.1": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -27,6 +29,7 @@
     }, 
     "0.1.2": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -40,6 +43,7 @@
     }, 
     "0.1.3": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -53,6 +57,7 @@
     }, 
     "0.1.4": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -66,6 +71,7 @@
     }, 
     "0.1.5": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
             "SendFailsForZeroEther", 
@@ -79,6 +85,7 @@
     }, 
     "0.1.6": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -93,6 +100,7 @@
     }, 
     "0.1.7": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -107,6 +115,7 @@
     }, 
     "0.2.0": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -121,6 +130,7 @@
     }, 
     "0.2.1": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -135,6 +145,7 @@
     }, 
     "0.2.2": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -149,6 +160,7 @@
     }, 
     "0.3.0": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -162,6 +174,7 @@
     }, 
     "0.3.1": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -174,6 +187,7 @@
     }, 
     "0.3.2": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -186,6 +200,7 @@
     }, 
     "0.3.3": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -197,6 +212,7 @@
     }, 
     "0.3.4": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -208,6 +224,7 @@
     }, 
     "0.3.5": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -219,6 +236,7 @@
     }, 
     "0.3.6": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -228,6 +246,7 @@
     }, 
     "0.4.0": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -237,6 +256,7 @@
     }, 
     "0.4.1": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -245,11 +265,14 @@
         "released": "2016-09-09"
     }, 
     "0.4.10": {
-        "bugs": [], 
+        "bugs": [
+            "ConstantOptimizerSubtraction"
+        ], 
         "released": "2017-03-15"
     }, 
     "0.4.2": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
             "OptimizerStaleKnowledgeAboutSHA3"
@@ -258,6 +281,7 @@
     }, 
     "0.4.3": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage"
         ], 
@@ -265,12 +289,14 @@
     }, 
     "0.4.4": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored"
         ], 
         "released": "2016-10-31"
     }, 
     "0.4.5": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStateKnowledgeNotResetForJumpdest"
         ], 
@@ -278,20 +304,27 @@
     }, 
     "0.4.6": {
         "bugs": [
+            "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored"
         ], 
         "released": "2016-11-22"
     }, 
     "0.4.7": {
-        "bugs": [], 
+        "bugs": [
+            "ConstantOptimizerSubtraction"
+        ], 
         "released": "2016-12-15"
     }, 
     "0.4.8": {
-        "bugs": [], 
+        "bugs": [
+            "ConstantOptimizerSubtraction"
+        ], 
         "released": "2017-01-13"
     }, 
     "0.4.9": {
-        "bugs": [], 
+        "bugs": [
+            "ConstantOptimizerSubtraction"
+        ], 
         "released": "2017-01-31"
     }
 }
