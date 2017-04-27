@@ -38,6 +38,8 @@ extern "C"
 extern char const* compileJSON(char const* _input, bool _optimize);
 }
 
+bool quiet = false;
+
 string contains(string const& _haystack, vector<string> const& _needles)
 {
 	for (string const& needle: _needles)
@@ -48,7 +50,8 @@ string contains(string const& _haystack, vector<string> const& _needles)
 
 void testConstantOptimizer()
 {
-	cout << "Testing constant optimizer" << endl;
+	if (!quiet)
+		cout << "Testing constant optimizer" << endl;
 	vector<u256> numbers;
 	while (!cin.eof())
 	{
@@ -56,12 +59,14 @@ void testConstantOptimizer()
 		cin.read(reinterpret_cast<char*>(data.data()), 32);
 		numbers.push_back(u256(data));
 	}
-	cout << "Got " << numbers.size() << " inputs:" << endl;
+	if (!quiet)
+		cout << "Got " << numbers.size() << " inputs:" << endl;
 
 	Assembly assembly;
 	for (u256 const& n: numbers)
 	{
-		cout << n << endl;
+		if (!quiet)
+			cout << n << endl;
 		assembly.append(n);
 	}
 	for (bool isCreation: {false, true})
@@ -80,7 +85,8 @@ void testConstantOptimizer()
 
 void testCompiler()
 {
-	cout << "Testing compiler." << endl;
+	if (!quiet)
+		cout << "Testing compiler." << endl;
 	string input;
 	while (!cin.eof())
 	{
@@ -140,13 +146,11 @@ Allowed options)",
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23);
 	options.add_options()
-		(
-			"help",
-			"Show this help screen."
-		)
+		("help", "Show this help screen.")
+		("quiet", "Only output errors.")
 		(
 			"const-opt",
-			"Only run the constant optimizer. "
+			"Run the constant optimizer instead of compiling. "
 			"Expects a binary string of up to 32 bytes on stdin."
 		);
 
@@ -162,6 +166,9 @@ Allowed options)",
 		cerr << _exception.what() << endl;
 		return false;
 	}
+
+	if (arguments.count("quiet"))
+		quiet = true;
 
 	if (arguments.count("help"))
 		cout << options;
