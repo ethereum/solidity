@@ -79,7 +79,7 @@ TMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     for f in *.sol
     do
-        "$REPO_ROOT"/build/test/solfuzzer < "$f"
+        "$REPO_ROOT"/build/test/solfuzzer --quiet < "$f"
     done
 )
 rm -rf "$TMPDIR"

@@ -16,20 +16,29 @@
 */
 /**
  * Executable for use with AFL <http://lcamtuf.coredump.cx/afl>.
- * Reads a single source from stdin and signals a failure for internal errors.
  */
 
+#include <libevmasm/Assembly.h>
+#include <libevmasm/ConstantOptimiser.h>
+
 #include <json/json.h>
+
+#include <boost/program_options.hpp>
 
 #include <string>
 #include <iostream>
 
 using namespace std;
+using namespace dev;
+using namespace dev::eth;
+namespace po = boost::program_options;
 
 extern "C"
 {
 extern char const* compileJSON(char const* _input, bool _optimize);
 }
+
+bool quiet = false;
 
 string contains(string const& _haystack, vector<string> const& _needles)
 {
@@ -39,8 +48,45 @@ string contains(string const& _haystack, vector<string> const& _needles)
 	return "";
 }
 
-int main()
+void testConstantOptimizer()
 {
+	if (!quiet)
+		cout << "Testing constant optimizer" << endl;
+	vector<u256> numbers;
+	while (!cin.eof())
+	{
+		h256 data;
+		cin.read(reinterpret_cast<char*>(data.data()), 32);
+		numbers.push_back(u256(data));
+	}
+	if (!quiet)
+		cout << "Got " << numbers.size() << " inputs:" << endl;
+
+	Assembly assembly;
+	for (u256 const& n: numbers)
+	{
+		if (!quiet)
+			cout << n << endl;
+		assembly.append(n);
+	}
+	for (bool isCreation: {false, true})
+	{
+		for (unsigned runs: {1, 2, 3, 20, 40, 100, 200, 400, 1000})
+		{
+			ConstantOptimisationMethod::optimiseConstants(
+				isCreation,
+				runs,
+				assembly,
+				const_cast<AssemblyItems&>(assembly.items())
+			);
+		}
+	}
+}
+
+void testCompiler()
+{
+	if (!quiet)
+		cout << "Testing compiler." << endl;
 	string input;
 	while (!cin.eof())
 	{
@@ -87,5 +133,49 @@ int main()
 		cout << "Output JSON has neither \"errors\" nor \"contracts\"." << endl;
 		abort();
 	}
+}
+
+int main(int argc, char** argv)
+{
+	po::options_description options(
+		R"(solfuzzer, fuzz-testing binary for use with AFL.
+Usage: solfuzzer [Options] < input
+Reads a single source from stdin, compiles it and signals a failure for internal errors.
+
+Allowed options)",
+		po::options_description::m_default_line_length,
+		po::options_description::m_default_line_length - 23);
+	options.add_options()
+		("help", "Show this help screen.")
+		("quiet", "Only output errors.")
+		(
+			"const-opt",
+			"Run the constant optimizer instead of compiling. "
+			"Expects a binary string of up to 32 bytes on stdin."
+		);
+
+	po::variables_map arguments;
+	try
+	{
+		po::command_line_parser cmdLineParser(argc, argv);
+		cmdLineParser.options(options);
+		po::store(cmdLineParser.run(), arguments);
+	}
+	catch (po::error const& _exception)
+	{
+		cerr << _exception.what() << endl;
+		return false;
+	}
+
+	if (arguments.count("quiet"))
+		quiet = true;
+
+	if (arguments.count("help"))
+		cout << options;
+	else if (arguments.count("const-opt"))
+		testConstantOptimizer();
+	else
+		testCompiler();
+
 	return 0;
 }
