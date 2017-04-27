@@ -232,6 +232,54 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	}
 }
 
+bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine)
+{
+	// This is a tiny EVM that can only evaluate some instructions.
+	vector<u256> stack;
+	for (AssemblyItem const& item: _routine)
+	{
+		switch (item.type())
+		{
+		case Operation:
+		{
+			if (stack.size() < size_t(item.arguments()))
+				return false;
+			u256* sp = &stack.back();
+			switch (item.instruction())
+			{
+			case Instruction::MUL:
+				sp[-1] = sp[0] * sp[-1];
+				break;
+			case Instruction::EXP:
+				if (sp[-1] > 0xff)
+					return false;
+				sp[-1] = boost::multiprecision::pow(sp[0], unsigned(sp[-1]));
+				break;
+			case Instruction::ADD:
+				sp[-1] = sp[0] + sp[-1];
+				break;
+			case Instruction::SUB:
+				sp[-1] = sp[0] - sp[-1];
+				break;
+			case Instruction::NOT:
+				sp[0] = ~sp[0];
+				break;
+			default:
+				return false;
+			}
+			stack.resize(stack.size() + item.deposit());
+			break;
+		}
+		case Push:
+			stack.push_back(item.data());
+			break;
+		default:
+			return false;
+		}
+	}
+	return stack.size() == 1 && stack.front() == _value;
+}
+
 bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine)
 {
 	size_t numExps = count(_routine.begin(), _routine.end(), Instruction::EXP);
