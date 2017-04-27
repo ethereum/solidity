@@ -251,15 +251,15 @@ Output Description
               // Function gas estimates
               gasEstimates: {
                 creation: {
-                  dataCost: 420000,
-                  // -1 means infinite (aka. unknown)
-                  executionCost: -1
+                  codeDepositCost: "420000",
+                  executionCost: "infinite",
+                  totalCost: "infinite"
                 },
                 external: {
-                  "delegate(address)": 25000
+                  "delegate(address)": "25000"
                 },
                 internal: {
-                  "heavyLifting()": -1
+                  "heavyLifting()": "infinite"
                 }
               }
             },
