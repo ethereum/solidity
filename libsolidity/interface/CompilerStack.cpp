@@ -657,8 +657,41 @@ void CompilerStack::compileContract(
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
 	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	compiledContract.compiler = compiler;
-	compiledContract.object = compiler->assembledObject();
-	compiledContract.runtimeObject = compiler->runtimeObject();
+
+	try
+	{
+		compiledContract.object = compiler->assembledObject();
+	}
+	catch(eth::OptimizerException const&)
+	{
+		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
+		*err << errinfo_comment("Assembly optimizer exception for bytecode");
+		m_errors.push_back(std::move(err);
+	}
+	catch(eth::AssemblyException const&)
+	{
+		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
+		*err << errinfo_comment("Assembly exception for bytecode");
+		m_errors.push_back(std::move(err);
+	}
+
+	try
+	{
+		compiledContract.runtimeObject = compiler->runtimeObject();
+	}
+	catch(eth::OptimizerException const&)
+	{
+		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
+		*err << errinfo_comment("Assembly optimizer exception for deployed bytecode");
+		m_errors.push_back(std::move(err);
+	}
+	catch(eth::AssemblyException const&)
+	{
+		auto err = make_shared<Error>(Error::Type::InternalCompilerError);
+		*err << errinfo_comment("Assembly exception for deployed bytecode");
+		m_errors.push_back(std::move(err);
+	}
+
 	compiledContract.onChainMetadata = onChainMetadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
