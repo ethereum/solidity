@@ -299,25 +299,6 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
-void CompilerUtils::memoryCopyPrecompile()
-{
-	// Stack here: size target source
-
-	m_context.appendInlineAssembly(R"(
-		{
-		let words := div(add(len, 31), 32)
-		let cost := add(15, mul(3, words))
-		jumpi(invalidJumpLabel, iszero(call(cost, $identityContractAddress, 0, src, len, dst, len)))
-		}
-	)",
-		{ "len", "dst", "src" },
-		map<string, string> {
-			{ "$identityContractAddress", toString(identityContractAddress) }
-		}
-	);
-	m_context << Instruction::POP << Instruction::POP << Instruction::POP;
-}
-
 void CompilerUtils::memoryCopy32()
 {
 	// Stack here: size target source

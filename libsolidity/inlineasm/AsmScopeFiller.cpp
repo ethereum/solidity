@@ -39,10 +39,6 @@ using namespace dev::solidity::assembly;
 ScopeFiller::ScopeFiller(ScopeFiller::Scopes& _scopes, ErrorList& _errors):
 	m_scopes(_scopes), m_errors(_errors)
 {
-	// Make the Solidity ErrorTag available to inline assembly
-	Scope::Label errorLabel;
-	errorLabel.id = Scope::Label::errorLabelId;
-	scope(nullptr).identifiers["invalidJumpLabel"] = errorLabel;
 	m_currentScope = &scope(nullptr);
 }
 
