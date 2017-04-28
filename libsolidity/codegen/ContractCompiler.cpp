@@ -530,7 +530,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			return size_t(-1);
 		return ref->second.valueSize;
 	};
-	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext _context, eth::Assembly& _assembly)
+	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext _context, julia::AbstractAssembly& _assembly)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
@@ -538,21 +538,25 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(!!decl, "");
 		if (_context == assembly::IdentifierContext::RValue)
 		{
-			int const depositBefore = _assembly.deposit();
+			int const depositBefore = _assembly.stackHeight();
 			solAssert(!!decl->type(), "Type of declaration required but not yet determined.");
 			if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
 			{
 				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
 				functionDef = &m_context.resolveVirtualFunction(*functionDef);
-				_assembly.append(m_context.functionEntryLabel(*functionDef).pushTag());
+				auto functionEntryLabel = m_context.functionEntryLabel(*functionDef).pushTag();
+				solAssert(functionEntryLabel.data() <= std::numeric_limits<size_t>::max(), "");
+				_assembly.appendLabelReference(size_t(functionEntryLabel.data()));
 				// If there is a runtime context, we have to merge both labels into the same
 				// stack slot in case we store it in storage.
 				if (CompilerContext* rtc = m_context.runtimeContext())
 				{
-					_assembly.append(u256(1) << 32);
-					_assembly.append(Instruction::MUL);
-					_assembly.append(rtc->functionEntryLabel(*functionDef).toSubAssemblyTag(m_context.runtimeSub()));
-					_assembly.append(Instruction::OR);
+					_assembly.appendConstant(u256(1) << 32);
+					_assembly.appendInstruction(Instruction::MUL);
+					auto runtimeEntryLabel = rtc->functionEntryLabel(*functionDef).toSubAssemblyTag(m_context.runtimeSub());
+					solAssert(runtimeEntryLabel.data() <= std::numeric_limits<size_t>::max(), "");
+					_assembly.appendLabelReference(size_t(runtimeEntryLabel.data()));
+					_assembly.appendInstruction(Instruction::OR);
 				}
 			}
 			else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
@@ -570,7 +574,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				}
 				else if (m_context.isLocalVariable(decl))
 				{
-					int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable);
+					int stackDiff = _assembly.stackHeight() - m_context.baseStackOffsetOfVariable(*variable);
 					if (ref->second.isSlot || ref->second.isOffset)
 					{
 						solAssert(variable->type()->dataStoredIn(DataLocation::Storage), "");
@@ -587,7 +591,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 							// only slot, offset is zero
 							if (ref->second.isOffset)
 							{
-								_assembly.append(u256(0));
+								_assembly.appendConstant(u256(0));
 								return;
 							}
 						}
@@ -601,7 +605,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 							errinfo_comment("Stack too deep, try removing local variables.")
 						);
 					solAssert(variable->type()->sizeOnStack() == 1, "");
-					_assembly.append(dupInstruction(stackDiff));
+					_assembly.appendInstruction(dupInstruction(stackDiff));
 				}
 				else
 					solAssert(false, "");
@@ -610,11 +614,11 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			{
 				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
 				solAssert(contract->isLibrary(), "");
-				_assembly.appendLibraryAddress(contract->fullyQualifiedName());
+				_assembly.appendLinkerSymbol(contract->fullyQualifiedName());
 			}
 			else
 				solAssert(false, "Invalid declaration type.");
-			solAssert(_assembly.deposit() - depositBefore == int(ref->second.valueSize), "");
+			solAssert(_assembly.stackHeight() - depositBefore == int(ref->second.valueSize), "");
 		}
 		else
 		{
@@ -626,15 +630,15 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				"Can only assign to stack variables in inline assembly."
 			);
 			solAssert(variable->type()->sizeOnStack() == 1, "");
-			int stackDiff = _assembly.deposit() - m_context.baseStackOffsetOfVariable(*variable) - 1;
+			int stackDiff = _assembly.stackHeight() - m_context.baseStackOffsetOfVariable(*variable) - 1;
 			if (stackDiff > 16 || stackDiff < 1)
 				BOOST_THROW_EXCEPTION(
 					CompilerError() <<
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
-					errinfo_comment("Stack too deep, try removing local variables.")
+					errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
 				);
-			_assembly.append(swapInstruction(stackDiff));
-			_assembly.append(Instruction::POP);
+			_assembly.appendInstruction(swapInstruction(stackDiff));
+			_assembly.appendInstruction(Instruction::POP);
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
