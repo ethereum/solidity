@@ -67,6 +67,20 @@ assembly::Statement Parser::parseStatement()
 		return parseFunctionDefinition();
 	case Token::LBrace:
 		return parseBlock();
+	case Token::Switch:
+	{
+		assembly::Switch _switch = createWithLocation<assembly::Switch>();
+		m_scanner->next();
+		_switch.expression = make_shared<Statement>(parseExpression());
+		while (m_scanner->currentToken() == Token::Case)
+			_switch.cases.emplace_back(parseCase());
+		if (m_scanner->currentToken() == Token::Default)
+			_switch.cases.emplace_back(parseCase(true));
+		if (_switch.cases.size() == 0)
+			fatalParserError("Switch statement without any cases.");
+		_switch.location.end = _switch.cases.back().body.location.end;
+		return _switch;
+	}
 	case Token::Assign:
 	{
 		if (m_julia)
@@ -132,6 +146,22 @@ assembly::Statement Parser::parseStatement()
 		break;
 	}
 	return statement;
+}
+
+assembly::Case Parser::parseCase(bool _defaultCase)
+{
+	assembly::Case _case = createWithLocation<assembly::Case>();
+	if (_defaultCase)
+		expectToken(Token::Default);
+	else
+	{
+		expectToken(Token::Case);
+		_case.name = expectAsmIdentifier();
+	}
+	expectToken(Token::Colon);
+	_case.body = parseBlock();
+	_case.location.end = _case.body.location.end;
+	return _case;
 }
 
 assembly::Statement Parser::parseExpression()

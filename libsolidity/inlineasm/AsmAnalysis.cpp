@@ -285,6 +285,38 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 	return success;
 }
 
+bool AsmAnalyzer::operator()(Switch const& _switch)
+{
+	int const initialStackHeight = m_stackHeight;
+	if (!boost::apply_visitor(*this, *_switch.expression))
+		return false;
+	expectDeposit(1, initialStackHeight, locationOf(*_switch.expression));
+
+	map<string, bool> caseNames;
+	for (auto const& _case: _switch.cases)
+	{
+		/// Note: the parser ensures there is only one default case
+		if (caseNames[_case.name])
+		{
+			m_errors.push_back(make_shared<Error>(
+				Error::Type::DeclarationError,
+				"Duplicate case defined: " + _case.name,
+				_case.location
+			));
+			return false;
+		}
+		else
+			caseNames[_case.name] = true;
+
+		if (!(*this)(_case.body))
+			return false;
+	}
+
+	m_stackHeight--;
+
+	return true;
+}
+
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;

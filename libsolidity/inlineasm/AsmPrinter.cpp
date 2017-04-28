@@ -167,6 +167,20 @@ string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
 		")";
 }
 
+string AsmPrinter::operator()(Switch const& _switch)
+{
+	string out = "switch " + boost::apply_visitor(*this, *_switch.expression);
+	for (auto const& _case: _switch.cases)
+	{
+		if (_case.name.empty())
+			out += "\ndefault: ";
+		else
+			out += "\ncase " + _case.name + ": ";
+		out += (*this)(_case.body);
+	}
+	return out;
+}
+
 string AsmPrinter::operator()(Block const& _block)
 {
 	if (_block.statements.empty())
