@@ -37,6 +37,7 @@
 #include <libevmasm/LinkerObject.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/ReadFile.h>
+#include <libsolidity/interface/AssemblyStack.h>
 
 namespace dev
 {
@@ -170,6 +171,9 @@ public:
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
+	/// @returns the assembly stack of the IR of a contract.
+	AssemblyStack const assemblyStack() const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
