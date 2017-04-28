@@ -50,6 +50,7 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
 	if (_function.isImplemented())
 		m_inFunction = true;
+	m_currentFunction = &_function;
 	m_localVarUseCount.clear();
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	return true;
@@ -93,6 +94,17 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			m_localVarUseCount[&_variable];
 		}
 	}
+	return true;
+}
+
+bool StaticAnalyzer::visit(Return const& _return)
+{
+	// If the return has an expression, it counts as
+	// a "use" of the return parameters.
+	if (m_inFunction && _return.expression() != NULL)
+		for (auto const& var: m_currentFunction->returnParameterList()->parameters())
+			if (var->name() != "")
+				m_localVarUseCount[var.get()] += 1;
 	return true;
 }
 

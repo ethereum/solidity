@@ -63,7 +63,7 @@ private:
 	virtual bool visit(ExpressionStatement const& _statement) override;
 	virtual bool visit(VariableDeclaration const& _variable) override;
 	virtual bool visit(Identifier const& _identifier) override;
-
+	virtual bool visit(Return const& _return) override;
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 
 	ErrorList& m_errors;
@@ -76,6 +76,7 @@ private:
 
 	std::map<VariableDeclaration const*, int> m_localVarUseCount;
 
+	const FunctionDefinition *m_currentFunction;
 	bool m_inFunction = false;
 };
 

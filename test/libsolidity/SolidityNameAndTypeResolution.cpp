@@ -5663,6 +5663,22 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 		}
 	)";
 	success(text);
+	text = R"(
+		contract C {
+			function f() returns (uint a) {
+				a = 1;
+			}
+		}
+	)";
+	success(text);
+	text = R"(
+		contract C {
+			function f() returns (uint a) {
+				return 1;
+			}
+		}
+	)";
+	success(text);
 }
 
 BOOST_AUTO_TEST_CASE(no_unused_warnings)
