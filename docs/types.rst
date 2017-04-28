@@ -64,6 +64,12 @@ expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
 equivalent to ``x / 2**y``. This means that shifting negative numbers
 sign extends. Shifting by a negative amount throws a runtime exception.
 
+.. warning::
+    The results produced by shift right of negative values of signed integer types is different from those produced
+    by other programming languages. In Solidity, shift right maps to division so the shifted negative values
+    are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
+    works like division with rounding down (towards negative infinity).
+
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
