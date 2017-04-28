@@ -181,6 +181,19 @@ string AsmPrinter::operator()(Switch const& _switch)
 	return out;
 }
 
+string AsmPrinter::operator()(assembly::ForLoop const& _forLoop)
+{
+	string out = "for ";
+	out += (*this)(_forLoop.pre);
+	out += "\n";
+	out += boost::apply_visitor(*this, *_forLoop.condition);
+	out += "\n";
+	out += (*this)(_forLoop.post);
+	out += "\n";
+	out += (*this)(_forLoop.body);
+	return out;
+}
+
 string AsmPrinter::operator()(Block const& _block)
 {
 	if (_block.statements.empty())

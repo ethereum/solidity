@@ -291,6 +291,18 @@ BOOST_AUTO_TEST_CASE(switch_invalid_body)
 	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected token LBrace got 'Identifier'");
 }
 
+BOOST_AUTO_TEST_CASE(for_statement)
+{
+	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
+	BOOST_CHECK(successParse("{ for { let i := 1 } le(i, 5) { i := add(i, 1) } {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(for_invalid_expression)
+{
+	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ 1 2 for {} mul {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
+}
+
 BOOST_AUTO_TEST_CASE(blocks)
 {
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
@@ -407,6 +419,11 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 BOOST_AUTO_TEST_CASE(print_switch)
 {
 	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_for)
+{
+	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    le(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)

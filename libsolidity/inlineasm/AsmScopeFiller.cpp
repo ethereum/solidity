@@ -111,6 +111,11 @@ bool ScopeFiller::operator()(Switch const& _switch)
 	return success;
 }
 
+bool ScopeFiller::operator()(ForLoop const&)
+{
+	solAssert(false, "For loop not supported.");
+}
+
 bool ScopeFiller::operator()(Block const& _block)
 {
 	bool success = true;

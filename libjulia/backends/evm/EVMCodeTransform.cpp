@@ -53,6 +53,11 @@ void CodeTransform::run(Block const& _block)
 }
 
 
+void CodeTransform::operator()(ForLoop const&)
+{
+	solAssert(false, "For loop not removed during desugaring phase.");
+}
+
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
 	solAssert(m_scope, "");

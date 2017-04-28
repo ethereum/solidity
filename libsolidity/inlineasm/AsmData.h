@@ -51,9 +51,10 @@ struct FunctionalInstruction;
 struct FunctionDefinition;
 struct FunctionCall;
 struct Switch;
+struct ForLoop;
 struct Block;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, ForLoop, Block>;
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
@@ -82,6 +83,7 @@ struct FunctionDefinition { SourceLocation location; std::string name; TypedName
 struct Case { SourceLocation location; std::shared_ptr<Literal> value; Block body; };
 /// Switch statement
 struct Switch { SourceLocation location; std::shared_ptr<Statement> expression; std::vector<Case> cases; };
+struct ForLoop { SourceLocation location; Block pre; std::shared_ptr<Statement> condition; Block post; Block body; };
 
 struct LocationExtractor: boost::static_visitor<SourceLocation>
 {

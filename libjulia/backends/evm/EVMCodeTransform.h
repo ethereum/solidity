@@ -32,21 +32,6 @@ namespace solidity
 class ErrorReporter;
 namespace assembly
 {
-struct Literal;
-struct Block;
-struct Switch;
-struct Label;
-struct FunctionalInstruction;
-struct Assignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct StackAssignment;
-struct FunctionDefinition;
-struct FunctionCall;
-
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
-
 struct AsmAnalysisInfo;
 }
 }
@@ -115,6 +100,7 @@ public:
 	void operator()(solidity::assembly::VariableDeclaration const& _varDecl);
 	void operator()(solidity::assembly::Switch const& _switch);
 	void operator()(solidity::assembly::FunctionDefinition const&);
+	void operator()(solidity::assembly::ForLoop const&);
 	void operator()(solidity::assembly::Block const& _block);
 
 private:

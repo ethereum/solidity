@@ -63,6 +63,7 @@ protected:
 	Block parseBlock();
 	Statement parseStatement();
 	Case parseCase();
+	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Statement parseExpression();
 	static std::map<std::string, dev::solidity::Instruction> const& instructions();
