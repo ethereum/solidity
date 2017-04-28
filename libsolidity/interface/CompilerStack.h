@@ -103,6 +103,16 @@ public:
 	/// Sets the given source code as the only source unit apart from standard sources and parses it.
 	/// @returns false on error.
 	bool parse(std::string const& _sourceCode);
+	/// performs the analyisis steps (imports, scopesetting, syntaxCheck, referenceResolving,
+	///  typechecking, staticAnalysis) on previously set sources
+	/// @returns false on error.
+	bool analyze();
+	/// Parses and analyzes all source units that were added
+	/// @returns false on error.
+	bool parseAndAnalyze();
+	/// Sets the given source code as the only source unit apart from standard sources and parses and analyzes it.
+	/// @returns false on error.
+	bool parseAndAnalyze(std::string const& _sourceCode);
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 	std::string defaultContractName() const;
@@ -226,6 +236,13 @@ private:
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
+	enum State {
+		Empty,
+		SourcesSet,
+		ParsingSuccessful,
+		AnalysisSuccessful,
+		CompilationSuccessful
+	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
@@ -266,7 +283,6 @@ private:
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
-	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
@@ -275,6 +291,7 @@ private:
 	std::string m_formalTranslation;
 	ErrorList m_errors;
 	bool m_metadataLiteralSources = false;
+	State m_stackState = Empty;
 };
 
 }

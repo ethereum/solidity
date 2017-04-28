@@ -45,7 +45,7 @@ public:
 		bool _userDocumentation
 	)
 	{
-		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse("pragma solidity >=0.0;\n" + _code), "Parsing failed");
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parseAndAnalyze("pragma solidity >=0.0;\n" + _code), "Parsing failed");
 
 		Json::Value generatedDocumentation;
 		if (_userDocumentation)
@@ -63,7 +63,7 @@ public:
 
 	void expectNatspecError(std::string const& _code)
 	{
-		BOOST_CHECK(!m_compilerStack.parse(_code));
+		BOOST_CHECK(!m_compilerStack.parseAndAnalyze(_code));
 		BOOST_REQUIRE(Error::containsErrorOfType(m_compilerStack.errors(), Error::Type::DocstringParsingError));
 	}
 

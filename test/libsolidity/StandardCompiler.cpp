@@ -68,7 +68,10 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 		BOOST_REQUIRE(error.isObject());
 		BOOST_REQUIRE(error["severity"].isString());
 		if (error["severity"].asString() != "warning")
+		{
+			cout << error << std::endl;
 			return false;
+		}
 	}
 
 	return true;
