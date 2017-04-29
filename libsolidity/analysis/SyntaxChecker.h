@@ -32,6 +32,7 @@ namespace solidity
  * The module that performs syntax analysis on the AST:
  *  - whether continue/break is in a for/while loop.
  *  - whether a modifier contains at least one '_'
+ *  - issues deprecation warnings for unary '+'
  */
 class SyntaxChecker: private ASTConstVisitor
 {
@@ -43,6 +44,7 @@ public:
 
 private:
 	/// Adds a new error to the list of errors.
+	void warning(SourceLocation const& _location, std::string const& _description);
 	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(SourceUnit const& _sourceUnit) override;
@@ -59,6 +61,8 @@ private:
 
 	virtual bool visit(Continue const& _continueStatement) override;
 	virtual bool visit(Break const& _breakStatement) override;
+
+	virtual bool visit(UnaryOperation const& _operation) override;
 
 	virtual bool visit(PlaceholderStatement const& _placeholderStatement) override;
 

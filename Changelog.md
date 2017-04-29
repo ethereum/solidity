@@ -10,6 +10,7 @@ Features:
  * Inline Assembly: Storage variable access using ``_slot`` and ``_offset`` suffixes.
  * Inline Assembly: Disallow blocks with unbalanced stack.
  * Static analyzer: Warn about statements without effects.
+ * Syntax checker: issue deprecation warning for unary '+'
 
 Bugfixes:
  * Assembly output: Implement missing AssemblyItem types.
