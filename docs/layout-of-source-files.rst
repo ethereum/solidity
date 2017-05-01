@@ -26,7 +26,7 @@ The version pragma is used as follows::
   pragma solidity ^0.4.0;
 
 Such a source file will not compile with a compiler earlier than version 0.4.0
-and it will also not work on a compiler starting form version 0.5.0 (this
+and it will also not work on a compiler starting from version 0.5.0 (this
 second condition is added by using ``^``). The idea behind this is that
 there will be no breaking changes until version ``0.5.0``, so we can always
 be sure that our code will compile the way we intended it to. We do not fix
