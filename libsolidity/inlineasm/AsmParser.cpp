@@ -84,6 +84,7 @@ assembly::Statement Parser::parseStatement()
 	}
 	case Token::Return: // opcode
 	case Token::Byte: // opcode
+	case Token::Address: // opcode
 	default:
 		break;
 	}
@@ -119,6 +120,8 @@ assembly::Statement Parser::parseStatement()
 		else
 		{
 			// label
+			if (m_julia)
+				fatalParserError("Labels are not supported.");
 			Label label = createWithLocation<Label>(identifier.location);
 			label.name = identifier.name;
 			return label;
