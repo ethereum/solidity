@@ -46,7 +46,9 @@ public:
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	explicit Generator(assembly::Block const& _block)
 	{
-		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
+		m_assembly += "(module ";
+		visitStatements(_block);
+		m_assembly += ")";
 	}
 
 	string assembly() { return m_assembly; }
@@ -68,29 +70,48 @@ public:
 	{
 		solAssert(false, "Labels are not supported in Yul.");
 	}
-	void operator()(assembly::Literal const&)
+	void operator()(assembly::Literal const& _literal)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		if (_literal.kind == assembly::LiteralKind::Number)
+			m_assembly += "(i64.const " + _literal.value + ")";
+		else
+			solUnimplementedAssert(false, "Non-number literals not supported.");
 	}
-	void operator()(assembly::Identifier const&)
+	void operator()(assembly::Identifier const& _identifier)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		m_assembly += "(get_local $" + _identifier.name + ")";
 	}
-	void operator()(assembly::VariableDeclaration const&)
+	void operator()(assembly::VariableDeclaration const& _varDecl)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		solUnimplementedAssert(_varDecl.variables.size() == 1, "Tuples not supported yet.");
+		m_assembly += "(local $" + _varDecl.variables.front().name + " i64)";
+		m_assembly += "(set_local $" + _varDecl.variables.front().name + " ";
+		boost::apply_visitor(*this, *_varDecl.value);
+		m_assembly += ")";
 	}
-	void operator()(assembly::Assignment const&)
+	void operator()(assembly::Assignment const& _assignment)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		m_assembly += "(set_local $" + _assignment.variableName.name + " ";
+		boost::apply_visitor(*this, *_assignment.value);
+		m_assembly += ")";
 	}
-	void operator()(assembly::FunctionDefinition const&)
+	void operator()(assembly::FunctionDefinition const& _funDef)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		m_assembly += "(func $" + _funDef.name + " ";
+		/// FIXME implement parameters
+		/// Scope rules: return parameters must be marked appropriately
+		visitStatements(_funDef.body);
+		m_assembly += ")";
 	}
-	void operator()(assembly::FunctionCall const&)
+	void operator()(assembly::FunctionCall const& _funCall)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		m_assembly += "(call $" + _funCall.functionName.name;
+		for (auto const& statement: _funCall.arguments)
+		{
+			m_assembly += " ";
+			boost::apply_visitor(*this, statement);
+		}
+		m_assembly += ")";
 	}
 	void operator()(assembly::Switch const&)
 	{
@@ -100,11 +121,18 @@ public:
 	{
 		solUnimplementedAssert(false, "Not implemented yet.");
 	}
-	void operator()(assembly::Block const&)
+	void operator()(assembly::Block const& _block)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		m_assembly += "(block ";
+		visitStatements(_block);
+		m_assembly += ")";
 	}
 private:
+	void visitStatements(assembly::Block const& _block)
+	{
+		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
+	}
+
 	string m_assembly;
 };
 
