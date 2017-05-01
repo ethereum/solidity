@@ -31,6 +31,7 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/backends/webassembly/WebAssembly.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -170,7 +171,10 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 		return object;
 	}
 	case Machine::eWasm:
-		solUnimplemented("eWasm backend is not yet implemented.");
+		MachineAssemblyObject object;
+		object.assembly = yul::WebAssembly().assemble(*m_parserResult);
+		/// TODO: fill out the bytecode
+		return object;
 	}
 	// unreachable
 	return MachineAssemblyObject();
