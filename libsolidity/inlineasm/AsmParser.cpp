@@ -128,6 +128,8 @@ assembly::Statement Parser::parseStatement()
 		}
 	}
 	default:
+		if (m_julia)
+			fatalParserError("Call or assignment expected.");
 		break;
 	}
 	return statement;
