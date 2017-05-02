@@ -94,7 +94,7 @@ of votes.
             // called incorrectly. But watch out, this
             // will currently also consume all provided gas
             // (this is planned to change in the future).
-            require(msg.sender == chairperson || !voters[voter].voted);
+            require((msg.sender == chairperson) && !voters[voter].voted);
             voters[voter].weight = 1;
         }
 
@@ -268,11 +268,11 @@ activate themselves.
 
             // Revert the call if the bidding
             // period is over.
-            require(now < auctionStart + biddingTime);
+            require(now <= auctionStart + biddingTime);
 
             // If the bid is not higher, send the
             // money back.
-            require(msg.value <= highestBid);
+            require(msg.value > highestBid);
             
             if (highestBidder != 0) {
                 // Sending back the money by simply using
@@ -322,7 +322,7 @@ activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= auctionStart + biddingTime); // auction did not yet end
+            require(now >= (auctionStart + biddingTime)); // auction did not yet end
             require(!ended); // this function has already been called
 
             // 2. Effects
@@ -446,11 +446,9 @@ high or low invalid bids.
             onlyBefore(revealEnd)
         {
             uint length = bids[msg.sender].length;
-            require(
-                _values.length == length &&
-                _fake.length == length &&
-                _secret.length == length
-            );
+            require(_values.length == length);
+            require(_fake.length == length);
+            require(_secret.length == length);
 
             uint refund;
             for (uint i = 0; i < length; i++) {
@@ -609,8 +607,10 @@ Safe Remote Purchase
             // otherwise, the contracts called using `send` below
             // can call in again here.
             state = State.Inactive;
-            // This actually allows both the buyer and the seller to
+
+            // NOTE: This actually allows both the buyer and the seller to
             // block the refund - the withdraw pattern should be used.
+
             buyer.transfer(value);
             seller.transfer(this.balance));
         }

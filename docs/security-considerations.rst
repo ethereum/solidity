@@ -137,7 +137,8 @@ Sending and Receiving Ether
      depth, they can force the transfer to fail; take this possibility into account or use ``send`` and make sure to always check its return value. Better yet,
      write your contract using a pattern where the recipient can withdraw Ether instead.
   3. Sending Ether can also fail because the execution of the recipient contract
-     requires more than the allotted amount of gas (explicitly by using ``revert`` or
+     requires more than the allotted amount of gas (explicitly by using ``require``,
+     ``assert``, ``revert``, ``throw`` or
      because the operation is just too expensive) - it "runs out of gas" (OOG).
      If you use ``transfer`` or ``send`` with a return value check, this might provide a
      means for the recipient to block progress in the sending contract. Again, the best practice here is to use

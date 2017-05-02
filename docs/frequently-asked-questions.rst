@@ -665,7 +665,7 @@ What does the following strange check do in the Custom Token contract?
 
 ::
 
-    require(balanceOf[_to] + _value >= balanceOf[_to]);
+    require((balanceOf[_to] + _value) >= balanceOf[_to]);
 
 Integers in Solidity (and most other machine-related programming languages) are restricted to a certain range.
 For ``uint256``, this is ``0`` up to ``2**256 - 1``. If the result of some operation on those numbers
