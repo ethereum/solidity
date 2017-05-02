@@ -5658,6 +5658,14 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 	CHECK_WARNING(text, "Unused");
 	text = R"(
 		contract C {
+			function f() returns (uint a) {
+				return;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Unused");
+	text = R"(
+		contract C {
 			function f() returns (uint) {
 			}
 		}
@@ -5699,8 +5707,8 @@ BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
 	char const* text = R"(
 		contract C {
 			function f() {
-			a = 7;
-			uint a;
+				a = 7;
+				uint a;
 			}
 		}
 	)";

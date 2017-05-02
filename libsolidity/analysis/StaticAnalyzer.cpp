@@ -50,7 +50,9 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
 	if (_function.isImplemented())
 		m_currentFunction = &_function;
-	m_localVarUseCount.clear();
+	else
+		solAssert(!m_currentFunction, "");
+	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	return true;
 }
@@ -62,19 +64,18 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
 			warning(var.first->location(), "Unused local variable");
+	m_localVarUseCount.clear();
 }
 
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
 	if (m_currentFunction)
-	{
 		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		{
 			solAssert(!var->name().empty(), "");
 			if (var->isLocalVariable())
 				m_localVarUseCount[var] += 1;
 		}
-	}
 	return true;
 }
 
@@ -84,14 +85,8 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 	{
 		solAssert(_variable.isLocalVariable(), "");
 		if (_variable.name() != "")
-		{
-			// The variable may have been used before reaching the
-			// declaration.  If it was, we must not reset the counter,
-			// but since [] will insert the default 0, we really just
-			// need to access the map here and let it do the rest on its
-			// own.
-			m_localVarUseCount[&_variable];
-		}
+			// This is not a no-op, the entry might pre-exist.
+			m_localVarUseCount[&_variable] += 0;
 	}
 	return true;
 }

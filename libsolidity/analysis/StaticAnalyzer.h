@@ -74,6 +74,7 @@ private:
 	/// Flag that indicates whether a public function does not contain the "payable" modifier.
 	bool m_nonPayablePublic = false;
 
+	/// Number of uses of each (named) local variable in a function, counter is initialized with zero.
 	std::map<VariableDeclaration const*, int> m_localVarUseCount;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
