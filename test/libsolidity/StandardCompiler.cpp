@@ -26,6 +26,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libdevcore/JSON.h>
 
+#include "../Metadata.h"
 
 using namespace std;
 using namespace dev::eth;
@@ -68,56 +69,8 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 		BOOST_REQUIRE(error.isObject());
 		BOOST_REQUIRE(error["severity"].isString());
 		if (error["severity"].asString() != "warning")
-		{
-			cout << error << std::endl;
 			return false;
-		}
 	}
-
-	return true;
-}
-
-string bytecodeSansMetadata(string const& _bytecode)
-{
-	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
-	/// /a165627a7a72305820([0-9a-f]{64})0029$/
-
-	if (_bytecode.size() < 88)
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
-		return _bytecode;
-
-	return _bytecode.substr(0, _bytecode.size() - 86);
-}
-
-bool isValidMetadata(string const& _metadata)
-{
-	Json::Value metadata;
-	if (!Json::Reader().parse(_metadata, metadata, false))
-		return false;
-
-	if (
-		!metadata.isObject() ||
-		!metadata.isMember("version") ||
-		!metadata.isMember("language") ||
-		!metadata.isMember("compiler") ||
-		!metadata.isMember("settings") ||
-		!metadata.isMember("sources") ||
-		!metadata.isMember("output")
-	)
-		return false;
-
-	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
-		return false;
-
-	if (!metadata["language"].isString() || metadata["language"].asString() != "Solidity")
-		return false;
-
-	/// @TODO add more strict checks
 
 	return true;
 }
@@ -245,7 +198,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
 	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
-	BOOST_CHECK(bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()) ==
+	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()) ==
 		"60606040523415600b57fe5b5b60338060196000396000f30060606040525bfe00");
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString() ==
@@ -257,7 +210,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(dev::jsonCompactPrint(contract["evm"]["gasEstimates"]) ==
 		"{\"creation\":{\"codeDepositCost\":\"10200\",\"executionCost\":\"62\",\"totalCost\":\"10262\"}}");
 	BOOST_CHECK(contract["metadata"].isString());
-	BOOST_CHECK(isValidMetadata(contract["metadata"].asString()));
+	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
 	BOOST_CHECK(result["sources"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"]["legacyAST"].isObject());

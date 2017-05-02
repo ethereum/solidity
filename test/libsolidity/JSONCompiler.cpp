@@ -25,6 +25,8 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
 
+#include "../Metadata.h"
+
 using namespace std;
 
 extern "C"
@@ -41,51 +43,6 @@ namespace test
 
 namespace
 {
-
-string bytecodeSansMetadata(string const& _bytecode)
-{
-	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
-	/// /a165627a7a72305820([0-9a-f]{64})0029$/
-
-	if (_bytecode.size() < 88)
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
-		return _bytecode;
-
-	return _bytecode.substr(0, _bytecode.size() - 86);
-}
-
-bool isValidMetadata(string const& _metadata)
-{
-	Json::Value metadata;
-	if (!Json::Reader().parse(_metadata, metadata, false))
-		return false;
-
-	if (
-		!metadata.isObject() ||
-		!metadata.isMember("version") ||
-		!metadata.isMember("language") ||
-		!metadata.isMember("compiler") ||
-		!metadata.isMember("settings") ||
-		!metadata.isMember("sources") ||
-		!metadata.isMember("output")
-	)
-		return false;
-
-	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
-		return false;
-
-	if (!metadata["language"].isString() || metadata["language"].asString() != "Solidity")
-		return false;
-
-	/// @TODO add more strict checks
-
-	return true;
-}
 
 Json::Value compile(string const& _input)
 {
@@ -117,17 +74,17 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["interface"].isString());
 	BOOST_CHECK(contract["interface"].asString() == "[]");
 	BOOST_CHECK(contract["bytecode"].isString());
-	BOOST_CHECK(bytecodeSansMetadata(contract["bytecode"].asString()) ==
+	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["bytecode"].asString()) ==
 		"60606040523415600b57fe5b5b60338060196000396000f30060606040525bfe00");
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
-	BOOST_CHECK(bytecodeSansMetadata(contract["runtimeBytecode"].asString()) ==
+	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()) ==
 		"60606040525bfe00");
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
 	BOOST_CHECK(dev::jsonCompactPrint(contract["gasEstimates"]) ==
 		"{\"creation\":[62,10200],\"external\":{},\"internal\":{}}");
 	BOOST_CHECK(contract["metadata"].isString());
-	BOOST_CHECK(isValidMetadata(contract["metadata"].asString()));
+	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
 	BOOST_CHECK(result["sources"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"]["AST"].isObject());
