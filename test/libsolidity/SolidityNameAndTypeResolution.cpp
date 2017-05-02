@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(name_shadowing)
 	char const* text = R"(
 		contract test {
 			uint256 variable;
-			function f() { uint32 variable; variable; }
+			function f() { uint32 variable; variable = 2; }
 		}
 	)";
 	CHECK_SUCCESS(text);
@@ -5640,7 +5640,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_param)
 	CHECK_WARNING(text, "Unused");
 	text = R"(
 		contract C {
-			function f(uint) {
+			function f(uint a) {
 			}
 		}
 	)";
@@ -5662,7 +5662,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
 			function f() returns (uint a) {
@@ -5670,7 +5670,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
 			function f() returns (uint a) {
@@ -5678,7 +5678,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(no_unused_warnings)
@@ -5691,7 +5691,7 @@ BOOST_AUTO_TEST_CASE(no_unused_warnings)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
@@ -5704,7 +5704,7 @@ BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 
