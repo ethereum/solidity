@@ -235,12 +235,12 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(containsAtMostWarnings(result));
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
-	BOOST_CHECK(contract["abi"].isString());
-	BOOST_CHECK(contract["abi"].asString() == "[]");
-	BOOST_CHECK(contract["devdoc"].isString());
-	BOOST_CHECK(contract["devdoc"].asString() == "{\"methods\":{}}");
-	BOOST_CHECK(contract["userdoc"].isString());
-	BOOST_CHECK(contract["userdoc"].asString() == "{\"methods\":{}}");
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK(dev::jsonCompactPrint(contract["abi"]) == "[]");
+	BOOST_CHECK(contract["devdoc"].isObject());
+	BOOST_CHECK(dev::jsonCompactPrint(contract["devdoc"]) == "{\"methods\":{}}");
+	BOOST_CHECK(contract["userdoc"].isObject());
+	BOOST_CHECK(dev::jsonCompactPrint(contract["userdoc"]) == "{\"methods\":{}}");
 	BOOST_CHECK(contract["evm"].isObject());
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
 	BOOST_CHECK(contract["evm"]["bytecode"].isObject());

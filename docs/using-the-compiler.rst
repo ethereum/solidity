@@ -222,7 +222,7 @@ Output Description
               // Assembly (string)
               assembly: "",
               // Old-style assembly (object)
-              legacyAssembly: [],
+              legacyAssembly: {},
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
