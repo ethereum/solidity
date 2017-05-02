@@ -203,7 +203,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			u256 powerOfTwo = u256(1) << bits;
 			u256 upperPart = _value >> bits;
 			bigint lowerPart = _value & (powerOfTwo - 1);
-			if (powerOfTwo - lowerPart < lowerPart)
+			if ((powerOfTwo - lowerPart) < lowerPart)
 			{
 				lowerPart = lowerPart - powerOfTwo; // make it negative
 				upperPart++;
