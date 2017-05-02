@@ -985,13 +985,26 @@ bool CommandLineInterface::assemble()
 	map<string, shared_ptr<Scanner>> scanners;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
-		scanners[src.first] = scanner;
-		if (!m_assemblyStacks[src.first].parse(scanner))
-			successful = false;
-		else
-			//@TODO we should not just throw away the result here
-			m_assemblyStacks[src.first].assemble();
+		try
+		{
+			auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
+			scanners[src.first] = scanner;
+			if (!m_assemblyStacks[src.first].parse(scanner))
+				successful = false;
+			else
+				//@TODO we should not just throw away the result here
+				m_assemblyStacks[src.first].assemble();
+		}
+		catch (Exception const& _exception)
+		{
+			cerr << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
+			return false;
+		}
+		catch (...)
+		{
+			cerr << "Unknown exception in assembler." << endl;
+			return false;
+		}
 	}
 	for (auto const& stack: m_assemblyStacks)
 	{
