@@ -22,8 +22,8 @@ unit and units are considered naively in the following way:
  * ``1 minutes == 60 seconds``
  * ``1 hours == 60 minutes``
  * ``1 days == 24 hours``
- * ``1 weeks = 7 days``
- * ``1 years = 365 days``
+ * ``1 weeks == 7 days``
+ * ``1 years == 365 days``
 
 Take care if you perform calendar calculations using these units, because
 not every year equals 365 days and not even every day has 24 hours
