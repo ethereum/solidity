@@ -53,7 +53,7 @@ Available Solidity Integrations
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
-    
+
 * `Solium <https://github.com/duaraghav8/Solium/>`_
     A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
 
@@ -89,6 +89,9 @@ Solidity Tools
 
 * `evmdis <https://github.com/Arachnid/evmdis>`_
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
+
+* `Doxity <https://github.com/DigixGlobal/doxity>`_
+    Documentation Generator for Solidity.
 
 Third-Party Solidity Parsers and Grammars
 -----------------------------------------
