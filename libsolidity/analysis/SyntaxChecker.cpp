@@ -161,9 +161,7 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
 	if (_operation.getOperator() == Token::Add)
-	{
-		warning(_operation.location(), "Use of unary + is deprecated");
-	}
+		warning(_operation.location(), "Use of unary + is deprecated.");
 	return true;
 }
 
