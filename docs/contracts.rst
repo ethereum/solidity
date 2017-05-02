@@ -1034,7 +1034,7 @@ more advanced example to implement a set).
             // The library functions can be called without a
             // specific instance of the library, since the
             // "instance" will be the current contract.
-            assert(Set.insert(knownValues, value));
+            require(Set.insert(knownValues, value));
         }
         // In this contract, we can also directly access knownValues.flags, if we want.
     }

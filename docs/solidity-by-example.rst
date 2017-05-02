@@ -87,11 +87,13 @@ of votes.
         // Give `voter` the right to vote on this ballot.
         // May only be called by `chairperson`.
         function giveRightToVote(address voter) {
-            // `throw` terminates and reverts all changes to
+            // If the argument of `require` evaluates to `false`,
+            // it terminates and reverts all changes to
             // the state and to Ether balances. It is often
             // a good idea to use this if functions are
             // called incorrectly. But watch out, this
-            // will also consume all provided gas.
+            // will currently also consume all provided gas
+            // (this is planned to change in the future).
             require(msg.sender == chairperson || !voters[voter].voted);
             voters[voter].weight = 1;
         }
@@ -267,7 +269,6 @@ activate themselves.
             // Revert the call if the bidding
             // period is over.
             require(now < auctionStart + biddingTime);
-            
 
             // If the bid is not higher, send the
             // money back.
@@ -329,7 +330,7 @@ activate themselves.
             AuctionEnded(highestBidder, highestBid);
 
             // 3. Interaction
-            require(beneficiary.transfer(highestBid));
+            beneficiary.transfer(highestBid);
         }
     }
 
@@ -400,8 +401,8 @@ high or low invalid bids.
         /// functions. `onlyBefore` is applied to `bid` below:
         /// The new function body is the modifier's body where
         /// `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) { require(!now >= _time); _; }
-        modifier onlyAfter(uint _time) { require(!now <= _time); _; }
+        modifier onlyBefore(uint _time) { require(now < _time); _; }
+        modifier onlyAfter(uint _time) { require(now > _time); _; }
 
         function BlindAuction(
             uint _biddingTime,
@@ -446,8 +447,8 @@ high or low invalid bids.
         {
             uint length = bids[msg.sender].length;
             require(
-                _values.length == length ||
-                _fake.length == length ||
+                _values.length == length &&
+                _fake.length == length &&
                 _secret.length == length
             );
 
@@ -544,10 +545,10 @@ Safe Remote Purchase
         function Purchase() payable {
             seller = msg.sender;
             value = msg.value / 2;
-            require(!2 * value != msg.value);
+            require(2 * value == msg.value);
         }
 
-        modifier require(bool _condition) {
+        modifier condition(bool _condition) {
             require(_condition);
             _;
         }
@@ -589,7 +590,7 @@ Safe Remote Purchase
         /// is called.
         function confirmPurchase()
             inState(State.Created)
-            require(msg.value == 2 * value)
+            condition(msg.value == 2 * value)
             payable
         {
             purchaseConfirmed();
@@ -609,8 +610,9 @@ Safe Remote Purchase
             // can call in again here.
             state = State.Inactive;
             // This actually allows both the buyer and the seller to
-            // block the refund.
-            require(buyer.transfer(value) || seller.transfer(this.balance));
+            // block the refund - the withdraw pattern should be used.
+            buyer.transfer(value);
+            seller.transfer(this.balance));
         }
     }
 

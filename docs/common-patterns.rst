@@ -52,17 +52,12 @@ become the new richest.
             }
         }
 
-        function withdraw() returns (bool) {
+        function withdraw() {
             uint amount = pendingWithdrawals[msg.sender];
             // Remember to zero the pending refund before
             // sending to prevent re-entrancy attacks
             pendingWithdrawals[msg.sender] = 0;
-            if (msg.sender.send(amount)) {
-                return true;
-            } else {
-                pendingWithdrawals[msg.sender] = amount;
-                return false;
-            }
+            msg.sender.transfer(amount);
         }
     }
 
@@ -83,9 +78,7 @@ This is as opposed to the more intuitive sending pattern:
 
         function becomeRichest() payable returns (bool) {
             if (msg.value > mostSent) {
-                // Check if call succeeds to prevent an attacker
-                // from trapping the previous person's funds in
-                // this contract through a callstack attack
+                // This line can cause problems (explained below).
                 richest.transfer(msg.value);
                 richest = msg.sender;
                 mostSent = msg.value;
@@ -98,12 +91,16 @@ This is as opposed to the more intuitive sending pattern:
 
 Notice that, in this example, an attacker could trap the
 contract into an unusable state by causing ``richest`` to be
-the address of a  contract that has a fallback function
-which consumes more than the 2300 gas stipend.  That way,
-whenever ``send`` is called to deliver funds to the
-"poisoned" contract, it will cause execution to always fail
-because there will not be enough gas to finish the execution
-of the fallback function.
+the address of a contract that has a fallback function
+which fails (e.g. by using ``revert()`` or by just
+conssuming more than the 2300 gas stipend). That way,
+whenever ``transfer`` is called to deliver funds to the
+"poisoned" contract, it will fail and thus also ``becomeRichest``
+will fail, with the contract being stuck forever.
+
+In contrast, if you use the "withdraw" pattern from the first example,
+the attacker can only cause his or her own withdraw to fail and not the
+rest of the contract's workings.
 
 .. index:: access;restricting
 
