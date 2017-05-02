@@ -72,7 +72,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
 	++m_stackHeight;
-	if (!_literal.isNumber && _literal.value.size() > 32)
+	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
 	{
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::TypeError,
