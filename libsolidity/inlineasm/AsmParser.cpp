@@ -92,7 +92,7 @@ assembly::Statement Parser::parseStatement()
 	// Simple instruction (might turn into functional),
 	// literal,
 	// identifier (might turn into label or functional assignment)
-	Statement statement(parseElementaryOperation());
+	Statement statement(parseElementaryOperation(false));
 	switch (m_scanner->currentToken())
 	{
 	case Token::LParen:
@@ -214,7 +214,11 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		break;
 	}
 	default:
-		fatalParserError("Expected elementary inline assembly operation.");
+		fatalParserError(
+			m_julia ?
+			"Literal or identifier expected." :
+			"Expected elementary inline assembly operation."
+		);
 	}
 	m_scanner->next();
 	return ret;
@@ -322,7 +326,11 @@ assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _in
 		return ret;
 	}
 	else
-		fatalParserError("Assembly instruction or function name required in front of \"(\")");
+		fatalParserError(
+			m_julia ?
+			"Function name expected." :
+			"Assembly instruction or function name required in front of \"(\")"
+		);
 
 	return {};
 }
