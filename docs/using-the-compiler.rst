@@ -121,7 +121,6 @@ Input Description
         //   abi - ABI
         //   ast - AST of all source files (not supported atm)
         //   legacyAST - legacy AST of all source files
-        //   why3 - Why3 translated output
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
@@ -154,9 +153,9 @@ Input Description
           "*": {
             "*": [ "evm.sourceMap" ]
           },
-          // Enable the legacy AST and Why3 output of every single file.
+          // Enable the legacy AST output of every single file.
           "*": {
-            "": [ "legacyAST", "why3" ]
+            "": [ "legacyAST" ]
           }
         }
       }
@@ -180,7 +179,7 @@ Output Description
           ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
           type: "TypeError",
-          // Mandatory: Component where the error originated, such as "general", "why3", "ewasm", etc.
+          // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
           component: "general",
           // Mandatory ("error" or "warning")
           severity: "error",
@@ -272,7 +271,5 @@ Output Description
             }
           }
         }
-      },
-      // Why3 output (string)
-      why3: ""
+      }
     }
