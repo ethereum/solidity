@@ -62,13 +62,13 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 
 ::
 
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.4.11;
 
   contract Purchase {
       address public seller;
 
       modifier onlySeller() { // Modifier
-          if (msg.sender != seller) throw;
+          require(msg.sender == seller);
           _;
       }
 

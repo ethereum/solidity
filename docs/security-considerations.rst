@@ -79,7 +79,7 @@ outlined further below:
 
 ::
 
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.4.11;
 
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -88,8 +88,7 @@ outlined further below:
       function withdraw() {
           var share = shares[msg.sender];
           shares[msg.sender] = 0;
-          if (!msg.sender.send(share))
-              throw;
+          require(msg.sender.send(share));
       }
   }
 
@@ -162,7 +161,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
@@ -173,8 +172,8 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
 
         function transfer(address dest, uint amount) {
-            if (tx.origin != owner) { throw; }
-            if (!dest.call.value(amount)()) throw;
+            require(tx.origin == owner);
+            require(dest.call.value(amount)());
         }
     }
 
