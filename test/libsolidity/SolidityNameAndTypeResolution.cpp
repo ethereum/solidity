@@ -3938,12 +3938,29 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
+				ufixed8x16 a = 3.25;
+				fixed8x16 b = -3.25;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract test {
+			function f() {
 				ufixed8x16 a = +3.25;
 				fixed8x16 b = -3.25;
 			}
 		}
 	)";
-	CHECK_SUCCESS(text);
+	CHECK_WARNING(text,"Use of unary + is deprecated");
+	text = R"(
+		contract test {
+			function f(uint x) {
+				uint y = +x;
+			}
+		}
+	)";
+	CHECK_WARNING(text,"Use of unary + is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)

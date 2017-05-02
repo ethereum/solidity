@@ -32,6 +32,16 @@ bool SyntaxChecker::checkSyntax(ASTNode const& _astRoot)
 	return Error::containsOnlyWarnings(m_errors);
 }
 
+void SyntaxChecker::warning(SourceLocation const& _location, string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::Warning);
+	*err <<
+		errinfo_sourceLocation(_location) <<
+		errinfo_comment(_description);
+
+	m_errors.push_back(err);
+}
+
 void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::SyntaxError);
@@ -145,6 +155,13 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
 		syntaxError(_breakStatement.location(), "\"break\" has to be in a \"for\" or \"while\" loop.");
+	return true;
+}
+
+bool SyntaxChecker::visit(UnaryOperation const& _operation)
+{
+	if (_operation.getOperator() == Token::Add)
+		warning(_operation.location(), "Use of unary + is deprecated.");
 	return true;
 }
 
