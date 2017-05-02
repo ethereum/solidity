@@ -49,8 +49,7 @@ void StaticAnalyzer::endVisit(ContractDefinition const&)
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
 	if (_function.isImplemented())
-		m_inFunction = true;
-	m_currentFunction = &_function;
+		m_currentFunction = &_function;
 	m_localVarUseCount.clear();
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	return true;
@@ -58,7 +57,7 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 
 void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
-	m_inFunction = false;
+	m_currentFunction = nullptr;
 	m_nonPayablePublic = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
@@ -67,7 +66,7 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
-	if (m_inFunction)
+	if (m_currentFunction)
 	{
 		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		{
@@ -81,7 +80,7 @@ bool StaticAnalyzer::visit(Identifier const& _identifier)
 
 bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 {
-	if (m_inFunction)
+	if (m_currentFunction)
 	{
 		solAssert(_variable.isLocalVariable(), "");
 		if (_variable.name() != "")
@@ -101,9 +100,9 @@ bool StaticAnalyzer::visit(Return const& _return)
 {
 	// If the return has an expression, it counts as
 	// a "use" of the return parameters.
-	if (m_inFunction && _return.expression() != NULL)
-		for (auto const& var: m_currentFunction->returnParameterList()->parameters())
-			if (var->name() != "")
+	if (m_currentFunction && _return.expression())
+		for (auto const& var: m_currentFunction->returnParameters())
+			if (!var->name().empty())
 				m_localVarUseCount[var.get()] += 1;
 	return true;
 }

@@ -76,8 +76,7 @@ private:
 
 	std::map<VariableDeclaration const*, int> m_localVarUseCount;
 
-	const FunctionDefinition *m_currentFunction;
-	bool m_inFunction = false;
+	FunctionDefinition const* m_currentFunction = nullptr;
 };
 
 }
