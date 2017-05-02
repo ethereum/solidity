@@ -80,8 +80,11 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 void CompilerStack::reset(bool _keepSources)
 {
 	if (_keepSources)
+	{
+		m_stackState = SourcesSet;
 		for (auto sourcePair: m_sources)
 			sourcePair.second.reset();
+	}
 	else
 	{
 		m_sources.clear();
@@ -161,7 +164,7 @@ bool CompilerStack::parse()
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState < ParsingSuccessful)
+	if (m_stackState != ParsingSuccessful)
 		return false;
 	resolveImports();
 
