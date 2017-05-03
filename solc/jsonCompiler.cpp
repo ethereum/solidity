@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/Version.h>
@@ -50,15 +51,39 @@ extern "C" {
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 }
 
-string formatError(
-	Exception const& _exception,
-	string const& _name,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
-)
+ReadFile::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
 {
-	ostringstream errorOutput;
-	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _scannerFromSourceName);
-	return errorOutput.str();
+	ReadFile::Callback readCallback;
+	if (_readCallback)
+	{
+		readCallback = [=](string const& _path)
+		{
+			char* contents_c = nullptr;
+			char* error_c = nullptr;
+			_readCallback(_path.c_str(), &contents_c, &error_c);
+			ReadFile::Result result;
+			result.success = true;
+			if (!contents_c && !error_c)
+			{
+				result.success = false;
+				result.contentsOrErrorMessage = "File not found.";
+			}
+			if (contents_c)
+			{
+				result.success = true;
+				result.contentsOrErrorMessage = string(contents_c);
+				free(contents_c);
+			}
+			if (error_c)
+			{
+				result.success = false;
+				result.contentsOrErrorMessage = string(error_c);
+				free(error_c);
+			}
+			return result;
+		};
+	}
+	return readCallback;
 }
 
 Json::Value functionHashes(ContractDefinition const& _contract)
@@ -69,98 +94,52 @@ Json::Value functionHashes(ContractDefinition const& _contract)
 	return functionHashes;
 }
 
-Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
+/// Translates a gas value as a string to a JSON number or null
+Json::Value gasToJson(Json::Value const& _value)
 {
-	if (_gas.isInfinite || _gas.value > std::numeric_limits<Json::LargestUInt>::max())
+	if (_value.isObject())
+	{
+		Json::Value ret = Json::objectValue;
+		for (auto const& sig: _value.getMemberNames())
+			ret[sig] = gasToJson(_value[sig]);
+		return ret;
+	}
+
+	if (_value == "infinite")
+		return Json::Value(Json::nullValue);
+
+	u256 value(_value.asString());
+	if (value > std::numeric_limits<Json::LargestUInt>::max())
 		return Json::Value(Json::nullValue);
 	else
-		return Json::Value(Json::LargestUInt(_gas.value));
+		return Json::Value(Json::LargestUInt(value));
 }
 
 Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 {
-	Json::Value gasEstimates(Json::objectValue);
-	using Gas = GasEstimator::GasConsumption;
-	if (!_compiler.assemblyItems(_contract) && !_compiler.runtimeAssemblyItems(_contract))
-		return gasEstimates;
-	if (eth::AssemblyItems const* items = _compiler.assemblyItems(_contract))
+	Json::Value estimates = _compiler.gasEstimates(_contract);
+	Json::Value output(Json::objectValue);
+
+	if (estimates["creation"].isObject())
 	{
-		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(_compiler.runtimeObject(_contract).bytecode.size());
-		Json::Value creationGas(Json::arrayValue);
-		creationGas[0] = gasToJson(gas);
-		creationGas[1] = gasToJson(bytecodeSize * eth::GasCosts::createDataGas);
-		gasEstimates["creation"] = creationGas;
+		Json::Value creation(Json::arrayValue);
+		creation[0] = gasToJson(estimates["creation"]["executionCost"]);
+		creation[1] = gasToJson(estimates["creation"]["codeDepositCost"]);
+		output["creation"] = creation;
 	}
-	if (eth::AssemblyItems const* items = _compiler.runtimeAssemblyItems(_contract))
-	{
-		ContractDefinition const& contract = _compiler.contractDefinition(_contract);
-		Json::Value externalFunctions(Json::objectValue);
-		for (auto it: contract.interfaceFunctions())
-		{
-			string sig = it.second->externalSignature();
-			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
-		}
-		if (contract.fallbackFunction())
-			externalFunctions[""] = gasToJson(GasEstimator::functionalEstimation(*items, "INVALID"));
-		gasEstimates["external"] = externalFunctions;
-		Json::Value internalFunctions(Json::objectValue);
-		for (auto const& it: contract.definedFunctions())
-		{
-			if (it->isPartOfExternalInterface() || it->isConstructor())
-				continue;
-			size_t entry = _compiler.functionEntryPoint(_contract, *it);
-			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
-			if (entry > 0)
-				gas = GasEstimator::functionalEstimation(*items, entry, *it);
-			FunctionType type(*it);
-			string sig = it->name() + "(";
-			auto paramTypes = type.parameterTypes();
-			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
-				sig += (*it)->toString() + (it + 1 == paramTypes.end() ? "" : ",");
-			sig += ")";
-			internalFunctions[sig] = gasToJson(gas);
-		}
-		gasEstimates["internal"] = internalFunctions;
-	}
-	return gasEstimates;
+	else
+		output["creation"] = Json::objectValue;
+	output["external"] = gasToJson(estimates.get("external", Json::objectValue));
+	output["internal"] = gasToJson(estimates.get("internal", Json::objectValue));
+
+	return output;
 }
 
 string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback _readCallback)
 {
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
-	CompilerStack::ReadFileCallback readCallback;
-	if (_readCallback)
-	{
-		readCallback = [=](string const& _path)
-		{
-			char* contents_c = nullptr;
-			char* error_c = nullptr;
-			_readCallback(_path.c_str(), &contents_c, &error_c);
-			CompilerStack::ReadFileResult result;
-			result.success = true;
-			if (!contents_c && !error_c)
-			{
-				result.success = false;
-				result.contentsOrErrorMesage = "File not found.";
-			}
-			if (contents_c)
-			{
-				result.success = true;
-				result.contentsOrErrorMesage = string(contents_c);
-				free(contents_c);
-			}
-			if (error_c)
-			{
-				result.success = false;
-				result.contentsOrErrorMesage = string(error_c);
-				free(error_c);
-			}
-			return result;
-		};
-	}
-	CompilerStack compiler(readCallback);
+	CompilerStack compiler(wrapReadCallback(_readCallback));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return compiler.scanner(_sourceName); };
 	bool success = false;
 	try
@@ -170,7 +149,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		for (auto const& error: compiler.errors())
 		{
 			auto err = dynamic_pointer_cast<Error const>(error);
-			errors.append(formatError(
+			errors.append(SourceReferenceFormatter::formatExceptionInformation(
 				*error,
 				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
 				scannerFromSourceName
@@ -180,19 +159,19 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	}
 	catch (Error const& error)
 	{
-		errors.append(formatError(error, error.typeName(), scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(error, error.typeName(), scannerFromSourceName));
 	}
 	catch (CompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Internal compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Internal compiler error (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (UnimplementedFeatureError const& exception)
 	{
-		errors.append(formatError(exception, "Unimplemented feature (" + exception.lineInfo() + ")", scannerFromSourceName));
+		errors.append(SourceReferenceFormatter::formatExceptionInformation(exception, "Unimplemented feature (" + exception.lineInfo() + ")", scannerFromSourceName));
 	}
 	catch (Exception const& exception)
 	{
@@ -245,7 +224,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			{
 				Json::Value errors(Json::arrayValue);
 				for (auto const& error: formalErrors)
-					errors.append(formatError(
+					errors.append(SourceReferenceFormatter::formatExceptionInformation(
 						*error,
 						(error->type() == Error::Type::Warning) ? "Warning" : "Error",
 						scannerFromSourceName
@@ -314,6 +293,13 @@ string compileSingle(string const& _input, bool _optimize)
 	return compile(sources, _optimize, nullptr);
 }
 
+
+string compileStandardInternal(string const& _input, CStyleReadFileCallback _readCallback = nullptr)
+{
+	StandardCompiler compiler(wrapReadCallback(_readCallback));
+	return compiler.compile(_input);
+}
+
 static string s_outputBuffer;
 
 extern "C"
@@ -335,6 +321,11 @@ extern char const* compileJSONMulti(char const* _input, bool _optimize)
 extern char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback)
 {
 	s_outputBuffer = compileMulti(_input, _optimize, _readCallback);
+	return s_outputBuffer.c_str();
+}
+extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback)
+{
+	s_outputBuffer = compileStandardInternal(_input, _readCallback);
 	return s_outputBuffer.c_str();
 }
 }

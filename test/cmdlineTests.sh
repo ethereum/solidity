@@ -31,7 +31,10 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 SOLC="$REPO_ROOT/build/solc/solc"
 
-# Compile all files in std and examples.
+echo "Checking that the bug list is up to date..."
+"$REPO_ROOT"/scripts/update_bugs_by_version.py
+
+echo "Compiling all files in std and examples..."
 
 for f in "$REPO_ROOT"/std/*.sol
 do
@@ -73,10 +76,10 @@ TMPDIR=$(mktemp -d)
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
     cd "$TMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/contracts/* "$REPO_ROOT"/test/libsolidity/*EndToEnd*
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     for f in *.sol
     do
-        "$REPO_ROOT"/build/test/solfuzzer < "$f"
+        "$REPO_ROOT"/build/test/solfuzzer --quiet < "$f"
     done
 )
 rm -rf "$TMPDIR"

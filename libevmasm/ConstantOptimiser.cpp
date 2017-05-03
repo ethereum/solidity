@@ -203,8 +203,13 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			u256 powerOfTwo = u256(1) << bits;
 			u256 upperPart = _value >> bits;
 			bigint lowerPart = _value & (powerOfTwo - 1);
-			if (abs(powerOfTwo - lowerPart) < lowerPart)
+			if ((powerOfTwo - lowerPart) < lowerPart)
+			{
 				lowerPart = lowerPart - powerOfTwo; // make it negative
+				upperPart++;
+			}
+			if (upperPart == 0)
+				continue;
 			if (abs(lowerPart) >= (powerOfTwo >> 8))
 				continue;
 
@@ -212,7 +217,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (lowerPart != 0)
 				newRoutine += findRepresentation(u256(abs(lowerPart)));
 			newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
-			if (upperPart != 1 && upperPart != 0)
+			if (upperPart != 1)
 				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
@@ -230,6 +235,54 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 		}
 		return routine;
 	}
+}
+
+bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine)
+{
+	// This is a tiny EVM that can only evaluate some instructions.
+	vector<u256> stack;
+	for (AssemblyItem const& item: _routine)
+	{
+		switch (item.type())
+		{
+		case Operation:
+		{
+			if (stack.size() < size_t(item.arguments()))
+				return false;
+			u256* sp = &stack.back();
+			switch (item.instruction())
+			{
+			case Instruction::MUL:
+				sp[-1] = sp[0] * sp[-1];
+				break;
+			case Instruction::EXP:
+				if (sp[-1] > 0xff)
+					return false;
+				sp[-1] = boost::multiprecision::pow(sp[0], unsigned(sp[-1]));
+				break;
+			case Instruction::ADD:
+				sp[-1] = sp[0] + sp[-1];
+				break;
+			case Instruction::SUB:
+				sp[-1] = sp[0] - sp[-1];
+				break;
+			case Instruction::NOT:
+				sp[0] = ~sp[0];
+				break;
+			default:
+				return false;
+			}
+			stack.resize(stack.size() + item.deposit());
+			break;
+		}
+		case Push:
+			stack.push_back(item.data());
+			break;
+		default:
+			return false;
+		}
+	}
+	return stack.size() == 1 && stack.front() == _value;
 }
 
 bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine)

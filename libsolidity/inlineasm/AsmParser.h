@@ -37,7 +37,7 @@ namespace assembly
 class Parser: public ParserBase
 {
 public:
-	Parser(ErrorList& _errors): ParserBase(_errors) {}
+	explicit Parser(ErrorList& _errors, bool _julia = false): ParserBase(_errors), m_julia(_julia) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.
@@ -70,6 +70,9 @@ protected:
 	FunctionDefinition parseFunctionDefinition();
 	Statement parseFunctionalInstruction(Statement&& _instruction);
 	std::string expectAsmIdentifier();
+
+private:
+	bool m_julia = false;
 };
 
 }

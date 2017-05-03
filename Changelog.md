@@ -1,3 +1,27 @@
+### 0.4.11 (2017-05-03)
+
+Features:
+ * Implement the Standard JSON Input / Output API
+ * Support ``interface`` contracts.
+ * C API (``jsonCompiler``): Add the ``compileStandard()`` method to process a Standard JSON I/O.
+ * Commandline interface: Add the ``--standard-json`` parameter to process a Standard JSON I/O.
+ * Commandline interface: Support ``--allow-paths`` to define trusted import paths. Note: the
+   path(s) of the supplied source file(s) is always trusted.
+ * Inline Assembly: Storage variable access using ``_slot`` and ``_offset`` suffixes.
+ * Inline Assembly: Disallow blocks with unbalanced stack.
+ * Static analyzer: Warn about statements without effects.
+ * Static analyzer: Warn about unused local variables, parameters, and return parameters.
+ * Syntax checker: issue deprecation warning for unary '+'
+
+Bugfixes:
+ * Assembly output: Implement missing AssemblyItem types.
+ * Compiler interface: Fix a bug where source indexes could be inconsistent between Solidity compiled
+   with different compilers (clang vs. gcc) or compiler settings. The bug was visible in AST
+   and source mappings.
+ * Gas Estimator: Reflect the most recent fee schedule.
+ * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
+ * Optimizer: Number representation bug in the constant optimizer fixed.
+
 ### 0.4.10 (2017-03-15)
 
 Features:

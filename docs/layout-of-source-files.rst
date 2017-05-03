@@ -7,6 +7,8 @@ and pragma directives.
 
 .. index:: ! pragma, version
 
+.. _version_pragma:
+
 Version Pragma
 ==============
 
@@ -24,7 +26,7 @@ The version pragma is used as follows::
   pragma solidity ^0.4.0;
 
 Such a source file will not compile with a compiler earlier than version 0.4.0
-and it will also not work on a compiler starting form version 0.5.0 (this
+and it will also not work on a compiler starting from version 0.5.0 (this
 second condition is added by using ``^``). The idea behind this is that
 there will be no breaking changes until version ``0.5.0``, so we can always
 be sure that our code will compile the way we intended it to. We do not fix
@@ -151,9 +153,9 @@ remapping ``=/``.
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
 
-**browser-solidity**:
+**Remix**:
 
-The `browser-based compiler <https://ethereum.github.io/browser-solidity>`_
+`Remix <https://remix.ethereum.org/>`_
 provides an automatic remapping for github and will also automatically retrieve
 the file over the network:
 You can import the iterable mapping by e.g.

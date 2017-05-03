@@ -7,38 +7,42 @@
 # scripts/isolate_tests.py test/libsolidity/*
 
 import sys
-
+import re
+import os
+import hashlib
+from os.path import join
 
 def extract_cases(path):
-    lines = open(path).read().splitlines()
+    lines = open(path, 'rb').read().splitlines()
 
     inside = False
+    delimiter = ''
     tests = []
 
     for l in lines:
       if inside:
-        if l.strip().endswith(')";'):
+        if l.strip().endswith(')' + delimiter + '";'):
           inside = False
         else:
           tests[-1] += l + '\n'
       else:
-        if l.strip().endswith('R"('):
+        m = re.search(r'R"([^(]*)\($', l.strip())
+        if m:
           inside = True
+          delimiter = m.group(1)
           tests += ['']
 
     return tests
 
 
-def write_cases(tests, start=0):
-    for i, test in enumerate(tests, start=start):
-        open('test%d.sol' % i, 'w').write(test)
-
+def write_cases(tests):
+    for test in tests:
+        open('test_%s.sol' % hashlib.sha256(test).hexdigest(), 'wb').write(test)
 
 if __name__ == '__main__':
-    files = sys.argv[1:]
+    path = sys.argv[1]
 
-    i = 0
-    for path in files:
-        cases = extract_cases(path)
-        write_cases(cases, start=i)
-        i += len(cases)
+    for root, dir, files in os.walk(path):
+        for f in files:
+            cases = extract_cases(join(root, f))
+            write_cases(cases)

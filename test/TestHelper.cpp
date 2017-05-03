@@ -43,8 +43,10 @@ Options::Options()
 			optimize = true;
 		else if (string(suite.argv[i]) == "--show-messages")
 			showMessages = true;
+		else if (string(suite.argv[i]) == "--no-ipc")
+			disableIPC = true;
 
-	if (ipcPath.empty())
+	if (!disableIPC && ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;
 }

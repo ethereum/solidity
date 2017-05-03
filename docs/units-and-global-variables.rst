@@ -22,8 +22,8 @@ unit and units are considered naively in the following way:
  * ``1 minutes == 60 seconds``
  * ``1 hours == 60 minutes``
  * ``1 days == 24 hours``
- * ``1 weeks = 7 days``
- * ``1 years = 365 days``
+ * ``1 weeks == 7 days``
+ * ``1 years == 365 days``
 
 Take care if you perform calendar calculations using these units, because
 not every year equals 365 days and not even every day has 24 hours
@@ -93,13 +93,14 @@ Mathematical and Cryptographic Functions
 ``keccak256(...) returns (bytes32)``:
     compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
 ``sha3(...) returns (bytes32)``:
-    alias to `keccak256()`
+    alias to ``keccak256()``
 ``sha256(...) returns (bytes32)``:
     compute the SHA-256 hash of the (tightly packed) arguments
 ``ripemd160(...) returns (bytes20)``:
     compute RIPEMD-160 hash of the (tightly packed) arguments
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
+    (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
 ``revert()``:
     abort execution and revert state changes
 
@@ -128,17 +129,23 @@ Address Related
 
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
-``<address>.send(uint256 amount) returns (bool)``:
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure
 ``<address>.transfer(uint256 amount)``:
     send given amount of Wei to :ref:`address`, throws on failure
+``<address>.send(uint256 amount) returns (bool)``:
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure
+``<address>.call(...) returns (bool)``:
+    issue low-level ``CALL``, returns ``false`` on failure
+``<address>.callcode(...) returns (bool)``:
+    issue low-level ``CALLCODE``, returns ``false`` on failure
+``<address>.delegatecall(...) returns (bool)``:
+    issue low-level ``DELEGATECALL``, returns ``false`` on failure
 
 For more information, see the section on :ref:`address`.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     Use a pattern where the recipient withdraws the money.
 
 .. index:: this, selfdestruct

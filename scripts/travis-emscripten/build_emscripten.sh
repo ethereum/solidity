@@ -94,6 +94,8 @@ emmake make -j 4
 
 cd ..
 cp build/solc/soljson.js ./
+mkdir -p upload
+cp soljson.js upload/
 
 OUTPUT_SIZE=`ls -la build/solc/soljson.js`
 

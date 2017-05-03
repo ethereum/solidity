@@ -29,20 +29,20 @@ files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
+For security reasons the compiler has restrictions what directories it can access. Paths (and their subdirectories) of source files specified on the commandline and paths defined by remappings are allowed for import statements, but everything else is rejected. Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
+
 If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__LibraryName______``. You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
 
 Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
+If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output.
+
 .. _compiler-api:
 
 Compiler Input and Output JSON Description
 ******************************************
-
-.. warning::
-
-    This JSON interface is not yet supported by the Solidity compiler, but will be released in a future version.
 
 These JSON formats are used by the compiler API as well as are available through ``solc``. These are subject to change,
 some fields are optional (as noted), but it is aimed at to only make backwards compatible changes.
@@ -119,22 +119,27 @@ Input Description
         //
         // The available output types are as follows:
         //   abi - ABI
-        //   ast - AST of all source files
-        //   why3 - Why3 translated output
+        //   ast - AST of all source files (not supported atm)
+        //   legacyAST - legacy AST of all source files
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
-        //   evm.ir - New assembly format before desugaring
+        //   ir - New assembly format before desugaring
         //   evm.assembly - New assembly format after desugaring
-        //   evm.legacyAssemblyJSON - Old-style assembly format in JSON
-        //   evm.opcodes - Opcodes list
+        //   evm.legacyAssembly - Old-style assembly format in JSON
+        //   evm.bytecode.object - Bytecode object
+        //   evm.bytecode.opcodes - Opcodes list
+        //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
+        //   evm.bytecode.linkReferences - Link references (if unlinked object)
+        //   evm.deployedBytecode* - Deployed bytecode (has the same options as evm.bytecode)
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   evm.bytecode - Bytecode
-        //   evm.deployedBytecode - Deployed bytecode
-        //   evm.sourceMap - Source mapping (useful for debugging)
         //   ewasm.wast - eWASM S-expressions format (not supported atm)
         //   ewasm.wasm - eWASM binary format (not supported atm)
+        //
+        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
+        // target part of that output.
+        //
         outputSelection: {
           // Enable the metadata and bytecode outputs of every single contract.
           "*": {
@@ -148,9 +153,9 @@ Input Description
           "*": {
             "*": [ "evm.sourceMap" ]
           },
-          // Enable the AST and Why3 output of every single file.
+          // Enable the legacy AST output of every single file.
           "*": {
-            "": [ "ast", "why3" ]
+            "": [ "legacyAST" ]
           }
         }
       }
@@ -174,12 +179,14 @@ Output Description
           ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
           type: "TypeError",
-          // Mandatory: Component where the error originated, such as "general", "why3", "ewasm", etc.
+          // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
           component: "general",
           // Mandatory ("error" or "warning")
           severity: "error",
           // Mandatory
           message: "Invalid keyword"
+          // Optional: the message formatted with source location
+          formattedMessage: "sourceFile.sol:100: Invalid keyword"
         }
       ],
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
@@ -188,7 +195,9 @@ Output Description
           // Identifier (used in source maps)
           id: 1,
           // The AST object
-          ast: {}
+          ast: {},
+          // The legacy AST object
+          legacyAST: {}
         }
       },
       // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
@@ -199,17 +208,26 @@ Output Description
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
             abi: [],
+            // See the Metadata Output documentation (serialised JSON string)
+            metadata: "{...}",
+            // User documentation (natspec)
+            userdoc: {},
+            // Developer documentation (natspec)
+            devdoc: {},
+            // Intermediate representation (string)
+            ir: "",
+            // EVM-related outputs
             evm: {
-              // Intermediate representation (string)
-              ir: "",
               // Assembly (string)
               assembly: "",
-              // Old-style assembly (string)
-              legacyAssemblyJSON: [],
+              // Old-style assembly (object)
+              legacyAssembly: {},
               // Bytecode and related details.
               bytecode: {
                 // The bytecode as a hex string.
                 object: "00fe",
+                // Opcodes list (string)
+                opcodes: "",
                 // The source mapping as a string. See the source mapping definition.
                 sourceMap: "",
                 // If given, this is an unlinked object.
@@ -222,45 +240,36 @@ Output Description
                     ]
                   }
                 }
-              }
+              },
               // The same layout as above.
               deployedBytecode: { },
-              // Opcodes list (string)
-              opcodes: "",
               // The list of function hashes
               methodIdentifiers: {
-                "5c19a95c": "delegate(address)",
+                "delegate(address)": "5c19a95c"
               },
               // Function gas estimates
               gasEstimates: {
                 creation: {
-                  dataCost: 420000,
-                  // -1 means infinite (aka. unknown)
-                  executionCost: -1
+                  codeDepositCost: "420000",
+                  executionCost: "infinite",
+                  totalCost: "infinite"
                 },
                 external: {
-                  "delegate(address)": 25000
+                  "delegate(address)": "25000"
                 },
                 internal: {
-                  "heavyLifting()": -1
+                  "heavyLifting()": "infinite"
                 }
               }
             },
-            // See the Metadata Output documentation
-            metadata: {},
+            // eWASM related outputs
             ewasm: {
               // S-expressions format
               wast: "",
               // Binary format (hex string)
               wasm: ""
-            },
-            // User documentation (natspec)
-            userdoc: {},
-            // Developer documentation (natspec)
-            devdoc: {}
+            }
           }
         }
-      },
-      // Why3 output (string)
-      why3: ""
+      }
     }

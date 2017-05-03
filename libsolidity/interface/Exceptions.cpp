@@ -33,22 +33,22 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 	switch(m_type)
 	{
 	case Type::DeclarationError:
-		m_typeName = "Declaration Error";
+		m_typeName = "DeclarationError";
 		break;
 	case Type::DocstringParsingError:
-		m_typeName = "Docstring Parsing Error";
+		m_typeName = "DocstringParsingError";
 		break;
 	case Type::ParserError:
-		m_typeName = "Parser Error";
+		m_typeName = "ParserError";
 		break;
 	case Type::SyntaxError:
-		m_typeName = "Syntax Error";
+		m_typeName = "SyntaxError";
 		break;
 	case Type::TypeError:
-		m_typeName = "Type Error";
+		m_typeName = "TypeError";
 		break;
 	case Type::Why3TranslatorError:
-		m_typeName = "Why3 Translator Error";
+		m_typeName = "Why3TranslatorError";
 		break;
 	case Type::Warning:
 		m_typeName = "Warning";

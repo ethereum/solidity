@@ -146,7 +146,7 @@ single account.
 
 The line ``event Sent(address from, address to, uint amount);`` declares
 a so-called "event" which is fired in the last line of the function
-``send``. User interfaces (as well as server appliances of course) can
+``send``. User interfaces (as well as server applications of course) can
 listen for those events being fired on the blockchain without much
 cost. As soon as it is fired, the listener will also receive the
 arguments ``from``, ``to`` and ``amount``, which makes it easy to track
@@ -161,7 +161,7 @@ transactions. In order to listen for this event, you would use ::
                 "Sender: " + Coin.balances.call(result.args.from) +
                 "Receiver: " + Coin.balances.call(result.args.to));
         }
-    }
+    })
 
 Note how the automatically generated function ``balances`` is called from
 the user interface.

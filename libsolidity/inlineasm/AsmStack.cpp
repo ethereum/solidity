@@ -26,6 +26,7 @@
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libsolidity/parsing/Scanner.h>
 
@@ -39,7 +40,10 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
+bool InlineAssemblyStack::parse(
+	shared_ptr<Scanner> const& _scanner,
+	ExternalIdentifierAccess::Resolver const& _resolver
+)
 {
 	m_parserResult = make_shared<Block>();
 	Parser parser(m_errors);
@@ -48,8 +52,8 @@ bool InlineAssemblyStack::parse(shared_ptr<Scanner> const& _scanner)
 		return false;
 
 	*m_parserResult = std::move(*result);
-	AsmAnalyzer::Scopes scopes;
-	return (AsmAnalyzer(scopes, m_errors))(*m_parserResult);
+	AsmAnalysisInfo analysisInfo;
+	return (AsmAnalyzer(analysisInfo, m_errors, _resolver)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
@@ -59,14 +63,17 @@ string InlineAssemblyStack::toString()
 
 eth::Assembly InlineAssemblyStack::assemble()
 {
-	CodeGenerator codeGen(*m_parserResult, m_errors);
-	return codeGen.assemble();
+	AsmAnalysisInfo analysisInfo;
+	AsmAnalyzer analyzer(analysisInfo, m_errors);
+	solAssert(analyzer.analyze(*m_parserResult), "");
+	CodeGenerator codeGen(m_errors);
+	return codeGen.assemble(*m_parserResult, analysisInfo);
 }
 
 bool InlineAssemblyStack::parseAndAssemble(
 	string const& _input,
 	eth::Assembly& _assembly,
-	CodeGenerator::IdentifierAccess const& _identifierAccess
+	ExternalIdentifierAccess const& _identifierAccess
 )
 {
 	ErrorList errors;
@@ -74,8 +81,12 @@ bool InlineAssemblyStack::parseAndAssemble(
 	auto parserResult = Parser(errors).parse(scanner);
 	if (!errors.empty())
 		return false;
+	solAssert(parserResult, "");
 
-	CodeGenerator(*parserResult, errors).assemble(_assembly, _identifierAccess);
+	AsmAnalysisInfo analysisInfo;
+	AsmAnalyzer analyzer(analysisInfo, errors, _identifierAccess.resolve);
+	solAssert(analyzer.analyze(*parserResult), "");
+	CodeGenerator(errors).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.

@@ -157,6 +157,7 @@ namespace solidity
 	K(Hex, "hex", 0)                                                   \
 	K(If, "if", 0)                                                     \
 	K(Indexed, "indexed", 0)                                           \
+	K(Interface, "interface", 0)                                       \
 	K(Internal, "internal", 0)                                         \
 	K(Import, "import", 0)                                             \
 	K(Is, "is", 0)                                                     \
@@ -225,7 +226,6 @@ namespace solidity
 	K(Final, "final", 0)                                               \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
-	K(Interface, "interface", 0)                                       \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(NullLiteral, "null", 0)                                          \

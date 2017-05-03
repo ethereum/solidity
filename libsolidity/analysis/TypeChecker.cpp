@@ -24,8 +24,9 @@
 #include <memory>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
-#include <libevmasm/Assembly.h> // needed for inline assembly
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
 using namespace std;
 using namespace dev;
@@ -64,8 +65,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_scope = &_contract;
 
-	// We force our own visiting order here.
-	//@TODO structs will be visited again below, but it is probably fine.
+	// We force our own visiting order here. The structs have to be excluded below.
+	set<ASTNode const*> visited;
+	for (auto const& s: _contract.definedStructs())
+		visited.insert(s);
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -113,7 +116,9 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			_contract.annotation().isFullyImplemented = false;
 	}
 
-	ASTNode::listAccept(_contract.subNodes(), *this);
+	for (auto const& n: _contract.subNodes())
+		if (!visited.count(n.get()))
+			n->accept(*this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
@@ -183,13 +188,20 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
 	map<string, vector<FunTypeAndFlag>> functions;
 
+	bool allBaseConstructorsImplemented = true;
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			// Take constructors out of overload hierarchy
 			if (function->isConstructor())
+			{
+				if (!function->isImplemented())
+					// Base contract's constructor is not fully implemented, no way to get
+					// out of this.
+					allBaseConstructorsImplemented = false;
 				continue;
+			}
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
@@ -206,6 +218,9 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			else if (function->isImplemented())
 				it->second = true;
 		}
+
+	if (!allBaseConstructorsImplemented)
+		_contract.annotation().isFullyImplemented = false;
 
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
@@ -354,6 +369,9 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_inheritance.location(), "Interfaces cannot inherit.");
+
 	if (base->isLibrary())
 		typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
@@ -396,6 +414,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 bool TypeChecker::visit(StructDefinition const& _struct)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_struct.location(), "Structs cannot be defined in interfaces.");
+
 	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		if (!type(*member)->canBeStored())
 			typeError(member->location(), "Type cannot be used in struct.");
@@ -451,6 +472,15 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
 			vector<ContractDefinition const*>()
 		);
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	{
+		if (_function.isImplemented())
+			typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
+		if (_function.visibility() < FunctionDefinition::Visibility::Public)
+			typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+		if (_function.isConstructor())
+			typeError(_function.location(), "Constructor cannot be defined in interfaces.");
+	}
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	return false;
@@ -458,6 +488,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_variable.location(), "Variables cannot be declared in interfaces.");
+
 	// Variables can be declared without type (with "var"), in which case the first assignment
 	// sets the type.
 	// Note that assignments before the first declaration are legal because of the special scoping
@@ -501,6 +534,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		!FunctionType(_variable).interfaceFunctionType()
 	)
 		typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+	return false;
+}
+
+bool TypeChecker::visit(EnumDefinition const& _enum)
+{
+	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+		typeError(_enum.location(), "Enumerable cannot be declared in interfaces.");
 	return false;
 }
 
@@ -582,72 +622,98 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
-	if (fun.location() == FunctionType::Location::External)
+	if (fun.kind() == FunctionType::Kind::External)
 		if (!fun.canBeUsedExternally(false))
 			typeError(_funType.location(), "External function type uses internal types.");
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
-	// Inline assembly does not have its own type-checking phase, so we just run the
-	// code-generator and see whether it produces any errors.
 	// External references have already been resolved in a prior stage and stored in the annotation.
-	auto identifierAccess = [&](
+	// We run the resolve step again regardless.
+	assembly::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		eth::Assembly& _assembly,
-		assembly::CodeGenerator::IdentifierContext _context
+		assembly::IdentifierContext _context
 	)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
-			return false;
-		Declaration const* declaration = ref->second;
+			return size_t(-1);
+		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
-		if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
+		{
+			if (ref->second.isSlot || ref->second.isOffset)
+			{
+				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+				{
+					typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+					return size_t(-1);
+				}
+				else if (_context != assembly::IdentifierContext::RValue)
+				{
+					typeError(_identifier.location, "Storage variables cannot be assigned to.");
+					return size_t(-1);
+				}
+			}
+			else if (var->isConstant())
+			{
+				typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
+			else if (!var->isLocalVariable())
+			{
+				typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
+				return size_t(-1);
+			}
+			else if (var->type()->dataStoredIn(DataLocation::Storage))
+			{
+				typeError(_identifier.location, "You have to use the _slot or _offset prefix to access storage reference variables.");
+				return size_t(-1);
+			}
+			else if (var->type()->sizeOnStack() != 1)
+			{
+				typeError(_identifier.location, "Only types that use one stack slot are supported.");
+				return size_t(-1);
+			}
+		}
+		else if (_context == assembly::IdentifierContext::LValue)
+		{
+			typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
+			return size_t(-1);
+		}
+
+		if (_context == assembly::IdentifierContext::RValue)
 		{
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
-			unsigned pushes = 0;
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
-				pushes = 1;
-			else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 			{
-				if (var->isConstant())
-					fatalTypeError(SourceLocation(), "Constant variables not yet implemented for inline assembly.");
-				if (var->isLocalVariable())
-					pushes = var->type()->sizeOnStack();
-				else if (!var->type()->isValueType())
-					pushes = 1;
-				else
-					pushes = 2; // slot number, intra slot offset
+			}
+			else if (dynamic_cast<VariableDeclaration const*>(declaration))
+			{
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 			{
 				if (!contract->isLibrary())
-					return false;
-				pushes = 1;
+				{
+					typeError(_identifier.location, "Expected a library.");
+					return size_t(-1);
+				}
 			}
 			else
-				return false;
-			for (unsigned i = 0; i < pushes; ++i)
-				_assembly.append(u256(0)); // just to verify the stack height
+				return size_t(-1);
 		}
-		else
-		{
-			// lvalue context
-			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-			{
-				if (!varDecl->isLocalVariable())
-					return false; // only local variables are inline-assemlby lvalues
-				for (unsigned i = 0; i < declaration->type()->sizeOnStack(); ++i)
-					_assembly.append(Instruction::POP); // remove value just to verify the stack height
-			}
-			else
-				return false;
-		}
-		return true;
+		ref->second.valueSize = 1;
+		return size_t(1);
 	};
-	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), m_errors);
-	if (!codeGen.typeCheck(identifierAccess))
+	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
+	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+	assembly::AsmAnalyzer analyzer(
+		*_inlineAssembly.annotation().analysisInfo,
+		m_errors,
+		identifierAccess
+	);
+	if (!analyzer.analyze(_inlineAssembly.operations()))
 		return false;
 	return true;
 }
@@ -886,15 +952,14 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 	{
 		if (auto callType = dynamic_cast<FunctionType const*>(type(call->expression()).get()))
 		{
-			using Location = FunctionType::Location;
-			Location location = callType->location();
+			auto kind = callType->kind();
 			if (
-				location == Location::Bare ||
-				location == Location::BareCallCode ||
-				location == Location::BareDelegateCall
+				kind == FunctionType::Kind::Bare ||
+				kind == FunctionType::Kind::BareCallCode ||
+				kind == FunctionType::Kind::BareDelegateCall
 			)
 				warning(_statement.location(), "Return value of low-level calls not used.");
-			else if (location == Location::Send)
+			else if (kind == FunctionType::Kind::Send)
 				warning(_statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 		}
 	}
@@ -1387,7 +1452,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			TypePointers{type},
 			strings(),
 			strings(),
-			FunctionType::Location::ObjectCreation
+			FunctionType::Kind::ObjectCreation
 		);
 		_newExpression.annotation().isPure = true;
 	}
@@ -1636,8 +1701,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
 		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
-		if (auto functionType = dynamic_cast<FunctionType const*>(annotation.type.get()))
-			annotation.isPure = functionType->isPure();
+		if (dynamic_cast<FunctionType const*>(annotation.type.get()))
+			annotation.isPure = true;
 	return false;
 }
 

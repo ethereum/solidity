@@ -68,7 +68,7 @@ private:
 	int m_socket;
 	/// Socket read timeout in milliseconds. Needs to be large because the key generation routine
 	/// might take long.
-	unsigned static constexpr m_readTimeOutMS = 15000;
+	unsigned static constexpr m_readTimeOutMS = 300000;
 	char m_readBuf[512000];
 };
 #endif
@@ -133,7 +133,7 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_maxMiningTime = 15000; // 15 seconds
+	unsigned m_maxMiningTime = 6000000; // 600 seconds
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 

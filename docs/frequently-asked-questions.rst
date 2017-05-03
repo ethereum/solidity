@@ -68,7 +68,7 @@ creator. Save it. Then ``selfdestruct(creator);`` to kill and return funds.
 
 Note that if you ``import "mortal"`` at the top of your contracts and declare
 ``contract SomeContract is mortal { ...`` and compile with a compiler that already
-has it (which includes `browser-solidity <https://ethereum.github.io/browser-solidity/>`_), then
+has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``kill()`` is taken care of for you. Once a contract is "mortal", then you can
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
@@ -665,8 +665,7 @@ What does the following strange check do in the Custom Token contract?
 
 ::
 
-    if (balanceOf[_to] + _value < balanceOf[_to])
-        throw;
+    require((balanceOf[_to] + _value) >= balanceOf[_to]);
 
 Integers in Solidity (and most other machine-related programming languages) are restricted to a certain range.
 For ``uint256``, this is ``0`` up to ``2**256 - 1``. If the result of some operation on those numbers

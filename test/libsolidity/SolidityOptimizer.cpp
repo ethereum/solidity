@@ -74,16 +74,17 @@ public:
 	void compileBothVersions(
 		std::string const& _sourceCode,
 		u256 const& _value = 0,
-		std::string const& _contractName = ""
+		std::string const& _contractName = "",
+		unsigned const _optimizeRuns = 200
 	)
 	{
-		bytes nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false);
+		bytes nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false, _optimizeRuns);
 		m_nonOptimizedContract = m_contractAddress;
-		bytes optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true);
+		bytes optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true, _optimizeRuns);
 		size_t nonOptimizedSize = numInstructions(nonOptimizedBytecode);
 		size_t optimizedSize = numInstructions(optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
-			optimizedSize < nonOptimizedSize,
+			_optimizeRuns < 50 || optimizedSize < nonOptimizedSize,
 			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
 			std::to_string(nonOptimizedSize) + " - optimized size: " +
 			std::to_string(optimizedSize)
@@ -1191,31 +1192,42 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 BOOST_AUTO_TEST_CASE(computing_constants)
 {
 	char const* sourceCode = R"(
-		contract c {
-			uint a;
-			uint b;
-			uint c;
-			function set() returns (uint a, uint b, uint c) {
-				a = 0x77abc0000000000000000000000000000000000000000000000000000000001;
-				b = 0x817416927846239487123469187231298734162934871263941234127518276;
+		contract C {
+			uint m_a;
+			uint m_b;
+			uint m_c;
+			uint m_d;
+			function C() {
+				set();
+			}
+			function set() returns (uint) {
+				m_a = 0x77abc0000000000000000000000000000000000000000000000000000000001;
+				m_b = 0x817416927846239487123469187231298734162934871263941234127518276;
 				g();
+				return 1;
 			}
 			function g() {
-				b = 0x817416927846239487123469187231298734162934871263941234127518276;
-				c = 0x817416927846239487123469187231298734162934871263941234127518276;
+				m_b = 0x817416927846239487123469187231298734162934871263941234127518276;
+				m_c = 0x817416927846239487123469187231298734162934871263941234127518276;
+				h();
 			}
-			function get() returns (uint ra, uint rb, uint rc) {
-				ra = a;
-				rb = b;
-				rc = c ;
+			function h() {
+				m_d = 0xff05694900000000000000000000000000000000000000000000000000000000;
+			}
+			function get() returns (uint ra, uint rb, uint rc, uint rd) {
+				ra = m_a;
+				rb = m_b;
+				rc = m_c;
+				rd = m_d;
 			}
 		}
 	)";
-	compileBothVersions(sourceCode);
+	compileBothVersions(sourceCode, 0, "C", 1);
+	compareVersions("get()");
 	compareVersions("set()");
 	compareVersions("get()");
 
-	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true, 1);
+	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "C", true, 1);
 	bytes complicatedConstant = toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
 	unsigned occurrences = 0;
 	for (auto iter = optimizedBytecode.cbegin(); iter < optimizedBytecode.cend(); ++occurrences)

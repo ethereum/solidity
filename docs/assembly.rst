@@ -11,7 +11,7 @@ differs from standalone assembly and then specify assembly itself.
 
 TODO: Write about how scoping rules of inline assembly are a bit different
 and the complications that arise when for example using internal functions
-of libraries. Furhermore, write about the symbols defined by the compiler.
+of libraries. Furthermore, write about the symbols defined by the compiler.
 
 Inline Assembly
 ===============
@@ -29,7 +29,7 @@ arising when writing manual assembly by the following features:
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
 * switch statements: ``switch x case 0: { y := mul(x, 2) } default: { y := 0 }``
-* function calls: ``function f(x) -> (y) { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
+* function calls: ``function f(x) -> y { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
 
 .. note::
     Of the above, loops, function calls and switch statements are not yet implemented.
@@ -323,9 +323,12 @@ Access to External Variables and Functions
 ------------------------------------------
 
 Solidity variables and other identifiers can be accessed by simply using their name.
-For storage and memory variables, this will push the address and not the value onto the
-stack. Also note that non-struct and non-array storage variable addresses occupy two slots
-on the stack: One for the address and one for the byte offset inside the storage slot.
+For memory variables, this will push the address and not the value onto the
+stack. Storage variables are different: Values in storage might not occupy a
+full storage slot, so their "address" is composed of a slot and a byte-offset
+inside that slot. To retrieve the slot pointed to by the variable ``x``, you
+used ``x_slot`` and to retrieve the byte-offset you used ``x_offset``.
+
 In assignments (see below), we can even use local Solidity variables to assign to.
 
 Functions external to inline assembly can also be accessed: The assembly will
@@ -340,17 +343,13 @@ changes during the call, and thus references to local variables will be wrong.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract C {
         uint b;
         function f(uint x) returns (uint r) {
             assembly {
-                b pop // remove the offset, we know it is zero
-                sload
-                x
-                mul
-                =: r  // assign to return variable r
+                r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
             }
         }
     }
@@ -567,7 +566,7 @@ The following example implements the power function by square-and-multiply.
 .. code::
 
     assembly {
-        function power(base, exponent) -> (result) {
+        function power(base, exponent) -> result {
             switch exponent
             0: { result := 1 }
             1: { result := base }
@@ -702,12 +701,12 @@ The following assembly will be generated::
       }
       default: { jump(invalidJumpLabel) }
       // memory allocator
-      function $allocate(size) -> (pos) {
+      function $allocate(size) -> pos {
         pos := mload(0x40)
         mstore(0x40, add(pos, size))
       }
       // the contract function
-      function f(x) -> (y) {
+      function f(x) -> y {
         y := 1
         for { let i := 0 } lt(i, x) { i := add(i, 1) } {
           y := mul(2, y)

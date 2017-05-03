@@ -36,6 +36,7 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ReadFile.h>
 
 namespace dev
 {
@@ -77,18 +78,10 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
-	struct ReadFileResult
-	{
-		bool success;
-		std::string contentsOrErrorMesage;
-	};
-
-	/// File reading callback.
-	using ReadFileCallback = std::function<ReadFileResult(std::string const&)>;
-
 	/// Creates a new compiler stack.
-	/// @param _readFile callback to used to read files for import statements. Should return
-	explicit CompilerStack(ReadFileCallback const& _readFile = ReadFileCallback());
+	/// @param _readFile callback to used to read files for import statements. Must return
+	/// and must not emit exceptions.
+	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback());
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
@@ -110,6 +103,16 @@ public:
 	/// Sets the given source code as the only source unit apart from standard sources and parses it.
 	/// @returns false on error.
 	bool parse(std::string const& _sourceCode);
+	/// performs the analyisis steps (imports, scopesetting, syntaxCheck, referenceResolving,
+	///  typechecking, staticAnalysis) on previously set sources
+	/// @returns false on error.
+	bool analyze();
+	/// Parses and analyzes all source units that were added
+	/// @returns false on error.
+	bool parseAndAnalyze();
+	/// Sets the given source code as the only source unit apart from standard sources and parses and analyzes it.
+	/// @returns false on error.
+	bool parseAndAnalyze(std::string const& _sourceCode);
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 	std::string defaultContractName() const;
@@ -181,6 +184,9 @@ public:
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
+	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
+	Json::Value gasEstimates(std::string const& _contractName) const;
+
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
@@ -230,6 +236,13 @@ private:
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
+	enum State {
+		Empty,
+		SourcesSet,
+		ParsingSuccessful,
+		AnalysisSuccessful,
+		CompilationSuccessful
+	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
@@ -263,14 +276,13 @@ private:
 		std::string target;
 	};
 
-	ReadFileCallback m_readFile;
+	ReadFile::Callback m_readFile;
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
-	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
@@ -279,6 +291,7 @@ private:
 	std::string m_formalTranslation;
 	ErrorList m_errors;
 	bool m_metadataLiteralSources = false;
+	State m_stackState = Empty;
 };
 
 }

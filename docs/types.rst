@@ -64,6 +64,12 @@ expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
 equivalent to ``x / 2**y``. This means that shifting negative numbers
 sign extends. Shifting by a negative amount throws a runtime exception.
 
+.. warning::
+    The results produced by shift right of negative values of signed integer types is different from those produced
+    by other programming languages. In Solidity, shift right maps to division so the shifted negative values
+    are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
+    works like division with rounding down (towards negative infinity).
+
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
@@ -122,6 +128,8 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 In a similar way, the function ``delegatecall`` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+
+The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
     All contracts inherit the members of address, so it is possible to query the balance of the
@@ -232,7 +240,7 @@ a non-rational number).
     Integer literals and rational number literals belong to number literal types.
     Moreover, all number literal expressions (i.e. the expressions that
     contain only number literals and operators) belong to number literal
-    types.  So the number literal expressions `1 + 2` and `2 + 1` both
+    types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
     belong to the same number literal type for the rational number three.
 
 .. note::
@@ -261,7 +269,7 @@ a non-rational number).
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; `"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
@@ -412,7 +420,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.5;
+    pragma solidity ^0.4.11;
 
     contract Oracle {
       struct Request {
@@ -437,7 +445,7 @@ Another example that uses external function types::
         oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) {
-        if (msg.sender != address(oracle)) throw;
+        require(msg.sender == address(oracle));
         // Use the data
       }
     }
@@ -714,7 +722,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     contract CrowdFunding {
         // Defines a new type with two fields.
@@ -755,8 +763,7 @@ shown in the following example:
                 return false;
             uint amount = c.amount;
             c.amount = 0;
-            if (!c.beneficiary.send(amount))
-                throw;
+            c.beneficiary.transfer(amount);
             return true;
         }
     }

@@ -32,6 +32,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
@@ -102,6 +103,8 @@ static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strVersion = "version";
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strMetadataLiteral = "metadata-literal";
+static string const g_strAllowPaths = "allow-paths";
+static string const g_strStandardJSON = "standard-json";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
@@ -131,6 +134,8 @@ static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
+static string const g_argAllowPaths = g_strAllowPaths;
+static string const g_argStandardJSON = g_strStandardJSON;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -315,49 +320,40 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 void CommandLineInterface::handleGasEstimation(string const& _contract)
 {
-	using Gas = GasEstimator::GasConsumption;
-	if (!m_compiler->assemblyItems(_contract) && !m_compiler->runtimeAssemblyItems(_contract))
-		return;
+	Json::Value estimates = m_compiler->gasEstimates(_contract);
 	cout << "Gas estimation:" << endl;
-	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
+
+	if (estimates["creation"].isObject())
 	{
-		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
+		Json::Value creation = estimates["creation"];
 		cout << "construction:" << endl;
-		cout << "   " << gas << " + " << (bytecodeSize * eth::GasCosts::createDataGas) << " = ";
-		gas += bytecodeSize * eth::GasCosts::createDataGas;
-		cout << gas << endl;
+		cout << "   " << creation["executionCost"].asString();
+		cout << " + " << creation["codeDepositCost"].asString();
+		cout << " = " << creation["totalCost"].asString() << endl;
 	}
-	if (eth::AssemblyItems const* items = m_compiler->runtimeAssemblyItems(_contract))
+
+	if (estimates["external"].isObject())
 	{
-		ContractDefinition const& contract = m_compiler->contractDefinition(_contract);
+		Json::Value externalFunctions = estimates["external"];
 		cout << "external:" << endl;
-		for (auto it: contract.interfaceFunctions())
+		for (auto const& name: externalFunctions.getMemberNames())
 		{
-			string sig = it.second->externalSignature();
-			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, sig);
-			cout << "   " << sig << ":\t" << gas << endl;
+			if (name.empty())
+				cout << "   fallback:\t";
+			else
+				cout << "   " << name << ":\t";
+			cout << externalFunctions[name].asString() << endl;
 		}
-		if (contract.fallbackFunction())
-		{
-			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, "INVALID");
-			cout << "   fallback:\t" << gas << endl;
-		}
+	}
+
+	if (estimates["internal"].isObject())
+	{
+		Json::Value internalFunctions = estimates["internal"];
 		cout << "internal:" << endl;
-		for (auto const& it: contract.definedFunctions())
+		for (auto const& name: internalFunctions.getMemberNames())
 		{
-			if (it->isPartOfExternalInterface() || it->isConstructor())
-				continue;
-			size_t entry = m_compiler->functionEntryPoint(_contract, *it);
-			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
-			if (entry > 0)
-				gas = GasEstimator::functionalEstimation(*items, entry, *it);
-			FunctionType type(*it);
-			cout << "   " << it->name() << "(";
-			auto paramTypes = type.parameterTypes();
-			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
-				cout << (*it)->toString() << (it + 1 == paramTypes.end() ? "" : ",");
-			cout << "):\t" << gas << endl;
+			cout << "   " << name << ":\t";
+			cout << internalFunctions[name].asString() << endl;
 		}
 	}
 }
@@ -534,6 +530,11 @@ Allowed options)",
 		)
 		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
 		(
+			g_argStandardJSON.c_str(),
+			"Switch to Standard JSON input / output mode, ignoring all options. "
+			"It reads from standard input and provides the result on the standard output."
+		)
+		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options and assumes input is assembly."
 		)
@@ -542,7 +543,12 @@ Allowed options)",
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
 		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.");
+		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
+		(
+			g_argAllowPaths.c_str(),
+			po::value<string>()->value_name("path(s)"),
+			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
+		);
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -610,6 +616,69 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
+	ReadFile::Callback fileReader = [this](string const& _path)
+	{
+		try
+		{
+			auto path = boost::filesystem::path(_path);
+			auto canonicalPath = boost::filesystem::canonical(path);
+			bool isAllowed = false;
+			for (auto const& allowedDir: m_allowedDirectories)
+			{
+				// If dir is a prefix of boostPath, we are fine.
+				if (
+					std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
+					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
+				)
+				{
+					isAllowed = true;
+					break;
+				}
+			}
+			if (!isAllowed)
+				return ReadFile::Result{false, "File outside of allowed directories."};
+			else if (!boost::filesystem::exists(path))
+				return ReadFile::Result{false, "File not found."};
+			else if (!boost::filesystem::is_regular_file(canonicalPath))
+				return ReadFile::Result{false, "Not a valid file."};
+			else
+			{
+				auto contents = dev::contentsString(canonicalPath.string());
+				m_sourceCodes[path.string()] = contents;
+				return ReadFile::Result{true, contents};
+			}
+		}
+		catch (Exception const& _exception)
+		{
+			return ReadFile::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+		}
+		catch (...)
+		{
+			return ReadFile::Result{false, "Unknown exception in read callback."};
+		}
+	};
+
+	if (m_args.count(g_argAllowPaths))
+	{
+		vector<string> paths;
+		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+			m_allowedDirectories.push_back(boost::filesystem::path(path));
+	}
+
+	if (m_args.count(g_argStandardJSON))
+	{
+		string input;
+		while (!cin.eof())
+		{
+			string tmp;
+			getline(cin, tmp);
+			input.append(tmp + "\n");
+		}
+		StandardCompiler compiler(fileReader);
+		cout << compiler.compile(input) << endl;
+		return true;
+	}
+
 	readInputFilesAndConfigureRemappings();
 
 	if (m_args.count(g_argLibraries))
@@ -629,37 +698,6 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
-
-	CompilerStack::ReadFileCallback fileReader = [this](string const& _path)
-	{
-		auto path = boost::filesystem::path(_path);
-		if (!boost::filesystem::exists(path))
-			return CompilerStack::ReadFileResult{false, "File not found."};
-		auto canonicalPath = boost::filesystem::canonical(path);
-		bool isAllowed = false;
-		for (auto const& allowedDir: m_allowedDirectories)
-		{
-			// If dir is a prefix of boostPath, we are fine.
-			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-			)
-			{
-				isAllowed = true;
-				break;
-			}
-		}
-		if (!isAllowed)
-			return CompilerStack::ReadFileResult{false, "File outside of allowed directories."};
-		else if (!boost::filesystem::is_regular_file(canonicalPath))
-			return CompilerStack::ReadFileResult{false, "Not a valid file."};
-		else
-		{
-			auto contents = dev::contentsString(canonicalPath.string());
-			m_sourceCodes[path.string()] = contents;
-			return CompilerStack::ReadFileResult{true, contents};
-		}
-	};
 
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
@@ -877,7 +915,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_onlyAssemble)
+	if (m_args.count(g_argStandardJSON))
+		return true;
+	else if (m_onlyAssemble)
 		outputAssembly();
 	else if (m_onlyLink)
 		writeLinkedFiles();

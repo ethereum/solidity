@@ -34,7 +34,7 @@ struct EVMSchedule
 	unsigned expByteGas = 10;
 	unsigned sha3Gas = 30;
 	unsigned sha3WordGas = 6;
-	unsigned sloadGas = 50;
+	unsigned sloadGas = 200;
 	unsigned sstoreSetGas = 20000;
 	unsigned sstoreResetGas = 5000;
 	unsigned sstoreRefundGas = 15000;

@@ -108,6 +108,7 @@ struct Options: boost::noncopyable
 	std::string ipcPath;
 	bool showMessages = false;
 	bool optimize = false;
+	bool disableIPC = false;
 
 	static Options const& get();
 

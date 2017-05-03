@@ -10,13 +10,11 @@ then
     docker tag ethereum/solc:build ethereum/solc:nightly-"$version"-"$TRAVIS_COMMIT"
     docker push ethereum/solc:nightly-"$version"-"$TRAVIS_COMMIT";
     docker push ethereum/solc:nightly;
-elif [ "$TRAVIS_BRANCH" = "release" ]
-then
-    docker tag ethereum/solc:build ethereum/solc:stable;
-    docker push ethereum/solc:stable;
 elif [ "$TRAVIS_TAG" = v"$version" ]
 then
+    docker tag ethereum/solc:build ethereum/solc:stable;
     docker tag ethereum/solc:build ethereum/solc:"$version";
+    docker push ethereum/solc:stable;
     docker push ethereum/solc:"$version";
 else
     echo "Not publishing docker image from branch $TRAVIS_BRANCH or tag $TRAVIS_TAG"

@@ -248,6 +248,51 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
+BOOST_AUTO_TEST_CASE(exponent_size)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function g(uint x) returns (uint) {
+				return x ** 0x100;
+			}
+			function h(uint x) returns (uint) {
+				return x ** 0x10000;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("h(uint256)", vector<bytes>{encodeArgs(2)});
+}
+
+BOOST_AUTO_TEST_CASE(balance_gas)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function lookup_balance(address a) returns (uint) {
+				return a.balance;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("lookup_balance(address)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
+}
+
+BOOST_AUTO_TEST_CASE(extcodesize_gas)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() returns (uint _s) {
+				assembly {
+					_s := extcodesize(0x30)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

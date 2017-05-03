@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TypePointer multiArray = make_shared<ArrayType>(DataLocation::Storage, stringArray);
 	BOOST_CHECK_EQUAL(multiArray->identifier(), "t_array$_t_array$_t_string_storage_$20_storage_$dyn_storage_ptr");
 
-	ContractDefinition c(SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, false);
+	ContractDefinition c(SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, ContractDefinition::ContractKind::Contract);
 	BOOST_CHECK_EQUAL(c.type()->identifier(), "t_type$_t_contract$_MyContract$$$_$2_$");
 	BOOST_CHECK_EQUAL(ContractType(c, true).identifier(), "t_super$_MyContract$$$_$2");
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
 	BOOST_CHECK_EQUAL(t.identifier(), "t_tuple$_t_type$_t_enum$_Enum_$4_$_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_t_array$_t_string_storage_$20_storage_ptr_$__$");
 
-	TypePointer sha3fun = make_shared<FunctionType>(strings{}, strings{}, FunctionType::Location::SHA3);
+	TypePointer sha3fun = make_shared<FunctionType>(strings{}, strings{}, FunctionType::Kind::SHA3);
 	BOOST_CHECK_EQUAL(sha3fun->identifier(), "t_function_sha3$__$returns$__$");
 
 	FunctionType metaFun(TypePointers{sha3fun}, TypePointers{s.type()});

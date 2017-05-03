@@ -69,7 +69,8 @@ private:
 	///@name Parsing functions for the AST nodes
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
-	ASTPointer<ContractDefinition> parseContractDefinition(bool _isLibrary);
+	ContractDefinition::ContractKind tokenToContractKind(Token::Value _token);
+	ASTPointer<ContractDefinition> parseContractDefinition(Token::Value _expectedKind);
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);

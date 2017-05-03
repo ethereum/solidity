@@ -817,8 +817,7 @@ class FunctionType: public Type
 {
 public:
 	/// How this function is invoked on the EVM.
-	/// @todo This documentation is outdated, and Location should rather be named "Type"
-	enum class Location
+	enum class Kind
 	{
 		Internal, ///< stack-call using plain JUMP
 		External, ///< external call using CALL
@@ -868,7 +867,7 @@ public:
 	FunctionType(
 		strings const& _parameterTypes,
 		strings const& _returnParameterTypes,
-		Location _location = Location::Internal,
+		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
 		bool _constant = false,
 		bool _payable = false
@@ -877,7 +876,7 @@ public:
 		parseElementaryTypeVector(_returnParameterTypes),
 		strings(),
 		strings(),
-		_location,
+		_kind,
 		_arbitraryParameters,
 		nullptr,
 		_constant,
@@ -895,7 +894,7 @@ public:
 		TypePointers const& _returnParameterTypes,
 		strings _parameterNames = strings(),
 		strings _returnParameterNames = strings(),
-		Location _location = Location::Internal,
+		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
 		Declaration const* _declaration = nullptr,
 		bool _isConstant = false,
@@ -908,7 +907,7 @@ public:
 		m_returnParameterTypes(_returnParameterTypes),
 		m_parameterNames(_parameterNames),
 		m_returnParameterNames(_returnParameterNames),
-		m_location(_location),
+		m_kind(_kind),
 		m_arbitraryParameters(_arbitraryParameters),
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
@@ -937,11 +936,11 @@ public:
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
 	virtual std::string toString(bool _short) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
-	virtual bool canBeStored() const override { return m_location == Location::Internal || m_location == Location::External; }
+	virtual bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	virtual u256 storageSize() const override;
 	virtual unsigned storageBytes() const override;
 	virtual bool isValueType() const override { return true; }
-	virtual bool canLiveOutsideStorage() const override { return m_location == Location::Internal || m_location == Location::External; }
+	virtual bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	virtual unsigned sizeOnStack() const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
@@ -964,7 +963,7 @@ public:
 
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)
 	bool isBareCall() const;
-	Location const& location() const { return m_location; }
+	Kind const& kind() const { return m_kind; }
 	/// @returns the external signature of this function type given the function name
 	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
@@ -986,7 +985,7 @@ public:
 	ASTPointer<ASTString> documentation() const;
 
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
-	bool padArguments() const { return !(m_location == Location::SHA3 || m_location == Location::SHA256 || m_location == Location::RIPEMD160); }
+	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160); }
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
@@ -1012,7 +1011,7 @@ private:
 	TypePointers m_returnParameterTypes;
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
-	Location const m_location;
+	Kind const m_kind;
 	/// true if the function takes an arbitrary number of arguments of arbitrary types
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack

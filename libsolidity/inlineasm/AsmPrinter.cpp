@@ -116,7 +116,7 @@ string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefin
 {
 	string out = "function " + _functionDefinition.name + "(" + boost::algorithm::join(_functionDefinition.arguments, ", ") + ")";
 	if (!_functionDefinition.returns.empty())
-		out += " -> (" + boost::algorithm::join(_functionDefinition.returns, ", ") + ")";
+		out += " -> " + boost::algorithm::join(_functionDefinition.returns, ", ");
 	return out + "\n" + (*this)(_functionDefinition.body);
 }
 

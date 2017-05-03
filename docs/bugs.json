@@ -1,0 +1,103 @@
+[
+    {
+        "name": "ConstantOptimizerSubtraction",
+        "summary": "In some situations, the optimizer replaces certain numbers in the code with routines that compute different numbers.",
+        "description": "The optimizer tries to represent any number in the bytecode by routines that compute them with less gas. For some special numbers, an incorrect routine is generated. This could allow an attacker to e.g. trick victims about a specific amount of ether, or function calls to call different functions (or none at all).",
+        "link": "https://blog.ethereum.org/2017/05/03/solidity-optimizer-bug/",
+        "fixed": "0.4.11",
+        "severity": "low",
+        "conditions": {
+            "optimizer": true
+        }
+    },
+    {
+        "name": "IdentityPrecompileReturnIgnored",
+        "summary": "Failure of the identity precompile was ignored.",
+        "description": "Calls to the identity contract, which is used for copying memory, ignored its return value. On the public chain, calls to the identity precompile can be made in a way that they never fail, but this might be different on private chains.",
+        "severity": "low",
+        "fixed": "0.4.7"
+    },
+    {
+        "name": "OptimizerStateKnowledgeNotResetForJumpdest",
+        "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
+        "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was simplified to just use the empty state, but this implementation was not done properly. This bug can cause data corruption.",
+        "severity": "medium",
+        "introduced": "0.4.5",
+        "fixed": "0.4.6",
+        "conditions": {
+            "optimizer": true
+        }
+    },
+    {
+        "name": "HighOrderByteCleanStorage",
+        "summary": "For short types, the high order bytes were not cleaned properly and could overwrite existing data.",
+        "description": "Types shorter than 32 bytes are packed together into the same 32 byte storage slot, but storage writes always write 32 bytes. For some types, the higher order bytes were not cleaned properly, which made it sometimes possible to overwrite a variable in storage when writing to another one.",
+        "link": "https://blog.ethereum.org/2016/11/01/security-alert-solidity-variables-can-overwritten-storage/",
+        "severity": "high",
+        "introduced": "0.1.6",
+        "fixed": "0.4.4"
+    },
+    {
+        "name": "OptimizerStaleKnowledgeAboutSHA3",
+        "summary": "The optimizer did not properly reset its knowledge about SHA3 operations resulting in some hashes (also used for storage variable positions) not being calculated correctly.",
+        "description": "The optimizer performs symbolic execution in order to save re-evaluating expressions whose value is already known. This knowledge was not properly reset across control flow paths and thus the optimizer sometimes thought that the result of a SHA3 operation is already present on the stack. This could result in data corruption by accessing the wrong storage slot.",
+        "severity": "medium",
+        "fixed": "0.4.3",
+        "conditions": {
+            "optimizer": true
+        }
+    },
+    {
+        "name": "LibrariesNotCallableFromPayableFunctions",
+        "summary": "Library functions threw an exception when called from a call that received Ether.",
+        "description": "Library functions are protected against sending them Ether through a call. Since the DELEGATECALL opcode forwards the information about how much Ether was sent with a call, the library function incorrectly assumed that Ether was sent to the library and threw an exception.",
+        "severity": "low",
+        "introduced": "0.4.0",
+        "fixed": "0.4.2"
+    },
+    {
+        "name": "SendFailsForZeroEther",
+        "summary": "The send function did not provide enough gas to the recipient if no Ether was sent with it.",
+        "description": "The recipient of an Ether transfer automatically receives a certain amount of gas from the EVM to handle the transfer. In the case of a zero-transfer, this gas is not provided which causes the recipient to throw an exception.",
+        "severity": "low",
+        "fixed": "0.4.0"
+    },
+    {
+        "name": "DynamicAllocationInfiniteLoop",
+        "summary": "Dynamic allocation of an empty memory array caused an infinite loop and thus an exception.",
+        "description": "Memory arrays can be created provided a length. If this length is zero, code was generated that did not terminate and thus consumed all gas.",
+        "severity": "low",
+        "fixed": "0.3.6"
+    },
+    {
+        "name": "OptimizerClearStateOnCodePathJoin",
+        "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
+        "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was not done correctly. This bug can cause data corruption, but it is probably quite hard to use for targeted attacks.",
+        "severity": "low",
+        "fixed": "0.3.6",
+        "conditions": {
+            "optimizer": true
+        }
+    },
+    {
+        "name": "CleanBytesHigherOrderBits",
+        "summary": "The higher order bits of short bytesNN types were not cleaned before comparison.",
+        "description": "Two variables of type bytesNN were considered different if their higher order bits, which are not part of the actual value, were different. An attacker might use this to reach seemingly unreachable code paths by providing incorrectly formatted input data.",
+        "severity": "medium/high",
+        "fixed": "0.3.3"
+    },
+    {
+        "name": "ArrayAccessCleanHigherOrderBits",
+        "summary": "Access to array elements for arrays of types with less than 32 bytes did not correctly clean the higher order bits, causing corruption in other array elements.",
+        "description": "Multiple elements of an array of values that are shorter than 17 bytes are packed into the same storage slot. Writing to a single element of such an array did not properly clean the higher order bytes and thus could lead to data corruption.",
+        "severity": "medium/high",
+        "fixed": "0.3.1"
+    },
+    {
+        "name": "AncientCompiler",
+        "summary": "This compiler version is ancient and might contain several undocumented or undiscovered bugs.",
+        "description": "The list of bugs is only kept for compiler versions starting from 0.3.0, so older versions might contain undocumented bugs.",
+        "severity": "high",
+        "fixed": "0.3.0"
+    }
+]
