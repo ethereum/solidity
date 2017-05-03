@@ -3961,6 +3961,8 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 			function f() {
 				ufixed8x16 a = 3.25;
 				fixed8x16 b = -3.25;
+				a;
+				b;
 			}
 		}
 	)";
@@ -3979,6 +3981,7 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 		contract test {
 			function f(uint x) {
 				uint y = +x;
+				y;
 			}
 		}
 	)";
