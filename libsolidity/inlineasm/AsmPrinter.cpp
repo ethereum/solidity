@@ -119,14 +119,22 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
 	string out = "function " + _functionDefinition.name + "(";
-	for (auto const& argument: _functionDefinition.arguments)
-		out += argument.name + appendTypeName(argument.type) + ",";
+	out += boost::algorithm::join(
+		_functionDefinition.arguments | boost::adaptors::transformed(
+			[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+		),
+		", "
+	);
 	out += ")";
 	if (!_functionDefinition.returns.empty())
 	{
 		out += " -> ";
-		for (auto const& argument: _functionDefinition.returns)
-		    out += argument.name + appendTypeName(argument.type) + ",";
+		out += boost::algorithm::join(
+			_functionDefinition.returns | boost::adaptors::transformed(
+				[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+			),
+			", "
+		);
 	}
 
 	return out + "\n" + (*this)(_functionDefinition.body);
