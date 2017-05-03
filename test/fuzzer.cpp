@@ -205,7 +205,7 @@ Allowed options)",
 	catch (po::error const& _exception)
 	{
 		cerr << _exception.what() << endl;
-		return false;
+		return 1;
 	}
 
 	if (arguments.count("quiet"))
