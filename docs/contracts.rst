@@ -835,7 +835,7 @@ Arguments for Base Constructors
 Derived contracts need to provide all arguments needed for
 the base constructors. This can be done in two ways::
 
-    pragma solidity ^0.4.0;s
+    pragma solidity ^0.4.0;
 
     contract Base {
         uint x;
