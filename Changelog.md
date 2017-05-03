@@ -1,4 +1,4 @@
-### 0.4.11 (unreleased)
+### 0.4.11 (2017-05-02)
 
 Features:
  * Implement the Standard JSON Input / Output API
