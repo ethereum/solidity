@@ -77,6 +77,8 @@ string Why3Translator::toFormalType(Type const& _type) const
 		return "bool";
 	else if (auto type = dynamic_cast<IntegerType const*>(&_type))
 	{
+		if (type->isAddress())
+			return "Address.address";
 		if (!type->isAddress() && !type->isSigned() && type->numBits() == 256)
 			return "uint256";
 	}
@@ -150,6 +152,7 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	addLine("use import int.ComputerDivision");
 	addLine("use import mach.int.Unsigned");
 	addLine("use import UInt256");
+	addLine("use Address"); // `import` would cause name clashes with Uint256.
 	addLine("exception Revert");
 	addLine("exception Return");
 
@@ -291,8 +294,6 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 
 	if (_function.isDeclaredConst())
 		addLine("ensures { (old this) = this }");
-	else
-		addLine("writes { this }");
 
 	addLine("=");
 
@@ -511,7 +512,7 @@ bool Why3Translator::visit(UnaryOperation const& _unaryOperation)
 	catch (NoFormalType &err)
 	{
 		string const* typeNamePtr = boost::get_error_info<errinfo_noFormalTypeFrom>(err);
-		error(_unaryOperation, "Type \"" + (typeNamePtr ? *typeNamePtr : "") + "\" supported in unary operation.");
+		error(_unaryOperation, "Type \"" + (typeNamePtr ? *typeNamePtr : "") + "\" not supported in unary operation.");
 	}
 
 	switch (_unaryOperation.getOperator())
@@ -697,23 +698,35 @@ bool Why3Translator::visit(MemberAccess const& _node)
 
 bool Why3Translator::visit(IndexAccess const& _node)
 {
-	auto baseType = dynamic_cast<ArrayType const*>(_node.baseExpression().annotation().type.get());
-	if (!baseType)
+	auto baseTypeRaw = _node.baseExpression().annotation().type.get();
+
+	auto arrayType = dynamic_cast<ArrayType const*>(baseTypeRaw);
+	auto mappingType = dynamic_cast<MappingType const*>(baseTypeRaw);
+
+	if (!(arrayType || mappingType))
 	{
-		error(_node, "Index access only supported for arrays.");
-		return true;
-	}
-	if (_node.annotation().lValueRequested)
-	{
-		error(_node, "Assignment to array elements not supported.");
+		error(_node, "Index access only supported for arrays or mappings.");
 		return true;
 	}
 	add("(");
 	_node.baseExpression().accept(*this);
-	add("[to_int ");
+	auto indexIntegerType = dynamic_cast<IntegerType const*>(_node.indexExpression()->annotation().type.get());
+	if (!indexIntegerType)
+	{
+		error(_node, "Index access only supported for indices of IntegerType");
+		return true;
+	}
+	if (indexIntegerType->isAddress())
+		add("[Address.to_int ");
+	else
+		add("[to_int ");
 	_node.indexExpression()->accept(*this);
 	add("]");
 	add(")");
+	if (_node.annotation().lValueRequested)
+	{
+		m_currentLValueIsRef = false; /* because <- should be used. */
+	}
 
 	return false;
 }
