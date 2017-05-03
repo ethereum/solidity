@@ -3,7 +3,7 @@
         "name": "ConstantOptimizerSubtraction",
         "summary": "In some situations, the optimizer replaces certain numbers in the code with routines that compute different numbers.",
         "description": "The optimizer tries to represent any number in the bytecode by routines that compute them with less gas. For some special numbers, an incorrect routine is generated. This could allow an attacker to e.g. trick victims about a specific amount of ether, or function calls to call different functions (or none at all).",
-        "link": "https://blog.ethereum.org/2017/04/24/solidity-optimizer-bug/",
+        "link": "https://blog.ethereum.org/2017/05/03/solidity-optimizer-bug/",
         "fixed": "0.4.11",
         "severity": "low",
         "conditions": {
