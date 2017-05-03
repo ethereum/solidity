@@ -20,6 +20,7 @@ Bugfixes:
    and source mappings.
  * Gas Estimator: Reflect the most recent fee schedule.
  * Type system: Contract inheriting from base with unimplemented constructor should be abstract.
+ * Optimizer: Number representation bug in the constant optimizer fixed.
 
 ### 0.4.10 (2017-03-15)
 
