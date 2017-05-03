@@ -48,13 +48,58 @@ void StaticAnalyzer::endVisit(ContractDefinition const&)
 
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
+	if (_function.isImplemented())
+		m_currentFunction = &_function;
+	else
+		solAssert(!m_currentFunction, "");
+	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	return true;
 }
 
 void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
+	m_currentFunction = nullptr;
 	m_nonPayablePublic = false;
+	for (auto const& var: m_localVarUseCount)
+		if (var.second == 0)
+			warning(var.first->location(), "Unused local variable");
+	m_localVarUseCount.clear();
+}
+
+bool StaticAnalyzer::visit(Identifier const& _identifier)
+{
+	if (m_currentFunction)
+		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		{
+			solAssert(!var->name().empty(), "");
+			if (var->isLocalVariable())
+				m_localVarUseCount[var] += 1;
+		}
+	return true;
+}
+
+bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
+{
+	if (m_currentFunction)
+	{
+		solAssert(_variable.isLocalVariable(), "");
+		if (_variable.name() != "")
+			// This is not a no-op, the entry might pre-exist.
+			m_localVarUseCount[&_variable] += 0;
+	}
+	return true;
+}
+
+bool StaticAnalyzer::visit(Return const& _return)
+{
+	// If the return has an expression, it counts as
+	// a "use" of the return parameters.
+	if (m_currentFunction && _return.expression())
+		for (auto const& var: m_currentFunction->returnParameters())
+			if (!var->name().empty())
+				m_localVarUseCount[var.get()] += 1;
+	return true;
 }
 
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)

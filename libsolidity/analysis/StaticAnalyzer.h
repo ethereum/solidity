@@ -61,7 +61,9 @@ private:
 	virtual void endVisit(FunctionDefinition const& _function) override;
 
 	virtual bool visit(ExpressionStatement const& _statement) override;
-
+	virtual bool visit(VariableDeclaration const& _variable) override;
+	virtual bool visit(Identifier const& _identifier) override;
+	virtual bool visit(Return const& _return) override;
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 
 	ErrorList& m_errors;
@@ -71,6 +73,11 @@ private:
 
 	/// Flag that indicates whether a public function does not contain the "payable" modifier.
 	bool m_nonPayablePublic = false;
+
+	/// Number of uses of each (named) local variable in a function, counter is initialized with zero.
+	std::map<VariableDeclaration const*, int> m_localVarUseCount;
+
+	FunctionDefinition const* m_currentFunction = nullptr;
 };
 
 }
