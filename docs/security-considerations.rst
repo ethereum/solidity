@@ -79,7 +79,7 @@ outlined further below:
 
 ::
 
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.4.11;
 
   contract Fund {
       /// Mapping of ether shares of the contract.
@@ -88,8 +88,7 @@ outlined further below:
       function withdraw() {
           var share = shares[msg.sender];
           shares[msg.sender] = 0;
-          if (!msg.sender.send(share))
-              throw;
+          msg.sender.transfer(share);
       }
   }
 
@@ -124,22 +123,24 @@ Sending and Receiving Ether
   (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
-  ``addr.call.value(x)()``. This is essentially the same as ``addr.send(x)``,
+  ``addr.call.value(x)()``. This is essentially the same as ``addr.transfer(x)``,
   only that it forwards all remaining gas and opens up the ability for the
-  recipient to perform more expensive actions. This might include calling back
+  recipient to perform more expensive actions (and it only returns a failure code
+  and does not automatically propagate the error). This might include calling back
   into the sending contract or other state changes you might not have thought of.
   So it allows for great flexibility for honest users but also for malicious actors.
 
-- If you want to send Ether using ``address.send``, there are certain details to be aware of:
+- If you want to send Ether using ``address.transfer``, there are certain details to be aware of:
 
   1. If the recipient is a contract, it causes its fallback function to be executed which can, in turn, call back the sending contract.
   2. Sending Ether can fail due to the call depth going above 1024. Since the caller is in total control of the call
-     depth, they can force the transfer to fail; make sure to always check the return value of ``send``. Better yet,
+     depth, they can force the transfer to fail; take this possibility into account or use ``send`` and make sure to always check its return value. Better yet,
      write your contract using a pattern where the recipient can withdraw Ether instead.
   3. Sending Ether can also fail because the execution of the recipient contract
-     requires more than the allotted amount of gas (explicitly by using ``throw`` or
+     requires more than the allotted amount of gas (explicitly by using ``require``,
+     ``assert``, ``revert``, ``throw`` or
      because the operation is just too expensive) - it "runs out of gas" (OOG).
-     If the return value of ``send`` is checked, this might provide a
+     If you use ``transfer`` or ``send`` with a return value check, this might provide a
      means for the recipient to block progress in the sending contract. Again, the best practice here is to use
      a :ref:`"withdraw" pattern instead of a "send" pattern <withdrawal_pattern>`.
 
@@ -162,7 +163,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.11;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
@@ -172,9 +173,9 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
             owner = msg.sender;
         }
 
-        function transfer(address dest, uint amount) {
-            if (tx.origin != owner) { throw; }
-            if (!dest.call.value(amount)()) throw;
+        function transferTo(address dest, uint amount) {
+            require(tx.origin == owner);
+            dest.transfer(amount);
         }
     }
 
@@ -192,7 +193,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
         }
 
         function() {
-            TxUserWallet(msg.sender).transfer(owner, msg.sender.balance);
+            TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }
 
