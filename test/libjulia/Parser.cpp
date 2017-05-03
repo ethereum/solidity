@@ -52,11 +52,7 @@ bool parse(string const& _source, ErrorList& errors)
 		auto scanner = make_shared<Scanner>(CharStream(_source));
 		auto parserResult = assembly::Parser(errors, true).parse(scanner);
 		if (parserResult)
-		{
-			assembly::AsmAnalysisInfo analysisInfo;
-			if (assembly::AsmAnalyzer(analysisInfo, errors).analyze(*parserResult))
-				return true;
-		}
+			return true;
 	}
 	catch (FatalError const&)
 	{
@@ -144,12 +140,6 @@ BOOST_AUTO_TEST_CASE(vardecl_complex)
 	BOOST_CHECK(successParse("{ let y := 2 let x := add(7, mul(6, y)) }"));
 }
 
-BOOST_AUTO_TEST_CASE(variable_use_before_decl)
-{
-	CHECK_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
-	CHECK_ERROR("{ function mul(y) -> z {} let x := mul(x) }", DeclarationError, "Variable x used before it was declared.");
-}
-
 BOOST_AUTO_TEST_CASE(blocks)
 {
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
@@ -168,16 +158,6 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 BOOST_AUTO_TEST_CASE(function_calls)
 {
 	BOOST_CHECK(successParse("{ function f(a) -> b {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
-}
-
-BOOST_AUTO_TEST_CASE(name_clashes)
-{
-	CHECK_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Function name g already taken in this scope");
-}
-
-BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
-{
-	CHECK_ERROR("{ let x := 2 function g() { let y := x } }", DeclarationError, "Identifier not found.");
 }
 
 BOOST_AUTO_TEST_CASE(label)
