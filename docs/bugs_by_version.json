@@ -270,6 +270,10 @@
         ], 
         "released": "2017-03-15"
     }, 
+    "0.4.11": {
+        "bugs": [], 
+        "released": "2017-05-02"
+    }, 
     "0.4.2": {
         "bugs": [
             "ConstantOptimizerSubtraction", 
