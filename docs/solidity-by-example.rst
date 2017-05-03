@@ -268,7 +268,7 @@ activate themselves.
 
             // Revert the call if the bidding
             // period is over.
-            require(now <= auctionStart + biddingTime);
+            require(now <= (auctionStart + biddingTime));
 
             // If the bid is not higher, send the
             // money back.
@@ -543,7 +543,7 @@ Safe Remote Purchase
         function Purchase() payable {
             seller = msg.sender;
             value = msg.value / 2;
-            require(2 * value == msg.value);
+            require((2 * value) == msg.value);
         }
 
         modifier condition(bool _condition) {
@@ -588,7 +588,7 @@ Safe Remote Purchase
         /// is called.
         function confirmPurchase()
             inState(State.Created)
-            condition(msg.value == 2 * value)
+            condition(msg.value == (2 * value))
             payable
         {
             purchaseConfirmed();
