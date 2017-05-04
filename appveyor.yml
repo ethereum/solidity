@@ -54,7 +54,7 @@ install:
     - git submodule update --init --recursive
     - ps: $prerelease = "nightly."
     - ps: $prerelease += Get-Date -format "yyyy.M.d"
-    - ps: Set-Content prerelease.txt $prerelease
+    - ps: if ( "%APPVEYOR_REPO_BRANCH%" -eq "release" ) { Set-Content prerelease.txt "" } else { Set-Content prerelease.txt $prerelease }
     - scripts/install_deps.bat
     - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
