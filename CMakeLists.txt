@@ -25,6 +25,7 @@ include(EthCcache)
 include(EthDependencies)
 include(jsoncpp)
 include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+include(ProjectBinaryen)
 
 find_package(Threads)
 

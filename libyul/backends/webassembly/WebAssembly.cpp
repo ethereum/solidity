@@ -26,6 +26,9 @@
 
 #include <libdevcore/CommonIO.h>
 
+#include <binaryen-c.h>
+#include <wasm-builder.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm/count_if.hpp>
