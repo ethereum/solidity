@@ -21,8 +21,8 @@
  */
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
-
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/interface/Utils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -40,6 +40,7 @@ using namespace dev::solidity::assembly;
 
 string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 {
+	solAssert(!m_julia, "");
 	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
 }
 
@@ -83,6 +84,7 @@ string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
 {
+	solAssert(!m_julia, "");
 	return
 		(*this)(_functionalInstruction.instruction) +
 		"(" +
@@ -94,11 +96,13 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
+	solAssert(!m_julia, "");
 	return _label.name + ":";
 }
 
 string AsmPrinter::operator()(assembly::Assignment const& _assignment)
 {
+	solAssert(!m_julia, "");
 	return "=: " + (*this)(_assignment.variableName);
 }
 
