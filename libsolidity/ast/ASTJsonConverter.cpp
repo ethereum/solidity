@@ -242,7 +242,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
 	setJsonNode(_node, "ContractDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("isLibrary", _node.isLibrary()),
+		make_pair("contractKind", contractKind(_node.contractKind())),
 		make_pair("fullyImplemented", _node.annotation().isFullyImplemented),
 		make_pair("linearizedBaseContracts", getContainerIds(_node.annotation().linearizedBaseContracts)),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
@@ -265,7 +265,7 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
 	setJsonNode(_node, "UsingForDirective", {
-		make_pair("libraryNames", toJson(_node.libraryName())),
+		make_pair("libraryName", toJson(_node.libraryName())),
 		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
 	});
 	return false;
@@ -321,7 +321,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		make_pair("returnParameters", toJson(*_node.returnParameterList())),
 		make_pair("modifiers", toJson(_node.modifiers())),
 		make_pair("body", _node.isImplemented() ? toJson(_node.body()) : Json::nullValue),
-		make_pair("isImplemented", _node.isImplemented()),
+		make_pair("implemented", _node.isImplemented()),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
@@ -438,18 +438,13 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 
 bool ASTJsonConverter::visit(InlineAssembly const& _node)
 {
-	std::map<assembly::Identifier const*, Declaration const*>::iterator it;
 	Json::Value externalReferences(Json::arrayValue);
-	for (
-		it = _node.annotation().externalReferences.begin();
-		it != _node.annotation().externalReferences.end();
-		it++
-	)
+	for (auto const& it : _node.annotation().externalReferences)
 	{
-		if (it->first && it->second)
+		if (it.first && it.second)
 		{
 			Json::Value tuple(Json::objectValue);
-			tuple[it->first->name] = nodeId(*it->second);
+			tuple[it.first->name] = nodeId(*it.second);
 			externalReferences.append(tuple);
 		}
 	}
@@ -500,7 +495,7 @@ bool ASTJsonConverter::visit(WhileStatement const& _node)
 bool ASTJsonConverter::visit(ForStatement const& _node)
 {
 	setJsonNode(_node, "ForStatement", {
-		make_pair("initExpression", toJsonOrNull(_node.initializationExpression())),
+		make_pair("initializationExpression", toJsonOrNull(_node.initializationExpression())),
 		make_pair("condition", toJsonOrNull(_node.condition())),
 		make_pair("loopExpression", toJsonOrNull(_node.loopExpression())),
 		make_pair("body", toJson(_node.body()))
@@ -623,7 +618,7 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 		names.append(Json::Value(*name));
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair(m_legacy ? "type_conversion" : "isTypeConversion", _node.annotation().isTypeConversion),
-		make_pair("isStructContstructorCall", _node.annotation().isStructConstructorCall),
+		make_pair("isStructConstructorCall", _node.annotation().isStructConstructorCall),
 		make_pair("expression", toJson(_node.expression())),
 		make_pair("names", std::move(names)),
 		make_pair("arguments", toJson(_node.arguments()))
@@ -749,6 +744,21 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 		return "memory";
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration location."));
+	}
+}
+
+string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
+{
+	switch (_kind)
+	{
+	case ContractDefinition::ContractKind::Interface:
+		return "interface";
+	case ContractDefinition::ContractKind::Contract:
+		return "contract";
+	case ContractDefinition::ContractKind::Library:
+		return "library";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown contract kind."));
 	}
 }
 
