@@ -55,7 +55,7 @@ private:
 
 	VariableDeclaration const* findCycle(
 		VariableDeclaration const* _startingFrom,
-		std::set<VariableDeclaration const*> const& _seen = {}
+		std::set<VariableDeclaration const*> const& _seen = std::set<VariableDeclaration const*>{}
 	);
 
 	ErrorList& m_errors;
