@@ -128,8 +128,11 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 		),
 		", "
 	);
-	out += " := ";
-	out += boost::apply_visitor(*this, *_variableDeclaration.value);
+	if (_variableDeclaration.value)
+	{
+		out += " := ";
+		out += boost::apply_visitor(*this, *_variableDeclaration.value);
+	}
 	return out;
 }
 
