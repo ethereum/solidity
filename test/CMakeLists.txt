@@ -6,6 +6,7 @@ aux_source_directory(libevmasm SRC_LIST)
 aux_source_directory(libsolidity SRC_LIST)
 aux_source_directory(contracts SRC_LIST)
 aux_source_directory(liblll SRC_LIST)
+aux_source_directory(libjulia SRC_LIST)
 
 list(REMOVE_ITEM SRC_LIST "./fuzzer.cpp")
 
