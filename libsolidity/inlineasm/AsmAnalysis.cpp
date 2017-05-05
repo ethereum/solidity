@@ -184,7 +184,15 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	int const expectedItems = _varDecl.variables.size();
 	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
-	solAssert(m_stackHeight - stackHeight == expectedItems, "Invalid value size.");
+	if ((m_stackHeight - stackHeight) != expectedItems)
+	{
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::DeclarationError,
+			"Variable count mismatch.",
+			_varDecl.location
+		));
+		return false;
+	}
 
 	for (auto const& variable: _varDecl.variables)
 		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
