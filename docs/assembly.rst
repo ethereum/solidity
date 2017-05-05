@@ -431,11 +431,6 @@ As an example how this can be done in extreme cases, please see the following.
         pop // We have to pop the manually pushed value here again.
     }
 
-.. note::
-
-    ``invalidJumpLabel`` is a pre-defined label. Jumping to this location will always
-    result in an invalid jump, effectively aborting execution of the code.
-
 Declaring Assembly-Local Variables
 ----------------------------------
 
@@ -699,7 +694,7 @@ The following assembly will be generated::
         mstore(ret, r)
         return(ret, 0x20)
       }
-      default: { jump(invalidJumpLabel) }
+      default: { revert(0, 0) }
       // memory allocator
       function $allocate(size) -> pos {
         pos := mload(0x40)
@@ -744,7 +739,7 @@ After the desugaring phase it looks as follows::
         }
         $caseDefault:
         {
-          jump(invalidJumpLabel)
+          revert(0, 0)
           jump($endswitch)
         }
         $endswitch:

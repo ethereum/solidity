@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(imbalanced_stack)
 
 BOOST_AUTO_TEST_CASE(error_tag)
 {
-	BOOST_CHECK(successAssemble("{ jump(invalidJumpLabel) }"));
+	CHECK_ASSEMBLE_ERROR("{ jump(invalidJumpLabel) }", DeclarationError, "Identifier not found");
 }
 
 BOOST_AUTO_TEST_CASE(designated_invalid_instruction)

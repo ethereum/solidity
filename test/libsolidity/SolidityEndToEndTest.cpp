@@ -9126,21 +9126,6 @@ BOOST_AUTO_TEST_CASE(packed_storage_overflow)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x1234), u256(0), u256(0), u256(0xfffe)));
 }
 
-BOOST_AUTO_TEST_CASE(inline_assembly_invalidjumplabel)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() {
-				assembly {
-					jump(invalidJumpLabel)
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
-}
-
 BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 {
 	char const* sourceCode = R"(

@@ -73,7 +73,6 @@ struct Scope
 	struct Label
 	{
 		size_t id = unassignedLabelId;
-		static const size_t errorLabelId = -1;
 		static const size_t unassignedLabelId = 0;
 	};
 

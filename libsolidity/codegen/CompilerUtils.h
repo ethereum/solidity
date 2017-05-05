@@ -109,10 +109,6 @@ public:
 	/// Stack post: <updated_memptr>
 	void zeroInitialiseMemoryArray(ArrayType const& _type);
 
-	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
-	/// Stack pre: <size> <target> <source>
-	/// Stack post:
-	void memoryCopyPrecompile();
 	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than length.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:

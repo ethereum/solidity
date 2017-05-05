@@ -278,8 +278,6 @@ private:
 	{
 		if (_label.id == Scope::Label::unassignedLabelId)
 			_label.id = m_state.newLabelId();
-		else if (_label.id == Scope::Label::errorLabelId)
-			_label.id = size_t(m_state.assembly.errorTag().data());
 	}
 
 
