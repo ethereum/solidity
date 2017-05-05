@@ -252,8 +252,7 @@ public:
 	{
 		int height = m_assembly.stackHeight();
 		int expectedItems = _varDecl.variables.size();
-		for (auto const& value: _varDecl.values)
-			boost::apply_visitor(*this, value);
+		boost::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(expectedItems, height);
 		for (auto const& variable: _varDecl.variables)
 		{
