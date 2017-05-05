@@ -122,12 +122,12 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 
 BOOST_AUTO_TEST_CASE(vardecl)
 {
-	BOOST_CHECK(successParse("{ let x := 7 }"));
+	BOOST_CHECK(successParse("{ let x:u256 := 7:u256 }"));
 }
 
 BOOST_AUTO_TEST_CASE(assignment)
 {
-	BOOST_CHECK(successParse("{ let x := 2 let y := x }"));
+	BOOST_CHECK(successParse("{ let x:u256 := 2:u256 let y:u256 := x }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_call)
@@ -137,27 +137,27 @@ BOOST_AUTO_TEST_CASE(function_call)
 
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
-	BOOST_CHECK(successParse("{ let y := 2 let x := add(7, mul(6, y)) }"));
+	BOOST_CHECK(successParse("{ let y:u256 := 2:u256 let x:u256 := add(7:u256, mul(6:u256, y)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
 {
-	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
+	BOOST_CHECK(successParse("{ let x:u256 := 7:u256 { let y:u256 := 3:u256 } { let z:u256 := 2:u256 } }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions)
 {
-	BOOST_CHECK(successParse("{ function f() { } function g(a) -> x { } }"));
+	BOOST_CHECK(successParse("{ function f() { } function g(a:u256) -> x:u256 { } }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 {
-	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> x, y { } }"));
+	BOOST_CHECK(successParse("{ function f(a:u256, d:u256) { } function g(a:u256, d:u256) -> x:u256, y:u256 { } }"));
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	BOOST_CHECK(successParse("{ function f(a) -> b {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
+	BOOST_CHECK(successParse("{ function f(a:u256) -> b:u256 {} function g(a:u256, b:u256, c:u256) {} function x() { g(1:u256, 2:u256, f(mul(2:u256, 3:u256))) x() } }"));
 }
 
 BOOST_AUTO_TEST_CASE(label)
@@ -172,17 +172,25 @@ BOOST_AUTO_TEST_CASE(instructions)
 
 BOOST_AUTO_TEST_CASE(push)
 {
-	CHECK_ERROR("{ 0x42 }", ParserError, "Call or assignment expected.");
+	CHECK_ERROR("{ 0x42:u256 }", ParserError, "Call or assignment expected.");
 }
 
 BOOST_AUTO_TEST_CASE(assign_from_stack)
 {
-	CHECK_ERROR("{ =: x }", ParserError, "Literal or identifier expected.");
+	CHECK_ERROR("{ =: x:u256 }", ParserError, "Literal or identifier expected.");
 }
 
 BOOST_AUTO_TEST_CASE(empty_call)
 {
 	CHECK_ERROR("{ () }", ParserError, "Literal or identifier expected.");
+}
+
+BOOST_AUTO_TEST_CASE(lacking_types)
+{
+	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected token Identifier got 'Assign'");
+	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected token Colon got 'RBrace'");
+	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected token Colon got 'RParen'");
+	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected token Colon got 'LBrace'");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
