@@ -26,6 +26,7 @@
 #include <libdevcore/JSON.h>
 
 #include "../Metadata.h"
+#include "../TestHelper.h"
 
 using namespace std;
 
@@ -46,7 +47,7 @@ namespace
 
 Json::Value compile(string const& _input)
 {
-	string output(compileJSONMulti(_input.c_str(), false));
+	string output(compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize));
 	Json::Value ret;
 	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
 	return ret;
