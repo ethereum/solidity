@@ -173,9 +173,9 @@ public:
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
-	/// @returns a JSON representing the contract interface.
+	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& interface(std::string const& _contractName = "") const;
+	Json::Value const& contractABI(std::string const& _contractName = "") const;
 	/// @returns a JSON representing the contract's documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.

@@ -444,7 +444,7 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json::Value const& CompilerStack::interface(string const& _contractName) const
+Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 {
 	return metadata(_contractName, DocumentationType::ABIInterface);
 }

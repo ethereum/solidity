@@ -193,7 +193,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			for (string const& contractName: compiler.contractNames())
 			{
 				Json::Value contractData(Json::objectValue);
-				contractData["interface"] = dev::jsonCompactPrint(compiler.interface(contractName));
+				contractData["interface"] = dev::jsonCompactPrint(compiler.contractABI(contractName));
 				contractData["bytecode"] = compiler.object(contractName).toHex();
 				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
