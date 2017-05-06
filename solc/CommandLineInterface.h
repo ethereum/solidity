@@ -67,6 +67,7 @@ private:
 	void handleBytecode(std::string const& _contract);
 	void handleSignatureHashes(std::string const& _contract);
 	void handleOnChainMetadata(std::string const& _contract);
+	void handleABI(std::string const& _contract);
 	void handleMeta(DocumentationType _type, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
 	void handleFormal();

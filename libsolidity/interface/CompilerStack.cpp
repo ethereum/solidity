@@ -449,6 +449,11 @@ Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 	return metadata(_contractName, DocumentationType::ABIInterface);
 }
 
+Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
+{
+	return metadata(_contract, DocumentationType::ABIInterface);
+}
+
 Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
 	return metadata(contract(_contractName), _type);
@@ -830,7 +835,7 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	for (auto const& library: m_libraries)
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
-	meta["output"]["abi"] = metadata(_contract, DocumentationType::ABIInterface);
+	meta["output"]["abi"] = contractABI(_contract);
 	meta["output"]["userdoc"] = metadata(_contract, DocumentationType::NatspecUser);
 	meta["output"]["devdoc"] = metadata(_contract, DocumentationType::NatspecDev);
 
