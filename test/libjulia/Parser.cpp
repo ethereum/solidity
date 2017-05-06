@@ -161,6 +161,11 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	BOOST_CHECK(successParse("{ function f(a:u256) -> b:u256 {} function g(a:u256, b:u256, c:u256) {} function x() { g(1:u256, 2:u256, f(mul(2:u256, 3:u256))) x() } }"));
 }
 
+BOOST_AUTO_TEST_CASE(tuple_assignment)
+{
+	BOOST_CHECK(successParse("{ function f() -> a:u256, b:u256, c:u256 {} let x:u256, y:u256, z:u256 := f() }"));
+}
+
 BOOST_AUTO_TEST_CASE(label)
 {
 	CHECK_ERROR("{ label: }", ParserError, "Labels are not supported.");
