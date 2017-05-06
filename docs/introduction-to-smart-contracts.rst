@@ -33,9 +33,9 @@ Storage
 The first line simply tells that the source code is written for
 Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.5.0). This is to ensure that the
-contract does not suddenly behave differently with a new compiler version.
+contract does not suddenly behave differently with a new compiler version. For more information about pragma, see [here](https://en.wikipedia.org/wiki/Pragma_once).
 
-A contract in the sense of Solidity is a collection of code (its functions) and
+A contract in the sense of Solidity is a collection of code (its [functions](https://en.wikipedia.org/wiki/Subroutine)) and
 data (its *state*) that resides at a specific address on the Ethereum
 blockchain. The line ``uint storedData;`` declares a state variable called ``storedData`` of
 type ``uint`` (unsigned integer of 256 bits). You can think of it as a single slot
@@ -47,9 +47,9 @@ or retrieve the value of the variable.
 To access a state variable, you do not need the prefix ``this.`` as is common in
 other languages.
 
-This contract does not yet do much apart from (due to the infrastructure
-built by Ethereum) allowing anyone to store a single number that is accessible by
-anyone in the world without (feasible) a way to prevent you from publishing
+This contract does not do much yet (due to the infrastructure
+built by Ethereum) apart from allowing anyone to store a single number that is accessible by
+anyone in the world without a (feasible) way to prevent you from publishing
 this number. Of course, anyone could just call ``set`` again with a different value
 and overwrite your number, but the number will still be stored in the history
 of the blockchain. Later, we will see how you can impose access restrictions
@@ -124,7 +124,7 @@ get the idea - the compiler figures that out for you.
 The next line, ``mapping (address => uint) public balances;`` also
 creates a public state variable, but it is a more complex datatype.
 The type maps addresses to unsigned integers.
-Mappings can be seen as hashtables which are
+Mappings can be seen as [hash tables](https://en.wikipedia.org/wiki/Hash_table) which are
 virtually initialized such that every possible key exists and is mapped to a
 value whose byte-representation is all zeros. This analogy does not go
 too far, though, as it is neither possible to obtain a list of all keys of
@@ -193,7 +193,7 @@ Blockchain Basics
 *****************
 
 Blockchains as a concept are not too hard to understand for programmers. The reason is that
-most of the complications (mining, hashing, elliptic-curve cryptography, peer-to-peer networks, ...)
+most of the complications (mining, [hashing](https://en.wikipedia.org/wiki/Cryptographic_hash_function), [elliptic-curve cryptography](https://en.wikipedia.org/wiki/Elliptic_curve_cryptography), [peer-to-peer networks](https://en.wikipedia.org/wiki/Peer-to-peer), etc.)
 are just there to provide a certain set of features and promises. Once you accept these
 features as given, you do not have to worry about the underlying technology - or do you have
 to know how Amazon's AWS works internally in order to use it?
@@ -402,7 +402,7 @@ such situations, so that exceptions "bubble up" the call stack.
 As already said, the called contract (which can be the same as the caller)
 will receive a freshly cleared instance of memory and has access to the
 call payload - which will be provided in a separate area called the **calldata**.
-After it finished execution, it can return data which will be stored at
+After it has finished execution, it can return data which will be stored at
 a location in the caller's memory preallocated by the caller.
 
 Calls are **limited** to a depth of 1024, which means that for more complex
@@ -423,8 +423,8 @@ address at runtime. Storage, current address and balance still
 refer to the calling contract, only the code is taken from the called address.
 
 This makes it possible to implement the "library" feature in Solidity:
-Reusable library code that can be applied to a contract's storage in
-order to e.g. implement a complex data structure.
+Reusable library code that can be applied to a contract's storage, e.g. in
+order to  implement a complex data structure.
 
 .. index:: log
 
@@ -436,7 +436,7 @@ that maps all the way up to the block level. This feature called **logs**
 is used by Solidity in order to implement **events**.
 Contracts cannot access log data after it has been created, but they
 can be efficiently accessed from outside the blockchain.
-Since some part of the log data is stored in bloom filters, it is
+Since some part of the log data is stored in [bloom filters](https://en.wikipedia.org/wiki/Bloom_filter), it is
 possible to search for this data in an efficient and cryptographically
 secure way, so network peers that do not download the whole blockchain
 ("light clients") can still find these logs.
