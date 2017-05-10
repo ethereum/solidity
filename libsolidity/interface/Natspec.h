@@ -58,7 +58,7 @@ enum class CommentOwner
 	Function
 };
 
-class InterfaceHandler
+class Natspec
 {
 public:
 	/// Get the given type of documentation

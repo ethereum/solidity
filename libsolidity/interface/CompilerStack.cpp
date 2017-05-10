@@ -38,7 +38,7 @@
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/ABI.h>
-#include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
 
@@ -220,8 +220,8 @@ bool CompilerStack::analyze()
 				TypeChecker typeChecker(m_errors);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
-					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
-					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
+					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
+					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
 				}
 				else
 					noErrors = false;
@@ -492,7 +492,7 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new Json::Value(InterfaceHandler::documentation(*_contract.contract, _type)));
+		doc->reset(new Json::Value(Natspec::documentation(*_contract.contract, _type)));
 
 	return *(*doc);
 }

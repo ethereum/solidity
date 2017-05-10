@@ -23,7 +23,7 @@
  * Can generally deal with JSON files
  */
 
-#include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/Natspec.h>
 #include <boost/range/irange.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -32,7 +32,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Json::Value InterfaceHandler::documentation(
+Json::Value Natspec::documentation(
 	ContractDefinition const& _contractDef,
 	DocumentationType _type
 )
@@ -48,7 +48,7 @@ Json::Value InterfaceHandler::documentation(
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
 }
 
-Json::Value InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
+Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -71,7 +71,7 @@ Json::Value InterfaceHandler::userDocumentation(ContractDefinition const& _contr
 	return doc;
 }
 
-Json::Value InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
+Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -120,7 +120,7 @@ Json::Value InterfaceHandler::devDocumentation(ContractDefinition const& _contra
 	return doc;
 }
 
-string InterfaceHandler::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
+string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
 {
 	string value;
 	auto range = _tags.equal_range(_name);

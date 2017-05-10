@@ -59,7 +59,7 @@ class FunctionDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
-class InterfaceHandler;
+class Natspec;
 class Error;
 class DeclarationContainer;
 
