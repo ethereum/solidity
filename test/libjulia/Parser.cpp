@@ -89,11 +89,6 @@ bool successParse(std::string const& _source, bool _allowWarnings = true)
 	return !parseAndReturnFirstError(_source, _allowWarnings);
 }
 
-bool successAssemble(string const& _source, bool _allowWarnings = true)
-{
-	return successParse(_source, _allowWarnings);
-}
-
 Error expectError(std::string const& _source, bool _allowWarnings = false)
 {
 
