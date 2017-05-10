@@ -308,7 +308,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 	if (m_args.count(argName))
 	{
-		std::string output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
+		std::string output = dev::jsonPrettyPrint(m_compiler->natspec(_contract, _type));
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -817,9 +817,9 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecDev));
+			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecUser));
+			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecUser));
 		output[g_strContracts][contractName] = contractData;
 	}
 

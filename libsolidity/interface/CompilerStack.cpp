@@ -464,12 +464,12 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 	return *_contract.abi;
 }
 
-Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::natspec(string const& _contractName, DocumentationType _type) const
 {
-	return metadata(contract(_contractName), _type);
+	return natspec(contract(_contractName), _type);
 }
 
-Json::Value const& CompilerStack::metadata(Contract const& _contract, DocumentationType _type) const
+Json::Value const& CompilerStack::natspec(Contract const& _contract, DocumentationType _type) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -843,8 +843,8 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = contractABI(_contract);
-	meta["output"]["userdoc"] = metadata(_contract, DocumentationType::NatspecUser);
-	meta["output"]["devdoc"] = metadata(_contract, DocumentationType::NatspecDev);
+	meta["output"]["userdoc"] = natspec(_contract, DocumentationType::NatspecUser);
+	meta["output"]["devdoc"] = natspec(_contract, DocumentationType::NatspecDev);
 
 	return jsonCompactPrint(meta);
 }

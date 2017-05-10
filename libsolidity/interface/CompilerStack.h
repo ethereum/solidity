@@ -179,7 +179,7 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
-	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
+	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
@@ -267,7 +267,7 @@ private:
 	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 	Json::Value const& contractABI(Contract const&) const;
-	Json::Value const& metadata(Contract const&, DocumentationType _type) const;
+	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
 
 	struct Remapping
 	{
