@@ -66,8 +66,7 @@ class DeclarationContainer;
 enum class DocumentationType: uint8_t
 {
 	NatspecUser = 1,
-	NatspecDev,
-	ABIInterface
+	NatspecDev
 };
 
 /**
@@ -230,7 +229,7 @@ private:
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
 		std::string onChainMetadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> interface;
+		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
@@ -267,6 +266,7 @@ private:
 
 	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
+	Json::Value const& contractABI(Contract const&) const;
 	Json::Value const& metadata(Contract const&, DocumentationType _type) const;
 
 	struct Remapping
