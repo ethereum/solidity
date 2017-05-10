@@ -166,7 +166,7 @@ public:
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
 	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
-	/// Appends code that computes tha SHA3 hash of the topmost stack element of 32 byte type.
+	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.

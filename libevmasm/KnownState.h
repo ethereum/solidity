@@ -150,8 +150,8 @@ private:
 	StoreOperation storeInMemory(Id _slot, Id _value, SourceLocation const& _location);
 	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
 	Id loadFromMemory(Id _slot, SourceLocation const& _location);
-	/// Finds or creates a new expression that applies the sha3 hash function to the contents in memory.
-	Id applySha3(Id _start, Id _length, SourceLocation const& _location);
+	/// Finds or creates a new expression that applies the Keccak-256 hash function to the contents in memory.
+	Id applyKeccak256(Id _start, Id _length, SourceLocation const& _location);
 
 	/// @returns a new or already used Id representing the given set of tags.
 	Id tagUnion(std::set<u256> _tags);
@@ -167,8 +167,8 @@ private:
 	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
 	/// and are not contained here if they are not completely known.
 	std::map<Id, Id> m_memoryContent;
-	/// Keeps record of all sha3 hashes that are computed.
-	std::map<std::vector<Id>, Id> m_knownSha3Hashes;
+	/// Keeps record of all Keccak-256 hashes that are computed.
+	std::map<std::vector<Id>, Id> m_knownKeccak256Hashes;
 	/// Structure containing the classes of equivalent expressions.
 	std::shared_ptr<ExpressionClasses> m_expressionClasses;
 	/// Container for unions of tags stored on the stack.

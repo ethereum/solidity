@@ -96,9 +96,9 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				classes.find(AssemblyItem(1))
 			}));
 			break;
-		case Instruction::SHA3:
-			gas = GasCosts::sha3Gas;
-			gas += wordGas(GasCosts::sha3WordGas, m_state->relativeStackElement(-1));
+		case Instruction::KECCAK256:
+			gas = GasCosts::keccak256Gas;
+			gas += wordGas(GasCosts::keccak256WordGas, m_state->relativeStackElement(-1));
 			gas += memoryGas(0, -1);
 			break;
 		case Instruction::CALLDATACOPY:

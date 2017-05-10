@@ -449,7 +449,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		m_context << Instruction::DUP3 << Instruction::ADD << Instruction::SWAP2;
 		if (_sourceType.isDynamicallySized())
 		{
-			// actual array data is stored at SHA3(storage_offset)
+			// actual array data is stored at KECCAK256(storage_offset)
 			m_context << Instruction::SWAP1;
 			utils.computeHashStatic();
 			m_context << Instruction::SWAP1;
@@ -731,7 +731,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 				_context << Instruction::POP;
 			}
 
-			// Change of length for a regular array (i.e. length at location, data at sha3(location)).
+			// Change of length for a regular array (i.e. length at location, data at KECCAK256(location)).
 			// stack: ref new_length old_length
 			// store new length
 			_context << Instruction::DUP2;
