@@ -132,6 +132,8 @@ Rules::Rules()
 		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::DIV, {0, X}}, [=]{ return u256(0); }},
 		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
+		{{Instruction::SDIV, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::SDIV, {0, X}}, [=]{ return u256(0); }},
 		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
 		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
 		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
