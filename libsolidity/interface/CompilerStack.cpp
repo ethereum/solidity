@@ -451,9 +451,6 @@ Json::Value const& CompilerStack::interface(string const& _contractName) const
 
 Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
 {
-	if (m_stackState < AnalysisSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-
 	return metadata(contract(_contractName), _type);
 }
 
@@ -491,13 +488,16 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 string const& CompilerStack::onChainMetadata(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return contract(_contractName).onChainMetadata;
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
 {
+	if (m_stackState < ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
 	return *source(_sourceName).scanner;
 }
 
@@ -511,6 +511,9 @@ SourceUnit const& CompilerStack::ast(string const& _sourceName) const
 
 ContractDefinition const& CompilerStack::contractDefinition(string const& _contractName) const
 {
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
 	return *contract(_contractName).contract;
 }
 
@@ -739,6 +742,9 @@ void CompilerStack::compileContract(
 
 std::string CompilerStack::defaultContractName() const
 {
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
 	return contract("").contract->name();
 }
 
