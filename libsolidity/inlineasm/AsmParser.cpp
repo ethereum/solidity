@@ -200,6 +200,8 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 
 		// add alias for suicide
 		s_instructions["suicide"] = solidity::Instruction::SELFDESTRUCT;
+		// add alis for sha3
+		s_instructions["sha3"] = solidity::Instruction::KECCAK256;
 	}
 	return s_instructions;
 }
