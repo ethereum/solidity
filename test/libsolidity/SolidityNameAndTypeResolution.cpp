@@ -5718,6 +5718,20 @@ BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint a;
+				assembly {
+					a := 1
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
 
 
 

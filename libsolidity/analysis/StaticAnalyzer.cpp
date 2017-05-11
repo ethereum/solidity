@@ -21,13 +21,15 @@
  */
 
 #include <libsolidity/analysis/StaticAnalyzer.h>
-#include <memory>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libsolidity/inlineasm/AsmData.h>
+#include <memory>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
-
 
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
@@ -128,3 +130,22 @@ void StaticAnalyzer::warning(SourceLocation const& _location, string const& _des
 
 	m_errors.push_back(err);
 }
+
+bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
+{
+	if (!m_currentFunction)
+		return true;
+
+	for (auto const& ref: _inlineAssembly.annotation().externalReferences)
+	{
+		if (auto var = dynamic_cast<VariableDeclaration const*>(ref.second.declaration))
+		{
+			solAssert(!var->name().empty(), "");
+			if (var->isLocalVariable())
+				m_localVarUseCount[var] += 1;
+		}
+	}
+
+	return true;
+}
+
