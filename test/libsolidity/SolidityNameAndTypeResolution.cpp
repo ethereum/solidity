@@ -2933,12 +2933,12 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	CHECK_WARNING(text, "Uninitialized storage pointer");
 }
 
-BOOST_AUTO_TEST_CASE(sha3_with_large_integer_constant)
+BOOST_AUTO_TEST_CASE(keccak256_with_large_integer_constant)
 {
 	char const* text = R"(
 		contract c
 		{
-			function f() { sha3(2**500); }
+			function f() { keccak256(2**500); }
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "");
@@ -5400,7 +5400,7 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 		contract C {
 			uint constant a = b * c;
 			uint constant b = 7;
-			uint constant c = b + uint(sha3(d));
+			uint constant c = b + uint(keccak256(d));
 			uint constant d = 2 + a;
 		}
 	)";
@@ -5409,7 +5409,7 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 		contract C {
 			uint constant a = b * c;
 			uint constant b = 7;
-			uint constant c = 4 + uint(sha3(d));
+			uint constant c = 4 + uint(keccak256(d));
 			uint constant d = 2 + b;
 		}
 	)";
