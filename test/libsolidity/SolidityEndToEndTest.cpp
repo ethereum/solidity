@@ -1883,6 +1883,23 @@ BOOST_AUTO_TEST_CASE(keccak256)
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
+BOOST_AUTO_TEST_CASE(sha3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			// to confuse the optimiser
+			function b(bytes32 input) returns (bytes32) {
+				return sha3(input);
+			}
+			function a(bytes32 input) returns (bool) {
+				return keccak256(input) == b(input);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_REQUIRE(callContractFunction("a(bytes32)", u256(42)) == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_CASE(sha256)
 {
 	char const* sourceCode = R"(
