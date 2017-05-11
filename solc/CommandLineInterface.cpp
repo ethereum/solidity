@@ -284,7 +284,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 		cout << "Contract JSON ABI " << endl << data << endl;
 }
 
-void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
+void CommandLineInterface::handleNatspec(DocumentationType _type, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
@@ -1073,8 +1073,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleSignatureHashes(contract);
 		handleOnChainMetadata(contract);
 		handleABI(contract);
-		handleMeta(DocumentationType::NatspecDev, contract);
-		handleMeta(DocumentationType::NatspecUser, contract);
+		handleNatspec(DocumentationType::NatspecDev, contract);
+		handleNatspec(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
 
 	handleFormal();
