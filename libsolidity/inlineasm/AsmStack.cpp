@@ -46,14 +46,14 @@ bool InlineAssemblyStack::parse(
 )
 {
 	m_parserResult = make_shared<Block>();
-	Parser parser(m_errors);
+	Parser parser(m_errorReporter);
 	auto result = parser.parse(_scanner);
 	if (!result)
 		return false;
 
 	*m_parserResult = std::move(*result);
 	AsmAnalysisInfo analysisInfo;
-	return (AsmAnalyzer(analysisInfo, m_errors, false, _resolver)).analyze(*m_parserResult);
+	return (AsmAnalyzer(analysisInfo, m_errorReporter, false, _resolver)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
@@ -64,9 +64,9 @@ string InlineAssemblyStack::toString()
 eth::Assembly InlineAssemblyStack::assemble()
 {
 	AsmAnalysisInfo analysisInfo;
-	AsmAnalyzer analyzer(analysisInfo, m_errors);
+	AsmAnalyzer analyzer(analysisInfo, m_errorReporter);
 	solAssert(analyzer.analyze(*m_parserResult), "");
-	CodeGenerator codeGen(m_errors);
+	CodeGenerator codeGen(m_errorReporter);
 	return codeGen.assemble(*m_parserResult, analysisInfo);
 }
 
@@ -77,19 +77,20 @@ bool InlineAssemblyStack::parseAndAssemble(
 )
 {
 	ErrorList errors;
+	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_input), "--CODEGEN--");
-	auto parserResult = Parser(errors).parse(scanner);
-	if (!errors.empty())
+	auto parserResult = Parser(errorReporter).parse(scanner);
+	if (!errorReporter.errors().empty())
 		return false;
 	solAssert(parserResult, "");
 
 	AsmAnalysisInfo analysisInfo;
-	AsmAnalyzer analyzer(analysisInfo, errors, false, _identifierAccess.resolve);
+	AsmAnalyzer analyzer(analysisInfo, errorReporter, false, _identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "");
-	CodeGenerator(errors).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
+	CodeGenerator(errorReporter).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.
-	return errors.empty();
+	return errorReporter.errors().empty();
 }
 

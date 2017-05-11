@@ -30,7 +30,7 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/TypeChecker.h>
 
@@ -56,7 +56,8 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 	// Silence compiler version warning
 	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
 	ErrorList errors;
-	Parser parser(errors);
+	ErrorReporter errorReporter(errors);
+	Parser parser(errorReporter);
 	ASTPointer<SourceUnit> sourceUnit;
 	// catch exceptions for a transition period
 	try
@@ -65,14 +66,14 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 		if(!sourceUnit)
 			BOOST_FAIL("Parsing failed in type checker test.");
 
-		SyntaxChecker syntaxChecker(errors);
+		SyntaxChecker syntaxChecker(errorReporter);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
-			return make_pair(sourceUnit, errors.at(0));
+			return make_pair(sourceUnit, errorReporter.errors().at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errors);
-		solAssert(Error::containsOnlyWarnings(errors), "");
+		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errorReporter);
+		solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 		resolver.registerDeclarations(*sourceUnit);
 
 		bool success = true;
@@ -92,19 +93,19 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					globalContext->setCurrentContract(*contract);
 					resolver.updateDeclaration(*globalContext->currentThis());
 
-					TypeChecker typeChecker(errors);
+					TypeChecker typeChecker(errorReporter);
 					bool success = typeChecker.checkTypeRequirements(*contract);
-					BOOST_CHECK(success || !errors.empty());
+					BOOST_CHECK(success || !errorReporter.errors().empty());
 				}
 		if (success)
-			if (!PostTypeChecker(errors).check(*sourceUnit))
+			if (!PostTypeChecker(errorReporter).check(*sourceUnit))
 				success = false;
 		if (success)
-			if (!StaticAnalyzer(errors).analyze(*sourceUnit))
+			if (!StaticAnalyzer(errorReporter).analyze(*sourceUnit))
 				success = false;
-		if (errors.size() > 1 && !_allowMultipleErrors)
+		if (errorReporter.errors().size() > 1 && !_allowMultipleErrors)
 			BOOST_FAIL("Multiple errors found");
-		for (auto const& currentError: errors)
+		for (auto const& currentError: errorReporter.errors())
 		{
 			if (
 				(_reportWarnings && currentError->type() == Error::Type::Warning) ||

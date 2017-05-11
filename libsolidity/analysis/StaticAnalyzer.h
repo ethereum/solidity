@@ -44,15 +44,13 @@ class StaticAnalyzer: private ASTConstVisitor
 {
 public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during static analysis.
-	explicit StaticAnalyzer(ErrorList& _errors): m_errors(_errors) {}
+	explicit StaticAnalyzer(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
 	bool analyze(SourceUnit const& _sourceUnit);
 
 private:
-	/// Adds a new warning to the list of errors.
-	void warning(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(ContractDefinition const& _contract) override;
 	virtual void endVisit(ContractDefinition const& _contract) override;
@@ -67,7 +65,7 @@ private:
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
 
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether the current contract definition is a library.
 	bool m_library = false;

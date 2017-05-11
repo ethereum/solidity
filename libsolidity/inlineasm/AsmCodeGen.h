@@ -23,7 +23,6 @@
 #pragma once
 
 #include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/interface/Exceptions.h>
 
 #include <functional>
 
@@ -35,6 +34,7 @@ class Assembly;
 }
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
 struct Block;
@@ -42,8 +42,8 @@ struct Block;
 class CodeGenerator
 {
 public:
-	CodeGenerator(ErrorList& _errors):
-		m_errors(_errors) {}
+	CodeGenerator(ErrorReporter& _errorReporter):
+		m_errorReporter(_errorReporter) {}
 	/// Performs code generation and @returns the result.
 	eth::Assembly assemble(
 		Block const& _parsedData,
@@ -59,7 +59,7 @@ public:
 	);
 
 private:
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

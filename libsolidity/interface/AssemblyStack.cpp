@@ -45,13 +45,13 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 {
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = assembly::Parser(m_errors, m_language == Language::JULIA).parse(m_scanner);
-	if (!m_errors.empty())
+	m_parserResult = assembly::Parser(m_errorReporter, m_language == Language::JULIA).parse(m_scanner);
+	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
 
 	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errors);
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter);
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }
@@ -66,7 +66,7 @@ eth::LinkerObject AssemblyStack::assemble(Machine _machine)
 	{
 	case Machine::EVM:
 	{
-		auto assembly = assembly::CodeGenerator(m_errors).assemble(*m_parserResult, *m_analysisInfo);
+		auto assembly = assembly::CodeGenerator(m_errorReporter).assemble(*m_parserResult, *m_analysisInfo);
 		return assembly.assemble();
 	}
 	case Machine::EVM15:

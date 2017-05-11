@@ -24,7 +24,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -37,8 +37,8 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorList& _errors):
-	m_info(_info), m_errors(_errors)
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
+	m_info(_info), m_errorReporter(_errorReporter)
 {
 	m_currentScope = &scope(nullptr);
 }
@@ -48,11 +48,10 @@ bool ScopeFiller::operator()(Label const& _item)
 	if (!m_currentScope->registerLabel(_item.name))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Label name " + _item.name + " already taken in this scope.",
-			_item.location
-		));
+		m_errorReporter.declarationError(
+			_item.location,
+			"Label name " + _item.name + " already taken in this scope."
+		);
 		return false;
 	}
 	return true;
@@ -78,11 +77,10 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Function name " + _funDef.name + " already taken in this scope.",
-			_funDef.location
-		));
+		m_errorReporter.declarationError(
+			_funDef.location,
+			"Function name " + _funDef.name + " already taken in this scope."
+		);
 		success = false;
 	}
 
@@ -132,11 +130,10 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 	if (!_scope.registerVariable(_name.name, _name.type))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Variable name " + _name.name + " already taken in this scope.",
-			_location
-		));
+		m_errorReporter.declarationError(
+			_location,
+			"Variable name " + _name.name + " already taken in this scope."
+		);
 		return false;
 	}
 	return true;

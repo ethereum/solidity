@@ -21,10 +21,10 @@
  */
 
 #include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <ctype.h>
 #include <algorithm>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 using namespace dev;
@@ -40,7 +40,7 @@ shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scann
 	}
 	catch (FatalError const&)
 	{
-		if (m_errors.empty())
+		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
 	}
 	return nullptr;

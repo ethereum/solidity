@@ -23,7 +23,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <string>
 
 namespace dev
@@ -43,7 +43,7 @@ class SourceUnit;
 class Why3Translator: private ASTConstVisitor
 {
 public:
-	Why3Translator(ErrorList& _errors): m_lines(std::vector<Line>{{std::string(), 0}}), m_errors(_errors) {}
+	Why3Translator(ErrorReporter& _errorReporter): m_lines(std::vector<Line>{{std::string(), 0}}), m_errorReporter(_errorReporter) {}
 
 	/// Appends formalisation of the given source unit to the output.
 	/// @returns false on error.
@@ -52,11 +52,6 @@ public:
 	std::string translation() const;
 
 private:
-	/// Creates an error and adds it to errors list.
-	void error(ASTNode const& _node, std::string const& _description);
-	/// Reports a fatal error and throws.
-	void fatalError(ASTNode const& _node, std::string const& _description);
-
 	/// Appends imports and constants use throughout the formal code.
 	void appendPreface();
 
@@ -64,6 +59,9 @@ private:
 	std::string toFormalType(Type const& _type) const;
 	using errinfo_noFormalTypeFrom = boost::error_info<struct tag_noFormalTypeFrom, std::string /* name of the type that cannot be translated */ >;
 	struct NoFormalType: virtual Exception {};
+
+	void error(ASTNode const& _source, std::string const& _description);
+	void fatalError(ASTNode const& _source, std::string const& _description);
 
 	void indent() { newLine(); m_lines.back().indentation++; }
 	void unindent();
@@ -98,7 +96,7 @@ private:
 
 	virtual bool visitNode(ASTNode const& _node) override
 	{
-		error(_node, "Code not supported for formal verification.");
+		m_errorReporter.why3TranslatorError(_node, "Code not supported for formal verification.");
 		return false;
 	}
 
@@ -142,7 +140,7 @@ private:
 		unsigned indentation;
 	};
 	std::vector<Line> m_lines;
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

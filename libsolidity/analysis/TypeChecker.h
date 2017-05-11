@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
@@ -33,6 +32,7 @@ namespace dev
 namespace solidity
 {
 
+class ErrorReporter;
 
 /**
  * The module that performs type analysis on the AST, checks the applicability of operations on
@@ -43,7 +43,7 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
-	TypeChecker(ErrorList& _errors): m_errors(_errors) {}
+	TypeChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	/// Performs type checking on the given contract and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
@@ -56,14 +56,6 @@ public:
 	TypePointer const& type(VariableDeclaration const& _variable) const;
 
 private:
-	/// Adds a new error to the list of errors.
-	void typeError(SourceLocation const& _location, std::string const& _description);
-
-	/// Adds a new warning to the list of errors.
-	void warning(SourceLocation const& _location, std::string const& _description);
-
-	/// Adds a new error to the list of errors and throws to abort type checking.
-	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(ContractDefinition const& _contract) override;
 	/// Checks that two functions defined in this contract with the same name have different
@@ -127,7 +119,7 @@ private:
 
 	ContractDefinition const* m_scope = nullptr;
 
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

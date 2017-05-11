@@ -22,6 +22,7 @@
 
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <memory>
 
 using namespace std;
@@ -31,7 +32,7 @@ using namespace dev::solidity;
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
-	return Error::containsOnlyWarnings(m_errors);
+	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
 bool StaticAnalyzer::visit(ContractDefinition const& _contract)
@@ -62,7 +63,7 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_nonPayablePublic = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
-			warning(var.first->location(), "Unused local variable");
+			m_errorReporter.warning(var.first->location(), "Unused local variable");
 	m_localVarUseCount.clear();
 }
 
@@ -104,7 +105,11 @@ bool StaticAnalyzer::visit(Return const& _return)
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
 	if (_statement.expression().annotation().isPure)
-		warning(_statement.location(), "Statement has no effect.");
+		m_errorReporter.warning(
+			_statement.location(),
+			"Statement has no effect."
+		);
+
 	return true;
 }
 
@@ -113,19 +118,12 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	if (m_nonPayablePublic && !m_library)
 		if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
 			if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "value")
-				warning(_memberAccess.location(), "\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?");
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?"
+				);
 
 	return true;
-}
-
-void StaticAnalyzer::warning(SourceLocation const& _location, string const& _description)
-{
-	auto err = make_shared<Error>(Error::Type::Warning);
-	*err <<
-		errinfo_sourceLocation(_location) <<
-		errinfo_comment(_description);
-
-	m_errors.push_back(err);
 }
 
 bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
@@ -145,4 +143,3 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 
 	return true;
 }
-

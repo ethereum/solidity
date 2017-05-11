@@ -32,14 +32,14 @@ using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
 CodeTransform::CodeTransform(
-	ErrorList& _errors,
+	ErrorReporter& _errorReporter,
 	AbstractAssembly& _assembly,
 	Block const& _block,
 	AsmAnalysisInfo& _analysisInfo,
 	ExternalIdentifierAccess const& _identifierAccess,
 	int _initialStackHeight
 ):
-	m_errors(_errors),
+	m_errorReporter(_errorReporter),
 	m_assembly(_assembly),
 	m_info(_analysisInfo),
 	m_scope(*_analysisInfo.scopes.at(&_block)),
@@ -91,11 +91,10 @@ int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const&
 	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 	{
 		//@TODO move this to analysis phase.
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::TypeError,
-			"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-			_location
-		));
+		m_errorReporter.typeError(
+			_location,
+			"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")"
+		);
 		return 0;
 	}
 	else
@@ -124,7 +123,7 @@ void CodeTransform::assignLabelIdIfUnset(Scope::Label& _label)
 
 void CodeTransform::operator()(Block const& _block)
 {
-	CodeTransform(m_errors, m_assembly, _block, m_info, m_identifierAccess, m_initialStackHeight);
+	CodeTransform(m_errorReporter, m_assembly, _block, m_info, m_identifierAccess, m_initialStackHeight);
 	checkStackHeight(&_block);
 }
 

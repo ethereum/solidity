@@ -37,7 +37,7 @@ namespace assembly
 class Parser: public ParserBase
 {
 public:
-	explicit Parser(ErrorList& _errors, bool _julia = false): ParserBase(_errors), m_julia(_julia) {}
+	explicit Parser(ErrorReporter& _errorReporter, bool _julia = false): ParserBase(_errorReporter), m_julia(_julia) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.

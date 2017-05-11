@@ -32,7 +32,7 @@ bool Why3Translator::process(SourceUnit const& _source)
 	try
 	{
 		if (m_lines.size() != 1 || !m_lines.back().contents.empty())
-			fatalError(_source, "Multiple source units not yet supported");
+			fatalError(_source, string("Multiple source units not yet supported"));
 		appendPreface();
 		_source.accept(*this);
 	}
@@ -53,22 +53,6 @@ string Why3Translator::translation() const
 	for (auto const& line: m_lines)
 		result += string(line.indentation, '\t') + line.contents + "\n";
 	return result;
-}
-
-void Why3Translator::error(ASTNode const& _node, string const& _description)
-{
-	auto err = make_shared<Error>(Error::Type::Why3TranslatorError);
-	*err <<
-		errinfo_sourceLocation(_node.location()) <<
-		errinfo_comment(_description);
-	m_errors.push_back(err);
-	m_errorOccured = true;
-}
-
-void Why3Translator::fatalError(ASTNode const& _node, string const& _description)
-{
-	error(_node, _description);
-	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 string Why3Translator::toFormalType(Type const& _type) const
@@ -900,3 +884,15 @@ module Address
 end
    )", 0});
 }
+
+void Why3Translator::error(ASTNode const& _source, std::string const& _description)
+{
+	m_errorOccured = true;
+	m_errorReporter.why3TranslatorError(_source, _description);
+}
+void Why3Translator::fatalError(ASTNode const& _source, std::string const& _description)
+{
+	m_errorOccured = true;
+	m_errorReporter.fatalWhy3TranslatorError(_source, _description);
+}
+

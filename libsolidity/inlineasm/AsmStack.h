@@ -22,9 +22,8 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <libjulia/backends/evm/AbstractAssembly.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 #include <string>
 #include <functional>
@@ -46,6 +45,8 @@ struct Identifier;
 class InlineAssemblyStack
 {
 public:
+	InlineAssemblyStack():
+		m_errorReporter(m_errorList) {}
 	/// Parse the given inline assembly chunk starting with `{` and ending with the corresponding `}`.
 	/// @return false or error.
 	bool parse(
@@ -65,11 +66,12 @@ public:
 		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess()
 	);
 
-	ErrorList const& errors() const { return m_errors; }
+	ErrorList const& errors() const { return m_errorReporter.errors(); }
 
 private:
 	std::shared_ptr<Block> m_parserResult;
-	ErrorList m_errors;
+	ErrorList m_errorList;
+	ErrorReporter m_errorReporter;
 };
 
 }

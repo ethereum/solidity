@@ -29,6 +29,7 @@
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include "../TestHelper.h"
 
 using namespace std;
@@ -98,7 +99,8 @@ bytes compileFirstExpression(
 	try
 	{
 		ErrorList errors;
-		sourceUnit = Parser(errors).parse(make_shared<Scanner>(CharStream(_sourceCode)));
+		ErrorReporter errorReporter(errors);
+		sourceUnit = Parser(errorReporter).parse(make_shared<Scanner>(CharStream(_sourceCode)));
 		if (!sourceUnit)
 			return bytes();
 	}
@@ -114,8 +116,9 @@ bytes compileFirstExpression(
 		declarations.push_back(variable.get());
 
 	ErrorList errors;
+	ErrorReporter errorReporter(errors);
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(declarations, scopes, errors);
+	NameAndTypeResolver resolver(declarations, scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
@@ -128,7 +131,8 @@ bytes compileFirstExpression(
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker typeChecker(errors);
+			ErrorReporter errorReporter(errors);
+			TypeChecker typeChecker(errorReporter);
 			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

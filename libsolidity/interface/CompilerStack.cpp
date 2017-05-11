@@ -57,9 +57,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-CompilerStack::CompilerStack(ReadFile::Callback const& _readFile):
-	m_readFile(_readFile) {}
-
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
 	vector<Remapping> remappings;
@@ -96,7 +93,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
-	m_errors.clear();
+	m_errorReporter.clear();
 	m_stackState = Empty;
 }
 
@@ -121,15 +118,11 @@ bool CompilerStack::parse()
 	//reset
 	if(m_stackState != SourcesSet)
 		return false;
-	m_errors.clear();
+	m_errorReporter.clear();
 	ASTNode::resetID();
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
-	{
-		auto err = make_shared<Error>(Error::Type::Warning);
-		*err << errinfo_comment("This is a pre-release compiler version, please do not use it in production.");
-		m_errors.push_back(err);
-	}
+		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -139,9 +132,9 @@ bool CompilerStack::parse()
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
-		source.ast = Parser(m_errors).parse(source.scanner);
+		source.ast = Parser(m_errorReporter).parse(source.scanner);
 		if (!source.ast)
-			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
 		{
 			source.ast->annotation().path = path;
@@ -154,7 +147,7 @@ bool CompilerStack::parse()
 			}
 		}
 	}
-	if (Error::containsOnlyWarnings(m_errors))
+	if (Error::containsOnlyWarnings(m_errorReporter.errors()))
 	{
 		m_stackState = ParsingSuccessful;
 		return true;
@@ -170,18 +163,18 @@ bool CompilerStack::analyze()
 	resolveImports();
 
 	bool noErrors = true;
-	SyntaxChecker syntaxChecker(m_errors);
+	SyntaxChecker syntaxChecker(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
 
-	DocStringAnalyser docStringAnalyser(m_errors);
+	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!docStringAnalyser.analyseDocStrings(*source->ast))
 			noErrors = false;
 
 	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errors);
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
@@ -217,7 +210,7 @@ bool CompilerStack::analyze()
 			{
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->currentThis());
-				TypeChecker typeChecker(m_errors);
+				TypeChecker typeChecker(m_errorReporter);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
 					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
@@ -237,7 +230,7 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
-		PostTypeChecker postTypeChecker(m_errors);
+		PostTypeChecker postTypeChecker(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!postTypeChecker.check(*source->ast))
 				noErrors = false;
@@ -245,7 +238,7 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
-		StaticAnalyzer staticAnalyzer(m_errors);
+		StaticAnalyzer staticAnalyzer(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
@@ -323,11 +316,11 @@ void CompilerStack::link()
 	}
 }
 
-bool CompilerStack::prepareFormalAnalysis(ErrorList* _errors)
+bool CompilerStack::prepareFormalAnalysis(ErrorReporter* _errorReporter)
 {
-	if (!_errors)
-		_errors = &m_errors;
-	Why3Translator translator(*_errors);
+	if (!_errorReporter)
+		_errorReporter = &m_errorReporter;
+	Why3Translator translator(*_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!translator.process(*source->ast))
 			return false;
@@ -582,11 +575,10 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 				newSources[importPath] = result.contentsOrErrorMessage;
 			else
 			{
-				auto err = make_shared<Error>(Error::Type::ParserError);
-				*err <<
-					errinfo_sourceLocation(import->location()) <<
-					errinfo_comment("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage);
-				m_errors.push_back(std::move(err));
+				m_errorReporter.parserError(
+					import->location(),
+					string("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage)
+				);
 				continue;
 			}
 		}

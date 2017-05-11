@@ -22,6 +22,7 @@
 
 #include <libsolidity/parsing/ParserBase.h>
 #include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
 using namespace dev;
@@ -82,16 +83,10 @@ void ParserBase::expectToken(Token::Value _value)
 
 void ParserBase::parserError(string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::ParserError);
-	*err <<
-		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
-		errinfo_comment(_description);
-
-	m_errors.push_back(err);
+	m_errorReporter.parserError(SourceLocation(position(), position(), sourceName()), _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	parserError(_description);
-	BOOST_THROW_EXCEPTION(FatalError());
+	m_errorReporter.fatalParserError(SourceLocation(position(), position(), sourceName()), _description);
 }

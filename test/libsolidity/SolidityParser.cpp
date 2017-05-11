@@ -24,7 +24,7 @@
 #include <memory>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include "../TestHelper.h"
 #include "ErrorCheck.h"
 
@@ -41,7 +41,8 @@ namespace
 {
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
-	ASTPointer<SourceUnit> sourceUnit = Parser(_errors).parse(std::make_shared<Scanner>(CharStream(_source)));
+	ErrorReporter errorReporter(_errors);
+	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source)));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

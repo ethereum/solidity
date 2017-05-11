@@ -23,7 +23,6 @@
 #pragma once
 
 #include <memory>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Token.h>
 
@@ -32,12 +31,13 @@ namespace dev
 namespace solidity
 {
 
+class ErrorReporter;
 class Scanner;
 
 class ParserBase
 {
 public:
-	ParserBase(ErrorList& errors): m_errors(errors) {}
+	ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
 
 	std::shared_ptr<std::string const> const& sourceName() const;
 
@@ -67,7 +67,7 @@ protected:
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

@@ -46,7 +46,7 @@ set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
-	if (!(ScopeFiller(m_info, m_errors))(_block))
+	if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 		return false;
 
 	return (*this)(_block);
@@ -74,11 +74,10 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::TypeError,
-			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)",
-			_literal.location
-		));
+		m_errorReporter.typeError(
+			_literal.location,
+			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+		);
 		return false;
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
@@ -87,18 +86,17 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 
 bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 {
-	size_t numErrorsBefore = m_errors.size();
+	size_t numErrorsBefore = m_errorReporter.errors().size();
 	bool success = true;
 	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
 		[&](Scope::Variable const& _var)
 		{
 			if (!_var.active)
 			{
-				m_errors.push_back(make_shared<Error>(
-					Error::Type::DeclarationError,
-					"Variable " + _identifier.name + " used before it was declared.",
-					_identifier.location
-				));
+				m_errorReporter.declarationError(
+					_identifier.location,
+					"Variable " + _identifier.name + " used before it was declared."
+				);
 				success = false;
 			}
 			++m_stackHeight;
@@ -109,11 +107,10 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		},
 		[&](Scope::Function const&)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Function " + _identifier.name + " used without being called.",
-				_identifier.location
-			));
+			m_errorReporter.typeError(
+				_identifier.location,
+				"Function " + _identifier.name + " used without being called."
+			);
 			success = false;
 		}
 	)))
@@ -127,12 +124,8 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		if (stackSize == size_t(-1))
 		{
 			// Only add an error message if the callback did not do it.
-			if (numErrorsBefore == m_errors.size())
-				m_errors.push_back(make_shared<Error>(
-					Error::Type::DeclarationError,
-					"Identifier not found.",
-					_identifier.location
-				));
+			if (numErrorsBefore == m_errorReporter.errors().size())
+				m_errorReporter.declarationError(_identifier.location, "Identifier not found.");
 			success = false;
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
@@ -187,11 +180,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
 	if ((m_stackHeight - stackHeight) != expectedItems)
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Variable count mismatch.",
-			_varDecl.location
-		));
+		m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
 		return false;
 	}
 
@@ -233,20 +222,18 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 	if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Attempt to call variable instead of function.",
-				_funCall.functionName.location
-			));
+			m_errorReporter.typeError(
+				_funCall.functionName.location,
+				"Attempt to call variable instead of function."
+			);
 			success = false;
 		},
 		[&](Scope::Label const&)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Attempt to call label instead of function.",
-				_funCall.functionName.location
-				));
+			m_errorReporter.typeError(
+				_funCall.functionName.location,
+				"Attempt to call label instead of function."
+			);
 			success = false;
 		},
 		[&](Scope::Function const& _fun)
@@ -257,26 +244,18 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		}
 	)))
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Function not found.",
-			_funCall.functionName.location
-		));
+		m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
 		success = false;
 	}
 	if (success)
 	{
 		if (_funCall.arguments.size() != arguments)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Expected " +
-				boost::lexical_cast<string>(arguments) +
-				" arguments but got " +
-				boost::lexical_cast<string>(_funCall.arguments.size()) +
-				".",
-				_funCall.functionName.location
-				));
+			m_errorReporter.typeError(
+				_funCall.functionName.location,
+				"Expected " + boost::lexical_cast<string>(arguments) + " arguments but got " +
+				boost::lexical_cast<string>(_funCall.arguments.size()) + "."
+			);
 			success = false;
 		}
 	}
@@ -317,11 +296,10 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			auto val = make_tuple(_case.value->kind, _case.value->value);
 			if (!cases.insert(val).second)
 			{
-				m_errors.push_back(make_shared<Error>(
-					Error::Type::DeclarationError,
-					"Duplicate case defined",
-					_case.location
-				));
+				m_errorReporter.declarationError(
+					_case.location,
+					"Duplicate case defined"
+				);
 				success = false;
 			}
 		}
@@ -354,16 +332,15 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	int const stackDiff = m_stackHeight - initialStackHeight;
 	if (stackDiff != 0)
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
+		m_errorReporter.declarationError(
+			_block.location,
 			"Unbalanced stack at the end of a block: " +
 			(
 				stackDiff > 0 ?
 				to_string(stackDiff) + string(" surplus item(s).") :
 				to_string(-stackDiff) + string(" missing item(s).")
-			),
-			_block.location
-		));
+			)
+		);
 		success = false;
 	}
 
@@ -375,27 +352,22 @@ bool AsmAnalyzer::operator()(Block const& _block)
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
 	bool success = true;
-	size_t numErrorsBefore = m_errors.size();
+	size_t numErrorsBefore = m_errorReporter.errors().size();
 	size_t variableSize(-1);
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
 		// Check that it is a variable
 		if (var->type() != typeid(Scope::Variable))
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Assignment requires variable.",
-				_variable.location
-			));
+			m_errorReporter.typeError(_variable.location, "Assignment requires variable.");
 			success = false;
 		}
 		else if (!boost::get<Scope::Variable>(*var).active)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::DeclarationError,
-				"Variable " + _variable.name + " used before it was declared.",
-				_variable.location
-			));
+			m_errorReporter.declarationError(
+				_variable.location,
+				"Variable " + _variable.name + " used before it was declared."
+			);
 			success = false;
 		}
 		variableSize = 1;
@@ -405,12 +377,8 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 	if (variableSize == size_t(-1))
 	{
 		// Only add message if the callback did not.
-		if (numErrorsBefore == m_errors.size())
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::DeclarationError,
-				"Variable not found or variable not lvalue.",
-				_variable.location
-			));
+		if (numErrorsBefore == m_errorReporter.errors().size())
+			m_errorReporter.declarationError(_variable.location, "Variable not found or variable not lvalue.");
 		success = false;
 	}
 	if (_valueSize == size_t(-1))
@@ -420,15 +388,14 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 
 	if (_valueSize != variableSize && variableSize != size_t(-1))
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::TypeError,
+		m_errorReporter.typeError(
+			_variable.location,
 			"Variable size (" +
 			to_string(variableSize) +
 			") and value size (" +
 			to_string(_valueSize) +
-			") do not match.",
-			_variable.location
-		));
+			") do not match."
+		);
 		success = false;
 	}
 	return success;
@@ -439,15 +406,14 @@ bool AsmAnalyzer::expectDeposit(int const _deposit, int const _oldHeight, Source
 	int stackDiff = m_stackHeight - _oldHeight;
 	if (stackDiff != _deposit)
 	{
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::TypeError,
+		m_errorReporter.typeError(
+			_location,
 			"Expected instruction(s) to deposit " +
 			boost::lexical_cast<string>(_deposit) +
 			" item(s) to the stack, but did deposit " +
 			boost::lexical_cast<string>(stackDiff) +
-			" item(s).",
-			_location
-		));
+			" item(s)."
+		);
 		return false;
 	}
 	else
@@ -468,9 +434,8 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 		return;
 
 	if (!builtinTypes.count(type))
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::TypeError,
-			"\"" + type + "\" is not a valid type (user defined types are not yet supported).",
-			_location
-		));
+		m_errorReporter.typeError(
+			_location,
+			"\"" + type + "\" is not a valid type (user defined types are not yet supported)."
+		);
 }

@@ -33,6 +33,7 @@ namespace dev
 namespace solidity
 {
 
+class ErrorReporter;
 class NameAndTypeResolver;
 
 /**
@@ -43,11 +44,11 @@ class ReferencesResolver: private ASTConstVisitor
 {
 public:
 	ReferencesResolver(
-		ErrorList& _errors,
+		ErrorReporter& _errorReporter,
 		NameAndTypeResolver& _resolver,
 		bool _resolveInsideCode = false
 	):
-		m_errors(_errors),
+		m_errorReporter(_errorReporter),
 		m_resolver(_resolver),
 		m_resolveInsideCode(_resolveInsideCode)
 	{}
@@ -77,13 +78,10 @@ private:
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
-	/// Adds a new error to the list of errors.
-	void declarationError(const SourceLocation& _location, std::string const& _description);
-
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void fatalDeclarationError(const SourceLocation& _location, std::string const& _description);
+	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
 
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	/// Stack of return parameters.
 	std::vector<ParameterList const*> m_returnParameters;

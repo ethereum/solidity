@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <boost/variant.hpp>
 
 #include <functional>
@@ -29,8 +27,10 @@
 
 namespace dev
 {
+struct SourceLocation;
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
 
@@ -58,7 +58,7 @@ struct AsmAnalysisInfo;
 class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
-	ScopeFiller(AsmAnalysisInfo& _info, ErrorList& _errors);
+	ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter);
 
 	bool operator()(assembly::Instruction const&) { return true; }
 	bool operator()(assembly::Literal const&) { return true; }
@@ -84,7 +84,7 @@ private:
 
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

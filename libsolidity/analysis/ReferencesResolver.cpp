@@ -28,6 +28,7 @@
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -111,7 +112,7 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	case VariableDeclaration::Visibility::External:
 		break;
 	default:
-		typeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
@@ -165,7 +166,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// the type and size of external identifiers, which would result in false errors.
 	// The only purpose of this step is to fill the inline assembly annotation with
 	// external references.
-	ErrorList errorsIgnored;
+	ErrorList errors;
+	ErrorReporter errorsIgnored(errors);
 	julia::ExternalIdentifierAccess::Resolver resolver =
 	[&](assembly::Identifier const& _identifier, julia::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
@@ -303,29 +305,19 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::TypeError);
-	*err <<	errinfo_sourceLocation(_location) << errinfo_comment(_description);
 	m_errorOccurred = true;
-	m_errors.push_back(err);
+	m_errorReporter.typeError(_location, _description);
 }
 
 void ReferencesResolver::fatalTypeError(SourceLocation const& _location, string const& _description)
 {
-	typeError(_location, _description);
-	BOOST_THROW_EXCEPTION(FatalError());
-}
-
-void ReferencesResolver::declarationError(SourceLocation const& _location, string const& _description)
-{
-	auto err = make_shared<Error>(Error::Type::DeclarationError);
-	*err <<	errinfo_sourceLocation(_location) << errinfo_comment(_description);
 	m_errorOccurred = true;
-	m_errors.push_back(err);
+	m_errorReporter.fatalTypeError(_location, _description);
 }
 
 void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
 {
-	declarationError(_location, _description);
-	BOOST_THROW_EXCEPTION(FatalError());
+	m_errorOccurred = true;
+	m_errorReporter.fatalDeclarationError(_location, _description);
 }
 
