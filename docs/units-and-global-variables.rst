@@ -55,7 +55,7 @@ Block and Transaction Properties
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
-- ``block.timestamp`` (``uint``): current block timestamp
+- ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
 - ``msg.data`` (``bytes``): complete calldata
 - ``msg.gas`` (``uint``): remaining gas
 - ``msg.sender`` (``address``): sender of the message (current call)
