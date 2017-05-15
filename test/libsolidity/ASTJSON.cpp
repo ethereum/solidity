@@ -25,6 +25,7 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 
 using namespace std;
 
@@ -226,6 +227,44 @@ BOOST_AUTO_TEST_CASE(function_type)
 	BOOST_CHECK_EQUAL(funType["attributes"]["constant"], true);
 	BOOST_CHECK_EQUAL(funType["attributes"]["payable"], false);
 	BOOST_CHECK_EQUAL(funType["attributes"]["visibility"], "external");
+}
+
+BOOST_AUTO_TEST_CASE(importAST)
+{
+	CompilerStack c;
+	c.addSource("a",
+		"pragma solidity ^0.4.8;"
+//		"contract C { function f(function() external payable returns (uint) x) "
+//		"returns (function() external constant returns (uint)) {} }"
+	);
+	c.parseAndAnalyze();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 0;
+	//SourceUnit const& originalAst = c.ast();
+	Json::Value originalJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	//Json::Value originalJson = ASTJsonConverter(true, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+
+	//use importer to transform json to ast and back again:
+	//first build the ast without scopes and types
+	ASTPointer<SourceUnit> newPartialAST = ASTJsonImporter(originalJson, "a").jsonToSourceUnit();
+	//next, put it into a map that can be given to the compiler
+	map<string, shared_ptr<SourceUnit>> tmp;
+	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
+	//reset compiler and load map
+	c.reset(false);
+	bool import = c.importASTs(tmp);
+//	//use the compiler's analyzer to annotate, typecheck, etc...
+	if (import)
+		c.analyze();
+	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json();
+	if (newJson != originalJson)
+	{
+		cout << "originalJson: " << originalJson << std::endl;
+		cout << "backandforth" << newJson << std::endl;
+	}
+	assert(newJson == originalJson);
+
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

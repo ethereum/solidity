@@ -61,6 +61,8 @@ public:
 	size_t id() const { return m_id; }
 	/// Resets the global ID counter. This invalidates all previous IDs.
 	static void resetID();
+	/// Set the ID manually, used when recreating the AST from a JSON-tree
+	void setID(size_t _id) { m_id = _id; }
 
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
@@ -99,7 +101,7 @@ public:
 	///@}
 
 protected:
-	size_t const m_id = 0;
+	size_t m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable ASTAnnotation* m_annotation = nullptr;
 
