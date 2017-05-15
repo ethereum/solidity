@@ -252,6 +252,34 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
+bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
+{
+	if (m_stackState != Empty)
+		return false;
+	for (auto& src : _sources)
+	{
+		string const& path = src.first;
+		Source source;
+		source.ast = src.second;
+		//source.scanner will stay empty
+		m_sources[path] = source;
+	}
+	m_stackState = ParsingSuccessful;
+	return true;
+	//	in case not all necessary contracts are in the list, //TODO???
+	//	import and parse the missing ones
+}
+
+vector<string> CompilerStack::contractNames() const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+	vector<string> contractNames;
+	for (auto const& contract: m_contracts)
+		contractNames.push_back(contract.first);
+	return contractNames;
+}
+
 bool CompilerStack::compile()
 {
 	if (m_stackState < AnalysisSuccessful)

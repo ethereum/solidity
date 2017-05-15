@@ -158,6 +158,10 @@ public:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse()
+	/// @returns false if the CompilerStack was not reset beforehand.
+	bool importASTs(std::map<std::string, std::shared_ptr<SourceUnit>> _sources);
+
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 

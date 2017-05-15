@@ -25,6 +25,11 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
+
+//4 debugging
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -257,6 +262,61 @@ BOOST_AUTO_TEST_CASE(documentation)
 
 }
 
+
+//BOOST_AUTO_TEST_CASE(importAST)
+
+//=======
+//	//SourceUnit const& originalAst = c.ast();
+//	//Json::Value originalJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+//	Json::Value originalJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+
+//	//use importer to transform json to ast and back again:
+//	//first build the ast without scopes and types
+//	ASTPointer<SourceUnit> newPartialAST = ASTJsonImporter(originalJson, "a").jsonToSourceUnit();
+//	//next, put it into a map that can be given to the compiler
+//	map<string, shared_ptr<SourceUnit>> tmp;
+//	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
+//	//reset compiler and load map
+//	c.reset(false);
+//	bool import = c.importASTs(tmp);
+////	//use the compiler's analyzer to annotate, typecheck, etc...
+//	if (import)
+//		c.analyze();
+//	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+////	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json();
+//	if (newJson != originalJson)
+//	{
+//		cout << "originalJson: " << originalJson << std::endl;
+//		cout << "backandforth" << newJson << std::endl;
+//	}
+//	assert(newJson == originalJson);
+//>>>>>>> fixing small errors
+
+//{
+//	CompilerStack c;
+//	c.addSource("a",
+//		"pragma solidity ^0.4.8;"
+//		"contract C { function f(function() external payable returns (uint) x) "
+//		"returns (function() external constant returns (uint)) {} }"
+//	);
+//	//SourceUnit const& originalAst = c.ast();
+//	Json::Value originalJson = ASTJsonConverter(true, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+
+//	//use importer to transform json to ast and back again:
+//	//first build the ast without scopes and types
+//	ASTPointer<SourceUnit> newPartialAST = ASTJsonImporter(originalJson, "a").jsonToSourceUnit();
+//	//next, put it into a map that can be given to the compiler
+//	map<string, shared_ptr<SourceUnit>> tmp;
+//	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
+//	//reset compiler and load map
+//	c.reset(false);
+////	bool import = c.importASTs(tmp);
+////	c.importASTs(tmp);
+////	//use the compiler's analyzer to annotate, typecheck, etc...
+////	assert(newJson == originalJson);
+
+
+//}
 
 BOOST_AUTO_TEST_SUITE_END()
 

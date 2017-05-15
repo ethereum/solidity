@@ -66,6 +66,8 @@ public:
 	size_t id() const { return m_id; }
 	/// Resets the global ID counter. This invalidates all previous IDs.
 	static void resetID();
+	/// Set the ID manually, used when recreating the AST from a JSON-tree
+	void setID(size_t _id) { m_id = _id; }
 
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
@@ -104,7 +106,7 @@ public:
 	///@}
 
 protected:
-	size_t const m_id = 0;
+	size_t m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable ASTAnnotation* m_annotation = nullptr;
 
@@ -894,8 +896,14 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
+<<<<<<< 6d6023019656403018d7a7d587df791878a8a06a
 	ASTPointer<ParameterList> const& parameterTypeList() const { return m_parameterTypes; }
 	ASTPointer<ParameterList> const& returnParameterTypeList() const { return m_returnTypes; }
+=======
+	ASTPointer<ParameterList> const& parameterTypesList() const { return m_parameterTypes; }
+	ASTPointer<ParameterList> const& returnParameterTypesList() const { return m_returnTypes; }
+
+>>>>>>> fixing small errors
 
 	Declaration::Visibility visibility() const
 	{
