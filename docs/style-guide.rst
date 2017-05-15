@@ -1093,3 +1093,64 @@ General Recommendations
 =======================
 
 TODO
+
+.. _natspec:
+
+*******
+NatSpec
+*******
+
+Solidity contracts can have a form of comments that are the basis of the
+Ethereum Natural Language Specification Format.
+
+Add comments above functions or contracts following `doxygen <http://www.doxygen.nl>`_ notation
+of one or multiple lines starting with `///` or a
+multiline comment starting with `/**` and ending with `*/`.
+
+For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
+added looks like the one below::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    /// @author The Solidity Team
+    /// @title A simple storage example
+    contract SimpleStorage {
+        uint storedData;
+
+        /// Store `x`.
+        /// @param x the new value to store
+        /// @dev stores the number in the state variable `storedData`
+        function set(uint x) public {
+            storedData = x;
+        }
+
+        /// Return the stored value.
+        /// @dev retrieves the value of the state variable `storedData`
+        /// @return the stored value
+        function get() public view returns (uint) {
+            return storedData;
+        }
+    }
+
+Natspec uses doxygen style tags with some special meaning.
+If no tag is used, then the comment applies to ``@notice``.
+The ``@notice`` tag is the main NatSpec tag and its audience is
+users of the contract who have never seen the source code, so it should make
+as little assumptions about the inner details as possible.
+All tags are optional.
+
++-------------+-------------------------------------------+-------------------------------+
+| Tag         | Description                               | Context                       |
++=============+===========================================+===============================+
+| ``@title``  | A title that describes the contract       | contract, interface           |
++-------------+-------------------------------------------+-------------------------------+
+| ``@author`` | The name of the author                    | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@notice`` | Explanation of functionality              | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@dev``    | Any extra details                         | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@param``  | Parameter type followed by parameter name | function                      |
++-------------+-------------------------------------------+-------------------------------+
+| ``@return`` | The return value of a contract's function | function                      |
++-------------+-------------------------------------------+-------------------------------+
