@@ -204,7 +204,7 @@ public:
 		int height = m_state.assembly.deposit();
 		boost::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(1, height);
-		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.name));
+		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.variable.name));
 		var.stackHeight = height;
 		var.active = true;
 	}

@@ -60,6 +60,8 @@ public:
 	std::string operator()(assembly::Block const& _block);
 
 private:
+	std::string appendTypeName(std::string const& _type);
+
 	bool m_julia = false;
 };
 

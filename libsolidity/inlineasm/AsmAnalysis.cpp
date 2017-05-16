@@ -184,7 +184,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_varDecl.value);
 	solAssert(m_stackHeight - stackHeight == 1, "Invalid value size.");
-	boost::get<Scope::Variable>(m_currentScope->identifiers.at(_varDecl.name)).active = true;
+	boost::get<Scope::Variable>(m_currentScope->identifiers.at(_varDecl.variable.name)).active = true;
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
 }
@@ -193,7 +193,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	Scope& bodyScope = scope(&_funDef.body);
 	for (auto const& var: _funDef.arguments + _funDef.returns)
-		boost::get<Scope::Variable>(bodyScope.identifiers.at(var)).active = true;
+		boost::get<Scope::Variable>(bodyScope.identifiers.at(var.name)).active = true;
 
 	int const stackHeight = m_stackHeight;
 	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
@@ -232,8 +232,9 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		},
 		[&](Scope::Function const& _fun)
 		{
-			arguments = _fun.arguments;
-			returns = _fun.returns;
+			/// TODO: compare types too
+			arguments = _fun.arguments.size();
+			returns = _fun.returns.size();
 		}
 	)))
 	{
