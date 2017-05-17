@@ -128,6 +128,7 @@ private:
 	{
 		return _node ? toJson(*_node) : Json::nullValue;
 	}
+	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info);
 	std::string visibility(Declaration::Visibility const& _visibility);
 	std::string location(VariableDeclaration::Location _location);
 	std::string contractKind(ContractDefinition::ContractKind _kind);

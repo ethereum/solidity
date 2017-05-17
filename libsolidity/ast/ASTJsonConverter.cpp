@@ -171,6 +171,16 @@ void ASTJsonConverter::appendExpressionAttributes(
 	_attributes.insert(_attributes.end(), exprAttributes.begin(), exprAttributes.end());
 }
 
+Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<assembly::Identifier const* ,InlineAssemblyAnnotation::ExternalIdentifierInfo> _info)
+{
+	Json::Value tuple(Json::objectValue);
+	tuple["src"] = sourceLocationToString(_info.first->location);
+	tuple["declaration"] = idOrNull(_info.second.declaration);
+	tuple["isSlot"] = Json::Value(_info.second.isSlot);
+	tuple["isOffset"] = Json::Value(_info.second.isOffset);
+	tuple["valueSize"] = _info.second.valueSize;
+	return tuple;
+}
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
@@ -441,10 +451,10 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 	Json::Value externalReferences(Json::arrayValue);
 	for (auto const& it : _node.annotation().externalReferences)
 	{
-		if (it.first && it.second)
+		if (it.first)
 		{
 			Json::Value tuple(Json::objectValue);
-			tuple[it.first->name] = nodeId(*it.second);
+			tuple[it.first->name] = inlineAssemblyIdentifierToJson(it);
 			externalReferences.append(tuple);
 		}
 	}
