@@ -292,21 +292,29 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 		return false;
 	expectDeposit(1, initialStackHeight, locationOf(*_switch.expression));
 
-	map<string, bool> caseNames;
+	set<tuple<LiteralKind, string>> cases;
 	for (auto const& _case: _switch.cases)
 	{
-		/// Note: the parser ensures there is only one default case
-		if (caseNames[_case.name])
+		if (_case.value)
 		{
-			m_errors.push_back(make_shared<Error>(
-				Error::Type::DeclarationError,
-				"Duplicate case defined: " + _case.name,
-				_case.location
-			));
-			return false;
+			int const initialStackHeight = m_stackHeight;
+			if (!(*this)(*_case.value))
+				return false;
+			expectDeposit(1, initialStackHeight, _case.value->location);
+			m_stackHeight--;
+
+			/// Note: the parser ensures there is only one default case
+			auto val = make_tuple(_case.value->kind, _case.value->value);
+			if (!cases.insert(val).second)
+			{
+				m_errors.push_back(make_shared<Error>(
+					Error::Type::DeclarationError,
+					"Duplicate case defined",
+					_case.location
+				));
+				return false;
+			}
 		}
-		else
-			caseNames[_case.name] = true;
 
 		if (!(*this)(_case.body))
 			return false;
