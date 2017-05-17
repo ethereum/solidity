@@ -20,7 +20,7 @@ Contracts can be created "from outside" or from Solidity contracts.
 When a contract is created, its constructor (a function with the same
 name as the contract) is executed once.
 
-A constructor is optional. Only one constructor is allowed and this means
+A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
 
 From ``web3.js``, i.e. the JavaScript
@@ -273,7 +273,7 @@ be done at declaration.
 
 The getter functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
-it is evaluated as a state variable and if it is accessed externally
+it is evaluated as a state variable.  If it is accessed externally
 (i.e. with ``this.``), it is evaluated as a function.
 
 ::
@@ -321,8 +321,8 @@ is no good way to provide the key for the mapping.
 Function Modifiers
 ******************
 
-Modifiers can be used to easily change the behaviour of functions, for example
-to automatically check a condition prior to executing the function. They are
+Modifiers can be used to easily change the behaviour of functions.  For example,
+they can automatically check a condition prior to executing the function. Modifiers are
 inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
@@ -405,8 +405,8 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
     }
 
-Multiple modifiers can be applied to a function by specifying them in a
-whitespace-separated list and will be evaluated in order.
+Multiple modifiers are applied to a function by specifying them in a
+whitespace-separated list and are evaluated in the order presented.
 
 .. warning::
     In an earlier version of Solidity, ``return`` statements in functions
@@ -441,7 +441,7 @@ The reason behind allowing side-effects on the memory allocator is that it
 should be possible to construct complex objects like e.g. lookup-tables.
 This feature is not yet fully usable.
 
-The compiler does not reserve a storage slot for these variables and every occurrence is
+The compiler does not reserve a storage slot for these variables, and every occurrence is
 replaced by the respective constant expression (which might be computed to a single value by the optimizer).
 
 Not all types for constants are implemented at this time. The only supported types are
@@ -462,7 +462,7 @@ value types and strings.
 Constant Functions
 ******************
 
-Functions can be declared constant. These functions promise not to modify the state.
+Functions can be declared constant in which case they promise not to modify the state.
 
 ::
 
@@ -491,7 +491,7 @@ Fallback Function
 A contract can have exactly one unnamed function. This function cannot have
 arguments and cannot return anything.
 It is executed on a call to the contract if none of the other
-functions matches the given function identifier (or if no data was supplied at
+functions match the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
@@ -567,13 +567,12 @@ the contract and will be incorporated into the blockchain
 and stay there as long as a block is accessible (forever as of
 Frontier and Homestead, but this might change with Serenity). Log and
 event data is not accessible from within contracts (not even from
-the contract that created a log).
+the contract that created them).
 
 SPV proofs for logs are possible, so if an external entity supplies
 a contract with such a proof, it can check that the log actually
-exists inside the blockchain (but be aware of the fact that
-ultimately, also the block headers have to be supplied because
-the contract can only see the last 256 block hashes).
+exists inside the blockchain.  But be aware that block headers have to be supplied because
+the contract can only see the last 256 block hashes.
 
 Up to three parameters can
 receive the attribute ``indexed`` which will cause the respective arguments
@@ -590,7 +589,7 @@ not possible to filter for specific anonymous events by name.
 All non-indexed arguments will be stored in the data part of the log.
 
 .. note::
-    Indexed arguments will not be stored themselves, you can only
+    Indexed arguments will not be stored themselves.  You can only
     search for the values, but it is impossible to retrieve the
     values themselves.
 
@@ -679,9 +678,9 @@ Solidity supports multiple inheritance by copying code including polymorphism.
 All function calls are virtual, which means that the most derived function
 is called, except when the contract name is explicitly given.
 
-Even if a contract inherits from multiple other contracts, only a single
-contract is created on the blockchain, the code from the base contracts
-is always copied into the final contract.
+When a contract inherits from multiple contracts, only a single
+contract is created on the blockchain, and the code from all the base contracts
+is copied into the created contract.
 
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
@@ -818,7 +817,7 @@ derived override, but this function will bypass
     }
 
 If ``Base1`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts, it rather
+call this function on one of its base contracts.  Rather, it 
 calls this function on the next base contract in the final
 inheritance graph, so it will call ``Base2.kill()`` (note that
 the final inheritance sequence is -- starting with the most
@@ -834,7 +833,7 @@ Arguments for Base Constructors
 ===============================
 
 Derived contracts need to provide all arguments needed for
-the base constructors. This can be done at two places::
+the base constructors. This can be done in two ways::
 
     pragma solidity ^0.4.0;
 
@@ -849,7 +848,7 @@ the base constructors. This can be done at two places::
         }
     }
 
-Either directly in the inheritance list (``is Base(7)``) or in
+One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier would be invoked as part of the header of
 the derived constructor (``Base(_y * _y)``). The first way to
 do it is more convenient if the constructor argument is a
@@ -865,7 +864,7 @@ Multiple Inheritance and Linearization
 ======================================
 
 Languages that allow multiple inheritance have to deal with
-several problems, one of them being the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
+several problems.  One is the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
 Solidity follows the path of Python and uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
 to force a specific order in the DAG of base classes. This
 results in the desirable property of monotonicity but
@@ -937,7 +936,7 @@ Interfaces are similar to abstract contracts, but they cannot have any functions
 
 Some of these restrictions might be lifted in the future.
 
-Interfaces are basically limited to what the Contract ABI can represent and the conversion between the ABI and
+Interfaces are basically limited to what the Contract ABI can represent, and the conversion between the ABI and
 an Interface should be possible without any information loss.
 
 Interfaces are denoted by their own keyword:
@@ -976,9 +975,9 @@ contracts (``L.f()`` if ``L`` is the name of the library). Furthermore,
 if the library were a base contract. Of course, calls to internal functions
 use the internal calling convention, which means that all internal types
 can be passed and memory types will be passed by reference and not copied.
-In order to realise this in the EVM, code of internal library functions
-(and all functions called from therein) will be pulled into the calling
-contract and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
+To realize this in the EVM, code of internal library functions
+and all functions called from therein will be pulled into the calling
+contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
 .. index:: using for, set
 
@@ -1041,8 +1040,8 @@ more advanced example to implement a set).
 
 Of course, you do not have to follow this way to use
 libraries - they can also be used without defining struct
-data types, functions also work without any storage
-reference parameters, can have multiple storage reference
+data types. Functions also work without any storage
+reference parameters, and they can have multiple storage reference
 parameters and in any position.
 
 The calls to ``Set.contains``, ``Set.insert`` and ``Set.remove``
