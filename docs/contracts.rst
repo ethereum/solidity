@@ -604,7 +604,7 @@ All non-indexed arguments will be stored in the data part of the log.
             uint _value
         );
 
-        function deposit(bytes32 _id) {
+        function deposit(bytes32 _id) payable {
             // Any call to this function (even deeply nested) can
             // be detected from the JavaScript API by filtering
             // for `Deposit` to be called.
