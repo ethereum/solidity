@@ -612,7 +612,7 @@ Safe Remote Purchase
             // block the refund - the withdraw pattern should be used.
 
             buyer.transfer(value);
-            seller.transfer(this.balance));
+            seller.transfer(this.balance);
         }
     }
 
