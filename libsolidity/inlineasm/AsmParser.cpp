@@ -381,7 +381,15 @@ TypedName Parser::parseTypedName()
 string Parser::expectAsmIdentifier()
 {
 	string name = m_scanner->currentLiteral();
-	if (!m_julia && instructions().count(name))
+	if (m_julia)
+	{
+		if (m_scanner->currentToken() == Token::Bool)
+		{
+			m_scanner->next();
+			return name;
+		}
+	}
+	else if (instructions().count(name))
 		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	return name;
