@@ -139,13 +139,13 @@ private:
 		return _node.id();
 	}
 	template<class Container>
-	Json::Value getContainerIds(Container container)
+	Json::Value getContainerIds(Container const& container)
 	{
 		Json::Value tmp(Json::arrayValue);
-		for (auto it = container.begin(); it != container.end(); ++it)
+		for (auto const& element: container)
 		{
-			solAssert(*it, "");
-			tmp.append(nodeId(**it));
+			solAssert(element, "");
+			tmp.append(nodeId(*element));
 		}
 		return tmp;
 	}
