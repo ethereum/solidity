@@ -24,6 +24,8 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
+#include <libsolidity/parsing/Token.h>
+
 
 using namespace std;
 
@@ -60,7 +62,7 @@ ASTPointer<SourceUnit> ASTJsonImporter::jsonToSourceUnit()
 
 SourceLocation ASTJsonImporter::getSourceLocation(Json::Value const& _node)
 {
-	solAssert(!_node["src"].isNull() || _node["name"] == "SourceUnit","JsonValue should not be an ASTNode");
+	solAssert(!_node["src"].isNull() || _node["nodeType"] == "SourceUnit","JsonValue should not be an ASTNode");
         string srcString = _node["src"].asCString();
         vector<string> pos;
         boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
@@ -99,125 +101,129 @@ Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 //replace name with nodeType for new version
 ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _json)
 {
-	if (_json["name"] == "SourceUnit")
+	if (_json["nodeType"] == "SourceUnit")
 	    return createSourceUnit(_json);
-	if (_json["name"].asString() == "PragmaDirective")
+	if (_json["nodeType"].asString() == "PragmaDirective")
 	    return createPragmaDirective(_json);
-	if (_json["name"].asString() == "ImportDirective")
+	if (_json["nodeType"].asString() == "ImportDirective")
 	    return createImportDirective(_json);
-	if (_json["name"].asString() == "ContractDefinition")
+	if (_json["nodeType"].asString() == "ContractDefinition")
 	    return createContractDefinition(_json);
-	if (_json["name"].asString() == "InheritanceSpecifier")
+	if (_json["nodeType"].asString() == "InheritanceSpecifier")
 	    return createInheritanceSpecifier(_json);
-	if (_json["name"].asString() == "UsingForDirective")
+	if (_json["nodeType"].asString() == "UsingForDirective")
 		return createUsingForDirective(_json);
-	if (_json["name"].asString() == "StructDefinition")
+	if (_json["nodeType"].asString() == "StructDefinition")
 		return createStructDefinition(_json);
-	if (_json["name"].asString() == "createEnumDefinition")
+	if (_json["nodeType"].asString() == "createEnumDefinition")
 		return createEnumDefinition(_json);
-	if (_json["name"] == "EnumValue")
+	if (_json["nodeType"] == "EnumValue")
 		return createEnumValue(_json);
-	if (_json["name"] == "ParameterList")
+	if (_json["nodeType"] == "ParameterList")
 		return createParameterList(_json);
-	if (_json["name"] == "FunctionDefinition")
+	if (_json["nodeType"] == "FunctionDefinition")
 		return createFunctionDefinition(_json);
-	if (_json["name"] == "VariableDeclaration")
+	if (_json["nodeType"] == "VariableDeclaration")
 		return createVariableDeclaration(_json);
-	if (_json["name"] == "ModifierDefinition")
+	if (_json["nodeType"] == "ModifierDefinition")
 		return createModifierDefinition(_json);
-	if (_json["name"] == "ModifierInvocation")
+	if (_json["nodeType"] == "ModifierInvocation")
 		return createModifierInvocation(_json);
-	if (_json["name"] == "EventDefinition")
+	if (_json["nodeType"] == "EventDefinition")
 		return createEventDefinition(_json);
-	if (_json["name"] == "ElementaryTypeName")
+	if (_json["nodeType"] == "ElementaryTypeName")
 		return createElementaryTypeName(_json);
-	if (_json["name"] == "UserDefinedTypeName")
+	if (_json["nodeType"] == "UserDefinedTypeName")
 		return createUserDefinedTypeName(_json);
-	if (_json["name"] == "FunctionTypeName")
+	if (_json["nodeType"] == "FunctionTypeName")
 		return createFunctionTypeName(_json);
-	if (_json["name"] == "Mapping")
+	if (_json["nodeType"] == "Mapping")
 		return createMapping(_json);
-	if (_json["name"] == "ArrayTypeName")
+	if (_json["nodeType"] == "ArrayTypeName")
 		return createArrayTypeName(_json);
-//	if (_json["name"] == "InlineAssembly")
+//	if (_json["nodeType"] == "InlineAssembly")
 //		return createInlineAssembly(_json);
-	if (_json["name"] == "Block")
+	if (_json["nodeType"] == "Block")
 		return createBlock(_json);
-	if (_json["name"] == "PlaceholderStatement")
+	if (_json["nodeType"] == "PlaceholderStatement")
 		return createPlaceholderStatement(_json);
-	if (_json["name"] == "IfStatement")
+	if (_json["nodeType"] == "IfStatement")
 		return createIfStatement(_json);
-	if (_json["name"] == "WhileStatement")
+	if (_json["nodeType"] == "WhileStatement")
 		return createWhileStatement(_json, false);
-	if (_json["name"] == "DoWhileStatement")
+	if (_json["nodeType"] == "DoWhileStatement")
 		return createWhileStatement(_json, true);
-	if (_json["name"] == "ForStatement")
+	if (_json["nodeType"] == "ForStatement")
 		return createForStatement(_json);
-	if (_json["name"] == "Continue")
+	if (_json["nodeType"] == "Continue")
 		return createContinue(_json);
-	if (_json["name"] == "Break")
+	if (_json["nodeType"] == "Break")
 		return createBreak(_json);
-	if (_json["name"] == "Return")
+	if (_json["nodeType"] == "Return")
 		return createReturn(_json);
-	if (_json["name"] == "Throw")
+	if (_json["nodeType"] == "Throw")
 		return createThrow(_json);
-	if (_json["name"] == "VariableDeclarationStatement")
+	if (_json["nodeType"] == "VariableDeclarationStatement")
 		return createVariableDeclarationStatement(_json);
-	if (_json["name"] == "ExpressionStatement")
+	if (_json["nodeType"] == "ExpressionStatement")
 		return createExpressionStatement(_json);
-	if (_json["name"] == "Conditional")
+	if (_json["nodeType"] == "Conditional")
 		return createConditional(_json);
-	if (_json["name"] == "Assignment")
+	if (_json["nodeType"] == "Assignment")
 		return createAssignment(_json);
-	if (_json["name"] == "TupleExpression")
+	if (_json["nodeType"] == "TupleExpression")
 		return createTupleExpression(_json);
-	if (_json["name"] == "UnaryOperation")
+	if (_json["nodeType"] == "UnaryOperation")
 		return createUnaryOperation(_json);
-	if (_json["name"] == "BinaryOperation")
+	if (_json["nodeType"] == "BinaryOperation")
 		return createBinaryOperation(_json);
-	if (_json["name"] == "FunctionCall")
+	if (_json["nodeType"] == "FunctionCall")
 		return createFunctionCall(_json);
-	if (_json["name"] == "NewExpression")
+	if (_json["nodeType"] == "NewExpression")
 		return createNewExpression(_json);
-	if (_json["name"] == "MemberAccess")
+	if (_json["nodeType"] == "MemberAccess")
 		return createMemberAccess(_json);
-	if (_json["name"] == "IndexAccess")
+	if (_json["nodeType"] == "IndexAccess")
 		return createIndexAccess(_json);
-	if (_json["name"] == "Identifier")
+	if (_json["nodeType"] == "Identifier")
 		return createIdentifier(getSourceLocation(_json), "TODOREPLACETHIS");
-	if (_json["name"] == "ElementaryTypeNameExpression")
+	if (_json["nodeType"] == "ElementaryTypeNameExpression")
 		return createElementaryTypeNameExpression(_json);
-	if (_json["name"] == "Literal")
+	if (_json["nodeType"] == "Literal")
 		return createLiteral(_json);
 	else BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
 }
 
 Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
 {
+	solAssert(_node.isMember("visibility"), "");
 	Declaration::Visibility vis;
-	if (strcmp(_node["visibility"].asCString(), "Default") == 0)
+	if (strcmp(_node["visibility"].asCString(), "default") == 0)
 		vis = Declaration::Visibility::Default;
-	if (strcmp(_node["visibility"].asCString(), "Private") == 0)
+	else if (strcmp(_node["visibility"].asCString(), "private") == 0)
 		vis = Declaration::Visibility::Private;
-	if (strcmp( _node["visibility"].asCString(), "Internal") == 0)
+	else if (strcmp( _node["visibility"].asCString(), "internal") == 0)
 		vis = Declaration::Visibility::Internal;
-	if (strcmp(_node["visibility"].asCString(), "Public") == 0)
+	else if (strcmp(_node["visibility"].asCString(), "public") == 0)
 		vis = Declaration::Visibility::Public;
-	if (strcmp(_node["visibility"].asCString(), "External") == 0)
+	else if (strcmp(_node["visibility"].asCString(), "external") == 0)
 		vis = Declaration::Visibility::External;
 	else
+	{
 		solAssert(false,"unknown visibility declaration");
+	}
 	return vis;
 }
 
 VariableDeclaration::Location ASTJsonImporter::getLocation(Json::Value const& _node)
 {
 	VariableDeclaration::Location loc;
-	if (strcmp(_node["location"].asCString(), "default") == 0)
+	solAssert(_node.isMember("storageLocation"),"");
+	if (strcmp(_node["storageLocation"].asCString(), "default") == 0)
 		return loc = VariableDeclaration::Location::Default;
-	if (strcmp(_node["location"].asCString(), "storage") == 0)
+	else if (strcmp(_node["storageLocation"].asCString(), "storage") == 0)
 		return loc = VariableDeclaration::Location::Storage;
-	if (strcmp(_node["location"].asCString(), "memory") == 0)
+	else if (strcmp(_node["storageLocation"].asCString(), "memory") == 0)
 		return loc = VariableDeclaration::Location::Memory;
 	else
 		solAssert(false,"unknown location declaration");
@@ -226,26 +232,27 @@ VariableDeclaration::Location ASTJsonImporter::getLocation(Json::Value const& _n
 ContractDefinition::ContractKind ASTJsonImporter::getContractKind(Json::Value const& _node)
 {
 	ContractDefinition::ContractKind kind;
+	solAssert(_node.isMember("contractKind"), "");
 	if (strcmp(_node["contractKind"].asCString(), "interface") == 0)
 		return kind = ContractDefinition::ContractKind::Interface;
-	if (strcmp(_node["contractKind"].asCString(), "contract") == 0)
+	else if (strcmp(_node["contractKind"].asCString(), "contract") == 0)
 		return kind = ContractDefinition::ContractKind::Contract;
-	if (strcmp(_node["contractKind"].asCString(), "library") == 0)
+	else if (strcmp(_node["contractKind"].asCString(), "library") == 0)
 		return kind = ContractDefinition::ContractKind::Library;
 	else
 		solAssert(false,"unknown ContractKind ");
 }
 
-
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node)
 {
 	SourceLocation const& location = getSourceLocation(_node);
 	vector<ASTPointer<ASTNode>> nodes;
-//	for (auto& child: _node["nodes"])
-	for (auto& child: _node["children"])
+//	for (auto& child: _node["children"])
+	for (auto& child: _node["nodes"])
 		nodes.push_back(convertJsonToASTNode(child));
 	//create node
 	ASTPointer<SourceUnit> tmp = make_shared<SourceUnit>(location, nodes);
+	tmp->setID(_node["id"].asInt());
 	return tmp;
 }
 
@@ -253,7 +260,7 @@ ASTPointer<PragmaDirective> ASTJsonImporter::createPragmaDirective(Json::Value c
 {
 	vector<Token::Value> tokens;
 	vector<ASTString> literals;
-        for (auto const& lit: _node["attributes"]["literals"]) //remove attributes
+	for (auto const& lit: _node["literals"])
 	{
                 string l = lit.asCString();
                 literals.push_back(l);
@@ -268,10 +275,10 @@ ASTPointer<PragmaDirective> ASTJsonImporter::createPragmaDirective(Json::Value c
 ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value const& _node){
 	//create args for the fields of the node
 	SourceLocation const& location = getSourceLocation(_node);
-	ASTPointer<ASTString> const& path = make_shared<ASTString>(_node["attributes"]["file"].asCString());
-	ASTPointer<ASTString> const& unitAlias = make_shared<ASTString>(_node["attributes"]["unitAlias"].asCString());
+	ASTPointer<ASTString> const& path = make_shared<ASTString>(_node["file"].asCString());
+	ASTPointer<ASTString> const& unitAlias = make_shared<ASTString>(_node["unitAlias"].asCString());
 	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
-	for (auto& tuple: _node["attributes"]["symbolAliases"])
+	for (auto& tuple: _node["symbolAliases"])
 	{
                 symbolAliases.push_back( make_pair(
 			createIdentifier(location, tuple["foreign"].asCString()), //ATTENTION! is this the correct sourcelocation?? where to get src-location from?
@@ -295,7 +302,7 @@ ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::V
 	std::vector<ASTPointer<ASTNode>> subNodes;
 	for (auto& subnode : _node["nodes"])
 		subNodes.push_back(convertJsonToASTNode(subnode));
-	ContractDefinition::ContractKind contractKind = getContractKind(_node["contractKind"]);
+	ContractDefinition::ContractKind contractKind = getContractKind(_node);
 	//create node
 	ASTPointer<ContractDefinition> tmp = make_shared<ContractDefinition>(
 		location,
@@ -323,7 +330,7 @@ ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Jso
 		baseName,
 		arguments
 	);
-//	setID
+	tmp->setID(_node["id"].asInt());
 	return tmp;
 }
 
@@ -440,9 +447,9 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 	SourceLocation location = getSourceLocation(_node);
 	ASTPointer<TypeName> type = nullOrCast<TypeName>(_node["typeName"]);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
-	ASTPointer<Expression> value = nullOrCast<Expression>(_node["name"]);
+	ASTPointer<Expression> value = nullOrCast<Expression>(_node["value"]);
 	Declaration::Visibility visibility = getVisibility(_node);
-	bool isStateVar = false; //TODO
+	bool isStateVar = _node["stateVariable"].asBool();
 	bool isIndexed = _node["indexed"].asBool();
 	bool isConstant = _node["constant"].asBool();
 	VariableDeclaration::Location referenceLocation = getLocation(_node);
@@ -450,14 +457,14 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		location,
 		type,
 		name,
-		value,
+	        value,
 		visibility,
 		isStateVar,
 		isIndexed,
 		isConstant,
 		referenceLocation
 	);
-        tmp->setID(_node["id"].asInt());
+	tmp->setID(_node["id"].asInt());
 	return tmp;
 }
 
@@ -516,11 +523,13 @@ ASTPointer<EventDefinition> ASTJsonImporter::createEventDefinition(Json::Value c
 ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::Value const& _node) //HELP
 {
 	SourceLocation location = getSourceLocation(_node);
-
-//	ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(_node["typeDescriptions"]["typeString"].asCString()), "tmp");
-//	Token::Value token = scanner->next(); //correct way to get the token?
-        Token::Value token = scanSingleToken(_node["typeDescriptions"]["typeString"]);
-	ElementaryTypeNameToken elem(token,1,1);	//what does firstSize, secondSize mean?
+	unsigned short firstNum;
+	unsigned short secondNum;
+	string name = _node["typeDescriptions"]["typeString"].asCString();
+	Token::Value token;
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
+//        Token::Value token = scanSingleToken(_node["typeDescriptions"]["typeString"]);
+	ElementaryTypeNameToken elem(token, firstNum,  secondNum);
 	ASTPointer<ElementaryTypeName> tmp = make_shared<ElementaryTypeName>(
 		location,
 		elem

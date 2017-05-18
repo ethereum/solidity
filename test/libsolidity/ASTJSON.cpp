@@ -234,15 +234,15 @@ BOOST_AUTO_TEST_CASE(importAST)
 	CompilerStack c;
 	c.addSource("a",
 		"pragma solidity ^0.4.8;"
-//		"contract C { function f(function() external payable returns (uint) x) "
-//		"returns (function() external constant returns (uint)) {} }"
+		"contract C { function f(function() external payable returns (uint) x) "
+		"returns (function() external constant returns (uint)) {} }"
 	);
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 0;
 	//SourceUnit const& originalAst = c.ast();
-	Json::Value originalJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	//Json::Value originalJson = ASTJsonConverter(true, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+	//Json::Value originalJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
+	Json::Value originalJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
 
 	//use importer to transform json to ast and back again:
 	//first build the ast without scopes and types
@@ -256,7 +256,8 @@ BOOST_AUTO_TEST_CASE(importAST)
 //	//use the compiler's analyzer to annotate, typecheck, etc...
 	if (import)
 		c.analyze();
-	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json();
+	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+//	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json();
 	if (newJson != originalJson)
 	{
 		cout << "originalJson: " << originalJson << std::endl;

@@ -875,8 +875,14 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameterTypes() const { return m_parameterTypes->parameters(); }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameterTypes() const { return m_returnTypes->parameters(); }
+<<<<<<< 6d6023019656403018d7a7d587df791878a8a06a
 	ASTPointer<ParameterList> const& parameterTypeList() const { return m_parameterTypes; }
 	ASTPointer<ParameterList> const& returnParameterTypeList() const { return m_returnTypes; }
+=======
+	ASTPointer<ParameterList> const& parameterTypesList() const { return m_parameterTypes; }
+	ASTPointer<ParameterList> const& returnParameterTypesList() const { return m_returnTypes; }
+
+>>>>>>> fixing small errors
 
 	Declaration::Visibility visibility() const
 	{
