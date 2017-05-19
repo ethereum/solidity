@@ -75,7 +75,7 @@ assembly::Statement Parser::parseStatement()
 		while (m_scanner->currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
 		if (m_scanner->currentToken() == Token::Default)
-			_switch.cases.emplace_back(parseCase(true));
+			_switch.cases.emplace_back(parseCase());
 		if (_switch.cases.size() == 0)
 			fatalParserError("Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
@@ -148,19 +148,21 @@ assembly::Statement Parser::parseStatement()
 	return statement;
 }
 
-assembly::Case Parser::parseCase(bool _defaultCase)
+assembly::Case Parser::parseCase()
 {
 	assembly::Case _case = createWithLocation<assembly::Case>();
-	if (_defaultCase)
-		expectToken(Token::Default);
-	else
+	if (m_scanner->currentToken() == Token::Default)
+		m_scanner->next();
+	else if (m_scanner->currentToken() == Token::Case)
 	{
-		expectToken(Token::Case);
+		m_scanner->next();
 		assembly::Statement statement = parseElementaryOperation();
 		if (statement.type() != typeid(assembly::Literal))
 			fatalParserError("Literal expected.");
 		_case.value = make_shared<Literal>(std::move(boost::get<assembly::Literal>(statement)));
 	}
+	else
+		fatalParserError("Case or default case expected.");
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
