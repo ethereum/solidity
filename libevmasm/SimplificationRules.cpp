@@ -103,7 +103,7 @@ Rules::Rules()
 		{{Instruction::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }},
 		{{Instruction::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }},
 		{{Instruction::NOT, {A}}, [=]{ return ~A.d(); }},
-		{{Instruction::LT, {A, B}}, [=]() { return A.d() < B.d() ? u256(1) : 0; }},
+		{{Instruction::LT, {A, B}}, [=]() -> u256 { return A.d() < B.d() ? 1 : 0; }},
 		{{Instruction::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }},
 		{{Instruction::SLT, {A, B}}, [=]() -> u256 { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }},
 		{{Instruction::SGT, {A, B}}, [=]() -> u256 { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }},
@@ -124,23 +124,26 @@ Rules::Rules()
 			return u256(boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask);
 		}},
 
-		// invariants involving known constants
+		// invariants involving known constants (commutative instructions will be checked with swapped operants too)
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }},
 		{{Instruction::SUB, {X, 0}}, [=]{ return X; }},
-		{{Instruction::MUL, {X, 1}}, [=]{ return X; }},
-		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
-		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
-		{{Instruction::OR, {X, 0}}, [=]{ return X; }},
-		{{Instruction::XOR, {X, 0}}, [=]{ return X; }},
-		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
-		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::MUL, {X, 1}}, [=]{ return X; }},
 		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::DIV, {0, X}}, [=]{ return u256(0); }},
+		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
+		{{Instruction::SDIV, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::SDIV, {0, X}}, [=]{ return u256(0); }},
+		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
+		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
+		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::OR, {X, 0}}, [=]{ return X; }},
+		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
+		{{Instruction::XOR, {X, 0}}, [=]{ return X; }},
 		{{Instruction::MOD, {X, 0}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }},
-		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; } },
+
 		// operations involving an expression and itself
 		{{Instruction::AND, {X, X}}, [=]{ return X; }},
 		{{Instruction::OR, {X, X}}, [=]{ return X; }},
@@ -153,6 +156,7 @@ Rules::Rules()
 		{{Instruction::SGT, {X, X}}, [=]{ return u256(0); }},
 		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }},
 
+		// logical instruction combinations
 		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }},
 		{{Instruction::XOR, {{{X}, {Instruction::XOR, {X, Y}}}}}, [=]{ return Y; }},
 		{{Instruction::OR, {{{X}, {Instruction::AND, {X, Y}}}}}, [=]{ return X; }},
@@ -160,6 +164,7 @@ Rules::Rules()
 		{{Instruction::AND, {{{X}, {Instruction::NOT, {X}}}}}, [=]{ return u256(0); }},
 		{{Instruction::OR, {{{X}, {Instruction::NOT, {X}}}}}, [=]{ return ~u256(0); }},
 	});
+
 	// Double negation of opcodes with binary result
 	for (auto const& op: vector<Instruction>{
 		Instruction::EQ,
@@ -172,14 +177,17 @@ Rules::Rules()
 			{Instruction::ISZERO, {{Instruction::ISZERO, {{op, {X, Y}}}}}},
 			[=]() -> Pattern { return {op, {X, Y}}; }
 		});
+
 	addRule({
 		{Instruction::ISZERO, {{Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}}},
 		[=]() -> Pattern { return {Instruction::ISZERO, {X}}; }
 	});
+
 	addRule({
 		{Instruction::ISZERO, {{Instruction::XOR, {X, Y}}}},
 		[=]() -> Pattern { return { Instruction::EQ, {X, Y} }; }
 	});
+
 	// Associative operations
 	for (auto const& opFun: vector<pair<Instruction,function<u256(u256 const&,u256 const&)>>>{
 		{Instruction::ADD, plus<u256>()},
@@ -210,6 +218,7 @@ Rules::Rules()
 			[=]() -> Pattern { return {op, {{op, {X, Y}}, A}}; }
 		}});
 	}
+
 	// move constants across subtractions
 	addRules(vector<pair<Pattern, function<Pattern()>>>{
 		{
