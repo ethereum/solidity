@@ -60,8 +60,9 @@ public:
 	/// Append a label reference.
 	virtual void appendLabelReference(size_t _labelId) = 0;
 	/// Generate a new unique label.
-	virtual size_t newLabel() = 0;
+	virtual size_t newLabelId() = 0;
 	/// Append a reference to a to-be-linked symobl.
+	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
 };
 

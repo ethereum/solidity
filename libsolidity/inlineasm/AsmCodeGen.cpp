@@ -87,7 +87,7 @@ public:
 	{
 		m_assembly.append(eth::AssemblyItem(eth::PushTag, _labelId));
 	}
-	virtual size_t newLabel() override
+	virtual size_t newLabelId() override
 	{
 		return assemblyTagToIdentifier(m_assembly.newTag());
 	}
@@ -241,7 +241,7 @@ public:
 	}
 	void operator()(FunctionalAssignment const& _assignment)
 	{
-		size_t height = m_assembly.stackHeight();
+		int height = m_assembly.stackHeight();
 		boost::apply_visitor(*this, *_assignment.value);
 		expectDeposit(1, height);
 		m_assembly.setSourceLocation(_assignment.location);
@@ -250,7 +250,7 @@ public:
 	}
 	void operator()(assembly::VariableDeclaration const& _varDecl)
 	{
-		size_t height = m_assembly.stackHeight();
+		int height = m_assembly.stackHeight();
 		boost::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(1, height);
 		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.variable.name));
@@ -291,9 +291,9 @@ private:
 	/// Determines the stack height difference to the given variables. Automatically generates
 	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
 	/// errors and the (positive) stack height difference otherwise.
-	size_t variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
+	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
 	{
-		size_t heightDiff = m_assembly.stackHeight() - _var.stackHeight;
+		int heightDiff = m_assembly.stackHeight() - _var.stackHeight;
 		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 		{
 			//@TODO move this to analysis phase.
@@ -326,7 +326,7 @@ private:
 	void assignLabelIdIfUnset(Scope::Label& _label)
 	{
 		if (!_label.id)
-			_label.id.reset(m_assembly.newLabel());
+			_label.id.reset(m_assembly.newLabelId());
 	}
 
 
