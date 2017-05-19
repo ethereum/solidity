@@ -582,7 +582,7 @@ bool Why3Translator::visit(BinaryOperation const& _binaryOperation)
 
 bool Why3Translator::visit(FunctionCall const& _node)
 {
-	if (_node.annotation().isTypeConversion || _node.annotation().isStructConstructorCall)
+	if (_node.annotation().kind == FunctionCallKind::TypeConversion || _node.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		error(_node, "Only ordinary function calls supported.");
 		return true;

@@ -156,19 +156,19 @@ Json::Value ASTJsonConverter::typePointerToJson(std::shared_ptr<std::vector<Type
 }
 
 void ASTJsonConverter::appendExpressionAttributes(
-	std::vector<pair<string, Json::Value>> &_attributes,
+	std::vector<pair<string, Json::Value>>& _attributes,
 	ExpressionAnnotation const& _annotation
 )
 {
 	std::vector<pair<string, Json::Value>> exprAttributes = {
-	make_pair("typeDescriptions", typePointerToJson(_annotation.type)),
+		make_pair("typeDescriptions", typePointerToJson(_annotation.type)),
 		make_pair("isConstant", _annotation.isConstant),
 		make_pair("isPure", _annotation.isPure),
 		make_pair("isLValue", _annotation.isLValue),
 		make_pair("lValueRequested", _annotation.lValueRequested),
 		make_pair("argumentTypes", typePointerToJson(_annotation.argumentTypes))
 	};
-	_attributes.insert(_attributes.end(), exprAttributes.begin(), exprAttributes.end());
+	_attributes += exprAttributes;
 }
 
 Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<assembly::Identifier const* ,InlineAssemblyAnnotation::ExternalIdentifierInfo> _info)
@@ -344,6 +344,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("name", _node.name()),
 		make_pair("typeName", toJsonOrNull(_node.typeName())),
 		make_pair("constant", _node.isConstant()),
+		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
 		make_pair("visibility", visibility(_node.visibility())),
 		make_pair("value", _node.value() ? toJson(*_node.value()) : Json::nullValue),
@@ -627,12 +628,17 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	for (auto const& name: _node.names())
 		names.append(Json::Value(*name));
 	std::vector<pair<string, Json::Value>> attributes = {
-		make_pair(m_legacy ? "type_conversion" : "isTypeConversion", _node.annotation().isTypeConversion),
-		make_pair("isStructConstructorCall", _node.annotation().isStructConstructorCall),
 		make_pair("expression", toJson(_node.expression())),
 		make_pair("names", std::move(names)),
 		make_pair("arguments", toJson(_node.arguments()))
-		};
+	};
+	if (m_legacy)
+	{
+		attributes.push_back(make_pair("isStructConstructorCall", functionCallKind(_node.annotation().kind)));
+		attributes.push_back(make_pair("type_conversion", _node.annotation().kind == FunctionCallKind::TypeConversion));
+	}
+	else
+		attributes.push_back(make_pair("kind", functionCallKind(_node.annotation().kind)));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "FunctionCall", std::move(attributes));
 	return false;
@@ -768,7 +774,22 @@ string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
 	case ContractDefinition::ContractKind::Library:
 		return "library";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown contract kind."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of contract."));
+	}
+}
+
+string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
+{
+	switch (_kind)
+	{
+	case FunctionCallKind::FunctionCall:
+		return "functionCall";
+	case FunctionCallKind::TypeConversion:
+		return "typeConversion";
+	case FunctionCallKind::StructConstructorCall:
+		return "structConstructorCall";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of function call ."));
 	}
 }
 
