@@ -80,6 +80,10 @@ TMPDIR=$(mktemp -d)
     for f in *.sol
     do
         "$REPO_ROOT"/build/test/solfuzzer --quiet < "$f"
+        if [ $? -ne 0 ]; then
+            echo "Fuzzer failed on:"
+            cat $f
+        fi
     done
 )
 rm -rf "$TMPDIR"
