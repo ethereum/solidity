@@ -83,7 +83,7 @@ TMPDIR=$(mktemp -d)
         "$REPO_ROOT"/build/test/solfuzzer --quiet < "$f"
         if [ $? -ne 0 ]; then
             echo "Fuzzer failed on:"
-            cat $f
+            cat "$f"
             exit 1
         fi
         set -e
