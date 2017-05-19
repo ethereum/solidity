@@ -46,8 +46,16 @@ string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 
 string AsmPrinter::operator()(assembly::Literal const& _literal)
 {
-	if (_literal.isNumber)
+	switch (_literal.kind)
+	{
+	case LiteralKind::Number:
 		return _literal.value + appendTypeName(_literal.type);
+	case LiteralKind::Boolean:
+		return ((_literal.value == "true") ? "true" : "false") + appendTypeName(_literal.type);
+	case LiteralKind::String:
+		break;
+	}
+
 	string out;
 	for (char c: _literal.value)
 		if (c == '\\')

@@ -43,7 +43,8 @@ using TypedNameList = std::vector<TypedName>;
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
-struct Literal { SourceLocation location; bool isNumber; std::string value; Type type; };
+enum class LiteralKind { Number, Boolean, String };
+struct Literal { SourceLocation location; LiteralKind kind; std::string value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { SourceLocation location; std::string name; };
 struct FunctionalInstruction;

@@ -118,8 +118,15 @@ public:
 	void operator()(assembly::Literal const& _literal)
 	{
 		m_state.assembly.setSourceLocation(_literal.location);
-		if (_literal.isNumber)
+		if (_literal.kind == assembly::LiteralKind::Number)
 			m_state.assembly.append(u256(_literal.value));
+		else if (_literal.kind == assembly::LiteralKind::Boolean)
+		{
+			if (_literal.value == "true")
+				m_state.assembly.append(u256(1));
+			else
+				m_state.assembly.append(u256(0));
+		}
 		else
 		{
 			solAssert(_literal.value.size() <= 32, "");
