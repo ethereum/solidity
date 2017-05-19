@@ -103,10 +103,12 @@ Grammar::
     BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
     TypedIdentifierList = Identifier ':' TypeName ( ',' Identifier ':' TypeName )*
     Literal =
-        (NumberLiteral | StringLiteral | HexLiteral) ':' TypeName
+        (NumberLiteral | StringLiteral | HexLiteral | TrueLiteral | FalseLiteral) ':' TypeName
     NumberLiteral = HexNumber | DecimalNumber
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+    TrueLiteral = 'true'
+    FalseLiteral = 'false'
     HexNumber = '0x' [0-9a-fA-F]+
     DecimalNumber = [0-9]+
 
