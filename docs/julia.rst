@@ -84,7 +84,7 @@ Grammar::
     Expression =
         FunctionCall | Identifier | Literal
     Switch =
-        'switch' Expression Case* ( 'default' ':' Block )?
+        'switch' Expression Case+ ( 'default' ':' Block )?
     Case =
         'case' Literal ':' Block
     ForLoop =
