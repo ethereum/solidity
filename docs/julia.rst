@@ -33,13 +33,13 @@ and ``mod`` are available either natively or as functions and computes exponenti
         function power(base:u256, exponent:u256) -> result:u256
         {
             switch exponent
-            case 0:u256: { result := 1:u256 }
-            case 1:u256: { result := base }
+            case 0:u256 { result := 1:u256 }
+            case 1:u256 { result := base }
             default:
             {
                 result := power(mul(base, base), div(exponent, 2:u256))
                 switch mod(exponent, 2:u256)
-                    case 1:u256: { result := mul(base, result) }
+                    case 1:u256 { result := mul(base, result) }
             }
         }
     }
