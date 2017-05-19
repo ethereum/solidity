@@ -97,7 +97,7 @@ public:
 	}
 
 private:
-	size_t assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
+	size_t assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
 	{
 		u256 id = _tag.data();
 		solAssert(id <= std::numeric_limits<size_t>::max(), "Tag id too large.");
