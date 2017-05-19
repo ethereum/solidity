@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	/// NOTE: compiles without optimisations
 	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
 	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-	std::string const& metadata = compilerStack.onChainMetadata("test");
+	std::string const& metadata = compilerStack.metadata("test");
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);

@@ -183,7 +183,7 @@ public:
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
 	Json::Value methodIdentifiers(std::string const& _contractName) const;
 
-	std::string const& onChainMetadata(std::string const& _contractName) const;
+	std::string const& metadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
@@ -223,7 +223,7 @@ private:
 		eth::LinkerObject object;
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
-		std::string onChainMetadata; ///< The metadata json that will be hashed into the chain.
+		std::string metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
@@ -255,7 +255,7 @@ private:
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
-	std::string createOnChainMetadata(Contract const& _contract) const;
+	std::string createMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 	Json::Value const& contractABI(Contract const&) const;
 	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
