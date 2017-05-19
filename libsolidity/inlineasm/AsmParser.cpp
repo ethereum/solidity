@@ -161,7 +161,6 @@ assembly::Case Parser::parseCase(bool _defaultCase)
 			fatalParserError("Literal expected.");
 		_case.value = make_shared<Literal>(std::move(boost::get<assembly::Literal>(statement)));
 	}
-	expectToken(Token::Colon);
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;

@@ -173,9 +173,9 @@ string AsmPrinter::operator()(Switch const& _switch)
 	for (auto const& _case: _switch.cases)
 	{
 		if (!_case.value)
-			out += "\ndefault: ";
+			out += "\ndefault ";
 		else
-			out += "\ncase " + (*this)(*_case.value) + ": ";
+			out += "\ncase " + (*this)(*_case.value) + " ";
 		out += (*this)(_case.body);
 	}
 	return out;
