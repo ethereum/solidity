@@ -1,0 +1,18 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cpp,h}]
+indent_style = tab
+
+[*.{py,rst,sh,yml}]
+indent_style = space
+indent_size = 4
+
+[std/**.sol]
+indent_style = space
+indent_size = 4
