@@ -47,28 +47,35 @@ namespace dev
 namespace solidity
 {
 
-ASTJsonImporter::ASTJsonImporter(
-        Json::Value const& _json,
-        string const& _name
-) : m_json(&_json), m_name(_name)
+ASTJsonImporter::ASTJsonImporter(map<string, Json::Value const*> _sourceList )
+        : m_sourceList(_sourceList)
 {
 }
 
-ASTPointer<SourceUnit> ASTJsonImporter::jsonToSourceUnit()
+map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 {
-	solAssert(!m_json->isNull(),"");
-	return createSourceUnit(*m_json);
+	for (auto const& srcPair: m_sourceList)
+	{
+//		solAssert(!m_json->isNull(),"");
+		solAssert(!srcPair.second->isNull(), "");
+		m_currentSource = srcPair.first;
+		m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second);
+	}
+	return m_sourceUnits;
 }
 
-SourceLocation ASTJsonImporter::getSourceLocation(Json::Value const& _node)
+SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	solAssert(!_node["src"].isNull() || _node["nodeType"] == "SourceUnit","JsonValue should not be an ASTNode");
+	solAssert(!_node["src"].isNull() || _node["nodeType"] == "SourceUnit", "JsonValue should not be an ASTNode");
         string srcString = _node["src"].asCString();
         vector<string> pos;
         boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
         int start = stoi(pos[0]);
-        int end = stoi(pos[1]);
-        shared_ptr<string const> source = make_shared<string const>(m_name);
+	int end = start + stoi(pos[1]);
+//	if (strcmp(_node["nodeType"].asCString(), "ParameterList") == 0 )
+//	cout << srcString << std::endl;
+//	cout << pos[0] <<":"<<pos[1]<<":" << pos[2] << std::endl;
+	shared_ptr<string const> source = make_shared<string const>(m_currentSource);
         return SourceLocation(
                 start,
                 end,
@@ -186,7 +193,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (_json["nodeType"] == "IndexAccess")
 		return createIndexAccess(_json);
 	if (_json["nodeType"] == "Identifier")
-		return createIdentifier(getSourceLocation(_json), "TODOREPLACETHIS");
+		return createIdentifier(createSourceLocation(_json), _json["name"].asCString());
 	if (_json["nodeType"] == "ElementaryTypeNameExpression")
 		return createElementaryTypeNameExpression(_json);
 	if (_json["nodeType"] == "Literal")
@@ -245,13 +252,12 @@ ContractDefinition::ContractKind ASTJsonImporter::getContractKind(Json::Value co
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node)
 {
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	vector<ASTPointer<ASTNode>> nodes;
-//	for (auto& child: _node["children"])
 	for (auto& child: _node["nodes"])
 		nodes.push_back(convertJsonToASTNode(child));
-	//create node
 	ASTPointer<SourceUnit> tmp = make_shared<SourceUnit>(location, nodes);
+	tmp->annotation().path = m_currentSource;
 	tmp->setID(_node["id"].asInt());
 	return tmp;
 }
@@ -266,7 +272,7 @@ ASTPointer<PragmaDirective> ASTJsonImporter::createPragmaDirective(Json::Value c
                 literals.push_back(l);
                 tokens.push_back(scanSingleToken(l));
 	}
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<PragmaDirective> tmp = make_shared<PragmaDirective>(location, tokens, literals);
         tmp->setID(_node["id"].asInt());
 	return tmp;
@@ -274,7 +280,7 @@ ASTPointer<PragmaDirective> ASTJsonImporter::createPragmaDirective(Json::Value c
 
 ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value const& _node){
 	//create args for the fields of the node
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<ASTString> const& path = make_shared<ASTString>(_node["file"].asCString());
 	ASTPointer<ASTString> const& unitAlias = make_shared<ASTString>(_node["unitAlias"].asCString());
 	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
@@ -293,7 +299,7 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 
 ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::Value const& _node){
 	//create args for the constructor of the node
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	std::vector<ASTPointer<InheritanceSpecifier>> baseContracts;
@@ -319,7 +325,7 @@ ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::V
 ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Json::Value const& _node)
 {
 	//create args for the constructor of the node && see how they are filled in parser.cpp
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<UserDefinedTypeName> baseName = createUserDefinedTypeName(_node["baseName"]);
 	std::vector<ASTPointer<Expression>> arguments;
 	for (auto& arg : _node["arguments"])
@@ -336,7 +342,7 @@ ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Jso
 
 ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Value const& _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<UserDefinedTypeName> libraryName = createUserDefinedTypeName(_node["libraryName"]);
 	ASTPointer<TypeName> typeName;
 	if (!_node["typename"].isNull())
@@ -354,7 +360,7 @@ ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Val
 
 ASTPointer<ASTNode> ASTJsonImporter::createStructDefinition(Json::Value const& _node)
 {
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<ASTString> const& name = make_shared<ASTString>(_node["name"].asCString());
 	std::vector<ASTPointer<VariableDeclaration>> members;
 	for (auto& member: _node["members"])
@@ -364,13 +370,13 @@ ASTPointer<ASTNode> ASTJsonImporter::createStructDefinition(Json::Value const& _
 		name,
 		members
 	);
-	return make_shared<Identifier>(getSourceLocation(_node), make_shared<ASTString>("placeholder"));
+	return make_shared<Identifier>(createSourceLocation(_node), make_shared<ASTString>("placeholder"));
 
 }
 
 ASTPointer<EnumDefinition> ASTJsonImporter::createEnumDefinition(Json::Value const& _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	std::vector<ASTPointer<EnumValue>> members;
 	for (auto& member: _node["members"])
@@ -386,7 +392,7 @@ ASTPointer<EnumDefinition> ASTJsonImporter::createEnumDefinition(Json::Value con
 
 ASTPointer<EnumValue> ASTJsonImporter::createEnumValue(Json::Value const& _node)
 {
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	ASTPointer<ASTString> const& name = make_shared<ASTString>(_node["name"].asCString());
 	ASTPointer<EnumValue> tmp = make_shared<EnumValue>(
 		location,
@@ -398,7 +404,7 @@ ASTPointer<EnumValue> ASTJsonImporter::createEnumValue(Json::Value const& _node)
 
 ASTPointer<ParameterList> ASTJsonImporter::createParameterList(Json::Value const&  _node)
 {
-	SourceLocation const& location = getSourceLocation(_node);
+	SourceLocation const& location = createSourceLocation(_node);
 	std::vector<ASTPointer<VariableDeclaration>> parameters;
 	for (auto& param: _node["parameters"])
 		parameters.push_back(createVariableDeclaration(param));
@@ -412,13 +418,13 @@ ASTPointer<ParameterList> ASTJsonImporter::createParameterList(Json::Value const
 
 ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	Declaration::Visibility visibility = getVisibility(_node);
 	bool isConstructor = _node["isConstructor"].asBool();
 	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
 	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
-	bool isDeclaredConst = _node["isConstructor"].asBool();
+	bool isDeclaredConst = _node["isDeclaredConst"].asBool();
 	std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	for (auto& mod: _node["modifiers"])
 		modifiers.push_back(createModifierInvocation(mod));
@@ -444,7 +450,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 
 ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<TypeName> type = nullOrCast<TypeName>(_node["typeName"]);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	ASTPointer<Expression> value = nullOrCast<Expression>(_node["value"]);
@@ -470,7 +476,7 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 
 ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
 	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
@@ -488,7 +494,7 @@ ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::V
 
 ASTPointer<ModifierInvocation> ASTJsonImporter::createModifierInvocation(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Identifier> name = createIdentifier(location, _node["name"].asCString());
 	std::vector<ASTPointer<Expression>> arguments;
 	for (auto& arg: _node["arguments"])
@@ -504,7 +510,7 @@ ASTPointer<ModifierInvocation> ASTJsonImporter::createModifierInvocation(Json::V
 
 ASTPointer<EventDefinition> ASTJsonImporter::createEventDefinition(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
 	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
@@ -520,15 +526,14 @@ ASTPointer<EventDefinition> ASTJsonImporter::createEventDefinition(Json::Value c
 	return tmp;
 }
 
-ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::Value const& _node) //HELP
+ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::Value const& _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	unsigned short firstNum;
 	unsigned short secondNum;
-	string name = _node["typeDescriptions"]["typeString"].asCString();
+	string name = _node["name"].asCString();
 	Token::Value token;
 	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
-//        Token::Value token = scanSingleToken(_node["typeDescriptions"]["typeString"]);
 	ElementaryTypeNameToken elem(token, firstNum,  secondNum);
 	ASTPointer<ElementaryTypeName> tmp = make_shared<ElementaryTypeName>(
 		location,
@@ -540,7 +545,7 @@ ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::V
 
 ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json::Value const& _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	vector<ASTString> namePath;
 	vector<string> strs;
 	string nameString = _node["name"].asCString();
@@ -557,11 +562,11 @@ ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json:
 
 ASTPointer<FunctionTypeName> ASTJsonImporter::createFunctionTypeName(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ParameterList> parameterTypes = createParameterList(_node["parameterTypes"]);
 	ASTPointer<ParameterList> returnTypes = createParameterList(_node["returnParameterTypes"]);
 	Declaration::Visibility visibility = getVisibility(_node);
-	bool isDeclaredConst = _node["constant"].asBool();
+	bool isDeclaredConst = _node["isDeclaredConstant"].asBool();
 	bool isPayable = _node["payable"].asBool();
 	ASTPointer<FunctionTypeName> tmp = make_shared<FunctionTypeName>(
 		location,
@@ -577,7 +582,7 @@ ASTPointer<FunctionTypeName> ASTJsonImporter::createFunctionTypeName(Json::Value
 
 ASTPointer<Mapping> ASTJsonImporter::createMapping(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ElementaryTypeName> keyType = createElementaryTypeName(_node["keyType"]);
 	ASTPointer<TypeName> valueType = castPointer<TypeName>(convertJsonToASTNode(_node["valueType"]));
 	ASTPointer<Mapping> tmp = make_shared<Mapping>(
@@ -589,9 +594,9 @@ ASTPointer<Mapping> ASTJsonImporter::createMapping(Json::Value const&  _node)
 	return tmp;
 }
 
-ASTPointer<ArrayTypeName> ASTJsonImporter::createArrayTypeName(Json::Value const&  _node) //HELP
+ASTPointer<ArrayTypeName> ASTJsonImporter::createArrayTypeName(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<TypeName> baseType = castPointer<TypeName>(convertJsonToASTNode(_node));
 	ASTPointer<Expression> length = nullOrCast<Expression>(_node["length"]);
 	ASTPointer<ArrayTypeName> tmp = make_shared<ArrayTypeName>(
@@ -605,11 +610,11 @@ ASTPointer<ArrayTypeName> ASTJsonImporter::createArrayTypeName(Json::Value const
 
 //ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value const&  _node) //TODO LATER
 //{
-//	return make_shared<Identifier>(getSourceLocation(_node), make_shared<ASTString>("placeholder"));
+//	return make_shared<Identifier>(createSourceLocation(_node), make_shared<ASTString>("placeholder"));
 //}
 ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	std::vector<ASTPointer<Statement>> statements;
 	for (auto& stat: _node["statements"])
@@ -625,7 +630,7 @@ ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const&  _node)
 
 ASTPointer<PlaceholderStatement> ASTJsonImporter::createPlaceholderStatement(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<PlaceholderStatement> tmp = make_shared<PlaceholderStatement>(
 		location,
@@ -635,9 +640,9 @@ ASTPointer<PlaceholderStatement> ASTJsonImporter::createPlaceholderStatement(Jso
 	return tmp;
 }
 
-ASTPointer<IfStatement> ASTJsonImporter::createIfStatement(Json::Value const&  _node) //help
+ASTPointer<IfStatement> ASTJsonImporter::createIfStatement(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
 	ASTPointer<Statement> trueBody = castPointer<Statement>(convertJsonToASTNode(_node["trueBody"]));
@@ -655,7 +660,7 @@ ASTPointer<IfStatement> ASTJsonImporter::createIfStatement(Json::Value const&  _
 
 ASTPointer<WhileStatement> ASTJsonImporter::createWhileStatement(Json::Value const&  _node, bool _isDoWhile=false)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
 	ASTPointer<Statement> body = castPointer<Statement>(convertJsonToASTNode(_node["Body"]));
@@ -672,7 +677,7 @@ ASTPointer<WhileStatement> ASTJsonImporter::createWhileStatement(Json::Value con
 
 ASTPointer<ForStatement> ASTJsonImporter::createForStatement(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Statement> initExpression = nullOrCast<Statement>(_node["initExpression"]);
 	ASTPointer<Expression> conditionExpression = nullOrCast<Expression>(_node["condition"]);
@@ -692,7 +697,7 @@ ASTPointer<ForStatement> ASTJsonImporter::createForStatement(Json::Value const& 
 
 ASTPointer<Continue> ASTJsonImporter::createContinue(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Continue> tmp = make_shared<Continue>(location, docString);
         tmp->setID(_node["id"].asInt());
@@ -701,7 +706,7 @@ ASTPointer<Continue> ASTJsonImporter::createContinue(Json::Value const&  _node)
 
 ASTPointer<Break> ASTJsonImporter::createBreak(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Break> tmp = make_shared<Break>(location, docString);
         tmp->setID(_node["id"].asInt());
@@ -710,7 +715,7 @@ ASTPointer<Break> ASTJsonImporter::createBreak(Json::Value const&  _node)
 
 ASTPointer<Return> ASTJsonImporter::createReturn(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
 	ASTPointer<Return> tmp = make_shared<Return>(
@@ -724,7 +729,7 @@ ASTPointer<Return> ASTJsonImporter::createReturn(Json::Value const&  _node)
 
 ASTPointer<Throw> ASTJsonImporter::createThrow(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Throw> tmp = make_shared<Throw>(location, docString);
         tmp->setID(_node["id"].asInt());
@@ -733,7 +738,7 @@ ASTPointer<Throw> ASTJsonImporter::createThrow(Json::Value const&  _node)
 
 ASTPointer<VariableDeclarationStatement> ASTJsonImporter::createVariableDeclarationStatement(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	std::vector<ASTPointer<VariableDeclaration>> variables;
 	for (auto& var: _node["declarations"])
@@ -751,7 +756,7 @@ ASTPointer<VariableDeclarationStatement> ASTJsonImporter::createVariableDeclarat
 
 ASTPointer<ExpressionStatement> ASTJsonImporter::createExpressionStatement(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
 	ASTPointer<ExpressionStatement> tmp = make_shared<ExpressionStatement>(
@@ -765,7 +770,7 @@ ASTPointer<ExpressionStatement> ASTJsonImporter::createExpressionStatement(Json:
 
 ASTPointer<Conditional> ASTJsonImporter::createConditional(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
 	ASTPointer<Expression> trueExpression = castPointer<Expression>(convertJsonToASTNode(_node["trueExpression"]));
 	ASTPointer<Expression> falseExpression = castPointer<Expression>(convertJsonToASTNode(_node["falseExpression"]));
@@ -781,7 +786,7 @@ ASTPointer<Conditional> ASTJsonImporter::createConditional(Json::Value const&  _
 
 ASTPointer<Assignment> ASTJsonImporter::createAssignment(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> leftHandSide = castPointer<Expression>(convertJsonToASTNode(_node["leftHandSide"]));
         Token::Value assignmentOperator = scanSingleToken(_node["operator"]);
 //	ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(_node["operator"].asCString()), "tmp");
@@ -799,7 +804,7 @@ ASTPointer<Assignment> ASTJsonImporter::createAssignment(Json::Value const&  _no
 
 ASTPointer<TupleExpression> ASTJsonImporter::createTupleExpression(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	std::vector<ASTPointer<Expression>> components;
 	for (auto& comp: _node["components"])
 		components.push_back(castPointer<Expression>(convertJsonToASTNode(comp)));
@@ -815,7 +820,7 @@ ASTPointer<TupleExpression> ASTJsonImporter::createTupleExpression(Json::Value c
 
 ASTPointer<UnaryOperation> ASTJsonImporter::createUnaryOperation(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
         Token::Value operation = scanSingleToken(_node["operator"]);
 //	Token::Value operation = Scanner(CharStream(_node["operator"].asCString()), "tmp").next(); //TODO make this oneliner
 //	Scanner scanner(CharStream(_node["operator"].asCString()), "tmp");
@@ -835,7 +840,7 @@ ASTPointer<UnaryOperation> ASTJsonImporter::createUnaryOperation(Json::Value con
 
 ASTPointer<BinaryOperation> ASTJsonImporter::createBinaryOperation(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> left = castPointer<Expression>(convertJsonToASTNode(_node["leftExpression"]));
         Token::Value operation = scanSingleToken(_node["operator"]);
 //	Token::Value operation;
@@ -854,7 +859,7 @@ ASTPointer<BinaryOperation> ASTJsonImporter::createBinaryOperation(Json::Value c
 
 ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
 	std::vector<ASTPointer<Expression>> arguments;
 	for (auto& arg: _node["arguments"])
@@ -874,7 +879,7 @@ ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const& 
 
 ASTPointer<NewExpression> ASTJsonImporter::createNewExpression(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<TypeName> typeName = castPointer<TypeName>(convertJsonToASTNode(_node["typeName"]));
 	ASTPointer<NewExpression> tmp = make_shared<NewExpression>(
 		location,
@@ -886,7 +891,7 @@ ASTPointer<NewExpression> ASTJsonImporter::createNewExpression(Json::Value const
 
 ASTPointer<MemberAccess> ASTJsonImporter::createMemberAccess(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
 	ASTPointer<ASTString> memberName = make_shared<ASTString>(_node["memberName"].asCString());
 	ASTPointer<MemberAccess> tmp = make_shared<MemberAccess>(
@@ -900,7 +905,7 @@ ASTPointer<MemberAccess> ASTJsonImporter::createMemberAccess(Json::Value const& 
 
 ASTPointer<IndexAccess> ASTJsonImporter::createIndexAccess(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> base = castPointer<Expression>(convertJsonToASTNode(_node["baseExpression"]));
 	ASTPointer<Expression> index = castPointer<Expression>(convertJsonToASTNode(_node["indexExpression"]));
 	ASTPointer<IndexAccess> tmp = make_shared<IndexAccess>(
@@ -919,7 +924,7 @@ ASTPointer<Identifier> ASTJsonImporter::createIdentifier(SourceLocation location
 
 ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 //	Scanner scanner(CharStream(_node["typeName"].asCString()), "tmp"); //shared
         Token::Value token = scanSingleToken(_node["typeName"]);//scanner.next(); //correct way to get the token?
 	ElementaryTypeNameToken elem(token,1,1);	//what does firstSize, secondSize mean?
@@ -934,7 +939,7 @@ ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNa
 
 ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
 {
-	SourceLocation location = getSourceLocation(_node);
+	SourceLocation location = createSourceLocation(_node);
 	return make_shared<Identifier>(location, make_shared<ASTString>("TODO"));
 }
 

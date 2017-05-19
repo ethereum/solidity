@@ -40,13 +40,13 @@ class ASTJsonImporter
 {
 public:
 	/// Create an Importer to import a given abstract syntax tree in Json format to an ASTNode
-        ASTJsonImporter(Json::Value const& _json, std::string const& name);
+	ASTJsonImporter(std::map<std::string, Json::Value const*> _sourceList);
 
         ///this is the primary Interface from the Outside
-	ASTPointer<SourceUnit> jsonToSourceUnit();
+	std::map<std::string, ASTPointer<SourceUnit>> jsonToSourceUnit();
 
 private:
-	SourceLocation getSourceLocation(Json::Value const& _node);
+	SourceLocation const createSourceLocation(Json::Value const& _node);
 	///function to be called when the type of the Json-node is unknown
 	ASTPointer<ASTNode> convertJsonToASTNode(Json::Value const& _ast);
 
@@ -102,8 +102,11 @@ private:
 	VariableDeclaration::Location getLocation(Json::Value const& _node);
 	ContractDefinition::ContractKind getContractKind(Json::Value const& _node);
 	Token::Value scanSingleToken(Json::Value _node);
-	Json::Value const* m_json;
-        std::string const& m_name;
+//	Json::Value const* m_json;
+//        std::string const& m_name;
+	std::map<std::string, Json::Value const*> m_sourceList;
+	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
+	std::string m_currentSource;
 
 
 };
