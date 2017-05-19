@@ -54,7 +54,11 @@ struct Label { SourceLocation location; std::string name; };
 struct StackAssignment { SourceLocation location; Identifier variableName; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
-struct Assignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
+///
+/// Multiple assignment ("x, y := f()"), where the left hand side variables each occupy
+/// a single stack slot and expects a single expression on the right hand returning
+/// the same amount of items as the number of variables.
+struct Assignment { SourceLocation location; std::vector<Identifier> variableNames; std::shared_ptr<Statement> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
 struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
 struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };

@@ -412,7 +412,25 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 	CHECK_PARSE_ERROR(input, ParserError, "recursion");
 }
 
+BOOST_AUTO_TEST_CASE(multiple_assignment)
+{
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name expected in multiple assignemnt.");
 
+	/// NOTE: Travis hiccups if not having a variable
+	char const* text = R"(
+	{
+		function f(a) -> r1, r2 {
+			r1 := a
+			r2 := 7
+		}
+		let x := 9
+		let y := 2
+		x, y := f(x)
+	}
+	)";
+	BOOST_CHECK(successParse(text));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -122,6 +122,34 @@ assembly::Statement Parser::parseStatement()
 	{
 	case Token::LParen:
 		return parseCall(std::move(statement));
+	case Token::Comma:
+	{
+		// if a comma follows, a multiple assignment is assumed
+
+		if (statement.type() != typeid(assembly::Identifier))
+			fatalParserError("Label name / variable name must precede \",\" (multiple assignment).");
+		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(statement);
+
+		Assignment assignment = createWithLocation<Assignment>(identifier.location);
+		assignment.variableNames.emplace_back(identifier);
+
+		do
+		{
+			expectToken(Token::Comma);
+			statement = parseElementaryOperation(false);
+			if (statement.type() != typeid(assembly::Identifier))
+				fatalParserError("Variable name expected in multiple assignemnt.");
+			assignment.variableNames.emplace_back(boost::get<assembly::Identifier>(statement));
+		}
+		while (currentToken() == Token::Comma);
+
+		expectToken(Token::Colon);
+		expectToken(Token::Assign);
+
+		assignment.value.reset(new Statement(parseExpression()));
+		assignment.location.end = locationOf(*assignment.value).end;
+		return assignment;
+	}
 	case Token::Colon:
 	{
 		if (statement.type() != typeid(assembly::Identifier))
@@ -136,7 +164,7 @@ assembly::Statement Parser::parseStatement()
 			if (!m_julia && instructions().count(identifier.name))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			advance();
-			assignment.variableName = identifier;
+			assignment.variableNames.emplace_back(identifier);
 			assignment.value.reset(new Statement(parseExpression()));
 			assignment.location.end = locationOf(*assignment.value).end;
 			return assignment;
