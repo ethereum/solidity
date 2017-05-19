@@ -266,24 +266,31 @@ void CommandLineInterface::handleOnChainMetadata(string const& _contract)
 		return;
 
 	string data = m_compiler->onChainMetadata(_contract);
-	if (m_args.count("output-dir"))
+	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
 		cout << "Metadata: " << endl << data << endl;
 }
 
-void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
+void CommandLineInterface::handleABI(string const& _contract)
+{
+	if (!m_args.count(g_argAbi))
+		return;
+
+	string data = dev::jsonCompactPrint(m_compiler->contractABI(_contract));
+	if (m_args.count(g_argOutputDir))
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
+	else
+		cout << "Contract JSON ABI " << endl << data << endl;
+}
+
+void CommandLineInterface::handleNatspec(DocumentationType _type, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
 	std::string title;
 	switch(_type)
 	{
-	case DocumentationType::ABIInterface:
-		argName = g_argAbi;
-		suffix = ".abi";
-		title = "Contract JSON ABI";
-		break;
 	case DocumentationType::NatspecUser:
 		argName = g_argNatspecUser;
 		suffix = ".docuser";
@@ -301,11 +308,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 	if (m_args.count(argName))
 	{
-		std::string output;
-		if (_type == DocumentationType::ABIInterface)
-			output = dev::jsonCompactPrint(m_compiler->metadata(_contract, _type));
-		else
-			output = dev::jsonPrettyPrint(m_compiler->metadata(_contract, _type));
+		std::string output = dev::jsonPrettyPrint(m_compiler->natspec(_contract, _type));
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -787,7 +790,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value contractData(Json::objectValue);
 		if (requests.count(g_strAbi))
-			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->interface(contractName));
+			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->onChainMetadata(contractName);
 		if (requests.count(g_strBinary))
@@ -814,9 +817,9 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecDev));
+			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->metadata(contractName, DocumentationType::NatspecUser));
+			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecUser));
 		output[g_strContracts][contractName] = contractData;
 	}
 
@@ -1069,9 +1072,9 @@ void CommandLineInterface::outputCompilationResults()
 		handleBytecode(contract);
 		handleSignatureHashes(contract);
 		handleOnChainMetadata(contract);
-		handleMeta(DocumentationType::ABIInterface, contract);
-		handleMeta(DocumentationType::NatspecDev, contract);
-		handleMeta(DocumentationType::NatspecUser, contract);
+		handleABI(contract);
+		handleNatspec(DocumentationType::NatspecDev, contract);
+		handleNatspec(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
 
 	handleFormal();

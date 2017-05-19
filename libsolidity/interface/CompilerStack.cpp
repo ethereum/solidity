@@ -37,7 +37,8 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
-#include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/ABI.h>
+#include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
 
@@ -219,8 +220,8 @@ bool CompilerStack::analyze()
 				TypeChecker typeChecker(m_errors);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
-					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
-					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
+					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
+					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
 				}
 				else
 					noErrors = false;
@@ -444,17 +445,31 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json::Value const& CompilerStack::interface(string const& _contractName) const
+Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 {
-	return metadata(_contractName, DocumentationType::ABIInterface);
+	return contractABI(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 {
-	return metadata(contract(_contractName), _type);
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.abi)
+		_contract.abi.reset(new Json::Value(ABI::generate(*_contract.contract)));
+
+	return *_contract.abi;
 }
 
-Json::Value const& CompilerStack::metadata(Contract const& _contract, DocumentationType _type) const
+Json::Value const& CompilerStack::natspec(string const& _contractName, DocumentationType _type) const
+{
+	return natspec(contract(_contractName), _type);
+}
+
+Json::Value const& CompilerStack::natspec(Contract const& _contract, DocumentationType _type) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -471,16 +486,13 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 	case DocumentationType::NatspecDev:
 		doc = &_contract.devDocumentation;
 		break;
-	case DocumentationType::ABIInterface:
-		doc = &_contract.interface;
-		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new Json::Value(InterfaceHandler::documentation(*_contract.contract, _type)));
+		doc->reset(new Json::Value(Natspec::documentation(*_contract.contract, _type)));
 
 	return *(*doc);
 }
@@ -830,9 +842,9 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	for (auto const& library: m_libraries)
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
-	meta["output"]["abi"] = metadata(_contract, DocumentationType::ABIInterface);
-	meta["output"]["userdoc"] = metadata(_contract, DocumentationType::NatspecUser);
-	meta["output"]["devdoc"] = metadata(_contract, DocumentationType::NatspecDev);
+	meta["output"]["abi"] = contractABI(_contract);
+	meta["output"]["userdoc"] = natspec(_contract, DocumentationType::NatspecUser);
+	meta["output"]["devdoc"] = natspec(_contract, DocumentationType::NatspecDev);
 
 	return jsonCompactPrint(meta);
 }

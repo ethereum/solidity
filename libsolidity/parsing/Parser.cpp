@@ -27,7 +27,6 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/InterfaceHandler.h>
 
 using namespace std;
 

@@ -59,15 +59,14 @@ class FunctionDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
-class InterfaceHandler;
+class Natspec;
 class Error;
 class DeclarationContainer;
 
 enum class DocumentationType: uint8_t
 {
 	NatspecUser = 1,
-	NatspecDev,
-	ABIInterface
+	NatspecDev
 };
 
 /**
@@ -173,14 +172,14 @@ public:
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
-	/// @returns a JSON representing the contract interface.
+	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& interface(std::string const& _contractName = "") const;
+	Json::Value const& contractABI(std::string const& _contractName = "") const;
 	/// @returns a JSON representing the contract's documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
-	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
+	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
@@ -230,7 +229,7 @@ private:
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
 		std::string onChainMetadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> interface;
+		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
@@ -267,7 +266,8 @@ private:
 
 	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
-	Json::Value const& metadata(Contract const&, DocumentationType _type) const;
+	Json::Value const& contractABI(Contract const&) const;
+	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
 
 	struct Remapping
 	{

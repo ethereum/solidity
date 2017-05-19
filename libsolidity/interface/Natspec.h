@@ -17,8 +17,7 @@
 /**
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
- * Takes the parsed AST and produces the Natspec
- * documentation and the ABI interface
+ * Takes the parsed AST and produces the Natspec documentation:
  * https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
  *
  * Can generally deal with JSON files
@@ -59,7 +58,7 @@ enum class CommentOwner
 	Function
 };
 
-class InterfaceHandler
+class Natspec
 {
 public:
 	/// Get the given type of documentation
@@ -71,10 +70,6 @@ public:
 		ContractDefinition const& _contractDef,
 		DocumentationType _type
 	);
-	/// Get the ABI Interface of the contract
-	/// @param _contractDef The contract definition
-	/// @return             A JSONrepresentation of the contract's ABI Interface
-	static Json::Value abiInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation of the contract's user documentation
