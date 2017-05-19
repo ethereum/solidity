@@ -39,7 +39,7 @@ keyid=703F83D0
 email=builds@ethereum.org
 packagename=solc
 
-for distribution in trusty vivid wily xenial yakkety
+for distribution in trusty vivid xenial yakkety zesty
 do
 cd /tmp/
 mkdir $distribution
