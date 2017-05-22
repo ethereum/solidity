@@ -68,17 +68,21 @@ namespace dev
 namespace solidity
 {
 
+static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strAbi = "abi";
 static string const g_strAddStandard = "add-std";
+static string const g_strAllowPaths = "allow-paths";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
 static string const g_strAssemble = "assemble";
 static string const g_strAst = "ast";
 static string const g_strAstJson = "ast-json";
+static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCloneBinary = "clone-bin";
 static string const g_strCombinedJson = "combined-json";
+static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
@@ -88,6 +92,7 @@ static string const g_strInterface = "interface";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMetadata = "metadata";
+static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
 static string const g_strOpcodes = "opcodes";
@@ -100,23 +105,23 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
-static string const g_strVersion = "version";
-static string const g_stdinFileNameStr = "<stdin>";
-static string const g_strMetadataLiteral = "metadata-literal";
-static string const g_strAllowPaths = "allow-paths";
 static string const g_strStandardJSON = "standard-json";
+static string const g_strVersion = "version";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
+static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
 static string const g_argAssemble = g_strAssemble;
 static string const g_argAst = g_strAst;
+static string const g_argAstCompactJson = g_strAstCompactJson;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCloneBinary = g_strCloneBinary;
 static string const g_argCombinedJson = g_strCombinedJson;
+static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
@@ -124,6 +129,7 @@ static string const g_argInputFile = g_strInputFile;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMetadata = g_strMetadata;
+static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
 static string const g_argOpcodes = g_strOpcodes;
@@ -131,20 +137,20 @@ static string const g_argOptimize = g_strOptimize;
 static string const g_argOptimizeRuns = g_strOptimizeRuns;
 static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
+static string const g_argStandardJSON = g_strStandardJSON;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
-static string const g_argMetadataLiteral = g_strMetadataLiteral;
-static string const g_argAllowPaths = g_strAllowPaths;
-static string const g_argStandardJSON = g_strStandardJSON;
 
 /// Possible arguments to for --combined-json
-static set<string> const g_combinedJsonArgs{
+static set<string> const g_combinedJsonArgs
+{
 	g_strAbi,
 	g_strAsm,
 	g_strAst,
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCloneBinary,
+	g_strCompactJSON,
 	g_strInterface,
 	g_strMetadata,
 	g_strNatspecUser,
@@ -556,6 +562,7 @@ Allowed options)",
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
+		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
 		(g_argAsm.c_str(), "EVM assembly of the contracts.")
 		(g_argAsmJson.c_str(), "EVM assembly of the contracts in JSON format.")
 		(g_argOpcodes.c_str(), "Opcodes of the contracts.")
@@ -835,10 +842,11 @@ void CommandLineInterface::handleCombinedJSON()
 
 	if (requests.count(g_strAst))
 	{
+		bool legacyFormat = !requests.count(g_strCompactJSON);
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(true, m_compiler->sourceIndices());
+			ASTJsonConverter converter(legacyFormat, m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
@@ -854,6 +862,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		title = "Syntax trees:";
 	else if (_argStr == g_argAstJson)
 		title = "JSON AST:";
+	else if (_argStr == g_argAstCompactJson)
+		title = "JSON AST (compact format):";
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argStr for AST"));
 
@@ -870,6 +880,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				asts
 			);
 
+		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
 		{
 			for (auto const& sourceCode: m_sourceCodes)
@@ -883,7 +894,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter(true).print(data, m_compiler->ast(sourceCode.first));
+					ASTJsonConverter(legacyFormat).print(data, m_compiler->ast(sourceCode.first));
 					postfix += "_json";
 				}
 				boost::filesystem::path path(sourceCode.first);
@@ -906,9 +917,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 					printer.print(cout);
 				}
 				else
-				{
-					ASTJsonConverter(true).print(cout, m_compiler->ast(sourceCode.first));
-				}
+					ASTJsonConverter(legacyFormat).print(cout, m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
@@ -1041,6 +1050,7 @@ void CommandLineInterface::outputCompilationResults()
 	// do we need AST output?
 	handleAst(g_argAst);
 	handleAst(g_argAstJson);
+	handleAst(g_argAstCompactJson);
 
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
