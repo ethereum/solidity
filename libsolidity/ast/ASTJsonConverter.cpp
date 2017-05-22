@@ -634,7 +634,7 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	};
 	if (m_legacy)
 	{
-		attributes.push_back(make_pair("isStructConstructorCall", functionCallKind(_node.annotation().kind)));
+		attributes.push_back(make_pair("isStructConstructorCall", _node.annotation().kind == FunctionCallKind::StructConstructorCall));
 		attributes.push_back(make_pair("type_conversion", _node.annotation().kind == FunctionCallKind::TypeConversion));
 	}
 	else

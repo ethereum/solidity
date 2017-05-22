@@ -1246,6 +1246,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else
 		_functionCall.annotation().kind = FunctionCallKind::FunctionCall;
+	solAssert(_functionCall.annotation().kind != FunctionCallKind::Unset, "");
 
 	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
 	{

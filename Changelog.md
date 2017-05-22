@@ -1,4 +1,5 @@
 ### 0.4.12 (unreleased)
+ * AST: export all attributes to Json format
 
 ### 0.4.11 (2017-05-03)
 
