@@ -1238,13 +1238,17 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (auto const* typeType = dynamic_cast<TypeType const*>(expressionType.get()))
 	{
-		_functionCall.annotation().isStructConstructorCall = (typeType->actualType()->category() == Type::Category::Struct);
-		_functionCall.annotation().isTypeConversion = !_functionCall.annotation().isStructConstructorCall;
+		if (typeType->actualType()->category() == Type::Category::Struct)
+			_functionCall.annotation().kind = FunctionCallKind::StructConstructorCall;
+		else
+			_functionCall.annotation().kind = FunctionCallKind::TypeConversion;
+
 	}
 	else
-		_functionCall.annotation().isStructConstructorCall = _functionCall.annotation().isTypeConversion = false;
+		_functionCall.annotation().kind = FunctionCallKind::FunctionCall;
+	solAssert(_functionCall.annotation().kind != FunctionCallKind::Unset, "");
 
-	if (_functionCall.annotation().isTypeConversion)
+	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
 	{
 		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
 		TypePointer resultType = t.actualType();
@@ -1274,7 +1278,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	/// For error message: Struct members that were removed during conversion to memory.
 	set<string> membersRemovedForStructConstructor;
-	if (_functionCall.annotation().isStructConstructorCall)
+	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
 		auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
@@ -1312,7 +1316,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			toString(parameterTypes.size()) +
 			".";
 		// Extend error message in case we try to construct a struct with mapping member.
-		if (_functionCall.annotation().isStructConstructorCall && !membersRemovedForStructConstructor.empty())
+		if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall && !membersRemovedForStructConstructor.empty())
 		{
 			msg += " Members that have to be skipped in memory:";
 			for (auto const& member: membersRemovedForStructConstructor)

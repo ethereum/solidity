@@ -42,15 +42,23 @@ class ASTJsonConverter: public ASTConstVisitor
 {
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
+	/// @a _legacy if true, use legacy format
 	/// @a _sourceIndices is used to abbreviate source names in source locations.
 	explicit ASTJsonConverter(
-		ASTNode const& _ast,
+		bool _legacy,
 		std::map<std::string, unsigned> _sourceIndices = std::map<std::string, unsigned>()
 	);
 	/// Output the json representation of the AST to _stream.
-	void print(std::ostream& _stream);
-	Json::Value const& json();
-
+	void print(std::ostream& _stream, ASTNode const& _node);
+	Json::Value toJson(ASTNode const& _node);
+	template <class T>
+	Json::Value toJson(std::vector<ASTPointer<T>> const& _nodes)
+	{
+		Json::Value ret(Json::arrayValue);
+		for (auto const& n: _nodes)
+			ret.append(n ? toJson(*n) : Json::nullValue);
+		return ret;
+	}
 	bool visit(SourceUnit const& _node) override;
 	bool visit(PragmaDirective const& _node) override;
 	bool visit(ImportDirective const& _node) override;
@@ -97,82 +105,60 @@ public:
 	bool visit(ElementaryTypeNameExpression const& _node) override;
 	bool visit(Literal const& _node) override;
 
-	void endVisit(SourceUnit const&) override;
-	void endVisit(PragmaDirective const&) override;
-	void endVisit(ImportDirective const&) override;
-	void endVisit(ContractDefinition const&) override;
-	void endVisit(InheritanceSpecifier const&) override;
-	void endVisit(UsingForDirective const&) override;
-	void endVisit(StructDefinition const&) override;
-	void endVisit(EnumDefinition const&) override;
-	void endVisit(EnumValue const&) override;
-	void endVisit(ParameterList const&) override;
-	void endVisit(FunctionDefinition const&) override;
-	void endVisit(VariableDeclaration const&) override;
-	void endVisit(ModifierDefinition const&) override;
-	void endVisit(ModifierInvocation const&) override;
 	void endVisit(EventDefinition const&) override;
-	void endVisit(TypeName const&) override;
-	void endVisit(ElementaryTypeName const&) override;
-	void endVisit(UserDefinedTypeName const&) override;
-	void endVisit(FunctionTypeName const&) override;
-	void endVisit(Mapping const&) override;
-	void endVisit(ArrayTypeName const&) override;
-	void endVisit(InlineAssembly const&) override;
-	void endVisit(Block const&) override;
-	void endVisit(PlaceholderStatement const&) override;
-	void endVisit(IfStatement const&) override;
-	void endVisit(WhileStatement const&) override;
-	void endVisit(ForStatement const&) override;
-	void endVisit(Continue const&) override;
-	void endVisit(Break const&) override;
-	void endVisit(Return const&) override;
-	void endVisit(Throw const&) override;
-	void endVisit(VariableDeclarationStatement const&) override;
-	void endVisit(ExpressionStatement const&) override;
-	void endVisit(Conditional const&) override;
-	void endVisit(Assignment const&) override;
-	void endVisit(TupleExpression const&) override;
-	void endVisit(UnaryOperation const&) override;
-	void endVisit(BinaryOperation const&) override;
-	void endVisit(FunctionCall const&) override;
-	void endVisit(NewExpression const&) override;
-	void endVisit(MemberAccess const&) override;
-	void endVisit(IndexAccess const&) override;
-	void endVisit(Identifier const&) override;
-	void endVisit(ElementaryTypeNameExpression const&) override;
-	void endVisit(Literal const&) override;
 
 private:
-	void process();
-	void addJsonNode(
+	void setJsonNode(
 		ASTNode const& _node,
 		std::string const& _nodeName,
-		std::initializer_list<std::pair<std::string const, Json::Value const>> _attributes,
-		bool _hasChildren
+		std::initializer_list<std::pair<std::string, Json::Value>>&& _attributes
 	);
-	void addJsonNode(
+	void setJsonNode(
 		ASTNode const& _node,
 		std::string const& _nodeName,
-		std::vector<std::pair<std::string const, Json::Value const>> const& _attributes,
-		bool _hasChildren
+		std::vector<std::pair<std::string, Json::Value>>&& _attributes
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
+	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
+	Json::Value idOrNull(ASTNode const* _pt)
+	{
+		return _pt ? Json::Value(nodeId(*_pt)) : Json::nullValue;
+	}
+	Json::Value toJsonOrNull(ASTNode const* _node)
+	{
+		return _node ? toJson(*_node) : Json::nullValue;
+	}
+	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info);
 	std::string visibility(Declaration::Visibility const& _visibility);
 	std::string location(VariableDeclaration::Location _location);
+	std::string contractKind(ContractDefinition::ContractKind _kind);
+	std::string functionCallKind(FunctionCallKind _kind);
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
-	inline void goUp()
+	int nodeId(ASTNode const& _node)
 	{
-		solAssert(!m_jsonNodePtrs.empty(), "Uneven json nodes stack. Internal error.");
-		m_jsonNodePtrs.pop();
+		return _node.id();
 	}
-
+	template<class Container>
+	Json::Value getContainerIds(Container const& container)
+	{
+		Json::Value tmp(Json::arrayValue);
+		for (auto const& element: container)
+		{
+			solAssert(element, "");
+			tmp.append(nodeId(*element));
+		}
+		return tmp;
+	}
+	Json::Value typePointerToJson(TypePointer _tp);
+	Json::Value typePointerToJson(std::shared_ptr<std::vector<TypePointer>> _tps);
+	void appendExpressionAttributes(
+		std::vector<std::pair<std::string, Json::Value>> &_attributes,
+		ExpressionAnnotation const& _annotation
+	);
+	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
-	bool processed = false;
-	Json::Value m_astJson;
-	std::stack<Json::Value*> m_jsonNodePtrs;
-	ASTNode const* m_ast;
+	Json::Value m_currentValue;
 	std::map<std::string, unsigned> m_sourceIndices;
 };
 

@@ -583,8 +583,7 @@ public:
 	bool isPayable() const { return m_isPayable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
-	Block const& body() const { return *m_body; }
-
+	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !name().empty();
@@ -1314,7 +1313,7 @@ private:
 
 /**
  * Tuple, parenthesized expression, or bracketed expression.
- * Examples: (1, 2), (x,), (x), (), [1, 2], 
+ * Examples: (1, 2), (x,), (x), (), [1, 2],
  * Individual components might be empty shared pointers (as in the second example).
  * The respective types in lvalue context are: 2-tuple, 2-tuple (with wildcard), type of x, 0-tuple
  * Not in lvalue context: 2-tuple, _1_-tuple, type of x, 0-tuple.
@@ -1327,8 +1326,8 @@ public:
 		std::vector<ASTPointer<Expression>> const& _components,
 		bool _isArray
 	):
-		Expression(_location), 
-		m_components(_components), 
+		Expression(_location),
+		m_components(_components),
 		m_isArray(_isArray) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;

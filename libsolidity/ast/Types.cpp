@@ -2183,6 +2183,8 @@ string FunctionType::identifier() const
 	case Kind::ArrayPush: id += "arraypush"; break;
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
+	case Kind::Assert: id += "assert"; break;
+	case Kind::Require: id += "require";break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	if (isConstant())
