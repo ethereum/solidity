@@ -910,7 +910,11 @@ void CommandLineInterface::handleCombinedJSON()
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
 	}
-	cout << dev::jsonCompactPrint(output) << endl;
+
+	if (m_args.count(g_argOutputDir))
+		createJson("combined", output);
+	else
+		cout << dev::jsonCompactPrint(output) << endl;
 }
 
 void CommandLineInterface::handleAst(string const& _argStr)
