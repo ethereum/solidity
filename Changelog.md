@@ -1,6 +1,9 @@
 ### 0.4.12 (unreleased)
  * AST: export all attributes to Json format
 
+Bugfixes:
+ * Unused variable warnings no longer issued for variables used inside inline assembly
+
 ### 0.4.11 (2017-05-03)
 
 Features:

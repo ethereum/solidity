@@ -65,6 +65,7 @@ private:
 	virtual bool visit(Identifier const& _identifier) override;
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(MemberAccess const& _memberAccess) override;
+	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
 
 	ErrorList& m_errors;
 
