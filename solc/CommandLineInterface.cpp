@@ -894,7 +894,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter(legacyFormat).print(data, m_compiler->ast(sourceCode.first));
+					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
 					postfix += "_json";
 				}
 				boost::filesystem::path path(sourceCode.first);
@@ -917,7 +917,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 					printer.print(cout);
 				}
 				else
-					ASTJsonConverter(legacyFormat).print(cout, m_compiler->ast(sourceCode.first));
+					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(cout, m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
