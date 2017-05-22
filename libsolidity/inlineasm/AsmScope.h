@@ -23,6 +23,7 @@
 #include <libsolidity/interface/Exceptions.h>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <functional>
 #include <memory>
@@ -75,8 +76,7 @@ struct Scope
 
 	struct Label
 	{
-		size_t id = unassignedLabelId;
-		static const size_t unassignedLabelId = 0;
+		boost::optional<size_t> id;
 	};
 
 	struct Function

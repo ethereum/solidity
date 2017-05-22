@@ -264,7 +264,7 @@ void CompilerContext::appendInlineAssembly(
 		assembly = &replacedAssembly;
 	}
 
-	unsigned startStackHeight = stackHeight();
+	int startStackHeight = stackHeight();
 
 	assembly::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](
@@ -278,26 +278,26 @@ void CompilerContext::appendInlineAssembly(
 	identifierAccess.generateCode = [&](
 		assembly::Identifier const& _identifier,
 		assembly::IdentifierContext _context,
-		eth::Assembly& _assembly
+		julia::AbstractAssembly& _assembly
 	)
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
 		solAssert(it != _localVariables.end(), "");
-		unsigned stackDepth = _localVariables.end() - it;
-		int stackDiff = _assembly.deposit() - startStackHeight + stackDepth;
+		int stackDepth = _localVariables.end() - it;
+		int stackDiff = _assembly.stackHeight() - startStackHeight + stackDepth;
 		if (_context == assembly::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				CompilerError() <<
-				errinfo_comment("Stack too deep, try removing local variables.")
+				errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
 		if (_context == assembly::IdentifierContext::RValue)
-			_assembly.append(dupInstruction(stackDiff));
+			_assembly.appendInstruction(dupInstruction(stackDiff));
 		else
 		{
-			_assembly.append(swapInstruction(stackDiff));
-			_assembly.append(Instruction::POP);
+			_assembly.appendInstruction(swapInstruction(stackDiff));
+			_assembly.appendInstruction(Instruction::POP);
 		}
 	};
 
