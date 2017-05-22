@@ -508,6 +508,11 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
 }
 
+void CommandLineInterface::createJson(string const& _fileName, Json::Value const& _json)
+{
+	createFile(boost::filesystem::basename(_fileName) + string(".json"), dev::jsonCompactPrint(_json));
+}
+
 bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 {
 	// Declare the supported options.
