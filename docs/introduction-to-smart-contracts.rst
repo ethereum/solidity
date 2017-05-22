@@ -35,7 +35,7 @@ Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.5.0). This is to ensure that the
 contract does not suddenly behave differently with a new compiler version. The keyword ``pragma`` is called that way because, in general,
 pragmas are instructions for the compiler about how to treat the
-source code (e.g. `pragma once<https://en.wikipedia.org/wiki/Pragma_once>`_).  .
+source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).  .
 
 A contract in the sense of Solidity is a collection of code (its *functions*) and
 data (its *state*) that resides at a specific address on the Ethereum
@@ -126,7 +126,7 @@ get the idea - the compiler figures that out for you.
 The next line, ``mapping (address => uint) public balances;`` also
 creates a public state variable, but it is a more complex datatype.
 The type maps addresses to unsigned integers.
-Mappings can be seen as `hash tables<https://en.wikipedia.org/wiki/Hash_table>`_ which are
+Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are
 virtually initialized such that every possible key exists and is mapped to a
 value whose byte-representation is all zeros. This analogy does not go
 too far, though, as it is neither possible to obtain a list of all keys of
@@ -195,7 +195,7 @@ Blockchain Basics
 *****************
 
 Blockchains as a concept are not too hard to understand for programmers. The reason is that
-most of the complications (mining, `hashing<https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_, `elliptic-curve cryptography<https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_, `peer-to-peer networks<https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.)
+most of the complications (mining, `hashing <https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_, `elliptic-curve cryptography <https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_, `peer-to-peer networks <https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.)
 are just there to provide a certain set of features and promises. Once you accept these
 features as given, you do not have to worry about the underlying technology - or do you have
 to know how Amazon's AWS works internally in order to use it?
@@ -438,7 +438,7 @@ that maps all the way up to the block level. This feature called **logs**
 is used by Solidity in order to implement **events**.
 Contracts cannot access log data after it has been created, but they
 can be efficiently accessed from outside the blockchain.
-Since some part of the log data is stored in `bloom filters<https://en.wikipedia.org/wiki/Bloom_filter>`_, it is
+Since some part of the log data is stored in `bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`_, it is
 possible to search for this data in an efficient and cryptographically
 secure way, so network peers that do not download the whole blockchain
 ("light clients") can still find these logs.
