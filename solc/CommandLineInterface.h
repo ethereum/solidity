@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/MultiBackendAssemblyStack.h>
+#include <libsolidity/interface/AssemblyStack.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
@@ -54,7 +54,7 @@ private:
 	bool link();
 	void writeLinkedFiles();
 
-	bool assemble(MultiBackendAssemblyStack::Input _input, MultiBackendAssemblyStack::Machine _targetMachine);
+	bool assemble(AssemblyStack::Language _language, AssemblyStack::Machine _targetMachine);
 
 	void outputCompilationResults();
 

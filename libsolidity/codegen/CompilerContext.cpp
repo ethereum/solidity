@@ -266,10 +266,10 @@ void CompilerContext::appendInlineAssembly(
 
 	int startStackHeight = stackHeight();
 
-	assembly::ExternalIdentifierAccess identifierAccess;
+	julia::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](
 		assembly::Identifier const& _identifier,
-		assembly::IdentifierContext
+		julia::IdentifierContext
 	)
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
@@ -277,7 +277,7 @@ void CompilerContext::appendInlineAssembly(
 	};
 	identifierAccess.generateCode = [&](
 		assembly::Identifier const& _identifier,
-		assembly::IdentifierContext _context,
+		julia::IdentifierContext _context,
 		julia::AbstractAssembly& _assembly
 	)
 	{
@@ -285,14 +285,14 @@ void CompilerContext::appendInlineAssembly(
 		solAssert(it != _localVariables.end(), "");
 		int stackDepth = _localVariables.end() - it;
 		int stackDiff = _assembly.stackHeight() - startStackHeight + stackDepth;
-		if (_context == assembly::IdentifierContext::LValue)
+		if (_context == julia::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				CompilerError() <<
 				errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
-		if (_context == assembly::IdentifierContext::RValue)
+		if (_context == julia::IdentifierContext::RValue)
 			_assembly.appendInstruction(dupInstruction(stackDiff));
 		else
 		{

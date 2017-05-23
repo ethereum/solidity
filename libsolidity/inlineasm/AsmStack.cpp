@@ -42,7 +42,7 @@ using namespace dev::solidity::assembly;
 
 bool InlineAssemblyStack::parse(
 	shared_ptr<Scanner> const& _scanner,
-	ExternalIdentifierAccess::Resolver const& _resolver
+	julia::ExternalIdentifierAccess::Resolver const& _resolver
 )
 {
 	m_parserResult = make_shared<Block>();
@@ -73,7 +73,7 @@ eth::Assembly InlineAssemblyStack::assemble()
 bool InlineAssemblyStack::parseAndAssemble(
 	string const& _input,
 	eth::Assembly& _assembly,
-	ExternalIdentifierAccess const& _identifierAccess
+	julia::ExternalIdentifierAccess const& _identifierAccess
 )
 {
 	ErrorList errors;

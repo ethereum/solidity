@@ -43,15 +43,14 @@ struct Block;
  * Full assembly stack that can support EVM-assembly and JULIA as input and EVM, EVM1.5 and
  * eWasm as output.
  */
-class MultiBackendAssemblyStack
+class AssemblyStack
 {
 public:
-	enum class Input { JULIA, Assembly };
+	enum class Language { JULIA, Assembly };
 	enum class Machine { EVM, EVM15, eWasm };
 
-	MultiBackendAssemblyStack(Input _input = Input::Assembly, Machine _targetMachine = Machine::EVM):
-		m_input(_input),
-		m_targetMachine(_targetMachine)
+	explicit AssemblyStack(Language _language = Language::Assembly):
+		m_language(_language)
 	{}
 
 	/// @returns the scanner used during parsing
@@ -61,7 +60,7 @@ public:
 	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	eth::LinkerObject assemble();
+	eth::LinkerObject assemble(Machine _machine);
 
 	ErrorList const& errors() const { return m_errors; }
 
@@ -70,8 +69,7 @@ public:
 
 private:
 
-	Input m_input = Input::Assembly;
-	Machine m_targetMachine = Machine::EVM;
+	Language m_language = Language::Assembly;
 
 	std::shared_ptr<Scanner> m_scanner;
 

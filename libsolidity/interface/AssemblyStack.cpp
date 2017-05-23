@@ -20,7 +20,7 @@
  */
 
 
-#include <libsolidity/interface/MultiBackendAssemblyStack.h>
+#include <libsolidity/interface/AssemblyStack.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -35,17 +35,17 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-Scanner const& MultiBackendAssemblyStack::scanner() const
+Scanner const& AssemblyStack::scanner() const
 {
 	solAssert(m_scanner, "");
 	return *m_scanner;
 }
 
-bool MultiBackendAssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
+bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = assembly::Parser(m_errors, m_input == Input::JULIA).parse(m_scanner);
+	m_parserResult = assembly::Parser(m_errors, m_language == Language::JULIA).parse(m_scanner);
 	if (!m_errors.empty())
 		return false;
 	solAssert(m_parserResult, "");
@@ -56,13 +56,13 @@ bool MultiBackendAssemblyStack::parseAndAnalyze(std::string const& _sourceName, 
 	return m_analysisSuccessful;
 }
 
-eth::LinkerObject MultiBackendAssemblyStack::assemble()
+eth::LinkerObject AssemblyStack::assemble(Machine _machine)
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
 	solAssert(m_analysisInfo, "");
 
-	switch (m_targetMachine)
+	switch (_machine)
 	{
 	case Machine::EVM:
 	{
@@ -78,8 +78,8 @@ eth::LinkerObject MultiBackendAssemblyStack::assemble()
 	return eth::LinkerObject();
 }
 
-string MultiBackendAssemblyStack::print()
+string AssemblyStack::print()
 {
 	solAssert(m_parserResult, "");
-	return assembly::AsmPrinter(m_input == Input::JULIA)(*m_parserResult);
+	return assembly::AsmPrinter(m_language == Language::JULIA)(*m_parserResult);
 }

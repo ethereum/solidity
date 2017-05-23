@@ -32,7 +32,8 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
-#include <libjulia/backends/AbstractAssembly.h>
+#include <libjulia/backends/evm/AbstractAssembly.h>
+#include <libjulia/backends/evm/EVMCodeTransform.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -47,15 +48,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
-
-struct GeneratorState
-{
-	GeneratorState(ErrorList& _errors, AsmAnalysisInfo& _analysisInfo):
-		errors(_errors), info(_analysisInfo) {}
-
-	ErrorList& errors;
-	AsmAnalysisInfo info;
-};
 
 class EthAssemblyAdapter: public julia::AbstractAssembly
 {
@@ -110,13 +102,12 @@ private:
 eth::Assembly assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
-	ExternalIdentifierAccess const& _identifierAccess
+	julia::ExternalIdentifierAccess const& _identifierAccess
 )
 {
 	eth::Assembly assembly;
-	GeneratorState state(m_errors, _analysisInfo);
 	EthAssemblyAdapter assemblyAdapter(assembly);
-	CodeTransform(state, assemblyAdapter, _parsedData, _identifierAccess);
+	julia::CodeTransform(m_errors, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
 	return assembly;
 }
 
@@ -124,10 +115,9 @@ void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	ExternalIdentifierAccess const& _identifierAccess
+	julia::ExternalIdentifierAccess const& _identifierAccess
 )
 {
-	GeneratorState state(m_errors, _analysisInfo);
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	CodeTransform(state, assemblyAdapter, _parsedData, _identifierAccess);
+	julia::CodeTransform(m_errors, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
 }
