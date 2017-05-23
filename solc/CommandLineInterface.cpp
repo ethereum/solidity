@@ -80,11 +80,15 @@ static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCloneBinary = "clone-bin";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strContracts = "contracts";
+static string const g_strEVM = "evm";
+static string const g_strEVM15 = "evm15";
+static string const g_streWASM = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
+static string const g_strJulia = "julia";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMetadata = "metadata";
@@ -121,8 +125,10 @@ static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
+static string const g_argJulia = "julia";
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
+static string const g_argMachine = "machine";
 static string const g_argMetadata = g_strMetadata;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -152,6 +158,14 @@ static set<string> const g_combinedJsonArgs{
 	g_strOpcodes,
 	g_strSrcMap,
 	g_strSrcMapRuntime
+};
+
+/// Possible arguments to for --machine
+static set<string> const g_machineArgs
+{
+	g_strEVM,
+	g_strEVM15,
+	g_streWASM
 };
 
 static void version()
@@ -539,7 +553,16 @@ Allowed options)",
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options and assumes input is assembly."
+			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
+		)
+		(
+			g_argJulia.c_str(),
+			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+		)
+		(
+			g_argMachine.c_str(),
+			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
+			"Target machine in assembly or JULIA mode."
 		)
 		(
 			g_argLink.c_str(),
@@ -689,10 +712,25 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
-	if (m_args.count(g_argAssemble))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
+		if (m_args.count(g_argMachine))
+		{
+			string machine = m_args[g_argMachine].as<string>();
+			if (machine == g_strEVM)
+				m_assemblyMachine = AssemblyMachine::EVM;
+			else if (machine == g_strEVM15)
+				m_assemblyMachine = AssemblyMachine::EVM15;
+			else if (machine == g_streWASM)
+				m_assemblyMachine = AssemblyMachine::eWasm;
+			else
+			{
+				cerr << "Invalid option for --machine: " << machine << endl;
+				return false;
+			}
+		}
 		return assemble();
 	}
 	if (m_args.count(g_argLink))

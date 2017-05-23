@@ -86,6 +86,12 @@ private:
 	bool m_error = false; ///< If true, some error occurred.
 
 	bool m_onlyAssemble = false;
+	/// Settings to use in assembly / JULIA mode.
+	enum class AssemblyInput { JULIA, Assembly };
+	enum class AssemblyMachine { EVM, EVM15, eWasm };
+	AssemblyInput m_assemblyInput = AssemblyInput::Assembly;
+	AssemblyMachine m_assemblyMachine = AssemblyMachine::EVM;
+
 	bool m_onlyLink = false;
 
 	/// Compiler arguments variable map
