@@ -22,9 +22,6 @@
 
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
 #include <memory>
 
 using namespace std;
