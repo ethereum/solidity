@@ -59,7 +59,10 @@ bool ScopeFiller::operator()(Label const& _item)
 
 bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 {
-	return registerVariable(_varDecl.variable, _varDecl.location, *m_currentScope);
+	for (auto const& variable: _varDecl.variables)
+		if (!registerVariable(variable, _varDecl.location, *m_currentScope))
+			return false;
+	return true;
 }
 
 bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)

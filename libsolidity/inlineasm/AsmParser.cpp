@@ -258,7 +258,14 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
-	varDecl.variable = parseTypedName();
+	while (true)
+	{
+		varDecl.variables.push_back(parseTypedName());
+		if (m_scanner->currentToken() == Token::Comma)
+			expectToken(Token::Comma);
+		else
+			break;
+	}
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
 	varDecl.value.reset(new Statement(parseExpression()));
