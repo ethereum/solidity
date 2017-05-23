@@ -223,6 +223,53 @@ BOOST_AUTO_TEST_CASE(variable_use_before_decl)
 	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
+BOOST_AUTO_TEST_CASE(switch_statement)
+{
+	BOOST_CHECK(successParse("{ switch 42 default {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} default {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} default {} }"));
+	BOOST_CHECK(successParse("{ 1 2 switch mul case 1 {} case 2 {} default {} }"));
+	BOOST_CHECK(successParse("{ switch mul(1, 2) case 1 {} case 2 {} default {} }"));
+	BOOST_CHECK(successParse("{ function f() -> x {} switch f() case 1 {} case 2 {} default {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(switch_no_cases)
+{
+	CHECK_PARSE_ERROR("{ switch 42 }", ParserError, "Switch statement without any cases.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_duplicate_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case 1 {} case 1 {} default {} }", DeclarationError, "Duplicate case defined");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_expression)
+{
+	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Expected elementary inline assembly operation.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_default_before_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 default {} case 1 {} }", ParserError, "Expected elementary inline assembly operation.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_duplicate_default_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 default {} default {} }", ParserError, "Expected elementary inline assembly operation.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case mul(1, 2) {} case 2 {} default {} }", ParserError, "Literal expected.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_body)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected token LBrace got 'Identifier'");
+}
+
 BOOST_AUTO_TEST_CASE(blocks)
 {
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
@@ -334,6 +381,11 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.toString(), parsed);
 	parsePrintCompare(parsed);
+}
+
+BOOST_AUTO_TEST_CASE(print_switch)
+{
+	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
