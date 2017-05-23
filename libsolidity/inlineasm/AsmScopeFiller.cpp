@@ -97,6 +97,15 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	return success;
 }
 
+bool ScopeFiller::operator()(Switch const& _switch)
+{
+	bool success = true;
+	for (auto const& _case: _switch.cases)
+		if (!(*this)(_case.body))
+			success = false;
+	return success;
+}
+
 bool ScopeFiller::operator()(Block const& _block)
 {
 	bool success = true;
