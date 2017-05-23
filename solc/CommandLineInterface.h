@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/inlineasm/AsmStack.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
@@ -104,8 +103,6 @@ private:
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
-	/// Assembly stacks for assembly-only mode
-	std::map<std::string, assembly::InlineAssemblyStack> m_assemblyStacks;
 };
 
 }

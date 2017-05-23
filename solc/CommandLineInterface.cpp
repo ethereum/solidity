@@ -36,6 +36,7 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
+#include <libsolidity/inlineasm/AsmStack.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
@@ -954,10 +955,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_args.count(g_argStandardJSON))
+	if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
+		// Already done in "processInput" phase.
 		return true;
-	else if (m_onlyAssemble)
-		outputAssembly();
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
@@ -1022,17 +1022,18 @@ bool CommandLineInterface::assemble()
 {
 	bool successful = true;
 	map<string, shared_ptr<Scanner>> scanners;
+	map<string, assembly::InlineAssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
 		try
 		{
 			auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
 			scanners[src.first] = scanner;
-			if (!m_assemblyStacks[src.first].parse(scanner))
+			if (!assemblyStacks[src.first].parse(scanner))
 				successful = false;
 			else
 				//@TODO we should not just throw away the result here
-				m_assemblyStacks[src.first].assemble();
+				assemblyStacks[src.first].assemble();
 		}
 		catch (Exception const& _exception)
 		{
@@ -1045,7 +1046,7 @@ bool CommandLineInterface::assemble()
 			return false;
 		}
 	}
-	for (auto const& stack: m_assemblyStacks)
+	for (auto const& stack: assemblyStacks)
 	{
 		for (auto const& error: stack.second.errors())
 			SourceReferenceFormatter::printExceptionInformation(
@@ -1058,18 +1059,18 @@ bool CommandLineInterface::assemble()
 			successful = false;
 	}
 
-	return successful;
-}
+	if (!successful)
+		return false;
 
-void CommandLineInterface::outputAssembly()
-{
 	for (auto const& src: m_sourceCodes)
 	{
 		cout << endl << "======= " << src.first << " =======" << endl;
-		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
+		eth::Assembly assembly = assemblyStacks[src.first].assemble();
 		cout << assembly.assemble().toHex() << endl;
 		assembly.stream(cout, "", m_sourceCodes);
 	}
+
+	return true;
 }
 
 void CommandLineInterface::outputCompilationResults()
