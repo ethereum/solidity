@@ -40,6 +40,20 @@ using TypedNameList = std::vector<TypedName>;
 
 /// What follows are the AST nodes for assembly.
 
+struct Instruction;
+struct Literal;
+struct Label;
+struct StackAssignment;
+struct Identifier;
+struct Assignment;
+struct VariableDeclaration;
+struct FunctionalInstruction;
+struct FunctionDefinition;
+struct FunctionCall;
+struct Block;
+
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
@@ -47,17 +61,10 @@ enum class LiteralKind { Number, Boolean, String };
 struct Literal { SourceLocation location; LiteralKind kind; std::string value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { SourceLocation location; std::string name; };
-struct FunctionalInstruction;
 /// Jump label ("name:")
 struct Label { SourceLocation location; std::string name; };
 /// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
 struct StackAssignment { SourceLocation location; Identifier variableName; };
-struct Assignment;
-struct VariableDeclaration;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Block;
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 struct Assignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
