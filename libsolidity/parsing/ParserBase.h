@@ -25,7 +25,6 @@
 #include <memory>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/Token.h>
-#include <libsolidity/ast/ASTForward.h>
 
 namespace dev
 {
@@ -52,9 +51,6 @@ protected:
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
-	Token::Value expectAssignmentOperator();
-	ASTPointer<ASTString> expectIdentifierToken();
-	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
 	/// Creates a @ref ParserError and annotates it with the current position and the

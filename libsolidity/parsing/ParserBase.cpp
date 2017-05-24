@@ -80,62 +80,6 @@ void ParserBase::expectToken(Token::Value _value)
 	m_scanner->next();
 }
 
-Token::Value ParserBase::expectAssignmentOperator()
-{
-	Token::Value op = m_scanner->currentToken();
-	if (!Token::isAssignmentOp(op))
-	{
-		if (Token::isElementaryTypeName(op)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected assignment operator,  got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
-		}
-		else
-			fatalParserError(
-				string("Expected assignment operator,  got '") +
-				string(Token::name(m_scanner->currentToken())) +
-				string("'")
-			);
-	}
-	m_scanner->next();
-	return op;
-}
-
-ASTPointer<ASTString> ParserBase::expectIdentifierToken()
-{
-	Token::Value id = m_scanner->currentToken();
-	if (id != Token::Identifier)
-	{
-		if (Token::isElementaryTypeName(id)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected identifier, got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
-		}
-		else
-			fatalParserError(
-				string("Expected identifier, got '") +
-				string(Token::name(id)) +
-				string("'")
-			);
-	}
-	return getLiteralAndAdvance();
-}
-
-ASTPointer<ASTString> ParserBase::getLiteralAndAdvance()
-{
-	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
-	m_scanner->next();
-	return identifier;
-}
-
 void ParserBase::parserError(string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::ParserError);
