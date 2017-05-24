@@ -37,12 +37,14 @@ bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 bool StaticAnalyzer::visit(ContractDefinition const& _contract)
 {
 	m_library = _contract.isLibrary();
+	m_currentContract = &_contract;
 	return true;
 }
 
 void StaticAnalyzer::endVisit(ContractDefinition const&)
 {
 	m_library = false;
+	m_currentContract = nullptr;
 }
 
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
@@ -53,6 +55,7 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 		solAssert(!m_currentFunction, "");
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
+	m_constructor = _function.isConstructor();
 	return true;
 }
 
@@ -60,6 +63,7 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
 	m_currentFunction = nullptr;
 	m_nonPayablePublic = false;
+	m_constructor = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
 			warning(var.first->location(), "Unused local variable");
@@ -114,6 +118,11 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 		if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
 			if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "value")
 				warning(_memberAccess.location(), "\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?");
+
+	if (m_constructor && m_currentContract)
+		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type.get()))
+			if (type->contractDefinition() == *m_currentContract)
+				warning(_memberAccess.location(), "\"this\" used in constructor.");
 
 	return true;
 }
