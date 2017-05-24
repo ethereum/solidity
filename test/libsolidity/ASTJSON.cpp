@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(importAST)
 		c.analyze();
 	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
 	//	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json(); //old format
-	cout << "backandforth" << newJson << std::endl;
+//	cout << "backandforth" << newJson << std::endl;
 	if (newJson != originalJson)
 	{
 		ofstream originalFile;

@@ -204,6 +204,9 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() { return m_errorReporter.errors(); }
 
+	/// @returns true if the source files were imported from a json-file
+	bool importedSources() { return m_importedSources; }
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -295,6 +298,7 @@ private:
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
+	bool m_importedSources = false;
 };
 
 }

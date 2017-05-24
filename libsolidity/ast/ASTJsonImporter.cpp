@@ -514,7 +514,7 @@ ASTPointer<FunctionTypeName> ASTJsonImporter::createFunctionTypeName(Json::Value
 	ASTPointer<ParameterList> parameterTypes = createParameterList(_node["parameterTypes"]);
 	ASTPointer<ParameterList> returnTypes = createParameterList(_node["returnParameterTypes"]);
 	Declaration::Visibility visibility = getVisibility(_node);
-	bool isDeclaredConst = _node["isDeclaredConstant"].asBool();
+	bool isDeclaredConst = _node["isDeclaredConst"].asBool();
 	bool isPayable = _node["payable"].asBool();
 	ASTPointer<FunctionTypeName> tmp = make_shared<FunctionTypeName>(
 		location,
@@ -868,12 +868,15 @@ ASTPointer<Identifier> ASTJsonImporter::createIdentifier(SourceLocation location
 	return make_shared<Identifier>(location, make_shared<ASTString>(name));
 }
 
-ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node)
+ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node) //needs TEST (elem)
 {
 	SourceLocation location = createSourceLocation(_node);
-//	Scanner scanner(CharStream(_node["typeName"].asCString()), "tmp"); //shared
-        Token::Value token = scanSingleToken(_node["typeName"]);//scanner.next(); //correct way to get the token?
-	ElementaryTypeNameToken elem(token,1,1);	//what does firstSize, secondSize mean?
+	Scanner scanner(CharStream(_node["typeDescriptions"]["typeString"].asCString()), "tmp");
+	Token::Value token = scanner.currentToken();
+	unsigned firstSize;
+	unsigned secondSize;
+	tie(firstSize, secondSize) = scanner.currentTokenInfo();
+	ElementaryTypeNameToken elem(token, firstSize, secondSize);
 	ASTPointer<ElementaryTypeNameExpression> tmp = make_shared<ElementaryTypeNameExpression>(
 		location,
 		elem

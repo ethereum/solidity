@@ -755,62 +755,6 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
-	if (m_args.count(g_argImportAst))
-	{
-		//read file contents
-		Json::Reader reader;
-		map<string, Json::Value const*> sourceList; //input for the Importer
-		for (auto& srcPair: m_sourceCodes) // aka <string, string>
-		{
-			Json::Value* ast = new Json::Value(); //use shared-Pointer here?
-			//recreate Json::Value from file
-			if (!reader.parse(srcPair.second, *ast, false))
-				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
-			solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-			sourceList[srcPair.first] = ast;
-		}
-		//=======compare parsed json to exported Json
-//		CompilerStack c2;
-//		c2.addSource("a",
-//			"pragma solidity ^0.4.8;"
-//			"contract C { function f(function() external payable returns (uint) x) "
-//			"returns (function() external constant returns (uint)) {} }"
-//		);
-//		c2.parseAndAnalyze();
-//		Json::Value jsonExport = ASTJsonConverter(false, c2.sourceIndices()).toJson(c2.ast("a")); //once PR merged
-//		Json::Value jsonParsed = *sourceList["tmp"];
-//		if (jsonExport != jsonParsed)
-//		{
-//			cout << "converted" << jsonExport << std::endl;
-//			cout << "parsed" << jsonParsed << std::endl;
-//			ofstream exportFile;
-//			exportFile.open("../../myTests/exportedJson.json");
-//			exportFile << jsonExport;
-//			exportFile.close();
-//			ofstream parsedFile;
-//			parsedFile.open("../../myTests/parsedJson.json");
-//			parsedFile << jsonParsed;
-//			parsedFile.close();
-//		}
-		//===========
-//		solAssert((*sourceList["test"])["nodeType"] == "SourceUnit", "invalid AST");
-		//feed Json to Importer to create AST
-		map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
-		//feed AST to compiler
-		//	create  compiler and reset it
-		m_compiler.reset(new CompilerStack(fileReader));
-		m_compiler->reset(false);
-		bool import = m_compiler->importASTs(reconstructedSources);
-		//use the compiler's analyzer to annotate, typecheck, etc...
-		if (import)
-			if (m_compiler->analyze())
-			{
-				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast("a")); //once PR merged
-				return true;
-			}
-		cout << "import or analysis failed" << std::endl;
-		return false;
-	}
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
@@ -820,9 +764,44 @@ bool CommandLineInterface::processInput()
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 
-
-		for (auto const& sourceCode: m_sourceCodes)
-			m_compiler->addSource(sourceCode.first, sourceCode.second);
+		if (m_args.count(g_argImportAst))
+		{
+			//read file contents
+			Json::Reader reader;
+			string tmp;
+			map<string, Json::Value const*> sourceList; //input for the Importer
+			for (auto& srcPair: m_sourceCodes) // aka <string, string>
+			{
+				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+				//recreate Json::Value from file
+				if (!reader.parse(srcPair.second, *ast, false))
+					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
+				solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+				sourceList[srcPair.first] = ast;
+				tmp = srcPair.first;
+			}
+			map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+			//feed AST to compiler
+			m_compiler->reset(false);
+			bool import = m_compiler->importASTs(reconstructedSources);
+			//use the compiler's analyzer to annotate, typecheck, etc...
+			if (!import || !m_compiler->analyze())
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
+//			else
+//			{
+//				//TEST export again to json to compare to the initial json > should only fail for the absolute path
+//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast(tmp)); //once PR merged
+//				ofstream newFile;
+//				newFile.open("../../myTests/impexp.json");
+//				newFile << jsonExport;
+//				newFile.close();
+//			}
+		}
+		else
+		{
+			for (auto const& sourceCode: m_sourceCodes)
+				m_compiler->addSource(sourceCode.first, sourceCode.second);
+		}
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -831,14 +810,14 @@ bool CommandLineInterface::processInput()
 		if (successful && m_args.count(g_argFormal))
 			if (!m_compiler->prepareFormalAnalysis())
 				successful = false;
-
-		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
-			);
+		if (!m_compiler->importedSources())
+			for (auto const& error: m_compiler->errors())
+				SourceReferenceFormatter::printExceptionInformation(
+					cerr,
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					scannerFromSourceName
+				);
 
 		if (!successful)
 			return false;
