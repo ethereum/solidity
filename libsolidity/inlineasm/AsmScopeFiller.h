@@ -39,7 +39,7 @@ struct Literal;
 struct Block;
 struct Label;
 struct FunctionalInstruction;
-struct FunctionalAssignment;
+struct Assignment;
 struct VariableDeclaration;
 struct Instruction;
 struct Identifier;
@@ -65,7 +65,7 @@ public:
 	bool operator()(assembly::FunctionalInstruction const&) { return true; }
 	bool operator()(assembly::Label const& _label);
 	bool operator()(assembly::StackAssignment const&) { return true; }
-	bool operator()(assembly::FunctionalAssignment const&) { return true; }
+	bool operator()(assembly::Assignment const&) { return true; }
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const&) { return true; }

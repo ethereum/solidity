@@ -107,15 +107,14 @@ assembly::Statement Parser::parseStatement()
 		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
 		if (m_scanner->currentToken() == Token::Assign && m_scanner->peekNextToken() != Token::Colon)
 		{
-			// functional assignment
-			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
+			assembly::Assignment assignment = createWithLocation<assembly::Assignment>(identifier.location);
 			if (!m_julia && instructions().count(identifier.name))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			m_scanner->next();
-			funAss.variableName = identifier;
-			funAss.value.reset(new Statement(parseExpression()));
-			funAss.location.end = locationOf(*funAss.value).end;
-			return funAss;
+			assignment.variableName = identifier;
+			assignment.value.reset(new Statement(parseExpression()));
+			assignment.location.end = locationOf(*assignment.value).end;
+			return assignment;
 		}
 		else
 		{

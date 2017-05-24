@@ -114,9 +114,9 @@ string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
 	return "=: " + (*this)(_assignment.variableName);
 }
 
-string AsmPrinter::operator()(assembly::FunctionalAssignment const& _functionalAssignment)
+string AsmPrinter::operator()(assembly::Assignment const& _assignment)
 {
-	return (*this)(_functionalAssignment.variableName) + " := " + boost::apply_visitor(*this, *_functionalAssignment.value);
+	return (*this)(_assignment.variableName) + " := " + boost::apply_visitor(*this, *_assignment.value);
 }
 
 string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDeclaration)

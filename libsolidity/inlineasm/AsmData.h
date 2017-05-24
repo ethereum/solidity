@@ -52,15 +52,15 @@ struct FunctionalInstruction;
 struct Label { SourceLocation location; std::string name; };
 /// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
 struct StackAssignment { SourceLocation location; Identifier variableName; };
-struct FunctionalAssignment;
+struct Assignment;
 struct VariableDeclaration;
 struct FunctionDefinition;
 struct FunctionCall;
 struct Block;
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
-/// Functional assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+/// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
-struct FunctionalAssignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
+struct Assignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
 struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
 struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };

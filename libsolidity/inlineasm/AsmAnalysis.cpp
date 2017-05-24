@@ -168,7 +168,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 }
 
 
-bool AsmAnalyzer::operator()(FunctionalAssignment const& _assignment)
+bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
 	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_assignment.value);

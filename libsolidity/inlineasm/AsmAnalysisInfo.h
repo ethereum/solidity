@@ -36,7 +36,7 @@ struct Literal;
 struct Block;
 struct Label;
 struct FunctionalInstruction;
-struct FunctionalAssignment;
+struct Assignment;
 struct VariableDeclaration;
 struct Instruction;
 struct Identifier;
@@ -46,7 +46,7 @@ struct FunctionCall;
 
 struct Scope;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 
 struct AsmAnalysisInfo
 {

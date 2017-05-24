@@ -239,7 +239,7 @@ public:
 		generateAssignment(_assignment.variableName, _assignment.location);
 		checkStackHeight(&_assignment);
 	}
-	void operator()(FunctionalAssignment const& _assignment)
+	void operator()(assembly::Assignment const& _assignment)
 	{
 		int height = m_assembly.stackHeight();
 		boost::apply_visitor(*this, *_assignment.value);
