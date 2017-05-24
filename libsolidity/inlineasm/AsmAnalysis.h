@@ -97,6 +97,7 @@ private:
 
 	Scope& scope(assembly::Block const* _block);
 	void expectValidType(std::string const& type, SourceLocation const& _location);
+	void warnOnFutureInstruction(solidity::Instruction _instr, SourceLocation const& _location);
 
 	int m_stackHeight = 0;
 	julia::ExternalIdentifierAccess::Resolver m_resolver;
