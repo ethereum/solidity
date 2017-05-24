@@ -507,7 +507,7 @@ string const& CompilerStack::onChainMetadata(string const& _contractName) const
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
 {
-	if (m_stackState < ParsingSuccessful)
+	if (m_stackState < SourcesSet)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	return *source(_sourceName).scanner;
