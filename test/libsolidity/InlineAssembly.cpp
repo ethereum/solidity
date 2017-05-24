@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected 2 arguments, but received 0");
+	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (MUL expects 2 arguments)");
 	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected comma (MUL expects 2 arguments)");
 }
 
