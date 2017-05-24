@@ -270,6 +270,17 @@ BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 	CHECK_PARSE_ERROR("{ 42 let x, y := 1 }", DeclarationError, "Variable count mismatch.");
 }
 
+BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
+{
+	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (MUL expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected comma (MUL expects 2 arguments)");
+}
+
+BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
+{
+	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (MUL expects 2 arguments)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Printing)
