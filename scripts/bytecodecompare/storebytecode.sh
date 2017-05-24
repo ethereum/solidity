@@ -34,10 +34,6 @@ TMPDIR=$(mktemp -d)
 (
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
-
-    echo "Running for commit $TRAVIS_COMMIT"
-    COMMIT_DATE=$(git show -s --format="%cd" --date=short "$TRAVIS_COMMIT")
-
     cd "$TMPDIR"
 
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
@@ -97,9 +93,9 @@ EOF
         git config user.email "chris@ethereum.org"
         git clean -f -d -x
 
-        DIRECTORY=$COMMIT_DATE"_"$TRAVIS_COMMIT
-        mkdir -p "$DIRECTORY"
-        REPORT="$DIRECTORY/$ZIP_SUFFIX.txt"
+        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-H" --date=short)
+        mkdir -p "$DIRNAME"
+        REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
         cp ../report.txt "$REPORT"
         # Only push if adding actually worked, i.e. there were changes.
         if git add "$REPORT"
