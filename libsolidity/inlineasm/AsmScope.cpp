@@ -79,3 +79,11 @@ bool Scope::exists(string const& _name)
 	else
 		return false;
 }
+
+bool Scope::insideFunction() const
+{
+	for (Scope const* s = this; s; s = s->superScope)
+		if (s->functionScope)
+			return true;
+	return false;
+}

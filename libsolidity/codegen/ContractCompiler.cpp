@@ -21,15 +21,20 @@
  */
 
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <algorithm>
-#include <boost/range/adaptor/reversed.hpp>
+#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/codegen/ExpressionCompiler.h>
+#include <libsolidity/codegen/CompilerUtils.h>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/ExpressionCompiler.h>
-#include <libsolidity/codegen/CompilerUtils.h>
+
+#include <boost/range/adaptor/reversed.hpp>
+
+#include <algorithm>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -524,7 +529,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	assembly::CodeGenerator codeGen(errorReporter);
 	unsigned startStackHeight = m_context.stackHeight();
 	julia::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, julia::IdentifierContext)
+	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, julia::IdentifierContext, bool)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())

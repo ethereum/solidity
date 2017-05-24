@@ -5159,6 +5159,21 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
 	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_variable_access_out_of_functions)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint a;
+				assembly {
+					function g() -> x { x := a }
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Inline assembly functions cannot access their outer scope.");
+}
+
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 {
 	char const* text = R"(

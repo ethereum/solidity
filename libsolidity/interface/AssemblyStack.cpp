@@ -30,6 +30,9 @@
 
 #include <libevmasm/Assembly.h>
 
+#include <libjulia/backends/evm/EVMCodeTransform.h>
+#include <libjulia/backends/evm/EVMAssembly.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -87,7 +90,11 @@ eth::LinkerObject AssemblyStack::assemble(Machine _machine)
 		return assembly.assemble();
 	}
 	case Machine::EVM15:
-		solUnimplemented("EVM 1.5 backend is not yet implemented.");
+	{
+		julia::EVMAssembly assembly(true);
+		julia::CodeTransform(m_errorReporter, assembly, *m_analysisInfo, true).run(*m_parserResult);
+		return assembly.finalize();
+	}
 	case Machine::eWasm:
 		solUnimplemented("eWasm backend is not yet implemented.");
 	}

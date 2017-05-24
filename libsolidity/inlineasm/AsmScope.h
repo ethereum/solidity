@@ -85,6 +85,7 @@ struct Scope
 		Function(std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns): arguments(_arguments), returns(_returns) {}
 		std::vector<JuliaType> arguments;
 		std::vector<JuliaType> returns;
+		boost::optional<LabelID> id;
 	};
 
 	using Identifier = boost::variant<Variable, Label, Function>;
@@ -122,6 +123,9 @@ struct Scope
 	/// @returns true if the name exists in this scope or in super scopes (also searches
 	/// across function and assembly boundaries).
 	bool exists(std::string const& _name);
+
+	/// @returns true if this scope is inside a function.
+	bool insideFunction() const;
 
 	Scope* superScope = nullptr;
 	/// If true, variables from the super scope are not visible here (other identifiers are),
