@@ -40,6 +40,20 @@ using TypedNameList = std::vector<TypedName>;
 
 /// What follows are the AST nodes for assembly.
 
+struct Instruction;
+struct Literal;
+struct Label;
+struct StackAssignment;
+struct Identifier;
+struct Assignment;
+struct VariableDeclaration;
+struct FunctionalInstruction;
+struct FunctionDefinition;
+struct FunctionCall;
+struct Block;
+
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
@@ -47,20 +61,13 @@ enum class LiteralKind { Number, Boolean, String };
 struct Literal { SourceLocation location; LiteralKind kind; std::string value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { SourceLocation location; std::string name; };
-struct FunctionalInstruction;
 /// Jump label ("name:")
 struct Label { SourceLocation location; std::string name; };
-/// Assignemnt (":= x", moves stack top into x, potentially multiple slots)
-struct Assignment { SourceLocation location; Identifier variableName; };
-struct FunctionalAssignment;
-struct VariableDeclaration;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Block;
-using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
-/// Functional assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
+/// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
+struct StackAssignment { SourceLocation location; Identifier variableName; };
+/// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
-struct FunctionalAssignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
+struct Assignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
 struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
 struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };

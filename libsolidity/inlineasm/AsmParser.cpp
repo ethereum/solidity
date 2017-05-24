@@ -71,7 +71,7 @@ assembly::Statement Parser::parseStatement()
 	{
 		if (m_julia)
 			break;
-		assembly::Assignment assignment = createWithLocation<assembly::Assignment>();
+		assembly::StackAssignment assignment = createWithLocation<assembly::StackAssignment>();
 		m_scanner->next();
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
@@ -96,7 +96,7 @@ assembly::Statement Parser::parseStatement()
 	switch (m_scanner->currentToken())
 	{
 	case Token::LParen:
-		return parseFunctionalInstruction(std::move(statement));
+		return parseCall(std::move(statement));
 	case Token::Colon:
 	{
 		if (statement.type() != typeid(assembly::Identifier))
@@ -107,15 +107,14 @@ assembly::Statement Parser::parseStatement()
 		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
 		if (m_scanner->currentToken() == Token::Assign && m_scanner->peekNextToken() != Token::Colon)
 		{
-			// functional assignment
-			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
+			assembly::Assignment assignment = createWithLocation<assembly::Assignment>(identifier.location);
 			if (!m_julia && instructions().count(identifier.name))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			m_scanner->next();
-			funAss.variableName = identifier;
-			funAss.value.reset(new Statement(parseExpression()));
-			funAss.location.end = locationOf(*funAss.value).end;
-			return funAss;
+			assignment.variableName = identifier;
+			assignment.value.reset(new Statement(parseExpression()));
+			assignment.location.end = locationOf(*assignment.value).end;
+			return assignment;
 		}
 		else
 		{
@@ -139,7 +138,7 @@ assembly::Statement Parser::parseExpression()
 {
 	Statement operation = parseElementaryOperation(true);
 	if (m_scanner->currentToken() == Token::LParen)
-		return parseFunctionalInstruction(std::move(operation));
+		return parseCall(std::move(operation));
 	else
 		return operation;
 }
@@ -304,7 +303,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
+assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 {
 	if (_instruction.type() == typeid(Instruction))
 	{
