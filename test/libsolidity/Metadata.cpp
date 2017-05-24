@@ -19,6 +19,7 @@
  * Unit tests for the metadata output.
  */
 
+#include "../Metadata.h"
 #include "../TestHelper.h"
 #include <libsolidity/interface/CompilerStack.h>
 #include <libdevcore/SwarmHash.h>
@@ -44,7 +45,9 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	CompilerStack compilerStack;
 	BOOST_REQUIRE(compilerStack.compile(std::string(sourceCode)));
 	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-	bytes hash = dev::swarmHash(compilerStack.onChainMetadata("test")).asBytes();
+	std::string const& metadata = compilerStack.onChainMetadata("test");
+	BOOST_CHECK(dev::test::isValidMetadata(metadata));
+	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
 	BOOST_REQUIRE(bytecode.size() >= 2);
 	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
