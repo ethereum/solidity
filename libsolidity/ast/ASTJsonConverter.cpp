@@ -420,8 +420,8 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", visibility(_node.visibility())),
 		make_pair(m_legacy ? "constant" : "isDeclaredConstant", _node.isDeclaredConst()),
-		make_pair("parameterTypes", toJson(*_node.parameterTypesList())),
-		make_pair("returnParameterTypes", toJson(*_node.returnParameterTypesList())),
+		make_pair("parameterTypes", toJson(*_node.parameterTypeList())),
+		make_pair("returnParameterTypes", toJson(*_node.returnParameterTypeList())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type))
 	});
 	return false;

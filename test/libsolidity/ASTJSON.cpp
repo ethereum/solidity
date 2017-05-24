@@ -242,8 +242,23 @@ BOOST_AUTO_TEST_CASE(importAST)
 		"returns (function() external constant returns (uint)) {} }"
 	);
 //	c.addSource("a",
-//		    "pragma solidity ^0.4.8;"
-//		    "contract C {uint a;}"
+//		"pragma solidity ^0.4.0;"
+//		    "contract Dummy {"
+//		      "uint private x;"
+//		      "uint private x2;"
+//		      "uint private x3;"
+//		      "function Dummy(uint _x1, uint _x2) {"
+//			"x = _x1;"
+//			"x2 = _x2;"
+//			"x3 = bla(4,6);"
+//		      "}"
+//		      "function bla(uint a, uint b) returns (uint) {"
+//			"return a+b;"
+//		      "}"
+//		      "function bla(uint a) returns (uint) {"
+//			"return a + 3;"
+//		      "}"
+//		    "}"
 //	);
 	c.parseAndAnalyze();
 //	map<string, unsigned> sourceIndices;
@@ -269,6 +284,7 @@ BOOST_AUTO_TEST_CASE(importAST)
 		c.analyze();
 	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
 	//	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json(); //old format
+	cout << "backandforth" << newJson << std::endl;
 	if (newJson != originalJson)
 	{
 		ofstream originalFile;
@@ -280,7 +296,6 @@ BOOST_AUTO_TEST_CASE(importAST)
 		newFile << newJson;
 		newFile.close();
 //		cout << "originalJson: " << originalJson << std::endl;
-//		cout << "backandforth" << newJson << std::endl;
 	}
 	assert(newJson == originalJson);
 

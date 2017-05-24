@@ -29,6 +29,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -91,6 +92,7 @@ static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
+static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strJulia = "julia";
@@ -130,6 +132,7 @@ static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
+static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argJulia = "julia";
 static string const g_argLibraries = g_strLibraries;
@@ -558,6 +561,7 @@ Allowed options)",
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
+		(g_argImportAst.c_str(), "Import ASTs to be compiled, assumes input is in JSON format")
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
@@ -751,7 +755,65 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
-
+	if (m_args.count(g_argImportAst))
+	{
+		//read file contents
+		Json::Reader reader;
+		map<string, Json::Value const*> sourceList; //input for the Importer
+		for (auto& srcPair: m_sourceCodes) // aka <string, string>
+		{
+			Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+			//recreate Json::Value from file
+			if (!reader.parse(srcPair.second, *ast, false))
+				cout << "parsing failed" << std::endl;
+//				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry.")); //TODO what to throw
+			solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST, SourceUnit should be the top-level node");
+			sourceList[srcPair.first] = ast;
+			sourceList["tmp"] = ast;
+		}
+		//=======compare parsed json to exported Json
+		CompilerStack c2;
+		c2.addSource("a",
+			"pragma solidity ^0.4.8;"
+			"contract C { function f(function() external payable returns (uint) x) "
+			"returns (function() external constant returns (uint)) {} }"
+		);
+		c2.parseAndAnalyze();
+		Json::Value jsonExport = ASTJsonConverter(false, c2.sourceIndices()).toJson(c2.ast("a")); //once PR merged
+		Json::Value jsonParsed = *sourceList["tmp"];
+		if (jsonExport != jsonParsed)
+		{
+			cout << "converted" << jsonExport << std::endl;
+			cout << "parsed" << jsonParsed << std::endl;
+			ofstream exportFile;
+			exportFile.open("../../myTests/exportedJson.json");
+			exportFile << jsonExport;
+			exportFile.close();
+			ofstream parsedFile;
+			parsedFile.open("../../myTests/parsedJson.json");
+			parsedFile << jsonParsed;
+			parsedFile.close();
+		}
+		//===========
+//		solAssert((*sourceList["test"])["nodeType"] == "SourceUnit", "invalid AST");
+		//feed Json to Importer to create AST
+		map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+		//feed AST to compiler
+		//	create  compiler and reset it
+//		m_compiler = std::make_unique<CompilerStack>(fileReader); //not working
+		m_compiler.reset(new CompilerStack(fileReader));
+		m_compiler->reset(false);
+		bool import = m_compiler->importASTs(reconstructedSources);
+		//use the compiler's analyzer to annotate, typecheck, etc...
+		if (import)
+		{
+			bool analysis = m_compiler->analyze();
+			if (analysis)
+				return true;
+		}
+		cout << "import or analysis failed" << std::endl;
+		return false;
+	}
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
@@ -760,6 +822,8 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+
+
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested

@@ -101,6 +101,7 @@ private:
 	Declaration::Visibility getVisibility(Json::Value const& _node);
 	VariableDeclaration::Location getLocation(Json::Value const& _node);
 	ContractDefinition::ContractKind getContractKind(Json::Value const& _node);
+	Literal::SubDenomination getSubdenomination(Json::Value const& _node);
 	Token::Value scanSingleToken(Json::Value _node);
 //	Json::Value const* m_json;
 //        std::string const& m_name;
