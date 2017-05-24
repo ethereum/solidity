@@ -406,6 +406,7 @@ bool AsmAnalyzer::expectDeposit(int const _deposit, int const _oldHeight, Source
 
 Scope& AsmAnalyzer::scope(Block const* _block)
 {
+	solAssert(m_info.scopes.count(_block) == 1, "Scope requested but not present.");
 	auto scopePtr = m_info.scopes.at(_block);
 	solAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
