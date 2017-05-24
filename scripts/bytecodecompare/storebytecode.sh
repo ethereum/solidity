@@ -34,6 +34,10 @@ TMPDIR=$(mktemp -d)
 (
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
+
+    echo "Running for commit $TRAVIS_COMMIT"
+    COMMIT_DATE=$(git show -s --format="%cd" --date=short "$TRAVIS_COMMIT")
+
     cd "$TMPDIR"
 
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
@@ -86,8 +90,6 @@ EOF
         chmod 600 deploy_key
         eval `ssh-agent -s`
         ssh-add deploy_key
-
-        COMMIT_DATE=$(cd "$REPO_ROOT" && git show -s --format="%cd" --date=short "$TRAVIS_COMMIT")
 
         git clone --depth 2 git@github.com:ethereum/solidity-test-bytecode.git
         cd solidity-test-bytecode
