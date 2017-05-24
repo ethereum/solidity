@@ -392,7 +392,13 @@ void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
 			Instruction::OR;
 }
 
-void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded, bool _chopSignBits)
+void CompilerUtils::convertType(
+	Type const& _typeOnStack,
+	Type const& _targetType,
+	bool _cleanupNeeded,
+	bool _chopSignBits,
+	bool _asPartOfArgumentDecoding
+)
 {
 	// For a type extension, we need to remove all higher-order bits that we might have ignored in
 	// previous operations.
@@ -450,7 +456,10 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_typeOnStack);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalInvalid();
+			if (_asPartOfArgumentDecoding)
+				m_context.appendConditionalRevert();
+			else
+				m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;
 		}
 		break;
@@ -985,7 +994,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 			m_context << shiftFactor << Instruction::MUL;
 	}
 	if (_fromCalldata)
-		convertType(_type, _type, true);
+		convertType(_type, _type, true, false, true);
 
 	return numBytes;
 }

@@ -587,7 +587,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalInvalid();
+			m_context.appendConditionalRevert();
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -651,7 +651,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				// Check if zero (out of stack or not enough balance).
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalInvalid();
+				m_context.appendConditionalRevert();
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -660,9 +660,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			// memory offset returned - zero length
-			m_context << u256(0) << u256(0);
-			m_context << Instruction::REVERT;
+			m_context.appendRevert();
 			break;
 		case FunctionType::Kind::SHA3:
 		{
@@ -890,7 +888,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// condition was not met, flag an error
 				m_context << Instruction::INVALID;
 			else
-				m_context << u256(0) << u256(0) << Instruction::REVERT;
+				m_context.appendRevert();
 			// the success branch
 			m_context << success;
 			break;
@@ -1695,7 +1693,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
 
@@ -1731,7 +1729,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalRevert();
 	}
 
 	utils().popStackSlots(remainsSize);
