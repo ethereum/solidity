@@ -70,12 +70,12 @@ public:
 		m_assembly.append(_constant);
 	}
 	/// Append a label.
-	virtual void appendLabel(size_t _labelId) override
+	virtual void appendLabel(LabelID _labelId) override
 	{
 		m_assembly.append(eth::AssemblyItem(eth::Tag, _labelId));
 	}
 	/// Append a label reference.
-	virtual void appendLabelReference(size_t _labelId) override
+	virtual void appendLabelReference(LabelID _labelId) override
 	{
 		m_assembly.append(eth::AssemblyItem(eth::PushTag, _labelId));
 	}
