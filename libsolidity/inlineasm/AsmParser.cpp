@@ -321,6 +321,15 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 		unsigned args = unsigned(instrInfo.args);
 		for (unsigned i = 0; i < args; ++i)
 		{
+			/// check for premature closing parentheses
+			if (m_scanner->currentToken() == Token::RParen)
+				fatalParserError(string(
+					"Expected " +
+					boost::lexical_cast<string>(args) +
+					" arguments, but received " +
+					boost::lexical_cast<string>(i)
+				));
+
 			ret.arguments.emplace_back(parseExpression());
 			if (i != args - 1)
 			{
