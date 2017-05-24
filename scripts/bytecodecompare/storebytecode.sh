@@ -87,17 +87,15 @@ EOF
         eval `ssh-agent -s`
         ssh-add deploy_key
 
-        COMMIT_DATE=$(cd "$REPO_ROOT" && git show -s --format="%cd" --date=short "$TRAVIS_COMMIT")
-
         git clone --depth 2 git@github.com:ethereum/solidity-test-bytecode.git
         cd solidity-test-bytecode
         git config user.name "travis"
         git config user.email "chris@ethereum.org"
         git clean -f -d -x
 
-        DIRECTORY=$COMMIT_DATE"_"$TRAVIS_COMMIT
-        mkdir -p "$DIRECTORY"
-        REPORT="$DIRECTORY/$ZIP_SUFFIX.txt"
+        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-H" --date=short)
+        mkdir -p "$DIRNAME"
+        REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
         cp ../report.txt "$REPORT"
         # Only push if adding actually worked, i.e. there were changes.
         if git add "$REPORT"
