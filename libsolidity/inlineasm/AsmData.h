@@ -50,14 +50,14 @@ struct Identifier { SourceLocation location; std::string name; };
 struct FunctionalInstruction;
 /// Jump label ("name:")
 struct Label { SourceLocation location; std::string name; };
-/// Assignemnt (":= x", moves stack top into x, potentially multiple slots)
-struct Assignment { SourceLocation location; Identifier variableName; };
+/// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
+struct StackAssignment { SourceLocation location; Identifier variableName; };
 struct FunctionalAssignment;
 struct VariableDeclaration;
 struct FunctionDefinition;
 struct FunctionCall;
 struct Block;
-using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 /// Functional assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 struct FunctionalAssignment { SourceLocation location; Identifier variableName; std::shared_ptr<Statement> value; };

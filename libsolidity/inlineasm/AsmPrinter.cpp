@@ -108,7 +108,7 @@ string AsmPrinter::operator()(assembly::Label const& _label)
 	return _label.name + ":";
 }
 
-string AsmPrinter::operator()(assembly::Assignment const& _assignment)
+string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
 {
 	solAssert(!m_julia, "");
 	return "=: " + (*this)(_assignment.variableName);

@@ -160,7 +160,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
+bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;

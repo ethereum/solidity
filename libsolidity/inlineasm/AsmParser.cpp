@@ -71,7 +71,7 @@ assembly::Statement Parser::parseStatement()
 	{
 		if (m_julia)
 			break;
-		assembly::Assignment assignment = createWithLocation<assembly::Assignment>();
+		assembly::StackAssignment assignment = createWithLocation<assembly::StackAssignment>();
 		m_scanner->next();
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();

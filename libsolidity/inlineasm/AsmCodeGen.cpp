@@ -233,7 +233,7 @@ public:
 		m_assembly.appendLabel(*label.id);
 		checkStackHeight(&_label);
 	}
-	void operator()(assembly::Assignment const& _assignment)
+	void operator()(assembly::StackAssignment const& _assignment)
 	{
 		m_assembly.setSourceLocation(_assignment.location);
 		generateAssignment(_assignment.variableName, _assignment.location);

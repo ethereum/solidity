@@ -35,7 +35,7 @@ struct Literal;
 struct Identifier;
 struct FunctionalInstruction;
 struct Label;
-struct Assignment;
+struct StackAssignment;
 struct FunctionalAssignment;
 struct VariableDeclaration;
 struct FunctionDefinition;
@@ -52,7 +52,7 @@ public:
 	std::string operator()(assembly::Identifier const& _identifier);
 	std::string operator()(assembly::FunctionalInstruction const& _functionalInstruction);
 	std::string operator()(assembly::Label const& _label);
-	std::string operator()(assembly::Assignment const& _assignment);
+	std::string operator()(assembly::StackAssignment const& _assignment);
 	std::string operator()(assembly::FunctionalAssignment const& _functionalAssignment);
 	std::string operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	std::string operator()(assembly::FunctionDefinition const& _functionDefinition);
