@@ -110,7 +110,6 @@ do \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
-
 BOOST_AUTO_TEST_SUITE(JuliaParser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
@@ -195,6 +194,31 @@ BOOST_AUTO_TEST_CASE(lacking_types)
 	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected token Colon got 'RBrace'");
 	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected token Colon got 'RParen'");
 	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected token Colon got 'LBrace'");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_types)
+{
+	/// testing invalid literal
+	/// NOTE: these will need to change when types are compared
+	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, "User defined types (\"invalid\") are not supported yet.");
+	/// testing invalid variable declaration
+	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, "User defined types (\"invalid\") are not supported yet.");
+	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "User defined types (\"invalid\") are not supported yet.");
+}
+
+BOOST_AUTO_TEST_CASE(builtin_types)
+{
+	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));
+	BOOST_CHECK(successParse("{ let x:u8 := 1:u8 }"));
+	BOOST_CHECK(successParse("{ let x:s8 := 1:u8 }"));
+	BOOST_CHECK(successParse("{ let x:u32 := 1:u32 }"));
+	BOOST_CHECK(successParse("{ let x:s32 := 1:s32 }"));
+	BOOST_CHECK(successParse("{ let x:u64 := 1:u64 }"));
+	BOOST_CHECK(successParse("{ let x:s64 := 1:s64 }"));
+	BOOST_CHECK(successParse("{ let x:u128 := 1:u128 }"));
+	BOOST_CHECK(successParse("{ let x:s128 := 1:s128 }"));
+	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let x:s256 := 1:s256 }"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

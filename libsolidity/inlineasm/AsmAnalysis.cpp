@@ -62,6 +62,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
+	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
 	{
@@ -186,7 +187,10 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	}
 
 	for (auto const& variable: _varDecl.variables)
+	{
+		expectValidType(variable.type, variable.location);
 		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
+	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
 }
@@ -195,7 +199,10 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	Scope& bodyScope = scope(&_funDef.body);
 	for (auto const& var: _funDef.arguments + _funDef.returns)
+	{
+		expectValidType(var.type, var.location);
 		boost::get<Scope::Variable>(bodyScope.identifiers.at(var.name)).active = true;
+	}
 
 	int const stackHeight = m_stackHeight;
 	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
@@ -443,4 +450,17 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	auto scopePtr = m_info.scopes.at(_block);
 	solAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
+}
+
+void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
+{
+//	if (!m_julia)
+//		return;
+
+	if (!(set<string>{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"}).count(type))
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::TypeError,
+			"User defined types (\"" + type + "\") are not supported yet.",
+			_location
+		));
 }
