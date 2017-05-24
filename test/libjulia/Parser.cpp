@@ -21,11 +21,13 @@
 
 #include "../TestHelper.h"
 
+#include <test/libsolidity/ErrorCheck.h>
+
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/parsing/Scanner.h>
-#include <test/libsolidity/ErrorCheck.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>

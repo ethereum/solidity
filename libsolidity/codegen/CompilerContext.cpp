@@ -269,7 +269,8 @@ void CompilerContext::appendInlineAssembly(
 	julia::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](
 		assembly::Identifier const& _identifier,
-		julia::IdentifierContext
+		julia::IdentifierContext,
+		bool
 	)
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);

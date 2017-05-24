@@ -7535,6 +7535,102 @@ BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(10)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_function_call)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					function asmfun(a, b, c) -> x, y, z {
+						x := a
+						y := b
+						z := 7
+					}
+					let a1, b1, c1 := asmfun(1, 2, 3)
+					mstore(0x00, a1)
+					mstore(0x20, b1)
+					mstore(0x40, c1)
+					return(0, 0x60)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1), u256(2), u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_function_call2)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					let d := 0x10
+					function asmfun(a, b, c) -> x, y, z {
+						x := a
+						y := b
+						z := 7
+					}
+					let a1, b1, c1 := asmfun(1, 2, 3)
+					mstore(0x00, a1)
+					mstore(0x20, b1)
+					mstore(0x40, c1)
+					mstore(0x60, d)
+					return(0, 0x80)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1), u256(2), u256(7), u256(0x10)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_switch)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				assembly {
+					switch a
+					case 1 { b := 8 }
+					case 2 { b := 9 }
+					default { b := 2 }
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(9)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_recursion)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				assembly {
+					function fac(n) -> nf {
+						switch n
+						case 0 { nf := 1 }
+						case 1 { nf := 1 }
+						default { nf := mul(n, fac(sub(n, 1))) }
+					}
+					b := fac(a)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(u256(6)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(4)) == encodeArgs(u256(24)));
+}
+
 BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 {
 	// Test for a bug where higher order bits cleanup was not done for array index access.

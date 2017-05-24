@@ -632,7 +632,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// We run the resolve step again regardless.
 	julia::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		julia::IdentifierContext _context
+		julia::IdentifierContext _context,
+		bool
 	)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);

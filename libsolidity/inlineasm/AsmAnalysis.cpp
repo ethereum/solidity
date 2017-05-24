@@ -25,7 +25,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -120,7 +120,10 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	{
 		size_t stackSize(-1);
 		if (m_resolver)
-			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue);
+		{
+			bool insideFunction = m_currentScope->insideFunction();
+			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue, insideFunction);
+		}
 		if (stackSize == size_t(-1))
 		{
 			// Only add an error message if the callback did not do it.
@@ -200,7 +203,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	}
 
 	int const stackHeight = m_stackHeight;
-	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
+	// 1 for return label, depends on VM version
+	m_stackHeight = 1 + _funDef.arguments.size() + _funDef.returns.size();
 
 	bool success = (*this)(_funDef.body);
 
@@ -254,10 +258,11 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 			success = false;
 		}
 	}
+	m_stackHeight += 1; // Return label, but depends on backend
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
-	m_stackHeight += int(returns) - int(arguments);
+	m_stackHeight += int(returns) - int(arguments) - 1; // Return label, but depends on backend
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }
@@ -295,6 +300,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	}
 
 	m_stackHeight--;
+	m_info.stackHeightInfo[&_switch] = m_stackHeight;
 
 	return success;
 }
@@ -378,7 +384,10 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		variableSize = 1;
 	}
 	else if (m_resolver)
-		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue);
+	{
+		bool insideFunction = m_currentScope->insideFunction();
+		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue, insideFunction);
+	}
 	if (variableSize == size_t(-1))
 	{
 		// Only add message if the callback did not.

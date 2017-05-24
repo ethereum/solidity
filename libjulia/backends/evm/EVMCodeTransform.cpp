@@ -25,49 +25,359 @@
 
 #include <libsolidity/interface/Utils.h>
 
+#include <boost/range/adaptor/reversed.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-CodeTransform::CodeTransform(
-	ErrorReporter& _errorReporter,
-	AbstractAssembly& _assembly,
-	Block const& _block,
-	AsmAnalysisInfo& _analysisInfo,
-	ExternalIdentifierAccess const& _identifierAccess,
-	int _initialStackHeight
-):
-	m_errorReporter(_errorReporter),
-	m_assembly(_assembly),
-	m_info(_analysisInfo),
-	m_scope(*_analysisInfo.scopes.at(&_block)),
-	m_identifierAccess(_identifierAccess),
-	m_initialStackHeight(_initialStackHeight)
+void CodeTransform::run(Block const& _block)
 {
+	m_scope = m_info.scopes.at(&_block).get();
+
 	int blockStartStackHeight = m_assembly.stackHeight();
 	std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
 
 	m_assembly.setSourceLocation(_block.location);
 
 	// pop variables
-	for (auto const& identifier: m_scope.identifiers)
+	for (auto const& identifier: m_scope->identifiers)
 		if (identifier.second.type() == typeid(Scope::Variable))
 			m_assembly.appendInstruction(solidity::Instruction::POP);
 
 	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
 	solAssert(deposit == 0, "Invalid stack height at end of block.");
+	checkStackHeight(&_block);
 }
 
-void CodeTransform::operator()(const FunctionDefinition&)
+
+void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
-	solAssert(false, "Function definition not removed during desugaring phase.");
+	solAssert(m_scope, "");
+
+	int expectedItems = _varDecl.variables.size();
+	int height = m_assembly.stackHeight();
+	boost::apply_visitor(*this, *_varDecl.value);
+	expectDeposit(expectedItems, height);
+	for (auto const& variable: _varDecl.variables)
+	{
+		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(variable.name));
+		var.stackHeight = height++;
+		var.active = true;
+	}
+}
+
+void CodeTransform::operator()(Assignment const& _assignment)
+{
+	visitExpression(*_assignment.value);
+	m_assembly.setSourceLocation(_assignment.location);
+	generateAssignment(_assignment.variableName, _assignment.location);
+	checkStackHeight(&_assignment);
+}
+
+void CodeTransform::operator()(StackAssignment const& _assignment)
+{
+	m_assembly.setSourceLocation(_assignment.location);
+	generateAssignment(_assignment.variableName, _assignment.location);
+	checkStackHeight(&_assignment);
+}
+
+void CodeTransform::operator()(Label const& _label)
+{
+	m_assembly.setSourceLocation(_label.location);
+	solAssert(m_scope, "");
+	solAssert(m_scope->identifiers.count(_label.name), "");
+	Scope::Label& label = boost::get<Scope::Label>(m_scope->identifiers.at(_label.name));
+	assignLabelIdIfUnset(label.id);
+	m_assembly.appendLabel(*label.id);
+	checkStackHeight(&_label);
+}
+
+void CodeTransform::operator()(FunctionCall const& _call)
+{
+	solAssert(m_scope, "");
+
+	m_assembly.setSourceLocation(_call.location);
+	EVMAssembly::LabelID returnLabel(-1); // only used for evm 1.0
+	if (!m_evm15)
+	{
+		returnLabel = m_assembly.newLabelId();
+		m_assembly.appendLabelReference(returnLabel);
+	}
+
+	Scope::Function* function = nullptr;
+	solAssert(m_scope->lookup(_call.functionName.name, Scope::NonconstVisitor(
+		[=](Scope::Variable&) { solAssert(false, "Expected function name."); },
+		[=](Scope::Label&) { solAssert(false, "Expected function name."); },
+		[&](Scope::Function& _function) { function = &_function; }
+	)), "Function name not found.");
+	solAssert(function, "");
+	solAssert(function->arguments.size() == _call.arguments.size(), "");
+	for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+		visitExpression(arg);
+	m_assembly.setSourceLocation(_call.location);
+	assignLabelIdIfUnset(function->id);
+	if (m_evm15)
+		m_assembly.appendJumpsub(*function->id, function->arguments.size(), function->returns.size());
+	else
+	{
+		m_assembly.appendJumpTo(*function->id, function->returns.size() - function->arguments.size() - 1);
+		m_assembly.appendLabel(returnLabel);
+	}
+	checkStackHeight(&_call);
+}
+
+void CodeTransform::operator()(FunctionalInstruction const& _instruction)
+{
+	if (m_evm15 && (
+		_instruction.instruction.instruction == solidity::Instruction::JUMP ||
+		_instruction.instruction.instruction == solidity::Instruction::JUMPI
+	))
+	{
+		bool const isJumpI = _instruction.instruction.instruction == solidity::Instruction::JUMPI;
+		if (isJumpI)
+		{
+			solAssert(_instruction.arguments.size() == 2, "");
+			visitExpression(_instruction.arguments.at(1));
+		}
+		else
+		{
+			solAssert(_instruction.arguments.size() == 1, "");
+		}
+		m_assembly.setSourceLocation(_instruction.location);
+		auto label = labelFromIdentifier(boost::get<assembly::Identifier>(_instruction.arguments.at(0)));
+		if (isJumpI)
+			m_assembly.appendJumpToIf(label);
+		else
+			m_assembly.appendJumpTo(label);
+	}
+	else
+	{
+		for (auto const& arg: _instruction.arguments | boost::adaptors::reversed)
+			visitExpression(arg);
+		(*this)(_instruction.instruction);
+	}
+	checkStackHeight(&_instruction);
+}
+
+void CodeTransform::operator()(assembly::Identifier const& _identifier)
+{
+	m_assembly.setSourceLocation(_identifier.location);
+	// First search internals, then externals.
+	solAssert(m_scope, "");
+	if (m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
+		[=](Scope::Variable& _var)
+		{
+			if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
+				m_assembly.appendInstruction(solidity::dupInstruction(heightDiff));
+			else
+				// Store something to balance the stack
+				m_assembly.appendConstant(u256(0));
+		},
+		[=](Scope::Label& _label)
+		{
+			assignLabelIdIfUnset(_label.id);
+			m_assembly.appendLabelReference(*_label.id);
+		},
+		[=](Scope::Function&)
+		{
+			solAssert(false, "Function not removed during desugaring.");
+		}
+	)))
+	{
+		return;
+	}
+	solAssert(
+		m_identifierAccess.generateCode,
+		"Identifier not found and no external access available."
+	);
+	m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_assembly);
+	checkStackHeight(&_identifier);
+}
+
+void CodeTransform::operator()(assembly::Literal const& _literal)
+{
+	m_assembly.setSourceLocation(_literal.location);
+	if (_literal.kind == assembly::LiteralKind::Number)
+		m_assembly.appendConstant(u256(_literal.value));
+	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	{
+		if (_literal.value == "true")
+			m_assembly.appendConstant(u256(1));
+		else
+			m_assembly.appendConstant(u256(0));
+	}
+	else
+	{
+		solAssert(_literal.value.size() <= 32, "");
+		m_assembly.appendConstant(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
+	}
+	checkStackHeight(&_literal);
+}
+
+void CodeTransform::operator()(assembly::Instruction const& _instruction)
+{
+	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
+	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
+	m_assembly.setSourceLocation(_instruction.location);
+	m_assembly.appendInstruction(_instruction.instruction);
+	checkStackHeight(&_instruction);
+}
+
+void CodeTransform::operator()(Switch const& _switch)
+{
+	//@TODO use JUMPV in EVM1.5?
+
+	visitExpression(*_switch.expression);
+	int expressionHeight = m_assembly.stackHeight();
+	map<Case const*, AbstractAssembly::LabelID> caseBodies;
+	AbstractAssembly::LabelID end = m_assembly.newLabelId();
+	for (Case const& c: _switch.cases)
+	{
+		if (c.value)
+		{
+			(*this)(*c.value);
+			m_assembly.setSourceLocation(c.location);
+			AbstractAssembly::LabelID bodyLabel = m_assembly.newLabelId();
+			caseBodies[&c] = bodyLabel;
+			solAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
+			m_assembly.appendInstruction(solidity::dupInstruction(2));
+			m_assembly.appendInstruction(solidity::Instruction::EQ);
+			m_assembly.appendJumpToIf(bodyLabel);
+		}
+		else
+			// default case
+			(*this)(c.body);
+	}
+	m_assembly.setSourceLocation(_switch.location);
+	m_assembly.appendJumpTo(end);
+
+	size_t numCases = caseBodies.size();
+	for (auto const& c: caseBodies)
+	{
+		m_assembly.setSourceLocation(c.first->location);
+		m_assembly.appendLabel(c.second);
+		(*this)(c.first->body);
+		if (--numCases > 0)
+		{
+			m_assembly.setSourceLocation(c.first->location);
+			m_assembly.appendJumpTo(end);
+		}
+	}
+
+	m_assembly.setSourceLocation(_switch.location);
+	m_assembly.appendLabel(end);
+	m_assembly.appendInstruction(solidity::Instruction::POP);
+	checkStackHeight(&_switch);
+}
+
+void CodeTransform::operator()(FunctionDefinition const& _function)
+{
+	solAssert(m_scope, "");
+	solAssert(m_scope->identifiers.count(_function.name), "");
+	Scope::Function& function = boost::get<Scope::Function>(m_scope->identifiers.at(_function.name));
+	assignLabelIdIfUnset(function.id);
+
+	int height = m_evm15 ? 0 : 1;
+	solAssert(m_info.scopes.at(&_function.body), "");
+	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
+	solAssert(varScope, "");
+	for (auto const& v: _function.arguments | boost::adaptors::reversed)
+	{
+		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
+		var.stackHeight = height++;
+		var.active = true;
+	}
+
+	m_assembly.setSourceLocation(_function.location);
+	int stackHeightBefore = m_assembly.stackHeight();
+	AbstractAssembly::LabelID afterFunction = m_assembly.newLabelId();
+	m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
+
+	if (m_evm15)
+		m_assembly.appendBeginsub(*function.id, _function.arguments.size());
+	else
+		m_assembly.appendLabel(*function.id);
+
+	for (auto const& v: _function.returns)
+	{
+		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
+		var.stackHeight = height++;
+		var.active = true;
+		m_assembly.appendConstant(u256(0));
+	}
+
+	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, 0).run(_function.body);
+
+	if (_function.arguments.size() > 0)
+	{
+		vector<int> stackLayout;
+		if (!m_evm15)
+			stackLayout.push_back(_function.returns.size()); // Move return label to the top
+		stackLayout += vector<int>(_function.arguments.size(), -1); // discard all arguments
+		for (size_t i = 0; i < _function.returns.size(); ++i)
+			stackLayout.push_back(i);
+
+		solAssert(stackLayout.size() <= 17, "Stack too deep");
+		while (stackLayout.back() != int(stackLayout.size() - 1))
+			if (stackLayout.back() < 0)
+			{
+				m_assembly.appendInstruction(solidity::Instruction::POP);
+				stackLayout.pop_back();
+			}
+			else
+			{
+				m_assembly.appendInstruction(swapInstruction(stackLayout.size() - stackLayout.back() - 1));
+				swap(stackLayout[stackLayout.back()], stackLayout.back());
+			}
+		for (int i = 0; size_t(i) < stackLayout.size(); ++i)
+			solAssert(i == stackLayout[i], "Error reshuffling stack.");
+	}
+
+	if (m_evm15)
+		m_assembly.appendReturnsub(_function.returns.size());
+	else
+		m_assembly.appendJump(stackHeightBefore - _function.returns.size());
+	m_assembly.appendLabel(afterFunction);
+	checkStackHeight(&_function);
+}
+
+void CodeTransform::operator()(Block const& _block)
+{
+	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, m_initialStackHeight).run(_block);
+}
+
+AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
+{
+	AbstractAssembly::LabelID label = AbstractAssembly::LabelID(-1);
+	if (!m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
+		[=](Scope::Variable&) { solAssert(false, "Expected label"); },
+		[&](Scope::Label& _label)
+		{
+			assignLabelIdIfUnset(_label.id);
+			label = *_label.id;
+		},
+		[=](Scope::Function&) { solAssert(false, "Expected label"); }
+	)))
+	{
+		solAssert(false, "Identifier not found.");
+	}
+	return label;
+}
+
+void CodeTransform::visitExpression(Statement const& _expression)
+{
+	int height = m_assembly.stackHeight();
+	boost::apply_visitor(*this, _expression);
+	expectDeposit(1, height);
 }
 
 void CodeTransform::generateAssignment(Identifier const& _variableName, SourceLocation const& _location)
 {
-	auto var = m_scope.lookup(_variableName.name);
+	solAssert(m_scope, "");
+	auto var = m_scope->lookup(_variableName.name);
 	if (var)
 	{
 		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
@@ -111,142 +421,15 @@ void CodeTransform::checkStackHeight(void const* _astElement)
 	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
 	solAssert(
 		m_info.stackHeightInfo.at(_astElement) == m_assembly.stackHeight() - m_initialStackHeight,
-		"Stack height mismatch between analysis and code generation phase."
+		"Stack height mismatch between analysis and code generation phase: Analysis: " +
+		to_string(m_info.stackHeightInfo.at(_astElement)) +
+		" code gen: " +
+		to_string(m_assembly.stackHeight() - m_initialStackHeight)
 	);
 }
 
-void CodeTransform::assignLabelIdIfUnset(Scope::Label& _label)
+void CodeTransform::assignLabelIdIfUnset(boost::optional<AbstractAssembly::LabelID>& _labelId)
 {
-	if (!_label.id)
-		_label.id.reset(m_assembly.newLabelId());
-}
-
-void CodeTransform::operator()(Block const& _block)
-{
-	CodeTransform(m_errorReporter, m_assembly, _block, m_info, m_identifierAccess, m_initialStackHeight);
-	checkStackHeight(&_block);
-}
-
-void CodeTransform::operator()(Switch const&)
-{
-	solAssert(false, "Switch not removed during desugaring phase.");
-}
-
-void CodeTransform::operator()(VariableDeclaration const& _varDecl)
-{
-	int expectedItems = _varDecl.variables.size();
-	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_varDecl.value);
-	expectDeposit(expectedItems, height);
-	for (auto const& variable: _varDecl.variables)
-	{
-		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(variable.name));
-		var.stackHeight = height++;
-		var.active = true;
-	}
-}
-
-void CodeTransform::operator()(Assignment const& _assignment)
-{
-	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_assignment.value);
-	expectDeposit(1, height);
-	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName, _assignment.location);
-	checkStackHeight(&_assignment);
-}
-
-void CodeTransform::operator()(StackAssignment const& _assignment)
-{
-	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName, _assignment.location);
-	checkStackHeight(&_assignment);
-}
-
-void CodeTransform::operator()(Label const& _label)
-{
-	m_assembly.setSourceLocation(_label.location);
-	solAssert(m_scope.identifiers.count(_label.name), "");
-	Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers.at(_label.name));
-	assignLabelIdIfUnset(label);
-	m_assembly.appendLabel(*label.id);
-	checkStackHeight(&_label);
-}
-
-void CodeTransform::operator()(FunctionCall const&)
-{
-	solAssert(false, "Function call not removed during desugaring phase.");
-}
-
-void CodeTransform::operator()(FunctionalInstruction const& _instr)
-{
-	for (auto it = _instr.arguments.rbegin(); it != _instr.arguments.rend(); ++it)
-	{
-		int height = m_assembly.stackHeight();
-		boost::apply_visitor(*this, *it);
-		expectDeposit(1, height);
-	}
-	(*this)(_instr.instruction);
-	checkStackHeight(&_instr);
-}
-
-void CodeTransform::operator()(assembly::Identifier const& _identifier)
-{
-	m_assembly.setSourceLocation(_identifier.location);
-	// First search internals, then externals.
-	if (m_scope.lookup(_identifier.name, Scope::NonconstVisitor(
-		[=](Scope::Variable& _var)
-		{
-			if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
-				m_assembly.appendInstruction(solidity::dupInstruction(heightDiff));
-			else
-				// Store something to balance the stack
-				m_assembly.appendConstant(u256(0));
-		},
-		[=](Scope::Label& _label)
-		{
-			assignLabelIdIfUnset(_label);
-			m_assembly.appendLabelReference(*_label.id);
-		},
-		[=](Scope::Function&)
-		{
-			solAssert(false, "Function not removed during desugaring.");
-		}
-	)))
-	{
-		return;
-	}
-	solAssert(
-		m_identifierAccess.generateCode,
-		"Identifier not found and no external access available."
-	);
-	m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_assembly);
-	checkStackHeight(&_identifier);
-}
-
-void CodeTransform::operator()(assembly::Literal const& _literal)
-{
-	m_assembly.setSourceLocation(_literal.location);
-	if (_literal.kind == assembly::LiteralKind::Number)
-		m_assembly.appendConstant(u256(_literal.value));
-	else if (_literal.kind == assembly::LiteralKind::Boolean)
-	{
-		if (_literal.value == "true")
-			m_assembly.appendConstant(u256(1));
-		else
-			m_assembly.appendConstant(u256(0));
-	}
-	else
-	{
-		solAssert(_literal.value.size() <= 32, "");
-		m_assembly.appendConstant(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
-	}
-	checkStackHeight(&_literal);
-}
-
-void CodeTransform::operator()(assembly::Instruction const& _instruction)
-{
-	m_assembly.setSourceLocation(_instruction.location);
-	m_assembly.appendInstruction(_instruction.instruction);
-	checkStackHeight(&_instruction);
+	if (!_labelId)
+		_labelId.reset(m_assembly.newLabelId());
 }
