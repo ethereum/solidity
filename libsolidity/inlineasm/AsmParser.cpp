@@ -72,6 +72,8 @@ assembly::Statement Parser::parseStatement()
 		assembly::Switch _switch = createWithLocation<assembly::Switch>();
 		m_scanner->next();
 		_switch.expression = make_shared<Statement>(parseExpression());
+		if (_switch.expression->type() == typeid(assembly::Instruction))
+			fatalParserError("Instructions are not supported as expressions for switch.");
 		while (m_scanner->currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
 		if (m_scanner->currentToken() == Token::Default)

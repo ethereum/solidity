@@ -230,7 +230,6 @@ BOOST_AUTO_TEST_CASE(switch_statement)
 	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} }"));
 	BOOST_CHECK(successParse("{ switch 42 case 1 {} default {} }"));
 	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} default {} }"));
-	BOOST_CHECK(successParse("{ 1 2 switch mul case 1 {} case 2 {} default {} }"));
 	BOOST_CHECK(successParse("{ switch mul(1, 2) case 1 {} case 2 {} default {} }"));
 	BOOST_CHECK(successParse("{ function f() -> x {} switch f() case 1 {} case 2 {} default {} }"));
 }
@@ -248,6 +247,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Expected elementary inline assembly operation.");
+	CHECK_PARSE_ERROR("{ 1 2 switch mul default {} }", ParserError, "Instructions are not supported as expressions for switch.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
