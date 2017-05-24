@@ -38,15 +38,6 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-AsmAnalyzer::AsmAnalyzer(
-	AsmAnalysisInfo& _analysisInfo,
-	ErrorList& _errors,
-	julia::ExternalIdentifierAccess::Resolver const& _resolver
-):
-	m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors)
-{
-}
-
 bool AsmAnalyzer::analyze(Block const& _block)
 {
 	if (!(ScopeFiller(m_info.scopes, m_errors))(_block))

@@ -61,11 +61,11 @@ struct AsmAnalysisInfo;
 class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
-	AsmAnalyzer(
+	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorList& _errors,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	);
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors) {}
 
 	bool analyze(assembly::Block const& _block);
 
