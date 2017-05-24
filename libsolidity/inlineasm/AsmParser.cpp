@@ -96,7 +96,7 @@ assembly::Statement Parser::parseStatement()
 	switch (m_scanner->currentToken())
 	{
 	case Token::LParen:
-		return parseFunctionalInstruction(std::move(statement));
+		return parseCall(std::move(statement));
 	case Token::Colon:
 	{
 		if (statement.type() != typeid(assembly::Identifier))
@@ -138,7 +138,7 @@ assembly::Statement Parser::parseExpression()
 {
 	Statement operation = parseElementaryOperation(true);
 	if (m_scanner->currentToken() == Token::LParen)
-		return parseFunctionalInstruction(std::move(operation));
+		return parseCall(std::move(operation));
 	else
 		return operation;
 }
@@ -303,7 +303,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-assembly::Statement Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
+assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 {
 	if (_instruction.type() == typeid(Instruction))
 	{
