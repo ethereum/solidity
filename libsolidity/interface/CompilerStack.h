@@ -225,6 +225,9 @@ public:
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
+	/// @returns true if the source files were imported from a json-file
+	bool importedSources() { return m_importedSources; }
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -314,6 +317,7 @@ private:
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
+	bool m_importedSources = false;
 };
 
 }

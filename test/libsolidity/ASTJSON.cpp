@@ -291,7 +291,6 @@ BOOST_AUTO_TEST_CASE(documentation)
 //	}
 //	assert(newJson == originalJson);
 //>>>>>>> fixing small errors
-
 //{
 //	CompilerStack c;
 //	c.addSource("a",

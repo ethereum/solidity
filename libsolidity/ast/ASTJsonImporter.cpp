@@ -66,15 +66,12 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 
 SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	solAssert(!_node["src"].isNull() || _node["nodeType"] == "SourceUnit", "JsonValue should not be an ASTNode");
+	solAssert(!_node["src"].isNull(), "JsonValue should not be an ASTNode");
         string srcString = _node["src"].asCString();
         vector<string> pos;
         boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
         int start = stoi(pos[0]);
 	int end = start + stoi(pos[1]);
-//	if (strcmp(_node["nodeType"].asCString(), "ParameterList") == 0 )
-//	cout << srcString << std::endl;
-//	cout << pos[0] <<":"<<pos[1]<<":" << pos[2] << std::endl;
 	shared_ptr<string const> source = make_shared<string const>(m_currentSource);
         return SourceLocation(
                 start,
@@ -96,13 +93,12 @@ ASTPointer<T> ASTJsonImporter::nullOrCast(Json::Value _json)
 Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 {
         Token::Value ret;
-        Scanner scanner(CharStream(_node.asCString()), "");
-        ret = scanner.next();
-        //check for EOS
-        if (scanner.currentToken() == Token::EOS)
-                return std::move(ret);
+	Scanner scanner(CharStream(_node.asCString()));
+	ret = scanner.currentToken();
+	if (scanner.next() == Token::EOS)
+		return std::move(ret);
         else
-            BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry.")); //TODO test this exception
+	    BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry."));
 }
 
 //replace name with nodeType for new version
@@ -193,7 +189,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (_json["nodeType"] == "IndexAccess")
 		return createIndexAccess(_json);
 	if (_json["nodeType"] == "Identifier")
-		return createIdentifier(createSourceLocation(_json), _json["name"].asCString());
+		return createIdentifier(createSourceLocation(_json), _json["nodeType"].asCString());
 	if (_json["nodeType"] == "ElementaryTypeNameExpression")
 		return createElementaryTypeNameExpression(_json);
 	if (_json["nodeType"] == "Literal")
@@ -201,54 +197,6 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	else BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
 }
 
-Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
-{
-	solAssert(_node.isMember("visibility"), "");
-	Declaration::Visibility vis;
-	if (strcmp(_node["visibility"].asCString(), "default") == 0)
-		vis = Declaration::Visibility::Default;
-	else if (strcmp(_node["visibility"].asCString(), "private") == 0)
-		vis = Declaration::Visibility::Private;
-	else if (strcmp( _node["visibility"].asCString(), "internal") == 0)
-		vis = Declaration::Visibility::Internal;
-	else if (strcmp(_node["visibility"].asCString(), "public") == 0)
-		vis = Declaration::Visibility::Public;
-	else if (strcmp(_node["visibility"].asCString(), "external") == 0)
-		vis = Declaration::Visibility::External;
-	else
-	{
-		solAssert(false,"unknown visibility declaration");
-	}
-	return vis;
-}
-
-VariableDeclaration::Location ASTJsonImporter::getLocation(Json::Value const& _node)
-{
-	VariableDeclaration::Location loc;
-	solAssert(_node.isMember("storageLocation"),"");
-	if (strcmp(_node["storageLocation"].asCString(), "default") == 0)
-		return loc = VariableDeclaration::Location::Default;
-	else if (strcmp(_node["storageLocation"].asCString(), "storage") == 0)
-		return loc = VariableDeclaration::Location::Storage;
-	else if (strcmp(_node["storageLocation"].asCString(), "memory") == 0)
-		return loc = VariableDeclaration::Location::Memory;
-	else
-		solAssert(false,"unknown location declaration");
-}
-
-ContractDefinition::ContractKind ASTJsonImporter::getContractKind(Json::Value const& _node)
-{
-	ContractDefinition::ContractKind kind;
-	solAssert(_node.isMember("contractKind"), "");
-	if (strcmp(_node["contractKind"].asCString(), "interface") == 0)
-		return kind = ContractDefinition::ContractKind::Interface;
-	else if (strcmp(_node["contractKind"].asCString(), "contract") == 0)
-		return kind = ContractDefinition::ContractKind::Contract;
-	else if (strcmp(_node["contractKind"].asCString(), "library") == 0)
-		return kind = ContractDefinition::ContractKind::Library;
-	else
-		solAssert(false,"unknown ContractKind ");
-}
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node)
 {
@@ -566,7 +514,7 @@ ASTPointer<FunctionTypeName> ASTJsonImporter::createFunctionTypeName(Json::Value
 	ASTPointer<ParameterList> parameterTypes = createParameterList(_node["parameterTypes"]);
 	ASTPointer<ParameterList> returnTypes = createParameterList(_node["returnParameterTypes"]);
 	Declaration::Visibility visibility = getVisibility(_node);
-	bool isDeclaredConst = _node["isDeclaredConstant"].asBool();
+	bool isDeclaredConst = _node["isDeclaredConst"].asBool();
 	bool isPayable = _node["payable"].asBool();
 	ASTPointer<FunctionTypeName> tmp = make_shared<FunctionTypeName>(
 		location,
@@ -789,8 +737,6 @@ ASTPointer<Assignment> ASTJsonImporter::createAssignment(Json::Value const&  _no
 	SourceLocation location = createSourceLocation(_node);
 	ASTPointer<Expression> leftHandSide = castPointer<Expression>(convertJsonToASTNode(_node["leftHandSide"]));
         Token::Value assignmentOperator = scanSingleToken(_node["operator"]);
-//	ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(_node["operator"].asCString()), "tmp");
-//	assignmentOperator = scanner->next();
 	ASTPointer<Expression> rightHandSide = castPointer<Expression>(convertJsonToASTNode(_node["rightHandSide"]));
 	ASTPointer<Assignment> tmp = make_shared<Assignment>(
 		location,
@@ -922,12 +868,15 @@ ASTPointer<Identifier> ASTJsonImporter::createIdentifier(SourceLocation location
 	return make_shared<Identifier>(location, make_shared<ASTString>(name));
 }
 
-ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node)
+ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node) //needs TEST (elem)
 {
 	SourceLocation location = createSourceLocation(_node);
-//	Scanner scanner(CharStream(_node["typeName"].asCString()), "tmp"); //shared
-        Token::Value token = scanSingleToken(_node["typeName"]);//scanner.next(); //correct way to get the token?
-	ElementaryTypeNameToken elem(token,1,1);	//what does firstSize, secondSize mean?
+	Scanner scanner(CharStream(_node["typeDescriptions"]["typeString"].asCString()), "tmp");
+	Token::Value token = scanner.currentToken();
+	unsigned firstSize;
+	unsigned secondSize;
+	tie(firstSize, secondSize) = scanner.currentTokenInfo();
+	ElementaryTypeNameToken elem(token, firstSize, secondSize);
 	ASTPointer<ElementaryTypeNameExpression> tmp = make_shared<ElementaryTypeNameExpression>(
 		location,
 		elem
@@ -937,11 +886,108 @@ ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNa
 
 }
 
-ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
+ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //TODO/HELP
 {
 	SourceLocation location = createSourceLocation(_node);
-	return make_shared<Identifier>(location, make_shared<ASTString>("TODO"));
+	Token::Value token;
+	if (!_node["token"].isNull())
+		token = scanSingleToken(_node["token"]);
+	ASTPointer<ASTString> value = make_shared<ASTString>(
+				_node["value"].isNull() ?
+				"todo" :
+				_node["value"].asCString()
+	);
+	Literal::SubDenomination sub = getSubdenomination(_node);
+	ASTPointer<Literal> tmp = make_shared<Literal>(
+		location,
+		token,
+		value,
+		sub
+	);
+	tmp->setID(_node["id"].asInt());
+	return tmp;
 }
+
+Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
+{
+	solAssert(_node.isMember("visibility") && !_node["visibility"].isNull(), "");
+	Declaration::Visibility vis;
+	if (strcmp(_node["visibility"].asCString(), "default") == 0)
+		vis = Declaration::Visibility::Default;
+	else if (strcmp(_node["visibility"].asCString(), "private") == 0)
+		vis = Declaration::Visibility::Private;
+	else if (strcmp( _node["visibility"].asCString(), "internal") == 0)
+		vis = Declaration::Visibility::Internal;
+	else if (strcmp(_node["visibility"].asCString(), "public") == 0)
+		vis = Declaration::Visibility::Public;
+	else if (strcmp(_node["visibility"].asCString(), "external") == 0)
+		vis = Declaration::Visibility::External;
+	else
+	{
+		solAssert(false, "unknown visibility declaration");
+	}
+	return vis;
+}
+
+VariableDeclaration::Location ASTJsonImporter::getLocation(Json::Value const& _node)
+{
+	VariableDeclaration::Location loc;
+	solAssert(_node.isMember("storageLocation") && !_node["storageLocation"].isNull(), "");
+	if (strcmp(_node["storageLocation"].asCString(), "default") == 0)
+		loc = VariableDeclaration::Location::Default;
+	else if (strcmp(_node["storageLocation"].asCString(), "storage") == 0)
+		loc = VariableDeclaration::Location::Storage;
+	else if (strcmp(_node["storageLocation"].asCString(), "memory") == 0)
+		loc = VariableDeclaration::Location::Memory;
+	else
+		solAssert(false, "unknown location declaration");
+	return loc;
+}
+
+ContractDefinition::ContractKind ASTJsonImporter::getContractKind(Json::Value const& _node)
+{
+	ContractDefinition::ContractKind kind;
+	solAssert(_node.isMember("contractKind") && !_node["contractKind"].isNull(), "");
+	if (strcmp(_node["contractKind"].asCString(), "interface") == 0)
+		kind = ContractDefinition::ContractKind::Interface;
+	else if (strcmp(_node["contractKind"].asCString(), "contract") == 0)
+		kind = ContractDefinition::ContractKind::Contract;
+	else if (strcmp(_node["contractKind"].asCString(), "library") == 0)
+		kind = ContractDefinition::ContractKind::Library;
+	else
+		solAssert(false, "unknown ContractKind ");
+	return kind;
+}
+
+Literal::SubDenomination ASTJsonImporter::getSubdenomination(Json::Value const& _node)
+{
+	Literal::SubDenomination kind;
+	solAssert(_node.isMember("subdenomination"), "");
+	if (_node["subdenomination"].isNull())
+		kind = Literal::SubDenomination::None;
+	else if (strcmp(_node["subdenomination"].asCString(), "wei") == 0)
+		kind = Literal::SubDenomination::Wei;
+	else if (strcmp(_node["subdenomination"].asCString(), "szabo") == 0)
+		kind = Literal::SubDenomination::Szabo;
+	else if (strcmp(_node["subdenomination"].asCString(), "finney") == 0)
+		kind = Literal::SubDenomination::Finney;
+	else if (strcmp(_node["subdenomination"].asCString(), "ether") == 0)
+		kind = Literal::SubDenomination::Ether;
+	else if (strcmp(_node["subdenomination"].asCString(), "second") == 0)
+		kind = Literal::SubDenomination::Second;
+	else if (strcmp(_node["subdenomination"].asCString(), "hour") == 0)
+		kind = Literal::SubDenomination::Hour;
+	else if (strcmp(_node["subdenomination"].asCString(), "day") == 0)
+		kind = Literal::SubDenomination::Day;
+	else if (strcmp(_node["subdenomination"].asCString(), "week") == 0)
+		kind = Literal::SubDenomination::Week;
+	else if (strcmp(_node["subdenomination"].asCString(), "year") == 0)
+		kind = Literal::SubDenomination::Year;
+	else
+		solAssert(false, "unknown subdenomination");
+	return kind;
+}
+
 
 }
 }

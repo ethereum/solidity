@@ -30,6 +30,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -91,6 +92,7 @@ static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
+static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strJulia = "julia";
@@ -133,6 +135,7 @@ static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
+static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argJulia = "julia";
 static string const g_argLibraries = g_strLibraries;
@@ -573,6 +576,7 @@ Allowed options)",
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
+		(g_argImportAst.c_str(), "Import ASTs to be compiled, assumes input is in JSON format")
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
@@ -772,7 +776,6 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
-
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
@@ -781,10 +784,52 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+<<<<<<< 684fcd4abf0a5fa0b55f55437f9a33d87237f42e
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+=======
+
+		if (m_args.count(g_argImportAst))
+		{
+			//read file contents
+			Json::Reader reader;
+			string tmp;
+			map<string, Json::Value const*> sourceList; //input for the Importer
+			for (auto& srcPair: m_sourceCodes) // aka <string, string>
+			{
+				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+				//recreate Json::Value from file
+				if (!reader.parse(srcPair.second, *ast, false))
+					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
+				solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+				sourceList[srcPair.first] = ast;
+				tmp = srcPair.first;
+			}
+			map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+			//feed AST to compiler
+			m_compiler->reset(false);
+			bool import = m_compiler->importASTs(reconstructedSources);
+			//use the compiler's analyzer to annotate, typecheck, etc...
+			if (!import || !m_compiler->analyze())
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
+//			else
+//			{
+//				//TEST export again to json to compare to the initial json > should only fail for the absolute path
+//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast(tmp)); //once PR merged
+//				ofstream newFile;
+//				newFile.open("../../myTests/impexp.json");
+//				newFile << jsonExport;
+//				newFile.close();
+//			}
+		}
+		else
+		{
+			for (auto const& sourceCode: m_sourceCodes)
+				m_compiler->addSource(sourceCode.first, sourceCode.second);
+		}
+>>>>>>> cli for import
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -792,13 +837,17 @@ bool CommandLineInterface::processInput()
 
 		bool successful = m_compiler->compile();
 
-		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
-			);
+		if (successful && m_args.count(g_argFormal))
+			if (!m_compiler->prepareFormalAnalysis())
+				successful = false;
+		if (!m_compiler->importedSources())
+			for (auto const& error: m_compiler->errors())
+				SourceReferenceFormatter::printExceptionInformation(
+					cerr,
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					scannerFromSourceName
+				);
 
 		if (!successful)
 			return false;

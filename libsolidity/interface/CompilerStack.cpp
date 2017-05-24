@@ -265,6 +265,7 @@ bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
 		m_sources[path] = source;
 	}
 	m_stackState = ParsingSuccessful;
+	m_importedSources = true;
 	return true;
 	//	in case not all necessary contracts are in the list, //TODO???
 	//	import and parse the missing ones
@@ -813,7 +814,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = "Solidity";
+	meta["language"] = m_importedSources ? "JSON" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.
@@ -823,22 +824,25 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		referencedSources.insert(sourceUnit->annotation().path);
 
 	meta["sources"] = Json::objectValue;
-	for (auto const& s: m_sources)
+	if (!m_importedSources)
 	{
-		if (!referencedSources.count(s.first))
-			continue;
-
-		solAssert(s.second.scanner, "Scanner not available");
-		meta["sources"][s.first]["keccak256"] =
-			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
-		if (m_metadataLiteralSources)
-			meta["sources"][s.first]["content"] = s.second.scanner->source();
-		else
+		for (auto const& s: m_sources)
 		{
-			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append(
-				"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
-			);
+			if (!referencedSources.count(s.first))
+				continue;
+
+			solAssert(s.second.scanner, "Scanner not available");
+			meta["sources"][s.first]["keccak256"] =
+				"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
+			if (m_metadataLiteralSources)
+				meta["sources"][s.first]["content"] = s.second.scanner->source();
+			else
+			{
+				meta["sources"][s.first]["urls"] = Json::arrayValue;
+				meta["sources"][s.first]["urls"].append(
+					"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
+				);
+			}
 		}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
