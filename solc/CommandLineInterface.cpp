@@ -765,52 +765,49 @@ bool CommandLineInterface::processInput()
 			Json::Value* ast = new Json::Value(); //use shared-Pointer here?
 			//recreate Json::Value from file
 			if (!reader.parse(srcPair.second, *ast, false))
-				cout << "parsing failed" << std::endl;
-//				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry.")); //TODO what to throw
-			solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST, SourceUnit should be the top-level node");
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
+			solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
 			sourceList[srcPair.first] = ast;
-			sourceList["tmp"] = ast;
 		}
 		//=======compare parsed json to exported Json
-		CompilerStack c2;
-		c2.addSource("a",
-			"pragma solidity ^0.4.8;"
-			"contract C { function f(function() external payable returns (uint) x) "
-			"returns (function() external constant returns (uint)) {} }"
-		);
-		c2.parseAndAnalyze();
-		Json::Value jsonExport = ASTJsonConverter(false, c2.sourceIndices()).toJson(c2.ast("a")); //once PR merged
-		Json::Value jsonParsed = *sourceList["tmp"];
-		if (jsonExport != jsonParsed)
-		{
-			cout << "converted" << jsonExport << std::endl;
-			cout << "parsed" << jsonParsed << std::endl;
-			ofstream exportFile;
-			exportFile.open("../../myTests/exportedJson.json");
-			exportFile << jsonExport;
-			exportFile.close();
-			ofstream parsedFile;
-			parsedFile.open("../../myTests/parsedJson.json");
-			parsedFile << jsonParsed;
-			parsedFile.close();
-		}
+//		CompilerStack c2;
+//		c2.addSource("a",
+//			"pragma solidity ^0.4.8;"
+//			"contract C { function f(function() external payable returns (uint) x) "
+//			"returns (function() external constant returns (uint)) {} }"
+//		);
+//		c2.parseAndAnalyze();
+//		Json::Value jsonExport = ASTJsonConverter(false, c2.sourceIndices()).toJson(c2.ast("a")); //once PR merged
+//		Json::Value jsonParsed = *sourceList["tmp"];
+//		if (jsonExport != jsonParsed)
+//		{
+//			cout << "converted" << jsonExport << std::endl;
+//			cout << "parsed" << jsonParsed << std::endl;
+//			ofstream exportFile;
+//			exportFile.open("../../myTests/exportedJson.json");
+//			exportFile << jsonExport;
+//			exportFile.close();
+//			ofstream parsedFile;
+//			parsedFile.open("../../myTests/parsedJson.json");
+//			parsedFile << jsonParsed;
+//			parsedFile.close();
+//		}
 		//===========
 //		solAssert((*sourceList["test"])["nodeType"] == "SourceUnit", "invalid AST");
 		//feed Json to Importer to create AST
 		map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
 		//feed AST to compiler
 		//	create  compiler and reset it
-//		m_compiler = std::make_unique<CompilerStack>(fileReader); //not working
 		m_compiler.reset(new CompilerStack(fileReader));
 		m_compiler->reset(false);
 		bool import = m_compiler->importASTs(reconstructedSources);
 		//use the compiler's analyzer to annotate, typecheck, etc...
 		if (import)
-		{
-			bool analysis = m_compiler->analyze();
-			if (analysis)
+			if (m_compiler->analyze())
+			{
+				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast("a")); //once PR merged
 				return true;
-		}
+			}
 		cout << "import or analysis failed" << std::endl;
 		return false;
 	}

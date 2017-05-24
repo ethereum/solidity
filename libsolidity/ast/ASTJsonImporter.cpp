@@ -93,13 +93,12 @@ ASTPointer<T> ASTJsonImporter::nullOrCast(Json::Value _json)
 Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 {
         Token::Value ret;
-        Scanner scanner(CharStream(_node.asCString()), "");
-        ret = scanner.next();
-        //check for EOS
-        if (scanner.currentToken() == Token::EOS)
-                return std::move(ret);
+	Scanner scanner(CharStream(_node.asCString()));
+	ret = scanner.currentToken();
+	if (scanner.next() == Token::EOS)
+		return std::move(ret);
         else
-            BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry.")); //TODO test this exception
+	    BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry."));
 }
 
 //replace name with nodeType for new version
@@ -895,7 +894,7 @@ ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //
 				"todo" :
 				_node["value"].asCString()
 	);
-	Literal::SubDenomination sub = getSubdenomination(_node); //todo test how tokenToString() writes Ether or ether
+	Literal::SubDenomination sub = getSubdenomination(_node);
 	ASTPointer<Literal> tmp = make_shared<Literal>(
 		location,
 		token,
@@ -904,7 +903,6 @@ ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //
 	);
 	tmp->setID(_node["id"].asInt());
 	return tmp;
-//	return make_shared<Identifier>(location, make_shared<ASTString>("TODO"));
 }
 
 Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
