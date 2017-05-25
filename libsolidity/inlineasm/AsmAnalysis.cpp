@@ -48,12 +48,14 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
+	solAssert(!m_julia, "");
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
+	solAssert(!m_julia, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -135,6 +137,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
+	solAssert(!m_julia, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 	{
@@ -154,11 +157,11 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
+	solAssert(!m_julia, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
-
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
@@ -454,8 +457,8 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-//	if (!m_julia)
-//		return;
+	if (!m_julia)
+		return;
 
 	if (!(set<string>{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"}).count(type))
 		m_errors.push_back(make_shared<Error>(

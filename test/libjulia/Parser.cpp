@@ -54,7 +54,7 @@ bool parse(string const& _source, ErrorList& errors)
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(analysisInfo, errors)).analyze(*parserResult);
+			return (assembly::AsmAnalyzer(analysisInfo, errors, true)).analyze(*parserResult);
 		}
 	}
 	catch (FatalError const&)

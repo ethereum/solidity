@@ -53,7 +53,7 @@ bool InlineAssemblyStack::parse(
 
 	*m_parserResult = std::move(*result);
 	AsmAnalysisInfo analysisInfo;
-	return (AsmAnalyzer(analysisInfo, m_errors, _resolver)).analyze(*m_parserResult);
+	return (AsmAnalyzer(analysisInfo, m_errors, false, _resolver)).analyze(*m_parserResult);
 }
 
 string InlineAssemblyStack::toString()
@@ -84,7 +84,7 @@ bool InlineAssemblyStack::parseAndAssemble(
 	solAssert(parserResult, "");
 
 	AsmAnalysisInfo analysisInfo;
-	AsmAnalyzer analyzer(analysisInfo, errors, _identifierAccess.resolve);
+	AsmAnalyzer analyzer(analysisInfo, errors, false, _identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "");
 	CodeGenerator(errors).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
 
