@@ -52,7 +52,10 @@ bool parse(string const& _source, ErrorList& errors)
 		auto scanner = make_shared<Scanner>(CharStream(_source));
 		auto parserResult = assembly::Parser(errors, true).parse(scanner);
 		if (parserResult)
-			return true;
+		{
+			assembly::AsmAnalysisInfo analysisInfo;
+			return (assembly::AsmAnalyzer(analysisInfo, errors)).analyze(*parserResult);
+		}
 	}
 	catch (FatalError const&)
 	{
@@ -131,14 +134,9 @@ BOOST_AUTO_TEST_CASE(assignment)
 	BOOST_CHECK(successParse("{ let x:u256 := 2:u256 let y:u256 := x }"));
 }
 
-BOOST_AUTO_TEST_CASE(function_call)
-{
-	BOOST_CHECK(successParse("{ fun() fun(fun()) }"));
-}
-
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
-	BOOST_CHECK(successParse("{ let y:u256 := 2:u256 let x:u256 := add(7:u256, mul(6:u256, y)) }"));
+	BOOST_CHECK(successParse("{ function add(a:u256, b:u256) -> c:u256 {} let y:u256 := 2:u256 let x:u256 := add(7:u256, add(6:u256, y)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
@@ -158,7 +156,7 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	BOOST_CHECK(successParse("{ function f(a:u256) -> b:u256 {} function g(a:u256, b:u256, c:u256) {} function x() { g(1:u256, 2:u256, f(mul(2:u256, 3:u256))) x() } }"));
+	BOOST_CHECK(successParse("{ function f(a:u256) -> b:u256 {} function g(a:u256, b:u256, c:u256) {} function x() { g(1:u256, 2:u256, f(3:u256)) x() } }"));
 }
 
 BOOST_AUTO_TEST_CASE(tuple_assignment)
