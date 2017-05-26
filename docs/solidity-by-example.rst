@@ -316,7 +316,7 @@ activate themselves.
             // 3. interacting with other contracts
             // If these phases are mixed up, the other contract could call
             // back into the current contract and modify the state or cause
-            // effects (ether payout) to be perfromed multiple times.
+            // effects (ether payout) to be performed multiple times.
             // If functions called internally include interaction with external
             // contracts, they also have to be considered interaction with
             // external contracts.
