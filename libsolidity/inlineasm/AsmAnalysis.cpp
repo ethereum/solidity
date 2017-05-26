@@ -38,6 +38,12 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
+namespace {
+
+set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
+
+}
+
 bool AsmAnalyzer::analyze(Block const& _block)
 {
 	if (!(ScopeFiller(m_info.scopes, m_errors))(_block))
@@ -460,7 +466,7 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 	if (!m_julia)
 		return;
 
-	if (!(set<string>{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"}).count(type))
+	if (!builtinTypes.count(type))
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::TypeError,
 			"\"" + type + "\" is not a valid type (user defined types are not yet supported).",
