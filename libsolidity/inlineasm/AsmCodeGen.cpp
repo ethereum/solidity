@@ -266,6 +266,10 @@ public:
 		CodeTransform(m_state, m_assembly, _block, m_identifierAccess, m_initialStackHeight);
 		checkStackHeight(&_block);
 	}
+	void operator()(assembly::Switch const&)
+	{
+		solAssert(false, "Switch not removed during desugaring phase.");
+	}
 	void operator()(assembly::FunctionDefinition const&)
 	{
 		solAssert(false, "Function definition not removed during desugaring phase.");

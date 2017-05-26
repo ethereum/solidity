@@ -43,10 +43,11 @@ struct Identifier;
 struct StackAssignment;
 struct FunctionDefinition;
 struct FunctionCall;
+struct Switch;
 
 struct Scope;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
 
 struct AsmAnalysisInfo
 {

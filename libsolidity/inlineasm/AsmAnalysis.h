@@ -47,6 +47,7 @@ struct Identifier;
 struct StackAssignment;
 struct FunctionDefinition;
 struct FunctionCall;
+struct Switch;
 
 struct Scope;
 
@@ -78,6 +79,7 @@ public:
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const& _functionCall);
+	bool operator()(assembly::Switch const& _switch);
 	bool operator()(assembly::Block const& _block);
 
 private:

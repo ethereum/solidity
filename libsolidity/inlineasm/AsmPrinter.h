@@ -40,6 +40,7 @@ struct Assignment;
 struct VariableDeclaration;
 struct FunctionDefinition;
 struct FunctionCall;
+struct Switch;
 struct Block;
 
 class AsmPrinter: public boost::static_visitor<std::string>
@@ -57,6 +58,7 @@ public:
 	std::string operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	std::string operator()(assembly::FunctionDefinition const& _functionDefinition);
 	std::string operator()(assembly::FunctionCall const& _functionCall);
+	std::string operator()(assembly::Switch const& _switch);
 	std::string operator()(assembly::Block const& _block);
 
 private:
