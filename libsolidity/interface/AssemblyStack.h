@@ -57,11 +57,13 @@ public:
 	Scanner const& scanner() const;
 
 	/// Runs parsing and analysis steps, returns false if input cannot be assembled.
+	/// Multiple calls overwrite the previous state.
 	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	eth::LinkerObject assemble(Machine _machine);
 
+	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
