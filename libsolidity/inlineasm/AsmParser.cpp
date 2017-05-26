@@ -102,9 +102,6 @@ assembly::Statement Parser::parseStatement()
 		expectToken(Token::Identifier);
 		return assignment;
 	}
-	case Token::Return: // opcode
-	case Token::Byte: // opcode
-	case Token::Address: // opcode
 	default:
 		break;
 	}
@@ -287,7 +284,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		fatalParserError(
 			m_julia ?
 			"Literal or identifier expected." :
-			"Expected elementary inline assembly operation."
+			"Literal, identifier or instruction expected."
 		);
 	}
 	return ret;
@@ -299,7 +296,7 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 	expectToken(Token::Let);
 	while (true)
 	{
-		varDecl.variables.push_back(parseTypedName());
+		varDecl.variables.emplace_back(parseTypedName());
 		if (m_scanner->currentToken() == Token::Comma)
 			expectToken(Token::Comma);
 		else
