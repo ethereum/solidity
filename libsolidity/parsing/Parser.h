@@ -155,6 +155,7 @@ private:
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
 
+	std::string currentTokenName();
 	Token::Value expectAssignmentOperator();
 	ASTPointer<ASTString> expectIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();

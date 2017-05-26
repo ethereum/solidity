@@ -1437,26 +1437,27 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
 }
 
+string Parser::currentTokenName()
+{
+	Token::Value token = m_scanner->currentToken();
+	if (Token::isElementaryTypeName(token)) //for the sake of accuracy in reporting
+	{
+		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+		return elemTypeName.toString();
+	}
+	else
+		return Token::name(token);
+}
+
 Token::Value Parser::expectAssignmentOperator()
 {
 	Token::Value op = m_scanner->currentToken();
 	if (!Token::isAssignmentOp(op))
-	{
-		string tokenName;
-		if (Token::isElementaryTypeName(op)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			tokenName = elemTypeName.toString();
-		}
-		else
-			tokenName = Token::name(m_scanner->currentToken());
-
 		fatalParserError(
 			string("Expected assignment operator,  got '") +
-			tokenName +
+			currentTokenName() +
 			string("'")
 		);
-	}
 	m_scanner->next();
 	return op;
 }
@@ -1465,22 +1466,11 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
 	Token::Value id = m_scanner->currentToken();
 	if (id != Token::Identifier)
-	{
-		string tokenName;
-		if (Token::isElementaryTypeName(id)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			tokenName = elemTypeName.toString();
-		}
-		else
-			tokenName = Token::name(id);
-
 		fatalParserError(
 			string("Expected identifier, got '") +
-			tokenName +
+			currentTokenName() +
 			string("'")
 		);
-	}
 	return getLiteralAndAdvance();
 }
 
