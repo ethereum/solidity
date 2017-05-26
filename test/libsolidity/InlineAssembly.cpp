@@ -252,12 +252,12 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
 {
-	CHECK_PARSE_ERROR("{ switch 42 default {} case 1 {} }", ParserError, "Expected elementary inline assembly operation.");
+	CHECK_PARSE_ERROR("{ switch 42 default {} case 1 {} }", ParserError, "Case not allowed after default case.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_duplicate_default_case)
 {
-	CHECK_PARSE_ERROR("{ switch 42 default {} default {} }", ParserError, "Expected elementary inline assembly operation.");
+	CHECK_PARSE_ERROR("{ switch 42 default {} default {} }", ParserError, "Only one default case allowed.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_invalid_case)

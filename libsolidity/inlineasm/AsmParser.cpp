@@ -78,6 +78,10 @@ assembly::Statement Parser::parseStatement()
 			_switch.cases.emplace_back(parseCase());
 		if (m_scanner->currentToken() == Token::Default)
 			_switch.cases.emplace_back(parseCase());
+		if (m_scanner->currentToken() == Token::Default)
+			fatalParserError("Only one default case allowed.");
+		else if (m_scanner->currentToken() == Token::Case)
+			fatalParserError("Case not allowed after default case.");
 		if (_switch.cases.size() == 0)
 			fatalParserError("Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
