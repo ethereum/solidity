@@ -566,9 +566,9 @@ Safe Remote Purchase
             _;
         }
 
-        event aborted();
-        event purchaseConfirmed();
-        event itemReceived();
+        event Aborted();
+        event PurchaseConfirmed();
+        event ItemReceived();
 
         /// Abort the purchase and reclaim the ether.
         /// Can only be called by the seller before
@@ -577,7 +577,7 @@ Safe Remote Purchase
             onlySeller
             inState(State.Created)
         {
-            aborted();
+            Aborted();
             state = State.Inactive;
             seller.transfer(this.balance);
         }
@@ -591,7 +591,7 @@ Safe Remote Purchase
             condition(msg.value == (2 * value))
             payable
         {
-            purchaseConfirmed();
+            PurchaseConfirmed();
             buyer = msg.sender;
             state = State.Locked;
         }
@@ -602,7 +602,7 @@ Safe Remote Purchase
             onlyBuyer
             inState(State.Locked)
         {
-            itemReceived();
+            ItemReceived();
             // It is important to change the state first because
             // otherwise, the contracts called using `send` below
             // can call in again here.
