@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
-	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Expected elementary inline assembly operation.");
+	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
 	CHECK_PARSE_ERROR("{ 1 2 switch mul default {} }", ParserError, "Instructions are not supported as expressions for switch.");
 }
 
