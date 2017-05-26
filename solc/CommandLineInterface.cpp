@@ -35,6 +35,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/AssemblyStack.h>
 #include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Instruction.h>
@@ -80,11 +81,15 @@ static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCloneBinary = "clone-bin";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strContracts = "contracts";
+static string const g_strEVM = "evm";
+static string const g_strEVM15 = "evm15";
+static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
+static string const g_strJulia = "julia";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMetadata = "metadata";
@@ -121,8 +126,10 @@ static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
+static string const g_argJulia = "julia";
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
+static string const g_argMachine = "machine";
 static string const g_argMetadata = g_strMetadata;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -152,6 +159,14 @@ static set<string> const g_combinedJsonArgs{
 	g_strOpcodes,
 	g_strSrcMap,
 	g_strSrcMapRuntime
+};
+
+/// Possible arguments to for --machine
+static set<string> const g_machineArgs
+{
+	g_strEVM,
+	g_strEVM15,
+	g_streWasm
 };
 
 static void version()
@@ -539,7 +554,16 @@ Allowed options)",
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options and assumes input is assembly."
+			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
+		)
+		(
+			g_argJulia.c_str(),
+			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+		)
+		(
+			g_argMachine.c_str(),
+			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
+			"Target machine in assembly or JULIA mode."
 		)
 		(
 			g_argLink.c_str(),
@@ -689,11 +713,30 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
-	if (m_args.count(g_argAssemble))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
-		return assemble();
+		using Input = AssemblyStack::Language;
+		using Machine = AssemblyStack::Machine;
+		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : Input::Assembly;
+		Machine targetMachine = Machine::EVM;
+		if (m_args.count(g_argMachine))
+		{
+			string machine = m_args[g_argMachine].as<string>();
+			if (machine == g_strEVM)
+				targetMachine = Machine::EVM;
+			else if (machine == g_strEVM15)
+				targetMachine = Machine::EVM15;
+			else if (machine == g_streWasm)
+				targetMachine = Machine::eWasm;
+			else
+			{
+				cerr << "Invalid option for --machine: " << machine << endl;
+				return false;
+			}
+		}
+		return assemble(inputLanguage, targetMachine);
 	}
 	if (m_args.count(g_argLink))
 	{
@@ -916,10 +959,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_args.count(g_argStandardJSON))
+	if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
+		// Already done in "processInput" phase.
 		return true;
-	else if (m_onlyAssemble)
-		outputAssembly();
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
@@ -980,21 +1022,20 @@ void CommandLineInterface::writeLinkedFiles()
 			writeFile(src.first, src.second);
 }
 
-bool CommandLineInterface::assemble()
+bool CommandLineInterface::assemble(
+	AssemblyStack::Language _language,
+	AssemblyStack::Machine _targetMachine
+)
 {
 	bool successful = true;
-	map<string, shared_ptr<Scanner>> scanners;
+	map<string, AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
+		auto& stack = assemblyStacks[src.first] = AssemblyStack(_language);
 		try
 		{
-			auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
-			scanners[src.first] = scanner;
-			if (!m_assemblyStacks[src.first].parse(scanner))
+			if (!stack.parseAndAnalyze(src.first, src.second))
 				successful = false;
-			else
-				//@TODO we should not just throw away the result here
-				m_assemblyStacks[src.first].assemble();
 		}
 		catch (Exception const& _exception)
 		{
@@ -1007,31 +1048,49 @@ bool CommandLineInterface::assemble()
 			return false;
 		}
 	}
-	for (auto const& stack: m_assemblyStacks)
+	for (auto const& sourceAndStack: assemblyStacks)
 	{
-		for (auto const& error: stack.second.errors())
+		auto const& stack = sourceAndStack.second;
+		for (auto const& error: stack.errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
 				*error,
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
+				[&](string const&) -> Scanner const& { return stack.scanner(); }
 			);
-		if (!Error::containsOnlyWarnings(stack.second.errors()))
+		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;
 	}
 
-	return successful;
-}
+	if (!successful)
+		return false;
 
-void CommandLineInterface::outputAssembly()
-{
 	for (auto const& src: m_sourceCodes)
 	{
-		cout << endl << "======= " << src.first << " =======" << endl;
-		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
-		cout << assembly.assemble().toHex() << endl;
-		assembly.stream(cout, "", m_sourceCodes);
+		string machine =
+			_targetMachine == AssemblyStack::Machine::EVM ? "EVM" :
+			_targetMachine == AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
+			"eWasm";
+		cout << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+		AssemblyStack& stack = assemblyStacks[src.first];
+		try
+		{
+			cout << stack.assemble(_targetMachine).toHex() << endl;
+		}
+		catch (Exception const& _exception)
+		{
+			cerr << "Exception while assembling: " << boost::diagnostic_information(_exception) << endl;
+			return false;
+		}
+		catch (...)
+		{
+			cerr << "Unknown exception while assembling." << endl;
+			return false;
+		}
+		cout << stack.print() << endl;
 	}
+
+	return true;
 }
 
 void CommandLineInterface::outputCompilationResults()

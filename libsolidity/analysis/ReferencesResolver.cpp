@@ -166,8 +166,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// The only purpose of this step is to fill the inline assembly annotation with
 	// external references.
 	ErrorList errorsIgnored;
-	assembly::ExternalIdentifierAccess::Resolver resolver =
-	[&](assembly::Identifier const& _identifier, assembly::IdentifierContext) {
+	julia::ExternalIdentifierAccess::Resolver resolver =
+	[&](assembly::Identifier const& _identifier, julia::IdentifierContext) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
 		bool isSlot = boost::algorithm::ends_with(_identifier.name, "_slot");
 		bool isOffset = boost::algorithm::ends_with(_identifier.name, "_offset");

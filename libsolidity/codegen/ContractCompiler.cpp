@@ -522,21 +522,21 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	ErrorList errors;
 	assembly::CodeGenerator codeGen(errors);
 	unsigned startStackHeight = m_context.stackHeight();
-	assembly::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext)
+	julia::ExternalIdentifierAccess identifierAccess;
+	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, julia::IdentifierContext)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return size_t(-1);
 		return ref->second.valueSize;
 	};
-	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, assembly::IdentifierContext _context, julia::AbstractAssembly& _assembly)
+	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, julia::IdentifierContext _context, julia::AbstractAssembly& _assembly)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
 		Declaration const* decl = ref->second.declaration;
 		solAssert(!!decl, "");
-		if (_context == assembly::IdentifierContext::RValue)
+		if (_context == julia::IdentifierContext::RValue)
 		{
 			int const depositBefore = _assembly.stackHeight();
 			solAssert(!!decl->type(), "Type of declaration required but not yet determined.");

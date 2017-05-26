@@ -631,9 +631,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
-	assembly::ExternalIdentifierAccess::Resolver identifierAccess = [&](
+	julia::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		assembly::Identifier const& _identifier,
-		assembly::IdentifierContext _context
+		julia::IdentifierContext _context
 	)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
@@ -650,7 +650,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
 				}
-				else if (_context != assembly::IdentifierContext::RValue)
+				else if (_context != julia::IdentifierContext::RValue)
 				{
 					typeError(_identifier.location, "Storage variables cannot be assigned to.");
 					return size_t(-1);
@@ -677,13 +677,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				return size_t(-1);
 			}
 		}
-		else if (_context == assembly::IdentifierContext::LValue)
+		else if (_context == julia::IdentifierContext::LValue)
 		{
 			typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
 			return size_t(-1);
 		}
 
-		if (_context == assembly::IdentifierContext::RValue)
+		if (_context == julia::IdentifierContext::RValue)
 		{
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))

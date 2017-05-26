@@ -41,7 +41,7 @@ using namespace dev::solidity::assembly;
 AsmAnalyzer::AsmAnalyzer(
 	AsmAnalysisInfo& _analysisInfo,
 	ErrorList& _errors,
-	ExternalIdentifierAccess::Resolver const& _resolver
+	julia::ExternalIdentifierAccess::Resolver const& _resolver
 ):
 	m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors)
 {
@@ -123,7 +123,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	{
 		size_t stackSize(-1);
 		if (m_resolver)
-			stackSize = m_resolver(_identifier, IdentifierContext::RValue);
+			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue);
 		if (stackSize == size_t(-1))
 		{
 			// Only add an error message if the callback did not do it.
@@ -393,7 +393,7 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		variableSize = 1;
 	}
 	else if (m_resolver)
-		variableSize = m_resolver(_variable, IdentifierContext::LValue);
+		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue);
 	if (variableSize == size_t(-1))
 	{
 		// Only add message if the callback did not.

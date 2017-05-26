@@ -48,14 +48,14 @@ public:
 	eth::Assembly assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
-		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
+		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess()
 	);
 	/// Performs code generation and appends generated to to _assembly.
 	void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
-		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
+		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess()
 	);
 
 private:

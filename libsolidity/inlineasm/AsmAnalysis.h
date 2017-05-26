@@ -64,7 +64,7 @@ public:
 	AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorList& _errors,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
+		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
 	);
 
 	bool analyze(assembly::Block const& _block);
@@ -94,7 +94,7 @@ private:
 	/// we enter the block.
 	int m_virtualVariablesInNextBlock = 0;
 	int m_stackHeight = 0;
-	ExternalIdentifierAccess::Resolver const& m_resolver;
+	julia::ExternalIdentifierAccess::Resolver const& m_resolver;
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
 	ErrorList& m_errors;
