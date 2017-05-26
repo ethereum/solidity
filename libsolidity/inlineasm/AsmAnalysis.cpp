@@ -463,7 +463,7 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 	if (!(set<string>{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"}).count(type))
 		m_errors.push_back(make_shared<Error>(
 			Error::Type::TypeError,
-			"User defined types (\"" + type + "\") are not supported yet.",
+			"\"" + type + "\" is not a valid type (user defined types are not yet supported).",
 			_location
 		));
 }
