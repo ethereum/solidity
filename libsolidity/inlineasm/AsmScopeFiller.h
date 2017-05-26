@@ -49,6 +49,7 @@ struct FunctionCall;
 struct Switch;
 
 struct Scope;
+struct AsmAnalysisInfo;
 
 /**
  * Fills scopes with identifiers and checks for name clashes.
@@ -57,8 +58,7 @@ struct Scope;
 class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
-	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	ScopeFiller(Scopes& _scopes, ErrorList& _errors);
+	ScopeFiller(AsmAnalysisInfo& _info, ErrorList& _errors);
 
 	bool operator()(assembly::Instruction const&) { return true; }
 	bool operator()(assembly::Literal const&) { return true; }
@@ -83,7 +83,7 @@ private:
 	Scope& scope(assembly::Block const* _block);
 
 	Scope* m_currentScope = nullptr;
-	Scopes& m_scopes;
+	AsmAnalysisInfo& m_info;
 	ErrorList& m_errors;
 };
 

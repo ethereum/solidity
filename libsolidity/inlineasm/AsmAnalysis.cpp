@@ -46,7 +46,7 @@ set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
-	if (!(ScopeFiller(m_info.scopes, m_errors))(_block))
+	if (!(ScopeFiller(m_info, m_errors))(_block))
 		return false;
 
 	return (*this)(_block);
@@ -206,16 +206,17 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 
 bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
-	Scope& bodyScope = scope(&_funDef.body);
+	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
+	solAssert(virtualBlock, "");
+	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.arguments + _funDef.returns)
 	{
 		expectValidType(var.type, var.location);
-		boost::get<Scope::Variable>(bodyScope.identifiers.at(var.name)).active = true;
+		boost::get<Scope::Variable>(varScope.identifiers.at(var.name)).active = true;
 	}
 
 	int const stackHeight = m_stackHeight;
 	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
-	m_virtualVariablesInNextBlock = m_stackHeight;
 
 	bool success = (*this)(_funDef.body);
 
@@ -337,10 +338,10 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;
+	auto previousScope = m_currentScope;
 	m_currentScope = &scope(&_block);
 
-	int const initialStackHeight = m_stackHeight - m_virtualVariablesInNextBlock;
-	m_virtualVariablesInNextBlock = 0;
+	int const initialStackHeight = m_stackHeight;
 
 	for (auto const& s: _block.statements)
 		if (!boost::apply_visitor(*this, s))
@@ -366,8 +367,8 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		success = false;
 	}
 
-	m_currentScope = m_currentScope->superScope;
 	m_info.stackHeightInfo[&_block] = m_stackHeight;
+	m_currentScope = previousScope;
 	return success;
 }
 

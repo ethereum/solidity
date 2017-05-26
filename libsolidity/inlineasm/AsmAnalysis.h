@@ -91,10 +91,6 @@ private:
 	Scope& scope(assembly::Block const* _block);
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 
-	/// This is used when we enter the body of a function definition. There, the parameters
-	/// and return parameters appear as variables which are already on the stack before
-	/// we enter the block.
-	int m_virtualVariablesInNextBlock = 0;
 	int m_stackHeight = 0;
 	julia::ExternalIdentifierAccess::Resolver const& m_resolver;
 	Scope* m_currentScope = nullptr;
