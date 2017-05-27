@@ -103,9 +103,20 @@ public:
 	void operator()(assembly::FunctionDefinition const& _funDef)
 	{
 		m_assembly += "(func $" + _funDef.name + " ";
-		/// FIXME implement parameters
+		for (auto const& argument: _funDef.arguments)
+			m_assembly += "(param $" + argument.name + " " + convertType(argument.type) + ")";
+		solUnimplementedAssert(_funDef.returns.size() <= 1, "Multiple return values not supported yet.");
+		string returnName;
+		for (auto const& returnArgument: _funDef.returns)
+		{
+			returnName = returnArgument.name;
+			m_assembly += "(result " + convertType(returnArgument.type) + ")";
+			m_assembly += "(local $" + returnArgument.name + " " + convertType(returnArgument.type) + ")";
+		}
 		/// Scope rules: return parameters must be marked appropriately
 		visitStatements(_funDef.body);
+		if (!returnName.empty())
+			m_assembly += "(return $" + returnName + ")";
 		m_assembly += ")";
 	}
 	void operator()(assembly::FunctionCall const& _funCall)
