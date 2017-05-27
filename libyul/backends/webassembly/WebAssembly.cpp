@@ -77,6 +77,8 @@ public:
 	{
 		if (_literal.kind == assembly::LiteralKind::Number)
 			m_assembly += "(" + convertType(_literal.type) + ".const " + _literal.value + ")";
+		else if (_literal.kind == assembly::LiteralKind::Boolean)
+			m_assembly += "(" + convertType(_literal.type) + ".const " + string((_literal.value == "true") ? "1" : "0") + ")";
 		else
 			solUnimplementedAssert(false, "Non-number literals not supported.");
 	}
@@ -139,7 +141,7 @@ private:
 	string convertType(assembly::Type type)
 	{
 		solAssert(!type.empty(), "Only Julia input is supported.");
-		set<string> const supportedTypes{"u8", "s8", "u32", "s32", "u64", "s64"};
+		set<string> const supportedTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64"};
 		solAssert(supportedTypes.count(type), "Type (" + type + ") not supported yet.");
 		return "i64";
 	}
