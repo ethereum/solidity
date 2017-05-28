@@ -57,6 +57,20 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	return m_analysisSuccessful;
 }
 
+bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scanner)
+{
+	m_errors.clear();
+	m_analysisSuccessful = false;
+	if (_scanner)
+		m_scanner = make_shared<Scanner>(*_scanner);
+	m_parserResult = make_shared<assembly::Block>(_block);
+
+	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter);
+	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
+	return m_analysisSuccessful;
+}
+
 eth::LinkerObject AssemblyStack::assemble(Machine _machine)
 {
 	solAssert(m_analysisSuccessful, "");
