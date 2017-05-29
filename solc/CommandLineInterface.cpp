@@ -768,18 +768,34 @@ bool CommandLineInterface::processInput()
 		{
 			//read file contents
 			Json::Reader reader;
-			string tmp;
 			map<string, Json::Value const*> sourceList; //input for the Importer
+			map<string,string> actualSourceCodes;
 			for (auto& srcPair: m_sourceCodes) // aka <string, string>
 			{
 				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+//				Json::Value* subast = new Json::Value(); //use shared-Pointer here?
 				//recreate Json::Value from file
 				if (!reader.parse(srcPair.second, *ast, false))
 					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
-				solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-				sourceList[srcPair.first] = ast;
-				tmp = srcPair.first;
+				//Json can be either in the output format of the combined-json ast CL, or the AST itself without any predefined
+				if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
+				{
+					for (auto& src: (*ast)["sourceList"]) //check here for ast-correctness as well
+					{
+						solAssert((*ast)["sources"][src.asCString()]["AST"]["nodeType"] == "SourceUnit", "the top-level node of the AST needs to be a 'SourceUnit'");
+						sourceList[src.asCString()] = &((*ast)["sources"][src.asCString()]["AST"]);
+						actualSourceCodes[src.asCString()] = "No source code available because src was imported from Json";
+					}
+				}
+				else
+				{
+					solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+					sourceList[srcPair.first] = ast;
+					//TODO now the xxx.json is the absolute path
+				}
 			}
+			if (actualSourceCodes.size() > 0)
+				m_sourceCodes = actualSourceCodes;
 			map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
 			//feed AST to compiler
 			m_compiler->reset(false);
@@ -790,7 +806,7 @@ bool CommandLineInterface::processInput()
 //			else
 //			{
 //				//TEST export again to json to compare to the initial json > should only fail for the absolute path
-//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast(tmp)); //once PR merged
+//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast("tmp"));
 //				ofstream newFile;
 //				newFile.open("../../myTests/impexp.json");
 //				newFile << jsonExport;

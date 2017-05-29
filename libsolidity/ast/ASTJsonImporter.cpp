@@ -101,7 +101,6 @@ Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 	    BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry."));
 }
 
-//replace name with nodeType for new version
 ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _json)
 {
 	if (_json["nodeType"] == "SourceUnit")
@@ -197,7 +196,6 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	else BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
 }
 
-
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node)
 {
 	SourceLocation const& location = createSourceLocation(_node);
@@ -248,7 +246,10 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::Value const& _node){
 	//create args for the constructor of the node
 	SourceLocation const& location = createSourceLocation(_node);
-	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
+	ASTPointer<ASTString> documentation = _node["documentation"].isNull() ?
+				nullptr :
+				make_shared<ASTString>(_node["documentation"].asCString()
+	);
 	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asCString());
 	std::vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	for (auto& base : _node["baseContracts"])
@@ -768,9 +769,6 @@ ASTPointer<UnaryOperation> ASTJsonImporter::createUnaryOperation(Json::Value con
 {
 	SourceLocation location = createSourceLocation(_node);
         Token::Value operation = scanSingleToken(_node["operator"]);
-//	Token::Value operation = Scanner(CharStream(_node["operator"].asCString()), "tmp").next(); //TODO make this oneliner
-//	Scanner scanner(CharStream(_node["operator"].asCString()), "tmp");
-//	operation = scanner.next();
 	ASTPointer<Expression> subExpression = castPointer<Expression>(convertJsonToASTNode(_node["subExpression"]));
 	bool prefix = _node["prefix"].asBool();
 	ASTPointer<UnaryOperation> tmp = make_shared<UnaryOperation>(
@@ -886,12 +884,10 @@ ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNa
 
 }
 
-ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //TODO/HELP
+ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //TODO
 {
 	SourceLocation location = createSourceLocation(_node);
-	Token::Value token;
-	if (!_node["token"].isNull())
-		token = scanSingleToken(_node["token"]);
+	Token::Value token = getLiteralTokenKind(_node);
 	ASTPointer<ASTString> value = make_shared<ASTString>(
 				_node["value"].isNull() ?
 				"todo" :
@@ -906,6 +902,22 @@ ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //
 	);
 	tmp->setID(_node["id"].asInt());
 	return tmp;
+}
+
+Token::Value ASTJsonImporter::getLiteralTokenKind(Json::Value const& _node)
+{
+	solAssert(_node.isMember("kind") && !_node["kind"].isNull(), "");
+	Token::Value tok;
+	if (strcmp(_node["kind"].asCString(), "number") == 0)
+		tok = Token::Number;
+	else if (strcmp(_node["kind"].asCString(), "string") == 0)
+		tok = Token::StringLiteral;
+	else if (strcmp(_node["kind"].asCString(), "bool") == 0)
+		 tok = (strcmp(_node["value"].asCString(), "true") == 0) ? Token::TrueLiteral : Token::FalseLiteral;
+	else
+		solAssert(false, "unknown kind of literalString");
+	return tok;
+
 }
 
 Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
@@ -923,9 +935,7 @@ Declaration::Visibility ASTJsonImporter::getVisibility(Json::Value const& _node)
 	else if (strcmp(_node["visibility"].asCString(), "external") == 0)
 		vis = Declaration::Visibility::External;
 	else
-	{
 		solAssert(false, "unknown visibility declaration");
-	}
 	return vis;
 }
 
