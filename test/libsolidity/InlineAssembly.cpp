@@ -547,7 +547,17 @@ BOOST_AUTO_TEST_CASE(returndatasize)
 	BOOST_CHECK(successAssemble("{ let r := returndatasize }"));
 }
 
+BOOST_AUTO_TEST_CASE(returndatasize_functional)
+{
+	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
+}
+
 BOOST_AUTO_TEST_CASE(returndatacopy)
+{
+	BOOST_CHECK(successAssemble("{ 64 32 0 returndatacopy }"));
+}
+
+BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
