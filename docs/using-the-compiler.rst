@@ -119,7 +119,7 @@ Input Description
         //
         // The available output types are as follows:
         //   abi - ABI
-        //   ast - AST of all source files (not supported atm)
+        //   ast - AST of all source files
         //   legacyAST - legacy AST of all source files
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
