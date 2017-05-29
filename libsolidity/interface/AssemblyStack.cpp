@@ -91,7 +91,9 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		eth::Assembly assembly;
 		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
-		/// TODO: fill out text representation
+		ostringstream tmp;
+		assembly.stream(tmp);
+		object.assembly = tmp.str();
 		return object;
 	}
 	case Machine::EVM15:
