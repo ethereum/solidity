@@ -220,7 +220,7 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"accountStartNonce": "0x",
 			"maximumExtraDataSize": "0x1000000",
 			"blockReward": "0x",
-			"allowFutureBlocks": "1",
+			"allowFutureBlocks": true,
 			"homsteadForkBlock": "0x00",
 			"EIP150ForkBlock": "0x00",
 			"EIP158ForkBlock": "0x00"
