@@ -42,6 +42,8 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -161,6 +163,11 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
+//		else
+//		{
+//			ASTJsonConverter converter(false, sourceIndices());
+//			cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
+//		}
 
 	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
@@ -172,6 +179,8 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
+
+
 
 	map<string, SourceUnit const*> sourceUnitsByName;
 	for (auto& source: m_sources)
@@ -187,7 +196,14 @@ bool CompilerStack::analyze()
 				m_globalContext->setCurrentContract(*contract);
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-				if (!resolver.resolveNamesAndTypes(*contract)) return false;
+				if (!resolver.resolveNamesAndTypes(*contract))
+				{
+					cout << "hier" << std::endl;
+//					ASTJsonConverter converter(false, sourceIndices());
+//					cout << "Json before registerDecs" << std::endl;
+//					cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
+					return false;
+				}
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
@@ -252,23 +268,35 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
+<<<<<<< 9fc85cf9442e2a23287b17470b9dfc43d1d819fe
 bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
+=======
+bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
+{
+	setSource(_sourceCode);
+	return parseAndAnalyze();
+}
+
+bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
+>>>>>>> fixed LiteralTokenBug, import multiple sources
 {
 	if (m_stackState != Empty)
 		return false;
-	for (auto& src : _sources)
+	m_sourceJsons = _sources;
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_sourceJsons).jsonToSourceUnit();
+	for (auto& src : reconstructedSources)
 	{
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		//source.scanner will stay empty
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
+//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(m_sourceJsons[src.first]->asCString()));
+		source.scanner = scanner;
 		m_sources[path] = source;
 	}
 	m_stackState = ParsingSuccessful;
 	m_importedSources = true;
 	return true;
-	//	in case not all necessary contracts are in the list, //TODO???
-	//	import and parse the missing ones
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -640,8 +668,8 @@ void CompilerStack::resolveImports()
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
 				string const& path = import->annotation().absolutePath;
-				solAssert(!path.empty(), "");
-				solAssert(m_sources.count(path), "");
+				solAssert(!path.empty(), "sdfsdfsdf");
+				solAssert(m_sources.count(path), "sdfsf");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}
@@ -814,7 +842,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = m_importedSources ? "JSON" : "Solidity";
+	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.
@@ -843,13 +871,18 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 					"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
 				);
 			}
+
 		}
+	}
+	else
+	{
+		solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
+		//meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO: this will hold the printed AST (-> one that can be imported into the compiler)
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
-
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
 	for (auto const& r: m_remappings)

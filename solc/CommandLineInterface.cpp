@@ -227,6 +227,23 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
+string bytecodeSansMetadata(string const& _bytecode)
+{
+	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
+	/// /a165627a7a72305820([0-9a-f]{64})0029$/
+
+	if (_bytecode.size() < 88)
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
+		return _bytecode;
+
+	return _bytecode.substr(0, _bytecode.size() - 86);
+}
+
 void CommandLineInterface::handleBinary(string const& _contract)
 {
 	if (m_args.count(g_argBinary))
@@ -236,7 +253,9 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << m_compiler->object(_contract).toHex() << endl;
+//			cout << m_compiler->object(_contract).toHex() << endl;
+			string tmp = m_compiler->object(_contract).toHex();
+			cout << bytecodeSansMetadata(tmp) << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinary))
@@ -793,36 +812,55 @@ bool CommandLineInterface::processInput()
 
 		if (m_args.count(g_argImportAst))
 		{
-			//read file contents
+			//read file contents, which either are
+			// a) a json-file with multiple sources
+			// b) a json-file with one source only
 			Json::Reader reader;
-			string tmp;
-			map<string, Json::Value const*> sourceList; //input for the Importer
-			for (auto& srcPair: m_sourceCodes) // aka <string, string>
+			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
+			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
+			map<string, string> supplementarySourceCodes;
+			for (auto const& srcPair: m_sourceCodes) // aka <string, string>
 			{
 				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
-				//recreate Json::Value from file
-				if (!reader.parse(srcPair.second, *ast, false))
-					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
-				solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-				sourceList[srcPair.first] = ast;
-				tmp = srcPair.first;
+				// try parsing as json
+				if (reader.parse(srcPair.second, *ast, false))
+				{
+					//case a)
+					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
+					{
+						for (auto& src: (*ast)["sourceList"])
+						{
+							solAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "the top-level node of the AST needs to be a 'SourceUnit'");
+							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
+							tmp_sources[src.asString()] = "noSourceCodeAvailable";
+//							tmp_sources[src.asCString()] = ((*ast)["sources"][src.asString()]["AST"]).asString();
+						}
+					}
+					// case b)
+					else
+					{
+						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+						//renaming sourcename from x.json to x.sol
+						string s = srcPair.first;
+						size_t f = s.find(".json");
+						s.replace(f, std::string(".json").length(), ".sol");
+						sourceJsons[s] = ast;
+						tmp_sources[s] = "noSourceCodeAvailable";
+					}
+				}
+				else
+					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Input file could not be parsed to JSON"));
 			}
-			map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+			//replace the internal map so that every source has its own entry
+			m_sourceCodes = tmp_sources;
 			//feed AST to compiler
 			m_compiler->reset(false);
-			bool import = m_compiler->importASTs(reconstructedSources);
+			bool import = m_compiler->importASTs(sourceJsons);
 			//use the compiler's analyzer to annotate, typecheck, etc...
-			if (!import || !m_compiler->analyze())
-				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
-//			else
-//			{
-//				//TEST export again to json to compare to the initial json > should only fail for the absolute path
-//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast(tmp)); //once PR merged
-//				ofstream newFile;
-//				newFile.open("../../myTests/impexp.json");
-//				newFile << jsonExport;
-//				newFile.close();
-//			}
+			if (!import)
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import of the AST failed"));
+			if (!m_compiler->analyze())
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Analysis of the AST failed"));
 		}
 		else
 		{
@@ -1241,5 +1279,25 @@ void CommandLineInterface::outputCompilationResults()
 		cerr << "Support for the Why3 output was removed." << endl;
 }
 
+//bool CommandLineInterface::replaceJsonWithSolName(string const& _solname, map<string,string> &_srcList)
+//{
+//	ret = false;
+//	vector<string> nameParts;
+//	boost::algorithm::split(nameParts, _solname, boost::is_any_of("."));
+//	int i = 0;
+//	for (auto const& pair: _srcList)
+//	{
+//		vector<string> jsonParts;
+//		boost::algorithm::split(jsonParts, pair.first, String, boost::is_any_of("."));
+//		solAssert(jsonParts.size() == 2 && nameParts.size() == 2, "filenames could not be resolved"); //can i
+//		if (nameParts[1] == "sol" && jsonParts[1] == "json" && nameParts[0] == jsonParts[0])
+//		{
+//			_jsonList[_solname] =
+//			_jsonList.erase(pair.first);
+
+//		i++;
+//	}
+//	return ret;
+//}
 }
 }

@@ -158,9 +158,9 @@ public:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
-	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse()
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
 	/// @returns false if the CompilerStack was not reset beforehand.
-	bool importASTs(std::map<std::string, std::shared_ptr<SourceUnit>> _sources);
+	bool importASTs(std::map<std::string, Json::Value const*> const& _sources);
 
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
@@ -309,6 +309,8 @@ private:
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
 	std::map<std::string const, Source> m_sources;
+	/// map of input files to Json-ASTs
+	std::map<std::string, Json::Value const*> m_sourceJsons;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;

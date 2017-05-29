@@ -279,6 +279,18 @@ BOOST_AUTO_TEST_CASE(documentation)
 //	//reset compiler and load map
 //	c.reset(false);
 //	bool import = c.importASTs(tmp);
+
+//use importer to transform json to ast and back again:
+	//first build the ast without scopes and types
+//	map<string, Json::Value const*> sourceList;
+//	sourceList["a"] = &originalJson;
+//	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+	//	newPartialAST
+	//next, put it into a map that can be given to the compiler
+//	map<string, shared_ptr<SourceUnit>> tmp;
+//	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
+//	bool import = c.importASTs(reconstructedSources);
+>>>>>>> option to supplement ast-json with sol-srcCode for metadatahash
 ////	//use the compiler's analyzer to annotate, typecheck, etc...
 //	if (import)
 //		c.analyze();
@@ -290,7 +302,7 @@ BOOST_AUTO_TEST_CASE(documentation)
 //		cout << "backandforth" << newJson << std::endl;
 //	}
 //	assert(newJson == originalJson);
-//>>>>>>> fixing small errors
+//>>>>>>> fiing small errors
 //{
 //	CompilerStack c;
 //	c.addSource("a",
