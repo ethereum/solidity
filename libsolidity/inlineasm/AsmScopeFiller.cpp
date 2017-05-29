@@ -22,6 +22,7 @@
 
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmScope.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/Utils.h>
@@ -36,8 +37,8 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-ScopeFiller::ScopeFiller(ScopeFiller::Scopes& _scopes, ErrorList& _errors):
-	m_scopes(_scopes), m_errors(_errors)
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorList& _errors):
+	m_info(_info), m_errors(_errors)
 {
 	m_currentScope = &scope(nullptr);
 }
@@ -84,15 +85,21 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 		));
 		success = false;
 	}
-	Scope& body = scope(&_funDef.body);
-	body.superScope = m_currentScope;
-	body.functionScope = true;
+
+	auto virtualBlock = m_info.virtualBlocks[&_funDef] = make_shared<Block>();
+	Scope& varScope = scope(virtualBlock.get());
+	varScope.superScope = m_currentScope;
+	m_currentScope = &varScope;
+	varScope.functionScope = true;
 	for (auto const& var: _funDef.arguments + _funDef.returns)
-		if (!registerVariable(var, _funDef.location, body))
+		if (!registerVariable(var, _funDef.location, varScope))
 			success = false;
 
 	if (!(*this)(_funDef.body))
 		success = false;
+
+	solAssert(m_currentScope == &varScope, "");
+	m_currentScope = m_currentScope->superScope;
 
 	return success;
 }
@@ -137,7 +144,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 
 Scope& ScopeFiller::scope(Block const* _block)
 {
-	auto& scope = m_scopes[_block];
+	auto& scope = m_info.scopes[_block];
 	if (!scope)
 		scope = make_shared<Scope>();
 	return *scope;
