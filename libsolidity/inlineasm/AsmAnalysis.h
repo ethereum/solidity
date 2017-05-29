@@ -61,11 +61,12 @@ struct AsmAnalysisInfo;
 class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
-	AsmAnalyzer(
+	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorList& _errors,
+		bool _julia = false,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	);
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors), m_julia(_julia) {}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -88,6 +89,7 @@ private:
 	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
 	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
 	Scope& scope(assembly::Block const* _block);
+	void expectValidType(std::string const& type, SourceLocation const& _location);
 
 	/// This is used when we enter the body of a function definition. There, the parameters
 	/// and return parameters appear as variables which are already on the stack before
@@ -98,6 +100,7 @@ private:
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
 	ErrorList& m_errors;
+	bool m_julia = false;
 };
 
 }

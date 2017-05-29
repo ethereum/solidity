@@ -38,13 +38,10 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-AsmAnalyzer::AsmAnalyzer(
-	AsmAnalysisInfo& _analysisInfo,
-	ErrorList& _errors,
-	julia::ExternalIdentifierAccess::Resolver const& _resolver
-):
-	m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors)
-{
+namespace {
+
+set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
+
 }
 
 bool AsmAnalyzer::analyze(Block const& _block)
@@ -57,12 +54,14 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
+	solAssert(!m_julia, "");
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
+	solAssert(!m_julia, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -71,6 +70,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
+	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
 	{
@@ -143,6 +143,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
+	solAssert(!m_julia, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 	{
@@ -162,11 +163,11 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
+	solAssert(!m_julia, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
-
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
@@ -195,7 +196,10 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	}
 
 	for (auto const& variable: _varDecl.variables)
+	{
+		expectValidType(variable.type, variable.location);
 		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
+	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
 }
@@ -204,7 +208,10 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	Scope& bodyScope = scope(&_funDef.body);
 	for (auto const& var: _funDef.arguments + _funDef.returns)
+	{
+		expectValidType(var.type, var.location);
 		boost::get<Scope::Variable>(bodyScope.identifiers.at(var.name)).active = true;
+	}
 
 	int const stackHeight = m_stackHeight;
 	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
@@ -452,4 +459,17 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	auto scopePtr = m_info.scopes.at(_block);
 	solAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
+}
+
+void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
+{
+	if (!m_julia)
+		return;
+
+	if (!builtinTypes.count(type))
+		m_errors.push_back(make_shared<Error>(
+			Error::Type::TypeError,
+			"\"" + type + "\" is not a valid type (user defined types are not yet supported).",
+			_location
+		));
 }
