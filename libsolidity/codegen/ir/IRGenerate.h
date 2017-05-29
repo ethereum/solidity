@@ -59,6 +59,7 @@ private:
 	virtual void endVisit(FunctionDefinition const&) override;
 	virtual bool visit(Block const&) override;
 	virtual bool visit(Throw const&) override;
+	virtual bool visit(InlineAssembly const&) override;
 
 	bool m_processed = false;
 	assembly::Block m_body;
