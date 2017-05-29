@@ -24,8 +24,8 @@
 
 #include <memory>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Token.h>
-#include <libsolidity/ast/ASTForward.h>
 
 namespace dev
 {
@@ -47,14 +47,14 @@ protected:
 	/// End position of the current token
 	int endPosition() const;
 
-
 	///@{
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
-	Token::Value expectAssignmentOperator();
-	ASTPointer<ASTString> expectIdentifierToken();
-	ASTPointer<ASTString> getLiteralAndAdvance();
+	Token::Value currentToken() const { return m_scanner->currentToken(); }
+	Token::Value peekNextToken() const { return m_scanner->peekNextToken(); }
+	std::string currentLiteral() const { return m_scanner->currentLiteral(); }
+	Token::Value advance() { return m_scanner->next(); }
 	///@}
 
 	/// Creates a @ref ParserError and annotates it with the current position and the

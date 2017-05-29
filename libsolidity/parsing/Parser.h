@@ -154,6 +154,11 @@ private:
 		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
+
+	std::string currentTokenName();
+	Token::Value expectAssignmentOperator();
+	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
