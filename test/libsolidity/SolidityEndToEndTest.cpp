@@ -7462,6 +7462,33 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access)
 	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_inside_function)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint16 x;
+			uint16 public y;
+			uint public z;
+			function f() returns (bool) {
+				uint off1;
+				uint off2;
+				assembly {
+					function f() -> o1 {
+						sstore(z_slot, 7)
+						o1 := y_offset
+					}
+					off2 := f()
+				}
+				assert(off2 == 2);
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_via_pointer)
 {
 	char const* sourceCode = R"(
