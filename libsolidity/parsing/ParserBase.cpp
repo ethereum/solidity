@@ -43,6 +43,26 @@ int ParserBase::endPosition() const
 	return m_scanner->currentLocation().end;
 }
 
+Token::Value ParserBase::currentToken() const
+{
+	return m_scanner->currentToken();
+}
+
+Token::Value ParserBase::peekNextToken() const
+{
+	return m_scanner->peekNextToken();
+}
+
+std::string ParserBase::currentLiteral() const
+{
+	return m_scanner->currentLiteral();
+}
+
+Token::Value ParserBase::advance()
+{
+	return m_scanner->next();
+}
+
 void ParserBase::expectToken(Token::Value _value)
 {
 	Token::Value tok = m_scanner->currentToken();
