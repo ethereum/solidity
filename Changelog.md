@@ -1,9 +1,11 @@
 ### 0.4.12 (unreleased)
 
 Features:
+ * Assembler: renamed ``SHA3`` to `KECCAK256``.
  * AST: export all attributes to Json format
  * Inline Assembly: Present proper error message when not supplying enough arguments to a functional
    instruction.
+ * Inline Assembly: introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
 
 Bugfixes:
  * Unused variable warnings no longer issued for variables used inside inline assembly
