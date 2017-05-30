@@ -65,6 +65,7 @@ private:
 	void appendFunction(std::string const&);
 	assembly::FunctionCall createFunctionCall(std::string const&);
 	assembly::Block wrapInBlock(assembly::Statement const&);
+	assembly::FunctionCall createRevert();
 
 	bool m_processed = false;
 	assembly::Block m_body;

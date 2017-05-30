@@ -109,7 +109,7 @@ void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 		defaultCase.body = std::move(body);
 	}
 	else
-		defaultCase.body = wrapInBlock(createFunctionCall("revert"));
+		defaultCase.body = wrapInBlock(createRevert());
 	_switch.cases.emplace_back(defaultCase);
 
 	m_body.statements.emplace_back(_switch);
@@ -148,14 +148,7 @@ bool IRGenerate::visit(Block const& _node)
 
 bool IRGenerate::visit(Throw const& _throw)
 {
-	assembly::Literal zero;
-	zero.kind = assembly::LiteralKind::Number;
-	zero.value = "0";
-
-	assembly::FunctionCall funCall;
-	funCall.functionName.name = "revert";
-	funCall.arguments.push_back(zero);
-	funCall.arguments.push_back(zero);
+	assembly::FunctionCall funCall = createRevert();
 	funCall.location = _throw.location();
 	m_currentFunction.body.statements.emplace_back(funCall);
 	return false;
@@ -193,4 +186,17 @@ assembly::Block IRGenerate::wrapInBlock(assembly::Statement const& _statement)
 	assembly::Block block;
 	block.statements.push_back(_statement);
 	return block;
+}
+
+assembly::FunctionCall IRGenerate::createRevert()
+{
+	assembly::Literal zero;
+	zero.kind = assembly::LiteralKind::Number;
+	zero.value = "0";
+
+	assembly::FunctionCall funCall;
+	funCall.functionName.name = "revert";
+	funCall.arguments.push_back(zero);
+	funCall.arguments.push_back(zero);
+	return funCall;
 }
