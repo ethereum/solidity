@@ -107,7 +107,7 @@ eth::Assembly assembly::CodeGenerator::assemble(
 {
 	eth::Assembly assembly;
 	EthAssemblyAdapter assemblyAdapter(assembly);
-	julia::CodeTransform(m_errors, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
+	julia::CodeTransform(m_errorReporter, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
 	return assembly;
 }
 
@@ -119,5 +119,5 @@ void assembly::CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	julia::CodeTransform(m_errors, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
+	julia::CodeTransform(m_errorReporter, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
 }

@@ -22,8 +22,6 @@
 
 #include <libsolidity/inlineasm/AsmStack.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <boost/variant.hpp>
 
 #include <functional>
@@ -33,6 +31,7 @@ namespace dev
 {
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
 
@@ -63,10 +62,10 @@ class AsmAnalyzer: public boost::static_visitor<bool>
 public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
-		ErrorList& _errors,
+		ErrorReporter& _errorReporter,
 		bool _julia = false,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	): m_resolver(_resolver), m_info(_analysisInfo), m_errors(_errors), m_julia(_julia) {}
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_julia(_julia) {}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -95,7 +94,7 @@ private:
 	julia::ExternalIdentifierAccess::Resolver const& m_resolver;
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 	bool m_julia = false;
 };
 

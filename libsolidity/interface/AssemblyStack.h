@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libevmasm/LinkerObject.h>
 
 #include <string>
@@ -50,7 +50,7 @@ public:
 	enum class Machine { EVM, EVM15, eWasm };
 
 	explicit AssemblyStack(Language _language = Language::Assembly):
-		m_language(_language)
+		m_language(_language), m_errorReporter(m_errors)
 	{}
 
 	/// @returns the scanner used during parsing
@@ -79,6 +79,7 @@ private:
 	std::shared_ptr<assembly::Block> m_parserResult;
 	std::shared_ptr<assembly::AsmAnalysisInfo> m_analysisInfo;
 	ErrorList m_errors;
+	ErrorReporter m_errorReporter;
 };
 
 }

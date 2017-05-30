@@ -30,6 +30,8 @@ namespace dev
 namespace solidity
 {
 
+class ErrorReporter;
+
 /**
  * Parses and analyses the doc strings.
  * Stores the parsing results in the AST annotations and reports errors.
@@ -37,7 +39,7 @@ namespace solidity
 class DocStringAnalyser: private ASTConstVisitor
 {
 public:
-	DocStringAnalyser(ErrorList& _errors): m_errors(_errors) {}
+	DocStringAnalyser(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 	bool analyseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
@@ -64,7 +66,7 @@ private:
 	void appendError(std::string const& _description);
 
 	bool m_errorOccured = false;
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

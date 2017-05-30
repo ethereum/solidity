@@ -23,6 +23,7 @@
 
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/parsing/DocStringParser.h>
 
 using namespace std;
@@ -110,7 +111,7 @@ void DocStringAnalyser::parseDocStrings(
 	DocStringParser parser;
 	if (_node.documentation() && !_node.documentation()->empty())
 	{
-		if (!parser.parse(*_node.documentation(), m_errors))
+		if (!parser.parse(*_node.documentation(), m_errorReporter))
 			m_errorOccured = true;
 		_annotation.docTags = parser.tags();
 	}
@@ -121,8 +122,6 @@ void DocStringAnalyser::parseDocStrings(
 
 void DocStringAnalyser::appendError(string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::DocstringParsingError);
-	*err << errinfo_comment(_description);
-	m_errors.push_back(err);
 	m_errorOccured = true;
+	m_errorReporter.docstringParsingError(_description);
 }

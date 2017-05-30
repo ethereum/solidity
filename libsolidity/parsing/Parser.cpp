@@ -26,7 +26,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
 
@@ -94,7 +94,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 	catch (FatalError const&)
 	{
-		if (m_errors.empty())
+		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
 		return nullptr;
 	}
@@ -865,7 +865,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	assembly::Parser asmParser(m_errors);
+	assembly::Parser asmParser(m_errorReporter);
 	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);

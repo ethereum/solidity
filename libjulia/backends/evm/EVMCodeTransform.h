@@ -20,8 +20,6 @@
 
 #include <libjulia/backends/evm/AbstractAssembly.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <libsolidity/inlineasm/AsmStack.h>
 #include <libsolidity/inlineasm/AsmScope.h>
 
@@ -31,6 +29,7 @@ namespace dev
 {
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
 struct Literal;
@@ -59,18 +58,18 @@ public:
 	/// of its creation.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	CodeTransform(
-		solidity::ErrorList& _errors,
+		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::Block const& _block,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
-	): CodeTransform(_errors, _assembly, _block, _analysisInfo, _identifierAccess, _assembly.stackHeight())
+	): CodeTransform(_errorReporter, _assembly, _block, _analysisInfo, _identifierAccess, _assembly.stackHeight())
 	{
 	}
 
 private:
 	CodeTransform(
-		solidity::ErrorList& _errors,
+		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::Block const& _block,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
@@ -107,7 +106,7 @@ private:
 	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
 	void assignLabelIdIfUnset(solidity::assembly::Scope::Label& _label);
 
-	solidity::ErrorList& m_errors;
+	solidity::ErrorReporter& m_errorReporter;
 	julia::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
 	solidity::assembly::Scope& m_scope;

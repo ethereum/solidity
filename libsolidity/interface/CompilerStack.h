@@ -35,7 +35,7 @@
 #include <libdevcore/FixedHash.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/ReadFile.h>
 
 namespace dev
@@ -80,7 +80,10 @@ public:
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback());
+	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback()):
+		m_readFile(_readFile),
+		m_errorList(),
+		m_errorReporter(m_errorList) {}
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
@@ -130,7 +133,7 @@ public:
 	/// Tries to translate all source files into a language suitable for formal analysis.
 	/// @param _errors list to store errors - defaults to the internal error list.
 	/// @returns false on error.
-	bool prepareFormalAnalysis(ErrorList* _errors = nullptr);
+	bool prepareFormalAnalysis(ErrorReporter* _errorReporter = nullptr);
 	std::string const& formalTranslation() const { return m_formalTranslation; }
 
 	/// @returns the assembled object for a contract.
@@ -207,7 +210,7 @@ public:
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
 	/// @returns the list of errors that occured during parsing and type checking.
-	ErrorList const& errors() const { return m_errors; }
+	ErrorList const& errors() { return m_errorReporter.errors(); }
 
 private:
 	/**
@@ -289,7 +292,8 @@ private:
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
 	std::string m_formalTranslation;
-	ErrorList m_errors;
+	ErrorList m_errorList;
+	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
 };

@@ -218,12 +218,13 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		{
 			// Do not taint the internal error list
 			ErrorList formalErrors;
-			if (compiler.prepareFormalAnalysis(&formalErrors))
+			ErrorReporter errorReporter(formalErrors);
+			if (compiler.prepareFormalAnalysis(&errorReporter))
 				output["formal"]["why3"] = compiler.formalTranslation();
-			if (!formalErrors.empty())
+			if (!errorReporter.errors().empty())
 			{
 				Json::Value errors(Json::arrayValue);
-				for (auto const& error: formalErrors)
+				for (auto const& error: errorReporter.errors())
 					errors.append(SourceReferenceFormatter::formatExceptionInformation(
 						*error,
 						(error->type() == Error::Type::Warning) ? "Warning" : "Error",

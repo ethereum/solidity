@@ -45,16 +45,16 @@ namespace test
 namespace
 {
 
-bool parse(string const& _source, ErrorList& errors)
+bool parse(string const& _source, ErrorReporter& errorReporter)
 {
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errors, true).parse(scanner);
+		auto parserResult = assembly::Parser(errorReporter, true).parse(scanner);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(analysisInfo, errors, true)).analyze(*parserResult);
+			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, true)).analyze(*parserResult);
 		}
 	}
 	catch (FatalError const&)
@@ -67,7 +67,8 @@ bool parse(string const& _source, ErrorList& errors)
 boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
 {
 	ErrorList errors;
-	if (!parse(_source, errors))
+	ErrorReporter errorReporter(errors);
+	if (!parse(_source, errorReporter))
 	{
 		BOOST_REQUIRE_EQUAL(errors.size(), 1);
 		return *errors.front();
