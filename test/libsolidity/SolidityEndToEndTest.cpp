@@ -9338,6 +9338,45 @@ BOOST_AUTO_TEST_CASE(interface)
 	BOOST_CHECK(callContractFunction("f(address)", recipient) == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(keccak256_assembly)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32 ret) {
+				assembly {
+					ret := keccak256(0, 0)
+				}
+			}
+			function g() returns (bytes32 ret) {
+				assembly {
+					0
+					0
+					keccak256
+					=: ret
+				}
+			}
+			function h() returns (bytes32 ret) {
+				assembly {
+					ret := sha3(0, 0)
+				}
+			}
+			function i() returns (bytes32 ret) {
+				assembly {
+					0
+					0
+					sha3
+					=: ret
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("g()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("h()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("i()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
