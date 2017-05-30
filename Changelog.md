@@ -12,6 +12,7 @@ Features:
  * Inline Assembly: ``for`` and ``switch`` statements.
  * Inline Assembly: function definitions and function calls.
  * Code Generator: Added the Whiskers template system.
+ * Remove obsolete Why3 output.
 
 Bugfixes:
  * Type Checker: Fix address literals not being treated as compile-time constants.

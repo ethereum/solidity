@@ -40,7 +40,6 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -314,20 +313,6 @@ void CompilerStack::link()
 		contract.second.runtimeObject.link(m_libraries);
 		contract.second.cloneObject.link(m_libraries);
 	}
-}
-
-bool CompilerStack::prepareFormalAnalysis(ErrorReporter* _errorReporter)
-{
-	if (!_errorReporter)
-		_errorReporter = &m_errorReporter;
-	Why3Translator translator(*_errorReporter);
-	for (Source const* source: m_sourceOrder)
-		if (!translator.process(*source->ast))
-			return false;
-
-	m_formalTranslation = translator.translation();
-
-	return true;
 }
 
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
