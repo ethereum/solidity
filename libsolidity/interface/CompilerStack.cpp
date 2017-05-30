@@ -271,7 +271,7 @@ bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
 	return parseAndAnalyze();
 }
 
-bool CompilerStack::importASTs(map<string, Json::Value const*> _sources)
+bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 {
 	if (m_stackState != Empty)
 		return false;
@@ -297,7 +297,6 @@ void CompilerStack::saveImportedSourceCodes(map<string, string> _sources)
 		{
 			ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(src.second));
 			m_sources[src.first].scanner = scanner;
-			cout << "added srcfile" << std::endl;
 		}
 }
 
@@ -839,11 +838,11 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 		if (m_importedSources)
 		{
 			solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
-//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO
+//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO?
 		}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
-	meta["settings"]["compiledFrom"] = m_importedSources ? "AST-Json" : "Solidity source file";
+	meta["settings"]["compiledFrom"] = m_importedSources ? "AST-Json" : "Solidity sourcefile";
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;

@@ -784,9 +784,15 @@ bool CommandLineInterface::processInput()
 					// case a)
 					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
 					{
-					for (auto& src: (*ast)["sourceList"]) //check here for ast-correctness as well
+						for (auto& src: (*ast)["sourceList"])
 						{
-							solAssert((*ast)["sources"][src.asCString()]["AST"]["nodeType"] == "SourceUnit", "the top-level node of the AST needs to be a 'SourceUnit'");
+							solAssert(
+								strcmp(
+									(*ast)["sources"][src.asCString()]["AST"]["nodeType"].asCString(),
+									"SourceUnit"
+								) == 0,
+								"the top-level node of the AST needs to be a 'SourceUnit'"
+							);
 							sourceJsons[src.asCString()] = &((*ast)["sources"][src.asCString()]["AST"]);
 							tmp_sources[src.asCString()] = "noSourceCodeAvailable";
 						}
@@ -795,15 +801,17 @@ bool CommandLineInterface::processInput()
 					else
 					{
 						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-						sourceJsons[srcPair.first] = ast;
-						tmp_sources[srcPair.first] = "noSourceCodeAvailable";
-						//TODO now the xxx.json is the absolute path name
+						//renaming sourcename from x.json to x.sol
+						string s = srcPair.first;
+						size_t f = s.find(".json");
+						s.replace(f, std::string(".json").length(), ".sol");
+						sourceJsons[s] = ast;
+						tmp_sources[s] = "noSourceCodeAvailable";
 					}
 				}
 				else // c) supplementary .sol file
 				{
-					// add .sol to the import-input only if there already is a json-ast with a correspoding name
-					if (sourceJsons.count(srcPair.first)) //TODO-> should not work for case b) yet in which the name is name.json instead of name.sol
+					if (sourceJsons.count(srcPair.first))
 						supplementarySourceCodes[srcPair.first] = srcPair.second;
 				}
 			}
@@ -812,20 +820,11 @@ bool CommandLineInterface::processInput()
 			//feed AST to compiler
 			m_compiler->reset(false);
 			bool import = m_compiler->importASTs(sourceJsons);
-			if (supplementarySourceCodes.size() > 0)
+			if (!supplementarySourceCodes.empty())
 				m_compiler->saveImportedSourceCodes(supplementarySourceCodes);
 			//use the compiler's analyzer to annotate, typecheck, etc...
 			if (!import || !m_compiler->analyze())
 				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
-//			else
-//			{
-//				//TEST export again to json to compare to the initial json > should only fail for the absolute path
-//				Json::Value jsonExport = ASTJsonConverter(false, m_compiler->sourceIndices()).toJson(m_compiler->ast("tmp"));
-//				ofstream newFile;
-//				newFile.open("../../myTests/impexp.json");
-//				newFile << jsonExport;
-//				newFile.close();
-//			}
 		}
 		else
 		{
