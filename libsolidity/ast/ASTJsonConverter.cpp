@@ -704,13 +704,13 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 
 bool ASTJsonConverter::visit(Literal const& _node)
 {
-	char const* tokenString = Token::toString(_node.token());
+	string tokenString = tokenKind(_node.token());
 	Json::Value value{_node.value()};
 	if (!dev::validateUTF8(_node.value()))
 		value = Json::nullValue;
 	Token::Value subdenomination = Token::Value(_node.subDenomination());
 	std::vector<pair<string, Json::Value>> attributes = {
-		make_pair("token", tokenString ? tokenString : Json::Value()),
+		make_pair(m_legacy ? "token" : "kind", tokenString),
 		make_pair("value", value),
 		make_pair(m_legacy ? "hexvalue" : "hexValue", toHex(_node.value())),
 		make_pair(
@@ -790,6 +790,23 @@ string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
 		return "structConstructorCall";
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of function call ."));
+	}
+}
+
+string ASTJsonConverter::tokenKind(Token::Value _token)
+{
+	switch (_token)
+	{
+	case dev::solidity::Token::Number:
+		return "number";
+	case dev::solidity::Token::StringLiteral:
+		return "string";
+	case dev::solidity::Token::TrueLiteral:
+		return "bool";
+	case dev::solidity::Token::FalseLiteral:
+		return "bool";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of literal token."));
 	}
 }
 
