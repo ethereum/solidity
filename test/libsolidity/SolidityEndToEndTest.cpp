@@ -1355,7 +1355,7 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 			function test() {
 				data = 8;
 				name = "Celina";
-				a_hash = sha3(123);
+				a_hash = keccak256(123);
 				an_address = address(0x1337);
 				super_secret_data = 42;
 			}
@@ -1864,12 +1864,12 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
-BOOST_AUTO_TEST_CASE(sha3)
+BOOST_AUTO_TEST_CASE(keccak256)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function a(bytes32 input) returns (bytes32 sha3hash) {
-				return sha3(input);
+			function a(bytes32 input) returns (bytes32 hash) {
+				return keccak256(input);
 			}
 		}
 	)";
@@ -1881,6 +1881,23 @@ BOOST_AUTO_TEST_CASE(sha3)
 	testContractAgainstCpp("a(bytes32)", f, u256(4));
 	testContractAgainstCpp("a(bytes32)", f, u256(5));
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(sha3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			// to confuse the optimiser
+			function b(bytes32 input) returns (bytes32) {
+				return sha3(input);
+			}
+			function a(bytes32 input) returns (bool) {
+				return keccak256(input) == b(input);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_REQUIRE(callContractFunction("a(bytes32)", u256(42)) == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(sha256)
@@ -3110,13 +3127,13 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 	BOOST_CHECK(callContractFunction("f(uint256)", 9) == encodeArgs(9));
 }
 
-BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
+BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
 {
 	char const* sourceCode = R"(
 		contract c {
 			function foo(uint a, uint b, uint c) returns (bytes32 d)
 			{
-				d = sha3(a, b, c);
+				d = keccak256(a, b, c);
 			}
 		}
 	)";
@@ -3129,13 +3146,13 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 						toBigEndian(u256(13)))));
 }
 
-BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_numeric_literals)
+BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_numeric_literals)
 {
 	char const* sourceCode = R"(
 		contract c {
 			function foo(uint a, uint16 b) returns (bytes32 d)
 			{
-				d = sha3(a, b, 145);
+				d = keccak256(a, b, 145);
 			}
 		}
 	)";
@@ -3148,17 +3165,17 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_numeric_literals)
 						bytes(1, 0x91))));
 }
 
-BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
+BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_string_literals)
 {
 	char const* sourceCode = R"(
 		contract c {
 			function foo() returns (bytes32 d)
 			{
-				d = sha3("foo");
+				d = keccak256("foo");
 			}
 			function bar(uint a, uint16 b) returns (bytes32 d)
 			{
-				d = sha3(a, b, 145, "foo");
+				d = keccak256(a, b, 145, "foo");
 			}
 		}
 	)";
@@ -3174,7 +3191,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 						bytes{0x66, 0x6f, 0x6f})));
 }
 
-BOOST_AUTO_TEST_CASE(sha3_with_bytes)
+BOOST_AUTO_TEST_CASE(keccak256_with_bytes)
 {
 	char const* sourceCode = R"(
 		contract c {
@@ -3185,7 +3202,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_bytes)
 				data[0] = "f";
 				data[1] = "o";
 				data[2] = "o";
-				return sha3(data) == sha3("foo");
+				return keccak256(data) == keccak256("foo");
 			}
 		}
 	)";
@@ -3193,7 +3210,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_bytes)
 	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(true));
 }
 
-BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
+BOOST_AUTO_TEST_CASE(iterated_keccak256_with_bytes)
 {
 	char const* sourceCode = R"(
 		contract c {
@@ -3204,7 +3221,7 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 				data[0] = "x";
 				data[1] = "y";
 				data[2] = "z";
-				return sha3("b", sha3(data), "a");
+				return keccak256("b", keccak256(data), "a");
 			}
 		}
 	)";
@@ -3214,13 +3231,13 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 	));
 }
 
-BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
+BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 {
 	char const* sourceCode = R"(
 		contract c {
 			function foo(uint a, uint b, uint c) returns (bytes32 d)
 			{
-				d = keccak256(a, b, c);
+				d = sha3(a, b, c);
 			}
 		})";
 	compileAndRun(sourceCode);
@@ -3245,7 +3262,7 @@ BOOST_AUTO_TEST_CASE(generic_call)
 				function sender() payable {}
 				function doSend(address rec) returns (uint d)
 				{
-					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
 					rec.call.value(2)(signature, 23);
 					return receiver(rec).received();
 				}
@@ -3270,7 +3287,7 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 				function Sender() payable { }
 				function doSend(address rec) returns (uint d)
 				{
-					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
 					rec.callcode.value(2)(signature, 23);
 					return Receiver(rec).received();
 				}
@@ -3307,7 +3324,7 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				function Sender() payable {}
 				function doSend(address rec) payable
 				{
-					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
 					if (rec.delegatecall(signature, 23)) {}
 				}
 			}
@@ -3372,7 +3389,7 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (bytes32) {
-				return sha3("abc", msg.data);
+				return keccak256("abc", msg.data);
 			}
 		}
 	)";
@@ -5294,7 +5311,7 @@ BOOST_AUTO_TEST_CASE(reusing_memory)
 			mapping(uint => uint) map;
 			function f(uint x) returns (uint) {
 				map[x] = x;
-				return (new Helper(uint(sha3(this.g(map[x]))))).flag();
+				return (new Helper(uint(keccak256(this.g(map[x]))))).flag();
 			}
 			function g(uint a) returns (uint)
 			{
@@ -9319,6 +9336,45 @@ BOOST_AUTO_TEST_CASE(interface)
 	u160 const recipient = m_contractAddress;
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f(address)", recipient) == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(keccak256_assembly)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32 ret) {
+				assembly {
+					ret := keccak256(0, 0)
+				}
+			}
+			function g() returns (bytes32 ret) {
+				assembly {
+					0
+					0
+					keccak256
+					=: ret
+				}
+			}
+			function h() returns (bytes32 ret) {
+				assembly {
+					ret := sha3(0, 0)
+				}
+			}
+			function i() returns (bytes32 ret) {
+				assembly {
+					0
+					0
+					sha3
+					=: ret
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("g()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("h()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_CHECK(callContractFunction("i()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

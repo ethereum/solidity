@@ -322,18 +322,18 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 // Information in joining branches is not retained anymore.
 BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 {
-	// This tests that the optimizer knows that we already have "z == sha3(y)" inside both branches.
+	// This tests that the optimizer knows that we already have "z == keccak256(y)" inside both branches.
 	char const* sourceCode = R"(
 		contract c {
 			bytes32 d;
 			uint a;
 			function f(uint x, bytes32 y) returns (uint r_a, bytes32 r_d) {
-				bytes32 z = sha3(y);
+				bytes32 z = keccak256(y);
 				if (x > 8) {
-					z = sha3(y);
+					z = keccak256(y);
 					a = x;
 				} else {
-					z = sha3(y);
+					z = keccak256(y);
 					a = x;
 				}
 				r_a = a;
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true);
 	size_t numSHA3s = 0;
 	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::SHA3)
+		if (_instr == Instruction::KECCAK256)
 			numSHA3s++;
 	});
 // TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 
 BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 {
-	// This calls the same function from two sources and both calls have a certain sha3 on
+	// This calls the same function from two sources and both calls have a certain Keccak-256 on
 	// the stack at the same position.
 	// Without storing tags as unions, the return from the shared function would not know where to
 	// jump and thus all jumpdests are forced to clear their state and we do not know about the
@@ -370,19 +370,19 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 		contract test {
 			bytes32 data;
 			function f(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
-				r_d = sha3(y);
+				r_d = keccak256(y);
 				shared(y);
-				r_d = sha3(y);
+				r_d = keccak256(y);
 				r_a = 5;
 			}
 			function g(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
-				r_d = sha3(y);
+				r_d = keccak256(y);
 				shared(y);
-				r_d = bytes32(uint(sha3(y)) + 2);
+				r_d = bytes32(uint(keccak256(y)) + 2);
 				r_a = 7;
 			}
 			function shared(bytes32 y) internal {
-				data = sha3(y);
+				data = keccak256(y);
 			}
 		}
 	)";
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "test", true);
 	size_t numSHA3s = 0;
 	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::SHA3)
+		if (_instr == Instruction::KECCAK256)
 			numSHA3s++;
 	});
 // TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 
 BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
 {
-	// This bug appeared because a sha3 operation with too low sequence number was used,
-	// resulting in memory not being rewritten before the sha3. The fix was to
+	// This bug appeared because a Keccak-256 operation with too low sequence number was used,
+	// resulting in memory not being rewritten before the Keccak-256. The fix was to
 	// take the max of the min sequence numbers when merging the states.
 	char const* sourceCode = R"(
 		contract C
@@ -821,19 +821,19 @@ BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_empty_sha3)
+BOOST_AUTO_TEST_CASE(cse_empty_keccak256)
 {
 	AssemblyItems input{
 		u256(0),
 		Instruction::DUP2,
-		Instruction::SHA3
+		Instruction::KECCAK256
 	};
 	checkCSE(input, {
 		u256(dev::keccak256(bytesConstRef()))
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_partial_sha3)
+BOOST_AUTO_TEST_CASE(cse_partial_keccak256)
 {
 	AssemblyItems input{
 		u256(0xabcd) << (256 - 16),
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(cse_partial_sha3)
 		Instruction::MSTORE,
 		u256(2),
 		u256(0),
-		Instruction::SHA3
+		Instruction::KECCAK256
 	};
 	checkCSE(input, {
 		u256(0xabcd) << (256 - 16),
@@ -851,19 +851,19 @@ BOOST_AUTO_TEST_CASE(cse_partial_sha3)
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_location)
+BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_location)
 {
-	// sha3 twice from same dynamic location
+	// Keccak-256 twice from same dynamic location
 	AssemblyItems input{
 		Instruction::DUP2,
 		Instruction::DUP1,
 		Instruction::MSTORE,
 		u256(64),
 		Instruction::DUP2,
-		Instruction::SHA3,
+		Instruction::KECCAK256,
 		u256(64),
 		Instruction::DUP3,
-		Instruction::SHA3
+		Instruction::KECCAK256
 	};
 	checkCSE(input, {
 		Instruction::DUP2,
@@ -871,27 +871,27 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_location)
 		Instruction::MSTORE,
 		u256(64),
 		Instruction::DUP2,
-		Instruction::SHA3,
+		Instruction::KECCAK256,
 		Instruction::DUP1
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content)
+BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content)
 {
-	// sha3 twice from different dynamic location but with same content
+	// Keccak-256 twice from different dynamic location but with same content
 	AssemblyItems input{
 		Instruction::DUP1,
 		u256(0x80),
 		Instruction::MSTORE, // m[128] = DUP1
 		u256(0x20),
 		u256(0x80),
-		Instruction::SHA3, // sha3(m[128..(128+32)])
+		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
 		Instruction::DUP2,
 		u256(12),
 		Instruction::MSTORE, // m[12] = DUP1
 		u256(0x20),
 		u256(12),
-		Instruction::SHA3 // sha3(m[12..(12+32)])
+		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
 	};
 	checkCSE(input, {
 		u256(0x80),
@@ -900,7 +900,7 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content)
 		Instruction::MSTORE,
 		u256(0x20),
 		Instruction::SWAP1,
-		Instruction::SHA3,
+		Instruction::KECCAK256,
 		u256(12),
 		Instruction::DUP3,
 		Instruction::SWAP1,
@@ -909,10 +909,10 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content)
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_dynamic_store_in_between)
+BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_dynamic_store_in_between)
 {
-	// sha3 twice from different dynamic location but with same content,
-	// dynamic mstore in between, which forces us to re-calculate the sha3
+	// Keccak-256 twice from different dynamic location but with same content,
+	// dynamic mstore in between, which forces us to re-calculate the hash
 	AssemblyItems input{
 		u256(0x80),
 		Instruction::DUP2,
@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_dynamic_store_in_between)
 		u256(0x20),
 		Instruction::DUP1,
 		Instruction::DUP3,
-		Instruction::SHA3, // sha3(m[128..(128+32)])
+		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
 		u256(12),
 		Instruction::DUP5,
 		Instruction::DUP2,
@@ -932,15 +932,15 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_dynamic_store_in_between)
 		Instruction::SWAP2,
 		Instruction::SWAP1,
 		Instruction::SWAP2,
-		Instruction::SHA3 // sha3(m[12..(12+32)])
+		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
 	};
 	checkCSE(input, input);
 }
 
-BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between)
+BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_noninterfering_store_in_between)
 {
-	// sha3 twice from different dynamic location but with same content,
-	// dynamic mstore in between, but does not force us to re-calculate the sha3
+	// Keccak-256 twice from different dynamic location but with same content,
+	// dynamic mstore in between, but does not force us to re-calculate the hash
 	AssemblyItems input{
 		u256(0x80),
 		Instruction::DUP2,
@@ -949,7 +949,7 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between
 		u256(0x20),
 		Instruction::DUP1,
 		Instruction::DUP3,
-		Instruction::SHA3, // sha3(m[128..(128+32)])
+		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
 		u256(12),
 		Instruction::DUP5,
 		Instruction::DUP2,
@@ -962,12 +962,12 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between
 		Instruction::MSTORE, // does not destoy memory knowledge
 		u256(0x20),
 		u256(12),
-		Instruction::SHA3 // sha3(m[12..(12+32)])
+		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
 	};
 	// if this changes too often, only count the number of SHA3 and MSTORE instructions
 	AssemblyItems output = CSE(input);
 	BOOST_CHECK_EQUAL(4, count(output.begin(), output.end(), AssemblyItem(Instruction::MSTORE)));
-	BOOST_CHECK_EQUAL(1, count(output.begin(), output.end(), AssemblyItem(Instruction::SHA3)));
+	BOOST_CHECK_EQUAL(1, count(output.begin(), output.end(), AssemblyItem(Instruction::KECCAK256)));
 }
 
 BOOST_AUTO_TEST_CASE(cse_with_initially_known_stack)
@@ -1296,7 +1296,7 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 			// Store and hash
 			assembly {
 				mstore(32, x)
-				ret := sha3(0, 40)
+				ret := keccak256(0, 40)
 			}
 		}
 	}

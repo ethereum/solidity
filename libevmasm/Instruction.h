@@ -62,7 +62,7 @@ enum class Instruction: uint8_t
 	NOT,				///< bitwise NOT opertation
 	BYTE,				///< retrieve single byte from word
 
-	SHA3 = 0x20,		///< compute SHA3-256 hash
+	KECCAK256 = 0x20,		///< compute KECCAK-256 hash
 
 	ADDRESS = 0x30,		///< get address of currently executing account
 	BALANCE,			///< get balance of the given account

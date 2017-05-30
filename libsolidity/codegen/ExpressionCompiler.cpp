@@ -110,7 +110,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			// move key to memory.
 			utils().copyToStackTop(paramTypes.size() - i, 1);
 			utils().storeInMemory(0);
-			m_context << u256(64) << u256(0) << Instruction::SHA3;
+			m_context << u256(64) << u256(0) << Instruction::KECCAK256;
 			// push offset
 			m_context << u256(0);
 			returnType = mappingType->valueType();
@@ -674,7 +674,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
 			utils().toSizeAfterFreeMemoryPointer();
-			m_context << Instruction::SHA3;
+			m_context << Instruction::KECCAK256;
 			break;
 		}
 		case FunctionType::Kind::Log0:
@@ -721,7 +721,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 							true
 						);
 						utils().toSizeAfterFreeMemoryPointer();
-						m_context << Instruction::SHA3;
+						m_context << Instruction::KECCAK256;
 					}
 					else
 						utils().convertType(
@@ -1214,7 +1214,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			utils().storeInMemoryDynamic(IntegerType(256));
 			m_context << u256(0);
 		}
-		m_context << Instruction::SHA3;
+		m_context << Instruction::KECCAK256;
 		m_context << u256(0);
 		setLValueToStorageItem(_indexAccess);
 	}

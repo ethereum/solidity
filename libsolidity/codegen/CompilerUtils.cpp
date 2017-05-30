@@ -934,7 +934,7 @@ unsigned CompilerUtils::sizeOnStack(vector<shared_ptr<Type const>> const& _varia
 void CompilerUtils::computeHashStatic()
 {
 	storeInMemory(0);
-	m_context << u256(32) << u256(0) << Instruction::SHA3;
+	m_context << u256(32) << u256(0) << Instruction::KECCAK256;
 }
 
 void CompilerUtils::storeStringData(bytesConstRef _data)
