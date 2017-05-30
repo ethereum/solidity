@@ -21,6 +21,12 @@
  */
 
 #include <libsolidity/codegen/ir/IRGenerate.h>
+#include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/ErrorReporter.h>
+#include <libdevcore/SHA3.h>
+#include <libdevcore/CommonData.h>
+
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
@@ -43,7 +49,70 @@ bool IRGenerate::visit(ContractDefinition const& _contract)
 
 	ASTNode::listAccept(_contract.definedFunctions(), *this);
 
+	buildDispatcher(_contract);
+
 	return false;
+}
+
+void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
+{
+	appendFunction(R"(
+	{
+		// Revert if value was received.
+		function ensureNoValueTransfer()
+		{
+			switch callvalue()
+			case 0 {}
+			default { revert(0, 0) }
+		}
+
+		// Extract 32 bit method identifier
+		function extractCallSignature() -> sig
+		{
+			// FIXME: replace with constant
+			sig := div(calldataload(0), exp(2, 224))
+		}
+	}
+	)");
+
+	assembly::Switch _switch;
+	_switch.expression = make_shared<assembly::Statement>(createFunctionCall("extractCallSignature"));
+
+	for (auto const& function: _contract.definedFunctions())
+	{
+		if (!function->isPartOfExternalInterface())
+			continue;
+
+		assembly::Literal literal;
+		literal.kind = assembly::LiteralKind::Number;
+		literal.value = toHex(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(function->externalSignature()))), HexPrefix::Add);
+
+		assembly::Block body;
+		if (!function->isPayable())
+			body.statements.emplace_back(createFunctionCall("ensureNoValueTransfer"));
+		body.statements.emplace_back(createFunctionCall("_" + function->name()));
+
+		assembly::Case _case;
+		_case.value = make_shared<assembly::Literal>(literal);
+		_case.body = std::move(body);
+
+		_switch.cases.emplace_back(_case);
+	}
+
+	assembly::Case defaultCase;
+	if (auto const& fallbackFunction = _contract.fallbackFunction())
+	{
+		assembly::Block body;
+		if (!fallbackFunction->isPayable())
+			body.statements.emplace_back(createFunctionCall("ensureNoValueTransfer"));
+		body.statements.emplace_back(createFunctionCall("fallback"));
+		defaultCase.body = std::move(body);
+	}
+	else
+		defaultCase.body = wrapInBlock(createFunctionCall("revert"));
+	_switch.cases.emplace_back(defaultCase);
+
+	m_body.statements.emplace_back(_switch);
 }
 
 bool IRGenerate::visit(FunctionDefinition const& _function)
@@ -57,7 +126,7 @@ bool IRGenerate::visit(FunctionDefinition const& _function)
 	if (_function.name().empty())
 		funDef.name = "fallback";
 	else
-		funDef.name = _function.name();
+		funDef.name = "_" + _function.name();
 	funDef.location = _function.location();
 	m_currentFunction = funDef;
 	_function.body().accept(*this);
@@ -82,7 +151,6 @@ bool IRGenerate::visit(Throw const& _throw)
 	assembly::Literal zero;
 	zero.kind = assembly::LiteralKind::Number;
 	zero.value = "0";
-	zero.type = "u256";
 
 	assembly::FunctionCall funCall;
 	funCall.functionName.name = "revert";
@@ -97,4 +165,32 @@ bool IRGenerate::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_currentFunction.body.statements.emplace_back(_inlineAssembly.operations());
 	return false;
+}
+
+void IRGenerate::appendFunction(string const& _function)
+{
+	ErrorList errors;
+	ErrorReporter errorReporter(errors);
+	auto scanner = make_shared<Scanner>(CharStream(_function), "<irgenerated>");
+	auto result = assembly::Parser(errorReporter).parse(scanner);
+	solAssert(result, "");
+	solAssert(errors.empty(), "");
+
+	auto statements = result->statements;
+	for (size_t i = 0; i < statements.size(); ++i)
+		m_body.statements.emplace_back(std::move(statements[i]));
+}
+
+assembly::FunctionCall IRGenerate::createFunctionCall(string const& _function)
+{
+	assembly::FunctionCall funCall;
+	funCall.functionName.name = _function;
+	return funCall;
+}
+
+assembly::Block IRGenerate::wrapInBlock(assembly::Statement const& _statement)
+{
+	assembly::Block block;
+	block.statements.push_back(_statement);
+	return block;
 }

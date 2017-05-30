@@ -61,6 +61,11 @@ private:
 	virtual bool visit(Throw const&) override;
 	virtual bool visit(InlineAssembly const&) override;
 
+	void buildDispatcher(ContractDefinition const&);
+	void appendFunction(std::string const&);
+	assembly::FunctionCall createFunctionCall(std::string const&);
+	assembly::Block wrapInBlock(assembly::Statement const&);
+
 	bool m_processed = false;
 	assembly::Block m_body;
 	assembly::FunctionDefinition m_currentFunction;
