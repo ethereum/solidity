@@ -766,40 +766,54 @@ bool CommandLineInterface::processInput()
 
 		if (m_args.count(g_argImportAst))
 		{
-			//read file contents
+			//read file contents, which either are
+			// a) a json-file with multiple sources
+			// b) a json-file with one source only
+			// c) a .sol file that corresponds to a given json
 			Json::Reader reader;
-			map<string, Json::Value const*> sourceList; //input for the Importer
-			map<string,string> actualSourceCodes;
+			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
+			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
+			map<string, string> supplementarySourceCodes;
 			for (auto& srcPair: m_sourceCodes) // aka <string, string>
 			{
 				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
-//				Json::Value* subast = new Json::Value(); //use shared-Pointer here?
-				//recreate Json::Value from file
-				if (!reader.parse(srcPair.second, *ast, false))
-					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
-				//Json can be either in the output format of the combined-json ast CL, or the AST itself without any predefined
-				if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
+				// try parsing as json
+				if (reader.parse(srcPair.second, *ast, false))
 				{
-					for (auto& src: (*ast)["sourceList"]) //check here for ast-correctness as well
+//					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
+					// case a)
+					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
 					{
-						solAssert((*ast)["sources"][src.asCString()]["AST"]["nodeType"] == "SourceUnit", "the top-level node of the AST needs to be a 'SourceUnit'");
-						sourceList[src.asCString()] = &((*ast)["sources"][src.asCString()]["AST"]);
-						actualSourceCodes[src.asCString()] = "No source code available because src was imported from Json";
+					for (auto& src: (*ast)["sourceList"]) //check here for ast-correctness as well
+						{
+							solAssert((*ast)["sources"][src.asCString()]["AST"]["nodeType"] == "SourceUnit", "the top-level node of the AST needs to be a 'SourceUnit'");
+							sourceJsons[src.asCString()] = &((*ast)["sources"][src.asCString()]["AST"]);
+							tmp_sources[src.asCString()] = "noSourceCodeAvailable";
+						}
+					}
+					// case b)
+					else
+					{
+						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+						sourceJsons[srcPair.first] = ast;
+						tmp_sources[srcPair.first] = "noSourceCodeAvailable";
+						//TODO now the xxx.json is the absolute path name
 					}
 				}
-				else
+				else // c) supplementary .sol file
 				{
-					solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-					sourceList[srcPair.first] = ast;
-					//TODO now the xxx.json is the absolute path
+					// add .sol to the import-input only if there already is a json-ast with a correspoding name
+					if (sourceJsons.count(srcPair.first)) //TODO-> should not work for case b) yet in which the name is name.json instead of name.sol
+						supplementarySourceCodes[srcPair.first] = srcPair.second;
 				}
 			}
-			if (actualSourceCodes.size() > 0)
-				m_sourceCodes = actualSourceCodes;
-			map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+			//replace the internal map so that every source has its own entry
+			m_sourceCodes = tmp_sources;
 			//feed AST to compiler
 			m_compiler->reset(false);
-			bool import = m_compiler->importASTs(reconstructedSources);
+			bool import = m_compiler->importASTs(sourceJsons);
+			if (supplementarySourceCodes.size() > 0)
+				m_compiler->saveImportedSourceCodes(supplementarySourceCodes);
 			//use the compiler's analyzer to annotate, typecheck, etc...
 			if (!import || !m_compiler->analyze())
 				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
@@ -1203,5 +1217,25 @@ void CommandLineInterface::outputCompilationResults()
 	handleFormal();
 }
 
+//bool CommandLineInterface::replaceJsonWithSolName(string const& _solname, map<string,string> &_srcList)
+//{
+//	ret = false;
+//	vector<string> nameParts;
+//	boost::algorithm::split(nameParts, _solname, boost::is_any_of("."));
+//	int i = 0;
+//	for (auto const& pair: _srcList)
+//	{
+//		vector<string> jsonParts;
+//		boost::algorithm::split(jsonParts, pair.first, String, boost::is_any_of("."));
+//		solAssert(jsonParts.size() == 2 && nameParts.size() == 2, "filenames could not be resolved"); //can i
+//		if (nameParts[1] == "sol" && jsonParts[1] == "json" && nameParts[0] == jsonParts[0])
+//		{
+//			_jsonList[_solname] =
+//			_jsonList.erase(pair.first);
+
+//		i++;
+//	}
+//	return ret;
+//}
 }
 }

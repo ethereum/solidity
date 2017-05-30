@@ -41,6 +41,7 @@
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -270,23 +271,34 @@ bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
 	return parseAndAnalyze();
 }
 
-bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
+bool CompilerStack::importASTs(map<string, Json::Value const*> _sources)
 {
 	if (m_stackState != Empty)
 		return false;
-	for (auto& src : _sources)
+	m_sourceJsons = _sources;
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_sourceJsons).jsonToSourceUnit();
+	for (auto& src : reconstructedSources)
 	{
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		//source.scanner will stay empty
+		//source.scanner will stay empty, can be initialized if the sourceCode is additionally supplemented
 		m_sources[path] = source;
 	}
 	m_stackState = ParsingSuccessful;
 	m_importedSources = true;
 	return true;
-	//	in case not all necessary contracts are in the list, //TODO???
-	//	import and parse the missing ones
+}
+
+void CompilerStack::saveImportedSourceCodes(map<string, string> _sources)
+{
+	for (auto& src: _sources)
+		if (m_sources.count(src.first))
+		{
+			ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(src.second));
+			m_sources[src.first].scanner = scanner;
+			cout << "added srcfile" << std::endl;
+		}
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -801,14 +813,14 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = m_importedSources ? "JSON" : "Solidity";
+	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	meta["sources"] = Json::objectValue;
-	if (!m_importedSources)
-		for (auto const& s: m_sources)
+	for (auto const& s: m_sources)
+	{
+		if (s.second.scanner)
 		{
-			solAssert(s.second.scanner, "Scanner not available");
 			meta["sources"][s.first]["keccak256"] =
 				"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
 			if (m_metadataLiteralSources)
@@ -820,8 +832,18 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 					"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
 				);
 			}
+
 		}
+		else
+			meta[s.first]["keccak256"] = "no source code available";
+		if (m_importedSources)
+		{
+			solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
+//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO
+		}
+	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
+	meta["settings"]["compiledFrom"] = m_importedSources ? "AST-Json" : "Solidity source file";
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;

@@ -80,6 +80,9 @@ private:
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
+	/// helper-function for the import to match up json with sourceCode-files
+	/// returns true if ".sol"-file _name has acorresponding .json file among the keys of the list
+//	bool assertJsonExists(std::string const& _solname, std::map<std::string,std::string> const& _jsonList);
 
 	bool m_error = false; ///< If true, some error occurred.
 
@@ -97,6 +100,7 @@ private:
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+
 };
 
 }

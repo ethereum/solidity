@@ -271,14 +271,15 @@ BOOST_AUTO_TEST_CASE(importAST)
 	//first build the ast without scopes and types
 	map<string, Json::Value const*> sourceList;
 	sourceList["a"] = &originalJson;
-	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
+//	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
 	//	newPartialAST
 	//next, put it into a map that can be given to the compiler
 //	map<string, shared_ptr<SourceUnit>> tmp;
 //	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
 //	//reset compiler and load map
 	c.reset(false);
-	bool import = c.importASTs(reconstructedSources);
+	bool import = c.importASTs(sourceList);
+//	bool import = c.importASTs(reconstructedSources);
 ////	//use the compiler's analyzer to annotate, typecheck, etc...
 	if (import)
 		c.analyze();
