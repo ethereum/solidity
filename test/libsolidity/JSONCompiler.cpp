@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(dev::jsonCompactPrint(result["sources"]["fileA"]["AST"]) ==
                 "{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]}},"
                 "\"children\":[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],"
-                "\"contractKind\":\"contract\",\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],"
+		"\"contractKind\":\"contract\",\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],"
                 "\"name\":\"A\",\"nodes\":[null],\"scope\":2},\"id\":1,\"name\":\"ContractDefinition\","
                 "\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}");
 }
