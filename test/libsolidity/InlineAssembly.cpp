@@ -22,7 +22,7 @@
 
 #include "../TestHelper.h"
 
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/AssemblyStack.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
@@ -47,15 +47,20 @@ namespace test
 namespace
 {
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _assemble = false, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	assembly::InlineAssemblyStack stack;
+	AssemblyStack stack;
 	bool success = false;
 	try
 	{
-		success = stack.parse(std::make_shared<Scanner>(CharStream(_source)));
+		success = stack.parseAndAnalyze("", _source);
 		if (success && _assemble)
-			stack.assemble();
+			stack.assemble(_machine);
 	}
 	catch (FatalError const&)
 	{
@@ -82,14 +87,20 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _ass
 	return {};
 }
 
-bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+bool successParse(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _machine);
 }
 
 bool successAssemble(string const& _source, bool _allowWarnings = true)
 {
-	return successParse(_source, true, _allowWarnings);
+	return successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM) &&
+		successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM15);
 }
 
 Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
@@ -102,10 +113,10 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 
 void parsePrintCompare(string const& _source)
 {
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), _source);
+	BOOST_CHECK_EQUAL(stack.print(), _source);
 }
 
 }
@@ -376,10 +387,10 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(source))));
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), parsed);
+	BOOST_CHECK_EQUAL(stack.print(), parsed);
 	parsePrintCompare(parsed);
 }
 
