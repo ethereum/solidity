@@ -80,14 +80,14 @@ protected:
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
-		int _initialStackHeight
+		int _stackAdjustment
 	):
 		m_errorReporter(_errorReporter),
 		m_assembly(_assembly),
 		m_info(_analysisInfo),
 		m_evm15(_evm15),
 		m_identifierAccess(_identifierAccess),
-		m_initialStackHeight(_initialStackHeight)
+		m_stackAdjustment(_stackAdjustment)
 	{}
 
 public:
@@ -128,7 +128,11 @@ public:
 	solidity::assembly::Scope* m_scope = nullptr;
 	bool m_evm15 = false;
 	ExternalIdentifierAccess m_identifierAccess;
-	int const m_initialStackHeight;
+	/// Adjustment between the stack height as determined during the analysis phase
+	/// and the stack height in the assembly. This is caused by an initial stack being present
+	/// for inline assembly and different stack heights depending on the EVM backend used
+	/// (EVM 1.0 or 1.5).
+	int m_stackAdjustment = 0;
 };
 
 }
