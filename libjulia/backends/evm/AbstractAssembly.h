@@ -83,7 +83,7 @@ public:
 	/// Call a subroutine.
 	virtual void appendJumpsub(LabelID _label, int _arguments, int _returns) = 0;
 	/// Return from a subroutine.
-	virtual void appendReturnsub(int _returns) = 0;
+	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
 };
 
 enum class IdentifierContext { LValue, RValue };

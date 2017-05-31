@@ -134,12 +134,12 @@ void EVMAssembly::appendJumpsub(AbstractAssembly::LabelID _labelId, int _argumen
 	m_stackHeight += _returns - _arguments;
 }
 
-void EVMAssembly::appendReturnsub(int _returns)
+void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
 	solAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	solAssert(_returns >= 0, "");
 	m_bytecode.push_back(byte(solidity::Instruction::RETURNSUB));
-	m_stackHeight -= _returns;
+	m_stackHeight += _stackDiffAfter - _returns;
 }
 
 eth::LinkerObject EVMAssembly::finalize()

@@ -347,7 +347,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 
 	if (m_evm15)
-		m_assembly.appendReturnsub(_function.returns.size());
+		m_assembly.appendReturnsub(_function.returns.size(), stackHeightBefore);
 	else
 		m_assembly.appendJump(stackHeightBefore - _function.returns.size());
 	m_stackAdjustment -= localStackAdjustment;

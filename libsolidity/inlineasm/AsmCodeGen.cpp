@@ -115,7 +115,7 @@ public:
 	}
 
 	/// Return from a subroutine.
-	virtual void appendReturnsub(int) override
+	virtual void appendReturnsub(int, int) override
 	{
 		// TODO we could emulate that, though
 		solAssert(false, "RETURNSUB not implemented for EVM 1.0");

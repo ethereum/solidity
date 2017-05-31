@@ -68,7 +68,7 @@ public:
 	/// Call a subroutine.
 	virtual void appendJumpsub(LabelID _label, int _arguments, int _returns) override;
 	/// Return from a subroutine.
-	virtual void appendReturnsub(int _returns) override;
+	virtual void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
 
 	/// Resolves references inside the bytecode and returns the linker object.
