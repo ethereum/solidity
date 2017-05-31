@@ -105,6 +105,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	{
 		returnLabel = m_assembly.newLabelId();
 		m_assembly.appendLabelReference(returnLabel);
+		m_stackAdjustment++;
 	}
 
 	Scope::Function* function = nullptr;
@@ -125,6 +126,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	{
 		m_assembly.appendJumpTo(*function->id, function->returns.size() - function->arguments.size() - 1);
 		m_assembly.appendLabel(returnLabel);
+		m_stackAdjustment--;
 	}
 	checkStackHeight(&_call);
 }
@@ -280,7 +282,8 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	Scope::Function& function = boost::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 	assignLabelIdIfUnset(function.id);
 
-	int height = m_evm15 ? 0 : 1;
+	int const localStackAdjustment = m_evm15 ? 0 : 1;
+	int height = localStackAdjustment;
 	solAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	solAssert(varScope, "");
@@ -294,12 +297,18 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_assembly.setSourceLocation(_function.location);
 	int stackHeightBefore = m_assembly.stackHeight();
 	AbstractAssembly::LabelID afterFunction = m_assembly.newLabelId();
-	m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
 
 	if (m_evm15)
+	{
+		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
 		m_assembly.appendBeginsub(*function.id, _function.arguments.size());
+	}
 	else
+	{
+		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
 		m_assembly.appendLabel(*function.id);
+	}
+	m_stackAdjustment += localStackAdjustment;
 
 	for (auto const& v: _function.returns)
 	{
@@ -309,10 +318,11 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, 0).run(_function.body);
+	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment)
+		.run(_function.body);
 
-	if (_function.arguments.size() > 0)
 	{
+		// Stack of target positions of stack elements
 		vector<int> stackLayout;
 		if (!m_evm15)
 			stackLayout.push_back(_function.returns.size()); // Move return label to the top
@@ -321,7 +331,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			stackLayout.push_back(i);
 
 		solAssert(stackLayout.size() <= 17, "Stack too deep");
-		while (stackLayout.back() != int(stackLayout.size() - 1))
+		while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))
 			if (stackLayout.back() < 0)
 			{
 				m_assembly.appendInstruction(solidity::Instruction::POP);
@@ -340,13 +350,14 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendReturnsub(_function.returns.size());
 	else
 		m_assembly.appendJump(stackHeightBefore - _function.returns.size());
+	m_stackAdjustment -= localStackAdjustment;
 	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);
 }
 
 void CodeTransform::operator()(Block const& _block)
 {
-	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, m_initialStackHeight).run(_block);
+	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment).run(_block);
 }
 
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
@@ -420,11 +431,11 @@ void CodeTransform::checkStackHeight(void const* _astElement)
 {
 	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
 	solAssert(
-		m_info.stackHeightInfo.at(_astElement) == m_assembly.stackHeight() - m_initialStackHeight,
+		m_info.stackHeightInfo.at(_astElement) == m_assembly.stackHeight() - m_stackAdjustment,
 		"Stack height mismatch between analysis and code generation phase: Analysis: " +
 		to_string(m_info.stackHeightInfo.at(_astElement)) +
 		" code gen: " +
-		to_string(m_assembly.stackHeight() - m_initialStackHeight)
+		to_string(m_assembly.stackHeight() - m_stackAdjustment)
 	);
 }
 

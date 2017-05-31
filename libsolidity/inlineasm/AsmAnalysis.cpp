@@ -203,8 +203,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	}
 
 	int const stackHeight = m_stackHeight;
-	// 1 for return label, depends on VM version
-	m_stackHeight = 1 + _funDef.arguments.size() + _funDef.returns.size();
+	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
 
 	bool success = (*this)(_funDef.body);
 
@@ -258,11 +257,10 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 			success = false;
 		}
 	}
-	m_stackHeight += 1; // Return label, but depends on backend
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
-	m_stackHeight += int(returns) - int(arguments) - 1; // Return label, but depends on backend
+	m_stackHeight += int(returns) - int(arguments);
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }
