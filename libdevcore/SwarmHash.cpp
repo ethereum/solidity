@@ -56,7 +56,7 @@ h256 swarmHashIntermediate(string const& _input, size_t _offset, size_t _length)
 		}
 		ref = bytesConstRef(&innerNodes);
 	}
-	return swarmHashSimple(ref, _length);
+	return swarmHashSimple(ref, ref.size());
 }
 
 h256 dev::swarmHash(string const& _input)
