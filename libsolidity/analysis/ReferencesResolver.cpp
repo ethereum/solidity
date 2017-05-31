@@ -191,7 +191,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 			if (var->isLocalVariable() && _crossesFunctionBoundary)
 			{
-				m_errorReporter.declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
+				declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
 				return size_t(-1);
 			}
 		_inlineAssembly.annotation().externalReferences[&_identifier].isSlot = isSlot;
@@ -319,6 +319,12 @@ void ReferencesResolver::fatalTypeError(SourceLocation const& _location, string 
 {
 	m_errorOccurred = true;
 	m_errorReporter.fatalTypeError(_location, _description);
+}
+
+void ReferencesResolver::declarationError(SourceLocation const& _location, string const& _description)
+{
+	m_errorOccurred = true;
+	m_errorReporter.declarationError(_location, _description);
 }
 
 void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
