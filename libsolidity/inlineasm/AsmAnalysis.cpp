@@ -349,9 +349,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		if (!boost::apply_visitor(*this, s))
 			success = false;
 
-	for (auto const& identifier: scope(&_block).identifiers)
-		if (identifier.second.type() == typeid(Scope::Variable))
-			--m_stackHeight;
+	m_stackHeight -= scope(&_block).numberOfVariables();
 
 	int const stackDiff = m_stackHeight - initialStackHeight;
 	if (stackDiff != 0)

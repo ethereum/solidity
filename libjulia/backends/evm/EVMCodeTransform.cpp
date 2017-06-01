@@ -43,9 +43,8 @@ void CodeTransform::run(Block const& _block)
 	m_assembly.setSourceLocation(_block.location);
 
 	// pop variables
-	for (auto const& identifier: m_scope->identifiers)
-		if (identifier.second.type() == typeid(Scope::Variable))
-			m_assembly.appendInstruction(solidity::Instruction::POP);
+	for (size_t i = 0; i < m_scope->numberOfVariables(); ++i)
+		m_assembly.appendInstruction(solidity::Instruction::POP);
 
 	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
 	solAssert(deposit == 0, "Invalid stack height at end of block.");
