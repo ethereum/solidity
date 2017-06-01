@@ -345,7 +345,7 @@ bool AsmAnalyzer::expectExpression(Statement const& _statement)
 	{
 		m_errorReporter.typeError(
 			locationOf(_statement),
-			"Expected expression to return one item to the stack but did return " +
+			"Expected expression to return one item to the stack, but did return " +
 			boost::lexical_cast<string>(m_stackHeight - initialHeight) +
 			" items."
 		);
