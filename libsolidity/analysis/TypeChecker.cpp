@@ -573,7 +573,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
 		!FunctionType(_variable).interfaceFunctionType()
 	)
-		m_errorReporter.typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+		m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 
 	if (varType->category() == Type::Category::Array)
 		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
@@ -664,7 +664,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
-			m_errorReporter.typeError(var->location(), "Internal type is not allowed as event parameter type.");
+			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
 	}
 	return false;
 }
