@@ -86,7 +86,7 @@ void EVMAssembly::appendJump(int _stackDiffAfter)
 	m_stackHeight += _stackDiffAfter;
 }
 
-void EVMAssembly::appendJumpTo(AbstractAssembly::LabelID _labelId, int _stackDiffAfter)
+void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 {
 	if (m_evm15)
 	{
@@ -101,7 +101,7 @@ void EVMAssembly::appendJumpTo(AbstractAssembly::LabelID _labelId, int _stackDif
 	}
 }
 
-void EVMAssembly::appendJumpToIf(AbstractAssembly::LabelID _labelId)
+void EVMAssembly::appendJumpToIf(LabelID _labelId)
 {
 	if (m_evm15)
 	{
@@ -116,7 +116,7 @@ void EVMAssembly::appendJumpToIf(AbstractAssembly::LabelID _labelId)
 	}
 }
 
-void EVMAssembly::appendBeginsub(AbstractAssembly::LabelID _labelId, int _arguments)
+void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
 {
 	solAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	solAssert(_arguments >= 0, "");
@@ -125,7 +125,7 @@ void EVMAssembly::appendBeginsub(AbstractAssembly::LabelID _labelId, int _argume
 	m_stackHeight += _arguments;
 }
 
-void EVMAssembly::appendJumpsub(AbstractAssembly::LabelID _labelId, int _arguments, int _returns)
+void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
 {
 	solAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	solAssert(_arguments >= 0 && _returns >= 0, "");
@@ -160,14 +160,14 @@ eth::LinkerObject EVMAssembly::finalize()
 	return obj;
 }
 
-void EVMAssembly::setLabelToCurrentPosition(AbstractAssembly::LabelID _labelId)
+void EVMAssembly::setLabelToCurrentPosition(LabelID _labelId)
 {
 	solAssert(m_labelPositions.count(_labelId), "Label not found.");
 	solAssert(m_labelPositions[_labelId] == size_t(-1), "Label already set.");
 	m_labelPositions[_labelId] = m_bytecode.size();
 }
 
-void EVMAssembly::appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId)
+void EVMAssembly::appendLabelReferenceInternal(LabelID _labelId)
 {
 	m_labelReferences[m_bytecode.size()] = _labelId;
 	m_bytecode += bytes(labelReferenceSize);

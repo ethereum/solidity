@@ -262,6 +262,7 @@ void CodeTransform::operator()(Switch const& _switch)
 		m_assembly.setSourceLocation(c.first->location);
 		m_assembly.appendLabel(c.second);
 		(*this)(c.first->body);
+		// Avoid useless "jump to next" for the last case.
 		if (--numCases > 0)
 		{
 			m_assembly.setSourceLocation(c.first->location);
@@ -315,6 +316,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		var.stackHeight = height++;
 		var.active = true;
+		// Preset stack slots for return variables to zero.
 		m_assembly.appendConstant(u256(0));
 	}
 
@@ -322,13 +324,20 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		.run(_function.body);
 
 	{
-		// Stack of target positions of stack elements
+		// The stack layout here is:
+		// <return label>? <arguments...> <return values...>
+		// But we would like it to be:
+		// <return values...> <return label>?
+		// So we have to append some SWAP and POP instructions.
+
+		// This vector holds the desired target positions of all stack slots and is
+		// modified parallel to the actual stack.
 		vector<int> stackLayout;
 		if (!m_evm15)
 			stackLayout.push_back(_function.returns.size()); // Move return label to the top
 		stackLayout += vector<int>(_function.arguments.size(), -1); // discard all arguments
 		for (size_t i = 0; i < _function.returns.size(); ++i)
-			stackLayout.push_back(i);
+			stackLayout.push_back(i); // Move return values down, but keep order.
 
 		solAssert(stackLayout.size() <= 17, "Stack too deep");
 		while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))

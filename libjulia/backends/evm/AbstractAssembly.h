@@ -72,17 +72,22 @@ public:
 
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
+	/// This is helpful to stack height analysis if there is no continuing control flow.
 	virtual void appendJump(int _stackDiffAfter) = 0;
 
 	/// Append a jump-to-immediate operation.
+	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendJumpTo(LabelID _label, int _stackDiffAfter = 0) = 0;
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _label) = 0;
-	/// Start a subroutine.
+	/// Start a subroutine identified by @a _label that takes @a _arguments
+	/// stack slots as arguments.
 	virtual void appendBeginsub(LabelID _label, int _arguments) = 0;
-	/// Call a subroutine.
+	/// Call a subroutine identified by @a _label, taking @a _arguments from the
+	/// stack upon call and putting @a _returns arguments onto the stack upon return.
 	virtual void appendJumpsub(LabelID _label, int _arguments, int _returns) = 0;
 	/// Return from a subroutine.
+	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
 };
 

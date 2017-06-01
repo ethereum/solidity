@@ -104,6 +104,7 @@ public:
 	void operator()(solidity::assembly::FunctionDefinition const&);
 	void operator()(solidity::assembly::Block const& _block);
 
+private:
 	AbstractAssembly::LabelID labelFromIdentifier(solidity::assembly::Identifier const& _identifier);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
