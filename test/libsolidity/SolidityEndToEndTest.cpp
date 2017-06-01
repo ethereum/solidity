@@ -9691,10 +9691,10 @@ BOOST_AUTO_TEST_CASE(return_structs)
 			function f() returns (uint x, S s) {
 				x = 7;
 				s.a = 8;
-				s.sub = new S[](3);
-				s.sub[0][0] = 9;
-				s.sub[1][0] = 10;
-				s.sub[2][1] = 11;
+				s.sub = new T[](3);
+				s.sub[0].x[0] = 9;
+				s.sub[1].x[0] = 10;
+				s.sub[2].x[1] = 11;
 			}
 		}
 	)";

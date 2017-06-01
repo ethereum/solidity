@@ -3283,7 +3283,7 @@ BOOST_AUTO_TEST_CASE(library_memory_struct)
 			function f() public returns (S ) {}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal type is not allowed for public or external functions.");
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
@@ -5402,7 +5402,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[] x; }
-			function f() returns (uint x, S s) {
+			function f() returns (uint, S) {
 			}
 		}
 	)";
@@ -5414,36 +5414,36 @@ BOOST_AUTO_TEST_CASE(return_recursive_structs)
 	char const* text = R"(
 		contract C {
 			struct S { uint a; S[] sub; }
-			function f() returns (uint x, S s) {
+			function f() returns (uint, S) {
 			}
 		}
 	)";
-	success(text);
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(return_recursive_structs2)
 {
 	char const* text = R"(
 		contract C {
-			struct S { uint a; S[2] sub; }
-			function f() returns (uint x, S s) {
+			struct S { uint a; S[2][] sub; }
+			function f() returns (uint, S) {
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "recursive data types in external functions.");
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(return_recursive_structs3)
 {
 	char const* text = R"(
 		contract C {
-			struct S { uint a; S sub; }
+			struct S { uint a; S[][][] sub; }
 			struct T { S s; }
 			function f() returns (uint x, T t) {
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "recursive data types in external functions.");
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
