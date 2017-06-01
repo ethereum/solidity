@@ -400,15 +400,6 @@ eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName)
 	return contract(_contractName).cloneObject;
 }
 
-dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
-{
-	auto const& obj = runtimeObject(_contractName);
-	if (obj.bytecode.empty() || !obj.linkReferences.empty())
-		return dev::h256();
-	else
-		return dev::keccak256(obj.bytecode);
-}
-
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
 {
 	Contract const& currentContract = contract(_contractName);
@@ -520,24 +511,6 @@ ContractDefinition const& CompilerStack::contractDefinition(string const& _contr
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return *contract(_contractName).contract;
-}
-
-size_t CompilerStack::functionEntryPoint(
-	std::string const& _contractName,
-	FunctionDefinition const& _function
-) const
-{
-	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
-	if (!compiler)
-		return 0;
-	eth::AssemblyItem tag = compiler->functionEntryLabel(_function);
-	if (tag.type() == eth::UndefinedItem)
-		return 0;
-	eth::AssemblyItems const& items = compiler->runtimeAssemblyItems();
-	for (size_t i = 0; i < items.size(); ++i)
-		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
-			return i;
-	return 0;
 }
 
 tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
@@ -742,14 +715,6 @@ void CompilerStack::compileContract(
 
 		// TODO: Report error / warning
 	}
-}
-
-std::string CompilerStack::defaultContractName() const
-{
-	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
-
-	return contract("").contract->name();
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
