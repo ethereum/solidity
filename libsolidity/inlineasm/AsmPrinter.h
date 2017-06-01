@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmDataForward.h>
+
 #include <boost/variant.hpp>
 
 namespace dev
@@ -30,19 +32,6 @@ namespace solidity
 {
 namespace assembly
 {
-struct Instruction;
-struct Literal;
-struct Identifier;
-struct FunctionalInstruction;
-struct Label;
-struct StackAssignment;
-struct Assignment;
-struct VariableDeclaration;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Switch;
-struct ForLoop;
-struct Block;
 
 class AsmPrinter: public boost::static_visitor<std::string>
 {

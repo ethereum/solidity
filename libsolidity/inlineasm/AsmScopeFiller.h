@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmDataForward.h>
+
 #include <boost/variant.hpp>
 
 #include <functional>
@@ -35,20 +37,6 @@ namespace assembly
 {
 
 struct TypedName;
-struct Literal;
-struct Block;
-struct Label;
-struct FunctionalInstruction;
-struct Assignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct StackAssignment;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Switch;
-struct ForLoop;
-
 struct Scope;
 struct AsmAnalysisInfo;
 

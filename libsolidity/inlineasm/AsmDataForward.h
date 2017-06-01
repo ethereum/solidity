@@ -15,18 +15,14 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Information generated during analyzer part of inline assembly.
+ * @author Christian <c@ethdev.com>
+ * @date 2016
+ * Forward declaration of classes for inline assembly / JULIA AST
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
-
 #include <boost/variant.hpp>
-
-#include <map>
-#include <memory>
-#include <vector>
 
 namespace dev
 {
@@ -35,17 +31,21 @@ namespace solidity
 namespace assembly
 {
 
-struct Scope;
+struct Instruction;
+struct Literal;
+struct Label;
+struct StackAssignment;
+struct Identifier;
+struct Assignment;
+struct VariableDeclaration;
+struct FunctionalInstruction;
+struct FunctionDefinition;
+struct FunctionCall;
+struct Switch;
+struct ForLoop;
+struct Block;
 
-struct AsmAnalysisInfo
-{
-	using StackHeightInfo = std::map<void const*, int>;
-	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	StackHeightInfo stackHeightInfo;
-	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks;
-};
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, ForLoop, Block>;
 
 }
 }

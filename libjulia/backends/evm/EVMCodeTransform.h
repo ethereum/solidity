@@ -21,6 +21,7 @@
 #include <libjulia/backends/evm/EVMAssembly.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
+#include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

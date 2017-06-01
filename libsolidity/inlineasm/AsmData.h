@@ -22,9 +22,12 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
+#include <libsolidity/inlineasm/AsmDataForward.h>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
+
+#include <boost/variant.hpp>
 
 namespace dev
 {
@@ -37,24 +40,6 @@ using Type = std::string;
 
 struct TypedName { SourceLocation location; std::string name; Type type; };
 using TypedNameList = std::vector<TypedName>;
-
-/// What follows are the AST nodes for assembly.
-
-struct Instruction;
-struct Literal;
-struct Label;
-struct StackAssignment;
-struct Identifier;
-struct Assignment;
-struct VariableDeclaration;
-struct FunctionalInstruction;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Switch;
-struct ForLoop;
-struct Block;
-
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, ForLoop, Block>;
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
