@@ -139,13 +139,8 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	solAssert(!m_julia, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
-	{
-		int const stackHeight = m_stackHeight;
-		if (!boost::apply_visitor(*this, arg))
+		if (!expectExpression(arg))
 			success = false;
-		if (!expectDeposit(1, stackHeight, locationOf(arg)))
-			success = false;
-	}
 	// Parser already checks that the number of arguments is correct.
 	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
 	if (!(*this)(_instr.instruction))
@@ -260,13 +255,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		}
 	}
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
-	{
-		int const stackHeight = m_stackHeight;
-		if (!boost::apply_visitor(*this, arg))
+		if (!expectExpression(arg))
 			success = false;
-		if (!expectDeposit(1, stackHeight, locationOf(arg)))
-			success = false;
-	}
 	m_stackHeight += int(returns) - int(arguments);
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
@@ -276,20 +266,16 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 {
 	bool success = true;
 
-	int const initialStackHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, *_switch.expression))
+	if (!expectExpression(*_switch.expression))
 		success = false;
-	expectDeposit(1, initialStackHeight, locationOf(*_switch.expression));
 
 	set<tuple<LiteralKind, string>> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
 		{
-			int const initialStackHeight = m_stackHeight;
-			if (!(*this)(*_case.value))
+			if (!expectExpression(*_case.value))
 				success = false;
-			expectDeposit(1, initialStackHeight, _case.value->location);
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
@@ -349,6 +335,25 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	return success;
 }
 
+bool AsmAnalyzer::expectExpression(Statement const& _statement)
+{
+	bool success = true;
+	int const initialHeight = m_stackHeight;
+	if (!boost::apply_visitor(*this, _statement))
+		success = false;
+	if (m_stackHeight - initialHeight != 1)
+	{
+		m_errorReporter.typeError(
+			locationOf(_statement),
+			"Expected instruction(s) to deposit one item to the stack but did deposit " +
+			boost::lexical_cast<string>(m_stackHeight - initialHeight) +
+			" items."
+		);
+		success = false;
+	}
+	return success;
+}
+
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
 	bool success = true;
@@ -399,25 +404,6 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		success = false;
 	}
 	return success;
-}
-
-bool AsmAnalyzer::expectDeposit(int const _deposit, int const _oldHeight, SourceLocation const& _location)
-{
-	int stackDiff = m_stackHeight - _oldHeight;
-	if (stackDiff != _deposit)
-	{
-		m_errorReporter.typeError(
-			_location,
-			"Expected instruction(s) to deposit " +
-			boost::lexical_cast<string>(_deposit) +
-			" item(s) to the stack, but did deposit " +
-			boost::lexical_cast<string>(stackDiff) +
-			" item(s)."
-		);
-		return false;
-	}
-	else
-		return true;
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
