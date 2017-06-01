@@ -509,6 +509,11 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	BOOST_CHECK(successAssemble("{ let r := 2 function f() -> x, y { x := 1 y := 2} let a, b := f() b := r }"));
 }
 
+BOOST_AUTO_TEST_CASE(embedded_functions)
+{
+	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
+}
+
 BOOST_AUTO_TEST_CASE(switch_statement)
 {
 	BOOST_CHECK(successAssemble("{ switch 1 default {} }"));
