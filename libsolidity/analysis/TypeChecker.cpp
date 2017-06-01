@@ -483,7 +483,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
-			m_errorReporter.fatalTypeError(var->location(), "Internal type is not allowed for public or external functions.");
+			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
 
 		var->accept(*this);
 	}
