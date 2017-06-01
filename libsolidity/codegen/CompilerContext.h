@@ -141,8 +141,6 @@ public:
 	CompilerContext&  appendInvalid();
 	/// Appends a conditional INVALID instruction
 	CompilerContext&  appendConditionalInvalid();
-	/// Returns an "ErrorTag"
-	eth::AssemblyItem errorTag() { return m_asm->errorTag(); }
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.

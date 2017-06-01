@@ -69,7 +69,6 @@ public:
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(solidity::Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMPI); return ret; }
-	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
