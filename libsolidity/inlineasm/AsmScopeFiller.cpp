@@ -111,9 +111,24 @@ bool ScopeFiller::operator()(Switch const& _switch)
 	return success;
 }
 
-bool ScopeFiller::operator()(ForLoop const&)
+bool ScopeFiller::operator()(ForLoop const& _forLoop)
 {
-	solAssert(false, "For loop not supported.");
+	Scope* originalScope = m_currentScope;
+
+	bool success = true;
+	if (!(*this)(_forLoop.pre))
+		success = false;
+	m_currentScope = &scope(&_forLoop.pre);
+	if (!boost::apply_visitor(*this, *_forLoop.condition))
+		success = false;
+	if (!(*this)(_forLoop.body))
+		success = false;
+	if (!(*this)(_forLoop.post))
+		success = false;
+
+	m_currentScope = originalScope;
+
+	return success;
 }
 
 bool ScopeFiller::operator()(Block const& _block)
