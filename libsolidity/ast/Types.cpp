@@ -1769,8 +1769,10 @@ TypePointer StructType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && location() == DataLocation::Storage)
 		return shared_from_this();
-	else
+	else if (!recursive())
 		return copyForLocation(DataLocation::Memory, true);
+	else
+		return TypePointer();
 }
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -1834,6 +1836,29 @@ set<string> StructType::membersMissingInMemory() const
 		if (!variable->annotation().type->canLiveOutsideStorage())
 			missing.insert(variable->name());
 	return missing;
+}
+
+bool StructType::recursive() const
+{
+	set<StructDefinition const*> structsSeen;
+	function<bool(StructType const*)> check = [&](StructType const* t) -> bool
+	{
+		StructDefinition const* str = &t->structDefinition();
+		if (structsSeen.count(str))
+			return true;
+		structsSeen.insert(str);
+		for (ASTPointer<VariableDeclaration> const& variable: str->members())
+		{
+			Type const* memberType = variable->annotation().type.get();
+			while (dynamic_cast<ArrayType const*>(memberType))
+				memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
+			if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+				if (check(innerStruct))
+					return true;
+		}
+		return false;
+	};
+	return check(this);
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const

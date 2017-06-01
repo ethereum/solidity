@@ -758,6 +758,10 @@ public:
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
 
+	/// @returns true if the same struct is used recursively in one of its members. Only
+	/// analyses the "memory" representation, i.e. mappings are ignored in all structs.
+	bool recursive() const;
+
 private:
 	StructDefinition const& m_struct;
 };
