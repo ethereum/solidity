@@ -117,7 +117,6 @@ public:
 	bool parseAndAnalyze(std::string const& _sourceCode);
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
-	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	/// @returns false on error.
@@ -159,11 +158,6 @@ public:
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
-	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
-	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
-	/// does not have runtime code.
-	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
-
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFromat shows whether the out should be in Json format
@@ -196,13 +190,6 @@ public:
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
-
-	/// @returns the offset of the entry point of the given function into the list of assembly items
-	/// or zero if it is not found or does not exist.
-	size_t functionEntryPoint(
-		std::string const& _contractName,
-		FunctionDefinition const& _function
-	) const;
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
@@ -271,6 +258,13 @@ private:
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 	Json::Value const& contractABI(Contract const&) const;
 	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
+
+	/// @returns the offset of the entry point of the given function into the list of assembly items
+	/// or zero if it is not found or does not exist.
+	size_t functionEntryPoint(
+		std::string const& _contractName,
+		FunctionDefinition const& _function
+	) const;
 
 	struct Remapping
 	{

@@ -85,6 +85,7 @@ void CompilerStack::reset(bool _keepSources)
 	}
 	else
 	{
+		m_stackState = Empty;
 		m_sources.clear();
 	}
 	m_optimize = false;
@@ -94,7 +95,6 @@ void CompilerStack::reset(bool _keepSources)
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errorReporter.clear();
-	m_stackState = Empty;
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -398,15 +398,6 @@ eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractNam
 eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName) const
 {
 	return contract(_contractName).cloneObject;
-}
-
-dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
-{
-	auto const& obj = runtimeObject(_contractName);
-	if (obj.bytecode.empty() || !obj.linkReferences.empty())
-		return dev::h256();
-	else
-		return dev::keccak256(obj.bytecode);
 }
 
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
@@ -742,14 +733,6 @@ void CompilerStack::compileContract(
 
 		// TODO: Report error / warning
 	}
-}
-
-std::string CompilerStack::defaultContractName() const
-{
-	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
-
-	return contract("").contract->name();
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
