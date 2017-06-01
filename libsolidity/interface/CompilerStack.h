@@ -259,6 +259,13 @@ private:
 	Json::Value const& contractABI(Contract const&) const;
 	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
 
+	/// @returns the offset of the entry point of the given function into the list of assembly items
+	/// or zero if it is not found or does not exist.
+	size_t functionEntryPoint(
+		std::string const& _contractName,
+		FunctionDefinition const& _function
+	) const;
+
 	struct Remapping
 	{
 		std::string context;

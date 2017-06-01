@@ -85,6 +85,7 @@ void CompilerStack::reset(bool _keepSources)
 	}
 	else
 	{
+		m_stackState = Empty;
 		m_sources.clear();
 	}
 	m_optimize = false;
@@ -94,7 +95,6 @@ void CompilerStack::reset(bool _keepSources)
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errorReporter.clear();
-	m_stackState = Empty;
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -511,6 +511,24 @@ ContractDefinition const& CompilerStack::contractDefinition(string const& _contr
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return *contract(_contractName).contract;
+}
+
+size_t CompilerStack::functionEntryPoint(
+	std::string const& _contractName,
+	FunctionDefinition const& _function
+) const
+{
+	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
+	if (!compiler)
+		return 0;
+	eth::AssemblyItem tag = compiler->functionEntryLabel(_function);
+	if (tag.type() == eth::UndefinedItem)
+		return 0;
+	eth::AssemblyItems const& items = compiler->runtimeAssemblyItems();
+	for (size_t i = 0; i < items.size(); ++i)
+		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
+			return i;
+	return 0;
 }
 
 tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
