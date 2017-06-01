@@ -47,6 +47,8 @@ struct StackAssignment;
 struct FunctionDefinition;
 struct FunctionCall;
 struct Switch;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
+
 
 struct Scope;
 
@@ -83,10 +85,13 @@ public:
 	bool operator()(assembly::Block const& _block);
 
 private:
+	/// Visits the statement and expects it to deposit one item onto the stack.
+	bool expectExpression(Statement const& _statement);
+
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
 	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
-	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
+
 	Scope& scope(assembly::Block const* _block);
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 
