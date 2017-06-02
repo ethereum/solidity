@@ -62,15 +62,15 @@ void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 		function ensureNoValueTransfer()
 		{
 			switch callvalue()
-			case 0 {}
-			default { revert(0, 0) }
+			case 0:u256 {}
+			default { revert(0:u256, 0:u256) }
 		}
 
 		// Extract 32 bit method identifier
-		function extractCallSignature() -> sig
+		function extractCallSignature() -> sig:u256
 		{
 			// FIXME: replace with constant
-			sig := div(calldataload(0), exp(2, 224))
+			sig := div(calldataload(0:u256), exp(2:u256, 224:u256))
 		}
 	}
 	)");
@@ -86,6 +86,7 @@ void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 		assembly::Literal literal;
 		literal.kind = assembly::LiteralKind::Number;
 		literal.value = toHex(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(function->externalSignature()))), HexPrefix::Add);
+		literal.type = "u256";
 
 		assembly::Block body;
 		if (!function->isPayable())
@@ -156,6 +157,10 @@ bool IRGenerate::visit(Throw const& _throw)
 
 bool IRGenerate::visit(InlineAssembly const& _inlineAssembly)
 {
+	/// TODO: translate code to Julia by:
+	/// - appending the type `u256` to everything
+	/// - translating FunctionalInstruction to FunctionCall
+	/// - bailing out on Label/StackAssignment/Instruction
 	m_currentFunction.body.statements.emplace_back(_inlineAssembly.operations());
 	return false;
 }
@@ -165,7 +170,8 @@ void IRGenerate::appendFunction(string const& _function)
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_function), "<irgenerated>");
-	auto result = assembly::Parser(errorReporter).parse(scanner);
+	/// Turn on Julia mode
+	auto result = assembly::Parser(errorReporter, true).parse(scanner);
 	solAssert(result, "");
 	solAssert(errors.empty(), "");
 
@@ -193,6 +199,7 @@ assembly::FunctionCall IRGenerate::createRevert()
 	assembly::Literal zero;
 	zero.kind = assembly::LiteralKind::Number;
 	zero.value = "0";
+	zero.type = "u256";
 
 	assembly::FunctionCall funCall;
 	funCall.functionName.name = "revert";
