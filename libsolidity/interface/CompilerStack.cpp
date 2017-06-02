@@ -288,15 +288,14 @@ void CompilerStack::link()
 	}
 }
 
-AssemblyStack const CompilerStack::assemblyStack() const
+AssemblyStack const CompilerStack::assemblyStack(string const& _contractName) const
 {
-	/// TODO: return an assembly for each contract
 	IRGenerate ir;
 	for (Source const* source: m_sourceOrder)
 		ir.process(*source->ast);
 	AssemblyStack stack;
 	/// TODO: set scanner
-	stack.analyze(ir.body());
+	stack.analyze(ir.contract(_contractName));
 	return stack;
 }
 

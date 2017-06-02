@@ -38,13 +38,21 @@ class IRGenerate: private ASTConstVisitor
 {
 public:
 	/// resets the state
-	void reset() { m_processed = false; m_body.statements.clear(); }
+	void reset() { m_contracts.clear(); }
 
 	/// process a source unit
-	void process(SourceUnit const& _source) { solAssert(!m_processed, ""); _source.accept(*this); m_processed = true; }
+	void process(SourceUnit const& _source) { _source.accept(*this); }
 
 	/// @returns the JULIA block
-	assembly::Block body() const { solAssert(m_processed, ""); return m_body; }
+	assembly::Block contract(std::string const& _contractName) const { solAssert(m_contracts.count(_contractName), ""); return *m_contracts.at(_contractName); }
+
+	/// @returns the contract names
+	std::vector<std::string> contractNames() const {
+		std::vector<std::string> names;
+		for (auto const& contract: m_contracts)
+			names.push_back(contract.first);
+		return names;
+	}
 
 private:
 	virtual bool visitNode(ASTNode const&) override
@@ -67,8 +75,8 @@ private:
 	assembly::Block wrapInBlock(assembly::Statement const&);
 	assembly::FunctionCall createRevert();
 
-	bool m_processed = false;
-	assembly::Block m_body;
+	std::map<std::string, std::shared_ptr<assembly::Block>> m_contracts;
+	std::shared_ptr<assembly::Block> m_body;
 	assembly::FunctionDefinition m_currentFunction;
 };
 

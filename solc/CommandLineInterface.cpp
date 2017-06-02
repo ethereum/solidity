@@ -400,9 +400,12 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 
 void CommandLineInterface::handleIR()
 {
-	AssemblyStack stack = m_compiler->assemblyStack();
-	cout << endl << "======= Intermediate Representation (IR) =======" << endl;
-	cout << stack.print() << endl;
+	for (string const& contractName: m_compiler->contractNames())
+	{
+		cout << endl << "======= Intermediate Representation (IR) of " << contractName << " =======" << endl;
+		AssemblyStack stack = m_compiler->assemblyStack(contractName);
+		cout << stack.print() << endl;
+	}
 }
 
 void CommandLineInterface::readInputFilesAndConfigureRemappings()

@@ -45,7 +45,10 @@ bool IRGenerate::visit(ContractDefinition const& _contract)
 	solUnimplementedAssert(_contract.events().empty(), "Events not supported yet.");
 	solUnimplementedAssert(_contract.functionModifiers().empty(), "Modifiers not supported yet.");
 
-	m_body.location = _contract.location();
+	solAssert(m_contracts[_contract.fullyQualifiedName()] == nullptr, "");
+	m_body = make_shared<assembly::Block>();
+	m_body->location = _contract.location();
+	m_contracts[_contract.fullyQualifiedName()] = m_body;
 
 	ASTNode::listAccept(_contract.definedFunctions(), *this);
 
@@ -113,7 +116,7 @@ void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 		defaultCase.body = wrapInBlock(createRevert());
 	_switch.cases.emplace_back(defaultCase);
 
-	m_body.statements.emplace_back(_switch);
+	m_body->statements.emplace_back(_switch);
 }
 
 bool IRGenerate::visit(FunctionDefinition const& _function)
@@ -137,7 +140,7 @@ bool IRGenerate::visit(FunctionDefinition const& _function)
 void IRGenerate::endVisit(FunctionDefinition const&)
 {
 	// invalidate m_currentFunction
-	m_body.statements.emplace_back(m_currentFunction);
+	m_body->statements.emplace_back(m_currentFunction);
 }
 
 bool IRGenerate::visit(Block const& _node)
@@ -177,7 +180,7 @@ void IRGenerate::appendFunction(string const& _function)
 
 	auto statements = result->statements;
 	for (size_t i = 0; i < statements.size(); ++i)
-		m_body.statements.emplace_back(std::move(statements[i]));
+		m_body->statements.emplace_back(std::move(statements[i]));
 }
 
 assembly::FunctionCall IRGenerate::createFunctionCall(string const& _function)
