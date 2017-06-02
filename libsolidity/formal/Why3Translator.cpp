@@ -169,12 +169,12 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	addLine("storage: state");
 	unindent();
 	addLine("}");
+	addSourceFromDocStrings(m_currentContract.contract->annotation());
 
 	addLine("val external_call (this: account): bool");
 	indent();
 	addLine("ensures { result = false -> this = (old this) }");
 	addLine("writes { this }");
-	addSourceFromDocStrings(m_currentContract.contract->annotation());
 	unindent();
 
 	if (!_contract.baseContracts().empty())
@@ -271,7 +271,6 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	addSourceFromDocStrings(_function.annotation());
 	if (!m_currentContract.contract)
 		error(_function, "Only functions inside contracts allowed.");
-	addSourceFromDocStrings(m_currentContract.contract->annotation());
 
 	if (_function.isDeclaredConst())
 		addLine("ensures { (old this) = this }");
