@@ -74,6 +74,7 @@ public:
 	std::string print();
 
 private:
+	bool analyzeParsed();
 
 	Language m_language = Language::Assembly;
 
