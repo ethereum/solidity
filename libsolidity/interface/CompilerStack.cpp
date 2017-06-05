@@ -282,22 +282,14 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		//source.scanner will stay empty, can be initialized if the sourceCode is additionally supplemented
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
+//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(m_sourceJsons[src.first]->asCString()));
+		source.scanner = scanner;
 		m_sources[path] = source;
 	}
 	m_stackState = ParsingSuccessful;
 	m_importedSources = true;
 	return true;
-}
-
-void CompilerStack::saveImportedSourceCodes(map<string, string> _sources)
-{
-	for (auto& src: _sources)
-		if (m_sources.count(src.first))
-		{
-			ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(src.second));
-			m_sources[src.first].scanner = scanner;
-		}
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -663,7 +655,7 @@ void CompilerStack::resolveImports()
 			{
 				string const& path = import->annotation().absolutePath;
 				solAssert(!path.empty(), "");
-				solAssert(m_sources.count(path), "");
+				solAssert(m_sources.count(path), "sdfsdf");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}

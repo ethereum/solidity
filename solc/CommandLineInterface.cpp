@@ -769,19 +769,17 @@ bool CommandLineInterface::processInput()
 			//read file contents, which either are
 			// a) a json-file with multiple sources
 			// b) a json-file with one source only
-			// c) a .sol file that corresponds to a given json
 			Json::Reader reader;
 			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
 			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
 			map<string, string> supplementarySourceCodes;
-			for (auto& srcPair: m_sourceCodes) // aka <string, string>
+			for (auto const& srcPair: m_sourceCodes) // aka <string, string>
 			{
 				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
 				// try parsing as json
 				if (reader.parse(srcPair.second, *ast, false))
 				{
-//					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("could not be parsed to JSON")); //TODO what to throw
-					// case a)
+					//case a)
 					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
 					{
 						for (auto& src: (*ast)["sourceList"])
@@ -793,8 +791,9 @@ bool CommandLineInterface::processInput()
 								) == 0,
 								"the top-level node of the AST needs to be a 'SourceUnit'"
 							);
-							sourceJsons[src.asCString()] = &((*ast)["sources"][src.asCString()]["AST"]);
+							sourceJsons[src.asCString()] = &((*ast)["sources"][src.asString()]["AST"]);
 							tmp_sources[src.asCString()] = "noSourceCodeAvailable";
+//							tmp_sources[src.asCString()] = ((*ast)["sources"][src.asString()]["AST"]).asString();
 						}
 					}
 					// case b)
@@ -809,19 +808,14 @@ bool CommandLineInterface::processInput()
 						tmp_sources[s] = "noSourceCodeAvailable";
 					}
 				}
-				else // c) supplementary .sol file
-				{
-					if (sourceJsons.count(srcPair.first))
-						supplementarySourceCodes[srcPair.first] = srcPair.second;
-				}
+				else
+					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Input file could not be parsed to JSON"));
 			}
 			//replace the internal map so that every source has its own entry
 			m_sourceCodes = tmp_sources;
 			//feed AST to compiler
 			m_compiler->reset(false);
 			bool import = m_compiler->importASTs(sourceJsons);
-			if (!supplementarySourceCodes.empty())
-				m_compiler->saveImportedSourceCodes(supplementarySourceCodes);
 			//use the compiler's analyzer to annotate, typecheck, etc...
 			if (!import || !m_compiler->analyze())
 				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));

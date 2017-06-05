@@ -116,12 +116,9 @@ public:
 	/// @returns false on error.
 	bool parseAndAnalyze(std::string const& _sourceCode);
 
-	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse()
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
 	/// @returns false if the CompilerStack was not reset beforehand.
-	//bool importASTs(std::map<std::string, std::shared_ptr<SourceUnit>> _sources);
 	bool importASTs(std::map<std::string, Json::Value const*> const& _sources);
-	/// Saves sourcecodes for the imported ASTs, so they can be part of the onchain-metadata
-	void saveImportedSourceCodes(std::map<std::string, std::string> _sources);
 
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;

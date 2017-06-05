@@ -17,7 +17,7 @@
 /**
  * @author julius <djudju@protonmail.com>
  * @date 2017
- * Converts an AST from json format to an ASTNode
+ * Converts the AST from JSON sformat to ASTNode
  */
 
 #pragma once
@@ -34,24 +34,27 @@ namespace solidity
 {
 
 /**
- * takes an AST in Json Format and recreates it with AST-Nodes
+ * Converter of the AST from JSON sformat to ASTNode
  */
 class ASTJsonImporter
 {
 public:
-	/// Create an Importer to import a given abstract syntax tree in Json format to an ASTNode
+	/// Create an importer to import a given abstract syntax tree in Json format to an ASTNode
+	/// @a _sourceList used to provide source names for the ASTs
 	ASTJsonImporter(std::map<std::string, Json::Value const*> _sourceList);
 
-        ///this is the primary Interface from the Outside
+	/// converts the
 	std::map<std::string, ASTPointer<SourceUnit>> jsonToSourceUnit();
 
 private:
+	template <typename T, typename... Args>
+	ASTPointer<T> createASTNode(Json::Value const& _node, Args&&... _args);
 	SourceLocation const createSourceLocation(Json::Value const& _node);
 	///function to be called when the type of the Json-node is unknown
 	ASTPointer<ASTNode> convertJsonToASTNode(Json::Value const& _ast);
 
 	//instantiate the AST-Nodes with the information from the Json-nodes
-	ASTPointer<SourceUnit> createSourceUnit(Json::Value const& _node);
+	ASTPointer<SourceUnit> createSourceUnit(Json::Value const& _node, std::string const& _srcName);
 	ASTPointer<PragmaDirective> createPragmaDirective(Json::Value const& _node);
 	ASTPointer<ImportDirective> createImportDirective(Json::Value const& _node);
 	ASTPointer<ContractDefinition> createContractDefinition(Json::Value const& _node);
@@ -92,23 +95,23 @@ private:
 	ASTPointer<NewExpression> createNewExpression(Json::Value const& _node);
 	ASTPointer<MemberAccess> createMemberAccess(Json::Value const& _node);
 	ASTPointer<IndexAccess> createIndexAccess(Json::Value const& _node);
-	ASTPointer<Identifier> createIdentifier(SourceLocation location, std::string const& name);
+	ASTPointer<Identifier> createIdentifier(Json::Value const& _node, std::string const& name);
 	ASTPointer<ElementaryTypeNameExpression> createElementaryTypeNameExpression(Json::Value const& _node);
 	ASTPointer<ASTNode> createLiteral(Json::Value const& _node);
 
 	template<class T>
 	ASTPointer<T> nullOrCast(Json::Value _json);
-	Declaration::Visibility getVisibility(Json::Value const& _node);
-	VariableDeclaration::Location getLocation(Json::Value const& _node);
-	ContractDefinition::ContractKind getContractKind(Json::Value const& _node);
-	Literal::SubDenomination getSubdenomination(Json::Value const& _node);
-	Token::Value getLiteralTokenKind(Json::Value const& _node);
+	Declaration::Visibility visibility(Json::Value const& _node);
+	VariableDeclaration::Location location(Json::Value const& _node);
+	ContractDefinition::ContractKind contractKind(Json::Value const& _node);
+	Literal::SubDenomination subdenomination(Json::Value const& _node);
+	Token::Value literalTokenKind(Json::Value const& _node);
 	Token::Value scanSingleToken(Json::Value _node);
 //	Json::Value const* m_json;
 //        std::string const& m_name;
 	std::map<std::string, Json::Value const*> m_sourceList;
+	std::vector<std::string> m_sourceOrder;
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
-	std::string m_currentSource;
 
 
 };
