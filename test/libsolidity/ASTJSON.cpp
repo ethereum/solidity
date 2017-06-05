@@ -228,6 +228,28 @@ BOOST_AUTO_TEST_CASE(function_type)
 	BOOST_CHECK_EQUAL(funType["attributes"]["visibility"], "external");
 }
 
+BOOST_AUTO_TEST_CASE(documentation)
+{
+	CompilerStack c;
+	c.addSource("a", "/**This contract is empty*/ contract C {}");
+	c.addSource("b",
+		"/**This contract is empty"
+		" and has a line-breaking comment.*/"
+		"contract C {}"
+	);
+	c.parseAndAnalyze();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 0;
+	sourceIndices["b"] = 1;
+	Json::Value astJsonA = ASTJsonConverter(true, sourceIndices).toJson(c.ast("a"));
+	Json::Value documentationA = astJsonA["children"][0]["attributes"]["documentation"];
+	BOOST_CHECK_EQUAL(documentationA, "This contract is empty");
+	Json::Value astJsonB = ASTJsonConverter(true, sourceIndices).toJson(c.ast("b"));
+	Json::Value documentationB = astJsonB["children"][0]["attributes"]["documentation"];
+	BOOST_CHECK_EQUAL(documentationB, "This contract is empty and has a line-breaking comment.");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
