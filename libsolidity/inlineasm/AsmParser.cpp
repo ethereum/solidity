@@ -163,6 +163,7 @@ assembly::Case Parser::parseCase()
 		if (statement.type() != typeid(assembly::Literal))
 			fatalParserError("Literal expected.");
 		_case.value = make_shared<Literal>(std::move(boost::get<assembly::Literal>(statement)));
+		cout << "After parsing, case value is pointing at: " << size_t(_case.value.get()) << endl;
 	}
 	else
 		fatalParserError("Case or default case expected.");
