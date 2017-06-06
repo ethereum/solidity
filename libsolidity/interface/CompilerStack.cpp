@@ -169,12 +169,11 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
-		else
-		{
-			ASTJsonConverter converter(false, sourceIndices());
-			cout << "Json before registerDecs" << std::endl;
-			cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
-		}
+//		else
+//		{
+//			ASTJsonConverter converter(false, sourceIndices());
+//			cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
+//		}
 
 	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)

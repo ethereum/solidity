@@ -788,8 +788,10 @@ string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
 		return "typeConversion";
 	case FunctionCallKind::StructConstructorCall:
 		return "structConstructorCall";
+	case FunctionCallKind::Unset:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("FunctionCallKind was not set."));
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of function call ."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of function call."));
 	}
 }
 
