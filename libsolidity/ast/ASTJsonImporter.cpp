@@ -55,7 +55,7 @@ ASTJsonImporter::ASTJsonImporter(map<string, Json::Value const*> _sourceList )
         : m_sourceList(_sourceList)
 {
 	for (auto const& src: _sourceList)
-		m_sourceOrder.emplace_back(src.first);
+		m_sourceLocations.emplace_back(make_shared<string const>(src.first));
 }
 
 map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
@@ -85,12 +85,11 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 	solAssert(pos.size() == 3, "invalid source location string");
 	int start = stoi(pos[0]);
 	int end = start + stoi(pos[1]);
-//	shared_ptr<string const> source = make_shared<string const>(m_sourceOrder[stoi(pos[2])]);
-	shared_ptr<string const> source = make_shared<string const>(m_sourceOrder[0]);
+	solAssert(int(m_sourceLocations.size()) >= stoi(pos[2]), "higher src-index than sourceNames");
 	return SourceLocation(
 		start,
 		end,
-		source
+		m_sourceLocations[stoi(pos[2])]
 	);
 }
 

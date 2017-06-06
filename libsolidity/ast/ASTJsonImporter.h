@@ -110,7 +110,7 @@ private:
 //	Json::Value const* m_json;
 //        std::string const& m_name;
 	std::map<std::string, Json::Value const*> m_sourceList;
-	std::vector<std::string> m_sourceOrder;
+	std::vector<std::shared_ptr<std::string const>> m_sourceLocations;
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
 
 
