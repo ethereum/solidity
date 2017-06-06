@@ -35,10 +35,8 @@ template<class T>
 dev::solidity::ASTPointer<T> castPointer(dev::solidity::ASTPointer<dev::solidity::ASTNode> _ast)
 {
 	dev::solidity::ASTPointer<T> ret = dynamic_pointer_cast<T>(_ast);
-	if (!ret)
-		solAssert(false, "");
-	else
-		return ret;
+	solAssert(ret, "");
+	return ret;
 }
 }
 
@@ -69,9 +67,10 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 		{
 			m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second, srcPair.first);
 		}
+		//not sure whether this is the right place to catch this (thrown by boost:split in createSourceLocation())
 		catch (boost::exception const& _e)
 		{
-			solAssert(false, "JSON-Node has invalid src-string");
+			solAssert(false, "JSON-Node has invalid src-string" + boost::diagnostic_information(_e));
 		}
 	}
 	return m_sourceUnits;
@@ -86,7 +85,8 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 	solAssert(pos.size() == 3, "invalid source location string");
 	int start = stoi(pos[0]);
 	int end = start + stoi(pos[1]);
-	shared_ptr<string const> source = make_shared<string const>(m_sourceOrder[stoi(pos[2])]);
+//	shared_ptr<string const> source = make_shared<string const>(m_sourceOrder[stoi(pos[2])]);
+	shared_ptr<string const> source = make_shared<string const>(m_sourceOrder[0]);
 	return SourceLocation(
 		start,
 		end,
@@ -238,7 +238,7 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 	for (auto& tuple: _node["symbolAliases"])
 	{
                 symbolAliases.push_back( make_pair(
-			createIdentifier(_node, tuple["foreign"].asString()), //ATTENTION! is this the correct sourcelocation?? where to  src-location from?
+			createIdentifier(_node, tuple["foreign"].asString()),
 			tuple["local"].isNull() ? make_shared<ASTString>(tuple["local"].asString()) : nullptr //also check if that's not null?
 		));
 	}

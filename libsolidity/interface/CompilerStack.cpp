@@ -194,7 +194,11 @@ bool CompilerStack::analyze()
 				m_globalContext->setCurrentContract(*contract);
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-				if (!resolver.resolveNamesAndTypes(*contract)) return false;
+				if (!resolver.resolveNamesAndTypes(*contract))
+				{
+					cout << "hier" << std::endl;
+					return false;
+				}
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
@@ -654,8 +658,8 @@ void CompilerStack::resolveImports()
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
 				string const& path = import->annotation().absolutePath;
-				solAssert(!path.empty(), "");
-				solAssert(m_sources.count(path), "sdfsdf");
+				solAssert(!path.empty(), "sdfsdfsdf");
+				solAssert(m_sources.count(path), "sdfsf");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}
@@ -825,20 +829,18 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 			}
 
 		}
-		else
-			meta[s.first]["keccak256"] = "no source code available";
+//		else
+//			meta[s.first]["keccak256"] = "no source code available";
 		if (m_importedSources)
 		{
 			solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
-//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO?
-		}
+//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO: this will hold the printed AST (-> one that can be imported into the compiler)
+			}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
-	meta["settings"]["compiledFrom"] = m_importedSources ? "AST-Json" : "Solidity sourcefile";
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
-
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
 	for (auto const& r: m_remappings)

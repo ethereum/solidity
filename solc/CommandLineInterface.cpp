@@ -215,6 +215,23 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
+string bytecodeSansMetadata(string const& _bytecode)
+{
+	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
+	/// /a165627a7a72305820([0-9a-f]{64})0029$/
+
+	if (_bytecode.size() < 88)
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
+		return _bytecode;
+
+	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
+		return _bytecode;
+
+	return _bytecode.substr(0, _bytecode.size() - 86);
+}
+
 void CommandLineInterface::handleBinary(string const& _contract)
 {
 	if (m_args.count(g_argBinary))
@@ -224,7 +241,9 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << m_compiler->object(_contract).toHex() << endl;
+//			cout << m_compiler->object(_contract).toHex() << endl;
+			string tmp = m_compiler->object(_contract).toHex();
+			cout << bytecodeSansMetadata(tmp) << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinary))
@@ -784,15 +803,9 @@ bool CommandLineInterface::processInput()
 					{
 						for (auto& src: (*ast)["sourceList"])
 						{
-							solAssert(
-								strcmp(
-									(*ast)["sources"][src.asCString()]["AST"]["nodeType"].asCString(),
-									"SourceUnit"
-								) == 0,
-								"the top-level node of the AST needs to be a 'SourceUnit'"
-							);
-							sourceJsons[src.asCString()] = &((*ast)["sources"][src.asString()]["AST"]);
-							tmp_sources[src.asCString()] = "noSourceCodeAvailable";
+							solAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "the top-level node of the AST needs to be a 'SourceUnit'");
+							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
+							tmp_sources[src.asString()] = "noSourceCodeAvailable";
 //							tmp_sources[src.asCString()] = ((*ast)["sources"][src.asString()]["AST"]).asString();
 						}
 					}
@@ -817,8 +830,10 @@ bool CommandLineInterface::processInput()
 			m_compiler->reset(false);
 			bool import = m_compiler->importASTs(sourceJsons);
 			//use the compiler's analyzer to annotate, typecheck, etc...
-			if (!import || !m_compiler->analyze())
-				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import/Analysis of the AST failed"));
+			if (!import)
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import of the AST failed"));
+			if (!m_compiler->analyze())
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Analysis of the AST failed"));
 		}
 		else
 		{
