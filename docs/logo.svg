@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.3, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1300px" height="1300px"
+	 viewBox="0 0 1300 1300" enable-background="new 0 0 1300 1300" xml:space="preserve">
+<title>Vector 1</title>
+<desc>Created with Sketch.</desc>
+<g id="Page-1" sketch:type="MSPage">
+	<g id="solidity" transform="translate(402.000000, 118.000000)" sketch:type="MSLayerGroup">
+		<g id="Group" sketch:type="MSShapeGroup">
+			<path id="Shape" opacity="0.45" enable-background="new    " d="M371.772,135.308L241.068,367.61H-20.158l130.614-232.302
+				H371.772"/>
+			<path id="Shape_1_" opacity="0.6" enable-background="new    " d="M241.068,367.61h261.318L371.772,135.308H110.456
+				L241.068,367.61z"/>
+			<path id="Shape_2_" opacity="0.8" enable-background="new    " d="M110.456,599.822L241.068,367.61L110.456,135.308
+				L-20.158,367.61L110.456,599.822z"/>
+			<path id="Shape_3_" opacity="0.45" enable-background="new    " d="M111.721,948.275l130.704-232.303h261.318L373.038,948.275
+				H111.721"/>
+			<path id="Shape_4_" opacity="0.6" enable-background="new    " d="M242.424,715.973H-18.893l130.613,232.303h261.317
+				L242.424,715.973z"/>
+			<path id="Shape_5_" opacity="0.8" enable-background="new    " d="M373.038,483.761L242.424,715.973l130.614,232.303
+				l130.704-232.303L373.038,483.761z"/>
+		</g>
+	</g>
+</g>
+</svg>
