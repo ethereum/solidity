@@ -72,6 +72,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
+	cout << "analyzing literal at " << size_t(&_literal) << endl;
 	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
@@ -356,6 +357,7 @@ bool AsmAnalyzer::expectExpression(Statement const& _statement)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
+	cout << "expecting expression at " << size_t(&_statement) << endl;
 	if (!boost::apply_visitor(*this, _statement))
 		success = false;
 	if (m_stackHeight - initialHeight != 1)
