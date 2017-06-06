@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 	Json::Value literal = astJson["children"][0]["children"][0]["children"][2]["children"][0]["children"][1];
 	BOOST_CHECK_EQUAL(literal["name"], "Literal");
 	BOOST_CHECK_EQUAL(literal["attributes"]["hexvalue"], "ff");
-	BOOST_CHECK_EQUAL(literal["attributes"]["token"], Json::nullValue);
+	BOOST_CHECK_EQUAL(literal["attributes"]["token"], "string");
 	BOOST_CHECK_EQUAL(literal["attributes"]["value"], Json::nullValue);
 	BOOST_CHECK(literal["attributes"]["type"].asString().find("invalid") != string::npos);
 }

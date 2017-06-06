@@ -133,6 +133,7 @@ private:
 	std::string location(VariableDeclaration::Location _location);
 	std::string contractKind(ContractDefinition::ContractKind _kind);
 	std::string functionCallKind(FunctionCallKind _kind);
+	std::string literalTokenKind(Token::Value _token);
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
 	int nodeId(ASTNode const& _node)
