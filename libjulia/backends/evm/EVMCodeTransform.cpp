@@ -67,6 +67,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 		var.stackHeight = height++;
 		var.active = true;
 	}
+	checkStackHeight(&_varDecl);
 }
 
 void CodeTransform::operator()(Assignment const& _assignment)
