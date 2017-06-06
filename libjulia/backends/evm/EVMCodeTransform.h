@@ -61,12 +61,11 @@ public:
 	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	CodeTransform(
-		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
-	): CodeTransform(_errorReporter, _assembly, _analysisInfo, _evm15, _identifierAccess, _assembly.stackHeight())
+	): CodeTransform(_assembly, _analysisInfo, _evm15, _identifierAccess, _assembly.stackHeight())
 	{
 	}
 
@@ -75,14 +74,12 @@ public:
 
 protected:
 	CodeTransform(
-		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		int _stackAdjustment
 	):
-		m_errorReporter(_errorReporter),
 		m_assembly(_assembly),
 		m_info(_analysisInfo),
 		m_evm15(_evm15),
@@ -109,12 +106,12 @@ private:
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
 
-	void generateAssignment(solidity::assembly::Identifier const& _variableName, SourceLocation const& _location);
+	void generateAssignment(solidity::assembly::Identifier const& _variableName);
 
-	/// Determines the stack height difference to the given variables. Automatically generates
-	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
-	/// errors and the (positive) stack height difference otherwise.
-	int variableHeightDiff(solidity::assembly::Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap);
+	/// Determines the stack height difference to the given variables. Throws
+	/// if it is not yet in scope or the height difference is too large. Returns
+	/// the (positive) stack height difference otherwise.
+	int variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap);
 
 	void expectDeposit(int _deposit, int _oldHeight);
 
@@ -123,7 +120,6 @@ private:
 	/// Assigns the label's or function's id to a value taken from eth::Assembly if it has not yet been set.
 	void assignLabelIdIfUnset(boost::optional<AbstractAssembly::LabelID>& _labelId);
 
-	solidity::ErrorReporter& m_errorReporter;
 	julia::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
 	solidity::assembly::Scope* m_scope = nullptr;

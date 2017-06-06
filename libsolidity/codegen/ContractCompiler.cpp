@@ -524,9 +524,6 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 
 bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	assembly::CodeGenerator codeGen(errorReporter);
 	unsigned startStackHeight = m_context.stackHeight();
 	julia::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, julia::IdentifierContext, bool)
@@ -648,13 +645,12 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
-	codeGen.assemble(
+	assembly::CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		m_context.nonConstAssembly(),
 		identifierAccess
 	);
-	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "Code generation for inline assembly with errors requested.");
 	m_context.setStackOffset(startStackHeight);
 	return false;
 }

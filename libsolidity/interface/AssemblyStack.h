@@ -65,13 +65,13 @@ public:
 	bool analyze(assembly::Block const& _block, Scanner const* _scanner = nullptr);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	eth::LinkerObject assemble(Machine _machine);
+	eth::LinkerObject assemble(Machine _machine) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
-	std::string print();
+	std::string print() const;
 
 private:
 	bool analyzeParsed();

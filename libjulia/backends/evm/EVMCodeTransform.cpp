@@ -73,14 +73,14 @@ void CodeTransform::operator()(Assignment const& _assignment)
 {
 	visitExpression(*_assignment.value);
 	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName, _assignment.location);
+	generateAssignment(_assignment.variableName);
 	checkStackHeight(&_assignment);
 }
 
 void CodeTransform::operator()(StackAssignment const& _assignment)
 {
 	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName, _assignment.location);
+	generateAssignment(_assignment.variableName);
 	checkStackHeight(&_assignment);
 }
 
@@ -172,7 +172,7 @@ void CodeTransform::operator()(assembly::Identifier const& _identifier)
 	if (m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
 		[=](Scope::Variable& _var)
 		{
-			if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
+			if (int heightDiff = variableHeightDiff(_var, false))
 				m_assembly.appendInstruction(solidity::dupInstruction(heightDiff));
 			else
 				// Store something to balance the stack
@@ -320,7 +320,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment)
+	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment)
 		.run(_function.body);
 
 	{
@@ -366,7 +366,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 void CodeTransform::operator()(Block const& _block)
 {
-	CodeTransform(m_errorReporter, m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment).run(_block);
+	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment).run(_block);
 }
 
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
@@ -394,14 +394,14 @@ void CodeTransform::visitExpression(Statement const& _expression)
 	expectDeposit(1, height);
 }
 
-void CodeTransform::generateAssignment(Identifier const& _variableName, SourceLocation const& _location)
+void CodeTransform::generateAssignment(Identifier const& _variableName)
 {
 	solAssert(m_scope, "");
 	auto var = m_scope->lookup(_variableName.name);
 	if (var)
 	{
 		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
-		if (int heightDiff = variableHeightDiff(_var, _location, true))
+		if (int heightDiff = variableHeightDiff(_var, true))
 			m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
 		m_assembly.appendInstruction(solidity::Instruction::POP);
 	}
@@ -415,14 +415,12 @@ void CodeTransform::generateAssignment(Identifier const& _variableName, SourceLo
 	}
 }
 
-int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
+int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap)
 {
 	int heightDiff = m_assembly.stackHeight() - _var.stackHeight;
 	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 	{
-		//@TODO move this to analysis phase.
-		m_errorReporter.typeError(
-			_location,
+		solUnimplemented(
 			"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")"
 		);
 		return 0;

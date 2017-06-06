@@ -66,8 +66,7 @@ eth::Assembly InlineAssemblyStack::assemble()
 	AsmAnalysisInfo analysisInfo;
 	AsmAnalyzer analyzer(analysisInfo, m_errorReporter);
 	solAssert(analyzer.analyze(*m_parserResult), "");
-	CodeGenerator codeGen(m_errorReporter);
-	return codeGen.assemble(*m_parserResult, analysisInfo);
+	return CodeGenerator::assemble(*m_parserResult, analysisInfo);
 }
 
 bool InlineAssemblyStack::parseAndAssemble(
@@ -87,7 +86,8 @@ bool InlineAssemblyStack::parseAndAssemble(
 	AsmAnalysisInfo analysisInfo;
 	AsmAnalyzer analyzer(analysisInfo, errorReporter, false, _identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "");
-	CodeGenerator(errorReporter).assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
+	solAssert(errorReporter.errors().empty(), "");
+	CodeGenerator::assemble(*parserResult, analysisInfo, _assembly, _identifierAccess);
 
 	// At this point, the assembly might be messed up, but we should throw an
 	// internal compiler error anyway.
