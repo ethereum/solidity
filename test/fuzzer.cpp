@@ -99,7 +99,7 @@ string readInput()
 
 void testStandardCompiler()
 {
-	if (!quiet)
+//	if (!quiet)
 		cout << "Testing compiler via JSON interface." << endl;
 	string input = readInput();
 	string outputString(compileStandard(input.c_str(), NULL));

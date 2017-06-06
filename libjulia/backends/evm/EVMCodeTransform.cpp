@@ -49,6 +49,7 @@ void CodeTransform::run(Block const& _block)
 
 	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
 	solAssert(deposit == 0, "Invalid stack height at end of block.");
+	cout << "Checking stack height for block..." << endl;
 	checkStackHeight(&_block);
 }
 
@@ -67,6 +68,8 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 		var.stackHeight = height++;
 		var.active = true;
 	}
+	cout << "Checking stack height for var decl..." << endl;
+	checkStackHeight(&_varDecl);
 }
 
 void CodeTransform::operator()(Assignment const& _assignment)
@@ -74,6 +77,7 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	visitExpression(*_assignment.value);
 	m_assembly.setSourceLocation(_assignment.location);
 	generateAssignment(_assignment.variableName, _assignment.location);
+	cout << "Checking stack height for assignment..." << endl;
 	checkStackHeight(&_assignment);
 }
 
@@ -81,6 +85,7 @@ void CodeTransform::operator()(StackAssignment const& _assignment)
 {
 	m_assembly.setSourceLocation(_assignment.location);
 	generateAssignment(_assignment.variableName, _assignment.location);
+	cout << "Checking stack height for stack assignment..." << endl;
 	checkStackHeight(&_assignment);
 }
 
@@ -92,6 +97,7 @@ void CodeTransform::operator()(Label const& _label)
 	Scope::Label& label = boost::get<Scope::Label>(m_scope->identifiers.at(_label.name));
 	assignLabelIdIfUnset(label.id);
 	m_assembly.appendLabel(*label.id);
+	cout << "Checking stack height for label..." << endl;
 	checkStackHeight(&_label);
 }
 
@@ -128,6 +134,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		m_assembly.appendLabel(returnLabel);
 		m_stackAdjustment--;
 	}
+	cout << "Checking stack height for call..." << endl;
 	checkStackHeight(&_call);
 }
 
@@ -161,6 +168,7 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 			visitExpression(arg);
 		(*this)(_instruction.instruction);
 	}
+	cout << "Checking stack height for instr..." << endl;
 	checkStackHeight(&_instruction);
 }
 
@@ -196,6 +204,7 @@ void CodeTransform::operator()(assembly::Identifier const& _identifier)
 		"Identifier not found and no external access available."
 	);
 	m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_assembly);
+	cout << "Checking stack height for identifier..." << endl;
 	checkStackHeight(&_identifier);
 }
 
@@ -216,6 +225,7 @@ void CodeTransform::operator()(assembly::Literal const& _literal)
 		solAssert(_literal.value.size() <= 32, "");
 		m_assembly.appendConstant(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
 	}
+	cout << "Checking stack height for literal..." << endl;
 	checkStackHeight(&_literal);
 }
 
@@ -225,6 +235,7 @@ void CodeTransform::operator()(assembly::Instruction const& _instruction)
 	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
 	m_assembly.setSourceLocation(_instruction.location);
 	m_assembly.appendInstruction(_instruction.instruction);
+	cout << "Checking stack height for instruction..." << endl;
 	checkStackHeight(&_instruction);
 }
 
@@ -273,6 +284,7 @@ void CodeTransform::operator()(Switch const& _switch)
 	m_assembly.appendLabel(end);
 	m_assembly.appendInstruction(solidity::Instruction::POP);
 	checkStackHeight(&_switch);
+	cout << "Checking stack height for switch..." << endl;
 }
 
 void CodeTransform::operator()(FunctionDefinition const& _function)
@@ -353,6 +365,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_stackAdjustment -= localStackAdjustment;
 	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);
+	cout << "Checking stack height for function decl..." << endl;
 }
 
 void CodeTransform::operator()(Block const& _block)
@@ -429,6 +442,7 @@ void CodeTransform::expectDeposit(int _deposit, int _oldHeight)
 
 void CodeTransform::checkStackHeight(void const* _astElement)
 {
+	cout << "Checking stack height for " << size_t(_astElement) << endl;
 	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
 	solAssert(
 		m_info.stackHeightInfo.at(_astElement) == m_assembly.stackHeight() - m_stackAdjustment,

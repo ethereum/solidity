@@ -55,6 +55,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 bool AsmAnalyzer::operator()(Label const& _label)
 {
 	solAssert(!m_julia, "");
+	cout << "Setting stack height for label " << size_t(&_label) << endl;
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	return true;
 }
@@ -64,6 +65,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 	solAssert(!m_julia, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
+	cout << "Setting stack height for instruction " << size_t(&_instruction) << endl;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
 	return true;
 }
@@ -80,6 +82,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
+	cout << "Setting stack height for literal " << size_t(&_literal) << endl;
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }
@@ -133,6 +136,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
 	}
+	cout << "Setting stack height for identifier " << size_t(&_identifier) << endl;
 	m_info.stackHeightInfo[&_identifier] = m_stackHeight;
 	return success;
 }
@@ -148,6 +152,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
 	if (!(*this)(_instr.instruction))
 		success = false;
+	cout << "Setting stack height for functional instr " << size_t(&_instr) << endl;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
 	return success;
 }
@@ -156,6 +161,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	solAssert(!m_julia, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
+	cout << "Setting stack height for stack assignment " << size_t(&_assignment) << endl;
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
@@ -167,6 +173,7 @@ bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 	solAssert(m_stackHeight >= stackHeight, "Negative value size.");
 	if (!checkAssignment(_assignment.variableName, m_stackHeight - stackHeight))
 		success = false;
+	cout << "Setting stack height for assignment " << size_t(&_assignment) << endl;
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
@@ -187,6 +194,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 		expectValidType(variable.type, variable.location);
 		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
 	}
+	cout << "Setting stack height for var decl " << size_t(&_varDecl) << endl;
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
 }
@@ -208,6 +216,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	bool success = (*this)(_funDef.body);
 
 	m_stackHeight = stackHeight;
+	cout << "Setting stack height for fun def " << size_t(&_funDef) << endl;
 	m_info.stackHeightInfo[&_funDef] = m_stackHeight;
 	return success;
 }
@@ -261,6 +270,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		if (!expectExpression(arg))
 			success = false;
 	m_stackHeight += int(returns) - int(arguments);
+	cout << "Setting stack height for fun call " << size_t(&_funCall) << endl;
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }
@@ -298,6 +308,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	}
 
 	m_stackHeight--;
+	cout << "Setting stack height for switch " << size_t(&_switch) << endl;
 	m_info.stackHeightInfo[&_switch] = m_stackHeight;
 
 	return success;
@@ -334,6 +345,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		success = false;
 	}
 
+	cout << "Setting stack height for block " << size_t(&_block) << endl;
 	m_info.stackHeightInfo[&_block] = m_stackHeight;
 	m_currentScope = previousScope;
 	return success;
