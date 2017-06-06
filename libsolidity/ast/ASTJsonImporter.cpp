@@ -127,7 +127,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createUsingForDirective(_json);
 	if (nodeType == "StructDefinition")
 		return createStructDefinition(_json);
-	if (nodeType == "createEnumDefinition")
+	if (nodeType == "EtypenumDefinition")
 		return createEnumDefinition(_json);
 	if (nodeType == "EnumValue")
 		return createEnumValue(_json);
@@ -198,12 +198,16 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (nodeType == "IndexAccess")
 		return createIndexAccess(_json);
 	if (nodeType == "Identifier")
-		return createIdentifier(_json, _json["nodeType"].asString());
+		return createIdentifier(_json, _json["name"].asString());
 	if (nodeType == "ElementaryTypeNameExpression")
 		return createElementaryTypeNameExpression(_json);
 	if (nodeType == "Literal")
 		return createLiteral(_json);
-	else BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
+	else
+	{
+		cout << nodeType <<std::endl;
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
+	}
 }
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node, string const& _srcName)
@@ -586,8 +590,8 @@ ASTPointer<WhileStatement> ASTJsonImporter::createWhileStatement(Json::Value con
 
 ASTPointer<ForStatement> ASTJsonImporter::createForStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Statement> initExpression = nullOrCast<Statement>(_node["initExpression"]);
+	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed //TODO
+	ASTPointer<Statement> initExpression = nullOrCast<Statement>(_node["initializationExpression"]);
 	ASTPointer<Expression> conditionExpression = nullOrCast<Expression>(_node["condition"]);
 	ASTPointer<ExpressionStatement> loopExpression = nullOrCast<ExpressionStatement>(_node["loopExpression"]);
 	ASTPointer<Statement> body = castPointer<Statement>(convertJsonToASTNode(_node["body"]));
