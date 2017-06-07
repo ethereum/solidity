@@ -99,7 +99,7 @@ private:
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 
 	int m_stackHeight = 0;
-	julia::ExternalIdentifierAccess::Resolver const& m_resolver;
+	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
