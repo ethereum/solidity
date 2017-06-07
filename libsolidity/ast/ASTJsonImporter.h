@@ -74,7 +74,7 @@ private:
 	ASTPointer<FunctionTypeName> createFunctionTypeName(Json::Value const& _node);
 	ASTPointer<Mapping> createMapping(Json::Value const& _node);
 	ASTPointer<ArrayTypeName> createArrayTypeName(Json::Value const& _node);
-//	ASTPointer<InlineAssembly> createInlineAssembly(Json::Value const& _node);
+	ASTPointer<InlineAssembly> createInlineAssembly(Json::Value const& _node);
 	ASTPointer<Block> createBlock(Json::Value const& _node);
 	ASTPointer<PlaceholderStatement> createPlaceholderStatement(Json::Value const& _node);
 	ASTPointer<IfStatement> createIfStatement(Json::Value const& _node);
@@ -107,8 +107,6 @@ private:
 	Literal::SubDenomination subdenomination(Json::Value const& _node);
 	Token::Value literalTokenKind(Json::Value const& _node);
 	Token::Value scanSingleToken(Json::Value _node);
-//	Json::Value const* m_json;
-//        std::string const& m_name;
 	std::map<std::string, Json::Value const*> m_sourceList;
 	std::vector<std::shared_ptr<std::string const>> m_sourceLocations;
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;

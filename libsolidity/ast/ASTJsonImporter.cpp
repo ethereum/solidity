@@ -25,7 +25,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 #include <libsolidity/parsing/Token.h>
-
+#include <libsolidity/inlineasm/AsmParser.h>
 
 using namespace std;
 
@@ -117,7 +117,7 @@ Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _json)
 {
 	string nodeType = _json["nodeType"].asString();
-//	cout << nodeType << std::endl;
+//	cout << nodeType << _json["id"] << std::endl;
 	if (nodeType == "PragmaDirective")
 	    return createPragmaDirective(_json);
 	if (nodeType == "ImportDirective")
@@ -130,7 +130,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createUsingForDirective(_json);
 	if (nodeType == "StructDefinition")
 		return createStructDefinition(_json);
-	if (nodeType == "EtypenumDefinition")
+	if (nodeType == "EnumDefinition")
 		return createEnumDefinition(_json);
 	if (nodeType == "EnumValue")
 		return createEnumValue(_json);
@@ -156,8 +156,8 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createMapping(_json);
 	if (nodeType == "ArrayTypeName")
 		return createArrayTypeName(_json);
-//	if (_json["nodeType"] == "InlineAssembly")
-//		return createInlineAssembly(_json);
+	if (_json["nodeType"] == "InlineAssembly")
+		return createInlineAssembly(_json);
 	if (nodeType == "Block")
 		return createBlock(_json);
 	if (nodeType == "PlaceholderStatement")
@@ -532,10 +532,18 @@ ASTPointer<ArrayTypeName> ASTJsonImporter::createArrayTypeName(Json::Value const
 	return tmp;
 }
 
-//ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value const&  _node) //TODO LATER
-//{
-//	return make_shared<Identifier>(createSourceLocation(_node), make_shared<ASTString>("placeholder"));
-//}
+ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value const& _node)
+{
+	std::shared_ptr<assembly::Block> operations;
+	ErrorList tmp_error;
+	assembly::Parser asmParser(tmp_error);
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_node["operations"].asString()), "");
+	operations = asmParser.parse(scanner);
+	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
+	ASTPointer<InlineAssembly> tmp = createASTNode<InlineAssembly>(_node, docString, operations);
+	return tmp;
+}
+
 ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const&  _node)
 {
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
@@ -647,7 +655,7 @@ ASTPointer<VariableDeclarationStatement> ASTJsonImporter::createVariableDeclarat
 	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	std::vector<ASTPointer<VariableDeclaration>> variables;
 	for (auto& var: _node["declarations"])
-		variables.push_back(createVariableDeclaration(var));
+		variables.push_back( var.isNull() ? nullptr : createVariableDeclaration(var));//unnamed components are empty pointers
 	ASTPointer<Expression> initialValue = nullOrCast<Expression>(_node["initialValue"]);
 	ASTPointer<VariableDeclarationStatement> tmp = createASTNode<VariableDeclarationStatement>(
 		_node,
@@ -703,7 +711,7 @@ ASTPointer<TupleExpression> ASTJsonImporter::createTupleExpression(Json::Value c
 {
 	std::vector<ASTPointer<Expression>> components;
 	for (auto& comp: _node["components"])
-		components.push_back(castPointer<Expression>(convertJsonToASTNode(comp)));
+		components.push_back(nullOrCast<Expression>(comp));
 	bool isArray = _node["isInlineArray"].asBool();
 	ASTPointer<TupleExpression> tmp = createASTNode<TupleExpression>(
 		_node,
@@ -732,9 +740,6 @@ ASTPointer<BinaryOperation> ASTJsonImporter::createBinaryOperation(Json::Value c
 {
 	ASTPointer<Expression> left = castPointer<Expression>(convertJsonToASTNode(_node["leftExpression"]));
         Token::Value operation = scanSingleToken(_node["operator"]);
-//	Token::Value operation;
-//	ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(_node["operator"].asString()), "tmp");
-//	operation = scanner->next();
 	ASTPointer<Expression> right = castPointer<Expression>(convertJsonToASTNode(_node["rightExpression"]));
 	ASTPointer<BinaryOperation> tmp = createASTNode<BinaryOperation>(
 		_node,
@@ -804,7 +809,7 @@ ASTPointer<Identifier> ASTJsonImporter::createIdentifier(Json::Value const& _nod
 
 ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node) //needs TEST (elem)
 {
-	Scanner scanner(CharStream(_node["typeDescriptions"]["typeString"].asString()), "tmp");
+	Scanner scanner(CharStream(_node["typeName"].asString()), "");
 	Token::Value token = scanner.currentToken();
 	unsigned firstSize;
 	unsigned secondSize;
@@ -838,7 +843,7 @@ Token::Value ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 {
 	solAssert(_node.isMember("kind") && !_node["kind"].isNull(), "");
 	Token::Value tok;
-	if (_node["kind"].asString(), "number")
+	if (_node["kind"].asString() == "number")
 		tok = Token::Number;
 	else if (_node["kind"].asString() == "string")
 		tok = Token::StringLiteral;
