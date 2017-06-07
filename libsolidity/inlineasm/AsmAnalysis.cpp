@@ -49,6 +49,22 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 		return false;
 
+	/// Populate top level block with builtin functions
+	if (m_julia)
+	{
+		Scope& rootScope = scope(&_block);
+		rootScope.registerFunction("abort", {}, {});
+		rootScope.registerFunction("discardu256", { "u256" }, { });
+		rootScope.registerFunction("splitu256tou64", { "u256" }, { "u64", "u64", "u64", "u64" });
+		rootScope.registerFunction("combineu64tou256", { "u64", "u64", "u64", "u64" }, { "u256" });
+		rootScope.registerFunction("keccak256", { "u256", "u256" }, { "u256" });
+		rootScope.registerFunction("addu256", { "u256", "u256" }, { "u256" });
+		rootScope.registerFunction("subu256", { "u256", "u256" }, { "u256" });
+		rootScope.registerFunction("mulu256", { "u256", "u256" }, { "u256" });
+		rootScope.registerFunction("divu256", { "u256", "u256" }, { "u256" });
+		rootScope.registerFunction("modu256", { "u256", "u256" }, { "u256" });
+	}
+
 	return (*this)(_block);
 }
 
