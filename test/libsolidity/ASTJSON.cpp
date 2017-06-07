@@ -247,6 +247,14 @@ BOOST_AUTO_TEST_CASE(documentation)
 	Json::Value astJsonB = ASTJsonConverter(true, sourceIndices).toJson(c.ast("b"));
 	Json::Value documentationB = astJsonB["children"][0]["attributes"]["documentation"];
 	BOOST_CHECK_EQUAL(documentationB, "This contract is empty and has a line-breaking comment.");
+	//same tests for non-legacy mode
+	astJsonA = ASTJsonConverter(false, sourceIndices).toJson(c.ast("a"));
+	documentationA = astJsonA["nodes"][0]["documentation"];
+	BOOST_CHECK_EQUAL(documentationA, "This contract is empty");
+	astJsonB = ASTJsonConverter(false, sourceIndices).toJson(c.ast("b"));
+	documentationB = astJsonB["nodes"][0]["documentation"];
+	BOOST_CHECK_EQUAL(documentationB, "This contract is empty and has a line-breaking comment.");
+
 }
 
 
