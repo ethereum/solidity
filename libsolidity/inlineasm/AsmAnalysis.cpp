@@ -288,8 +288,9 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
-			cout << "looking into case value at " << size_t(_case.value.get()) << endl;
-			if (!expectExpression(*_case.value))
+			// We cannot use "expectExpression" here because *_case.value is not a
+			// Statement and would be converted to a Statement otherwise.
+			if (!(*this)(*_case.value))
 				success = false;
 			m_stackHeight--;
 
