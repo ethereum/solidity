@@ -43,6 +43,7 @@ Scanner const& AssemblyStack::scanner() const
 
 bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
+	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
 	m_parserResult = assembly::Parser(m_errorReporter, m_language == Language::JULIA).parse(m_scanner);
