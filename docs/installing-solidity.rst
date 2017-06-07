@@ -119,6 +119,12 @@ Install it using ``brew``:
     # Install 0.4.8
     brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
+Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
+
+.. code:: bash
+
+    demerge ev-lang/solidity
+
 .. _building-from-source:
 
 Building from Source
