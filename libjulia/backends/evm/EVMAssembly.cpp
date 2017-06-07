@@ -151,7 +151,7 @@ eth::LinkerObject EVMAssembly::finalize()
 		size_t labelPos = m_labelPositions.at(ref.second);
 		solAssert(labelPos != size_t(-1), "Undefined but allocated label used.");
 		solAssert(m_bytecode.size() >= 4 && referencePos <= m_bytecode.size() - 4, "");
-		solAssert(labelPos < (uint64_t(1) << (8 * labelReferenceSize)), "");
+		solAssert(uint64_t(labelPos) < (uint64_t(1) << (8 * labelReferenceSize)), "");
 		for (size_t i = 0; i < labelReferenceSize; i++)
 			m_bytecode[referencePos + i] = byte((labelPos >> (8 * (labelReferenceSize - i - 1))) & 0xff);
 	}
