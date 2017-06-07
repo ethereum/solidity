@@ -277,8 +277,12 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
-			if (!expectExpression(*_case.value))
+			int const initialStackHeight = m_stackHeight;
+			// We cannot use "expectExpression" here because *_case.value is not a
+			// Statement and would be converted to a Statement otherwise.
+			if (!(*this)(*_case.value))
 				success = false;
+			expectDeposit(1, initialStackHeight, _case.value->location);
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
@@ -345,17 +349,24 @@ bool AsmAnalyzer::expectExpression(Statement const& _statement)
 	int const initialHeight = m_stackHeight;
 	if (!boost::apply_visitor(*this, _statement))
 		success = false;
-	if (m_stackHeight - initialHeight != 1)
+	if (!expectDeposit(1, initialHeight, locationOf(_statement)))
+		success = false;
+	return success;
+}
+
+bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
+{
+	if (m_stackHeight - _oldHeight != _deposit)
 	{
 		m_errorReporter.typeError(
-			locationOf(_statement),
+			_location,
 			"Expected expression to return one item to the stack, but did return " +
-			boost::lexical_cast<string>(m_stackHeight - initialHeight) +
+			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
 			" items."
 		);
-		success = false;
+		return false;
 	}
-	return success;
+	return true;
 }
 
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)

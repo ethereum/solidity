@@ -89,6 +89,7 @@ public:
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
 	bool expectExpression(Statement const& _statement);
+	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
