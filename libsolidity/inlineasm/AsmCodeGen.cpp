@@ -92,14 +92,14 @@ public:
 		appendInstruction(solidity::Instruction::JUMP);
 		m_assembly.adjustDeposit(_stackDiffAfter);
 	}
-	virtual void appendJumpTo(LabelID _label, int _stackDiffAfter) override
+	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override
 	{
-		appendLabelReference(_label);
+		appendLabelReference(_labelId);
 		appendJump(_stackDiffAfter);
 	}
-	virtual void appendJumpToIf(LabelID _label) override
+	virtual void appendJumpToIf(LabelID _labelId) override
 	{
-		appendLabelReference(_label);
+		appendLabelReference(_labelId);
 		appendInstruction(solidity::Instruction::JUMPI);
 	}
 	virtual void appendBeginsub(LabelID, int) override

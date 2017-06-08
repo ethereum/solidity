@@ -30,6 +30,7 @@ using namespace julia;
 
 namespace
 {
+/// Size of labels in bytes. Four-byte labels are required by some EVM1.5 instructions.
 size_t constexpr labelReferenceSize = 4;
 }
 
@@ -70,8 +71,8 @@ void EVMAssembly::appendLabelReference(LabelID _labelId)
 
 EVMAssembly::LabelID EVMAssembly::newLabelId()
 {
-	m_labelPositions[m_nextLabelID] = size_t(-1);
-	return m_nextLabelID++;
+	m_labelPositions[m_nextLabelId] = size_t(-1);
+	return m_nextLabelId++;
 }
 
 void EVMAssembly::appendLinkerSymbol(string const&)
