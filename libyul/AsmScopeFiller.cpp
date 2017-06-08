@@ -161,6 +161,20 @@ bool ScopeFiller::operator()(Block const& _block)
 			if (!boost::apply_visitor(*this, s))
 				success = false;
 
+	/* FIXME */
+	m_currentScope->registerFunction("add64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("sub64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("mul64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("div64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("sdiv64", {"i64","i64"}, {"i64"});
+	m_currentScope->registerFunction("and64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("or64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("xor64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("shl64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("shr64", {"u64","u64"}, {"u64"});
+	m_currentScope->registerFunction("sar64", {"i64","i64"}, {"i64"});
+	m_currentScope->registerFunction("gt64", {"u64","u64"}, {"u64"});
+
 	m_currentScope = m_currentScope->superScope;
 	return success;
 }

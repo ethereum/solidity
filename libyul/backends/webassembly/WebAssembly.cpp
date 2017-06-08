@@ -121,6 +121,9 @@ public:
 	}
 	void operator()(assembly::FunctionCall const& _funCall)
 	{
+		if (resolveBuiltinFunction(_funCall))
+			return;
+
 		m_assembly += "(call $" + _funCall.functionName.name;
 		for (auto const& statement: _funCall.arguments)
 		{
@@ -129,9 +132,23 @@ public:
 		}
 		m_assembly += ")";
 	}
-	void operator()(assembly::Switch const&)
+	void operator()(assembly::Switch const& _switch)
 	{
-		solUnimplementedAssert(false, "Not implemented yet.");
+		solUnimplementedAssert(_switch.cases.size() <= 2, "");
+		m_assembly += "(if (result i64) ";
+		boost::apply_visitor(*this, *_switch.expression);
+		m_assembly += "(then ";
+		Generator generator1 = Generator(_switch.cases[0].body);
+		m_assembly += generator1.assembly();
+		m_assembly += ")";
+		if (_switch.cases.size() == 2)
+		{
+			m_assembly += "(else ";
+			Generator generator2 = Generator(_switch.cases[1].body);
+			m_assembly += generator2.assembly();
+			m_assembly += ")";
+		}
+		m_assembly += ")";
 	}
 	void operator()(assembly::ForLoop const&)
 	{
@@ -155,6 +172,49 @@ private:
 		set<string> const supportedTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64"};
 		solAssert(supportedTypes.count(type), "Type (" + type + ") not supported yet.");
 		return "i64";
+	}
+
+	/// TODO: replace with a proper structure (and not manual code)
+	bool resolveBuiltinFunction(assembly::FunctionCall const& _funCall)
+	{
+		if (_funCall.functionName.name == "add64")
+		{
+			m_assembly += "(i64.add ";
+			solAssert(_funCall.arguments.size() == 2, "");
+			boost::apply_visitor(*this, _funCall.arguments[0]);
+			boost::apply_visitor(*this, _funCall.arguments[1]);
+			m_assembly += ")";
+			return true;
+		}
+		else if (_funCall.functionName.name == "sub64")
+		{
+			m_assembly += "(i64.sub ";
+			solAssert(_funCall.arguments.size() == 2, "");
+			boost::apply_visitor(*this, _funCall.arguments[0]);
+			boost::apply_visitor(*this, _funCall.arguments[1]);
+			m_assembly += ")";
+			return true;
+		}
+		else if (_funCall.functionName.name == "mul64")
+		{
+			m_assembly += "(i64.mul ";
+			solAssert(_funCall.arguments.size() == 2, "");
+			boost::apply_visitor(*this, _funCall.arguments[0]);
+			boost::apply_visitor(*this, _funCall.arguments[1]);
+			m_assembly += ")";
+			return true;
+		}
+		else if (_funCall.functionName.name == "gt64")
+		{
+			m_assembly += "(i64.gt_u ";
+			solAssert(_funCall.arguments.size() == 2, "");
+			boost::apply_visitor(*this, _funCall.arguments[0]);
+			boost::apply_visitor(*this, _funCall.arguments[1]);
+			m_assembly += ")";
+			return true;
+		}
+
+		return false;
 	}
 
 	string m_assembly;
