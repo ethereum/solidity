@@ -236,10 +236,14 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | returndatasize          |      | size of the last returndata                                     |
 +-------------------------+------+-----------------------------------------------------------------+
-| returndatacopy(t, f, s) | `*`  | copy s bytes from returndata at position f to mem at position t |
+| returndatacopy(t, f, s) | `-`  | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+------+-----------------------------------------------------------------+
 | create(v, p, s)         |      | create new contract with code mem[p..(p+s)) and send v wei      |
 |                         |      | and return the new address                                      |
++-------------------------+------+-----------------------------------------------------------------+
+| create2(v, n, p, s)     |      | create new contract with code mem[p..(p+s)) at address          |
+|                         |      | keccak256(<address> . n . keccak256(mem[p..(p+s))) and send v   |
+|                         |      | wei and return the new address                                  |
 +-------------------------+------+-----------------------------------------------------------------+
 | call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize))      |
 | insize, out, outsize)   |      | providing g gas and v wei and output area                       |
@@ -251,6 +255,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
++-------------------------+------+-----------------------------------------------------------------+
+| staticcall(g, a, in,    |      | identical to `call(g, a, 0, in, insize, out, outsize)` but do   |
+| insize, out, outsize)   |      | not allow state modifications                                   |
 +-------------------------+------+-----------------------------------------------------------------+
 | return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+

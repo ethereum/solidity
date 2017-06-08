@@ -562,6 +562,16 @@ BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
+BOOST_AUTO_TEST_CASE(staticcall)
+{
+	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(create2)
+{
+	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
