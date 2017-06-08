@@ -669,6 +669,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			for (auto const& arg: arguments)
 			{
 				arg->accept(*this);
+				solAssert(!(arg->annotation().type->category() == Type::Category::Struct), "Struct type cannot be SHA3'd yet.");
 				argumentTypes.push_back(arg->annotation().type);
 			}
 			utils().fetchFreeMemoryPointer();
