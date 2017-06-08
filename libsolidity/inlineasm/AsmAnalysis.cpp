@@ -25,7 +25,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -55,6 +55,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 bool AsmAnalyzer::operator()(Label const& _label)
 {
 	solAssert(!m_julia, "");
+	cout << "Setting stack height for label " << size_t(&_label) << endl;
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	return true;
 }
@@ -64,12 +65,14 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 	solAssert(!m_julia, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
+	cout << "Setting stack height for instruction " << size_t(&_instruction) << endl;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
 	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
+	cout << "analyzing literal at " << size_t(&_literal) << endl;
 	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
@@ -80,6 +83,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
+	cout << "Setting stack height for literal " << size_t(&_literal) << endl;
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }
@@ -120,7 +124,10 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	{
 		size_t stackSize(-1);
 		if (m_resolver)
-			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue);
+		{
+			bool insideFunction = m_currentScope->insideFunction();
+			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue, insideFunction);
+		}
 		if (stackSize == size_t(-1))
 		{
 			// Only add an error message if the callback did not do it.
@@ -130,6 +137,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
 	}
+	cout << "Setting stack height for identifier " << size_t(&_identifier) << endl;
 	m_info.stackHeightInfo[&_identifier] = m_stackHeight;
 	return success;
 }
@@ -145,6 +153,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
 	if (!(*this)(_instr.instruction))
 		success = false;
+	cout << "Setting stack height for functional instr " << size_t(&_instr) << endl;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
 	return success;
 }
@@ -153,6 +162,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	solAssert(!m_julia, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
+	cout << "Setting stack height for stack assignment " << size_t(&_assignment) << endl;
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
@@ -164,6 +174,7 @@ bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 	solAssert(m_stackHeight >= stackHeight, "Negative value size.");
 	if (!checkAssignment(_assignment.variableName, m_stackHeight - stackHeight))
 		success = false;
+	cout << "Setting stack height for assignment " << size_t(&_assignment) << endl;
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
@@ -184,6 +195,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 		expectValidType(variable.type, variable.location);
 		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
 	}
+	cout << "Setting stack height for var decl " << size_t(&_varDecl) << endl;
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
 }
@@ -205,6 +217,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	bool success = (*this)(_funDef.body);
 
 	m_stackHeight = stackHeight;
+	cout << "Setting stack height for fun def " << size_t(&_funDef) << endl;
 	m_info.stackHeightInfo[&_funDef] = m_stackHeight;
 	return success;
 }
@@ -258,6 +271,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		if (!expectExpression(arg))
 			success = false;
 	m_stackHeight += int(returns) - int(arguments);
+	cout << "Setting stack height for fun call " << size_t(&_funCall) << endl;
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }
@@ -274,7 +288,9 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
-			if (!expectExpression(*_case.value))
+			// We cannot use "expectExpression" here because *_case.value is not a
+			// Statement and would be converted to a Statement otherwise.
+			if (!(*this)(*_case.value))
 				success = false;
 			m_stackHeight--;
 
@@ -295,6 +311,8 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	}
 
 	m_stackHeight--;
+	cout << "Setting stack height for switch " << size_t(&_switch) << endl;
+	m_info.stackHeightInfo[&_switch] = m_stackHeight;
 
 	return success;
 }
@@ -330,6 +348,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		success = false;
 	}
 
+	cout << "Setting stack height for block " << size_t(&_block) << endl;
 	m_info.stackHeightInfo[&_block] = m_stackHeight;
 	m_currentScope = previousScope;
 	return success;
@@ -339,6 +358,7 @@ bool AsmAnalyzer::expectExpression(Statement const& _statement)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
+	cout << "expecting expression at " << size_t(&_statement) << endl;
 	if (!boost::apply_visitor(*this, _statement))
 		success = false;
 	if (m_stackHeight - initialHeight != 1)
@@ -378,7 +398,10 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		variableSize = 1;
 	}
 	else if (m_resolver)
-		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue);
+	{
+		bool insideFunction = m_currentScope->insideFunction();
+		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue, insideFunction);
+	}
 	if (variableSize == size_t(-1))
 	{
 		// Only add message if the callback did not.

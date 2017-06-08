@@ -87,13 +87,46 @@ public:
 	{
 		m_assembly.appendLibraryAddress(_linkerSymbol);
 	}
+	virtual void appendJump(int _stackDiffAfter) override
+	{
+		appendInstruction(solidity::Instruction::JUMP);
+		m_assembly.adjustDeposit(_stackDiffAfter);
+	}
+	virtual void appendJumpTo(LabelID _label, int _stackDiffAfter) override
+	{
+		appendLabelReference(_label);
+		appendJump(_stackDiffAfter);
+	}
+	virtual void appendJumpToIf(LabelID _label) override
+	{
+		appendLabelReference(_label);
+		appendInstruction(solidity::Instruction::JUMPI);
+	}
+	virtual void appendBeginsub(LabelID, int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "BEGINSUB not implemented for EVM 1.0");
+	}
+	/// Call a subroutine.
+	virtual void appendJumpsub(LabelID, int, int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "JUMPSUB not implemented for EVM 1.0");
+	}
+
+	/// Return from a subroutine.
+	virtual void appendReturnsub(int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "RETURNSUB not implemented for EVM 1.0");
+	}
 
 private:
-	size_t assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
+	LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
 	{
 		u256 id = _tag.data();
-		solAssert(id <= std::numeric_limits<size_t>::max(), "Tag id too large.");
-		return size_t(id);
+		solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
+		return LabelID(id);
 	}
 
 	eth::Assembly& m_assembly;
@@ -107,7 +140,7 @@ eth::Assembly assembly::CodeGenerator::assemble(
 {
 	eth::Assembly assembly;
 	EthAssemblyAdapter assemblyAdapter(assembly);
-	julia::CodeTransform(m_errorReporter, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
+	julia::CodeTransform(m_errorReporter, assemblyAdapter, _analysisInfo, false, _identifierAccess).run(_parsedData);
 	return assembly;
 }
 
@@ -119,5 +152,5 @@ void assembly::CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	julia::CodeTransform(m_errorReporter, assemblyAdapter, _parsedData, _analysisInfo, _identifierAccess);
+	julia::CodeTransform(m_errorReporter, assemblyAdapter, _analysisInfo, false, _identifierAccess).run(_parsedData);
 }

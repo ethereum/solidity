@@ -85,6 +85,13 @@ enum class Instruction: uint8_t
 	DIFFICULTY,			///< get the block's difficulty
 	GASLIMIT,			///< get the block's gas limit
 
+	JUMPTO = 0x4a,      ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
+	JUMPIF,             ///< conditionally alter the program counter -- not part of Instructions.cpp
+	JUMPV,              ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
+	JUMPSUB,            ///< alter the program counter to a beginsub -- not part of Instructions.cpp
+	JUMPSUBV,           ///< alter the program counter to a beginsub -- not part of Instructions.cpp
+	RETURNSUB,          ///< return to subroutine jumped from -- not part of Instructions.cpp
+
 	POP = 0x50,			///< remove item from stack
 	MLOAD,				///< load word from memory
 	MSTORE,				///< save word to memory
@@ -97,6 +104,8 @@ enum class Instruction: uint8_t
 	MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
+	BEGINSUB,           ///< set a potential jumpsub destination -- not part of Instructions.cpp
+	BEGINDATA,          ///< begine the data section -- not part of Instructions.cpp
 
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack

@@ -20,7 +20,11 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/Exceptions.h>
+
+#include <libsolidity/interface/Exceptions.h>
+
+#include <libjulia/backends/evm/AbstractAssembly.h>
 
 #include <boost/variant.hpp>
 
