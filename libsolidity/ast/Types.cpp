@@ -33,6 +33,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
@@ -1470,7 +1471,7 @@ string ArrayType::toString(bool _short) const
 	return ret;
 }
 
-string ArrayType::canonicalName(bool _addDataLocation) const
+string ArrayType::canonicalName() const
 {
 	string ret;
 	if (isString())
@@ -1479,14 +1480,27 @@ string ArrayType::canonicalName(bool _addDataLocation) const
 		ret = "bytes";
 	else
 	{
-		ret = baseType()->canonicalName(false) + "[";
+		ret = baseType()->canonicalName() + "[";
 		if (!isDynamicallySized())
 			ret += length().str();
 		ret += "]";
 	}
-	if (_addDataLocation && location() == DataLocation::Storage)
-		ret += " storage";
 	return ret;
+}
+
+string ArrayType::signatureInExternalFunction(bool _structsByName) const
+{
+	if (isByteArray())
+		return canonicalName();
+	else
+	{
+		solAssert(baseType(), "");
+		return
+			baseType()->signatureInExternalFunction(_structsByName) +
+			"[" +
+			(isDynamicallySized() ? "" : length().str()) +
+			"]";
+	}
 }
 
 MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
@@ -1597,7 +1611,7 @@ string ContractType::toString(bool) const
 		m_contract.name();
 }
 
-string ContractType::canonicalName(bool) const
+string ContractType::canonicalName() const
 {
 	return m_contract.annotation().canonicalName;
 }
@@ -1727,9 +1741,8 @@ bool StructType::isDynamicallyEncoded() const
 u256 StructType::memorySize() const
 {
 	u256 size;
-	for (auto const& member: members(nullptr))
-		if (member.type->canLiveOutsideStorage())
-			size += member.type->memoryHeadSize();
+	for (auto const& t: memoryMemberTypes())
+		size += t->memoryHeadSize();
 	return size;
 }
 
@@ -1782,12 +1795,25 @@ TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer)
 	return copy;
 }
 
-string StructType::canonicalName(bool _addDataLocation) const
+string StructType::signatureInExternalFunction(bool _structsByName) const
 {
-	string ret = m_struct.annotation().canonicalName;
-	if (_addDataLocation && location() == DataLocation::Storage)
-		ret += " storage";
-	return ret;
+	if (_structsByName)
+		return canonicalName();
+	else
+	{
+		TypePointers memberTypes = memoryMemberTypes();
+		auto memberTypeStrings = memberTypes | boost::adaptors::transformed([&](TypePointer _t) -> string
+		{
+			solAssert(_t, "Parameter should have external type.");
+			return _t->signatureInExternalFunction(_structsByName);
+		});
+		return "(" + boost::algorithm::join(memberTypeStrings, ",") + ")";
+	}
+}
+
+string StructType::canonicalName() const
+{
+	return m_struct.annotation().canonicalName;
 }
 
 FunctionTypePointer StructType::constructorType() const
@@ -1827,6 +1853,15 @@ u256 StructType::memoryOffsetOfMember(string const& _name) const
 			offset += member.type->memoryHeadSize();
 	solAssert(false, "Member not found in struct.");
 	return 0;
+}
+
+TypePointers StructType::memoryMemberTypes() const
+{
+	TypePointers types;
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
+		if (variable->annotation().type->canLiveOutsideStorage())
+			types.push_back(variable->annotation().type);
+	return types;
 }
 
 set<string> StructType::membersMissingInMemory() const
@@ -1893,7 +1928,7 @@ string EnumType::toString(bool) const
 	return string("enum ") + m_enum.annotation().canonicalName;
 }
 
-string EnumType::canonicalName(bool) const
+string EnumType::canonicalName() const
 {
 	return m_enum.annotation().canonicalName;
 }
@@ -2320,7 +2355,7 @@ TypePointer FunctionType::binaryOperatorResult(Token::Value _operator, TypePoint
 	return TypePointer();
 }
 
-string FunctionType::canonicalName(bool) const
+string FunctionType::canonicalName() const
 {
 	solAssert(m_kind == Kind::External, "");
 	return "function";
@@ -2580,20 +2615,19 @@ string FunctionType::externalSignature() const
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
 	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
 
-	bool _inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
-
-	string ret = m_declaration->name() + "(";
-
+	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 	FunctionTypePointer external = interfaceFunctionType();
 	solAssert(!!external, "External function type requested.");
-	TypePointers externalParameterTypes = external->parameterTypes();
-	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
+	auto parameterTypes = external->parameterTypes();
+	auto typeStrings = parameterTypes | boost::adaptors::transformed([&](TypePointer _t) -> string
 	{
-		solAssert(!!(*it), "Parameter should have external type");
-		ret += (*it)->canonicalName(_inLibrary) + (it + 1 == externalParameterTypes.cend() ? "" : ",");
-	}
-
-	return ret + ")";
+		solAssert(_t, "Parameter should have external type.");
+		string typeName = _t->signatureInExternalFunction(inLibrary);
+		if (inLibrary && _t->dataStoredIn(DataLocation::Storage))
+			typeName += " storage";
+		return typeName;
+	});
+	return m_declaration->name() + "(" + boost::algorithm::join(typeStrings, ",") + ")";
 }
 
 u256 FunctionType::externalIdentifier() const
@@ -2724,9 +2758,9 @@ string MappingType::toString(bool _short) const
 	return "mapping(" + keyType()->toString(_short) + " => " + valueType()->toString(_short) + ")";
 }
 
-string MappingType::canonicalName(bool) const
+string MappingType::canonicalName() const
 {
-	return "mapping(" + keyType()->canonicalName(false) + " => " + valueType()->canonicalName(false) + ")";
+	return "mapping(" + keyType()->canonicalName() + " => " + valueType()->canonicalName() + ")";
 }
 
 string TypeType::identifier() const

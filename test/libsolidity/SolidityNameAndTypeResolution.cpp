@@ -599,6 +599,14 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 		}
 }
 
+BOOST_AUTO_TEST_CASE(external_structs)
+{
+	BOOST_FAIL("This should test external structs");
+	// More test ideas:
+	// external function type as part of a struct and array
+	// external function type taking structs and arrays...
+}
+
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
 	char const* text = R"(
@@ -980,24 +988,24 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "uint256");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 
 	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto params = function->parameterTypes();
-	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(), "uint256");
 	returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "bytes4");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 
 	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	params = function->parameterTypes();
-	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
-	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(), "uint256");
 	returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "bytes4");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 }
 
