@@ -82,6 +82,12 @@ EOF
 
     if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]
     then
+        if !(test -f report.txt)
+        then
+            echo "No report was created?"
+            exit 1
+        fi
+
         openssl aes-256-cbc -K $encrypted_60701c962b9c_key -iv $encrypted_60701c962b9c_iv -in "$REPO_ROOT"/scripts/bytecodecompare/deploy_key.enc -out deploy_key -d
         chmod 600 deploy_key
         eval `ssh-agent -s`
