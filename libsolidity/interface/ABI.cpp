@@ -116,12 +116,13 @@ Json::Value ABI::formatType(string const& _name, Type const& _type, bool _forLib
 {
 	Json::Value ret;
 	ret["name"] = _name;
+	string suffix = (_forLibrary && _type.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
 	if (_type.isValueType() || (_forLibrary && _type.dataStoredIn(DataLocation::Storage)))
-		ret["type"] = _type.canonicalName(_forLibrary);
+		ret["type"] = _type.canonicalName() + suffix;
 	else if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&_type))
 	{
 		if (arrayType->isByteArray())
-			ret["type"] = _type.canonicalName(_forLibrary);
+			ret["type"] = _type.canonicalName() + suffix;
 		else
 		{
 			string suffix;
