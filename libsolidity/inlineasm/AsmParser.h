@@ -65,7 +65,8 @@ protected:
 	Case parseCase();
 	/// Parses a functional expression that has to push exactly one stack element
 	Statement parseExpression();
-	std::map<std::string, dev::solidity::Instruction> const& instructions();
+	static std::map<std::string, dev::solidity::Instruction> const& instructions();
+	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
 	Statement parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();

@@ -206,6 +206,20 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 	return s_instructions;
 }
 
+std::map<dev::solidity::Instruction, string> const& Parser::instructionNames()
+{
+	static map<dev::solidity::Instruction, string> s_instructionNames;
+	if (s_instructionNames.empty())
+	{
+		for (auto const& instr: instructions())
+			s_instructionNames[instr.second] = instr.first;
+		// set the ambiguous instructions to a clear default
+		s_instructionNames[solidity::Instruction::SELFDESTRUCT] = "selfdestruct";
+		s_instructionNames[solidity::Instruction::KECCAK256] = "keccak256";
+	}
+	return s_instructionNames;
+}
+
 assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 {
 	Statement ret;
@@ -233,7 +247,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			{
 				InstructionInfo info = dev::solidity::instructionInfo(instr);
 				if (info.ret != 1)
-					fatalParserError("Instruction " + info.name + " not allowed in this context.");
+					fatalParserError("Instruction \"" + literal + "\" not allowed in this context.");
 			}
 			ret = Instruction{location(), instr};
 		}
@@ -363,9 +377,9 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 			/// check for premature closing parentheses
 			if (currentToken() == Token::RParen)
 				fatalParserError(string(
-					"Expected expression (" +
-					instrInfo.name +
-					" expects " +
+					"Expected expression (\"" +
+					instructionNames().at(instr) +
+					"\" expects " +
 					boost::lexical_cast<string>(args) +
 					" arguments)"
 				));
@@ -375,9 +389,9 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 			{
 				if (currentToken() != Token::Comma)
 					fatalParserError(string(
-						"Expected comma (" +
-						instrInfo.name +
-						" expects " +
+						"Expected comma (\"" +
+						instructionNames().at(instr) +
+						"\" expects " +
 						boost::lexical_cast<string>(args) +
 						" arguments)"
 					));
@@ -387,9 +401,13 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 		}
 		ret.location.end = endPosition();
 		if (currentToken() == Token::Comma)
-			fatalParserError(
-				string("Expected ')' (" + instrInfo.name + " expects " + boost::lexical_cast<string>(args) + " arguments)")
-			);
+			fatalParserError(string(
+				"Expected ')' (\"" +
+				instructionNames().at(instr) +
+				"\" expects " +
+				boost::lexical_cast<string>(args) +
+				" arguments)"
+			));
 		expectToken(Token::RParen);
 		return ret;
 	}
