@@ -294,7 +294,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment, m_context)
+	CodeTransform(m_assembly, m_info, m_julia, m_evm15, m_identifierAccess, localStackAdjustment, m_context)
 		(_function.body);
 
 	{
