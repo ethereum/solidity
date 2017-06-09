@@ -72,6 +72,9 @@ private:
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
 	void readInputFilesAndConfigureRemappings();
+	/// Tries to read the ASTs from @ m_sourceCodes and to generate the input for
+	/// the compiler's importASTs()-function.
+	std::map<std::string, Json::Value const*> parseAstFromInput(); //use const here?
 	/// Tries to read from the file @a _input or interprets _input literally if that fails.
 	/// It then tries to parse the contents and appends to m_libraries.
 	bool parseLibraryOption(std::string const& _input);
@@ -80,9 +83,6 @@ private:
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
-	/// helper-function for the import to match up json with sourceCode-files
-	/// returns true if ".sol"-file _name has acorresponding .json file among the keys of the list
-//	bool assertJsonExists(std::string const& _solname, std::map<std::string,std::string> const& _jsonList);
 
 	/// Create a json file in the given directory
 	/// @arg _fileName the name of the file (the extension will be replaced with .json)
@@ -105,7 +105,6 @@ private:
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
-
 };
 
 }

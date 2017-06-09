@@ -17,7 +17,7 @@
 /**
  * @author julius <djudju@protonmail.com>
  * @date 2017
- * Converts the AST from JSON sformat to ASTNode
+ * Converts the AST from JSON format to ASTNode
  */
 
 #pragma once
@@ -101,7 +101,12 @@ private:
 
 	template<class T>
 	ASTPointer<T> nullOrCast(Json::Value _json);
+	ASTPointer<ASTString> nullOrASTString(Json::Value _json, std::string const& _name);
+	Json::Value member(Json::Value const& _node, std::string const& _name);
+	ASTPointer<ASTString> memberAsASTString(Json::Value const& _node, std::string const& _name);
+	bool memberAsBool(Json::Value const& _node, std::string const& _name);
 	Declaration::Visibility visibility(Json::Value const& _node);
+	StateMutability stateMutability(Json::Value const& _node);
 	VariableDeclaration::Location location(Json::Value const& _node);
 	ContractDefinition::ContractKind contractKind(Json::Value const& _node);
 	Literal::SubDenomination subdenomination(Json::Value const& _node);
@@ -110,6 +115,7 @@ private:
 	std::map<std::string, Json::Value const*> m_sourceList;
 	std::vector<std::shared_ptr<std::string const>> m_sourceLocations;
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
+	std::string m_currentSourceName;
 
 
 };

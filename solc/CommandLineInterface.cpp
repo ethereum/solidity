@@ -227,23 +227,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
-string bytecodeSansMetadata(string const& _bytecode)
-{
-	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
-	/// /a165627a7a72305820([0-9a-f]{64})0029$/
-
-	if (_bytecode.size() < 88)
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
-		return _bytecode;
-
-	return _bytecode.substr(0, _bytecode.size() - 86);
-}
-
 void CommandLineInterface::handleBinary(string const& _contract)
 {
 	if (m_args.count(g_argBinary))
@@ -460,6 +443,65 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 	}
 }
 
+//read file contents, which either are
+// a) a json-file with multiple sources (as produced by --combined-json)
+// b) a literal metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal --import-ast)
+// c) a json-file with one source only (as produced --ast-combined-json)
+map<string, Json::Value const*> CommandLineInterface::parseAstFromInput()
+{
+	map<string, Json::Value const*> sourceJsons;
+	map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
+	Json::Reader reader;
+	for (auto const& srcPair: m_sourceCodes) // aka <string, string>
+	{
+		Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+		// try parsing as json
+		if (reader.parse(srcPair.second, *ast, false))
+		{
+			//case a)
+			if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
+			{
+				for (auto& src: (*ast)["sourceList"])
+				{
+					astAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
+					sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
+					tmp_sources[src.asString()] = dev::jsonCompactPrint(*ast);
+				}
+			}
+			// case b)
+			else if ((*ast).isMember("language") && (*ast)["language"] == "SolidityAST")
+			{
+				for (auto const& filename: (*ast)["sources"].getMemberNames())
+				{
+					Json::Value* ast2 = new Json::Value();
+					string sourceString = (*ast)["sources"][filename]["content"].asString();
+					if (reader.parse(sourceString, *ast2, false))
+					{
+						string srcName = (*ast2)["absolutePath"].asString();
+						sourceJsons[srcName] = ast2;
+						tmp_sources[srcName] = sourceString;
+					}
+					else
+						BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata-file could not be parsed to JSON"));
+				}
+			}
+			// case c)
+			else
+			{
+				astAssert((*ast)["nodeType"] == "SourceUnit", "Top-level node should be a 'SourceUnit'");
+				string srcName = (*ast)["absolutePath"].asString();
+				sourceJsons[srcName] = ast;
+				tmp_sources[srcName] = srcPair.second;
+			}
+		}
+		else
+			BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Input file could not be parsed to JSON"));
+	}
+	//replace the internal map so that every source has its own entry
+	m_sourceCodes = tmp_sources;
+	return sourceJsons;
+}
+
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
@@ -593,7 +635,13 @@ Allowed options)",
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
-		(g_argImportAst.c_str(), "Import ASTs to be compiled, assumes input is in JSON format")
+		(
+				g_argImportAst.c_str(),
+				"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
+				" Supported Inputs are individual ASTs (e.g. produced by --ast-compact-json), "
+				" metadatafiles with Solidity-AST as language (--metadata --metadata-literal) and"
+				" JSONs with multiple sourcefiles (--combined-json ast,compact-format)"
+				)
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
@@ -793,6 +841,7 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
+
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
@@ -801,76 +850,13 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
-<<<<<<< 684fcd4abf0a5fa0b55f55437f9a33d87237f42e
-		for (auto const& sourceCode: m_sourceCodes)
-			m_compiler->addSource(sourceCode.first, sourceCode.second);
-		if (m_args.count(g_argLibraries))
-			m_compiler->setLibraries(m_libraries);
-=======
-
 		if (m_args.count(g_argImportAst))
 		{
-			//read file contents, which either are
-			// a) a json-file with multiple sources (as produced by --combined-json)
-			// b) a json file like specified in standard-json
-			// b) a metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal)
-			// c) a json-file with one source only (as produced --ast-combined-json)
-			Json::Reader reader;
-			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
-			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
-			map<string, string> supplementarySourceCodes;
-			for (auto const& srcPair: m_sourceCodes) // aka <string, string>
-			{
-				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
-				// try parsing as json
-				if (reader.parse(srcPair.second, *ast, false))
-				{
-					//case a)
-					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
-					{
-						for (auto& src: (*ast)["sourceList"])
-						{
-							solAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "the top-level node of the AST needs to be a 'SourceUnit'");
-							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
-							tmp_sources[src.asString()] = dev::jsonCompactPrint(*ast);
-						}
-					}
-					// case b)
-					else if ((*ast).isMember("language") && (*ast)["language"] == "SolidityAST")
-					{
-						for (auto const& filename: (*ast)["sources"].getMemberNames())
-						{
-							Json::Value* ast2 = new Json::Value();
-							string sourceString = (*ast)["sources"][filename]["content"].asString();
-							if (reader.parse(sourceString, *ast2, false))
-							{
-								string srcName = (*ast2)["absolutePath"].asString();
-								sourceJsons[srcName] = ast2;
-								tmp_sources[srcName] = sourceString;
-							}
-							else
-								BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata file could not be parsed to JSON"));
-						}
-					}
-					// case c)
-					else
-					{
-						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-						string srcName = (*ast)["absolutePath"].asString();
-						sourceJsons[srcName] = ast;
-						tmp_sources[srcName] = srcPair.second;
-					}
-				}
-				else
-					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Input file could not be parsed to JSON"));
-			}
-			//replace the internal map so that every source has its own entry
-			m_sourceCodes = tmp_sources;
+			map<string, Json::Value const*> sourceJsons = parseAstFromInput();
 			//feed AST to compiler
 			m_compiler->reset(false);
-			bool import = m_compiler->importASTs(sourceJsons);
 			//use the compiler's analyzer to annotate, typecheck, etc...
-			if (!import)
+			if (!m_compiler->importASTs(sourceJsons))
 				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import of the AST failed"));
 			if (!m_compiler->analyze())
 				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Analysis of the AST failed"));
@@ -880,7 +866,8 @@ bool CommandLineInterface::processInput()
 			for (auto const& sourceCode: m_sourceCodes)
 				m_compiler->addSource(sourceCode.first, sourceCode.second);
 		}
->>>>>>> cli for import
+		if (m_args.count(g_argLibraries))
+			m_compiler->setLibraries(m_libraries);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -888,17 +875,13 @@ bool CommandLineInterface::processInput()
 
 		bool successful = m_compiler->compile();
 
-		if (successful && m_args.count(g_argFormal))
-			if (!m_compiler->prepareFormalAnalysis())
-				successful = false;
-		if (!m_compiler->importedSources())
-			for (auto const& error: m_compiler->errors())
-				SourceReferenceFormatter::printExceptionInformation(
-					cerr,
-					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-					scannerFromSourceName
-				);
+		for (auto const& error: m_compiler->errors())
+			SourceReferenceFormatter::printExceptionInformation(
+				cerr,
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				scannerFromSourceName
+			);
 
 		if (!successful)
 			return false;

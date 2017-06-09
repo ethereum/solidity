@@ -99,6 +99,7 @@ Bugfixes:
 Features:
  * Syntax Checker: Deprecated "throw" in favour of require(), assert() and revert().
  * Type Checker: Warn if a local storage reference variable does not explicitly use the keyword ``storage``.
+ * AST: import a Json to AST.
 
 Bugfixes:
  * Code Generator: Correctly unregister modifier variables.

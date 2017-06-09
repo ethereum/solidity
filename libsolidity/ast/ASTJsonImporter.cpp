@@ -26,29 +26,29 @@
 #include <boost/algorithm/string.hpp>
 #include <libsolidity/parsing/Token.h>
 #include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
-
-namespace
-{
-template<class T>
-dev::solidity::ASTPointer<T> castPointer(dev::solidity::ASTPointer<dev::solidity::ASTNode> _ast)
-{
-	dev::solidity::ASTPointer<T> ret = dynamic_pointer_cast<T>(_ast);
-	solAssert(ret, "");
-	return ret;
-}
-}
 
 using namespace dev;
 using namespace solidity;
 
+template<class T>
+ASTPointer<T> castPointer(ASTPointer<ASTNode> _ast)
+{
+	ASTPointer<T> ret = dynamic_pointer_cast<T>(_ast);
+	astAssert(ret, "");
+	return ret;
+}
+
+
 template <typename T, typename... Args>
 ASTPointer<T> ASTJsonImporter::createASTNode(Json::Value const& _node, Args&&... _args)
 {
-    auto n = make_shared<T>(createSourceLocation(_node), forward<Args>(_args)...);
-    n->setID(_node["id"].asInt());
-    return n;
+	astAssert(!member(_node, "id").isNull(), "'id'-field must not be null.");
+	auto n = make_shared<T>(createSourceLocation(_node), forward<Args>(_args)...);
+	n->setID(_node["id"].asInt());
+	return n;
 }
 
 ASTJsonImporter::ASTJsonImporter(map<string, Json::Value const*> _sourceList )
@@ -62,7 +62,9 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 {
 	for (auto const& srcPair: m_sourceList)
 	{
-		solAssert(!srcPair.second->isNull(), "");
+		astAssert(!srcPair.second->isNull(), "");
+		astAssert(member(*srcPair.second,"nodeType") == "SourceUnit", "The 'nodeType' of the highest node must be 'SourceUnit'.");
+		m_currentSourceName = srcPair.first;
 		m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second, srcPair.first);
 	}
 	return m_sourceUnits;
@@ -70,12 +72,12 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 
 SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	solAssert(!_node["src"].isNull(), "JsonValue should not be an ASTNode");
+	astAssert(!member(_node, "src").isNull(), "'src' can not be null");
 	string srcString = _node["src"].asString();
 	vector<string> pos;
 	boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
 	if (pos.size() != 3 || int(m_sourceLocations.size()) < stoi(pos[2]))
-		BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry: src-location ill-formatted or src-index too high."));
+		BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("'src'-field ill-formatted or src-index too high"));
 	int start = stoi(pos[0]);
 	int end = start + stoi(pos[1]);
 	return SourceLocation(
@@ -86,6 +88,26 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 }
 
 //helper functions
+ASTPointer<ASTString> ASTJsonImporter::memberAsASTString(Json::Value const& _node, string const& _name)
+{
+	Json::Value value = member(_node, _name);
+	astAssert(value.isString(), "field " + _name + " must be of type string.");
+	return make_shared<ASTString>(_node[_name].asString()); }
+
+bool ASTJsonImporter::memberAsBool(Json::Value const& _node, string const& _name)
+{
+
+	Json::Value value = member(_node, _name);
+	astAssert(value.isBool(), "field " + _name + " must be of type boolean.");
+	return _node[_name].asBool();
+}
+
+Json::Value ASTJsonImporter::member(Json::Value const& _node, string const& _name)
+{
+	astAssert(_node.isMember(_name), "Node '" + _node["nodeType"].asString() + "' (id " + _node["id"].asString() + ") is missing field '" + _name + "'.");
+	return _node[_name];
+}
+
 template<class T>
 ASTPointer<T> ASTJsonImporter::nullOrCast(Json::Value _json)
 {
@@ -95,19 +117,21 @@ ASTPointer<T> ASTJsonImporter::nullOrCast(Json::Value _json)
 		return castPointer<T>(convertJsonToASTNode(_json));
 }
 
+ASTPointer<ASTString> ASTJsonImporter::nullOrASTString(Json::Value _json, string const& _name){
+	return _json[_name].isString() ? memberAsASTString(_json, _name) : nullptr;
+}
+
 Token::Value ASTJsonImporter::scanSingleToken(Json::Value _node)
 {
 	Scanner scanner(CharStream(_node.asString()));
-	if (scanner.peekNextToken() == Token::EOS)
-		return scanner.currentToken();
-	else
-		BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry."));
+	astAssert(scanner.peekNextToken() == Token::EOS, "Token string is too long.");
+	return scanner.currentToken();
 }
 
 ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _json)
 {
+	astAssert(_json.isMember("nodeType") && _json.isMember("id"), "JSON-Node needs to have 'nodeType' and 'id' fields.");
 	string nodeType = _json["nodeType"].asString();
-//	cout << nodeType << _json["id"] << std::endl;
 	if (nodeType == "PragmaDirective")
 	    return createPragmaDirective(_json);
 	if (nodeType == "ImportDirective")
@@ -197,16 +221,13 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (nodeType == "Literal")
 		return createLiteral(_json);
 	else
-	{
-		cout << "nodeType was:" << nodeType <<std::endl;
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("type of JsonValue is unknown."));
-	}
+		BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Unknown type of ASTNode."));
 }
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node, string const& _srcName)
 {
 	vector<ASTPointer<ASTNode>> nodes;
-	for (auto& child: _node["nodes"])
+	for (auto& child: member(_node, "nodes"))
 		nodes.emplace_back(convertJsonToASTNode(child));
 	ASTPointer<SourceUnit> tmp = createASTNode<SourceUnit>(_node, nodes);
 	tmp->annotation().path = _srcName;
@@ -217,124 +238,109 @@ ASTPointer<PragmaDirective> ASTJsonImporter::createPragmaDirective(Json::Value c
 {
 	vector<Token::Value> tokens;
 	vector<ASTString> literals;
-	for (auto const& lit: _node["literals"])
+	for (auto const& lit: member(_node, "literals"))
 	{
 		string l = lit.asString();
-                literals.push_back(l);
-                tokens.push_back(scanSingleToken(l));
+		literals.push_back(l);
+		tokens.push_back(scanSingleToken(l));
 	}
-	ASTPointer<PragmaDirective> tmp = createASTNode<PragmaDirective>(_node, tokens, literals);
-	return tmp;
+	return createASTNode<PragmaDirective>(_node, tokens, literals);
 }
 
 ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value const& _node){
-	ASTPointer<ASTString> const& path = make_shared<ASTString>(_node["file"].asString());
-	ASTPointer<ASTString> const& unitAlias = make_shared<ASTString>(_node["unitAlias"].asString());
+	ASTPointer<ASTString> unitAlias = memberAsASTString(_node, "unitAlias");
+	ASTPointer<ASTString> path = memberAsASTString(_node, "file");
 	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
 	for (auto& tuple: _node["symbolAliases"])
 	{
                 symbolAliases.push_back( make_pair(
 			createIdentifier(tuple["foreign"]),
-			tuple["local"].isNull() ? nullptr : make_shared<ASTString>(tuple["local"].asString()) //also check if that's not null?
+			tuple["local"].isNull() ? nullptr : make_shared<ASTString>(tuple["local"].asString())
 		));
 	}
-	ASTPointer<ImportDirective> tmp = createASTNode<ImportDirective>(_node, path, unitAlias, move(symbolAliases));
+	ASTPointer<ImportDirective> tmp = createASTNode<ImportDirective>(
+		_node,
+		path,
+		unitAlias,
+		move(symbolAliases)
+	);
 	tmp->annotation().absolutePath = _node["absolutePath"].asString();
 	return tmp;
 }
 
 ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::Value const& _node){
-	ASTPointer<ASTString> documentation = _node["documentation"].isNull() ?
-				nullptr :
-				make_shared<ASTString>(_node["documentation"].asString()
-	);
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
 	std::vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	for (auto& base : _node["baseContracts"])
 		baseContracts.push_back(createInheritanceSpecifier(base));
 	std::vector<ASTPointer<ASTNode>> subNodes;
 	for (auto& subnode : _node["nodes"])
 		subNodes.push_back(convertJsonToASTNode(subnode));
-	ContractDefinition::ContractKind kind = contractKind(_node);
-	//create node
-	ASTPointer<ContractDefinition> tmp = createASTNode<ContractDefinition>(
+	return createASTNode<ContractDefinition>(
 		_node,
-		name,
-		documentation,
+		make_shared<ASTString>(_node["name"].asString()),
+		nullOrASTString(_node, "documentation"),
 		baseContracts,
 		subNodes,
-		kind
+		contractKind(_node)
 	);
-	return tmp;
 }
 
 ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Json::Value const& _node)
 {
-	ASTPointer<UserDefinedTypeName> baseName = createUserDefinedTypeName(_node["baseName"]);
 	std::vector<ASTPointer<Expression>> arguments;
 	for (auto& arg : _node["arguments"])
 		arguments.push_back(castPointer<Expression>(convertJsonToASTNode(arg)));
-	//create node
-	ASTPointer<InheritanceSpecifier> tmp = createASTNode<InheritanceSpecifier>(
+	return createASTNode<InheritanceSpecifier>(
 		_node,
-		baseName,
+		createUserDefinedTypeName(_node["baseName"]),
 		arguments
 	);
-	return tmp;
+
 }
 
 ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Value const& _node)
 {
-	ASTPointer<UserDefinedTypeName> libraryName = createUserDefinedTypeName(_node["libraryName"]);
-	ASTPointer<TypeName> typeName;
-	if (!_node["typename"].isNull())
-		typeName = castPointer<TypeName>(convertJsonToASTNode(_node["typename"]));
-	else
-		typeName = nullptr;
-	ASTPointer<UsingForDirective> tmp = createASTNode<UsingForDirective>(
+	return createASTNode<UsingForDirective>(
 		_node,
-		libraryName,
-		typeName
+		createUserDefinedTypeName(member(_node, "libraryName")),
+		!_node["typename"].isNull() ?  castPointer<TypeName>(convertJsonToASTNode(_node["typename"])) : nullptr
 	);
-	return tmp;
+
 }
 
 ASTPointer<ASTNode> ASTJsonImporter::createStructDefinition(Json::Value const& _node)
 {
-	ASTPointer<ASTString> const& name = make_shared<ASTString>(_node["name"].asString());
 	std::vector<ASTPointer<VariableDeclaration>> members;
 	for (auto& member: _node["members"])
 		members.push_back(createVariableDeclaration(member));
-	ASTPointer<StructDefinition> tmp = createASTNode<StructDefinition>(
+	return createASTNode<StructDefinition>(
 		_node,
-		name,
+		memberAsASTString(_node, "name"),
 		members
 	);
-	return tmp;
+
 }
 
 ASTPointer<EnumDefinition> ASTJsonImporter::createEnumDefinition(Json::Value const& _node)
 {
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
 	std::vector<ASTPointer<EnumValue>> members;
 	for (auto& member: _node["members"])
 		members.push_back(createEnumValue(member));
-	ASTPointer<EnumDefinition> tmp = createASTNode<EnumDefinition>(
+	return createASTNode<EnumDefinition>(
 		_node,
-		name,
+		memberAsASTString(_node, "name"),
 		members
 	);
-	return tmp;
+
 }
 
 ASTPointer<EnumValue> ASTJsonImporter::createEnumValue(Json::Value const& _node)
 {
-	ASTPointer<ASTString> const& name = make_shared<ASTString>(_node["name"].asString());
-	ASTPointer<EnumValue> tmp = createASTNode<EnumValue>(
+	return createASTNode<EnumValue>(
 		_node,
-		name
+		memberAsASTString(_node, "name")
 	);
-	return tmp;
+
 }
 
 ASTPointer<ParameterList> ASTJsonImporter::createParameterList(Json::Value const&  _node)
@@ -342,513 +348,421 @@ ASTPointer<ParameterList> ASTJsonImporter::createParameterList(Json::Value const
 	std::vector<ASTPointer<VariableDeclaration>> parameters;
 	for (auto& param: _node["parameters"])
 		parameters.push_back(createVariableDeclaration(param));
-	ASTPointer<ParameterList> tmp = createASTNode<ParameterList>(
+	return createASTNode<ParameterList>(
 		_node,
 		parameters
 	);
-	return tmp;
+
 }
 
 ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
-	Declaration::Visibility vis = visibility(_node);
-	bool isConstructor = _node["isConstructor"].asBool();
-	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
-	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
-	bool isDeclaredConst = _node["isDeclaredConst"].asBool();
 	std::vector<ASTPointer<ModifierInvocation>> modifiers;
-	for (auto& mod: _node["modifiers"])
+	for (auto& mod: member(_node, "modifiers"))
 		modifiers.push_back(createModifierInvocation(mod));
-	ASTPointer<ParameterList> returnParameters = createParameterList(_node["returnParameters"]);
-	bool isPayable = _node["payable"].asBool();
-	ASTPointer<Block> body = _node["implemented"].asBool() ? createBlock(_node["body"]) : nullptr;
-	ASTPointer<FunctionDefinition> tmp = createASTNode<FunctionDefinition>(
+	return createASTNode<FunctionDefinition>(
 		_node,
-		name,
-		vis,
-		isConstructor,
-		documentation,
-		parameters,
-		isDeclaredConst,
+		memberAsASTString(_node, "name"),
+		visibility(_node),
+		stateMutability(_node),
+		memberAsBool(_node, "isConstructor"),
+		nullOrASTString(_node, "documentation"),
+		createParameterList(member(_node, "parameters")),
 		modifiers,
-		returnParameters,
-		isPayable,
-		body
+		createParameterList(member(_node, "returnParameters")),
+		memberAsBool(_node, "implemented") ? createBlock(member(_node, "body")) : nullptr
 	);
-	return tmp;
+
 }
 
-ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json::Value const&  _node)
+ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json::Value const& _node)
 {
-	ASTPointer<TypeName> type = nullOrCast<TypeName>(_node["typeName"]);
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
-	ASTPointer<Expression> value = nullOrCast<Expression>(_node["value"]);
-	Declaration::Visibility vis = visibility(_node);
-	bool isStateVar = _node["stateVariable"].asBool();
-	bool isIndexed = _node["indexed"].asBool();
-	bool isConstant = _node["constant"].asBool();
-	VariableDeclaration::Location referenceLocation = location(_node);
-	ASTPointer<VariableDeclaration> tmp = createASTNode<VariableDeclaration>(
+	return createASTNode<VariableDeclaration>(
 		_node,
-		type,
-		name,
-	        value,
-		vis,
-		isStateVar,
-		isIndexed,
-		isConstant,
-		referenceLocation
+		nullOrCast<TypeName>(member(_node, "typeName")),
+		make_shared<ASTString>(member(_node, "name").asString()),
+		nullOrCast<Expression>(member(_node, "value")),
+		visibility(_node),
+		memberAsBool(_node, "stateVariable"),
+		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
+		memberAsBool(_node, "constant"),
+		location(_node)
 	);
-	return tmp;
+
 }
 
 ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
-	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
-	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
-	ASTPointer<Block> body = createBlock(_node["body"]);
-	ASTPointer<ModifierDefinition> tmp = createASTNode<ModifierDefinition>(
+	return createASTNode<ModifierDefinition>(
 		_node,
-		name,
-		documentation,
-		parameters,
-		body
+		memberAsASTString(_node, "name"),
+		nullOrASTString(_node,"documentation"),
+		createParameterList(member(_node, "parameters")),
+		createBlock(member(_node, "body"))
 	);
-	return tmp;
+
 }
 
 ASTPointer<ModifierInvocation> ASTJsonImporter::createModifierInvocation(Json::Value const&  _node)
 {
-	ASTPointer<Identifier> name = createIdentifier(_node["modifierName"]);
-//	ASTPointer<Identifier> name = createIdentifier(_node["modifierName"], _node["modifierName"]["name"].asString());
 	std::vector<ASTPointer<Expression>> arguments;
-	for (auto& arg: _node["arguments"])
+	for (auto& arg: member(_node, "arguments"))
 		arguments.push_back(castPointer<Expression>(convertJsonToASTNode(arg)));
-	ASTPointer<ModifierInvocation> tmp = createASTNode<ModifierInvocation>(
+	return createASTNode<ModifierInvocation>(
 		_node,
-		name,
+		createIdentifier(member(_node, "modifierName")),
 		arguments
 	);
-	return tmp;
+
 }
 
 ASTPointer<EventDefinition> ASTJsonImporter::createEventDefinition(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> name = make_shared<ASTString>(_node["name"].asString());
-	ASTPointer<ASTString> documentation = make_shared<ASTString>(""); //postponed
-	ASTPointer<ParameterList> parameters = createParameterList(_node["parameters"]);
-	bool anonymous = _node["anonymous"].asBool();
-	ASTPointer<EventDefinition> tmp = createASTNode<EventDefinition>(
+	return createASTNode<EventDefinition>(
 		_node,
-		name,
-		documentation,
-		parameters,
-		anonymous
+		memberAsASTString(_node, "name"),
+		nullOrASTString(_node, "documentation"),
+		createParameterList(member(_node, "parameters")),
+		memberAsBool(_node, "anonymous")
 	);
-	return tmp;
+
 }
 
 ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::Value const& _node)
 {
 	unsigned short firstNum;
 	unsigned short secondNum;
-	string name = _node["name"].asString();
+	string name = member(_node, "name").asString();
 	Token::Value token;
 	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
 	ElementaryTypeNameToken elem(token, firstNum,  secondNum);
-	ASTPointer<ElementaryTypeName> tmp = createASTNode<ElementaryTypeName>(
+	return createASTNode<ElementaryTypeName>(
 		_node,
 		elem
 	);
-	return tmp;
+
 }
 
 ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json::Value const& _node)
 {
 	vector<ASTString> namePath;
 	vector<string> strs;
-	string nameString = _node["name"].asString();
+	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
 	for (string s : strs)
 		namePath.push_back(ASTString(s));
-	ASTPointer<UserDefinedTypeName> tmp = createASTNode<UserDefinedTypeName>(
+	return createASTNode<UserDefinedTypeName>(
 		_node,
 		namePath
 	);
-	return tmp;
+
 }
 
 ASTPointer<FunctionTypeName> ASTJsonImporter::createFunctionTypeName(Json::Value const&  _node)
 {
-	ASTPointer<ParameterList> parameterTypes = createParameterList(_node["parameterTypes"]);
-	ASTPointer<ParameterList> returnTypes = createParameterList(_node["returnParameterTypes"]);
-	Declaration::Visibility vis = visibility(_node);
-	bool isDeclaredConst = _node["isDeclaredConst"].asBool();
-	bool isPayable = _node["payable"].asBool();
-	ASTPointer<FunctionTypeName> tmp = createASTNode<FunctionTypeName>(
+	return createASTNode<FunctionTypeName>(
 		_node,
-		parameterTypes,
-		returnTypes,
-		vis,
-		isDeclaredConst,
-		isPayable
+		createParameterList(member(_node, "parameterTypes")),
+		createParameterList(member(_node, "returnParameterTypes")),
+		visibility(_node),
+		stateMutability(_node)
 	);
-	return tmp;
+
 }
 
 ASTPointer<Mapping> ASTJsonImporter::createMapping(Json::Value const&  _node)
 {
-	ASTPointer<ElementaryTypeName> keyType = createElementaryTypeName(_node["keyType"]);
-	ASTPointer<TypeName> valueType = castPointer<TypeName>(convertJsonToASTNode(_node["valueType"]));
-	ASTPointer<Mapping> tmp = createASTNode<Mapping>(
+	return createASTNode<Mapping>(
 		_node,
-		keyType,
-		valueType
+		createElementaryTypeName(member(_node, "keyType")),
+		castPointer<TypeName>(convertJsonToASTNode(member(_node, "valueType")))
 	);
-	return tmp;
+
 }
 
 ASTPointer<ArrayTypeName> ASTJsonImporter::createArrayTypeName(Json::Value const&  _node)
 {
-	ASTPointer<TypeName> baseType = castPointer<TypeName>(convertJsonToASTNode(_node["baseType"]));
-	ASTPointer<Expression> length = nullOrCast<Expression>(_node["length"]);
-	ASTPointer<ArrayTypeName> tmp = createASTNode<ArrayTypeName>(
+	return createASTNode<ArrayTypeName>(
 		_node,
-		baseType,
-		length
+		castPointer<TypeName>(convertJsonToASTNode(member(_node, "baseType"))),
+		nullOrCast<Expression>(member(_node, "length"))
 	);
-	return tmp;
 }
 
 ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value const& _node)
 {
-	std::shared_ptr<assembly::Block> operations;
-	ErrorList tmp_error;
+	ErrorList tmp_list;
+	ErrorReporter tmp_error(tmp_list);
 	assembly::Parser asmParser(tmp_error);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_node["operations"].asString()), "");
-	operations = asmParser.parse(scanner);
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<InlineAssembly> tmp = createASTNode<InlineAssembly>(_node, docString, operations);
-	return tmp;
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(
+		CharStream( member(_node, "operations").asString()),
+		m_currentSourceName
+	);
+	std::shared_ptr<assembly::Block> operations = asmParser.parse(scanner);
+	return createASTNode<InlineAssembly>(
+		_node,
+		nullOrASTString(_node, "documentation"),
+		operations
+	);
 }
 
 ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	std::vector<ASTPointer<Statement>> statements;
-	for (auto& stat: _node["statements"])
+	for (auto& stat: member(_node, "statements"))
 		statements.push_back(castPointer<Statement>(convertJsonToASTNode(stat)));
-	ASTPointer<Block> tmp = createASTNode<Block>(
+	return createASTNode<Block>(
 		_node,
-		docString,
+		nullOrASTString(_node, "documentation"),
 		statements
 	);
-	return tmp;
 }
 
 ASTPointer<PlaceholderStatement> ASTJsonImporter::createPlaceholderStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<PlaceholderStatement> tmp = createASTNode<PlaceholderStatement>(
+	return createASTNode<PlaceholderStatement>(
 		_node,
-		docString
+		nullOrASTString(_node, "documentation")
 	);
-	return tmp;
 }
 
 ASTPointer<IfStatement> ASTJsonImporter::createIfStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
-	ASTPointer<Statement> trueBody = castPointer<Statement>(convertJsonToASTNode(_node["trueBody"]));
-	ASTPointer<Statement> falseBody = nullOrCast<Statement>(_node["falseBody"]);
-	ASTPointer<IfStatement> tmp = createASTNode<IfStatement>(
+	return createASTNode<IfStatement>(
 		_node,
-		docString,
-		condition,
-		trueBody,
-		falseBody
+		nullOrASTString(_node, "documentation"),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "condition"))),
+		castPointer<Statement>(convertJsonToASTNode(member(_node, "trueBody"))),
+		nullOrCast<Statement>(member(_node, "falseBody"))
 	);
-	return tmp;
 }
 
 ASTPointer<WhileStatement> ASTJsonImporter::createWhileStatement(Json::Value const&  _node, bool _isDoWhile=false)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
-	ASTPointer<Statement> body = castPointer<Statement>(convertJsonToASTNode(_node["body"]));
-	ASTPointer<WhileStatement> tmp = createASTNode<WhileStatement>(
+	return createASTNode<WhileStatement>(
 		_node,
-		docString,
-		condition,
-		body,
+		nullOrASTString(_node, "documentation"),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "condition"))),
+		castPointer<Statement>(convertJsonToASTNode(member(_node, "body"))),
 		_isDoWhile
 	);
-	return tmp;
 }
 
 ASTPointer<ForStatement> ASTJsonImporter::createForStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed //TODO
-	ASTPointer<Statement> initExpression = nullOrCast<Statement>(_node["initializationExpression"]);
-	ASTPointer<Expression> conditionExpression = nullOrCast<Expression>(_node["condition"]);
-	ASTPointer<ExpressionStatement> loopExpression = nullOrCast<ExpressionStatement>(_node["loopExpression"]);
-	ASTPointer<Statement> body = castPointer<Statement>(convertJsonToASTNode(_node["body"]));
-	ASTPointer<ForStatement> tmp = createASTNode<ForStatement>(
+	return createASTNode<ForStatement>(
 		_node,
-		docString,
-		initExpression,
-		conditionExpression,
-		loopExpression,
-		body
+		nullOrASTString(_node, "documentation"),
+		nullOrCast<Statement>(member(_node, "initializationExpression")),
+		nullOrCast<Expression>(member(_node, "condition")),
+		nullOrCast<ExpressionStatement>(member(_node, "loopExpression")),
+		castPointer<Statement>(convertJsonToASTNode(member(_node, "body")))
 	);
-	return tmp;
 }
 
 ASTPointer<Continue> ASTJsonImporter::createContinue(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Continue> tmp = createASTNode<Continue>(_node, docString);
-	return tmp;
+	return createASTNode<Continue>(
+		_node,
+		nullOrASTString(_node, "documentation")
+	);
 }
 
 ASTPointer<Break> ASTJsonImporter::createBreak(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Break> tmp = createASTNode<Break>(_node, docString);
-	return tmp;
+	return createASTNode<Break>(
+		_node,
+		nullOrASTString(_node, "documentation")
+	);
 }
 
-ASTPointer<Return> ASTJsonImporter::createReturn(Json::Value const&  _node)
-{
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
-	ASTPointer<Return> tmp = createASTNode<Return>(
+ASTPointer<Return> ASTJsonImporter::createReturn(Json::Value const&  _node) {
+	return createASTNode<Return>(
 		_node,
-		docString,
-		expression
+		nullOrASTString(_node, "documentation"),
+		nullOrCast<Expression>(member(_node, "expression"))
 	);
-	return tmp;
 }
 
 ASTPointer<Throw> ASTJsonImporter::createThrow(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Throw> tmp = createASTNode<Throw>(_node, docString);
-	return tmp;
+	return createASTNode<Throw>(
+		_node,
+		nullOrASTString(_node, "documentation")
+	);
+
 }
 
 ASTPointer<VariableDeclarationStatement> ASTJsonImporter::createVariableDeclarationStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
 	std::vector<ASTPointer<VariableDeclaration>> variables;
-	for (auto& var: _node["declarations"])
-		variables.push_back( var.isNull() ? nullptr : createVariableDeclaration(var));//unnamed components are empty pointers
-	ASTPointer<Expression> initialValue = nullOrCast<Expression>(_node["initialValue"]);
-	ASTPointer<VariableDeclarationStatement> tmp = createASTNode<VariableDeclarationStatement>(
+	for (auto& var: member(_node, "declarations"))
+		variables.push_back( var.isNull() ? nullptr : createVariableDeclaration(var)); //unnamed components are empty pointers
+	return createASTNode<VariableDeclarationStatement>(
 		_node,
-		docString,
+		nullOrASTString(_node, "documentation"),
 		variables,
-		initialValue
+		nullOrCast<Expression>(member(_node, "initialValue"))
 	);
-	return tmp;
 }
 
 ASTPointer<ExpressionStatement> ASTJsonImporter::createExpressionStatement(Json::Value const&  _node)
 {
-	ASTPointer<ASTString> docString = make_shared<ASTString>(""); //postponed
-	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
-	ASTPointer<ExpressionStatement> tmp = createASTNode<ExpressionStatement>(
+	return createASTNode<ExpressionStatement>(
 		_node,
-		docString,
-		expression
+		nullOrASTString(_node, "documentation"),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "expression")))
 	);
-	return tmp;
 }
 
 ASTPointer<Conditional> ASTJsonImporter::createConditional(Json::Value const&  _node)
 {
-	ASTPointer<Expression> condition = castPointer<Expression>(convertJsonToASTNode(_node["condition"]));
-	ASTPointer<Expression> trueExpression = castPointer<Expression>(convertJsonToASTNode(_node["trueExpression"]));
-	ASTPointer<Expression> falseExpression = castPointer<Expression>(convertJsonToASTNode(_node["falseExpression"]));
-	ASTPointer<Conditional> tmp = createASTNode<Conditional>(
+	return createASTNode<Conditional>(
 		_node,
-		condition,
-		trueExpression,
-		falseExpression
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "condition"))),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "trueExpression"))),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "falseExpression")))
 	);
-        tmp->setID(_node["id"].asInt());
-	return tmp;
 }
 
 ASTPointer<Assignment> ASTJsonImporter::createAssignment(Json::Value const&  _node)
 {
-	ASTPointer<Expression> leftHandSide = castPointer<Expression>(convertJsonToASTNode(_node["leftHandSide"]));
-        Token::Value assignmentOperator = scanSingleToken(_node["operator"]);
-	ASTPointer<Expression> rightHandSide = castPointer<Expression>(convertJsonToASTNode(_node["rightHandSide"]));
-	ASTPointer<Assignment> tmp = createASTNode<Assignment>(
+	return createASTNode<Assignment>(
 		_node,
-		leftHandSide,
-		assignmentOperator,
-		rightHandSide
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "leftHandSide"))),
+		scanSingleToken(member(_node, "operator")),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "rightHandSide")))
 	);
-	return tmp;
 }
 
 ASTPointer<TupleExpression> ASTJsonImporter::createTupleExpression(Json::Value const&  _node)
 {
 	std::vector<ASTPointer<Expression>> components;
-	for (auto& comp: _node["components"])
+	for (auto& comp: member(_node, "components"))
 		components.push_back(nullOrCast<Expression>(comp));
-	bool isArray = _node["isInlineArray"].asBool();
-	ASTPointer<TupleExpression> tmp = createASTNode<TupleExpression>(
+	return createASTNode<TupleExpression>(
 		_node,
 		components,
-		isArray
+		memberAsBool(_node, "isInlineArray")
 	);
-	return tmp;
 }
 
 ASTPointer<UnaryOperation> ASTJsonImporter::createUnaryOperation(Json::Value const&  _node)
 {
-        Token::Value operation = scanSingleToken(_node["operator"]);
-	ASTPointer<Expression> subExpression = castPointer<Expression>(convertJsonToASTNode(_node["subExpression"]));
-	bool prefix = _node["prefix"].asBool();
-	ASTPointer<UnaryOperation> tmp = createASTNode<UnaryOperation>(
+	return createASTNode<UnaryOperation>(
 		_node,
-		operation,
-		subExpression,
-		prefix
+		scanSingleToken(member(_node, "operator")),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "subExpression"))),
+		memberAsBool(_node, "prefix")
 	);
-	return tmp;
+
 
 }
 
 ASTPointer<BinaryOperation> ASTJsonImporter::createBinaryOperation(Json::Value const&  _node)
 {
-	ASTPointer<Expression> left = castPointer<Expression>(convertJsonToASTNode(_node["leftExpression"]));
-        Token::Value operation = scanSingleToken(_node["operator"]);
-	ASTPointer<Expression> right = castPointer<Expression>(convertJsonToASTNode(_node["rightExpression"]));
-	ASTPointer<BinaryOperation> tmp = createASTNode<BinaryOperation>(
+	return createASTNode<BinaryOperation>(
 		_node,
-		left,
-		operation,
-		right
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "leftExpression"))),
+		scanSingleToken(member(_node, "operator")),
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "rightExpression")))
 	);
-	return tmp;
 }
 
 ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const&  _node)
 {
-	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
 	std::vector<ASTPointer<Expression>> arguments;
-	for (auto& arg: _node["arguments"])
+	for (auto& arg: member(_node, "arguments"))
 		arguments.push_back(castPointer<Expression>(convertJsonToASTNode(arg)));
 	std::vector<ASTPointer<ASTString>> names;
-	for (auto& name: _node["names"])
+	for (auto& name: member(_node, "names"))
 		names.push_back(make_shared<ASTString>(name.asString()));
-	ASTPointer<FunctionCall> tmp = createASTNode<FunctionCall>(
+	return createASTNode<FunctionCall>(
 		_node,
-		expression,
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "expression"))),
 		arguments,
 		names
 	);
-	return tmp;
+
 }
 
 ASTPointer<NewExpression> ASTJsonImporter::createNewExpression(Json::Value const&  _node)
 {
-	ASTPointer<TypeName> typeName = castPointer<TypeName>(convertJsonToASTNode(_node["typeName"]));
-	ASTPointer<NewExpression> tmp = createASTNode<NewExpression>(
+	return createASTNode<NewExpression>(
 		_node,
-		typeName
+		castPointer<TypeName>(convertJsonToASTNode(member(_node, "typeName")))
 	);
-	return tmp;
 }
 
 ASTPointer<MemberAccess> ASTJsonImporter::createMemberAccess(Json::Value const&  _node)
 {
-	ASTPointer<Expression> expression = castPointer<Expression>(convertJsonToASTNode(_node["expression"]));
-	ASTPointer<ASTString> memberName = make_shared<ASTString>(_node["memberName"].asString());
-	ASTPointer<MemberAccess> tmp = createASTNode<MemberAccess>(
+	return createASTNode<MemberAccess>(
 		_node,
-		expression,
-		memberName
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "expression"))),
+		memberAsASTString(_node, "memberName")
 	);
-	return tmp;
 }
 
 ASTPointer<IndexAccess> ASTJsonImporter::createIndexAccess(Json::Value const& _node)
 {
-	ASTPointer<Expression> base = castPointer<Expression>(convertJsonToASTNode(_node["baseExpression"]));
-	ASTPointer<Expression> index = castPointer<Expression>(convertJsonToASTNode(_node["indexExpression"]));
-	ASTPointer<IndexAccess> tmp = createASTNode<IndexAccess>(
+	return createASTNode<IndexAccess>(
 		_node,
-		base,
-		index
+		castPointer<Expression>(convertJsonToASTNode(member(_node, "baseExpression"))),
+		nullOrCast<Expression>(member(_node, "indexExpression"))
 	);
-	return tmp;
 }
 
 ASTPointer<Identifier> ASTJsonImporter::createIdentifier(Json::Value const& _node)
 {
-	return createASTNode<Identifier>(_node, make_shared<ASTString>(_node["name"].asString()));
+	return createASTNode<Identifier>(_node, memberAsASTString(_node, "name"));
 }
 
-ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node) //needs TEST (elem)
+ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node)
 {
-	Scanner scanner(CharStream(_node["typeName"].asString()), "");
+	Scanner scanner(CharStream(member(_node, "typeName").asString()), "");
 	Token::Value token = scanner.currentToken();
 	unsigned firstSize;
 	unsigned secondSize;
 	tie(firstSize, secondSize) = scanner.currentTokenInfo();
 	ElementaryTypeNameToken elem(token, firstSize, secondSize);
-	ASTPointer<ElementaryTypeNameExpression> tmp = createASTNode<ElementaryTypeNameExpression>(
+	return createASTNode<ElementaryTypeNameExpression>(
 		_node,
 		elem
 	);
-	return tmp;
-
 }
 
 ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
 {
-	Token::Value token = literalTokenKind(_node);
-	astAssert(!_node["value"].isNull() || !_node["hexValue"].isNull(), "invalidAST: Literal-value is unknown");
+	astAssert(!member(_node, "value").isNull() || !member(_node, "hexValue").isNull(), "Literal-value is unset.");
 	ASTPointer<ASTString> value = _node["value"].isNull() ?
 				make_shared<ASTString>(asString(fromHex(_node["hexValue"].asString()))):
 				make_shared<ASTString>(_node["value"].asString());
-	Literal::SubDenomination sub = _node["subdenomination"].isNull() ? Literal::SubDenomination::None : subdenomination(_node);
-	ASTPointer<Literal> tmp = createASTNode<Literal>(
+	return createASTNode<Literal>(
 		_node,
-		token,
+		literalTokenKind(_node),
 		value,
-		sub
+		member(_node, "subdenomination").isNull() ? Literal::SubDenomination::None : subdenomination(_node)
 	);
-	return tmp;
 }
 
 Token::Value ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 {
-	astAssert(_node.isMember("kind") && !_node["kind"].isNull(), "");
+	astAssert(!member(_node, "kind").isNull(), "Token-'kind' can not be null.");
 	Token::Value tok;
 	if (_node["kind"].asString() == "number")
 		tok = Token::Number;
 	else if (_node["kind"].asString() == "string")
 		tok = Token::StringLiteral;
 	else if (_node["kind"].asString() == "bool")
-		 tok = (_node["value"].asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
+		 tok = (member(_node, "value").asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
 	else
-		astAssert(false, "unknown kind of literalString");
+		astAssert(false, "Unknown kind of literalString");
 	return tok;
-
 }
 
 Declaration::Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 {
-	astAssert(_node.isMember("visibility") && !_node["visibility"].isNull(), "");
+	astAssert(!member(_node, "visibility").isNull(), "'visibility' can not be null.");
 	Declaration::Visibility vis;
 	if (_node["visibility"].asString() == "default")
 		vis = Declaration::Visibility::Default;
@@ -861,14 +775,14 @@ Declaration::Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 	else if (_node["visibility"].asString() == "external")
 		vis = Declaration::Visibility::External;
 	else
-		astAssert(false, "unknown visibility declaration");
+		astAssert(false, "Unknown visibility declaration");
 	return vis;
 }
 
 VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node)
 {
 	VariableDeclaration::Location loc;
-	solAssert(_node.isMember("storageLocation") && !_node["storageLocation"].isNull(), "");
+	astAssert(!member(_node, "storageLocation").isNull(), "'storageLocation' can not be null.");
 	if (_node["storageLocation"].asString() == "default")
 		loc = VariableDeclaration::Location::Default;
 	else if (_node["storageLocation"].asString() == "storage")
@@ -876,14 +790,14 @@ VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node
 	else if (_node["storageLocation"].asString() == "memory")
 		loc = VariableDeclaration::Location::Memory;
 	else
-		solAssert(false, "unknown location declaration");
+		astAssert(false, "Unknown location declaration");
 	return loc;
 }
 
 ContractDefinition::ContractKind ASTJsonImporter::contractKind(Json::Value const& _node)
 {
 	ContractDefinition::ContractKind kind;
-	solAssert(_node.isMember("contractKind") && !_node["contractKind"].isNull(), "");
+	astAssert(!member(_node, "contractKind").isNull(), "'Contract-kind' can not be null.");
 	if (_node["contractKind"].asString() == "interface")
 		kind = ContractDefinition::ContractKind::Interface;
 	else if (_node["contractKind"].asString() == "contract")
@@ -891,15 +805,14 @@ ContractDefinition::ContractKind ASTJsonImporter::contractKind(Json::Value const
 	else if (_node["contractKind"].asString() == "library")
 		kind = ContractDefinition::ContractKind::Library;
 	else
-		solAssert(false, "unknown ContractKind ");
+		astAssert(false, "Unknown ContractKind");
 	return kind;
 }
 
 Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _node)
 {
 	Literal::SubDenomination kind;
-	solAssert(_node.isMember("subdenomination"), "");
-	if (_node["subdenomination"].isNull())
+	if (member(_node, "subdenomination").isNull())
 		kind = Literal::SubDenomination::None;
 	else if (_node["subdenomination"].asString() == "wei")
 		kind = Literal::SubDenomination::Wei;
@@ -920,6 +833,23 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 	else if (_node["subdenomination"].asString() == "year")
 		kind = Literal::SubDenomination::Year;
 	else
-		solAssert(false, "unknown subdenomination");
+		astAssert(false, "Unknown subdenomination");
 	return kind;
+}
+
+StateMutability ASTJsonImporter::stateMutability(Json::Value const& _node)
+{
+	StateMutability mutability;
+	astAssert(!member(_node, "stateMutability").isNull(), "StateMutability' can not be null.");
+	if (_node["stateMutability"].asString() == "pure")
+		mutability = StateMutability::Pure;
+	else if (_node["stateMutability"].asString() == "view")
+		mutability = StateMutability::View;
+	else if (_node["stateMutability"].asString() == "nonpayable")
+		mutability = StateMutability::NonPayable;
+	else if (_node["stateMutability"].asString() == "payable")
+		mutability = StateMutability::Payable;
+	else
+		astAssert(false, "Unknown stateMutability");
+	return mutability;
 }

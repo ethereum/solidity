@@ -30,19 +30,3 @@ namespace solidity
 bool searchErrorMessage(Error const& _err, std::string const& _substr);
 }
 }
-<<<<<<< a0dbcbfebbd7677ba00bad25c0af72b01cefbf6f:test/libsolidity/ErrorCheck.h
-=======
-
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
-
-#define astAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InvalidAstError, DESCRIPTION)
-
-#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
-
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)
->>>>>>> importBugfix:libsolidity/interface/Utils.h

@@ -163,11 +163,6 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
-//		else
-//		{
-//			ASTJsonConverter converter(false, sourceIndices());
-//			cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
-//		}
 
 	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
@@ -179,8 +174,6 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
-
-
 
 	map<string, SourceUnit const*> sourceUnitsByName;
 	for (auto& source: m_sources)
@@ -196,8 +189,7 @@ bool CompilerStack::analyze()
 				m_globalContext->setCurrentContract(*contract);
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-				if (!resolver.resolveNamesAndTypes(*contract))
-					return false;
+				if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
@@ -262,7 +254,7 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
-bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
+bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 {
 	if (m_stackState != Empty)
 		return false;
@@ -273,7 +265,7 @@ bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
+		//ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
 		string srcString = dev::jsonCompactPrint(*m_sourceJsons[src.first]);
 		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), src.first);
 		source.scanner = scanner;
@@ -282,16 +274,6 @@ bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
 	m_stackState = ParsingSuccessful;
 	m_importedSources = true;
 	return true;
-}
-
-vector<string> CompilerStack::contractNames() const
-{
-	if (m_stackState < AnalysisSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-	vector<string> contractNames;
-	for (auto const& contract: m_contracts)
-		contractNames.push_back(contract.first);
-	return contractNames;
 }
 
 bool CompilerStack::compile()
@@ -653,8 +635,8 @@ void CompilerStack::resolveImports()
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
 				string const& path = import->annotation().absolutePath;
-				solAssert(!path.empty(), "sdfsdfsdf");
-				solAssert(m_sources.count(path), "sdfsf");
+				solAssert(!path.empty(), "");
+				solAssert(m_sources.count(path), "");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}
@@ -837,9 +819,9 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		referencedSources.insert(sourceUnit->annotation().path);
 
 	meta["sources"] = Json::objectValue;
-	if (!m_importedSources)
+	for (auto const& s: m_sources)
 	{
-		for (auto const& s: m_sources)
+		if (!m_importedSources)
 		{
 			if (!referencedSources.count(s.first))
 				continue;
@@ -858,16 +840,17 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 			}
 
 		}
-	}
-	else
-	{
-		solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
-		//meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO: this will hold the printed AST (-> one that can be imported into the compiler)
+		else
+		{
+			solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
+//			meta["sources"][s.first]["AST-JSON"] = dev::jsonCompactPrint(*m_sourceJsons[s.first]); //HELP NEEDED: why can't i use s.first as key?
+		}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
+
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
 	for (auto const& r: m_remappings)
