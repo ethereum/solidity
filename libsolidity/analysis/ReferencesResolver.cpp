@@ -162,6 +162,8 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
+	m_resolver.warnVariablesNamedLikeInstructions();
+
 	// Errors created in this stage are completely ignored because we do not yet know
 	// the type and size of external identifiers, which would result in false errors.
 	// The only purpose of this step is to fill the inline assembly annotation with

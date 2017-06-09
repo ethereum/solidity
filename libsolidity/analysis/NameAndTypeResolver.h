@@ -90,6 +90,9 @@ public:
 		std::vector<Declaration const*> const& _declarations
 	);
 
+	/// Generate and store warnings about variables that are named like instructions.
+	void warnVariablesNamedLikeInstructions();
+
 private:
 	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
