@@ -25,7 +25,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -120,7 +120,10 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	{
 		size_t stackSize(-1);
 		if (m_resolver)
-			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue);
+		{
+			bool insideFunction = m_currentScope->insideFunction();
+			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue, insideFunction);
+		}
 		if (stackSize == size_t(-1))
 		{
 			// Only add an error message if the callback did not do it.
@@ -274,8 +277,12 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
-			if (!expectExpression(*_case.value))
+			int const initialStackHeight = m_stackHeight;
+			// We cannot use "expectExpression" here because *_case.value is not a
+			// Statement and would be converted to a Statement otherwise.
+			if (!(*this)(*_case.value))
 				success = false;
+			expectDeposit(1, initialStackHeight, _case.value->location);
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
@@ -295,6 +302,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	}
 
 	m_stackHeight--;
+	m_info.stackHeightInfo[&_switch] = m_stackHeight;
 
 	return success;
 }
@@ -341,17 +349,24 @@ bool AsmAnalyzer::expectExpression(Statement const& _statement)
 	int const initialHeight = m_stackHeight;
 	if (!boost::apply_visitor(*this, _statement))
 		success = false;
-	if (m_stackHeight - initialHeight != 1)
+	if (!expectDeposit(1, initialHeight, locationOf(_statement)))
+		success = false;
+	return success;
+}
+
+bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
+{
+	if (m_stackHeight - _oldHeight != _deposit)
 	{
 		m_errorReporter.typeError(
-			locationOf(_statement),
+			_location,
 			"Expected expression to return one item to the stack, but did return " +
-			boost::lexical_cast<string>(m_stackHeight - initialHeight) +
+			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
 			" items."
 		);
-		success = false;
+		return false;
 	}
-	return success;
+	return true;
 }
 
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
@@ -378,7 +393,10 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		variableSize = 1;
 	}
 	else if (m_resolver)
-		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue);
+	{
+		bool insideFunction = m_currentScope->insideFunction();
+		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue, insideFunction);
+	}
 	if (variableSize == size_t(-1))
 	{
 		// Only add message if the callback did not.

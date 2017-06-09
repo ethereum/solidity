@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/Exceptions.h>
+
+#include <libjulia/backends/evm/AbstractAssembly.h>
 
 #include <boost/variant.hpp>
 
@@ -87,6 +89,7 @@ public:
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
 	bool expectExpression(Statement const& _statement);
+	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
@@ -96,7 +99,7 @@ private:
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 
 	int m_stackHeight = 0;
-	julia::ExternalIdentifierAccess::Resolver const& m_resolver;
+	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;

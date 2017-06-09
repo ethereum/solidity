@@ -34,7 +34,6 @@ class Assembly;
 }
 namespace solidity
 {
-class ErrorReporter;
 namespace assembly
 {
 struct Block;
@@ -42,24 +41,19 @@ struct Block;
 class CodeGenerator
 {
 public:
-	CodeGenerator(ErrorReporter& _errorReporter):
-		m_errorReporter(_errorReporter) {}
 	/// Performs code generation and @returns the result.
-	eth::Assembly assemble(
+	static eth::Assembly assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess()
 	);
 	/// Performs code generation and appends generated to to _assembly.
-	void assemble(
+	static void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
 		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess()
 	);
-
-private:
-	ErrorReporter& m_errorReporter;
 };
 
 }

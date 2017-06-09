@@ -18,12 +18,13 @@
  * Common code generator for translating Julia / inline assembly to EVM and EVM1.5.
  */
 
-#include <libjulia/backends/evm/AbstractAssembly.h>
+#include <libjulia/backends/evm/EVMAssembly.h>
 
 #include <libsolidity/inlineasm/AsmStack.h>
 #include <libsolidity/inlineasm/AsmScope.h>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 namespace dev
 {
@@ -45,37 +46,46 @@ struct StackAssignment;
 struct FunctionDefinition;
 struct FunctionCall;
 
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
+
 struct AsmAnalysisInfo;
 }
 }
 namespace julia
 {
+class EVMAssembly;
 
 class CodeTransform: public boost::static_visitor<>
 {
 public:
-	/// Create the code transformer which appends assembly to _assembly as a side-effect
-	/// of its creation.
+	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	CodeTransform(
-		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
-		solidity::assembly::Block const& _block,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
+		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
-	): CodeTransform(_errorReporter, _assembly, _block, _analysisInfo, _identifierAccess, _assembly.stackHeight())
+	): CodeTransform(_assembly, _analysisInfo, _evm15, _identifierAccess, _assembly.stackHeight())
 	{
 	}
 
-private:
+	/// Processes the block and appends the resulting code to the assembly.
+	void run(solidity::assembly::Block const& _block);
+
+protected:
 	CodeTransform(
-		solidity::ErrorReporter& _errorReporter,
 		julia::AbstractAssembly& _assembly,
-		solidity::assembly::Block const& _block,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
+		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
-		int _initialStackHeight
-	);
+		int _stackAdjustment
+	):
+		m_assembly(_assembly),
+		m_info(_analysisInfo),
+		m_evm15(_evm15),
+		m_identifierAccess(_identifierAccess),
+		m_stackAdjustment(_stackAdjustment)
+	{}
 
 public:
 	void operator()(solidity::assembly::Instruction const& _instruction);
@@ -87,31 +97,39 @@ public:
 	void operator()(solidity::assembly::StackAssignment const& _assignment);
 	void operator()(solidity::assembly::Assignment const& _assignment);
 	void operator()(solidity::assembly::VariableDeclaration const& _varDecl);
-	void operator()(solidity::assembly::Block const& _block);
 	void operator()(solidity::assembly::Switch const& _switch);
 	void operator()(solidity::assembly::FunctionDefinition const&);
+	void operator()(solidity::assembly::Block const& _block);
 
 private:
-	void generateAssignment(solidity::assembly::Identifier const& _variableName, SourceLocation const& _location);
+	AbstractAssembly::LabelID labelFromIdentifier(solidity::assembly::Identifier const& _identifier);
+	/// Generates code for an expression that is supposed to return a single value.
+	void visitExpression(solidity::assembly::Statement const& _expression);
 
-	/// Determines the stack height difference to the given variables. Automatically generates
-	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
-	/// errors and the (positive) stack height difference otherwise.
-	int variableHeightDiff(solidity::assembly::Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap);
+	void generateAssignment(solidity::assembly::Identifier const& _variableName);
+
+	/// Determines the stack height difference to the given variables. Throws
+	/// if it is not yet in scope or the height difference is too large. Returns
+	/// the (positive) stack height difference otherwise.
+	int variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap);
 
 	void expectDeposit(int _deposit, int _oldHeight);
 
 	void checkStackHeight(void const* _astElement);
 
-	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
-	void assignLabelIdIfUnset(solidity::assembly::Scope::Label& _label);
+	/// Assigns the label's or function's id to a value taken from eth::Assembly if it has not yet been set.
+	void assignLabelIdIfUnset(boost::optional<AbstractAssembly::LabelID>& _labelId);
 
-	solidity::ErrorReporter& m_errorReporter;
 	julia::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
-	solidity::assembly::Scope& m_scope;
+	solidity::assembly::Scope* m_scope = nullptr;
+	bool m_evm15 = false;
 	ExternalIdentifierAccess m_identifierAccess;
-	int const m_initialStackHeight;
+	/// Adjustment between the stack height as determined during the analysis phase
+	/// and the stack height in the assembly. This is caused by an initial stack being present
+	/// for inline assembly and different stack heights depending on the EVM backend used
+	/// (EVM 1.0 or 1.5).
+	int m_stackAdjustment = 0;
 };
 
 }

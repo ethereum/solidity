@@ -22,7 +22,7 @@
 
 #include "../TestHelper.h"
 
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/AssemblyStack.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
@@ -47,15 +47,20 @@ namespace test
 namespace
 {
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _assemble = false, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	assembly::InlineAssemblyStack stack;
+	AssemblyStack stack;
 	bool success = false;
 	try
 	{
-		success = stack.parse(std::make_shared<Scanner>(CharStream(_source)));
+		success = stack.parseAndAnalyze("", _source);
 		if (success && _assemble)
-			stack.assemble();
+			stack.assemble(_machine);
 	}
 	catch (FatalError const&)
 	{
@@ -82,14 +87,20 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _ass
 	return {};
 }
 
-bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+bool successParse(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _machine);
 }
 
 bool successAssemble(string const& _source, bool _allowWarnings = true)
 {
-	return successParse(_source, true, _allowWarnings);
+	return successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM) &&
+		successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM15);
 }
 
 Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
@@ -102,10 +113,10 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 
 void parsePrintCompare(string const& _source)
 {
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), _source);
+	BOOST_CHECK_EQUAL(stack.print(), _source);
 }
 
 }
@@ -376,10 +387,10 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(source))));
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), parsed);
+	BOOST_CHECK_EQUAL(stack.print(), parsed);
 	parsePrintCompare(parsed);
 }
 
@@ -479,6 +490,48 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	BOOST_CHECK(successAssemble("{ function f() {} }"));
+	BOOST_CHECK(successAssemble("{ function f() { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f() -> z { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f(a) { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f(a) { let y := a } }"));
+	BOOST_CHECK(successAssemble("{ function f() -> x, y, z {} }"));
+	BOOST_CHECK(successAssemble("{ function f(x, y, z) {} }"));
+	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y, z { y := a } }"));
+	BOOST_CHECK(successAssemble("{ function f() {} f() }"));
+	BOOST_CHECK(successAssemble("{ function f() -> x, y { x := 1 y := 2} let a, b := f() }"));
+	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y { x := b y := a } let a, b := f(2, 3) }"));
+	BOOST_CHECK(successAssemble("{ function rec(a) { rec(sub(a, 1)) } rec(2) }"));
+	BOOST_CHECK(successAssemble("{ let r := 2 function f() -> x, y { x := 1 y := 2} let a, b := f() b := r }"));
+	BOOST_CHECK(successAssemble("{ function f() { g() } function g() { f() } }"));
+}
+
+BOOST_AUTO_TEST_CASE(embedded_functions)
+{
+	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
+}
+
+BOOST_AUTO_TEST_CASE(switch_statement)
+{
+	BOOST_CHECK(successAssemble("{ switch 1 default {} }"));
+	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} default {} }"));
+	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} }"));
+	BOOST_CHECK(successAssemble("{ let a := 3 switch a case 1 { a := 1 } case 2 { a := 5 } a := 9}"));
+	BOOST_CHECK(successAssemble("{ let a := 2 switch calldataload(0) case 1 { a := 1 } case 2 { a := 5 } }"));
+}
+
+BOOST_AUTO_TEST_CASE(large_constant)
+{
+	auto source = R"({
+		switch mul(1, 2)
+		case 0x0000000000000000000000000000000000000000000000000000000026121ff0 {
+		}
+	})";
+	BOOST_CHECK(successAssemble(source));
 }
 
 BOOST_AUTO_TEST_CASE(keccak256)
