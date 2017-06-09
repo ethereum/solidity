@@ -707,7 +707,10 @@ bool ASTJsonConverter::visit(Literal const& _node)
 {
 	Json::Value value{_node.value()};
 	if (!dev::validateUTF8(_node.value()))
+	{
+//		cout << "Warning: The value " << value.asString() << " is non UTF8 and will not be exported to the JSON." << std::endl;
 		value = Json::nullValue;
+	}
 	Token::Value subdenomination = Token::Value(_node.subDenomination());
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair(m_legacy ? "token" : "kind", literalTokenKind(_node.token())),

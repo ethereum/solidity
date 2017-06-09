@@ -241,9 +241,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		else
 		{
 			cout << "Binary: " << endl;
-//			cout << m_compiler->object(_contract).toHex() << endl;
-			string tmp = m_compiler->object(_contract).toHex();
-			cout << bytecodeSansMetadata(tmp) << endl;
+			cout << m_compiler->object(_contract).toHex() << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinary))
@@ -786,8 +784,10 @@ bool CommandLineInterface::processInput()
 		if (m_args.count(g_argImportAst))
 		{
 			//read file contents, which either are
-			// a) a json-file with multiple sources
-			// b) a json-file with one source only
+			// a) a json-file with multiple sources (as produced by --combined-json)
+			// b) a json file like specified in standard-json
+			// b) a metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal)
+			// c) a json-file with one source only (as produced --ast-combined-json)
 			Json::Reader reader;
 			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
 			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
@@ -805,20 +805,33 @@ bool CommandLineInterface::processInput()
 						{
 							solAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "the top-level node of the AST needs to be a 'SourceUnit'");
 							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
-							tmp_sources[src.asString()] = "noSourceCodeAvailable";
-//							tmp_sources[src.asCString()] = ((*ast)["sources"][src.asString()]["AST"]).asString();
+							tmp_sources[src.asString()] = dev::jsonCompactPrint(*ast);
 						}
 					}
 					// case b)
+					else if ((*ast).isMember("language") && (*ast)["language"] == "SolidityAST")
+					{
+						for (auto const& filename: (*ast)["sources"].getMemberNames())
+						{
+							Json::Value* ast2 = new Json::Value();
+							string sourceString = (*ast)["sources"][filename]["content"].asString();
+							if (reader.parse(sourceString, *ast2, false))
+							{
+								string srcName = (*ast2)["absolutePath"].asString();
+								sourceJsons[srcName] = ast2;
+								tmp_sources[srcName] = sourceString;
+							}
+							else
+								BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata file could not be parsed to JSON"));
+						}
+					}
+					// case c)
 					else
 					{
 						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
-						//renaming sourcename from x.json to x.sol
-						string s = srcPair.first;
-						size_t f = s.find(".json");
-						s.replace(f, std::string(".json").length(), ".sol");
-						sourceJsons[s] = ast;
-						tmp_sources[s] = "noSourceCodeAvailable";
+						string srcName = (*ast)["absolutePath"].asString();
+						sourceJsons[srcName] = ast;
+						tmp_sources[srcName] = srcPair.second;
 					}
 				}
 				else
@@ -1225,25 +1238,5 @@ void CommandLineInterface::outputCompilationResults()
 	handleFormal();
 }
 
-//bool CommandLineInterface::replaceJsonWithSolName(string const& _solname, map<string,string> &_srcList)
-//{
-//	ret = false;
-//	vector<string> nameParts;
-//	boost::algorithm::split(nameParts, _solname, boost::is_any_of("."));
-//	int i = 0;
-//	for (auto const& pair: _srcList)
-//	{
-//		vector<string> jsonParts;
-//		boost::algorithm::split(jsonParts, pair.first, String, boost::is_any_of("."));
-//		solAssert(jsonParts.size() == 2 && nameParts.size() == 2, "filenames could not be resolved"); //can i
-//		if (nameParts[1] == "sol" && jsonParts[1] == "json" && nameParts[0] == jsonParts[0])
-//		{
-//			_jsonList[_solname] =
-//			_jsonList.erase(pair.first);
-
-//		i++;
-//	}
-//	return ret;
-//}
 }
 }

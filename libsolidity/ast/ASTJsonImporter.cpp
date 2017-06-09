@@ -63,31 +63,21 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 	for (auto const& srcPair: m_sourceList)
 	{
 		solAssert(!srcPair.second->isNull(), "");
-		try
-		{
-			m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second, srcPair.first);
-		}
-		//not sure whether this is the right place to catch this (thrown by boost:split in createSourceLocation())
-		catch (boost::exception const& _e)
-		{
-			solAssert(false, "JSON-Node has invalid src-string" + boost::diagnostic_information(_e));
-		}
+		m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second, srcPair.first);
 	}
 	return m_sourceUnits;
 }
 
 SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	if (_node["src"].isNull())
-		cout << "asssd" << std::endl;
 	solAssert(!_node["src"].isNull(), "JsonValue should not be an ASTNode");
 	string srcString = _node["src"].asString();
 	vector<string> pos;
 	boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
-	solAssert(pos.size() == 3, "invalid source location string");
+	if (pos.size() != 3 || int(m_sourceLocations.size()) < stoi(pos[2]))
+		BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Invalid AST entry: src-location ill-formatted or src-index too high."));
 	int start = stoi(pos[0]);
 	int end = start + stoi(pos[1]);
-	solAssert(int(m_sourceLocations.size()) >= stoi(pos[2]), "higher src-index than sourceNames");
 	return SourceLocation(
 		start,
 		end,
@@ -823,11 +813,12 @@ ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNa
 
 }
 
-ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node) //TODO
+ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
 {
 	Token::Value token = literalTokenKind(_node);
+	solAssert(!_node["value"].isNull() || !_node["hexValue"].isNull(), "invalidAST: LiteralValue can not be created");
 	ASTPointer<ASTString> value = _node["value"].isNull() ?
-				nullptr :
+				make_shared<ASTString>(asString(fromHex(_node["hexValue"].asString()))):
 				make_shared<ASTString>(_node["value"].asString());
 	Literal::SubDenomination sub = _node["subdenomination"].isNull() ? Literal::SubDenomination::None : subdenomination(_node);
 	ASTPointer<Literal> tmp = createASTNode<Literal>(

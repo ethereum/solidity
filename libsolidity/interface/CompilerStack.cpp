@@ -297,8 +297,9 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
-//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(m_sourceJsons[src.first]->asCString()));
+//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
+		string srcString = dev::jsonCompactPrint(*m_sourceJsons[src.first]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), src.first);
 		source.scanner = scanner;
 		m_sources[path] = source;
 	}
@@ -825,28 +826,19 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
 	{
-		if (s.second.scanner)
+		solAssert(s.second.scanner,"");
+		meta["sources"][s.first]["keccak256"] =
+			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
+		if (m_metadataLiteralSources)
+			meta["sources"][s.first]["content"] = s.second.scanner->source();
+		else
 		{
-			meta["sources"][s.first]["keccak256"] =
-				"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
-			if (m_metadataLiteralSources)
-				meta["sources"][s.first]["content"] = s.second.scanner->source();
-			else
-			{
-				meta["sources"][s.first]["urls"] = Json::arrayValue;
-				meta["sources"][s.first]["urls"].append(
-					"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
-				);
-			}
-
+			meta["sources"][s.first]["urls"] = Json::arrayValue;
+			meta["sources"][s.first]["urls"].append(
+				"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
+			);
 		}
-//		else
-//			meta[s.first]["keccak256"] = "no source code available";
-		if (m_importedSources)
-		{
-			solAssert(m_sourceJsons.count(s.first), "no JSON found for source");
-//			meta["sources"][s.first]["AST-JSON"] = *(m_sourceJsons[sx.first]); //TODO: this will hold the printed AST (-> one that can be imported into the compiler)
-			}
+
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
