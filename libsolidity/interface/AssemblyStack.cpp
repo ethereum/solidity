@@ -72,7 +72,7 @@ bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scann
 bool AssemblyStack::analyzeParsed()
 {
 	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter);
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_language == Language::JULIA);
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }
