@@ -507,6 +507,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y { x := b y := a } let a, b := f(2, 3) }"));
 	BOOST_CHECK(successAssemble("{ function rec(a) { rec(sub(a, 1)) } rec(2) }"));
 	BOOST_CHECK(successAssemble("{ let r := 2 function f() -> x, y { x := 1 y := 2} let a, b := f() b := r }"));
+	BOOST_CHECK(successAssemble("{ function f() { g() } function g() { f() } }"));
 }
 
 BOOST_AUTO_TEST_CASE(embedded_functions)
