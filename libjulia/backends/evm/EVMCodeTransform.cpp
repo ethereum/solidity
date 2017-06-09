@@ -33,24 +33,6 @@ using namespace dev::julia;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-void CodeTransform::run(Block const& _block)
-{
-	m_scope = m_info.scopes.at(&_block).get();
-
-	int blockStartStackHeight = m_assembly.stackHeight();
-	std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-
-	m_assembly.setSourceLocation(_block.location);
-
-	// pop variables
-	for (size_t i = 0; i < m_scope->numberOfVariables(); ++i)
-		m_assembly.appendInstruction(solidity::Instruction::POP);
-
-	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
-	solAssert(deposit == 0, "Invalid stack height at end of block.");
-	checkStackHeight(&_block);
-}
-
 
 void CodeTransform::operator()(ForLoop const&)
 {
@@ -319,7 +301,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 
 	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment, m_context)
-		.run(_function.body);
+		(_function.body);
 
 	{
 		// The stack layout here is:
@@ -364,7 +346,14 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 void CodeTransform::operator()(Block const& _block)
 {
-	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment, m_context).run(_block);
+	Scope* originalScope = m_scope;
+	m_scope = m_info.scopes.at(&_block).get();
+
+	int blockStartStackHeight = m_assembly.stackHeight();
+	std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
+
+	finalizeBlock(_block, blockStartStackHeight);
+	m_scope = originalScope;
 }
 
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
@@ -403,6 +392,20 @@ void CodeTransform::visitExpression(Statement const& _expression)
 	int height = m_assembly.stackHeight();
 	boost::apply_visitor(*this, _expression);
 	expectDeposit(1, height);
+}
+
+void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight)
+{
+	m_assembly.setSourceLocation(_block.location);
+
+	// pop variables
+	solAssert(m_info.scopes.at(&_block).get() == m_scope, "");
+	for (size_t i = 0; i < m_scope->numberOfVariables(); ++i)
+		m_assembly.appendInstruction(solidity::Instruction::POP);
+
+	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
+	solAssert(deposit == 0, "Invalid stack height at end of block.");
+	checkStackHeight(&_block);
 }
 
 void CodeTransform::generateAssignment(Identifier const& _variableName)

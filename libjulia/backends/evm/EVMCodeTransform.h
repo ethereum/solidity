@@ -61,9 +61,6 @@ public:
 	{
 	}
 
-	/// Processes the block and appends the resulting code to the assembly.
-	void run(solidity::assembly::Block const& _block);
-
 protected:
 	struct Context
 	{
@@ -112,6 +109,10 @@ private:
 	AbstractAssembly::LabelID functionEntryID(solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
+
+	/// Pops all variables declared in the block and checks that the stack height is equal
+	/// to @a _blackStartStackHeight.
+	void finalizeBlock(solidity::assembly::Block const& _block, int _blockStartStackHeight);
 
 	void generateAssignment(solidity::assembly::Identifier const& _variableName);
 
