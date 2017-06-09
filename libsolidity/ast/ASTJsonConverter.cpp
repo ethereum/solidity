@@ -239,7 +239,7 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 	{
 		Json::Value tuple(Json::objectValue);
 		solAssert(symbolAlias.first, "");
-		tuple["foreign"] = nodeId(*symbolAlias.first);
+		tuple["foreign"] = toJson(*symbolAlias.first);
 		tuple["local"] =  symbolAlias.second ? Json::Value(*symbolAlias.second) : Json::nullValue;
 		symbolAliases.append(tuple);
 	}

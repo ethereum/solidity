@@ -197,13 +197,7 @@ bool CompilerStack::analyze()
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract))
-				{
-					cout << "hier" << std::endl;
-//					ASTJsonConverter converter(false, sourceIndices());
-//					cout << "Json before registerDecs" << std::endl;
-//					cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
 					return false;
-				}
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
@@ -268,17 +262,7 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
-<<<<<<< 9fc85cf9442e2a23287b17470b9dfc43d1d819fe
 bool CompilerStack::importASTs(map<string, shared_ptr<SourceUnit>> _sources)
-=======
-bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
-{
-	setSource(_sourceCode);
-	return parseAndAnalyze();
-}
-
-bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
->>>>>>> fixed LiteralTokenBug, import multiple sources
 {
 	if (m_stackState != Empty)
 		return false;
@@ -289,8 +273,9 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
-//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(m_sourceJsons[src.first]->asCString()));
+//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
+		string srcString = dev::jsonCompactPrint(*m_sourceJsons[src.first]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), src.first);
 		source.scanner = scanner;
 		m_sources[path] = source;
 	}
