@@ -601,11 +601,35 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 
 BOOST_AUTO_TEST_CASE(external_structs)
 {
-	BOOST_FAIL("This should test external structs");
-	// More test ideas:
-	// external function type as part of a struct and array
-	// external function type taking structs and arrays...
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			struct Empty {}
+			struct Nested { X[2][] a; mapping(uint => uint) m; uint y; }
+			struct X { bytes32 x; Test t; Empty[] e; }
+			function f(ActionChoices, uint, Empty) external {}
+			function g(Nested) external {}
+			function h(function(Nested) external returns (uint)[]) external {}
+			function i(Nested[]) external {}
+		}
+	)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			for (auto const& f: functions)
+				cout << f->externalSignature() << endl;
+			BOOST_CHECK_EQUAL("f(uint8,uint256,())", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("g(((bytes32,address,()[])[2][],uint256))", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
+			BOOST_CHECK_EQUAL("i(((bytes32,address,()[])[2][],uint256)[])", functions[3]->externalSignature());
+		}
 }
+
+// TODO: Add a test that checks the signature of library functions taking structs
 
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
