@@ -25,8 +25,11 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -302,7 +305,18 @@ void CompilerContext::appendInlineAssembly(
 		}
 	};
 
-	solAssert(assembly::InlineAssemblyStack().parseAndAssemble(*assembly, *m_asm, identifierAccess), "Failed to assemble inline assembly block.");
+	ErrorList errors;
+	ErrorReporter errorReporter(errors);
+	auto scanner = make_shared<Scanner>(CharStream(*assembly), "--CODEGEN--");
+	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
+	solAssert(parserResult, "Failed to parse inline assembly block.");
+	solAssert(errorReporter.errors().empty(), "Failed to parse inline assembly block.");
+
+	assembly::AsmAnalysisInfo analysisInfo;
+	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
+	solAssert(analyzer.analyze(*parserResult), "Failed to analyze inline assembly block.");
+	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
+	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess);
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
