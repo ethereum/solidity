@@ -269,6 +269,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
 	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch.");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -294,13 +295,17 @@ BOOST_AUTO_TEST_CASE(switch_invalid_body)
 BOOST_AUTO_TEST_CASE(for_statement)
 {
 	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
-	BOOST_CHECK(successParse("{ for { let i := 1 } le(i, 5) { i := add(i, 1) } {} }"));
+	BOOST_CHECK(successParse("{ for { let i := 1 } lt(i, 5) { i := add(i, 1) } {} }"));
 }
 
 BOOST_AUTO_TEST_CASE(for_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected token LBrace got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected token LBrace got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected token LBrace got 'Number'");
 	CHECK_PARSE_ERROR("{ 1 2 for {} mul {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
@@ -423,7 +428,7 @@ BOOST_AUTO_TEST_CASE(print_switch)
 
 BOOST_AUTO_TEST_CASE(print_for)
 {
-	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    le(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
+	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    lt(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
@@ -550,6 +555,13 @@ BOOST_AUTO_TEST_CASE(switch_statement)
 	BOOST_CHECK(successAssemble("{ let a := 3 switch a case 1 { a := 1 } case 2 { a := 5 } a := 9}"));
 	BOOST_CHECK(successAssemble("{ let a := 2 switch calldataload(0) case 1 { a := 1 } case 2 { a := 5 } }"));
 }
+
+BOOST_AUTO_TEST_CASE(for_statement)
+{
+	BOOST_CHECK(successAssemble("{ for {} 1 {} {} }"));
+	BOOST_CHECK(successAssemble("{ let x := calldatasize() for { let i := 0} lt(i, x) { i := add(i, 1) } { mstore(i, 2) } }"));
+}
+
 
 BOOST_AUTO_TEST_CASE(large_constant)
 {
