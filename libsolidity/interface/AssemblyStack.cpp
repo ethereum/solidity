@@ -26,6 +26,7 @@
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 
 #include <libevmasm/Assembly.h>
@@ -86,7 +87,8 @@ eth::LinkerObject AssemblyStack::assemble(Machine _machine) const
 	{
 	case Machine::EVM:
 	{
-		auto assembly = assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo);
+		eth::Assembly assembly;
+		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
 		return assembly.assemble();
 	}
 	case Machine::EVM15:

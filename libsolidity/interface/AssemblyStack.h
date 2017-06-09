@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libevmasm/LinkerObject.h>
 
