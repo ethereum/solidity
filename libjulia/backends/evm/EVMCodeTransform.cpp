@@ -33,12 +33,6 @@ using namespace dev::julia;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-
-void CodeTransform::operator()(ForLoop const&)
-{
-	solAssert(false, "For loop not removed during desugaring phase.");
-}
-
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
 	solAssert(m_scope, "");
@@ -342,6 +336,44 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_stackAdjustment -= localStackAdjustment;
 	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);
+}
+
+void CodeTransform::operator()(ForLoop const& _forLoop)
+{
+	Scope* originalScope = m_scope;
+	// We start with visiting the block, but not finalizing it.
+	m_scope = m_info.scopes.at(&_forLoop.pre).get();
+	int stackStartHeight = m_assembly.stackHeight();
+
+	for (auto const& statement: _forLoop.pre.statements)
+		boost::apply_visitor(*this, statement);
+
+	// TODO: When we implement break and continue, the labels and the stack heights at that point
+	// have to be stored in a stack.
+	AbstractAssembly::LabelID loopStart = m_assembly.newLabelId();
+	AbstractAssembly::LabelID loopEnd = m_assembly.newLabelId();
+	AbstractAssembly::LabelID postPart = m_assembly.newLabelId();
+
+	m_assembly.appendLabel(loopStart);
+
+	visitExpression(*_forLoop.condition);
+	m_assembly.setSourceLocation(_forLoop.location);
+	m_assembly.appendInstruction(solidity::Instruction::ISZERO);
+	m_assembly.appendJumpToIf(loopEnd);
+
+	(*this)(_forLoop.body);
+
+	m_assembly.setSourceLocation(_forLoop.location);
+	m_assembly.appendLabel(postPart);
+
+	(*this)(_forLoop.post);
+
+	m_assembly.setSourceLocation(_forLoop.location);
+	m_assembly.appendJumpTo(loopStart);
+	m_assembly.appendLabel(loopEnd);
+
+	finalizeBlock(_forLoop.pre, stackStartHeight);
+	m_scope = originalScope;
 }
 
 void CodeTransform::operator()(Block const& _block)
