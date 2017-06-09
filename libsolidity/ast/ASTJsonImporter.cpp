@@ -35,7 +35,7 @@ template<class T>
 dev::solidity::ASTPointer<T> castPointer(dev::solidity::ASTPointer<dev::solidity::ASTNode> _ast)
 {
 	dev::solidity::ASTPointer<T> ret = dynamic_pointer_cast<T>(_ast);
-	solAssert(ret, "");
+	astAssert(ret, "");
 	return ret;
 }
 }
@@ -62,7 +62,7 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 {
 	for (auto const& srcPair: m_sourceList)
 	{
-		solAssert(!srcPair.second->isNull(), "");
+		astAssert(!srcPair.second->isNull(), "");
 		m_sourceUnits[srcPair.first] =  createSourceUnit(*srcPair.second, srcPair.first);
 	}
 	return m_sourceUnits;
@@ -70,7 +70,7 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit()
 
 SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	solAssert(!_node["src"].isNull(), "JsonValue should not be an ASTNode");
+	astAssert(!_node["src"].isNull(), "JsonValue should not be an ASTNode");
 	string srcString = _node["src"].asString();
 	vector<string> pos;
 	boost::algorithm::split(pos, srcString, boost::is_any_of(":"));
@@ -868,7 +868,7 @@ Declaration::Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node)
 {
 	VariableDeclaration::Location loc;
-	solAssert(_node.isMember("storageLocation") && !_node["storageLocation"].isNull(), "");
+	astAssert(_node.isMember("storageLocation") && !_node["storageLocation"].isNull(), "");
 	if (_node["storageLocation"].asString() == "default")
 		loc = VariableDeclaration::Location::Default;
 	else if (_node["storageLocation"].asString() == "storage")
@@ -876,14 +876,14 @@ VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node
 	else if (_node["storageLocation"].asString() == "memory")
 		loc = VariableDeclaration::Location::Memory;
 	else
-		solAssert(false, "unknown location declaration");
+		astAssert(false, "unknown location declaration");
 	return loc;
 }
 
 ContractDefinition::ContractKind ASTJsonImporter::contractKind(Json::Value const& _node)
 {
 	ContractDefinition::ContractKind kind;
-	solAssert(_node.isMember("contractKind") && !_node["contractKind"].isNull(), "");
+	astAssert(_node.isMember("contractKind") && !_node["contractKind"].isNull(), "");
 	if (_node["contractKind"].asString() == "interface")
 		kind = ContractDefinition::ContractKind::Interface;
 	else if (_node["contractKind"].asString() == "contract")
@@ -891,14 +891,14 @@ ContractDefinition::ContractKind ASTJsonImporter::contractKind(Json::Value const
 	else if (_node["contractKind"].asString() == "library")
 		kind = ContractDefinition::ContractKind::Library;
 	else
-		solAssert(false, "unknown ContractKind ");
+		astAssert(false, "unknown ContractKind ");
 	return kind;
 }
 
 Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _node)
 {
 	Literal::SubDenomination kind;
-	solAssert(_node.isMember("subdenomination"), "");
+	astAssert(_node.isMember("subdenomination"), "");
 	if (_node["subdenomination"].isNull())
 		kind = Literal::SubDenomination::None;
 	else if (_node["subdenomination"].asString() == "wei")
@@ -920,6 +920,6 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 	else if (_node["subdenomination"].asString() == "year")
 		kind = Literal::SubDenomination::Year;
 	else
-		solAssert(false, "unknown subdenomination");
+		astAssert(false, "unknown subdenomination");
 	return kind;
 }

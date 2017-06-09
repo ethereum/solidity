@@ -215,23 +215,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
-string bytecodeSansMetadata(string const& _bytecode)
-{
-	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
-	/// /a165627a7a72305820([0-9a-f]{64})0029$/
-
-	if (_bytecode.size() < 88)
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
-		return _bytecode;
-
-	return _bytecode.substr(0, _bytecode.size() - 86);
-}
-
 void CommandLineInterface::handleBinary(string const& _contract)
 {
 	if (m_args.count(g_argBinary))
@@ -785,8 +768,7 @@ bool CommandLineInterface::processInput()
 		{
 			//read file contents, which either are
 			// a) a json-file with multiple sources (as produced by --combined-json)
-			// b) a json file like specified in standard-json
-			// b) a metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal)
+			// b) a literal metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal --import-ast)
 			// c) a json-file with one source only (as produced --ast-combined-json)
 			Json::Reader reader;
 			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
@@ -803,7 +785,7 @@ bool CommandLineInterface::processInput()
 					{
 						for (auto& src: (*ast)["sourceList"])
 						{
-							solAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "the top-level node of the AST needs to be a 'SourceUnit'");
+							astAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
 							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
 							tmp_sources[src.asString()] = dev::jsonCompactPrint(*ast);
 						}
@@ -822,13 +804,13 @@ bool CommandLineInterface::processInput()
 								tmp_sources[srcName] = sourceString;
 							}
 							else
-								BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata file could not be parsed to JSON"));
+								BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata-file could not be parsed to JSON"));
 						}
 					}
 					// case c)
 					else
 					{
-						solAssert((*ast)["nodeType"] == "SourceUnit", "invalid AST: the top-level node should be a SourceUnit");
+						astAssert((*ast)["nodeType"] == "SourceUnit", "Top-level node should be a 'SourceUnit'");
 						string srcName = (*ast)["absolutePath"].asString();
 						sourceJsons[srcName] = ast;
 						tmp_sources[srcName] = srcPair.second;

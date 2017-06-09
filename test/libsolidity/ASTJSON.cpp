@@ -26,11 +26,11 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/ast/ASTJsonImporter.h>
+#include "../Metadata.h"
 
-//4 debugging
+//debugging
 #include <iostream>
 #include <fstream>
-
 using namespace std;
 
 namespace dev
@@ -241,66 +241,30 @@ BOOST_AUTO_TEST_CASE(importAST)
 		"contract C { function f(function() external payable returns (uint) x) "
 		"returns (function() external constant returns (uint)) {} }"
 	);
-//	c.addSource("a",
-//		"pragma solidity ^0.4.0;"
-//		    "contract Dummy {"
-//		      "uint private x;"
-//		      "uint private x2;"
-//		      "uint private x3;"
-//		      "function Dummy(uint _x1, uint _x2) {"
-//			"x = _x1;"
-//			"x2 = _x2;"
-//			"x3 = bla(4,6);"
-//		      "}"
-//		      "function bla(uint a, uint b) returns (uint) {"
-//			"return a+b;"
-//		      "}"
-//		      "function bla(uint a) returns (uint) {"
-//			"return a + 3;"
-//		      "}"
-//		    "}"
-//	);
-	c.parseAndAnalyze();
-//	map<string, unsigned> sourceIndices;
-//	sourceIndices["a"] = 0;
-	//SourceUnit const& originalAst = c.ast();
-	//Json::Value originalJson = ASTJsonConverter(c.ast("a"), sourceIndices).json();
-	Json::Value originalJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
+	c.compile();
+	Json::Value originalJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a"));
+	string originalBinary = dev::test::bytecodeSansMetadata(c.object(c.contractNames()[0]).toHex());
 
 	//use importer to transform json to ast and back again:
 	//first build the ast without scopes and types
 	map<string, Json::Value const*> sourceList;
 	sourceList["a"] = &originalJson;
-//	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(sourceList).jsonToSourceUnit();
-	//	newPartialAST
-	//next, put it into a map that can be given to the compiler
-//	map<string, shared_ptr<SourceUnit>> tmp;
-//	tmp["a"] = shared_ptr<SourceUnit>(newPartialAST);
-//	//reset compiler and load map
+	//reset compiler and import
 	c.reset(false);
-	bool import = c.importASTs(sourceList);
-//	bool import = c.importASTs(reconstructedSources);
-////	//use the compiler's analyzer to annotate, typecheck, etc...
-	if (import)
-		c.analyze();
-	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a")); //once PR merged
-	//	Json::Value newJson = ASTJsonConverter(c.ast("a"), c.sourceIndices()).json(); //old format
-//	cout << "backandforth" << newJson << std::endl;
-	if (newJson != originalJson)
-	{
-		ofstream originalFile;
-		originalFile.open("../../myTests/originalJson.json");
-		originalFile << originalJson;
-		originalFile.close();
-		ofstream newFile;
-		newFile.open("../../myTests/newJson.json");
-		newFile << newJson;
-		newFile.close();
-//		cout << "originalJson: " << originalJson << std::endl;
-	}
+	c.importASTs(sourceList);
+	//use the compiler's analyzer to annotate, typecheck, etc...
+	c.analyze();
+	c.compile();
+	//compare exported-json and bytecode
+	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a"));
+	string newBinary = dev::test::bytecodeSansMetadata(c.object(c.contractNames()[0]).toHex());
 	assert(newJson == originalJson);
-
-
+	// Note: Bytecode comparison will only succeed if the contracts don't import/inherit other contracts, because
+	// the other contract's bytecode will contain it's metadata, whose 'source'-field is generated from the solidity-code
+	// and after importing will be generated from the Solidity-AST.
+	// In order to test more complicated contracts, the bytecodeSansMetadata-function needs to be extended to
+	// also remove metadatabytecode not only from the end but also from the middle of a given string.
+	assert(newBinary == originalBinary);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

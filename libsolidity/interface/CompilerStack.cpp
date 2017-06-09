@@ -291,9 +291,8 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-//		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
-		string srcString = dev::jsonCompactPrint(*m_sourceJsons[src.first]);
-		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), src.first);
+		string srcString = dev::jsonCompactPrint(*m_sourceJsons[path]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), path);
 		source.scanner = scanner;
 		m_sources[path] = source;
 	}
