@@ -20,7 +20,6 @@
 
 #include <libjulia/backends/evm/EVMAssembly.h>
 
-#include <libsolidity/inlineasm/AsmStack.h>
 #include <libsolidity/inlineasm/AsmScope.h>
 
 #include <boost/variant.hpp>
