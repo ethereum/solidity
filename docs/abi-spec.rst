@@ -68,15 +68,11 @@ Formal Specification of the Encoding
 We will now formally specify the encoding, such that it will have the following
 properties, which are especially useful if some arguments are nested arrays:
 
-**Properties:**
+Properties:
 
-1. The number of reads necessary to access a value is at most the depth of the
-value inside the argument array structure, i.e. four reads are needed to
-retrieve `a_i[k][l][r]`. In a previous version of the ABI, the number of reads scaled
-linearly with the total number of dynamic parameters in the worst case.
+  1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve `a_i[k][l][r]`. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
 
-2. The data of a variable or array element is not interleaved with other data
-and it is relocatable, i.e. it only uses relative "addresses"
+  2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses"
 
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
@@ -92,8 +88,7 @@ All other types are called "static".
 The type of `len(a)` is assumed to be `uint256`.
 
 We define `enc`, the actual encoding, as a mapping of values of the ABI types to binary strings such
-that `len(enc(X))` depends on the value of `X` if and only if the type of `X`
-is dynamic.
+that `len(enc(X))` depends on the value of `X` if and only if the type of `X` is dynamic.
 
 **Definition:** For any ABI value `X`, we recursively define `enc(X)`, depending
 on the type of `X` being
@@ -158,7 +153,8 @@ fixed-size arrays of length `n` and `k`, respectively. Note that strictly,
 encoding is still well-defined as the assumed common type `T` (above) is not
 actually used.
 
-## Examples
+Examples
+========
 
 Given the contract:
 
@@ -183,9 +179,9 @@ In total:
 It returns a single `bool`. If, for example, it were to return `false`, its output would be the single byte array `0x0000000000000000000000000000000000000000000000000000000000000000`, a single bool.
 
 If we wanted to call `bar` with the argument `[2.125, 8.5]`, we would pass 68 bytes total, broken down into:
-- `0xab55044d`: the Method ID. This is derived from the signature `bar(fixed128x128[2])`. Note that `fixed` is replaced with its canonical representation `fixed128x128`.
-- `0x0000000000000000000000000000000220000000000000000000000000000000`: the first part of the first parameter, a fixed128x128 value `2.125`.
-- `0x0000000000000000000000000000000880000000000000000000000000000000`: the second part of the first parameter, a fixed128x128 value `8.5`.
+- `0xab55044d`: the Method ID. This is derived from the signature `bar(fixed[2])`. Note that `fixed` is replaced with its canonical representation `fixed128x19`.
+- `0x0000000000000000000000000000000220000000000000000000000000000000`: the first part of the first parameter, a fixed128x19 value `2.125`.
+- `0x0000000000000000000000000000000880000000000000000000000000000000`: the second part of the first parameter, a fixed128x19 value `8.5`.
 
 In total:
 ```
@@ -209,8 +205,8 @@ In total:
 0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
 ```
 
-
-### Use of Dynamic Types
+Use of Dynamic Types
+====================
 
 A call to a function with the signature `f(uint,uint32[],bytes10,bytes)` with values `(0x123, [0x456, 0x789], "1234567890", "Hello, world!")` is encoded in the following way:
 
