@@ -38,6 +38,9 @@ struct UnimplementedFeatureError;
 #define solAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
 
+#define astAssert(CONDITION, DESCRIPTION) \
+	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
+
 #define solUnimplementedAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
 

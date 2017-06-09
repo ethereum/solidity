@@ -95,7 +95,7 @@ private:
 	ASTPointer<NewExpression> createNewExpression(Json::Value const& _node);
 	ASTPointer<MemberAccess> createMemberAccess(Json::Value const& _node);
 	ASTPointer<IndexAccess> createIndexAccess(Json::Value const& _node);
-	ASTPointer<Identifier> createIdentifier(Json::Value const& _node, std::string const& name);
+	ASTPointer<Identifier> createIdentifier(Json::Value const& _node);
 	ASTPointer<ElementaryTypeNameExpression> createElementaryTypeNameExpression(Json::Value const& _node);
 	ASTPointer<ASTNode> createLiteral(Json::Value const& _node);
 

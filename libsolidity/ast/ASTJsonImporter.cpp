@@ -191,7 +191,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (nodeType == "IndexAccess")
 		return createIndexAccess(_json);
 	if (nodeType == "Identifier")
-		return createIdentifier(_json, _json["name"].asString());
+		return createIdentifier(_json);
 	if (nodeType == "ElementaryTypeNameExpression")
 		return createElementaryTypeNameExpression(_json);
 	if (nodeType == "Literal")
@@ -234,11 +234,10 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 	for (auto& tuple: _node["symbolAliases"])
 	{
                 symbolAliases.push_back( make_pair(
-			createIdentifier(_node, tuple["foreign"].asString()),
-			tuple["local"].isNull() ? make_shared<ASTString>(tuple["local"].asString()) : nullptr //also check if that's not null?
+			createIdentifier(tuple["foreign"]),
+			tuple["local"].isNull() ? nullptr : make_shared<ASTString>(tuple["local"].asString()) //also check if that's not null?
 		));
 	}
-	//create node
 	ASTPointer<ImportDirective> tmp = createASTNode<ImportDirective>(_node, path, unitAlias, move(symbolAliases));
 	tmp->annotation().absolutePath = _node["absolutePath"].asString();
 	return tmp;
@@ -422,7 +421,8 @@ ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::V
 
 ASTPointer<ModifierInvocation> ASTJsonImporter::createModifierInvocation(Json::Value const&  _node)
 {
-	ASTPointer<Identifier> name = createIdentifier(_node["modifierName"], _node["modifierName"]["name"].asString());
+	ASTPointer<Identifier> name = createIdentifier(_node["modifierName"]);
+//	ASTPointer<Identifier> name = createIdentifier(_node["modifierName"], _node["modifierName"]["name"].asString());
 	std::vector<ASTPointer<Expression>> arguments;
 	for (auto& arg: _node["arguments"])
 		arguments.push_back(castPointer<Expression>(convertJsonToASTNode(arg)));
@@ -792,9 +792,9 @@ ASTPointer<IndexAccess> ASTJsonImporter::createIndexAccess(Json::Value const& _n
 	return tmp;
 }
 
-ASTPointer<Identifier> ASTJsonImporter::createIdentifier(Json::Value const& _node, string const& name)
+ASTPointer<Identifier> ASTJsonImporter::createIdentifier(Json::Value const& _node)
 {
-	return createASTNode<Identifier>(_node, make_shared<ASTString>(name));
+	return createASTNode<Identifier>(_node, make_shared<ASTString>(_node["name"].asString()));
 }
 
 ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNameExpression(Json::Value const&  _node) //needs TEST (elem)
@@ -816,7 +816,7 @@ ASTPointer<ElementaryTypeNameExpression> ASTJsonImporter::createElementaryTypeNa
 ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
 {
 	Token::Value token = literalTokenKind(_node);
-	solAssert(!_node["value"].isNull() || !_node["hexValue"].isNull(), "invalidAST: LiteralValue can not be created");
+	astAssert(!_node["value"].isNull() || !_node["hexValue"].isNull(), "invalidAST: Literal-value is unknown");
 	ASTPointer<ASTString> value = _node["value"].isNull() ?
 				make_shared<ASTString>(asString(fromHex(_node["hexValue"].asString()))):
 				make_shared<ASTString>(_node["value"].asString());
@@ -832,7 +832,7 @@ ASTPointer<ASTNode> ASTJsonImporter::createLiteral(Json::Value const&  _node)
 
 Token::Value ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 {
-	solAssert(_node.isMember("kind") && !_node["kind"].isNull(), "");
+	astAssert(_node.isMember("kind") && !_node["kind"].isNull(), "");
 	Token::Value tok;
 	if (_node["kind"].asString() == "number")
 		tok = Token::Number;
@@ -841,14 +841,14 @@ Token::Value ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 	else if (_node["kind"].asString() == "bool")
 		 tok = (_node["value"].asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
 	else
-		solAssert(false, "unknown kind of literalString");
+		astAssert(false, "unknown kind of literalString");
 	return tok;
 
 }
 
 Declaration::Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 {
-	solAssert(_node.isMember("visibility") && !_node["visibility"].isNull(), "");
+	astAssert(_node.isMember("visibility") && !_node["visibility"].isNull(), "");
 	Declaration::Visibility vis;
 	if (_node["visibility"].asString() == "default")
 		vis = Declaration::Visibility::Default;
@@ -861,7 +861,7 @@ Declaration::Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 	else if (_node["visibility"].asString() == "external")
 		vis = Declaration::Visibility::External;
 	else
-		solAssert(false, "unknown visibility declaration");
+		astAssert(false, "unknown visibility declaration");
 	return vis;
 }
 

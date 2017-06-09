@@ -203,13 +203,7 @@ bool CompilerStack::analyze()
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract))
-				{
-					cout << "hier" << std::endl;
-//					ASTJsonConverter converter(false, sourceIndices());
-//					cout << "Json before registerDecs" << std::endl;
-//					cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
 					return false;
-				}
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
