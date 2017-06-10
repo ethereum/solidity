@@ -982,8 +982,8 @@ contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``
 .. index:: using for, set
 
 The following example illustrates how to use libraries (but
-be sure to check out :ref:`using for <using-for>` for a
-more advanced example to implement a set).
+be sure to check out `using-for <https://solidity.readthedocs.io/en/latest/contracts.html#using-for>`_ 
+for a more advanced example to implement a set).
 
 ::
 
@@ -1114,9 +1114,9 @@ custom types without the overhead of external function calls:
 
 As the compiler cannot know where the library will be
 deployed at, these addresses have to be filled into the
-final bytecode by a linker
-(see :ref:`commandline-compiler` for how to use the
-commandline compiler for linking). If the addresses are not
+final bytecode by a linker (see 
+`using-the-compiler <https://solidity.readthedocs.io/en/latest/using-the-compiler.html#using-the-compiler>`_ 
+for how to use the commandline compiler for linking). If the addresses are not
 given as arguments to the compiler, the compiled hex code
 will contain placeholders of the form ``__Set______`` (where
 ``Set`` is the name of the library). The address can be filled
@@ -1160,8 +1160,9 @@ be lifted to the global scope later, so that by including
 a module, its data types including library functions are
 available without having to add further code.
 
-Let us rewrite the set example from the
-:ref:`libraries` in this way::
+Let us rewrite the set example from the 
+`libraries <https://solidity.readthedocs.io/en/latest/contracts.html#libraries>`_
+in this way::
 
     pragma solidity ^0.4.11;
 
