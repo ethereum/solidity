@@ -114,7 +114,7 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
 
 * ``call``, ``callcode`` and ``delegatecall``
 
-Furthermore, to interface with contracts that do not adhere to the ABI,
+Furthermore, to interface with contracts that do not adhere to the `[ABI](https://en.wikipedia.org/wiki/Application_binary_interface)`_,
 the function ``call`` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
 
 ::
