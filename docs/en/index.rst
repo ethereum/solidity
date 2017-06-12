@@ -1,7 +1,7 @@
 Solidity
 ========
 
-.. image:: logo.svg
+.. image:: ../logo.svg
     :width: 120px
     :alt: Solidity logo
     :align: center
