@@ -4,10 +4,9 @@ Contributing
 
 Help is always appreciated!
 
-To get started, you can try `building-from-source 
-<https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source>`_ 
-in order to familiarize yourself with the components of Solidity and the build process. Also, 
-it may be useful to become well-versed at writing smart-contracts in Solidity.
+To get started, you can try :ref:`building-from-source` in order to familiarize
+yourself with the components of Solidity and the build process. Also, it may be
+useful to become well-versed at writing smart-contracts in Solidity.
 
 In particular, we need help in the following areas:
 
