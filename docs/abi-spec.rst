@@ -157,7 +157,8 @@ on the type of `X` being
 
 Note that for any `X`, `len(enc(X))` is a multiple of 32.
 
-## Function Selector and Argument Encoding
+Function Selector and Argument Encoding
+=======================================
 
 All in all, a call to the function `f` with parameters `a_1, ..., a_n` is encoded as
 
