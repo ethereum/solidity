@@ -259,8 +259,8 @@ BOOST_AUTO_TEST_CASE(importAST)
 	Json::Value newJson = ASTJsonConverter(false, c.sourceIndices()).toJson(c.ast("a"));
 	string newBinary = dev::test::bytecodeSansMetadata(c.object(c.contractNames()[0]).toHex());
 	assert(newJson == originalJson);
-	// Note: Bytecode comparison will only succeed if the contracts don't import/inherit other contracts, because
-	// the other contract's bytecode will contain it's metadata, whose 'source'-field is generated from the solidity-code
+	// Note: This Bytecode comparison will only succeed if the "a" doesn't import/inherit other contracts
+	// In that case the other contract's bytecode will contain its metadata, whose 'source'-field is generated from the solidity-code
 	// and after importing will be generated from the Solidity-AST.
 	// In order to test more complicated contracts, the bytecodeSansMetadata-function needs to be extended to
 	// also remove metadatabytecode not only from the end but also from the middle of a given string.

@@ -561,7 +561,13 @@ Allowed options)",
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
-		(g_argImportAst.c_str(), "Import ASTs to be compiled, assumes input is in JSON format")
+		(
+				g_argImportAst.c_str(),
+				"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
+				" Supported Inputs are individual ASTs (e.g. produced by --ast-compact-json), "
+				" metadatafiles with Solidity-AST as language (--metadata --metadata-literal) and"
+				" JSONs with multiple sourcefiles (--combined-json ast,compact-format)"
+				)
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
