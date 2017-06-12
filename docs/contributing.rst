@@ -12,7 +12,7 @@ In particular, we need help in the following areas:
 
 * Improving the documentation
 * Responding to questions from other users on `StackExchange
-  <http://ethereum.stackexchange.com/>`_ and the `Solidity Gitter
+  <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter
   <https://gitter.im/ethereum/solidity>`_
 * Fixing and responding to `Solidity's GitHub issues
   <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
