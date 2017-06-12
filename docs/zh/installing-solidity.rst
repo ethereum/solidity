@@ -9,7 +9,7 @@
 
 如果你只是想尝试一个使用Solidity的小合约，你不需要安装任何东西，只要访问 [基于浏览器的Solidity](https://chriseth.github.io/browser-solidity)。
 
-如果你想离线使用，你可以保存页面到本地，或者从 http://github.com/chriseth/browser-solidity 克隆一个。
+如果你想离线使用，你可以保存页面到本地，或者从 http://github.com/chriseth/browser-solidity 克隆一个。
 
 *******
 NPM / node.js
@@ -37,7 +37,7 @@ NPM / node.js
 Ethereum.
 *******
 
-包括Mix IDE的二进制Solidity安装包在Ethereum网站[C++ bundle](https://github.com/ethereum/webthree-umbrella/releases)中下载。 
+包括Mix IDE的二进制Solidity安装包在Ethereum网站[C++ bundle](https://github.com/ethereum/webthree-umbrella/releases)中下载。 
 
 *******
 从源码构建

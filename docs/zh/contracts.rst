@@ -10,7 +10,7 @@ Solidity里的合约是面向对象语言里的类。它们持久存放在状态
 
 合约可以从“外部”创建，也可以由Solidity合约创立。在创建合约时,它的构造函数(函具有与合约名称同名的函数)将被执行。
 
-web3.js,即  JavaScript API， 是这样做的::
+web3.js,即  JavaScript API， 是这样做的::
 
     // Need to specify some source including contract name for the data param below
     var source = "contract CONTRACT_NAME { function CONTRACT_NAME(uint a, uint b) {} }";
@@ -78,7 +78,7 @@ web3.js,即  JavaScript API， 是这样做的::
         }
 
         function changeName(bytes32 newName) {
-            // Only the creator can alter the name -- 仅仅是创立者可以改变名称--
+            // Only the creator can alter the name -- 仅仅是创立者可以改变名称--
             // the comparison is possible since contracts 因为合约是隐式转换到地址上，这种比较是可能的
             // are implicitly convertible to addresses.
             if (msg.sender == address(creator))
@@ -130,11 +130,11 @@ web3.js,即  JavaScript API， 是这样做的::
 可见性和访问限制符
 **********************
 
-因为Solidity可以理解两种函数调用(“内部调用”，不创建一个真实的EVM调用(也称为“消息调用”)；“外部的调用”-要创建一个真实的EMV调用),  有四种的函数和状态变量的可见性。
+因为Solidity可以理解两种函数调用(“内部调用”，不创建一个真实的EVM调用(也称为“消息调用”)；“外部的调用”-要创建一个真实的EMV调用),  有四种的函数和状态变量的可见性。
 
-函数可以被定义为external, public, internal or private，缺省是 public。对状态变量而言, external是不可能的,默认是 internal。
+函数可以被定义为external, public, internal or private，缺省是 public。对状态变量而言, external是不可能的,默认是 internal。
 
-**external:** 外部函数是合约接口的一部分,这意味着它们可以从其他合约调用, 也可以通过事务调用。外部函数f不能被内部调用(即 f()不执行,但this.f()执行)。外部函数，当他们接收大数组时，更有效。
+**external:** 外部函数是合约接口的一部分,这意味着它们可以从其他合约调用, 也可以通过事务调用。外部函数f不能被内部调用(即 f()不执行,但this.f()执行)。外部函数，当他们接收大数组时，更有效。
 
 **public:**公共函数是合约接口的一部分,可以通过内部调用或通过消息调用。对公共状态变量而言，会有的自动访问限制符的函数生成(见下文)。
 
@@ -144,39 +144,41 @@ web3.js,即  JavaScript API， 是这样做的::
 
 **请注意**
 
-在外部观察者中，合约的内部的各项均可见。*用 private* 仅仅防止其他合约来访问和修改（该合约中）信息, 但它对blockchain之外的整个世界仍然可见。
+在外部观察者中，合约的内部的各项均可见。*用 private* 仅仅防止其他合约来访问和修改（该合约中）信息, 但它对blockchain之外的整个世界仍然可见。
 
 可见性说明符是放在在状态变量的类型之后，（也可以放在）参数列表和函数返回的参数列表之间。
 
 ::
 
-    contract c {
-        function f(uint a) private returns (uint b) { return a + 1; }
-        function setData(uint a) internal { data = a; }
-        uint public data;
+    contract c {
+        function f(uint a) private returns (uint b) { return a + 1; }
+        function setData(uint a) internal { data = a; }
+        uint public data;
     }
 
 其他合约可以调用c.data()来检索状态存储中data的值,但不能访问（函数）f。由c派生的合约可以访问（合约中）setData（函数），以便改变data的值(仅仅在它们自己的范围里)。
 
-## 访问限制符函数
+***********
+访问限制符函数
+***********
 
-编译器会自动创建所有公共状态变量的访问限制符功能。下文中的合约中有一个称作data的函数，它不带任何参数的，它返回一个uint类型,  状态变量的值是data。可以在声明里进行状态变量的初始化。
+编译器会自动创建所有公共状态变量的访问限制符功能。下文中的合约中有一个称作data的函数，它不带任何参数的，它返回一个uint类型,  状态变量的值是data。可以在声明里进行状态变量的初始化。
 
 访问限制符函数有外部可见性。如果标识符是内部可访问(即没有this),则它是一个状态变量,如果外部可访问的(即 有this),则它是一个函数。
 
 ::
 
-    contract test {
-
-        uint public data = 42;}
+    contract test {
+        uint public data = 42;
+    }
 
 下面的例子复杂些：
 
 ::
 
-    contract complex {
-        struct Data { uint a; bytes3 b; mapping(uint => uint) map; }
-        mapping(uint => mapping(bool => Data[])) public data;
+    contract complex {
+        struct Data { uint a; bytes3 b; mapping(uint => uint) map; }
+        mapping(uint => mapping(bool => Data[])) public data;
     }
 
 *******************
@@ -185,9 +187,9 @@ web3.js,即  JavaScript API， 是这样做的::
 
 ::
 
-    function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b){
-        a = data[arg1][arg2][arg3].a;
-        b = data[arg1][arg2][arg3].b;}
+    function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b){
+        a = data[arg1][arg2][arg3].a;
+        b = data[arg1][arg2][arg3].b;}
 
 
 注意 结构体的映射省略了，因为没有好的方法来提供映射的键值。
@@ -200,78 +202,78 @@ web3.js,即  JavaScript API， 是这样做的::
 
 ::
 
-    contract owned {
-        function owned() { owner = msg.sender; }
-        address owner;
-        // This contract only defines a modifier but does not use
-        // it - it will be used in derived contracts.
-        // The function body is inserted where the special symbol
-        // "_" in the definition of a modifier appears.
-        // This means that if the owner calls this function, the
-        // function is executed and otherwise, an exception is
-        // thrown.
-        modifier onlyowner { if (msg.sender != owner) throw; _ }}contract mortal is owned {
-        // This contract inherits the "onlyowner"-modifier from
-        // "owned" and applies it to the "close"-function, which
-        // causes that calls to "close" only have an effect if
-        // they are made by the stored owner.
-        function close() onlyowner {
-            selfdestruct(owner);
-        }}contract priced {
-        // Modifiers can receive arguments:
-        modifier costs(uint price) { if (msg.value >= price) _ }}contract Register is priced, owned {
-        mapping (address => bool) registeredAddresses;
-        uint price;
-        function Register(uint initialPrice) { price = initialPrice; }
+    contract owned {
+        function owned() { owner = msg.sender; }
+        address owner;
+        // This contract only defines a modifier but does not use
+        // it - it will be used in derived contracts.
+        // The function body is inserted where the special symbol
+        // "_" in the definition of a modifier appears.
+        // This means that if the owner calls this function, the
+        // function is executed and otherwise, an exception is
+        // thrown.
+        modifier onlyowner { if (msg.sender != owner) throw; _ }}contract mortal is owned {
+        // This contract inherits the "onlyowner"-modifier from
+        // "owned" and applies it to the "close"-function, which
+        // causes that calls to "close" only have an effect if
+        // they are made by the stored owner.
+        function close() onlyowner {
+            selfdestruct(owner);
+        }}contract priced {
+        // Modifiers can receive arguments:
+        modifier costs(uint price) { if (msg.value >= price) _ }}contract Register is priced, owned {
+        mapping (address => bool) registeredAddresses;
+        uint price;
+        function Register(uint initialPrice) { price = initialPrice; }
 
-        function register() costs(price) {
-            registeredAddresses[msg.sender] = true;
-        }
-        function changePrice(uint _price) onlyowner {
-            price = _price;
-        }
+        function register() costs(price) {
+            registeredAddresses[msg.sender] = true;
+        }
+        function changePrice(uint _price) onlyowner {
+            price = _price;
+        }
     }
-    contract owned {
-        function owned() { owner = msg.sender; }
-        address owner;
-        // This contract only defines a modifier but does not use 这个合约仅仅定义了修饰符，但没有使用它
-        // it - it will be used in derived contracts. 在派生的合约里使用
-        // The function body is inserted where the special symbol  ,函数体插入到特殊的标识 "_"定义的地方 
-        // "_" in the definition of a modifier appears.
-        // This means that if the owner calls this function, the 这意味着若它自己调用此函数，则函数将被执行
-        // function is executed and otherwise, an exception is 否则，一个异常将抛出
-        // thrown.
-        modifier onlyowner { if (msg.sender != owner) throw; _ }
+    contract owned {
+        function owned() { owner = msg.sender; }
+        address owner;
+        // This contract only defines a modifier but does not use 这个合约仅仅定义了修饰符，但没有使用它
+        // it - it will be used in derived contracts. 在派生的合约里使用
+        // The function body is inserted where the special symbol  ,函数体插入到特殊的标识 "_"定义的地方 
+        // "_" in the definition of a modifier appears.
+        // This means that if the owner calls this function, the 这意味着若它自己调用此函数，则函数将被执行
+        // function is executed and otherwise, an exception is 否则，一个异常将抛出
+        // thrown.
+        modifier onlyowner { if (msg.sender != owner) throw; _ }
     }
-    contract mortal is owned {
-        // This contract inherits the "onlyowner"-modifier from   该合约是从"owned" 继承的"onlyowner"修饰符，
-        // "owned" and applies it to the "close"-function, which    并且应用到"close"函数， 如果他们存储owner
-        // causes that calls to "close" only have an effect if  
-        // they are made by the stored owner.
-        function close() onlyowner {
-            selfdestruct(owner);
-        }
+    contract mortal is owned {
+        // This contract inherits the "onlyowner"-modifier from   该合约是从"owned" 继承的"onlyowner"修饰符，
+        // "owned" and applies it to the "close"-function, which    并且应用到"close"函数， 如果他们存储owner
+        // causes that calls to "close" only have an effect if  
+        // they are made by the stored owner.
+        function close() onlyowner {
+            selfdestruct(owner);
+        }
     }
-    contract priced {
-        // Modifiers can receive arguments:  修饰符可以接收参数
-        modifier costs(uint price) { if (msg.value >= price) _ }
+    contract priced {
+        // Modifiers can receive arguments:  修饰符可以接收参数
+        modifier costs(uint price) { if (msg.value >= price) _ }
     }
-    contract Register is priced, owned {
-        mapping (address => bool) registeredAddresses;
-        uint price;
-        function Register(uint initialPrice) { price = initialPrice; }
-        function register() costs(price) {
-            registeredAddresses[msg.sender] = true;
-        }
-        function changePrice(uint _price) onlyowner {
+    contract Register is priced, owned {
+        mapping (address => bool) registeredAddresses;
+        uint price;
+        function Register(uint initialPrice) { price = initialPrice; }
+        function register() costs(price) {
+            registeredAddresses[msg.sender] = true;
+        }
+        function changePrice(uint _price) onlyowner {
 
-            price = _price;
+            price = _price;
 
-        }
+        }
 
     }
 
-多个修饰符可以被应用到一个函数中（用空格隔开）,并顺序地进行计算。当离开整个函数时，显式返回一个修饰词或函数体,  同时在“_”之后紧接着的修饰符，直到函数尾部的控制流，或者是修饰体将继续执行。任意表达式允许修改参数，在修饰符中,所有函数的标识符是可见的。在此函数由修饰符引入的标识符是不可见的(虽然他们可以通过重写，改变他们的值)。
+多个修饰符可以被应用到一个函数中（用空格隔开）,并顺序地进行计算。当离开整个函数时，显式返回一个修饰词或函数体,  同时在“_”之后紧接着的修饰符，直到函数尾部的控制流，或者是修饰体将继续执行。任意表达式允许修改参数，在修饰符中,所有函数的标识符是可见的。在此函数由修饰符引入的标识符是不可见的(虽然他们可以通过重写，改变他们的值)。
 
 ## 常量
 
@@ -279,12 +281,12 @@ web3.js,即  JavaScript API， 是这样做的::
 
 ::
 
-    contract C {
-        uint constant x = 32*\*22 + 8;
-        string constant text = "abc";
+    contract C {
+        uint constant x = 32*\*22 + 8;
+        string constant text = "abc";
     }
 
-编译器不保留这些变量存储块,  每到执行到这个语句时，常量值又被替换一次。
+编译器不保留这些变量存储块,  每到执行到这个语句时，常量值又被替换一次。
 
 表达式的值只能包含整数算术运算。
 
@@ -298,24 +300,24 @@ web3.js,即  JavaScript API， 是这样做的::
 
 ::
 
-    contract Test {
-        function() { x = 1; }
-        uint x;
+    contract Test {
+        function() { x = 1; }
+        uint x;
     }
-    // This contract rejects any Ether sent to it. It is good   这个合约拒绝任何发给它的Ether.
-    // practise to  include such a function for every contract  为了严管Ether,在每个合约里包含一个这样的函数，是非常好的做法
-    // in order not to loose  Ether.
-    contract Rejector {
-        function() { throw; }
+    // This contract rejects any Ether sent to it. It is good   这个合约拒绝任何发给它的Ether.
+    // practise to  include such a function for every contract  为了严管Ether,在每个合约里包含一个这样的函数，是非常好的做法
+    // in order not to loose  Ether.
+    contract Rejector {
+        function() { throw; }
     }
-    contract Caller {
-      function callTest(address testAddress) {
-          Test(testAddress).call(0xabcdef01); // hash does not exist hash值不存在
-          // results in Test(testAddress).x becoming == 1.  Test(testAddress).x的结果  becoming == 1
-          Rejector r = Rejector(0x123);
-          r.send(2 ether);
-          // results in r.balance == 0     结果里r.balance == 0  
-      }
+    contract Caller {
+      function callTest(address testAddress) {
+          Test(testAddress).call(0xabcdef01); // hash does not exist hash值不存在
+          // results in Test(testAddress).x becoming == 1.  Test(testAddress).x的结果  becoming == 1
+          Rejector r = Rejector(0x123);
+          r.send(2 ether);
+          // results in r.balance == 0     结果里r.balance == 0  
+      }
     }
 
 
@@ -325,13 +327,13 @@ web3.js,即  JavaScript API， 是这样做的::
 
 事件允许EMV写日志功能的方便使用, 进而在dapp的用户接口中用JavaScript顺序调用,从而监听这些事件。
 
-事件是合约中可继承的成员。当他们调用时，会在导致一些参数在事务日志上的存储--在blockchain上的一种特殊的数据结构。这些日志和合约的地址相关联,  将被纳入blockchain中，存储在block里以便访问( 在**Frontier** 和** Homestead**里是永久存储,但在**Serenity**里有些变化）。在合约内部，日志和事件数据是不可访问的(从创建该日志的合约里)。
+事件是合约中可继承的成员。当他们调用时，会在导致一些参数在事务日志上的存储--在blockchain上的一种特殊的数据结构。这些日志和合约的地址相关联,  将被纳入blockchain中，存储在block里以便访问( 在**Frontier** 和** Homestead**里是永久存储,但在**Serenity**里有些变化）。在合约内部，日志和事件数据是不可访问的(从创建该日志的合约里)。
 
-SPV日志证明是可行的, 如果一个外部实体提供一个这样的证明给合约,  它可以检查blockchain内实际存在的日志(但要注意这样一个事实,最终要提供block的headers, 因为合约只能看到最近的256块hash值)。
+SPV日志证明是可行的, 如果一个外部实体提供一个这样的证明给合约,  它可以检查blockchain内实际存在的日志(但要注意这样一个事实,最终要提供block的headers, 因为合约只能看到最近的256块hash值)。
 
-最多有三个参数可以接收属性索引，它将对各自的参数进行检索：  可以对用户界面中的索引参数的特定值进行过滤。
+最多有三个参数可以接收属性索引，它将对各自的参数进行检索：  可以对用户界面中的索引参数的特定值进行过滤。
 
-如果数组(包括string和 bytes)被用作索引参数,  就会以sha3-hash形式存储，而不是topic。
+如果数组(包括string和 bytes)被用作索引参数,  就会以sha3-hash形式存储，而不是topic。
 
 除了用anonymous声明事件之外，事件的指纹的hash值都将是topic之一。这意味着，不可能通过名字来过滤特定的匿名事件。
 
@@ -339,18 +341,18 @@ SPV日志证明是可行的, 如果一个外部实体提供一个这样的证明
 
 ::
 
-    contract ClientReceipt {
-        event Deposit(
-            address indexed _from,
-            bytes32 indexed _id,
-            uint _value
-        );
-        function deposit(bytes32 _id) {
-            // Any call to this function (even deeply nested) can 任何对这个函数的调用都能通过JavaScipt API ， 用`Deposit` 过滤来检索到（即使深入嵌套）
-            // be detected from the JavaScript API by filtering
-            // for `Deposit` to be called.
-            Deposit(msg.sender, _id, msg.value);
-        }
+    contract ClientReceipt {
+        event Deposit(
+            address indexed _from,
+            bytes32 indexed _id,
+            uint _value
+        );
+        function deposit(bytes32 _id) {
+            // Any call to this function (even deeply nested) can 任何对这个函数的调用都能通过JavaScipt API ， 用`Deposit` 过滤来检索到（即使深入嵌套）
+            // be detected from the JavaScript API by filtering
+            // for `Deposit` to be called.
+            Deposit(msg.sender, _id, msg.value);
+        }
     }
 
 
@@ -358,21 +360,21 @@ JavaScript API 的使用如下：
 
 ::
 
-    var abi = /\ abi as generated by the compiler /;     /\ 由编译器生成的abi /;  
-    var ClientReceipt = web3.eth.contract(abi);
-    var clientReceipt = ClientReceipt.at(0x123 /\ address /);   /\ 地址 /); 
-    var event = clientReceipt.Deposit();
-    // watch for changes   观察变化
+    var abi = /\ abi as generated by the compiler /;     /\ 由编译器生成的abi /;  
+    var ClientReceipt = web3.eth.contract(abi);
+    var clientReceipt = ClientReceipt.at(0x123 /\ address /);   /\ 地址 /); 
+    var event = clientReceipt.Deposit();
+    // watch for changes   观察变化
     event.watch(function(error, result){
-        // result will contain various information   结果包含不同的信息： 包括给Deposit调用的参数
-        // including the argumets given to the Deposit
-        // call.
-        if (!error)
-            console.log(result);});
-    // Or pass a callback to start watching immediately 或者通过callback立刻开始观察
-    var event = clientReceipt.Deposit(function(error, result) {
-        if (!error)
-            console.log(result);
+        // result will contain various information   结果包含不同的信息： 包括给Deposit调用的参数
+        // including the argumets given to the Deposit
+        // call.
+        if (!error)
+            console.log(result);});
+    // Or pass a callback to start watching immediately 或者通过callback立刻开始观察
+    var event = clientReceipt.Deposit(function(error, result) {
+        if (!error)
+            console.log(result);
     });
 
 
@@ -385,10 +387,10 @@ JavaScript API 的使用如下：
 ::
 
     log3(
-        msg.value,
-        0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
-        msg.sender,
-        _id
+        msg.value,
+        0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
+        msg.sender,
+        _id
     );
 
 很长的十六进制数等于
@@ -409,7 +411,7 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 
 除非合约是显式给出的，所有的函数调用都是虚拟的，绝大多数派生函数可被调用。
 
-即使合约是继承了多个其他合约, 在blockchain上只有一个合约被创建,  基本合约代码总是被复制到最终的合约上。
+即使合约是继承了多个其他合约, 在blockchain上只有一个合约被创建,  基本合约代码总是被复制到最终的合约上。
 
 通用的继承机制非常类似于[Python](https://docs.python.org/3/tutorial/classes.html#inheritance)里的继承,特别是关于多重继承方面。
 
@@ -418,95 +420,95 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 ::
 
     contract owned {
-        function owned() { owner = msg.sender; }
-        address owner;
+        function owned() { owner = msg.sender; }
+        address owner;
     }
-    // Use "is" to derive from another contract. Derived   用"is"是从其他的合约里派生出
-    // contracts can access all non-private members including   派生出的合约能够访问所有非私有的成员，包括内部函数和状态变量。  它们不能从外部用'this'来访问。
+    // Use "is" to derive from another contract. Derived   用"is"是从其他的合约里派生出
+    // contracts can access all non-private members including   派生出的合约能够访问所有非私有的成员，包括内部函数和状态变量。  它们不能从外部用'this'来访问。
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
     contract mortal is owned {
-        function kill() {
-            if (msg.sender == owner) selfdestruct(owner);
-        }
+        function kill() {
+            if (msg.sender == owner) selfdestruct(owner);
+        }
     }
-    // These abstract contracts are only provided to make the  这些抽象的合约仅仅是让编译器知道已经生成了接口，
-    // interface known to the compiler. Note the function   注意：函数没有函数体。如果合约不做实现的话，它就只能当作接口。
+    // These abstract contracts are only provided to make the  这些抽象的合约仅仅是让编译器知道已经生成了接口，
+    // interface known to the compiler. Note the function   注意：函数没有函数体。如果合约不做实现的话，它就只能当作接口。
     // without body. If a contract does not implement all
     // functions it can only be used as an interface.
     contract Config {
-        function lookup(uint id) returns (address adr);
+        function lookup(uint id) returns (address adr);
     }
     contract NameReg {
-        function register(bytes32 name);
-        function unregister();
+        function register(bytes32 name);
+        function unregister();
     }
-    // Multiple inheritance is possible. Note that "owned" is 多重继承也是可以的，注意"owned" 也是mortal的基类， 虽然 仅仅有"owned"的单个实例，（和C++里的virtual继承一样）
+    // Multiple inheritance is possible. Note that "owned" is 多重继承也是可以的，注意"owned" 也是mortal的基类， 虽然 仅仅有"owned"的单个实例，（和C++里的virtual继承一样）
     // also a base class of "mortal", yet there is only a single
     // instance of "owned" (as for virtual inheritance in C++).
     contract named is owned, mortal {
-        function named(bytes32 name) {
-            Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
-            NameReg(config.lookup(1)).register(name);
-        }
-        // Functions can be overridden, both local and  函数被重写，本地和基于消息的函数调用把这些override带入账户里。
-        // message-based function calls take these overrides
-        // into account.
-        function kill() {
-            if (msg.sender == owner) {
-                Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
-                NameReg(config.lookup(1)).unregister();
-                // It is still possible to call a specific  还可以调用特定的override函数
-                // overridden function.
-                mortal.kill();
-            }
-        }
+        function named(bytes32 name) {
+            Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
+            NameReg(config.lookup(1)).register(name);
+        }
+        // Functions can be overridden, both local and  函数被重写，本地和基于消息的函数调用把这些override带入账户里。
+        // message-based function calls take these overrides
+        // into account.
+        function kill() {
+            if (msg.sender == owner) {
+                Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
+                NameReg(config.lookup(1)).unregister();
+                // It is still possible to call a specific  还可以调用特定的override函数
+                // overridden function.
+                mortal.kill();
+            }
+        }
     }
-    // If a constructor takes an argument, it needs to be  如果构造器里带有一个参数，有必要在头部给出，（或者在派生合约的构造器里使用修饰符调用方式modifier-invocation-style（见下文））
+    // If a constructor takes an argument, it needs to be  如果构造器里带有一个参数，有必要在头部给出，（或者在派生合约的构造器里使用修饰符调用方式modifier-invocation-style（见下文））
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
     contract PriceFeed is owned, mortal, named("GoldFeed") {
-       function updateInfo(uint newInfo) {
-         if (msg.sender == owner) info = newInfo;
-       }
-       function get() constant returns(uint r) { return info; }
-       uint info;
+       function updateInfo(uint newInfo) {
+         if (msg.sender == owner) info = newInfo;
+       }
+       function get() constant returns(uint r) { return info; }
+       uint info;
     }
 
 注意：在上文中，我们使用mortal.kill() 来“forward” 析构请求。这种做法是有问题的，请看下面的例子：
 
 ::
-    contract mortal is owned {
-        function kill() {
-            if (msg.sender == owner) selfdestruct(owner);
-        }
+    contract mortal is owned {
+        function kill() {
+            if (msg.sender == owner) selfdestruct(owner);
+        }
     }
-    contract Base1 is mortal {
-        function kill() { /\ do cleanup 1  清除1 / mortal.kill(); 
-    }
-    }
-    contract Base2 is mortal {
-        function kill() { /\ do cleanup 2  清除2 / mortal.kill(); 
+    contract Base1 is mortal {
+        function kill() { /\ do cleanup 1  清除1 / mortal.kill(); 
     }
     }
-    contract Final is Base1, Base2 {
+    contract Base2 is mortal {
+        function kill() { /\ do cleanup 2  清除2 / mortal.kill(); 
+    }
+    }
+    contract Final is Base1, Base2 {
     }
 
- Final.kill() 将调用Base2.kill作为最后的派生重写，但这个函数绕开了Base1.kill。因为它不知道有Base1。这种情况下要使用 super
+ Final.kill() 将调用Base2.kill作为最后的派生重写，但这个函数绕开了Base1.kill。因为它不知道有Base1。这种情况下要使用 super
 
 ::
-    contract mortal is owned {
-        function kill() {
-            if (msg.sender == owner) selfdestruct(owner);
-        }
+    contract mortal is owned {
+        function kill() {
+            if (msg.sender == owner) selfdestruct(owner);
+        }
     }
-    contract Base1 is mortal {
-        function kill() { /\ do cleanup 1   清除1  \/    super.kill(); }
+    contract Base1 is mortal {
+        function kill() { /\ do cleanup 1   清除1  \/    super.kill(); }
     }
-    contract Base2 is mortal {
-        function kill() { /\ do cleanup 2  清除2  \/    super.kill(); }
+    contract Base2 is mortal {
+        function kill() { /\ do cleanup 2  清除2  \/    super.kill(); }
     }
-    contract Final is Base2, Base1 {
+    contract Final is Base2, Base1 {
     }
 
 若Base1 调用了super函数，它不是简单地调用基本合约之一的函数， 它是调用最后继承关系的下一个基本合约的函数。所以它会调用 base2.kill（）（注意，最后的继承顺序是–从最后的派生合约开始：Final, Base1, Base2, mortal, owned）。当使用类的上下文中super不知道的情况下，真正的函数将被调用，虽然它的类型已经知道。这个和普通的virtual方法的查找相似。
@@ -519,16 +521,16 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 
 ::
 
-    contract Base {
-        uint x;
-        function Base(uint _x) { x = _x;}
+    contract Base {
+        uint x;
+        function Base(uint _x) { x = _x;}
     }
-    contract Derived is Base(7) {
-        function Derived(uint _y) Base(_y * _y) {
-        }
+    contract Derived is Base(7) {
+        function Derived(uint _y) Base(_y * _y) {
+        }
     }
 
-第一种方式是直接在继承列表里实现（是 Base(7)），第二种方式是在派生的构造器的头部，修饰符被调用时实现（Base(_y * _y)）。如果构造函数参数是一个常量，并且定义了合约的行为或描述了它的行为，第一种方式比较方便。 如果基本构造函数参数依赖于派生合约的构造函数，则必须使用第二种方法。如果在这个荒谬的例子中，这两个地方都被使用，修饰符样式的参数优先。
+第一种方式是直接在继承列表里实现（是 Base(7)），第二种方式是在派生的构造器的头部，修饰符被调用时实现（Base(_y * _y)）。如果构造函数参数是一个常量，并且定义了合约的行为或描述了它的行为，第一种方式比较方便。 如果基本构造函数参数依赖于派生合约的构造函数，则必须使用第二种方法。如果在这个荒谬的例子中，这两个地方都被使用，修饰符样式的参数优先。
 
 **************
 多继承和线性化
@@ -536,11 +538,11 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 
 允许多重继承的编程语言，要处理这样几个问题，其中一个是[Diamond](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem)问题。Solidity是沿用Python的方式， 使用“[C3](https://en.wikipedia.org/wiki/C3_linearization)线性化”，在基类的DAG强制使用特定的顺序。这导致单调但不允许有一些的继承关系。特别是，在其中的基础类的顺序是直接的，这点非常重要。在下面的代码中，Solidity会报错：“继承关系的线性化是不可能的”。
 
-**contract** X {}
+**contract** X {}
 
-**contract** A is X {}
+**contract** A is X {}
 
-**contract** C is A, X {}
+**contract** C is A, X {}
 
 这个原因是，C要求X来重写A（定义A，X这个顺序），但A本身的要求重写X，这是一个矛盾，不能解决。
 
@@ -554,16 +556,16 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 
 ::
 
-    contract feline {
-        function utterance() returns (bytes32);
+    contract feline {
+        function utterance() returns (bytes32);
     }
 
 这样的合约不能被编译（即使它们包含实现的函数和非实现的函数），但它们可以用作基本合约：
 
 ::
 
-    contract Cat is feline {
-        function utterance() returns (bytes32) { return "miaow"; }
+    contract Cat is feline {
+        function utterance() returns (bytes32) { return "miaow"; }
     }
 
 如果一个合约是从抽象合约中继承的，而不实现所有非执行功能，则它本身就是抽象的。
@@ -578,48 +580,48 @@ sha3(“Deposit(address,hash256,uint256)”), 这个就是事件的指纹。
 
 ::
 
-    library Set {
-      // We define a new struct datatype that will be used to   我们定义了一个新的结构体数据类型，用于存放调用合约中的数据
-      // hold its data in the calling contract.
-      struct Data { mapping(uint => bool) flags; }
-      // Note that the first parameter is of type "storage 注意第一个参数是 “存储引用”类型，这样仅仅是它的地址，而不是它的内容在调用中被传入 这是库函数的特点， 
-      // reference" and thus only its storage address and not
-      // its contents is passed as part of the call.  This is a
-      // special feature of library functions.  It is idiomatic  若第一个参数用"self"调用时很笨的的，如果这个函数可以被对象的方法可见。
-      // to call the first parameter 'self', if the function can
-      // be seen as a method of that object.
-      function insert(Data storage self, uint value)
-          returns (bool)
-      {
-          if (self.flags[value])
-              return false; // already there 已经在那里
-          self.flags[value] = true;
-          return true;
-      }
-      function remove(Data storage self, uint value)
-          returns (bool)
-      {
-          if (!self.flags[value])
-              return false; // not there 不在那里
-          self.flags[value] = false;
-          return true;
-      }
-      function contains(Data storage self, uint value)
-          returns (bool)
-      {
-          return self.flags[value];
-      }
+    library Set {
+      // We define a new struct datatype that will be used to   我们定义了一个新的结构体数据类型，用于存放调用合约中的数据
+      // hold its data in the calling contract.
+      struct Data { mapping(uint => bool) flags; }
+      // Note that the first parameter is of type "storage 注意第一个参数是 “存储引用”类型，这样仅仅是它的地址，而不是它的内容在调用中被传入 这是库函数的特点， 
+      // reference" and thus only its storage address and not
+      // its contents is passed as part of the call.  This is a
+      // special feature of library functions.  It is idiomatic  若第一个参数用"self"调用时很笨的的，如果这个函数可以被对象的方法可见。
+      // to call the first parameter 'self', if the function can
+      // be seen as a method of that object.
+      function insert(Data storage self, uint value)
+          returns (bool)
+      {
+          if (self.flags[value])
+              return false; // already there 已经在那里
+          self.flags[value] = true;
+          return true;
+      }
+      function remove(Data storage self, uint value)
+          returns (bool)
+      {
+          if (!self.flags[value])
+              return false; // not there 不在那里
+          self.flags[value] = false;
+          return true;
+      }
+      function contains(Data storage self, uint value)
+          returns (bool)
+      {
+          return self.flags[value];
+      }
     }
-    contract C {
-        Set.Data knownValues;
-        function register(uint value) {
-            // The library functions can be called without a  这个库函数没有特定的函数实例被调用，因为“instance”是当前的合约
-            // specific instance of the library, since the
-            // "instance" will be the current contract.
-            if (!Set.insert(knownValues, value))
-                throw;
-        }
-        // In this contract, we can also directly access knownValues.flags, if we want 在这个合约里，如果我们要的话，也可以直接访问 knownValues.flags
+    contract C {
+        Set.Data knownValues;
+        function register(uint value) {
+            // The library functions can be called without a  这个库函数没有特定的函数实例被调用，因为“instance”是当前的合约
+            // specific instance of the library, since the
+            // "instance" will be the current contract.
+            if (!Set.insert(knownValues, value))
+                throw;
+        }
+        // In this contract, we can also directly access knownValues.flags, if we want 在这个合约里，如果我们要的话，也可以直接访问 knownValues.flags
     }
 
 当然，你不必这样使用库--他们也可以事前不定义结构体数据类型，就可以使用。 没有任何存储引入参数，函数也可以执行。也可以在任何位置，有多个存储引用参数。
@@ -659,55 +661,55 @@ msg.sender的值将是调用库函数的合约的值。
 Using For
 *********
 
-指令 using A for B;  可用于附加库函数（从库A）到任何类型（B）。这些函数将收到一个作为第一个参数的对象（像Python中self变量）。
+指令 using A for B;  可用于附加库函数（从库A）到任何类型（B）。这些函数将收到一个作为第一个参数的对象（像Python中self变量）。
 
 using A for *;，是指函数从库A附加到任何类型。
 
 在这两种情况下，所有的函数将被附加，（即使那些第一个参数的类型与对象的类型不匹配）。该被调用函数的入口类型将被检查，并进行函数重载解析。
 
-using A for B; 指令在当前的范围里是有效的，作用范围限定在现在的合约里。但（出了当前范围）在全局范围里就被移除。因此，通过 including一个模块，其数据类型（包括库函数）都将是可用的，而不必添加额外的代码。
+using A for B; 指令在当前的范围里是有效的，作用范围限定在现在的合约里。但（出了当前范围）在全局范围里就被移除。因此，通过 including一个模块，其数据类型（包括库函数）都将是可用的，而不必添加额外的代码。
 
 让我们用这种方式重写库中的set示例：
 
 ::
 
-    // This is the same code as before, just without comments   这个代码和之前的一样，仅仅是没有注释
+    // This is the same code as before, just without comments   这个代码和之前的一样，仅仅是没有注释
     library Set {
-      struct Data { mapping(uint => bool) flags; }
-      function insert(Data storage self, uint value)
-          returns (bool)
-      {
-          if (self.flags[value])
-            return false; // already there 已经在那里
-          self.flags[value] = true;
-          return true;
-      }
+      struct Data { mapping(uint => bool) flags; }
+      function insert(Data storage self, uint value)
+          returns (bool)
+      {
+          if (self.flags[value])
+            return false; // already there 已经在那里
+          self.flags[value] = true;
+          return true;
+      }
 
-      function remove(Data storage self, uint value)
-          returns (bool)
-      {
-          if (!self.flags[value])
-              return false; // not there 没有
-          self.flags[value] = false;
-          return true;
-      }
-      function contains(Data storage self, uint value)
-          returns (bool)
-      {
-          return self.flags[value];
-      }
+      function remove(Data storage self, uint value)
+          returns (bool)
+      {
+          if (!self.flags[value])
+              return false; // not there 没有
+          self.flags[value] = false;
+          return true;
+      }
+      function contains(Data storage self, uint value)
+          returns (bool)
+      {
+          return self.flags[value];
+      }
     }
-    contract C {
-        using Set for Set.Data; // this is the crucial change   这个是关键的变化
-        Set.Data knownValues;
-        function register(uint value) {
-           // Here, all variables of type Set.Data have   这里，所有Set.Data 的变量都有相应的成员函数
-            // corresponding member functions.
-            // The following function call is identical to  下面的函数调用和Set.insert(knownValues, value) 作用一样
-            // Set.insert(knownValues, value)
-            if (!knownValues.insert(value))
-                throw;
-        }
+    contract C {
+        using Set for Set.Data; // this is the crucial change   这个是关键的变化
+        Set.Data knownValues;
+        function register(uint value) {
+           // Here, all variables of type Set.Data have   这里，所有Set.Data 的变量都有相应的成员函数
+            // corresponding member functions.
+            // The following function call is identical to  下面的函数调用和Set.insert(knownValues, value) 作用一样
+            // Set.insert(knownValues, value)
+            if (!knownValues.insert(value))
+                throw;
+        }
     }
 
 It is also possible to extend elementary types in that way:
@@ -716,27 +718,27 @@ It is also possible to extend elementary types in that way:
 
 ::
 
-    library Search {
-        function indexOf(uint[] storage self, uint value) {
-            for (uint i = 0; i < self.length; i++)
-                if (self[i] == value) return i;
-            return uint(-1);
-        }
+    library Search {
+        function indexOf(uint[] storage self, uint value) {
+            for (uint i = 0; i < self.length; i++)
+                if (self[i] == value) return i;
+            return uint(-1);
+        }
     }
-    contract C {
-        using Search for uint[];
-        uint[] data;
-        function append(uint value) {
-            data.push(value);
-        }
-        function replace(uint _old, uint _new) {
-            // This performs the library function call   这样完成了库函数的调用
-            uint index = data.find(_old);
-            if (index == -1)
-                data.push(_new);
-            else
-                data[index] = _new;
-        }
+    contract C {
+        using Search for uint[];
+        uint[] data;
+        function append(uint value) {
+            data.push(value);
+        }
+        function replace(uint _old, uint _new) {
+            // This performs the library function call   这样完成了库函数的调用
+            uint index = data.find(_old);
+            if (index == -1)
+                data.push(_new);
+            else
+                data[index] = _new;
+        }
     }
 
 注意：所有的库函数调用都是调用实际的EVM。这意味着，如果你要使用内存或值类型，就必须执行一次拷贝操作，即使是self变量。拷贝没有完成的情况可能是存储引用变量已被使用。
