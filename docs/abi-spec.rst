@@ -149,10 +149,10 @@ on the type of `X` being
 - `address`: as in the `uint160` case
 - `int<M>`: `enc(X)` is the big-endian two's complement encoding of `X`, padded on the higher-oder (left) side with `0xff` for negative `X` and with zero bytes for positive `X` such that the length is a multiple of 32 bytes.
 - `bool`: as in the `uint8` case, where `1` is used for `true` and `0` for `false`
-- `fixed<M>x<N>`: `enc(X)` is `enc(X * 2**N)` where `X * 2**N` is interpreted as a `int256`.
-- `fixed`: as in the `fixed128x128` case
-- `ufixed<M>x<N>`: `enc(X)` is `enc(X * 2**N)` where `X * 2**N` is interpreted as a `uint256`.
-- `ufixed`: as in the `ufixed128x128` case
+- `fixed<M>x<N>`: `enc(X)` is `enc(X * 10**N)` where `X * 10**N` is interpreted as a `int256`.
+- `fixed`: as in the `fixed128x19` case
+- `ufixed<M>x<N>`: `enc(X)` is `enc(X * 10**N)` where `X * 10**N` is interpreted as a `uint256`.
+- `ufixed`: as in the `ufixed128x19` case
 - `bytes<M>`: `enc(X)` is the sequence of bytes in `X` padded with zero-bytes to a length of 32.
 
 Note that for any `X`, `len(enc(X))` is a multiple of 32.
@@ -176,7 +176,7 @@ Given the contract:
 
 ```js
 contract Foo {
-  function bar(fixed[2] xy) {}
+  function bar(bytes3[2] xy) {}
   function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
   function sam(bytes name, bool z, uint[] data) {}
 }
@@ -194,14 +194,15 @@ In total:
 ```
 It returns a single `bool`. If, for example, it were to return `false`, its output would be the single byte array `0x0000000000000000000000000000000000000000000000000000000000000000`, a single bool.
 
-If we wanted to call `bar` with the argument `[2.125, 8.5]`, we would pass 68 bytes total, broken down into:
-- `0xab55044d`: the Method ID. This is derived from the signature `bar(fixed[2])`. Note that `fixed` is replaced with its canonical representation `fixed128x19`.
-- `0x0000000000000000000000000000000220000000000000000000000000000000`: the first part of the first parameter, a fixed128x19 value `2.125`.
-- `0x0000000000000000000000000000000880000000000000000000000000000000`: the second part of the first parameter, a fixed128x19 value `8.5`.
+If we wanted to call `bar` with the argument `["abc", "def"]`, we would pass 68 bytes total, broken down into:
+
+- `0xfce353f6`: the Method ID. This is derived from the signature `bar(bytes3[2])`.
+- `0x6162630000000000000000000000000000000000000000000000000000000000`: the first part of the first parameter, a `bytes3` value `"abc"` (left-aligned).
+- `0x6465660000000000000000000000000000000000000000000000000000000000`: the second part of the first parameter, a `bytes3` value `"def"` (left-aligned).
 
 In total:
 ```
-0xab55044d00000000000000000000000000000002200000000000000000000000000000000000000000000000000000000000000880000000000000000000000000000000
+0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 ```
 
 If we wanted to call `sam` with the arguments `"dave"`, `true` and `[1,2,3]`, we would pass 292 bytes total, broken down into:
