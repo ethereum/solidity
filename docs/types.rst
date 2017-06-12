@@ -795,7 +795,7 @@ Mapping types are declared as ``mapping(_KeyType => _ValueType)``.
 Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
 ``_ValueType`` can actually be any type, including mappings.
 
-Mappings can be seen as hashtables which are virtually initialized such that
+Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
 all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
 in a mapping, only its ``keccak256`` hash used to look up the value.
