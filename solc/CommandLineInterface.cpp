@@ -521,7 +521,6 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 	// Declare the supported options.
 	po::options_description desc(R"(solc, the Solidity commandline compiler.
 
-Solidity Copyright (C) 2014-2017 Solidity contributors.
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
 are welcome to redistribute it under certain conditions. See 'solc --license'
 for details.
