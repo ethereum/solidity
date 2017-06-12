@@ -458,6 +458,8 @@ value types and strings.
     }
 
 
+.. _constant-functions:
+
 ******************
 Constant Functions
 ******************

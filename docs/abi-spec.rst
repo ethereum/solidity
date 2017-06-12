@@ -111,10 +111,14 @@ on the type of `X` being
 
   where `X(i)` is the `ith` component of the value, and
   `head` and `tail` are defined for `Ti` being a static type as
+
     `head(X(i)) = enc(X(i))` and `tail(X(i)) = ""` (the empty string)
+
   and as
+
     `head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))`
     `tail(X(i)) = enc(X(i))`
+
   otherwise, i.e. if `Ti` is a dynamic type.
 
   Note that in the dynamic case, `head(X(i))` is well-defined since the lengths of
@@ -175,13 +179,14 @@ Examples
 
 Given the contract:
 
-```js
-contract Foo {
-  function bar(bytes3[2] xy) {}
-  function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
-  function sam(bytes name, bool z, uint[] data) {}
-}
-```
+::
+
+    contract Foo {
+      function bar(bytes3[2] xy) {}
+      function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
+      function sam(bytes name, bool z, uint[] data) {}
+    }
+
 
 Thus for our `Foo` example if we wanted to call `baz` with the parameters `69` and `true`, we would pass 68 bytes total, which can be broken down into:
 
@@ -189,10 +194,10 @@ Thus for our `Foo` example if we wanted to call `baz` with the parameters `69` a
 - `0x0000000000000000000000000000000000000000000000000000000000000045`: the first parameter, a uint32 value `69` padded to 32 bytes
 - `0x0000000000000000000000000000000000000000000000000000000000000001`: the second parameter - boolean `true`, padded to 32 bytes
 
-In total:
-```
-0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
-```
+In total::
+
+    0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
+
 It returns a single `bool`. If, for example, it were to return `false`, its output would be the single byte array `0x0000000000000000000000000000000000000000000000000000000000000000`, a single bool.
 
 If we wanted to call `bar` with the argument `["abc", "def"]`, we would pass 68 bytes total, broken down into:
@@ -201,10 +206,9 @@ If we wanted to call `bar` with the argument `["abc", "def"]`, we would pass 68 
 - `0x6162630000000000000000000000000000000000000000000000000000000000`: the first part of the first parameter, a `bytes3` value `"abc"` (left-aligned).
 - `0x6465660000000000000000000000000000000000000000000000000000000000`: the second part of the first parameter, a `bytes3` value `"def"` (left-aligned).
 
-In total:
-```
-0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
-```
+In total::
+
+    0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
 If we wanted to call `sam` with the arguments `"dave"`, `true` and `[1,2,3]`, we would pass 292 bytes total, broken down into:
 - `0xa5643bf2`: the Method ID. This is derived from the signature `sam(bytes,bool,uint256[])`. Note that `uint` is replaced with its canonical representation `uint256`.
@@ -218,10 +222,9 @@ If we wanted to call `sam` with the arguments `"dave"`, `true` and `[1,2,3]`, we
 - `0x0000000000000000000000000000000000000000000000000000000000000002`: the second entry of the third parameter.
 - `0x0000000000000000000000000000000000000000000000000000000000000003`: the third entry of the third parameter.
 
-In total:
-```
-0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
-```
+In total::
+
+    0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
 
 Use of Dynamic Types
 ====================
@@ -249,19 +252,18 @@ Finally, we encode the data part of the second dynamic argument, `"Hello, world!
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
-```
-0x8be65246
-0000000000000000000000000000000000000000000000000000000000000123
-0000000000000000000000000000000000000000000000000000000000000080
-3132333435363738393000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000e0
-0000000000000000000000000000000000000000000000000000000000000002
-0000000000000000000000000000000000000000000000000000000000000456
-0000000000000000000000000000000000000000000000000000000000000789
-000000000000000000000000000000000000000000000000000000000000000d
-48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-```
+::
 
+    0x8be65246
+      0000000000000000000000000000000000000000000000000000000000000123
+      0000000000000000000000000000000000000000000000000000000000000080
+      3132333435363738393000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000000000000000000000e0
+      0000000000000000000000000000000000000000000000000000000000000002
+      0000000000000000000000000000000000000000000000000000000000000456
+      0000000000000000000000000000000000000000000000000000000000000789
+      000000000000000000000000000000000000000000000000000000000000000d
+      48656c6c6f2c20776f726c642100000000000000000000000000000000000000
 
 Events
 ======
@@ -309,35 +311,35 @@ An event description is a JSON object with fairly similar fields:
 
 For example, 
 
-```js
-contract Test {
-function Test(){ b = 0x12345678901234567890123456789012; }
-event Event(uint indexed a, bytes32 b)
-event Event2(uint indexed a, bytes32 b)
-function foo(uint a) { Event(a, b); }
-bytes32 b;
-}
-```
+::
+
+  contract Test {
+    function Test(){ b = 0x12345678901234567890123456789012; }
+    event Event(uint indexed a, bytes32 b)
+    event Event2(uint indexed a, bytes32 b)
+    function foo(uint a) { Event(a, b); }
+    bytes32 b;
+  }
 
 would result in the JSON:
 
-```js
-[{
-"type":"event",
-"inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-"name":"Event"
-}, {
-"type":"event",
-"inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-"name":"Event2"
-}, {
-"type":"event",
-"inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-"name":"Event2"
-}, {
-"type":"function",
-"inputs": [{"name":"a","type":"uint256"}],
-"name":"foo",
-"outputs": []
-}]
-```
+.. code:: JSON
+
+  [{
+  "type":"event",
+  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+  "name":"Event"
+  }, {
+  "type":"event",
+  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+  "name":"Event2"
+  }, {
+  "type":"event",
+  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+  "name":"Event2"
+  }, {
+  "type":"function",
+  "inputs": [{"name":"a","type":"uint256"}],
+  "name":"foo",
+  "outputs": []
+  }]
