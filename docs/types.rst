@@ -655,7 +655,7 @@ Members
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
-        // Note that the following is not a pair of arrays but an array of pairs.
+        // Note that the following is not a pair of dynamic arrays but a dynamic array of pairs (i.e. of fixed size arrays of length two).
         bool[2][] m_pairsOfFlags;
         // newPairs is stored in memory - the default for function arguments
 
