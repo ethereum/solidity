@@ -279,6 +279,18 @@ BOOST_AUTO_TEST_CASE(assembly_codecopy)
 	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
 }
 
+BOOST_AUTO_TEST_CASE(zeroarg_macro)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'zeroarg () (asm INVALID))
+				(zeroarg)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
