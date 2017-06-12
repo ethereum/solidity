@@ -9,6 +9,10 @@ Application Binary Interface Specification
 Basic design
 ============
 
+The Application Binary Interface is the standard way to interact with contracts in the Ethereum ecosystem, both
+from outside the blockchain and for contract-to-contract interaction. Data is encoded following its type,
+according to this specification.
+
 We assume the Application Binary Interface (ABI) is strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assert that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Should these cases become important they can be adequately handled as facilities built within the Ethereum ecosystem.
@@ -62,6 +66,14 @@ The following non-fixed-size types exist:
 
 - `<type>[]`: a variable-length array of the given fixed-length type.
 
+Types can be combined to anonymous structs by enclosing a finite non-negative number
+of them inside parentheses, separated by commas:
+
+- `(T1,T2,...,Tn)`: anonymous struct (ordered tuple) consisting of the types `T1`, ..., `Tn`, `n >= 0`
+
+It is possible to form structs of structs, arrays of structs and so on.
+
+
 Formal Specification of the Encoding
 ====================================
 
@@ -93,20 +105,28 @@ that `len(enc(X))` depends on the value of `X` if and only if the type of `X` is
 **Definition:** For any ABI value `X`, we recursively define `enc(X)`, depending
 on the type of `X` being
 
+- `(T1,...,Tk)` for `k >= 0` and any types `T1`, ..., `Tk`
+
+  `enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))`
+
+  where `X(i)` is the `ith` component of the value, and
+  `head` and `tail` are defined for `Ti` being a static type as
+    `head(X(i)) = enc(X(i))` and `tail(X(i)) = ""` (the empty string)
+  and as
+    `head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))`
+    `tail(X(i)) = enc(X(i))`
+  otherwise, i.e. if `Ti` is a dynamic type.
+
+  Note that in the dynamic case, `head(X(i))` is well-defined since the lengths of
+  the head parts only depend on the types and not the values. Its value is the offset
+  of the beginning of `tail(X(i))` relative to the start of `enc(X)`.
+  
 - `T[k]` for any `T` and `k`:
 
-  `enc(X) = head(X[0]) ... head(X[k-1]) tail(X[0]) ... tail(X[k-1])`
-
-  where `head` and `tail` are defined for `X[i]` being of a static type as
-    `head(X[i]) = enc(X[i])` and `tail(X[i]) = ""` (the empty string)
-  and as
-    `head(X[i]) = enc(len(head(X[0]) ... head(X[k-1]) tail(X[0]) ... tail(X[i-1])))`
-    `tail(X[i]) = enc(X[i])`
-  otherwise.
-
-  Note that in the dynamic case, `head(X[i])` is well-defined since the lengths of
-  the head parts only depend on the types and not the values. Its value is the offset
-  of the beginning of `tail(X[i])` relative to the start of `enc(X)`.
+  `enc(X) = enc((X[0], ..., X[k-1]))`
+  
+  i.e. it is encoded as if it were an anonymous struct with `k` elements
+  of the same type.
   
 - `T[]` where `X` has `k` elements (`k` is assumed to be of type `uint256`):
 
@@ -141,17 +161,13 @@ Note that for any `X`, `len(enc(X))` is a multiple of 32.
 
 All in all, a call to the function `f` with parameters `a_1, ..., a_n` is encoded as
 
-  `function_selector(f) enc([a_1, ..., a_n])`
+  `function_selector(f) enc((a_1, ..., a_n))`
 
 and the return values `v_1, ..., v_k` of `f` are encoded as
 
-  `enc([v_1, ..., v_k])`
+  `enc((v_1, ..., v_k))`
 
-where the types of `[a_1, ..., a_n]` and `[v_1, ..., v_k]` are assumed to be
-fixed-size arrays of length `n` and `k`, respectively. Note that strictly,
-`[a_1, ..., a_n]` can be an "array" with elements of different types, but the
-encoding is still well-defined as the assumed common type `T` (above) is not
-actually used.
+i.e. the values are combined into an anonymous struct and encoded.
 
 Examples
 ========
@@ -245,7 +261,8 @@ All together, the encoding is (newline after function selector and each 32-bytes
 ```
 
 
-# Events
+Events
+======
 
 Events are an abstraction of the Ethereum logging/event-watching protocol. Log entries provide the contract's address, a series of up to four topics and some arbitrary length binary data. Events leverage the existing function ABI in order to interpret this (together with an interface spec) as a properly typed structure.
 
@@ -258,17 +275,18 @@ In effect, a log entry using this ABI is described as:
 - `topics[n]`: `EVENT_INDEXED_ARGS[n - 1]` (`EVENT_INDEXED_ARGS` is the series of `EVENT_ARGS` that are indexed);
 - `data`: `abi_serialise(EVENT_NON_INDEXED_ARGS)` (`EVENT_NON_INDEXED_ARGS` is the series of `EVENT_ARGS` that are not indexed, `abi_serialise` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
 
-# JSON
+JSON
+====
 
 The JSON format for a contract's interface is given by an array of function and/or event descriptions. A function description is a JSON object with the fields:
 
-- `type`: `"function"`, `"constructor"`, or `"fallback"` (the [unnamed "default" function](http://solidity.readthedocs.io/en/develop/contracts.html#fallback-function));
+- `type`: `"function"`, `"constructor"`, or `"fallback"` (the :ref:`unnamed "default" function <fallback-function>`);
 - `name`: the name of the function;
 - `inputs`: an array of objects, each of which contains:
   * `name`: the name of the parameter;
   * `type`: the canonical type of the parameter.
 - `outputs`: an array of objects similar to `inputs`, can be omitted if function doesn't return anything;
-- `constant`: `true` if function is [specified to not modify blockchain state](http://solidity.readthedocs.io/en/develop/contracts.html#constant-functions);
+- `constant`: `true` if function is :ref:`specified to not modify blockchain state <constant-functions>`);
 - `payable`: `true` if function accepts ether, defaults to `false`.
 
 `type` can be omitted, defaulting to `"function"`.
