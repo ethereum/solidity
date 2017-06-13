@@ -485,7 +485,7 @@ Json::Value CompilerStack::functionHashes(ContractDefinition const& _contract)
 {
 	Json::Value functionHashes(Json::objectValue);
 	for (auto const& it: _contract.interfaceFunctions())
-		functionHashes[toHex(it.first.ref())] = it.second->externalSignature();
+		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
 	return functionHashes;
 }
 
