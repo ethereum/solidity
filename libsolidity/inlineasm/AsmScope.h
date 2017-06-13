@@ -77,7 +77,6 @@ struct Scope
 
 	struct Function
 	{
-		Function(std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns): arguments(_arguments), returns(_returns) {}
 		std::vector<JuliaType> arguments;
 		std::vector<JuliaType> returns;
 	};

@@ -46,7 +46,7 @@ bool Scope::registerFunction(string const& _name, std::vector<JuliaType> const& 
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Function(_arguments, _returns);
+	identifiers[_name] = Function{_arguments, _returns};
 	return true;
 }
 
