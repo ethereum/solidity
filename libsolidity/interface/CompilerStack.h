@@ -177,6 +177,9 @@ public:
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
 	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
+
+	Json::Value functionHashes(ContractDefinition const& _contract);
+
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 

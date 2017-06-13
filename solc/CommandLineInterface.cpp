@@ -165,6 +165,7 @@ static set<string> const g_combinedJsonArgs
 	g_strNatspecUser,
 	g_strNatspecDev,
 	g_strOpcodes,
+	g_strSignatureHashes,
 	g_strSrcMap,
 	g_strSrcMapRuntime
 };
@@ -887,6 +888,8 @@ void CommandLineInterface::handleCombinedJSON()
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
+		if (requests.count(g_strSignatureHashes))
+			contractData[g_strSignatureHashes] = m_compiler->functionHashes(m_compiler->contractDefinition(contractName));
 		if (requests.count(g_strNatspecDev))
 			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
 		if (requests.count(g_strNatspecUser))
