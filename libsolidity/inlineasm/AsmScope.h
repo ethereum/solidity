@@ -65,16 +65,8 @@ struct Scope
 	using JuliaType = std::string;
 	using LabelID = size_t;
 
-	struct Variable
-	{
-		/// Used during analysis to check whether we already passed the declaration inside the block.
-		/// @todo move there.
-		bool active = false;
-		JuliaType type;
-	};
-
+	struct Variable { JuliaType type; };
 	struct Label { };
-
 	struct Function
 	{
 		std::vector<JuliaType> arguments;
