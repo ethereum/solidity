@@ -5793,6 +5793,15 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	CHECK_WARNING_ALLOW_MULTI(text, "shadowed by an insturction of the same name");
 }
 
+BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
+{
+	char const* text = R"(
+		contract C {function f() {assembly {}}}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
