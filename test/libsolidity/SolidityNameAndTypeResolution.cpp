@@ -5785,6 +5785,20 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(callable_crash)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			S public s;
+			function C() {
+				3({a: 1, x: true});
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type is not callable");
+}
+
 BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 {
 	char const* text = R"(
@@ -5800,7 +5814,6 @@ BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
-
 
 
 BOOST_AUTO_TEST_SUITE_END()

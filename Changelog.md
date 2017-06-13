@@ -9,6 +9,7 @@ Features:
  * Inline Assembly: introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
 
 Bugfixes:
+ * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
 
 ### 0.4.11 (2017-05-03)
