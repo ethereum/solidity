@@ -99,7 +99,7 @@ PrimaryExpression = Identifier
                   | ElementaryTypeNameExpression
 
 ExpressionList = Expression ( ',' Expression )*
-NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
+NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )* ','?
 
 FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' FunctionCallArguments ')'
 FunctionCallArguments = '{' NameValueList? '}'
