@@ -32,6 +32,8 @@ namespace
 {
 /// Size of labels in bytes. Four-byte labels are required by some EVM1.5 instructions.
 size_t constexpr labelReferenceSize = 4;
+
+size_t constexpr assemblySizeReferenceSize = 4;
 }
 
 
@@ -145,6 +147,12 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 
 eth::LinkerObject EVMAssembly::finalize()
 {
+	size_t bytecodeSize = m_bytecode.size();
+	solAssert(uint64_t(bytecodeSize) < (uint64_t(1) << (8 * assemblySizeReferenceSize)), "Bytecode too big.");
+	for (auto const& ref: m_assemblySizePositions)
+		for (size_t i = 0; i < assemblySizeReferenceSize; i++)
+			m_bytecode[ref + i] = byte((bytecodeSize >> (8 * (assemblySizeReferenceSize - i - 1))) & 0xff);
+
 	for (auto const& ref: m_labelReferences)
 	{
 		size_t referencePos = ref.first;
@@ -156,6 +164,7 @@ eth::LinkerObject EVMAssembly::finalize()
 		for (size_t i = 0; i < labelReferenceSize; i++)
 			m_bytecode[referencePos + i] = byte((labelPos >> (8 * (labelReferenceSize - i - 1))) & 0xff);
 	}
+
 	eth::LinkerObject obj;
 	obj.bytecode = m_bytecode;
 	return obj;
@@ -172,4 +181,11 @@ void EVMAssembly::appendLabelReferenceInternal(LabelID _labelId)
 {
 	m_labelReferences[m_bytecode.size()] = _labelId;
 	m_bytecode += bytes(labelReferenceSize);
+}
+
+void EVMAssembly::appendAssemblySize()
+{
+	appendInstruction(solidity::pushInstruction(assemblySizeReferenceSize));
+	m_assemblySizePositions.push_back(m_bytecode.size());
+	m_bytecode += bytes(assemblySizeReferenceSize);
 }

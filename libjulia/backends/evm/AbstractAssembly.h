@@ -89,6 +89,9 @@ public:
 	/// Return from a subroutine.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
+
+	/// Append the assembled size as a constant.
+	virtual void appendAssemblySize() = 0;
 };
 
 enum class IdentifierContext { LValue, RValue };

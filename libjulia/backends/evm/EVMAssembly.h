@@ -70,6 +70,8 @@ public:
 	/// Return from a subroutine.
 	virtual void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
+	/// Append the assembled size as a constant.
+	virtual void appendAssemblySize() override;
 
 	/// Resolves references inside the bytecode and returns the linker object.
 	eth::LinkerObject finalize();
@@ -84,6 +86,7 @@ private:
 	bytes m_bytecode;
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;
+	std::vector<size_t> m_assemblySizePositions;
 };
 
 }
