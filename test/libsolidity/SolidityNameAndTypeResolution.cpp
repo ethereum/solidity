@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 			struct Nested { X[2][] a; mapping(uint => uint) m; uint y; }
 			struct X { bytes32 x; Test t; Empty[] e; }
 			function f(ActionChoices, uint, Empty) external {}
-			function g(Nested) external {}
+			function g(Test, Nested) external {}
 			function h(function(Nested) external returns (uint)[]) external {}
 			function i(Nested[]) external {}
 		}
@@ -620,10 +620,8 @@ BOOST_AUTO_TEST_CASE(external_structs)
 		{
 			auto functions = contract->definedFunctions();
 			BOOST_REQUIRE(!functions.empty());
-			for (auto const& f: functions)
-				cout << f->externalSignature() << endl;
 			BOOST_CHECK_EQUAL("f(uint8,uint256,())", functions[0]->externalSignature());
-			BOOST_CHECK_EQUAL("g(((bytes32,address,()[])[2][],uint256))", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("g(address,((bytes32,address,()[])[2][],uint256))", functions[1]->externalSignature());
 			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
 			BOOST_CHECK_EQUAL("i(((bytes32,address,()[])[2][],uint256)[])", functions[3]->externalSignature());
 		}
