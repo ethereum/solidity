@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(list)
 	BOOST_CHECK_EQUAL(parse(text), R"(( 1234 ))");
 
 	BOOST_CHECK(successParse("( 1234 5467 )"));
-	BOOST_CHECK(!successParse("()"));
+	BOOST_CHECK(successParse("()"));
 }
 
 BOOST_AUTO_TEST_CASE(macro_with_zero_args)
