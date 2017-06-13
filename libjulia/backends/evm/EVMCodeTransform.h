@@ -81,8 +81,10 @@ public:
 protected:
 	struct Context
 	{
-		std::map<solidity::assembly::Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
-		std::map<solidity::assembly::Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
+		using Scope = solidity::assembly::Scope;
+		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
+		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
+		std::map<Scope::Variable const*, int> variableStackHeights;
 	};
 
 	CodeTransform(

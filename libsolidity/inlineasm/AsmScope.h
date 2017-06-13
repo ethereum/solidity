@@ -67,8 +67,6 @@ struct Scope
 
 	struct Variable
 	{
-		/// Used during code generation to store the stack height. @todo move there.
-		int stackHeight = 0;
 		/// Used during analysis to check whether we already passed the declaration inside the block.
 		/// @todo move there.
 		bool active = false;

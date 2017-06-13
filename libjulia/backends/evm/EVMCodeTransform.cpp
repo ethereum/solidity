@@ -64,8 +64,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (auto const& variable: _varDecl.variables)
 	{
 		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(variable.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 	}
 	checkStackHeight(&_varDecl);
 }
@@ -288,8 +287,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	for (auto const& v: _function.arguments | boost::adaptors::reversed)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 	}
 
 	m_assembly.setSourceLocation(_function.location);
@@ -311,8 +309,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	for (auto const& v: _function.returns)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 		// Preset stack slots for return variables to zero.
 		m_assembly.appendConstant(u256(0));
 	}
@@ -427,7 +424,8 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 
 int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap)
 {
-	int heightDiff = m_assembly.stackHeight() - _var.stackHeight;
+	solAssert(m_context->variableStackHeights.count(&_var), "");
+	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
 	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 	{
 		solUnimplemented(
