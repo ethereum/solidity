@@ -291,6 +291,43 @@ BOOST_AUTO_TEST_CASE(zeroarg_macro)
 	BOOST_CHECK(callFallback() == encodeArgs(u256(0x1234)));
 }
 
+BOOST_AUTO_TEST_CASE(keccak256_32bytes)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 0x01)
+				(return (keccak256 0x00 0x20))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 0x01)
+				(return (sha3 0x00 0x20))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_one_arg)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (sha3 0x01)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
