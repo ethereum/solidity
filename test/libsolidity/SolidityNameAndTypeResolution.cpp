@@ -193,10 +193,15 @@ CHECK_ERROR_OR_WARNING(text, type, substring, false, false)
 #define CHECK_ERROR_ALLOW_MULTI(text, type, substring) \
 CHECK_ERROR_OR_WARNING(text, type, substring, false, true)
 
-// [checkWarning(text, type, substring)] asserts that the compilation down to typechecking
-// emits a warning of type [type] and with a message containing [substring].
+// [checkWarning(text, substring)] asserts that the compilation down to typechecking
+// emits a warning and with a message containing [substring].
 #define CHECK_WARNING(text, substring) \
 CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
+
+// [checkWarningAllowMulti(text, substring)] aserts that the compilation down to typechecking
+// emits a warning and with a message containing [substring].
+#define CHECK_WARNING_ALLOW_MULTI(text, substring) \
+CHECK_ERROR_OR_WARNING(text, Warning, substring, true, true)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
 #define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
@@ -5776,6 +5781,22 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 				}
 			}
 		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() { uint returndatasize; assembly { returndatasize }}}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
+{
+	char const* text = R"(
+		contract C {function f() {assembly {}}}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }

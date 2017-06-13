@@ -77,6 +77,8 @@ enum class Instruction: uint8_t
 	GASPRICE,			///< get price of gas in current environment
 	EXTCODESIZE,		///< get external code size (from another contract)
 	EXTCODECOPY,		///< copy external code (from another contract)
+	RETURNDATASIZE,		///< get size of the last return data
+	RETURNDATACOPY,		///< copy last return data to memory
 
 	BLOCKHASH = 0x40,	///< get hash of most recent complete block
 	COINBASE,			///< get the block's coinbase address

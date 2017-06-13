@@ -26,6 +26,8 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 
 namespace dev
@@ -230,6 +232,26 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 			uniqueFunctions.push_back(declaration);
 	}
 	return uniqueFunctions;
+}
+
+void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
+{
+	for (auto const& instruction: c_instructions)
+	{
+		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
+		auto declarations = nameFromCurrentScope(instructionName);
+		for (Declaration const* const declaration: declarations)
+		{
+			solAssert(!!declaration, "");
+			if (dynamic_cast<MagicVariableDeclaration const* const>(declaration))
+				// Don't warn the user for what the user did not.
+				continue;
+			m_errorReporter.warning(
+				declaration->location(),
+				"Variable is shadowed in inline assembly by an instruction of the same name"
+			);
+		}
+	}
 }
 
 bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode)
