@@ -148,7 +148,9 @@ Json::Value ABI::formatType(string const& _name, Type const& _type, bool _forLib
 		for (auto const& member: structType->members(nullptr))
 		{
 			solAssert(member.type, "");
-			ret["type"].append(formatType(member.name, *member.type, _forLibrary));
+			auto t = member.type->interfaceType(_forLibrary);
+			solAssert(t, "");
+			ret["type"].append(formatType(member.name, *t, _forLibrary));
 		}
 	}
 	else

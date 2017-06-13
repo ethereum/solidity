@@ -795,6 +795,42 @@ BOOST_AUTO_TEST_CASE(return_structs)
 	checkInterface(text, interface);
 }
 
+BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
+{
+	char const* text = R"(
+		contract C {
+			struct S { C[] x; C y; }
+			function f() returns (S s, C c) {
+			}
+		}
+	)";
+	char const* interface = R"(
+	[
+	{
+		"constant" : false,
+		"payable": false,
+		"inputs": [],
+		"name": "f",
+		"outputs" : [{
+			"name" : "s",
+			"type" : [{
+				"name" : "x",
+				"type" : "address[]"
+			}, {
+				"name" : "y",
+				"type" : "address"
+			}]
+		}, {
+			"name" : "c",
+			"type" : "address"
+		}],
+		"type" : "function"
+	}
+	]
+	)";
+	checkInterface(text, interface);
+}
+
 BOOST_AUTO_TEST_CASE(event_structs)
 {
 	char const* text = R"(

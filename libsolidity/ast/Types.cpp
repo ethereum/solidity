@@ -1777,6 +1777,8 @@ TypePointer StructType::interfaceType(bool _inLibrary) const
 	if (_inLibrary && location() == DataLocation::Storage)
 		return shared_from_this();
 	else if (!recursive())
+		// TODO this might not be enough, we have to convert all members to
+		// their interfaceType
 		return copyForLocation(DataLocation::Memory, true);
 	else
 		return TypePointer();
@@ -1799,7 +1801,9 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 		auto memberTypeStrings = memberTypes | boost::adaptors::transformed([&](TypePointer _t) -> string
 		{
 			solAssert(_t, "Parameter should have external type.");
-			return _t->signatureInExternalFunction(_structsByName);
+			auto t = _t->interfaceType(_structsByName);
+			solAssert(t, "");
+			return t->signatureInExternalFunction(_structsByName);
 		});
 		return "(" + boost::algorithm::join(memberTypeStrings, ",") + ")";
 	}
