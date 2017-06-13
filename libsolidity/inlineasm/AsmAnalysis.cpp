@@ -449,12 +449,13 @@ void AsmAnalyzer::warnOnFutureInstruction(solidity::Instruction _instr, SourceLo
 {
 	switch (_instr)
 	{
+	case solidity::Instruction::CREATE2:
 	case solidity::Instruction::RETURNDATASIZE:
 	case solidity::Instruction::RETURNDATACOPY:
 		m_errorReporter.warning(
 			_location,
-			"The RETURNDATASIZE/RETURNDATACOPY instructions are only available after "
-			"the Metropolis hard fork. Before that they act as an invalid instruction."
+			"The \"" + _instr + "\" instruction is only available after " +
+			"the Metropolis hard fork. Before that it acts as an invalid instruction."
 		);
 		break;
 	default:
