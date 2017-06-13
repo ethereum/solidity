@@ -75,17 +75,13 @@ struct Scope
 		JuliaType type;
 	};
 
-	struct Label
-	{
-		boost::optional<LabelID> id;
-	};
+	struct Label { };
 
 	struct Function
 	{
 		Function(std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns): arguments(_arguments), returns(_returns) {}
 		std::vector<JuliaType> arguments;
 		std::vector<JuliaType> returns;
-		boost::optional<LabelID> id;
 	};
 
 	using Identifier = boost::variant<Variable, Label, Function>;
