@@ -573,10 +573,6 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				m_asm.append(i.m_asm);
 			m_asm.popTo(1);
 		}
-		else if (us == "PANIC")
-		{
-			m_asm.appendJump(m_asm.errorTag());
-		}
 		else if (us == "BYTECODESIZE")
 		{
 			m_asm.appendProgramSize();

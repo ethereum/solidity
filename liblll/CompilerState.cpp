@@ -45,6 +45,7 @@ CodeFragment const& CompilerState::getDef(std::string const& _s)
 void CompilerState::populateStandard()
 {
 	static const string s = "{"
+	"(def 'panic () (asm INVALID))"
 	"(def 'allgas (- (gas) 21))"
 	"(def 'send (to value) (call allgas to value 0 0 0 0))"
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
