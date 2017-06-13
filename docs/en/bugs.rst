@@ -57,5 +57,5 @@ conditions
     means that the optimizer has to be switched on to enable the bug.
     If no conditions are given, assume that the bug is present.
 
-.. literalinclude:: bugs.json
+.. literalinclude:: ../bugs.json
    :language: js

@@ -22,7 +22,7 @@ import re
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 def setup(sphinx):
-    sys.path.insert(0, os.path.abspath('./utils'))
+    sys.path.insert(0, os.path.abspath('../utils'))
     from SolidityLexer import SolidityLexer
     sphinx.add_lexer('Solidity', SolidityLexer())
 
@@ -57,10 +57,10 @@ copyright = '2016-2017, Ethereum'
 # built documents.
 #
 # The short X.Y version.
-with open('../CMakeLists.txt', 'r') as f:
+with open('../../CMakeLists.txt', 'r') as f:
     version = re.search('PROJECT_VERSION "([^"]+)"', f.read()).group(1)
 # The full version, including alpha/beta/rc tags.
-if os.path.isfile('../prerelease.txt') != True or os.path.getsize('../prerelease.txt') == 0:
+if os.path.isfile('../../prerelease.txt') != True or os.path.getsize('../../prerelease.txt') == 0:
     release = version
 else:
     # This is a prerelease version

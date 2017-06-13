@@ -517,5 +517,5 @@ These keywords are reserved in Solidity. They might become part of the syntax in
 Language Grammar
 ================
 
-.. literalinclude:: grammar.txt
+.. literalinclude:: ../grammar.txt
    :language: none
