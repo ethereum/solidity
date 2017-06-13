@@ -30,6 +30,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -92,6 +93,7 @@ static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
+static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strJulia = "julia";
@@ -132,6 +134,7 @@ static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
+static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argJulia = "julia";
 static string const g_argLibraries = g_strLibraries;
@@ -574,6 +577,13 @@ Allowed options)",
 			"It reads from standard input and provides the result on the standard output."
 		)
 		(
+				g_argImportAst.c_str(),
+				"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
+				" Supported Inputs are individual ASTs (e.g. produced by --ast-compact-json), "
+				" metadatafiles with Solidity-AST as language (--metadata --metadata-literal) and"
+				" JSONs with multiple sourcefiles (--combined-json ast,compact-format)"
+				)
+		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
 		)
@@ -772,7 +782,6 @@ bool CommandLineInterface::processInput()
 		m_onlyLink = true;
 		return link();
 	}
-
 	m_compiler.reset(new CompilerStack(fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
@@ -781,8 +790,78 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
-		for (auto const& sourceCode: m_sourceCodes)
-			m_compiler->addSource(sourceCode.first, sourceCode.second);
+
+		if (m_args.count(g_argImportAst))
+		{
+			//read file contents, which either are
+			// a) a json-file with multiple sources (as produced by --combined-json)
+			// b) a literal metadata-json-file with SolidityAST as language (as produced by --metadata --metadata-literal --import-ast)
+			// c) a json-file with one source only (as produced --ast-combined-json)
+			Json::Reader reader;
+			map<string, Json::Value const*> sourceJsons; // will be given to the compilerimportfunction
+			map<string, string> tmp_sources; //used to generate the onchainmetadata-hash
+			map<string, string> supplementarySourceCodes;
+			for (auto const& srcPair: m_sourceCodes) // aka <string, string>
+			{
+				Json::Value* ast = new Json::Value(); //use shared-Pointer here?
+				// try parsing as json
+				if (reader.parse(srcPair.second, *ast, false))
+				{
+					//case a)
+					if ((*ast).isMember("sourceList") && (*ast).isMember("sources"))
+					{
+						for (auto& src: (*ast)["sourceList"])
+						{
+							astAssert( (*ast)["sources"][src.asString()]["AST"]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
+							sourceJsons[src.asString()] = &((*ast)["sources"][src.asString()]["AST"]);
+							tmp_sources[src.asString()] = dev::jsonCompactPrint(*ast);
+						}
+					}
+					// case b)
+					else if ((*ast).isMember("language") && (*ast)["language"] == "SolidityAST")
+					{
+						for (auto const& filename: (*ast)["sources"].getMemberNames())
+						{
+							Json::Value* ast2 = new Json::Value();
+							string sourceString = (*ast)["sources"][filename]["content"].asString();
+							if (reader.parse(sourceString, *ast2, false))
+							{
+								string srcName = (*ast2)["absolutePath"].asString();
+								sourceJsons[srcName] = ast2;
+								tmp_sources[srcName] = sourceString;
+							}
+							else
+								BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Source from metadata-file could not be parsed to JSON"));
+						}
+					}
+					// case c)
+					else
+					{
+						astAssert((*ast)["nodeType"] == "SourceUnit", "Top-level node should be a 'SourceUnit'");
+						string srcName = (*ast)["absolutePath"].asString();
+						sourceJsons[srcName] = ast;
+						tmp_sources[srcName] = srcPair.second;
+					}
+				}
+				else
+					BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Input file could not be parsed to JSON"));
+			}
+			//replace the internal map so that every source has its own entry
+			m_sourceCodes = tmp_sources;
+			//feed AST to compiler
+			m_compiler->reset(false);
+			bool import = m_compiler->importASTs(sourceJsons);
+			//use the compiler's analyzer to annotate, typecheck, etc...
+			if (!import)
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import of the AST failed"));
+			if (!m_compiler->analyze())
+				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Analysis of the AST failed"));
+		}
+		else
+		{
+			for (auto const& sourceCode: m_sourceCodes)
+				m_compiler->addSource(sourceCode.first, sourceCode.second);
+		}
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -791,14 +870,14 @@ bool CommandLineInterface::processInput()
 		if (successful && m_args.count(g_argFormal))
 			if (!m_compiler->prepareFormalAnalysis())
 				successful = false;
-
-		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
-			);
+		if (!m_compiler->importedSources())
+			for (auto const& error: m_compiler->errors())
+				SourceReferenceFormatter::printExceptionInformation(
+					cerr,
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					scannerFromSourceName
+				);
 
 		if (!successful)
 			return false;

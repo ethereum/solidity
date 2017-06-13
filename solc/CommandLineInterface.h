@@ -97,6 +97,7 @@ private:
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+
 };
 
 }

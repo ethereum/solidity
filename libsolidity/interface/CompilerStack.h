@@ -115,6 +115,11 @@ public:
 	/// Sets the given source code as the only source unit apart from standard sources and parses and analyzes it.
 	/// @returns false on error.
 	bool parseAndAnalyze(std::string const& _sourceCode);
+
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
+	/// @returns false if the CompilerStack was not reset beforehand.
+	bool importASTs(std::map<std::string, Json::Value const*> const& _sources);
+
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 
@@ -199,6 +204,9 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() { return m_errorReporter.errors(); }
 
+	/// @returns true if the source files were imported from a json-file
+	bool importedSources() { return m_importedSources; }
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -281,15 +289,18 @@ private:
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
 	std::map<std::string const, Source> m_sources;
+	/// map of input files to Json-ASTs
+	std::map<std::string, Json::Value const*> m_sourceJsons;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
-	std::map<std::string const, Contract> m_contracts;
+	std::map<std::string, Contract> m_contracts;
 	std::string m_formalTranslation;
 	ErrorList m_errorList;
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
+	bool m_importedSources = false;
 };
 
 }

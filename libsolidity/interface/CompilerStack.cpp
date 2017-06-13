@@ -41,6 +41,8 @@
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/formal/Why3Translator.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -167,6 +169,11 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
+//		else
+//		{
+//			ASTJsonConverter converter(false, sourceIndices());
+//			cout << dev::jsonCompactPrint(converter.toJson(*source->ast)) << std::endl;
+//		}
 
 	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
@@ -178,6 +185,8 @@ bool CompilerStack::analyze()
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
+
+
 
 	map<string, SourceUnit const*> sourceUnitsByName;
 	for (auto& source: m_sources)
@@ -193,7 +202,8 @@ bool CompilerStack::analyze()
 				m_globalContext->setCurrentContract(*contract);
 				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-				if (!resolver.resolveNamesAndTypes(*contract)) return false;
+				if (!resolver.resolveNamesAndTypes(*contract))
+					return false;
 
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
@@ -268,6 +278,27 @@ bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
 {
 	setSource(_sourceCode);
 	return parseAndAnalyze();
+}
+
+bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
+{
+	if (m_stackState != Empty)
+		return false;
+	m_sourceJsons = _sources;
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_sourceJsons).jsonToSourceUnit();
+	for (auto& src : reconstructedSources)
+	{
+		string const& path = src.first;
+		Source source;
+		source.ast = src.second;
+		string srcString = dev::jsonCompactPrint(*m_sourceJsons[path]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), path);
+		source.scanner = scanner;
+		m_sources[path] = source;
+	}
+	m_stackState = ParsingSuccessful;
+	m_importedSources = true;
+	return true;
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -632,8 +663,8 @@ void CompilerStack::resolveImports()
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
 				string const& path = import->annotation().absolutePath;
-				solAssert(!path.empty(), "");
-				solAssert(m_sources.count(path), "");
+				solAssert(!path.empty(), "sdfsdfsdf");
+				solAssert(m_sources.count(path), "sdfsf");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}
@@ -782,13 +813,13 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = "Solidity";
+	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
 	{
-		solAssert(s.second.scanner, "Scanner not available");
+		solAssert(s.second.scanner,"");
 		meta["sources"][s.first]["keccak256"] =
 			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
 		if (m_metadataLiteralSources)
@@ -800,12 +831,12 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 				"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
 			);
 		}
+
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
-
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
 	for (auto const& r: m_remappings)
