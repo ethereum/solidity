@@ -174,6 +174,19 @@ assembly::Case Parser::parseCase()
 assembly::Statement Parser::parseExpression()
 {
 	Statement operation = parseElementaryOperation(true);
+	if (operation.type() == typeid(Instruction))
+	{
+		Instruction const& instr = boost::get<Instruction>(operation);
+		int args = instructionInfo(instr.instruction).args;
+		if (args > 0 && currentToken() != Token::LParen)
+			fatalParserError(string(
+				"Expected token \"(\" (\"" +
+				instructionNames().at(instr.instruction) +
+				"\" expects " +
+				boost::lexical_cast<string>(args) +
+				" arguments)"
+			));
+	}
 	if (currentToken() == Token::LParen)
 		return parseCall(std::move(operation));
 	else

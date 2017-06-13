@@ -10,6 +10,7 @@ Features:
 
 Bugfixes:
  * Unused variable warnings no longer issued for variables used inside inline assembly.
+ * Inline Assembly: Enforce function arguments when parsing functional instructions.
 
 ### 0.4.11 (2017-05-03)
 
