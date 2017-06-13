@@ -630,6 +630,14 @@ BOOST_AUTO_TEST_CASE(create2)
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
+BOOST_AUTO_TEST_CASE(jump_warning)
+{
+	CHECK_PARSE_ERROR("{ 1 jump }", Warning, "Jump instructions");
+	CHECK_PARSE_ERROR("{ 1 2 jumpi }", Warning, "Jump instructions");
+	CHECK_PARSE_ERROR("{ a: jump(a) }", Warning, "Jump instructions");
+	CHECK_PARSE_ERROR("{ a: jumpi(a, 2) }", Warning, "Jump instructions");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

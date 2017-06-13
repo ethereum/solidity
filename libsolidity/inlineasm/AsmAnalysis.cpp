@@ -65,7 +65,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
-	warnOnFutureInstruction(_instruction.instruction, _instruction.location);
+	warnOnInstructions(_instruction.instruction, _instruction.location);
 	return true;
 }
 
@@ -150,7 +150,6 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	if (!(*this)(_instr.instruction))
 		success = false;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
-	warnOnFutureInstruction(_instr.instruction.instruction, _instr.location);
 	return success;
 }
 
@@ -470,7 +469,7 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 		);
 }
 
-void AsmAnalyzer::warnOnFutureInstruction(solidity::Instruction _instr, SourceLocation const& _location)
+void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location)
 {
 	static set<solidity::Instruction> futureInstructions{
 		solidity::Instruction::CREATE2,
@@ -485,5 +484,13 @@ void AsmAnalyzer::warnOnFutureInstruction(solidity::Instruction _instr, SourceLo
 			boost::to_lower_copy(instructionInfo(_instr).name)
 			+ "\" instruction is only available after " +
 			"the Metropolis hard fork. Before that it acts as an invalid instruction."
+		);
+
+	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI)
+		m_errorReporter.warning(
+			_location,
+			"Jump instructions are low-level EVM features that can lead to "
+			"incorrect stack access. Because of that they are discouraged. "
+			"Please consider using \"switch\" or \"for\" statements instead."
 		);
 }
