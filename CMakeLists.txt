@@ -24,6 +24,10 @@ include(EthExecutableHelper)
 # Include utils
 include(EthUtils)
 
+# Create license.h from LICENSE.txt and template
+file(READ ${CMAKE_SOURCE_DIR}/LICENSE.txt LICENSE_TEXT)
+configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" "license.h")
+
 include(EthOptions)
 configure_project(TESTS)
 

@@ -1,0 +1,3 @@
+#pragma once
+
+static char const* licenseText = R"(@LICENSE_TEXT@)";
