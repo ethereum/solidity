@@ -447,18 +447,25 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 
 void AsmAnalyzer::warnOnFutureInstruction(solidity::Instruction _instr, SourceLocation const& _location)
 {
+	string instr;
 	switch (_instr)
 	{
 	case solidity::Instruction::CREATE2:
+		instr = "create2";
+		break;
 	case solidity::Instruction::RETURNDATASIZE:
+		instr = "returndatasize";
+		break;
 	case solidity::Instruction::RETURNDATACOPY:
-		m_errorReporter.warning(
-			_location,
-			"The \"" + _instr + "\" instruction is only available after " +
-			"the Metropolis hard fork. Before that it acts as an invalid instruction."
-		);
+		instr = "returndatacopy";
 		break;
 	default:
 		break;
 	}
+	if (!instr.empty())
+		m_errorReporter.warning(
+			_location,
+			"The \"" + instr + "\" instruction is only available after " +
+			"the Metropolis hard fork. Before that it acts as an invalid instruction."
+		);
 }
