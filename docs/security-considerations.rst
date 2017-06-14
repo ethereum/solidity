@@ -32,8 +32,15 @@ As always, with open source documentation, please help us extend this section
 (especially, some examples would not hurt)!
 
 ********
-Pitfalls
+Pitfalls and Vulnerabilities
 ********
+
+The most comprehensive to date categorization of know vulnerabilities and pitfalls embodies different aspects of development with Solidity: not only the pitfalls of the language itlself, but also the EVM and blockchain levels. The following table summarizes the most important pitfalls and provides references to their description in this and other surces, together with an example of bad a good practice/solution. It also serves as a taxonomy reference for future findings.
+
+
+.. TODO: table in rst format
+
+
 
 Private Information and Randomness
 ==================================
@@ -144,17 +151,26 @@ Sending and Receiving Ether
      means for the recipient to block progress in the sending contract. Again, the best practice here is to use
      a :ref:`"withdraw" pattern instead of a "send" pattern <withdrawal_pattern>`.
 
-Callstack Depth
+
+.. class:: strike
+Callstack Depth [not a vulnerability]
 ===============
 
-External function calls can fail any time because they exceed the maximum
-call stack of 1024. In such situations, Solidity throws an exception.
-Malicious actors might be able to force the call stack to a high value
-before they interact with your contract.
+On October 18th 2016 a hard fork occurred due to EIP 150, where the stack size limit is no more a vulnerability, thus call depth attacks are not exploitable.
+The cost of EVM instructions were modified together with the way gas consumption of ``call`` and ``delegatecall`` is computed. Practically, the de-facto maximum call stack depth is limited to ~340 (4,7M gas) mitigating every DoS attack based on calls.
 
-Note that ``.send()`` does **not** throw an exception if the call stack is
-depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+.. TODO Explain how this affects a call/delegatecall in terms of execution flow (maybe an example?) when the gas limit is reached.
+
+For documentaiton purposes the desription is kept.
+
+   External function calls can fail any time because they exceed the maximum
+   call stack of 1024. In such situations, Solidity throws an exception.
+   Malicious actors might be able to force the call stack to a high value
+   before they interact with your contract.
+
+   Note that ``.send()`` does **not** throw an exception if the call stack is
+   depleted but rather returns ``false`` in that case. The low-level functions
+   ``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
 
 tx.origin
 =========
