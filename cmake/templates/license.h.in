@@ -1,5 +1,5 @@
 #pragma once
 
-static char licenseText[] = {
-	0x@LICENSE_TEXT@
+static char const licenseText[] = {
+	@LICENSE_TEXT@
 };
