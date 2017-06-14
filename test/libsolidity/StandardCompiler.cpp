@@ -189,37 +189,43 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
-	BOOST_CHECK(dev::jsonCompactPrint(contract["abi"]) == "[]");
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
 	BOOST_CHECK(contract["devdoc"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(contract["devdoc"]) == "{\"methods\":{}}");
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["devdoc"]), "{\"methods\":{}}");
 	BOOST_CHECK(contract["userdoc"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(contract["userdoc"]) == "{\"methods\":{}}");
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["userdoc"]), "{\"methods\":{}}");
 	BOOST_CHECK(contract["evm"].isObject());
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
 	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
-	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()) ==
-		"60606040523415600b57fe5b5b60338060196000396000f30060606040525bfe00");
+	BOOST_CHECK_EQUAL(
+		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
+		"60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00"
+	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString().find(
 		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
-		"  invalid\ntag_1:\ntag_2:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
+		"  0x0\n  dup1\n  revert\ntag_1:\ntag_2:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
 		"  return\nstop\n\nsub_0: assembly {\n        /* \"fileA\":0:14  contract A { } */\n"
-		"      mstore(0x40, 0x60)\n    tag_1:\n      invalid\n\n"
-		"    auxdata: 0xa165627a7a72305820") != std::string::npos);
+		"      mstore(0x40, 0x60)\n    tag_1:\n      0x0\n      dup1\n      revert\n\n"
+		"    auxdata: 0xa165627a7a7230582") == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(contract["evm"]["gasEstimates"]) ==
-		"{\"creation\":{\"codeDepositCost\":\"10200\",\"executionCost\":\"62\",\"totalCost\":\"10262\"}}");
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(contract["evm"]["gasEstimates"]),
+		"{\"creation\":{\"codeDepositCost\":\"10800\",\"executionCost\":\"62\",\"totalCost\":\"10862\"}}"
+	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
 	BOOST_CHECK(result["sources"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"]["legacyAST"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(result["sources"]["fileA"]["legacyAST"]) ==
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(result["sources"]["fileA"]["legacyAST"]),
 		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]}},\"children\":"
 		"[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],\"contractKind\":\"contract\","
 		"\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],\"name\":\"A\",\"nodes\":[null],\"scope\":2},"
-		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}");
+		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

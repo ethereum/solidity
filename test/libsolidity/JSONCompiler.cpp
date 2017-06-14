@@ -75,26 +75,34 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["interface"].isString());
 	BOOST_CHECK(contract["interface"].asString() == "[]");
 	BOOST_CHECK(contract["bytecode"].isString());
-	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["bytecode"].asString()) ==
-		"60606040523415600b57fe5b5b60338060196000396000f30060606040525bfe00");
+	BOOST_CHECK_EQUAL(
+		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
+		"60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00"
+	);
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
-	BOOST_CHECK(dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()) ==
-		"60606040525bfe00");
+	BOOST_CHECK_EQUAL(
+		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
+		"60606040525b600080fd00"
+	);
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(contract["gasEstimates"]) ==
-		"{\"creation\":[62,10200],\"external\":{},\"internal\":{}}");
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(contract["gasEstimates"]),
+		"{\"creation\":[62,10800],\"external\":{},\"internal\":{}}"
+	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
 	BOOST_CHECK(result["sources"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"].isObject());
 	BOOST_CHECK(result["sources"]["fileA"]["AST"].isObject());
-	BOOST_CHECK(dev::jsonCompactPrint(result["sources"]["fileA"]["AST"]) ==
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(result["sources"]["fileA"]["AST"]),
 		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]}},"
 		"\"children\":[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],"
 		"\"contractKind\":\"contract\",\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],"
 		"\"name\":\"A\",\"nodes\":[null],\"scope\":2},\"id\":1,\"name\":\"ContractDefinition\","
-		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}");
+		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
+	);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
