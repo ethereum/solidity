@@ -5793,6 +5793,14 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
 }
 
+BOOST_AUTO_TEST_CASE(create2_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() { uint create2; assembly { create2(0, 0, 0, 0) }}}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+}
+
 BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
 {
 	char const* text = R"(
