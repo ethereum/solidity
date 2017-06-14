@@ -439,15 +439,21 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int minDep = min(code[1].m_asm.deposit(), code[2].m_asm.deposit());
 
 			m_asm.append(code[0].m_asm);
-			auto pos = m_asm.appendJumpI();
-			m_asm.onePath();
+			auto mainBranch = m_asm.appendJumpI();
+
+			/// The else branch.
+			int startDeposit = m_asm.deposit();
 			m_asm.append(code[2].m_asm, minDep);
 			auto end = m_asm.appendJump();
-			m_asm.otherPath();
-			m_asm << pos.tag();
+			int deposit = m_asm.deposit();
+			m_asm.setDeposit(startDeposit);
+
+			/// The main branch.
+			m_asm << mainBranch.tag();
 			m_asm.append(code[1].m_asm, minDep);
 			m_asm << end.tag();
-			m_asm.donePaths();
+			if (m_asm.deposit() != deposit)
+				error<InvalidDeposit>();
 		}
 		else if (us == "WHEN" || us == "UNLESS")
 		{
@@ -458,11 +464,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (us == "WHEN")
 				m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
-			m_asm.onePath();
-			m_asm.otherPath();
 			m_asm.append(code[1].m_asm, 0);
 			m_asm << end.tag();
-			m_asm.donePaths();
 		}
 		else if (us == "WHILE" || us == "UNTIL")
 		{

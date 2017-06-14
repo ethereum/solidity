@@ -55,9 +55,6 @@ void Assembly::append(Assembly const& _a)
 	m_subs += _a.m_subs;
 	for (auto const& lib: _a.m_libraries)
 		m_libraries.insert(lib);
-
-	assert(!_a.m_baseDeposit);
-	assert(!_a.m_totalDeposit);
 }
 
 void Assembly::append(Assembly const& _a, int _deposit)
