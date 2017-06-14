@@ -1,5 +1,5 @@
 #pragma once
 
 static char const licenseText[] = {
-	@LICENSE_TEXT@
+	@LICENSE_TEXT@, 0
 };
