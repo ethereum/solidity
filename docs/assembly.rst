@@ -318,8 +318,10 @@ would be written as follows
 
     mstore(0x80, add(mload(0x80), 3))
 
-Functional style and instructional style can be mixed, but any opcode inside a
-functional style expression has to return exactly one stack slot (most of the opcodes do).
+Functional style expressions cannot use instructional style internally, i.e.
+``1 2 mstore(0x80, add)`` is not valid assembly, it has to be written as
+``mstore(0x80, add(2, 1))``. For opcodes that do not take arguments, the
+parentheses can be omitted.
 
 Note that the order of arguments is reversed in functional-style as opposed to the instruction-style
 way. If you use functional-style, the first argument will end up on the stack top.

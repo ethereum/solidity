@@ -213,6 +213,16 @@ BOOST_AUTO_TEST_CASE(functional)
 	BOOST_CHECK(successParse("{ let x := 2 add(7, mul(6, x)) mul(7, 8) add =: x }"));
 }
 
+BOOST_AUTO_TEST_CASE(functional_partial)
+{
+	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected token \"(\"");
+}
+
+BOOST_AUTO_TEST_CASE(functional_partial_success)
+{
+	BOOST_CHECK(successParse("{ let x := byte(1, 2) }"));
+}
+
 BOOST_AUTO_TEST_CASE(functional_assignment)
 {
 	BOOST_CHECK(successParse("{ let x := 2 x := 7 }"));
@@ -258,7 +268,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ 1 2 switch mul default {} }", ParserError, "Instructions are not supported as expressions for switch.");
+	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
