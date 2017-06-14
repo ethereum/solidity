@@ -59,6 +59,9 @@ Available Solidity Integrations
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
 
+* `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
+    Configurable Solidty linter for Atom using Solium as a base.
+
 * `Solium <https://github.com/duaraghav8/Solium/>`_
     A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
 
