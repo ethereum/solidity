@@ -41,6 +41,8 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/Version.h>
 
+#include "license.h"
+
 using namespace std;
 using namespace dev;
 using namespace solidity;
@@ -305,6 +307,11 @@ static string s_outputBuffer;
 
 extern "C"
 {
+extern char const* license()
+{
+	/// TOOD: include the copyright information on the top.
+	return licenseText;
+}
 extern char const* version()
 {
 	return VersionString.c_str();
