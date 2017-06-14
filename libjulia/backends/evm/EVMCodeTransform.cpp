@@ -345,8 +345,7 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	m_scope = m_info.scopes.at(&_forLoop.pre).get();
 	int stackStartHeight = m_assembly.stackHeight();
 
-	for (auto const& statement: _forLoop.pre.statements)
-		boost::apply_visitor(*this, statement);
+	visitStatements(_forLoop.pre.statements);
 
 	// TODO: When we implement break and continue, the labels and the stack heights at that point
 	// have to be stored in a stack.
@@ -382,7 +381,7 @@ void CodeTransform::operator()(Block const& _block)
 	m_scope = m_info.scopes.at(&_block).get();
 
 	int blockStartStackHeight = m_assembly.stackHeight();
-	std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
+	visitStatements(_block.statements);
 
 	finalizeBlock(_block, blockStartStackHeight);
 	m_scope = originalScope;
@@ -424,6 +423,12 @@ void CodeTransform::visitExpression(Statement const& _expression)
 	int height = m_assembly.stackHeight();
 	boost::apply_visitor(*this, _expression);
 	expectDeposit(1, height);
+}
+
+void CodeTransform::visitStatements(vector<Statement> const& _statements)
+{
+	for (auto const& statement: _statements)
+		boost::apply_visitor(*this, statement);
 }
 
 void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight)

@@ -110,6 +110,8 @@ private:
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
 
+	void visitStatements(std::vector<solidity::assembly::Statement> const& _statements);
+
 	/// Pops all variables declared in the block and checks that the stack height is equal
 	/// to @a _blackStartStackHeight.
 	void finalizeBlock(solidity::assembly::Block const& _block, int _blockStartStackHeight);
