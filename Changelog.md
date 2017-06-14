@@ -9,6 +9,7 @@ Features:
    instruction.
  * Inline Assembly: introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
  * Inline Assembly: ``for`` and ``switch`` statements.
+ * Inline Assembly: function definitions and function calls.
 
 Bugfixes:
  * Fixed crash concerning non-callable types.
