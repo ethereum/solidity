@@ -149,10 +149,10 @@ public:
 	eth::AssemblyItem newTag() { return m_asm->newTag(); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { auto sub = m_asm->newSub(_assembly); m_asm->append(m_asm->newPushSubSize(size_t(sub.data()))); return sub; }
-	void pushSubroutineSize(size_t _subRoutine) { m_asm->append(m_asm->newPushSubSize(_subRoutine)); }
+	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
+	void pushSubroutineSize(size_t _subRoutine) { m_asm->pushSubroutineSize(_subRoutine); }
 	/// Pushes the offset of the subroutine.
-	void pushSubroutineOffset(size_t _subRoutine) { m_asm->append(eth::AssemblyItem(eth::PushSub, _subRoutine)); }
+	void pushSubroutineOffset(size_t _subRoutine) { m_asm->pushSubroutineOffset(_subRoutine); }
 	/// Pushes the size of the final program
 	void appendProgramSize() { m_asm->appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
