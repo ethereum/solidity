@@ -57,6 +57,68 @@ BOOST_AUTO_TEST_CASE(panic)
 	BOOST_REQUIRE(m_output.empty());
 }
 
+BOOST_AUTO_TEST_CASE(when)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= (calldatasize) 0) (return 1))
+				(when (!= (calldatasize) 0) (return 2))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(unless)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(unless (!= (calldatasize) 0) (return 1))
+				(unless (= (calldatasize) 0) (return 2))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_literal)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(return (if (= (calldatasize) 0) 1 2))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(if (= (calldatasize) 0) (return 1) (return 2))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_seq)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(return (if (= (calldatasize) 0) { 0 2 1 } { 0 1 2 }))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(2)));
+	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(exp_operator_const)
 {
 	char const* sourceCode = R"(
