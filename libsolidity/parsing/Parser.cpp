@@ -1328,16 +1328,21 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	{
 		// call({arg1 : 1, arg2 : 2 })
 		expectToken(Token::LBrace);
+
+		bool first = true;
 		while (m_scanner->currentToken() != Token::RBrace)
 		{
+			if (!first)
+				expectToken(Token::Comma);
+
+			if (m_scanner->currentToken() == Token::RBrace)
+				fatalParserError("Unexpected trailing comma.");
+
 			ret.second.push_back(expectIdentifierToken());
 			expectToken(Token::Colon);
 			ret.first.push_back(parseExpression());
 
-			if (m_scanner->currentToken() == Token::Comma)
-				expectToken(Token::Comma);
-			else
-				break;
+			first = false;
 		}
 		expectToken(Token::RBrace);
 	}

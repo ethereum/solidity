@@ -199,6 +199,17 @@ BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 	CHECK_PARSE_ERROR(text, "Expected primary expression");
 }
 
+BOOST_AUTO_TEST_CASE(trailing_comma_in_named_args)
+{
+	char const* text = R"(
+		contract test {
+			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
+			function b() returns (uint r) { r = a({a: 1, b: 2, c: 3, }); }
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma");
+}
+
 BOOST_AUTO_TEST_CASE(two_exact_functions)
 {
 	char const* text = R"(
