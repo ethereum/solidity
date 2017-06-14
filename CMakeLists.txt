@@ -25,7 +25,11 @@ include(EthExecutableHelper)
 include(EthUtils)
 
 # Create license.h from LICENSE.txt and template
-file(READ ${CMAKE_SOURCE_DIR}/LICENSE.txt LICENSE_TEXT)
+# Converting to char array is required due to MSVC's string size limit.
+file(READ ${CMAKE_SOURCE_DIR}/LICENSE.txt LICENSE_TEXT HEX)
+string(REGEX MATCHALL ".." LICENSE_TEXT "${LICENSE_TEXT}")
+string(REGEX REPLACE ";" ",\t0x" LICENSE_TEXT "${LICENSE_TEXT}")
+
 configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" "license.h")
 
 include(EthOptions)
