@@ -315,8 +315,10 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
 		}
 		root[".data"] = data;
-		_out << root;
 	}
+
+	_out << root;
+
 	return root;
 }
 
