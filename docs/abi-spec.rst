@@ -323,7 +323,7 @@ For example,
 
 would result in the JSON:
 
-.. code:: JSON
+.. code:: json
 
   [{
   "type":"event",
