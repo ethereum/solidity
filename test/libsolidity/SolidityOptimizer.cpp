@@ -1189,6 +1189,32 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(peephole_double_push)
+{
+	AssemblyItems items{
+		u256(0),
+		u256(0),
+		u256(5),
+		u256(5),
+		u256(4),
+		u256(5)
+	};
+	AssemblyItems expectation{
+		u256(0),
+		Instruction::DUP1,
+		u256(5),
+		Instruction::DUP1,
+		u256(4),
+		u256(5)
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_CASE(computing_constants)
 {
 	char const* sourceCode = R"(
