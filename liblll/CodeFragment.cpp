@@ -571,7 +571,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			for (auto const& i: code)
 				m_asm.append(i.m_asm);
-			m_asm.popTo(1);
+			// Leave only the last item on stack.
+			while (m_asm.deposit() > 1)
+				m_asm.append(Instruction::POP);
 		}
 		else if (us == "BYTECODESIZE")
 		{

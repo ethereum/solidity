@@ -84,8 +84,6 @@ public:
 	void ignored() { m_baseDeposit = m_deposit; }
 	void endIgnored() { m_deposit = m_baseDeposit; m_baseDeposit = 0; }
 
-	void popTo(int _deposit) { while (m_deposit > _deposit) append(solidity::Instruction::POP); }
-
 	void injectStart(AssemblyItem const& _i);
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
