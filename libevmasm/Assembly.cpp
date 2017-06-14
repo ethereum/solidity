@@ -216,6 +216,9 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		}
 	}
 
+	if (m_auxiliaryData.size() > 0)
+		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
+
 	return _out;
 }
 
@@ -316,6 +319,9 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		}
 		root[".data"] = data;
 	}
+
+	if (m_auxiliaryData.size() > 0)
+		root[".auxdata"] = toHex(m_auxiliaryData);
 
 	_out << root;
 

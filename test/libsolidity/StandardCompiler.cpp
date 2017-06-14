@@ -205,7 +205,8 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
 		"  invalid\ntag_1:\ntag_2:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
 		"  return\nstop\n\nsub_0: assembly {\n        /* \"fileA\":0:14  contract A { } */\n"
-		"      mstore(0x40, 0x60)\n    tag_1:\n      invalid\n}\n");
+		"      mstore(0x40, 0x60)\n    tag_1:\n      invalid\n\n"
+		"    auxdata: 0xa165627a7a72305820e4855da8c6a5e8a35933acba62e02f4842146bb9655b81cb06547caf8ea743b40029\n}\n");
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK(dev::jsonCompactPrint(contract["evm"]["gasEstimates"]) ==
 		"{\"creation\":{\"codeDepositCost\":\"10200\",\"executionCost\":\"62\",\"totalCost\":\"10262\"}}");
