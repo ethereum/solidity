@@ -21,6 +21,7 @@
  */
 
 #include <libyul/backends/webassembly/WebAssembly.h>
+#include <libdevcore/IndentedWriter.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -49,12 +50,14 @@ public:
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	explicit Generator(assembly::Block const& _block)
 	{
-		m_assembly += "(module ";
+		m_output.addLine("(module ");
+		m_output.indent();
 		visitStatements(_block);
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.addLine(")");
 	}
 
-	string assembly() { return m_assembly; }
+	string assembly() { return m_output.format(); }
 
 public:
 	void operator()(assembly::Instruction const&)
@@ -76,79 +79,114 @@ public:
 	void operator()(assembly::Literal const& _literal)
 	{
 		if (_literal.kind == assembly::LiteralKind::Number)
-			m_assembly += "(" + convertType(_literal.type) + ".const " + _literal.value + ")";
+			m_output.add("(" + convertType(_literal.type) + ".const " + _literal.value + ")");
 		else if (_literal.kind == assembly::LiteralKind::Boolean)
-			m_assembly += "(" + convertType(_literal.type) + ".const " + string((_literal.value == "true") ? "1" : "0") + ")";
+			m_output.add("(" + convertType(_literal.type) + ".const " + string((_literal.value == "true") ? "1" : "0") + ")");
 		else
 			solUnimplementedAssert(false, "Non-number literals not supported.");
 	}
 	void operator()(assembly::Identifier const& _identifier)
 	{
-		m_assembly += "(get_local $" + _identifier.name + ")";
+		m_output.add("(get_local $" + _identifier.name + ")");
 	}
 	void operator()(assembly::VariableDeclaration const& _varDecl)
 	{
 		solUnimplementedAssert(_varDecl.variables.size() == 1, "Tuples not supported yet.");
-		m_assembly += "(local $" + _varDecl.variables.front().name + " " + convertType(_varDecl.variables.front().type) + ")";
-		m_assembly += "(set_local $" + _varDecl.variables.front().name + " ";
+		m_output.addLine("(local $" + _varDecl.variables.front().name + " " + convertType(_varDecl.variables.front().type) + ")");
+		m_output.addLine("(set_local $" + _varDecl.variables.front().name + " ");
+		m_output.indent();
 		boost::apply_visitor(*this, *_varDecl.value);
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.add(")");
+		m_output.newLine();
 	}
 	void operator()(assembly::Assignment const& _assignment)
 	{
-		m_assembly += "(set_local $" + _assignment.variableName.name + " ";
+		m_output.addLine("(set_local $" + _assignment.variableName.name + " ");
+		m_output.indent();
 		boost::apply_visitor(*this, *_assignment.value);
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.add(")");
+		m_output.newLine();
 	}
 	void operator()(assembly::FunctionDefinition const& _funDef)
 	{
-		m_assembly += "(func $" + _funDef.name + " ";
+		m_output.newLine();
+		m_output.addLine("(func $" + _funDef.name + " ");
+		m_output.indent();
 		for (auto const& argument: _funDef.arguments)
-			m_assembly += "(param $" + argument.name + " " + convertType(argument.type) + ")";
+			m_output.addLine("(param $" + argument.name + " " + convertType(argument.type) + ")");
 		solUnimplementedAssert(_funDef.returns.size() <= 1, "Multiple return values not supported yet.");
 		string returnName;
 		for (auto const& returnArgument: _funDef.returns)
 		{
 			returnName = returnArgument.name;
-			m_assembly += "(result " + convertType(returnArgument.type) + ")";
-			m_assembly += "(local $" + returnArgument.name + " " + convertType(returnArgument.type) + ")";
+			m_output.addLine("(result " + convertType(returnArgument.type) + ")");
+			m_output.addLine("(local $" + returnArgument.name + " " + convertType(returnArgument.type) + ")");
 		}
 		/// Scope rules: return parameters must be marked appropriately
+		m_output.newLine();
+		m_output.newLine();
 		visitStatements(_funDef.body);
+		m_output.newLine();
+		m_output.newLine();
 		if (!returnName.empty())
-			m_assembly += "(return $" + returnName + ")";
-		m_assembly += ")";
+			m_output.addLine("(return $" + returnName + ")");
+		m_output.unindent();
+		m_output.addLine(")");
+		m_output.newLine();
 	}
 	void operator()(assembly::FunctionCall const& _funCall)
 	{
 		if (resolveBuiltinFunction(_funCall))
 			return;
 
-		m_assembly += "(call $" + _funCall.functionName.name;
+		m_output.addLine("(call $" + _funCall.functionName.name);
+		m_output.indent();
 		for (auto const& statement: _funCall.arguments)
 		{
-			m_assembly += " ";
+			m_output.add(" ");
 			boost::apply_visitor(*this, statement);
+			m_output.newLine();
 		}
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.addLine(")");
 	}
 	void operator()(assembly::Switch const& _switch)
 	{
 		solUnimplementedAssert(_switch.cases.size() <= 2, "");
-		m_assembly += "(if (result i64) ";
+		/// One of the cases must be the default case
+		solUnimplementedAssert(
+			_switch.cases[0].value ||
+			_switch.cases[1].value,
+			""
+		);
+		unsigned defaultcase = _switch.cases[0].value ? 0 : 1;
+		solUnimplementedAssert(defaultcase <= (_switch.cases.size() - 1), "");
+
+		m_output.addLine("(if (result i64) ");
+		m_output.indent();
+		m_output.add("(i64.eq ");
 		boost::apply_visitor(*this, *_switch.expression);
-		m_assembly += "(then ";
-		Generator generator1 = Generator(_switch.cases[0].body);
-		m_assembly += generator1.assembly();
-		m_assembly += ")";
+		m_output.add(" ");
+		(*this)(*(_switch.cases[!!defaultcase].value));
+		m_output.add(")");
+		m_output.newLine();
+		m_output.add("(then ");
+		m_output.indent();
+		(*this)(_switch.cases[!!defaultcase].body);
+		m_output.unindent();
+		m_output.addLine(")");
 		if (_switch.cases.size() == 2)
 		{
-			m_assembly += "(else ";
-			Generator generator2 = Generator(_switch.cases[1].body);
-			m_assembly += generator2.assembly();
-			m_assembly += ")";
+			m_output.add("(else ");
+			m_output.indent();
+			(*this)(_switch.cases[defaultcase].body);
+			m_output.unindent();
+			m_output.addLine(")");
 		}
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.addLine(")");
 	}
 	void operator()(assembly::ForLoop const&)
 	{
@@ -156,9 +194,11 @@ public:
 	}
 	void operator()(assembly::Block const& _block)
 	{
-		m_assembly += "(block ";
+		m_output.add("(block ");
+		m_output.indent();
 		visitStatements(_block);
-		m_assembly += ")";
+		m_output.unindent();
+		m_output.add(")");
 	}
 private:
 	void visitStatements(assembly::Block const& _block)
@@ -179,45 +219,57 @@ private:
 	{
 		if (_funCall.functionName.name == "add64")
 		{
-			m_assembly += "(i64.add ";
+			m_output.add("(i64.add ");
+			m_output.indent();
 			solAssert(_funCall.arguments.size() == 2, "");
 			boost::apply_visitor(*this, _funCall.arguments[0]);
+			m_output.newLine();
 			boost::apply_visitor(*this, _funCall.arguments[1]);
-			m_assembly += ")";
+			m_output.unindent();
+			m_output.add(")");
 			return true;
 		}
 		else if (_funCall.functionName.name == "sub64")
 		{
-			m_assembly += "(i64.sub ";
+			m_output.add("(i64.sub ");
+			m_output.indent();
 			solAssert(_funCall.arguments.size() == 2, "");
 			boost::apply_visitor(*this, _funCall.arguments[0]);
+			m_output.newLine();
 			boost::apply_visitor(*this, _funCall.arguments[1]);
-			m_assembly += ")";
+			m_output.unindent();
+			m_output.add(")");
 			return true;
 		}
 		else if (_funCall.functionName.name == "mul64")
 		{
-			m_assembly += "(i64.mul ";
+			m_output.add("(i64.mul ");
+			m_output.indent();
 			solAssert(_funCall.arguments.size() == 2, "");
 			boost::apply_visitor(*this, _funCall.arguments[0]);
+			m_output.newLine();
 			boost::apply_visitor(*this, _funCall.arguments[1]);
-			m_assembly += ")";
+			m_output.unindent();
+			m_output.add(")");
 			return true;
 		}
 		else if (_funCall.functionName.name == "gt64")
 		{
-			m_assembly += "(i64.gt_u ";
+			m_output.add("(i64.gt_u ");
+			m_output.indent();
 			solAssert(_funCall.arguments.size() == 2, "");
 			boost::apply_visitor(*this, _funCall.arguments[0]);
+			m_output.newLine();
 			boost::apply_visitor(*this, _funCall.arguments[1]);
-			m_assembly += ")";
+			m_output.unindent();
+			m_output.add(")");
 			return true;
 		}
 
 		return false;
 	}
 
-	string m_assembly;
+	IndentedWriter m_output;
 };
 
 string yul::WebAssembly::assemble(assembly::Block const& _block)
