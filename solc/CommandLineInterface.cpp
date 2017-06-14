@@ -1103,9 +1103,14 @@ bool CommandLineInterface::assemble(
 			"eWasm";
 		cout << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 		AssemblyStack& stack = assemblyStacks[src.first];
+
+		cout << endl << "Pretty printed source:" << endl;
+		cout << stack.print() << endl;
+
+		MachineAssemblyObject object;
 		try
 		{
-			cout << stack.assemble(_targetMachine).toHex() << endl;
+			object = stack.assemble(_targetMachine);
 		}
 		catch (Exception const& _exception)
 		{
@@ -1117,7 +1122,18 @@ bool CommandLineInterface::assemble(
 			cerr << "Unknown exception while assembling." << endl;
 			return false;
 		}
-		cout << stack.print() << endl;
+
+		cout << endl << "Binary representation:" << endl;
+		if (object.bytecode)
+			cout << object.bytecode->toHex() << endl;
+		else
+			cerr << "No binary representation found." << endl;
+
+		cout << endl << "Text representation:" << endl;
+		if (!object.assembly.empty())
+			cout << object.assembly << endl;
+		else
+			cerr << "No text representation found." << endl;
 	}
 
 	return true;

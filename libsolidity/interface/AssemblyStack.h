@@ -38,6 +38,12 @@ struct AsmAnalysisInfo;
 struct Block;
 }
 
+struct MachineAssemblyObject
+{
+	std::shared_ptr<eth::LinkerObject> bytecode;
+	std::string assembly;
+};
+
 /*
  * Full assembly stack that can support EVM-assembly and JULIA as input and EVM, EVM1.5 and
  * eWasm as output.
@@ -64,7 +70,7 @@ public:
 	bool analyze(assembly::Block const& _block, Scanner const* _scanner = nullptr);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	eth::LinkerObject assemble(Machine _machine) const;
+	MachineAssemblyObject assemble(Machine _machine) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	ErrorList const& errors() const { return m_errors; }

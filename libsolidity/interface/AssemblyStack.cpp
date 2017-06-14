@@ -77,7 +77,7 @@ bool AssemblyStack::analyzeParsed()
 	return m_analysisSuccessful;
 }
 
-eth::LinkerObject AssemblyStack::assemble(Machine _machine) const
+MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
@@ -87,21 +87,29 @@ eth::LinkerObject AssemblyStack::assemble(Machine _machine) const
 	{
 	case Machine::EVM:
 	{
+		MachineAssemblyObject object;
 		eth::Assembly assembly;
 		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
-		return assembly.assemble();
+		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
+		ostringstream tmp;
+		assembly.stream(tmp);
+		object.assembly = tmp.str();
+		return object;
 	}
 	case Machine::EVM15:
 	{
+		MachineAssemblyObject object;
 		julia::EVMAssembly assembly(true);
 		julia::CodeTransform(assembly, *m_analysisInfo, true).run(*m_parserResult);
-		return assembly.finalize();
+		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
+		/// TOOD: fill out text representation
+		return object;
 	}
 	case Machine::eWasm:
 		solUnimplemented("eWasm backend is not yet implemented.");
 	}
 	// unreachable
-	return eth::LinkerObject();
+	return MachineAssemblyObject();
 }
 
 string AssemblyStack::print() const
