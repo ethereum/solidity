@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected token LBrace got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected token LBrace got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected token LBrace got 'Number'");
-	CHECK_PARSE_ERROR("{ 1 2 for {} mul {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
+	CHECK_PARSE_ERROR("{ for {} calldatasize {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
 	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
