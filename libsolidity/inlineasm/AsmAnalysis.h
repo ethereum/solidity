@@ -22,6 +22,8 @@
 
 #include <libsolidity/interface/Exceptions.h>
 
+#include <libsolidity/inlineasm/AsmScope.h>
+
 #include <libjulia/backends/evm/AbstractAssembly.h>
 
 #include <boost/variant.hpp>
@@ -50,9 +52,6 @@ struct FunctionDefinition;
 struct FunctionCall;
 struct Switch;
 using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
-
-
-struct Scope;
 
 struct AsmAnalysisInfo;
 
@@ -102,6 +101,9 @@ private:
 	int m_stackHeight = 0;
 	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
+	/// Variables that are active at the current point in assembly (as opposed to
+	/// "part of the scope but not yet declared")
+	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
 	bool m_julia = false;

@@ -92,7 +92,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
 		[&](Scope::Variable const& _var)
 		{
-			if (!_var.active)
+			if (!m_activeVariables.count(&_var))
 			{
 				m_errorReporter.declarationError(
 					_identifier.location,
@@ -187,7 +187,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	for (auto const& variable: _varDecl.variables)
 	{
 		expectValidType(variable.type, variable.location);
-		boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)).active = true;
+		m_activeVariables.insert(&boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
 	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
@@ -201,7 +201,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	for (auto const& var: _funDef.arguments + _funDef.returns)
 	{
 		expectValidType(var.type, var.location);
-		boost::get<Scope::Variable>(varScope.identifiers.at(var.name)).active = true;
+		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	int const stackHeight = m_stackHeight;
@@ -384,7 +384,7 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 			m_errorReporter.typeError(_variable.location, "Assignment requires variable.");
 			success = false;
 		}
-		else if (!boost::get<Scope::Variable>(*var).active)
+		else if (!m_activeVariables.count(&boost::get<Scope::Variable>(*var)))
 		{
 			m_errorReporter.declarationError(
 				_variable.location,

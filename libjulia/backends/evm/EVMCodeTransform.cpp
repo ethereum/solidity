@@ -64,8 +64,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (auto const& variable: _varDecl.variables)
 	{
 		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(variable.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 	}
 	checkStackHeight(&_varDecl);
 }
@@ -91,8 +90,7 @@ void CodeTransform::operator()(Label const& _label)
 	solAssert(m_scope, "");
 	solAssert(m_scope->identifiers.count(_label.name), "");
 	Scope::Label& label = boost::get<Scope::Label>(m_scope->identifiers.at(_label.name));
-	assignLabelIdIfUnset(label.id);
-	m_assembly.appendLabel(*label.id);
+	m_assembly.appendLabel(labelID(label));
 	checkStackHeight(&_label);
 }
 
@@ -120,12 +118,11 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	for (auto const& arg: _call.arguments | boost::adaptors::reversed)
 		visitExpression(arg);
 	m_assembly.setSourceLocation(_call.location);
-	assignLabelIdIfUnset(function->id);
 	if (m_evm15)
-		m_assembly.appendJumpsub(*function->id, function->arguments.size(), function->returns.size());
+		m_assembly.appendJumpsub(functionEntryID(*function), function->arguments.size(), function->returns.size());
 	else
 	{
-		m_assembly.appendJumpTo(*function->id, function->returns.size() - function->arguments.size() - 1);
+		m_assembly.appendJumpTo(functionEntryID(*function), function->returns.size() - function->arguments.size() - 1);
 		m_assembly.appendLabel(returnLabel);
 		m_stackAdjustment--;
 	}
@@ -181,8 +178,7 @@ void CodeTransform::operator()(assembly::Identifier const& _identifier)
 		},
 		[=](Scope::Label& _label)
 		{
-			assignLabelIdIfUnset(_label.id);
-			m_assembly.appendLabelReference(*_label.id);
+			m_assembly.appendLabelReference(labelID(_label));
 		},
 		[=](Scope::Function&)
 		{
@@ -282,7 +278,6 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	solAssert(m_scope, "");
 	solAssert(m_scope->identifiers.count(_function.name), "");
 	Scope::Function& function = boost::get<Scope::Function>(m_scope->identifiers.at(_function.name));
-	assignLabelIdIfUnset(function.id);
 
 	int const localStackAdjustment = m_evm15 ? 0 : 1;
 	int height = localStackAdjustment;
@@ -292,8 +287,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	for (auto const& v: _function.arguments | boost::adaptors::reversed)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 	}
 
 	m_assembly.setSourceLocation(_function.location);
@@ -303,25 +297,24 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (m_evm15)
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
-		m_assembly.appendBeginsub(*function.id, _function.arguments.size());
+		m_assembly.appendBeginsub(functionEntryID(function), _function.arguments.size());
 	}
 	else
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
-		m_assembly.appendLabel(*function.id);
+		m_assembly.appendLabel(functionEntryID(function));
 	}
 	m_stackAdjustment += localStackAdjustment;
 
 	for (auto const& v: _function.returns)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
-		var.stackHeight = height++;
-		var.active = true;
+		m_context->variableStackHeights[&var] = height++;
 		// Preset stack slots for return variables to zero.
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment)
+	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, localStackAdjustment, m_context)
 		.run(_function.body);
 
 	{
@@ -367,7 +360,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 void CodeTransform::operator()(Block const& _block)
 {
-	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment).run(_block);
+	CodeTransform(m_assembly, m_info, m_evm15, m_identifierAccess, m_stackAdjustment, m_context).run(_block);
 }
 
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
@@ -377,8 +370,7 @@ AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _
 		[=](Scope::Variable&) { solAssert(false, "Expected label"); },
 		[&](Scope::Label& _label)
 		{
-			assignLabelIdIfUnset(_label.id);
-			label = *_label.id;
+			label = labelID(_label);
 		},
 		[=](Scope::Function&) { solAssert(false, "Expected label"); }
 	)))
@@ -386,6 +378,20 @@ AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _
 		solAssert(false, "Identifier not found.");
 	}
 	return label;
+}
+
+AbstractAssembly::LabelID CodeTransform::labelID(Scope::Label const& _label)
+{
+	if (!m_context->labelIDs.count(&_label))
+		m_context->labelIDs[&_label] = m_assembly.newLabelId();
+	return m_context->labelIDs[&_label];
+}
+
+AbstractAssembly::LabelID CodeTransform::functionEntryID(Scope::Function const& _function)
+{
+	if (!m_context->functionEntryIDs.count(&_function))
+		m_context->functionEntryIDs[&_function] = m_assembly.newLabelId();
+	return m_context->functionEntryIDs[&_function];
 }
 
 void CodeTransform::visitExpression(Statement const& _expression)
@@ -418,7 +424,8 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 
 int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap)
 {
-	int heightDiff = m_assembly.stackHeight() - _var.stackHeight;
+	solAssert(m_context->variableStackHeights.count(&_var), "");
+	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
 	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 	{
 		solUnimplemented(
@@ -445,10 +452,4 @@ void CodeTransform::checkStackHeight(void const* _astElement)
 		" code gen: " +
 		to_string(m_assembly.stackHeight() - m_stackAdjustment)
 	);
-}
-
-void CodeTransform::assignLabelIdIfUnset(boost::optional<AbstractAssembly::LabelID>& _labelId)
-{
-	if (!_labelId)
-		_labelId.reset(m_assembly.newLabelId());
 }

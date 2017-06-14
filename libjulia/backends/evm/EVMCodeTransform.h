@@ -64,7 +64,14 @@ public:
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
-	): CodeTransform(_assembly, _analysisInfo, _evm15, _identifierAccess, _assembly.stackHeight())
+	): CodeTransform(
+		_assembly,
+		_analysisInfo,
+		_evm15,
+		_identifierAccess,
+		_assembly.stackHeight(),
+		std::make_shared<Context>()
+	)
 	{
 	}
 
@@ -72,18 +79,28 @@ public:
 	void run(solidity::assembly::Block const& _block);
 
 protected:
+	struct Context
+	{
+		using Scope = solidity::assembly::Scope;
+		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
+		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
+		std::map<Scope::Variable const*, int> variableStackHeights;
+	};
+
 	CodeTransform(
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
-		int _stackAdjustment
+		int _stackAdjustment,
+		std::shared_ptr<Context> _context
 	):
 		m_assembly(_assembly),
 		m_info(_analysisInfo),
 		m_evm15(_evm15),
 		m_identifierAccess(_identifierAccess),
-		m_stackAdjustment(_stackAdjustment)
+		m_stackAdjustment(_stackAdjustment),
+		m_context(_context)
 	{}
 
 public:
@@ -102,6 +119,10 @@ public:
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(solidity::assembly::Identifier const& _identifier);
+	/// @returns the label ID corresponding to the given label, allocating a new one if
+	/// necessary.
+	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
+	AbstractAssembly::LabelID functionEntryID(solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
 
@@ -116,9 +137,6 @@ private:
 
 	void checkStackHeight(void const* _astElement);
 
-	/// Assigns the label's or function's id to a value taken from eth::Assembly if it has not yet been set.
-	void assignLabelIdIfUnset(boost::optional<AbstractAssembly::LabelID>& _labelId);
-
 	julia::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
 	solidity::assembly::Scope* m_scope = nullptr;
@@ -129,6 +147,7 @@ private:
 	/// for inline assembly and different stack heights depending on the EVM backend used
 	/// (EVM 1.0 or 1.5).
 	int m_stackAdjustment = 0;
+	std::shared_ptr<Context> m_context;
 };
 
 }
