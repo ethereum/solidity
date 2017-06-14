@@ -72,13 +72,6 @@ void Assembly::append(Assembly const& _a, int _deposit)
 	}
 }
 
-string Assembly::out() const
-{
-	stringstream ret;
-	stream(ret);
-	return ret.str();
-}
-
 unsigned Assembly::bytesRequired(unsigned subTagSize) const
 {
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
