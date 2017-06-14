@@ -1287,7 +1287,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		membersRemovedForStructConstructor = structType.membersMissingInMemory();
 		_functionCall.annotation().isPure = isPure;
 	}
-	else if (functionType = dynamic_pointer_cast<FunctionType const>(expressionType))
+	else if ((functionType = dynamic_pointer_cast<FunctionType const>(expressionType)))
 		_functionCall.annotation().isPure =
 			isPure &&
 			_functionCall.expression().annotation().isPure &&
