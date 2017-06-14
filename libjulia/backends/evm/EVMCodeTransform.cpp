@@ -353,6 +353,7 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	AbstractAssembly::LabelID loopEnd = m_assembly.newLabelId();
 	AbstractAssembly::LabelID postPart = m_assembly.newLabelId();
 
+	m_assembly.setSourceLocation(_forLoop.location);
 	m_assembly.appendLabel(loopStart);
 
 	visitExpression(*_forLoop.condition);
