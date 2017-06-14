@@ -328,6 +328,26 @@ BOOST_AUTO_TEST_CASE(sha3_one_arg)
 		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
 }
 
+BOOST_AUTO_TEST_CASE(shift_left)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (shl 1 8)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(256)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (shr 65536 8)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(256)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
