@@ -401,9 +401,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
 		ostringstream tmp;
-		m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), false);
+		m_compilerStack.assemblyStream(tmp, contractName, createSourceList(_input));
 		evmData["assembly"] = tmp.str();
-		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), true);
+		evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
 		evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 

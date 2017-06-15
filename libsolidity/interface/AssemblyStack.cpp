@@ -92,7 +92,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		ostringstream tmp;
-		assembly.stream(tmp);
+		assembly.assemblyStream(tmp);
 		object.assembly = tmp.str();
 		return object;
 	}

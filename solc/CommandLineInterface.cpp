@@ -865,10 +865,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strOpcodes))
 			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
-		{
-			ostringstream unused;
-			contractData[g_strAsm] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
-		}
+			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
 		if (requests.count(g_strSrcMap))
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1152,14 +1149,25 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			if (m_args.count(g_argOutputDir))
 			{
-				stringstream data;
-				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJson));
-				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
+				if (m_args.count(g_argAsmJson)
+				{
+					Json::Value ret = m_compiler->assemblyJSON(contract, m_sourceCodes);
+					createFile(m_compiler->filesystemFriendlyName(contract) + "_evm.json", dev::jsonPrettyPrint(ret));
+				}
+				else
+				{
+					stringstream data;
+					m_compiler->assemblyStream(data, contract, m_sourceCodes);
+					createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", data.str());
+				}
 			}
 			else
 			{
 				cout << "EVM assembly:" << endl;
-				m_compiler->streamAssembly(cout, contract, m_sourceCodes, m_args.count(g_argAsmJson));
+				if (m_args.count(g_argAsmJson)
+					cout << m_compiler->assemblyJSON(contract, m_sourceCodes);
+				else
+					m_compiler->assemblyStream(cout, contract, m_sourceCodes);
 			}
 		}
 

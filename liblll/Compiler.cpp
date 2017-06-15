@@ -76,7 +76,7 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 		auto assembly = CodeFragment::compile(_src, cs).assembly(cs);
 		if (_opt)
 			assembly = assembly.optimise(true);
-		assembly.stream(ret);
+		assembly.assemblyStream(ret);
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret.str();
