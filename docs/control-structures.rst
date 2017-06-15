@@ -361,55 +361,73 @@ As a result, the following code is legal, despite being poorly written::
         return bar;// returns 5
     }
 
-.. index:: ! exception, ! throw
+.. index:: ! exception, ! throw, ! assert, ! require, ! revert
 
-Exceptions
-==========
+Error handling: Assert, Require, Revert and Exceptions
+======================================================
 
-There are some cases where exceptions are thrown automatically (see below). You can use the ``throw`` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are ``send`` and the low-level functions ``call``, ``delegatecall`` and ``callcode``, those return ``false`` in case of an exception).
+Solidity uses state-reverting exceptions to handle errors. Such an exception will undo all changes made to the
+state in the current call (and all its sub-calls) and also flag an error to the caller.
+The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
+if the condition is not met. The difference between the two is that ``assert`` should only be used for internal errors
+and ``require`` should be used to check external conditions (invalid inputs or errors in external components).
+The idea behind that is that analysis tools can check your contract and try to come up with situations and
+series of function calls that will reach a failing assertion. If this is possible, this means there is a bug
+in your contract you should fix.
+
+There are two other ways to trigger execptions: The ``revert`` function can be used to flag an error and
+revert the current call. In the future, it migt be possible, to also include details about the error
+in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
+
+When exceptions happen in a sub-call, they "bubble up" automatically. Exceptions to this rule are ``send``
+and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those return ``false`` in case
+of an exception instead of "rethrowing" it.
 
 Catching exceptions is not yet possible.
 
-In the following example, we show how ``throw`` can be used to easily revert an Ether transfer and also how to check the return value of ``send``::
+In the following example, you can see how ``require`` can be used to easily check conditions on inputs
+and the caller and how ``assert`` can be used for internal error checking::
 
     pragma solidity ^0.4.0;
 
     contract Sharer {
         function sendHalf(address addr) payable returns (uint balance) {
-            if (!addr.send(msg.value / 2))
-                throw; // also reverts the transfer to Sharer
+            require(msg.value % 2 == 0); // Only allow even numbers
+            uint balanceBeforeTransfer = this.balance;
+            addr.transfer(msg.value / 2);
+            // Since transfer throws an exception on failure and
+            // cannot call back here, there should be no way for us to
+            // still have half of the money.
+            assert(this.balance == balanceBeforeTransfer - msg.value / 2);
             return this.balance;
         }
     }
 
-Currently, Solidity automatically generates a runtime exception in the following situations:
+Currently, Solidity automatically generates an exception in the following situations. These exceptions
+use the same mechanism as a failed ``assert`` call, i.e. they flag an internal error.
 
 #. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
-#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
 #. If you shift by a negative amount.
 #. If you convert a value too big or negative into an enum type.
-#. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public getter function.
 #. If you call a zero-initialized variable of internal function type.
-#. If a ``.transfer()`` fails.
 #. If you call ``assert`` with an argument that evaluates to false.
 
-While a user-provided exception is generated in the following situations:
+A ``require``-style exception is generated in the following situations:
 
 #. Calling ``throw``.
 #. Calling ``require`` with an argument that evaluates to ``false``.
+#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+#. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
+#. If you perform an external function call targeting a contract that contains no code.
+#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public getter function.
+#. If a ``.transfer()`` fails.
 
-Internally, Solidity performs a revert operation (instruction ``0xfd``) when a user-provided exception is thrown or the condition of
-a ``require`` call is not met. In contrast, it performs an invalid operation
-(instruction ``0xfe``) if a runtime exception is encountered or the condition of an ``assert`` call is not met. In both cases, this causes
-the EVM to revert all changes made to the state. The reason for this is that there is no safe way to continue execution, because an expected effect
+Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``require``-style exception and executes an invalid operation
+(instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
+the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
-(or at least call) without effect.
-
-If contracts are written so that ``assert`` is only used to test internal conditions and ``require``
-is used in case of malformed input, a formal analysis tool that verifies that the invalid
-opcode can never be reached can be used to check for the absence of errors assuming valid inputs.
+(or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
+``revert``-style exceptions will not consume any gas starting from the metropolis release.
