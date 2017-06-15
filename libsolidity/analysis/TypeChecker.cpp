@@ -463,6 +463,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			m_errorReporter.fatalTypeError(var->location(), "Internal type is not allowed for public or external functions.");
+
+		var->accept(*this);
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 		visitManually(
@@ -487,7 +489,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	// Forbid any variable declarations inside interfaces unless they are part of
+	// a function's input/output parameters.
+	if (
+		m_scope->contractKind() == ContractDefinition::ContractKind::Interface
+		&& !_variable.isCallableParameter()
+	)
 		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
 
 	// Variables can be declared without type (with "var"), in which case the first assignment

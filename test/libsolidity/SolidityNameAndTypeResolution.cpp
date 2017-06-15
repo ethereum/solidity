@@ -1597,6 +1597,16 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(constant_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint[] constant a) { }
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Illegal use of \"constant\" specifier.");
+}
+
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 {
 	char const* text = R"(
@@ -5580,6 +5590,16 @@ BOOST_AUTO_TEST_CASE(interface_variables)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Variables cannot be declared in interfaces");
+}
+
+BOOST_AUTO_TEST_CASE(interface_function_parameters)
+{
+	char const* text = R"(
+		interface I {
+			function f(uint a) returns(bool);
+		}
+	)";
+	success(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_enums)
