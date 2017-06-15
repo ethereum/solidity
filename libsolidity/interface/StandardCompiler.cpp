@@ -115,14 +115,6 @@ StringMap createSourceList(Json::Value const& _input)
 	return sources;
 }
 
-Json::Value methodIdentifiers(ContractDefinition const& _contract)
-{
-	Json::Value methodIdentifiers(Json::objectValue);
-	for (auto const& it: _contract.interfaceFunctions())
-		methodIdentifiers[it.second->externalSignature()] = toHex(it.first.ref());
-	return methodIdentifiers;
-}
-
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
 	Json::Value ret(Json::objectValue);
@@ -404,7 +396,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), false);
 		evmData["assembly"] = tmp.str();
 		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), true);
-		evmData["methodIdentifiers"] = methodIdentifiers(m_compilerStack.contractDefinition(contractName));
+		evmData["methodIdentifiers"] = m_compilerStack.functionHashes(m_compilerStack.contractDefinition(contractName));
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
 		evmData["bytecode"] = collectEVMObject(
