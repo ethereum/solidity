@@ -48,7 +48,9 @@ public:
 	/// Create the code transformer which appends assembly to _state.assembly when called
 	/// with parsed assembly data.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
-	explicit Generator(assembly::Block const& _block)
+//	explicit Generator(assembly::Block const& _block, assembly::AsmAnalysisInfo& _analysisInfo):
+//		m_analysisInfo(_analysisInfo)
+	explicit Generator(assembly::Block const& _block, assembly::AsmAnalysisInfo&)
 	{
 		m_output.addLine("(module ");
 		m_output.indent();
@@ -98,6 +100,12 @@ public:
 		solAssert(!m_onRoot, "Statements are only allowed within functions.");
 
 		solUnimplementedAssert(_varDecl.variables.size() == 1, "Tuples not supported yet.");
+
+		if (_varDecl.variables.front().type == "u256")
+		{
+			
+		}
+
 		m_output.addLine("(local $" + _varDecl.variables.front().name + " " + convertType(_varDecl.variables.front().type) + ")");
 		m_output.addLine("(set_local $" + _varDecl.variables.front().name + " ");
 		m_output.indent();
@@ -287,11 +295,14 @@ private:
 		return false;
 	}
 
+	//assembly::AsmAnalysisInfo& m_analysisInfo;
+
 	IndentedWriter m_output;
 	bool m_onRoot = true;
+	//unsigned m_memorySize = 0;
 };
 
-string yul::WebAssembly::assemble(assembly::Block const& _block)
+string yul::WebAssembly::assemble(assembly::Block const& _block, assembly::AsmAnalysisInfo& _analysisInfo)
 {
 #if 0
 	BinaryenModuleRef module = BinaryenModuleCreate();
@@ -319,5 +330,5 @@ string yul::WebAssembly::assemble(assembly::Block const& _block)
 	BinaryenModuleDispose(module);
 #endif
 
-	return Generator(_block).assembly();
+	return Generator(_block, _analysisInfo).assembly();
 }

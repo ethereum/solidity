@@ -172,7 +172,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 	}
 	case Machine::eWasm:
 		MachineAssemblyObject object;
-		object.assembly = yul::WebAssembly().assemble(*m_parserResult);
+		object.assembly = yul::WebAssembly().assemble(*m_parserResult, *m_analysisInfo);
 		/// TODO: fill out the bytecode
 		return object;
 	}

@@ -31,6 +31,7 @@ namespace solidity
 namespace assembly
 {
 struct Block;
+struct AsmAnalysisInfo;
 }
 }
 
@@ -40,9 +41,15 @@ class WebAssembly
 {
 public:
 	/// Performs code generation and @returns S-expressions
-	std::string assemble(solidity::assembly::Block const& _block);
+	std::string assemble(
+		solidity::assembly::Block const& _block,
+		solidity::assembly::AsmAnalysisInfo& _analysisInfo
+	);
 	/// Performs code generator and @returns WebAssembly binary
-	///bytes assemble(solidity::assembly::Block const& _block);
+	///bytes assemble(
+	///	solidity::assembly::Block const& _block,
+	///	solidity::assembly::AsmAnalysisInfo& _analysisInfo
+	///);
 };
 
 }
