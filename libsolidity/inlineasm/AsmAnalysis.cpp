@@ -548,6 +548,22 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			"the Metropolis hard fork. Before that it acts as an invalid instruction."
 		);
 
+	static set<solidity::Instruction> experimentalInstructions{
+		solidity::Instruction::SHL,
+		solidity::Instruction::SHR,
+		solidity::Instruction::SAR,
+		solidity::Instruction::ROL,
+		solidity::Instruction::ROR
+	};
+	if (experimentalInstructions.count(_instr))
+		m_errorReporter.warning(
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is only available after " +
+			"the Constantinople hard fork. Before that it acts as an invalid instruction."
+		);
+
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 		m_errorReporter.warning(
 			_location,
