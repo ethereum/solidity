@@ -65,7 +65,8 @@ build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION%
-    - scripts\bytecodecompare\storebytecode.bat %CONFIGURATION% %APPVEYOR_REPO_COMMIT%
+    - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
+    - ps: scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%

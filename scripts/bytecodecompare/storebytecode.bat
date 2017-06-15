@@ -20,7 +20,7 @@ REM Copyright (c) 2017 solidity contributors.
 REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
-set COMMIT=%2
+set DIRECTORY=%2
 
 mkdir bytecode
 cd bytecode
@@ -33,8 +33,8 @@ git config user.name "travis"
 git config user.email "chris@ethereum.org"
 git clean -f -d -x
 
-mkdir %COMMIT%
-set REPORT=%COMMIT%/windows.txt
+if not exist %DIRECTORY% mkdir %DIRECTORY%
+set REPORT=%DIRECTORY%/windows.txt
 cp ../report.txt %REPORT%
 git add %REPORT%
 git commit -a -m "Added report."
