@@ -29,6 +29,7 @@
 #include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <memory>
 #include <functional>
@@ -447,25 +448,18 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 
 void AsmAnalyzer::warnOnFutureInstruction(solidity::Instruction _instr, SourceLocation const& _location)
 {
-	string instr;
-	switch (_instr)
-	{
-	case solidity::Instruction::CREATE2:
-		instr = "create2";
-		break;
-	case solidity::Instruction::RETURNDATASIZE:
-		instr = "returndatasize";
-		break;
-	case solidity::Instruction::RETURNDATACOPY:
-		instr = "returndatacopy";
-		break;
-	default:
-		break;
-	}
-	if (!instr.empty())
+	static set<solidity::Instruction> futureInstructions{
+		solidity::Instruction::CREATE2,
+		solidity::Instruction::RETURNDATACOPY,
+		solidity::Instruction::RETURNDATASIZE,
+		solidity::Instruction::STATICCALL
+	};
+	if (futureInstructions.count(_instr))
 		m_errorReporter.warning(
 			_location,
-			"The \"" + instr + "\" instruction is only available after " +
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is only available after " +
 			"the Metropolis hard fork. Before that it acts as an invalid instruction."
 		);
 }

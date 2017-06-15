@@ -1,9 +1,9 @@
 ### 0.4.12 (unreleased)
 
 Features:
- * Assembly: Add ``CREATE2`` (EIP86), ``RETURNDATASIZE`` and ``RETURNDATACOPY`` (EIP211) instructions.
+ * Assembly: renamed ``SHA3`` to ``KECCAK256``.
  * Assembly: Display auxiliary data in the assembly output.
- * Assembly: Renamed ``SHA3`` to ``KECCAK256``.
+ * Assembly: Add ``CREATE2`` (EIP86), ``STATICCALL`` (EIP214), ``RETURNDATASIZE`` and ``RETURNDATACOPY`` (EIP211) instructions.
  * AST: export all attributes to JSON format.
  * Inline Assembly: Present proper error message when not supplying enough arguments to a functional
    instruction.

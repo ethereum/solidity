@@ -77,8 +77,8 @@ enum class Instruction: uint8_t
 	GASPRICE,			///< get price of gas in current environment
 	EXTCODESIZE,		///< get external code size (from another contract)
 	EXTCODECOPY,		///< copy external code (from another contract)
-	RETURNDATASIZE,		///< get size of the last return data
-	RETURNDATACOPY,		///< copy last return data to memory
+	RETURNDATASIZE = 0x3d,	///< get size of return data buffer
+	RETURNDATACOPY = 0x3e,	///< copy return data in current environment to memory
 
 	BLOCKHASH = 0x40,	///< get hash of most recent complete block
 	COINBASE,			///< get the block's coinbase address
@@ -187,7 +187,8 @@ enum class Instruction: uint8_t
 	CALLCODE,			///< message-call with another account's code only
 	RETURN,				///< halt execution returning output data
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
-	CREATE2 = 0xfb,		///< create new account with associated code
+	STATICCALL = 0xfa,	///< like CALL but disallow state modifications
+	CREATE2 = 0xfb,		///< create new account with associated code at address `sha3(sender + salt + sha3(init code)) % 2**160`
 
 	REVERT = 0xfd,		///< halt execution, revert state and return output data
 	INVALID = 0xfe,		///< invalid instruction for expressing runtime errors (e.g., division-by-zero)
