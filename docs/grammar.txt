@@ -77,10 +77,11 @@ IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression
   = Expression ('++' | '--')
-  | FunctionCall
   | NewExpression
-  | MemberAccess
   | IndexAccess
+  | MemberAccess
+  | FunctionCall
+  | '(' Expression ')'
   | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
@@ -97,12 +98,12 @@ Expression
   | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
   | PrimaryExpression
 
-PrimaryExpression = Identifier
-                  | BooleanLiteral
+PrimaryExpression = BooleanLiteral
                   | NumberLiteral
                   | HexLiteral
                   | StringLiteral
                   | TupleExpression
+                  | Identifier
                   | ElementaryTypeNameExpression
 
 ExpressionList = Expression ( ',' Expression )*
