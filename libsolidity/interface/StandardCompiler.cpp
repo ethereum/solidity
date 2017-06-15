@@ -396,7 +396,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), false);
 		evmData["assembly"] = tmp.str();
 		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), true);
-		evmData["methodIdentifiers"] = m_compilerStack.functionHashes(m_compilerStack.contractDefinition(contractName));
+		evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
 		evmData["bytecode"] = collectEVMObject(

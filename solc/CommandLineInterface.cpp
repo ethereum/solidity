@@ -889,7 +889,7 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
 		if (requests.count(g_strSignatureHashes))
-			contractData[g_strSignatureHashes] = m_compiler->functionHashes(m_compiler->contractDefinition(contractName));
+			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
 			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
 		if (requests.count(g_strNatspecUser))

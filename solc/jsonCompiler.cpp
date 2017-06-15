@@ -192,7 +192,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
 				contractData["metadata"] = compiler.onChainMetadata(contractName);
-				contractData["functionHashes"] = compiler.functionHashes(compiler.contractDefinition(contractName));
+				contractData["functionHashes"] = compiler.methodIdentifiers(contractName);
 				contractData["gasEstimates"] = estimateGas(compiler, contractName);
 				auto sourceMap = compiler.sourceMapping(contractName);
 				contractData["srcmap"] = sourceMap ? *sourceMap : "";
