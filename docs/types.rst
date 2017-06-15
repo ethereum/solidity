@@ -54,7 +54,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-Division always truncates (it just maps to the DIV opcode of the EVM. Maps will be explained later `[here](http://solidity.readthedocs.io/en/develop/types.html#mappings)`_), but it does not truncate if both
+Division always truncates (it just is compiled to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws a runtime exception.
