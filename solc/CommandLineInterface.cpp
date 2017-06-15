@@ -281,9 +281,10 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (!m_args.count(g_argSignatureHashes))
 		return;
 
+	Json::Value methodIdentifiers = m_compiler->methodIdentifiers(_contract);
 	string out;
-	for (auto const& it: m_compiler->contractDefinition(_contract).interfaceFunctions())
-		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
+	for (auto const& name: methodIdentifiers.getMemberNames())
+		out += methodIdentifiers[name].asString() + ": " + name + "\n";
 
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
