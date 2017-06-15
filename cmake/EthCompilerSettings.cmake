@@ -69,9 +69,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# If supported for the target machine, emit position-independent code, suitable for dynamic
 	# linking and avoiding any limit on the size of the global offset table.
 	add_compile_options(-fPIC)
-	# A lot of places in the code rely on implicit fallthroughs in switch statements
-	# This makes sure that latest gcc and clang don't fail the build because of them.
-	add_compile_options(-Wno-implicit-fallthrough)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
