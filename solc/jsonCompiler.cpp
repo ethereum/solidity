@@ -88,14 +88,6 @@ ReadFile::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullp
 	return readCallback;
 }
 
-Json::Value functionHashes(ContractDefinition const& _contract)
-{
-	Json::Value functionHashes(Json::objectValue);
-	for (auto const& it: _contract.interfaceFunctions())
-		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
-	return functionHashes;
-}
-
 /// Translates a gas value as a string to a JSON number or null
 Json::Value gasToJson(Json::Value const& _value)
 {
@@ -200,7 +192,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 				contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 				contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
 				contractData["metadata"] = compiler.onChainMetadata(contractName);
-				contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
+				contractData["functionHashes"] = compiler.functionHashes(compiler.contractDefinition(contractName));
 				contractData["gasEstimates"] = estimateGas(compiler, contractName);
 				auto sourceMap = compiler.sourceMapping(contractName);
 				contractData["srcmap"] = sourceMap ? *sourceMap : "";

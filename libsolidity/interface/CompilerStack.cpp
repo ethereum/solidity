@@ -481,6 +481,14 @@ Json::Value const& CompilerStack::natspec(Contract const& _contract, Documentati
 	return *(*doc);
 }
 
+Json::Value CompilerStack::functionHashes(ContractDefinition const& _contract)
+{
+	Json::Value functionHashes(Json::objectValue);
+	for (auto const& it: _contract.interfaceFunctions())
+		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
+	return functionHashes;
+}
+
 string const& CompilerStack::onChainMetadata(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
