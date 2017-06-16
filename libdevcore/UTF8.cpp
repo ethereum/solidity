@@ -85,11 +85,19 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 			continue;
 
 		size_t count = 0;
-		switch(_input[i] & 0xf0) {
-			case 0xc0: count = 1; break;
-			case 0xe0: count = 2; break;
-			case 0xf0: count = 3; break;
-			default: break;
+		switch ((unsigned char)_input[i])
+		{
+			case 0xc0 ... 0xdf:
+				count = 1;
+				break;
+			case 0xe0 ... 0xef:
+				count = 2;
+				break;
+			case 0xf0 ... 0xf7:
+				count = 3;
+				break;
+			default:
+				break;
 		}
 
 		if (count == 0)
