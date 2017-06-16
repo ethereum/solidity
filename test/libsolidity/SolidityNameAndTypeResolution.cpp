@@ -2422,6 +2422,16 @@ BOOST_AUTO_TEST_CASE(invalid_utf8_explicit)
 	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed");
 }
 
+BOOST_AUTO_TEST_CASE(large_utf8_codepoint)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = "\xf0\x9f\xa6\x84";
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
+}
+
 BOOST_AUTO_TEST_CASE(string_index)
 {
 	char const* sourceCode = R"(

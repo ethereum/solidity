@@ -40,7 +40,7 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 			continue;
 
 		size_t count = 0;
-		switch(_input[i] & 0xe0) {
+		switch(_input[i] & 0xf0) {
 			case 0xc0: count = 1; break;
 			case 0xe0: count = 2; break;
 			case 0xf0: count = 3; break;
