@@ -347,8 +347,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		else if (Token::isVisibilitySpecifier(token))
 		{
 			if (result.visibility != Declaration::Visibility::Default)
-				fatalParserError(string("Multiple visibility specifiers."));
-			result.visibility = parseVisibilitySpecifier(token);
+			{
+				parserError(string("Multiple visibility specifiers."));
+				m_scanner->next();
+			}
+			else
+				result.visibility = parseVisibilitySpecifier(token);
 		}
 		else
 			break;
@@ -501,8 +505,12 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		{
 			if (visibility != Declaration::Visibility::Default)
-				fatalParserError(string("Visibility already specified."));
-			visibility = parseVisibilitySpecifier(token);
+			{
+				parserError(string("Visibility already specified."));
+				m_scanner->next();
+			}
+			else
+				visibility = parseVisibilitySpecifier(token);
 		}
 		else
 		{
@@ -513,14 +521,15 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Default)
-					fatalParserError(string("Location already specified."));
-				if (!type)
-					fatalParserError(string("Location specifier needs explicit type name."));
-				location = (
-					token == Token::Memory ?
-					VariableDeclaration::Location::Memory :
-					VariableDeclaration::Location::Storage
-				);
+					parserError(string("Location already specified."));
+				else if (!type)
+					parserError(string("Location specifier needs explicit type name."));
+				else
+					location = (
+						token == Token::Memory ?
+						VariableDeclaration::Location::Memory :
+						VariableDeclaration::Location::Storage
+					);
 			}
 			else
 				break;
@@ -702,7 +711,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Var)
 	{
 		if (!_allowVar)
-			fatalParserError(string("Expected explicit type name."));
+			parserError(string("Expected explicit type name."));
 		m_scanner->next();
 	}
 	else if (token == Token::Function)
