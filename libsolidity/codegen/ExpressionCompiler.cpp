@@ -886,7 +886,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
-				m_context << Instruction::INVALID;
+				m_context.appendInvalid();
 			else
 				m_context.appendRevert();
 			// the success branch

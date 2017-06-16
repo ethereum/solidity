@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	Json::Value contract = result["contracts"]["fileA:A"];
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["interface"].isString());
-	BOOST_CHECK(contract["interface"].asString() == "[]");
+	BOOST_CHECK_EQUAL(contract["interface"].asString(), "[]");
 	BOOST_CHECK(contract["bytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),

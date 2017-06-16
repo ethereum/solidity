@@ -376,7 +376,7 @@ series of function calls that will reach a failing assertion. If this is possibl
 in your contract you should fix.
 
 There are two other ways to trigger execptions: The ``revert`` function can be used to flag an error and
-revert the current call. In the future, it migt be possible, to also include details about the error
+revert the current call. In the future, it might be possible, to also include details about the error
 in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
 
 When exceptions happen in a sub-call, they "bubble up" automatically. Exceptions to this rule are ``send``
@@ -430,4 +430,4 @@ Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``
 the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
 (or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
-``revert``-style exceptions will not consume any gas starting from the metropolis release.
+``revert``-style exceptions will not consume any gas starting from the Metropolis release.

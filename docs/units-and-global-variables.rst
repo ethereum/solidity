@@ -130,8 +130,8 @@ This means that, for example, ``keccak256(0) == keccak256(uint8(0))`` and
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
-.. _address_related:
 .. index:: balance, send, transfer, call, callcode, delegatecall
+.. _address_related:
 
 Address Related
 ---------------
