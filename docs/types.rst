@@ -54,7 +54,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
+Division always truncates (it just is compiled to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws a runtime exception.
