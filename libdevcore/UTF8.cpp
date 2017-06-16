@@ -27,6 +27,50 @@
 namespace dev
 {
 
+namespace
+{
+
+/// Validate byte sequence against Unicode chapter 3 Table 3-7.
+bool isWellFormed(unsigned char byte1, unsigned char byte2)
+{
+	switch (byte1)
+	{
+	case 0xc0 ... 0xc1:
+		return false;
+	case 0xc2 ... 0xdf:
+		break;
+	case 0xe0:
+		if (byte2 < 0xa0)
+			return false;
+		break;
+	case 0xe1 ... 0xec:
+		break;
+	case 0xed:
+		if (byte2 > 0x9f)
+			return false;
+		break;
+	case 0xee ... 0xef:
+		break;
+	case 0xf0:
+		if (byte2 < 0x90)
+			return false;
+		break;
+	case 0xf1 ... 0xf3:
+		break;
+	case 0xf4:
+		if (byte2 > 0x8f)
+			return false;
+		break;
+	case 0xf5 ... 0xf7:
+	default:
+		/// Technically anything below 0xc0 or above 0xf7 is
+		/// not possible to encode using Table 3-6 anyway.
+		return false;
+	}
+	return true;
+}
+
+}
 
 bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 {
@@ -36,6 +80,7 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 
 	for (; i < length; i++)
 	{
+		// Check for Unicode Chapter 3 Table 3-6 conformity.
 		if ((unsigned char)_input[i] < 0x80)
 			continue;
 
@@ -67,6 +112,13 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 				valid = false;
 				break;
 			}
+
+			// Check for Unicode Chapter 3 Table 3-7 conformity.
+			if ((j == 0) && !isWellFormed(_input[i - 1], _input[i]))
+			{
+				valid = false;
+				break;
+			}
 		}
 	}
 
@@ -76,6 +128,5 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 	_invalidPosition = i;
 	return false;
 }
-
 
 }
