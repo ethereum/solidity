@@ -376,17 +376,17 @@ series of function calls that will reach a failing assertion. If this is possibl
 in your contract you should fix.
 
 There are two other ways to trigger execptions: The ``revert`` function can be used to flag an error and
-revert the current call. In the future, it might be possible, to also include details about the error
+revert the current call. In the future it might be possible to also include details about the error
 in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
 
-When exceptions happen in a sub-call, they "bubble up" automatically. Exceptions to this rule are ``send``
+When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send`` 
 and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those return ``false`` in case
-of an exception instead of "rethrowing" it.
+of an exception instead of "bubbling up".
 
 Catching exceptions is not yet possible.
 
 In the following example, you can see how ``require`` can be used to easily check conditions on inputs
-and the caller and how ``assert`` can be used for internal error checking::
+and how ``assert`` can be used for internal error checking::
 
     pragma solidity ^0.4.0;
 
@@ -403,8 +403,7 @@ and the caller and how ``assert`` can be used for internal error checking::
         }
     }
 
-Currently, Solidity automatically generates an exception in the following situations. These exceptions
-use the same mechanism as a failed ``assert`` call, i.e. they flag an internal error.
+An ``assert``-style exception is generated in the following situations:
 
 #. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
