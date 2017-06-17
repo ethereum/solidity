@@ -323,11 +323,17 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		Token::Value token = m_scanner->currentToken();
 		if (token == Token::Const)
 		{
+			if (result.isDeclaredConst)
+				parserError(string("Multiple \"constant\" specifiers."));
+
 			result.isDeclaredConst = true;
 			m_scanner->next();
 		}
 		else if (m_scanner->currentToken() == Token::Payable)
 		{
+			if (result.isPayable)
+				parserError(string("Multiple \"payable\" specifiers."));
+
 			result.isPayable = true;
 			m_scanner->next();
 		}

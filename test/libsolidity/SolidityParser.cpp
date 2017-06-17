@@ -901,6 +901,24 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 	CHECK_PARSE_ERROR(text, "Visibility already specified");
 }
 
+BOOST_AUTO_TEST_CASE(multiple_payable_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			function f() payable payable {}
+		})";
+	CHECK_PARSE_ERROR(text, "Multiple \"payable\" specifiers.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_constant_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			function f() constant constant {}
+		})";
+	CHECK_PARSE_ERROR(text, "Multiple \"constant\" specifiers.");
+}
+
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
 {
 	char const* text = R"(
