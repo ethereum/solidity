@@ -838,10 +838,10 @@ Grammar::
     AssemblyItem =
         Identifier |
         AssemblyBlock |
-        FunctionalAssemblyExpression |
+        AssemblyExpression |
         AssemblyLocalDefinition |
-        FunctionalAssemblyAssignment |
         AssemblyAssignment |
+        AssemblyRightAssignment |
         LabelDefinition |
         AssemblySwitch |
         AssemblyFunctionDefinition |
@@ -849,25 +849,26 @@ Grammar::
         'break' | 'continue' |
         SubAssembly | 'dataSize' '(' Identifier ')' |
         LinkerSymbol |
-        'errorLabel' | 'bytecodeSize' |
-        NumberLiteral | StringLiteral | HexLiteral
+        'errorLabel' | 'bytecodeSize'
     Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
-    FunctionalAssemblyExpression = Identifier '(' ( AssemblyItem ( ',' AssemblyItem )* )? ')'
-    AssemblyLocalDefinition = 'let' IdentifierOrList ':=' FunctionalAssemblyExpression
-    FunctionalAssemblyAssignment = IdentifierOrList ':=' FunctionalAssemblyExpression
+    AssemblyExpression = AssemblyCall | AssemblyLiteral
+    AssemblyCall = Identifier '(' ( AssemblyExpression ( ',' AssemblyExpression )* )? ')'
+    AssemblyLocalDefinition = 'let' IdentifierOrList ':=' AssemblyExpression
+    AssemblyAssignment = IdentifierOrList ':=' AssemblyExpression
     IdentifierOrList = Identifier | '(' IdentifierList ')'
     IdentifierList = Identifier ( ',' Identifier)*
-    AssemblyAssignment = '=:' Identifier
+    AssemblyRightAssignment = '=:' Identifier
     LabelDefinition = Identifier ':'
-    AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
+    AssemblySwitch = 'switch' AssemblyExpression AssemblyCase*
         ( 'default' ':' AssemblyBlock )?
-    AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
+    AssemblyCase = 'case' AssemblyLiteral ':' AssemblyBlock
     AssemblyFunctionDefinition = 'function' Identifier '(' IdentifierList? ')'
         ( '->' '(' IdentifierList ')' )? AssemblyBlock
-    AssemblyFor = 'for' ( AssemblyBlock | FunctionalAssemblyExpression)
-        FunctionalAssemblyExpression ( AssemblyBlock | FunctionalAssemblyExpression) AssemblyBlock
+    AssemblyFor = 'for' ( AssemblyBlock | AssemblyExpression )
+        AssemblyExpression ( AssemblyBlock | AssemblyExpression ) AssemblyBlock
     SubAssembly = 'assembly' Identifier AssemblyBlock
     LinkerSymbol = 'linkerSymbol' '(' StringLiteral ')'
+    AssemblyLiteral = StringLiteral | HexLiteral | HexNumber | DecimalNumber
     NumberLiteral = HexNumber | DecimalNumber
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
