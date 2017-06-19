@@ -33,7 +33,7 @@ be sure that our code will compile the way we intended it to. We do not fix
 the exact version of the compiler, so that bugfix releases are still possible.
 
 It is possible to specify much more complex rules for the compiler version,
-the expression follows those used by npm.
+the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
 
 .. index:: source file, ! import
 
