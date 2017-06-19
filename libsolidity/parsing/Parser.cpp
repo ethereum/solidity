@@ -1350,12 +1350,18 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 			if (!first)
 				expectToken(Token::Comma);
 
-			if (m_scanner->currentToken() == Token::RBrace)
-				fatalParserError("Unexpected trailing comma.");
-
 			ret.second.push_back(expectIdentifierToken());
 			expectToken(Token::Colon);
 			ret.first.push_back(parseExpression());
+
+			if (
+				m_scanner->currentToken() == Token::Comma &&
+				m_scanner->peekNextToken() == Token::RBrace
+			)
+			{
+				parserError("Unexpected trailing comma.");
+				m_scanner->next();
+			}
 
 			first = false;
 		}
