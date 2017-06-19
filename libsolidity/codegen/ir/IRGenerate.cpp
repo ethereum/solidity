@@ -57,6 +57,19 @@ bool IRGenerate::visit(ContractDefinition const& _contract)
 	return false;
 }
 
+namespace
+{
+
+string uniqueFunctionName(FunctionDefinition const& _function)
+{
+	if (_function.name().empty())
+		return "fallback";
+
+	return "_" + _function.name() + "_" + toHex(dev::keccak256(function.externalSignature()));
+}
+
+}
+
 void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 {
 	appendFunction(R"(
@@ -94,7 +107,7 @@ void IRGenerate::buildDispatcher(ContractDefinition const& _contract)
 		assembly::Block body;
 		if (!function->isPayable())
 			body.statements.emplace_back(createFunctionCall("ensureNoValueTransfer"));
-		body.statements.emplace_back(createFunctionCall("_" + function->name()));
+		body.statements.emplace_back(createFunctionCall(uniqueFunctionName(*function)));
 
 		assembly::Case _case;
 		_case.value = make_shared<assembly::Literal>(literal);
@@ -127,10 +140,7 @@ bool IRGenerate::visit(FunctionDefinition const& _function)
 	solUnimplementedAssert(_function.returnParameters().empty(), "Return parameters not supported yet.");
 
 	assembly::FunctionDefinition funDef;
-	if (_function.name().empty())
-		funDef.name = "fallback";
-	else
-		funDef.name = "_" + _function.name();
+	funDef.name = uniqueFunctionName(_function);
 	funDef.location = _function.location();
 	m_currentFunction = funDef;
 	_function.body().accept(*this);
