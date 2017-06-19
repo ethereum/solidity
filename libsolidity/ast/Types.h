@@ -311,6 +311,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual s256 signedValue(Literal const* _literal) const;
 
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
@@ -420,6 +421,7 @@ public:
 	/// @returns true if the value is negative.
 	bool isNegative() const { return m_value < 0; }
 
+	rational value() const { return m_value; }
 private:
 	rational m_value;
 

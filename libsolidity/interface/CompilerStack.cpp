@@ -35,6 +35,7 @@
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
+#include <libsolidity/analysis/OverflowChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/ABI.h>
@@ -209,6 +210,8 @@ bool CompilerStack::analyze()
 				{
 					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
 					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
+					OverflowChecker overflowChecker(m_errorReporter);
+					overflowChecker.checkOverflow(*contract);
 				}
 				else
 					noErrors = false;
