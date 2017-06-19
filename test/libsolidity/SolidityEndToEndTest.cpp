@@ -7685,6 +7685,55 @@ BOOST_AUTO_TEST_CASE(inline_assembly_recursion)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(4)) == encodeArgs(u256(24)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_for)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				assembly {
+					function fac(n) -> nf {
+						nf := 1
+						for { let i := n } gt(i, 0) { i := sub(i, 1) } {
+							nf := mul(nf, i)
+						}
+					}
+					b := fac(a)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(u256(6)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(4)) == encodeArgs(u256(24)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_for2)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint st;
+			function f(uint a) returns (uint b, uint c, uint d) {
+				st = 0;
+				assembly {
+					function sideeffect(r) -> x { sstore(0, add(sload(0), r)) x := 1}
+					for { let i := a } eq(i, sideeffect(2)) { d := add(d, 3) } {
+						b := i
+						i := 0
+					}
+				}
+				c = st;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(0), u256(2), u256(0)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(1), u256(4), u256(3)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(0), u256(2), u256(0)));
+}
+
 BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 {
 	// Test for a bug where higher order bits cleanup was not done for array index access.

@@ -21,6 +21,7 @@
 #include <libjulia/backends/evm/EVMAssembly.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
+#include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -32,21 +33,6 @@ namespace solidity
 class ErrorReporter;
 namespace assembly
 {
-struct Literal;
-struct Block;
-struct Switch;
-struct Label;
-struct FunctionalInstruction;
-struct Assignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct StackAssignment;
-struct FunctionDefinition;
-struct FunctionCall;
-
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, Block>;
-
 struct AsmAnalysisInfo;
 }
 }
@@ -74,9 +60,6 @@ public:
 	)
 	{
 	}
-
-	/// Processes the block and appends the resulting code to the assembly.
-	void run(solidity::assembly::Block const& _block);
 
 protected:
 	struct Context
@@ -115,6 +98,7 @@ public:
 	void operator()(solidity::assembly::VariableDeclaration const& _varDecl);
 	void operator()(solidity::assembly::Switch const& _switch);
 	void operator()(solidity::assembly::FunctionDefinition const&);
+	void operator()(solidity::assembly::ForLoop const&);
 	void operator()(solidity::assembly::Block const& _block);
 
 private:
@@ -125,6 +109,12 @@ private:
 	AbstractAssembly::LabelID functionEntryID(solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
+
+	void visitStatements(std::vector<solidity::assembly::Statement> const& _statements);
+
+	/// Pops all variables declared in the block and checks that the stack height is equal
+	/// to @a _blackStartStackHeight.
+	void finalizeBlock(solidity::assembly::Block const& _block, int _blockStartStackHeight);
 
 	void generateAssignment(solidity::assembly::Identifier const& _variableName);
 

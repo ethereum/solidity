@@ -310,6 +310,33 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	return success;
 }
 
+bool AsmAnalyzer::operator()(assembly::ForLoop const& _for)
+{
+	Scope* originalScope = m_currentScope;
+
+	bool success = true;
+	if (!(*this)(_for.pre))
+		success = false;
+	// The block was closed already, but we re-open it again and stuff the
+	// condition, the body and the post part inside.
+	m_stackHeight += scope(&_for.pre).numberOfVariables();
+	m_currentScope = &scope(&_for.pre);
+
+	if (!expectExpression(*_for.condition))
+		success = false;
+	m_stackHeight--;
+	if (!(*this)(_for.body))
+		success = false;
+	if (!(*this)(_for.post))
+		success = false;
+
+	m_stackHeight -= scope(&_for.pre).numberOfVariables();
+	m_info.stackHeightInfo[&_for] = m_stackHeight;
+	m_currentScope = originalScope;
+
+	return success;
+}
+
 bool AsmAnalyzer::operator()(Block const& _block)
 {
 	bool success = true;
@@ -322,9 +349,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 		if (!boost::apply_visitor(*this, s))
 			success = false;
 
-	for (auto const& identifier: scope(&_block).identifiers)
-		if (identifier.second.type() == typeid(Scope::Variable))
-			--m_stackHeight;
+	m_stackHeight -= scope(&_block).numberOfVariables();
 
 	int const stackDiff = m_stackHeight - initialStackHeight;
 	if (stackDiff != 0)

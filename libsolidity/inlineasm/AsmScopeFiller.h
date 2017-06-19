@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmDataForward.h>
+
 #include <boost/variant.hpp>
 
 #include <functional>
@@ -35,19 +37,6 @@ namespace assembly
 {
 
 struct TypedName;
-struct Literal;
-struct Block;
-struct Label;
-struct FunctionalInstruction;
-struct Assignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct StackAssignment;
-struct FunctionDefinition;
-struct FunctionCall;
-struct Switch;
-
 struct Scope;
 struct AsmAnalysisInfo;
 
@@ -71,6 +60,7 @@ public:
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const&) { return true; }
 	bool operator()(assembly::Switch const& _switch);
+	bool operator()(assembly::ForLoop const& _forLoop);
 	bool operator()(assembly::Block const& _block);
 
 private:

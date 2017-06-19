@@ -109,6 +109,8 @@ struct Scope
 	/// across function and assembly boundaries).
 	bool exists(std::string const& _name);
 
+	/// @returns the number of variables directly registered inside the scope.
+	size_t numberOfVariables() const;
 	/// @returns true if this scope is inside a function.
 	bool insideFunction() const;
 

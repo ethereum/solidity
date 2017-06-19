@@ -28,11 +28,8 @@ arising when writing manual assembly by the following features:
 * access to external variables: ``function f(uint x) { assembly { x := sub(x, 1) } }``
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
-* switch statements: ``switch x case 0: { y := mul(x, 2) } default: { y := 0 }``
-* function calls: ``function f(x) -> y { switch x case 0: { y := 1 } default: { y := mul(x, f(sub(x, 1))) }   }``
-
-.. note::
-    Of the above, loops, function calls and switch statements are not yet implemented.
+* switch statements: ``switch x case 0 { y := mul(x, 2) } default { y := 0 }``
+* function calls: ``function f(x) -> y { switch x case 0 { y := 1 } default { y := mul(x, f(sub(x, 1))) }   }``
 
 We now want to describe the inline assembly language in detail.
 
@@ -501,9 +498,6 @@ is performed by replacing the variable's value on the stack by the new value.
 Switch
 ------
 
-.. note::
-    Switch is not yet implemented.
-
 You can use a switch statement as a very basic version of "if/else".
 It takes the value of an expression and compares it to several constants.
 The branch corresponding to the matching constant is taken. Contrary to the
@@ -516,10 +510,10 @@ case called ``default``.
     assembly {
         let x := 0
         switch calldataload(4)
-        case 0: {
+        case 0 {
             x := calldataload(0x24)
         }
-        default: {
+        default {
             x := calldataload(0x44)
         }
         sstore(0, div(x, 2))
@@ -531,13 +525,10 @@ case does require them.
 Loops
 -----
 
-.. note::
-    Loops are not yet implemented.
-
 Assembly supports a simple for-style loop. For-style loops have
 a header containing an initializing part, a condition and a post-iteration
 part. The condition has to be a functional-style expression, while
-the other two can also be blocks. If the initializing part is a block that
+the other two are blocks. If the initializing part
 declares any variables, the scope of these variables is extended into the
 body (including the condition and the post-iteration part).
 
@@ -555,9 +546,6 @@ The following example computes the sum of an area in memory.
 Functions
 ---------
 
-.. note::
-    Functions are not yet implemented.
-
 Assembly allows the definition of low-level functions. These take their
 arguments (and a return PC) from the stack and also put the results onto the
 stack. Calling a function looks the same way as executing a functional-style
@@ -569,7 +557,7 @@ defined outside of that function. There is no explicit ``return``
 statement.
 
 If you call a function that returns multiple values, you have to assign
-them to a tuple using ``(a, b) := f(x)`` or ``let (a, b) := f(x)``.
+them to a tuple using ``a, b := f(x)`` or ``let a, b := f(x)``.
 
 The following example implements the power function by square-and-multiply.
 
@@ -578,12 +566,12 @@ The following example implements the power function by square-and-multiply.
     assembly {
         function power(base, exponent) -> result {
             switch exponent
-            0: { result := 1 }
-            1: { result := base }
-            default: {
+            case 0 { result := 1 }
+            case 1 { result := base }
+            default {
                 result := power(mul(base, base), div(exponent, 2))
                 switch mod(exponent, 2)
-                    1: { result := mul(base, result) }
+                    case 1 { result := mul(base, result) }
             }
         }
     }
@@ -703,13 +691,13 @@ The following assembly will be generated::
       mstore(0x40, 0x60) // store the "free memory pointer"
       // function dispatcher
       switch div(calldataload(0), exp(2, 226))
-      case 0xb3de648b: {
+      case 0xb3de648b {
         let (r) = f(calldataload(4))
         let ret := $allocate(0x20)
         mstore(ret, r)
         return(ret, 0x20)
       }
-      default: { revert(0, 0) }
+      default { revert(0, 0) }
       // memory allocator
       function $allocate(size) -> pos {
         pos := mload(0x40)
@@ -860,8 +848,8 @@ Grammar::
     AssemblyAssignment = '=:' Identifier
     LabelDefinition = Identifier ':'
     AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
-        ( 'default' ':' AssemblyBlock )?
-    AssemblyCase = 'case' FunctionalAssemblyExpression ':' AssemblyBlock
+        ( 'default' AssemblyBlock )?
+    AssemblyCase = 'case' FunctionalAssemblyExpression AssemblyBlock
     AssemblyFunctionDefinition = 'function' Identifier '(' IdentifierList? ')'
         ( '->' '(' IdentifierList ')' )? AssemblyBlock
     AssemblyFor = 'for' ( AssemblyBlock | FunctionalAssemblyExpression)

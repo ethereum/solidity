@@ -87,6 +87,8 @@ assembly::Statement Parser::parseStatement()
 		_switch.location.end = _switch.cases.back().body.location.end;
 		return _switch;
 	}
+	case Token::For:
+		return parseForLoop();
 	case Token::Assign:
 	{
 		if (m_julia)
@@ -169,6 +171,20 @@ assembly::Case Parser::parseCase()
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
+}
+
+assembly::ForLoop Parser::parseForLoop()
+{
+	ForLoop forLoop = createWithLocation<ForLoop>();
+	expectToken(Token::For);
+	forLoop.pre = parseBlock();
+	forLoop.condition = make_shared<Statement>(parseExpression());
+	if (forLoop.condition->type() == typeid(assembly::Instruction))
+		fatalParserError("Instructions are not supported as conditions for the for statement.");
+	forLoop.post = parseBlock();
+	forLoop.body = parseBlock();
+	forLoop.location.end = forLoop.body.location.end;
+	return forLoop;
 }
 
 assembly::Statement Parser::parseExpression()
