@@ -6,7 +6,7 @@ import subprocess
 import json
 
 solc = sys.argv[1]
-report = open("report.txt", "w")
+report = open("report.txt", "wb")
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
