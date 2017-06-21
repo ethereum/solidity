@@ -65,7 +65,7 @@ void CompilerState::populateStandard()
 	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
 	"(def 'permcount 0)"
 	"(def 'perm (name) { (makeperm name permcount) (def 'permcount (+ permcount 1)) } )"
-	"(def 'ecrecover (r s v hash) { [0] r [32] s [64] v [96] hash (msg allgas 1 0 0 128) })"
+	"(def 'ecrecover (hash v r s) { [0] hash [32] v [64] r [96] s (msg allgas 1 0 0 128) })"
 	"(def 'sha256 (data datasize) (msg allgas 2 0 data datasize))"
 	"(def 'ripemd160 (data datasize) (msg allgas 3 0 data datasize))"
 	"(def 'sha256 (val) { [0]:val (sha256 0 32) })"
