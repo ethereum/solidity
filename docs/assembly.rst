@@ -13,6 +13,8 @@ TODO: Write about how scoping rules of inline assembly are a bit different
 and the complications that arise when for example using internal functions
 of libraries. Furthermore, write about the symbols defined by the compiler.
 
+.. _inline-assembly:
+
 Inline Assembly
 ===============
 
