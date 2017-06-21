@@ -177,7 +177,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				error<InvalidName>("Empty variable name not allowed");
 			auto it = _s.vars.find(n);
 			if (it == _s.vars.end())
-				error<InvalidName>(std::string("Symbol not found: ") + s);
+				error<InvalidName>(std::string("Symbol not found: ") + n);
 			return it->second.first;
 		};
 
