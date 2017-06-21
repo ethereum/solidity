@@ -54,6 +54,4 @@ namespace dev
 	} \
 	while (false)
 
-using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
-
 }

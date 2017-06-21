@@ -56,9 +56,5 @@ DEV_SIMPLE_EXCEPTION(FileError);
 // error information to be added to exceptions
 using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;
 using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
-using errinfo_required = boost::error_info<struct tag_required, bigint>;
-using errinfo_got = boost::error_info<struct tag_got, bigint>;
-using errinfo_required_h256 = boost::error_info<struct tag_required_h256, h256>;
-using errinfo_got_h256 = boost::error_info<struct tag_get_h256, h256>;
 
 }
