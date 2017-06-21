@@ -5771,6 +5771,48 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_right)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y, ) = (y, x, 1, 2);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_left)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(,x, y) = (1, 2, y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
 BOOST_AUTO_TEST_CASE(warn_unused_local)
 {
 	char const* text = R"(
