@@ -76,8 +76,6 @@ using byte = uint8_t;
 #define DEV_QUOTED_HELPER(s) #s
 #define DEV_QUOTED(s) DEV_QUOTED_HELPER(s)
 
-#define DEV_IGNORE_EXCEPTIONS(X) try { X; } catch (...) {}
-
 namespace dev
 {
 
