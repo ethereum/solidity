@@ -85,7 +85,7 @@ public:
 	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
-	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
+	void onePath() { assertThrow(!m_totalDeposit && !m_baseDeposit, InvalidDeposit, ""); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
 	void donePaths() { donePath(); m_totalDeposit = m_baseDeposit = 0; }
 	void ignored() { m_baseDeposit = m_deposit; }
@@ -93,8 +93,8 @@ public:
 
 	void injectStart(AssemblyItem const& _i);
 	int deposit() const { return m_deposit; }
-	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
-	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
+	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
+	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
