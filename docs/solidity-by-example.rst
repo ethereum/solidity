@@ -94,7 +94,7 @@ of votes.
             // called incorrectly. But watch out, this
             // will currently also consume all provided gas
             // (this is planned to change in the future).
-            require((msg.sender == chairperson) && !voters[voter].voted);
+            require((msg.sender == chairperson) && !voters[voter].voted && (voters[voter].weight == 0));
             voters[voter].weight = 1;
         }
 
@@ -165,7 +165,7 @@ of votes.
                 }
             }
         }
-        
+
         // Calls winningProposal() function to get the index
         // of the winner contained in the proposals array and then
         // returns the name of the winner
@@ -273,7 +273,7 @@ activate themselves.
             // If the bid is not higher, send the
             // money back.
             require(msg.value > highestBid);
-            
+
             if (highestBidder != 0) {
                 // Sending back the money by simply using
                 // highestBidder.send(highestBid) is a security risk
@@ -296,7 +296,7 @@ activate themselves.
                 // before `send` returns.
                 pendingReturns[msg.sender] = 0;
 
-                if (!msg.sender.send(amount)) { 
+                if (!msg.sender.send(amount)) {
                     // No need to call throw here, just reset the amount owing
                     pendingReturns[msg.sender] = amount;
                     return false;
