@@ -52,7 +52,7 @@
 
 #include <algorithm>
 #include <tuple>
-#include <libsolidity/interface/Utils.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/Scanner.h>
 
 using namespace std;

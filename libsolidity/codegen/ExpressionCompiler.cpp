@@ -32,6 +32,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/GasMeter.h>
+
 using namespace std;
 
 namespace dev

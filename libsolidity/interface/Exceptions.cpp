@@ -21,7 +21,6 @@
  */
 
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/Utils.h>
 
 using namespace std;
 using namespace dev;
