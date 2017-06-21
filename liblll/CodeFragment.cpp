@@ -173,6 +173,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 		auto varAddress = [&](string const& n)
 		{
+			if (n.empty())
+				error<InvalidName>("Empty variable name not allowed");
 			auto it = _s.vars.find(n);
 			if (it == _s.vars.end())
 				error<InvalidName>(std::string("Symbol not found: ") + s);
