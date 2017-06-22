@@ -88,7 +88,6 @@ Expression =
   | Expression '||' Expression
   | Expression '?' Expression ':' Expression
   | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
-  | Expression? (',' Expression)
   | PrimaryExpression
 
 PrimaryExpression = Identifier
@@ -96,6 +95,7 @@ PrimaryExpression = Identifier
                   | NumberLiteral
                   | HexLiteral
                   | StringLiteral
+                  | TupleExpression
                   | ElementaryTypeNameExpression
 
 ExpressionList = Expression ( ',' Expression )*
@@ -119,6 +119,9 @@ Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
 HexNumber = '0x' [0-9a-fA-F]+
 DecimalNumber = [0-9]+
+
+TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'
+                | '[' ( Expression ( ',' Expression )*  )? ']'
 
 ElementaryTypeNameExpression = ElementaryTypeName
 
