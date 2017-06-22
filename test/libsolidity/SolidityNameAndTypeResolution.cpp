@@ -2173,6 +2173,36 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(text), "Type resolving failed");
 }
 
+BOOST_AUTO_TEST_CASE(warns_assigning_decimal_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = 7;
+		}
+	)";
+	CHECK_WARNING(text, "Decimal literal assigned to bytesXX variable will be left-aligned.");
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_assigning_hex_number_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = 0x1234;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = bytes32(7);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 {
 	char const* text = R"(
@@ -3698,12 +3728,12 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				byte[2] memory a;
 				byte[2] memory b;
 				var k = true ? a : b;
-				k[0] = 0; //Avoid unused var warning
+				k[0] = byte(0); //Avoid unused var warning
 
 				bytes memory e;
 				bytes memory f;
 				var l = true ? e : f;
-				l[0] = 0; // Avoid unused var warning
+				l[0] = byte(0); // Avoid unused var warning
 
 				// fixed bytes
 				bytes2 c;
