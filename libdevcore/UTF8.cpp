@@ -70,18 +70,15 @@ bool isWellFormed(unsigned char byte1, unsigned char byte2)
 	return true;
 }
 
-}
-
-bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
+bool validateUTF8(const unsigned char *_input, size_t _length, size_t& _invalidPosition)
 {
-	const size_t length = _input.length();
 	bool valid = true;
 	size_t i = 0;
 
-	for (; i < length; i++)
+	for (; i < _length; i++)
 	{
 		// Check for Unicode Chapter 3 Table 3-6 conformity.
-		if ((unsigned char)_input[i] < 0x80)
+		if (_input[i] < 0x80)
 			continue;
 
 		size_t count = 0;
@@ -106,7 +103,7 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 			break;
 		}
 
-		if ((i + count) >= length)
+		if ((i + count) >= _length)
 		{
 			valid = false;
 			break;
@@ -135,6 +132,13 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 
 	_invalidPosition = i;
 	return false;
+}
+
+}
+
+bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
+{
+	return validateUTF8(reinterpret_cast<unsigned char const*>(_input.c_str()), _input.length(), _invalidPosition);
 }
 
 }
