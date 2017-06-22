@@ -13,6 +13,7 @@ Features:
 
 Bugfixes:
  * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
+ * Type Checker: Do not treat strings that look like addresses as addresses.
  * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
