@@ -366,6 +366,34 @@ BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
 }
 
+BOOST_AUTO_TEST_CASE(create_1_arg)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(call allgas
+					(create (returnlll (return 42)))
+					0 0 0 0x00 0x20)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(create_2_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(call allgas
+					(create 42 (returnlll (return (balance (address)))))
+					0 0 0 0x00 0x20)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_CASE(sha3_two_args)
 {
 	char const* sourceCode = R"(

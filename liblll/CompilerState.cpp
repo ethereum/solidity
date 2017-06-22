@@ -54,8 +54,9 @@ void CompilerState::populateStandard()
 	"(def 'msg (gaslimit to value data) { [0]:data (msg gaslimit to value 0 32) })"
 	"(def 'msg (to value data) { [0]:data (msg allgas to value 0 32) })"
 	"(def 'msg (to data) { [0]:data (msg allgas to 0 0 32) })"
-	"(def 'create (value code) { [0]:(msize) (create value @0 (lll code @0)) })"
-	"(def 'create (code) { [0]:(msize) (create 0 @0 (lll code @0)) })"
+	// NOTE: in the create macros, memory location 0 is set in order to force msize to be at least 32 bytes.
+	"(def 'create (value code) { [0]:0 [0]:(msize) (create value @0 (lll code @0)) })"
+	"(def 'create (code) { [0]:0 [0]:(msize) (create 0 @0 (lll code @0)) })"
 	"(def 'sha3 (loc len) (keccak256 loc len))"
 	"(def 'sha3 (val) { [0]:val (sha3 0 32) })"
 	"(def 'sha3pair (a b) { [0]:a [32]:b (sha3 0 64) })"
