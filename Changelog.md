@@ -16,6 +16,7 @@ Bugfixes:
  * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
+ * Fixed segfault with constant function parameters
 
 ### 0.4.11 (2017-05-03)
 
