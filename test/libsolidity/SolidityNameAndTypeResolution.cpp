@@ -1792,7 +1792,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "type uint8, which can only hold");
+	CHECK_WARNING(sourceCode, "uint8, which can hold");
 	sourceCode = R"(
 		 contract test {
 			 function f() {
@@ -1800,7 +1800,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			 }
 		 }
 	 )";
-	CHECK_WARNING(sourceCode, "type uint8, which can only hold");
+	CHECK_WARNING(sourceCode, "uint8, which can hold");
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
