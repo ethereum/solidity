@@ -9469,6 +9469,29 @@ BOOST_AUTO_TEST_CASE(revert)
 	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(literal_empty_string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes32 public x;
+			uint public a;
+			function f(bytes32 _x, uint _a) {
+				x = _x;
+				a = _a;
+			}
+			function g() {
+				this.f("", 2);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(scientific_notation)
 {
 	char const* sourceCode = R"(

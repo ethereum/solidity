@@ -128,7 +128,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		m_context << Instruction::DUP1;
 		storeStringData(bytesConstRef(str->value()));
 		if (_padToWordBoundaries)
-			m_context << u256(((str->value().size() + 31) / 32) * 32);
+			m_context << u256(max<size_t>(32, ((str->value().size() + 31) / 32) * 32));
 		else
 			m_context << u256(str->value().size());
 		m_context << Instruction::ADD;
