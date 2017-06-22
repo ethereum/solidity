@@ -366,6 +366,23 @@ BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
 }
 
+BOOST_AUTO_TEST_CASE(msg_six_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= 0 (calldatasize))
+					(seq
+						(mstore 0x40 1)
+						(def 'outsize 0x20)
+						(return (msg 1000 (address) 42 0x40 0x20 outsize) outsize)))
+				(when (= 1 (calldataload 0x00))
+					(return (callvalue)))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_CASE(create_1_arg)
 {
 	char const* sourceCode = R"(

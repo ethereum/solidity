@@ -49,7 +49,8 @@ void CompilerState::populateStandard()
 	"(def 'allgas (- (gas) 21))"
 	"(def 'send (to value) (call allgas to value 0 0 0 0))"
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
-	"(def 'msg (gaslimit to value data datasize outsize) { (set x outsize) (set y (alloc @32)) (call gaslimit to value data datasize @0 @32) @0 })"
+	// NOTE: in this macro, memory location 0 is set in order to force msize to be at least 32 bytes.
+	"(def 'msg (gaslimit to value data datasize outsize) { [0]:0 [0]:(msize) (call gaslimit to value data datasize @0 outsize) @0 })"
 	"(def 'msg (gaslimit to value data datasize) { (call gaslimit to value data datasize 0 32) @0 })"
 	"(def 'msg (gaslimit to value data) { [0]:data (msg gaslimit to value 0 32) })"
 	"(def 'msg (to value data) { [0]:data (msg allgas to value 0 32) })"
