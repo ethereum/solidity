@@ -481,12 +481,12 @@ Json::Value const& CompilerStack::natspec(Contract const& _contract, Documentati
 	return *(*doc);
 }
 
-Json::Value CompilerStack::functionHashes(ContractDefinition const& _contract)
+Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 {
-	Json::Value functionHashes(Json::objectValue);
-	for (auto const& it: _contract.interfaceFunctions())
-		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
-	return functionHashes;
+	Json::Value methodIdentifiers(Json::objectValue);
+	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
+		methodIdentifiers[it.second->externalSignature()] = toHex(it.first.ref());
+	return methodIdentifiers;
 }
 
 string const& CompilerStack::onChainMetadata(string const& _contractName) const

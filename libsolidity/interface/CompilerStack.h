@@ -178,7 +178,8 @@ public:
 	/// Can be one of 4 types defined at @c DocumentationType
 	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
 
-	Json::Value functionHashes(ContractDefinition const& _contract);
+	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
+	Json::Value methodIdentifiers(std::string const& _contractName) const;
 
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
@@ -190,9 +191,6 @@ public:
 	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& ast(std::string const& _sourceName = "") const;
-	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
-	/// does not exist.
-	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
@@ -256,6 +254,10 @@ private:
 
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
+
+	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
+	/// does not exist.
+	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
