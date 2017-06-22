@@ -26,7 +26,6 @@
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>

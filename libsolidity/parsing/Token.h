@@ -43,7 +43,6 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libsolidity/interface/Utils.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libdevcore/UndefMacros.h>
 

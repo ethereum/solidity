@@ -59,14 +59,11 @@ void Assembly::append(Assembly const& _a)
 
 void Assembly::append(Assembly const& _a, int _deposit)
 {
-	if (_deposit > _a.m_deposit)
-		BOOST_THROW_EXCEPTION(InvalidDeposit());
-	else
-	{
-		append(_a);
-		while (_deposit++ < _a.m_deposit)
-			append(Instruction::POP);
-	}
+	assertThrow(_deposit <= _a.m_deposit, InvalidDeposit, "");
+
+	append(_a);
+	while (_deposit++ < _a.m_deposit)
+		append(Instruction::POP);
 }
 
 unsigned Assembly::bytesRequired(unsigned subTagSize) const

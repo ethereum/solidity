@@ -22,7 +22,6 @@
 
 #include <libsolidity/ast/Types.h>
 
-#include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/CommonIO.h>

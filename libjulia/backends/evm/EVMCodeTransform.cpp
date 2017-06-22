@@ -23,7 +23,7 @@
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
-#include <libsolidity/interface/Utils.h>
+#include <libsolidity/interface/Exceptions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

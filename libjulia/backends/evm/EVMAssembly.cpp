@@ -22,7 +22,7 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libsolidity/interface/Utils.h>
+#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 using namespace dev;

@@ -26,7 +26,6 @@
 #include <stack>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <json/json.h>
 
