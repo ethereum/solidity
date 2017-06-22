@@ -10,6 +10,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${Boost_RANDOM_LIBRARIES})
 		target_link_libraries(${TARGET} ${Boost_FILESYSTEM_LIBRARIES})
 		target_link_libraries(${TARGET} ${Boost_SYSTEM_LIBRARIES})
+		target_link_libraries(${TARGET} ${Boost_REGEX_LIBRARIES})
 
 		if (DEFINED MSVC)
 			target_link_libraries(${TARGET} ${Boost_CHRONO_LIBRARIES})

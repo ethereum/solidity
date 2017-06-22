@@ -10,6 +10,7 @@ Features:
  * Inline Assembly: introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
  * Inline Assembly: ``for`` and ``switch`` statements.
  * Inline Assembly: function definitions and function calls.
+ * Code Generator: Added the Whiskers template system.
 
 Bugfixes:
  * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
