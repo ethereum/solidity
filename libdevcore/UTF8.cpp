@@ -33,41 +33,48 @@ namespace
 /// Validate byte sequence against Unicode chapter 3 Table 3-7.
 bool isWellFormed(unsigned char byte1, unsigned char byte2)
 {
-	switch (byte1)
-	{
-	case 0xc0 ... 0xc1:
+	if (byte1 == 0xc0 || byte1 == 0xc1)
 		return false;
-	case 0xc2 ... 0xdf:
-		break;
-	case 0xe0:
+	else if (byte1 >= 0xc2 && byte1 <= 0xdf)
+		return true;
+	else if (byte1 == 0xe0)
+	{
 		if (byte2 < 0xa0)
 			return false;
-		break;
-	case 0xe1 ... 0xec:
-		break;
-	case 0xed:
+		else
+			return true;
+	}
+	else if (byte1 >= 0xe1 && byte1 <= 0xec)
+		return true;
+	else if (byte1 == 0xed)
+	{
 		if (byte2 > 0x9f)
 			return false;
-		break;
-	case 0xee ... 0xef:
-		break;
-	case 0xf0:
+		else
+			return true;
+	}
+	else if (byte1 == 0xee || byte1 == 0xef)
+		return true;
+	else if (byte1 == 0xf0)
+	{
 		if (byte2 < 0x90)
 			return false;
-		break;
-	case 0xf1 ... 0xf3:
-		break;
-	case 0xf4:
+		else
+			return true;
+	}
+	else if (byte1 >= 0xf1 && byte1 <= 0xf3)
+		return true;
+	else if (byte1 == 0xf4)
+	{
 		if (byte2 > 0x8f)
 			return false;
-		break;
-	case 0xf5 ... 0xf7:
-	default:
-		/// Technically anything below 0xc0 or above 0xf7 is
-		/// not possible to encode using Table 3-6 anyway.
-		return false;
+		else
+			return true;
 	}
-	return true;
+	/// 0xf5 .. 0xf7 is disallowed
+	/// Technically anything below 0xc0 or above 0xf7 is
+	/// not possible to encode using Table 3-6 anyway.
+	return false;
 }
 
 bool validateUTF8(const unsigned char *_input, size_t _length, size_t& _invalidPosition)
@@ -82,20 +89,12 @@ bool validateUTF8(const unsigned char *_input, size_t _length, size_t& _invalidP
 			continue;
 
 		size_t count = 0;
-		switch ((unsigned char)_input[i])
-		{
-			case 0xc0 ... 0xdf:
-				count = 1;
-				break;
-			case 0xe0 ... 0xef:
-				count = 2;
-				break;
-			case 0xf0 ... 0xf7:
-				count = 3;
-				break;
-			default:
-				break;
-		}
+		if (_input[i] >= 0xc0 && _input[i] <= 0xdf)
+			count = 1;
+		else if (_input[i] >= 0xe0 && _input[i] <= 0xef)
+			count = 2;
+		else if (_input[i] >= 0xf0 && _input[i] <= 0xf7)
+			count = 3;
 
 		if (count == 0)
 		{
