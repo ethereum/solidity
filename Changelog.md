@@ -15,6 +15,7 @@ Bugfixes:
  * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
  * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
+ * Code Generator: Fix ABI encoding of empty literal string.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
 
 ### 0.4.11 (2017-05-03)
