@@ -23,7 +23,6 @@
 #pragma once
 
 #include <memory>
-#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Token.h>
 
 namespace dev
@@ -51,10 +50,10 @@ protected:
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
-	Token::Value currentToken() const { return m_scanner->currentToken(); }
-	Token::Value peekNextToken() const { return m_scanner->peekNextToken(); }
-	std::string currentLiteral() const { return m_scanner->currentLiteral(); }
-	Token::Value advance() { return m_scanner->next(); }
+	Token::Value currentToken() const;
+	Token::Value peekNextToken() const;
+	std::string currentLiteral() const;
+	Token::Value advance();
 	///@}
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
