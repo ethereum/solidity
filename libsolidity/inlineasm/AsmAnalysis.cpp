@@ -27,6 +27,8 @@
 
 #include <libsolidity/interface/ErrorReporter.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -40,7 +42,46 @@ using namespace dev::solidity::assembly;
 
 namespace {
 
-set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
+static set<Scope::JuliaType> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
+static vector<string> const builtinFunctionSignatures{
+	"abort()",
+	"discardu256(u256)",
+	"splitu256tou64(u256) -> u64, u64, u64, u64",
+	"keccak256(u256, u256) -> u256",
+	"addu256(u256, u256) -> u256",
+	"subu256(u256, u256) -> u256",
+	"mulu256(u256, u256) -> u256",
+	"divu256(u256, u256) -> u256",
+	"modu256(u256, u256) -> u256"
+};
+
+vector<tuple<string, vector<Scope::JuliaType>, vector<Scope::JuliaType>>> const& builtinFunctions()
+{
+	using FunctionSpecification = tuple<string, vector<Scope::JuliaType>, vector<Scope::JuliaType>>;
+	static unique_ptr<vector<FunctionSpecification>> functions;
+	if (!functions)
+	{
+		functions.reset(new vector<FunctionSpecification>());
+		for (string const& sig: builtinFunctionSignatures)
+		{
+			auto openParen = find(sig.begin(), sig.end(), '(');
+			auto closeParen = find(openParen, sig.end(), ')');
+			auto arrow = find(closeParen, sig.end(), '>');
+			string parameterString(openParen, closeParen);
+			string returnString(arrow, sig.end());
+			vector<Scope::JuliaType> parameterTypes;
+			vector<Scope::JuliaType> returnTypes;
+			boost::split(parameterTypes, parameterString, boost::is_any_of(", "), boost::token_compress_on);
+			boost::split(returnTypes, returnString, boost::is_any_of(", "), boost::token_compress_on);
+			functions->emplace_back(make_tuple(
+				string(sig.begin(), openParen),
+				move(parameterTypes),
+				move(returnTypes)
+			));
+		}
+	}
+	return *functions;
+}
 
 }
 
@@ -53,16 +94,8 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	if (m_julia)
 	{
 		Scope& rootScope = scope(&_block);
-		rootScope.registerFunction("abort", {}, {});
-		rootScope.registerFunction("discardu256", { "u256" }, { });
-		rootScope.registerFunction("splitu256tou64", { "u256" }, { "u64", "u64", "u64", "u64" });
-		rootScope.registerFunction("combineu64tou256", { "u64", "u64", "u64", "u64" }, { "u256" });
-		rootScope.registerFunction("keccak256", { "u256", "u256" }, { "u256" });
-		rootScope.registerFunction("addu256", { "u256", "u256" }, { "u256" });
-		rootScope.registerFunction("subu256", { "u256", "u256" }, { "u256" });
-		rootScope.registerFunction("mulu256", { "u256", "u256" }, { "u256" });
-		rootScope.registerFunction("divu256", { "u256", "u256" }, { "u256" });
-		rootScope.registerFunction("modu256", { "u256", "u256" }, { "u256" });
+		for (auto const& f: builtinFunctions())
+			rootScope.registerFunction(get<0>(f), get<1>(f), get<2>(f));
 	}
 
 	return (*this)(_block);

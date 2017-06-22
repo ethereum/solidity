@@ -227,6 +227,31 @@ void CodeTransform::operator()(assembly::Literal const& _literal)
 	checkStackHeight(&_literal);
 }
 
+CodeTransform::CodeTransform(
+	AbstractAssembly& _assembly,
+	AsmAnalysisInfo& _analysisInfo,
+	bool _julia,
+	bool _evm15,
+	ExternalIdentifierAccess const& _identifierAccess,
+	bool _useNamedLabelsForFunctions,
+	int _stackAdjustment,
+	std::shared_ptr<CodeTransform::Context> _context
+):
+	m_assembly(_assembly),
+	m_info(_analysisInfo),
+	m_julia(_julia),
+	m_evm15(_evm15),
+	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
+	m_identifierAccess(_identifierAccess),
+	m_stackAdjustment(_stackAdjustment),
+	m_context(_context)
+{
+	m_builtinFunctions["abort"] = solidity::Instruction::INVALID;
+	m_builtinFunctions["discardu256"] = solidity::Instruction::POP;
+	m_builtinFunctions["mulu256"] = solidity::Instruction::MUL;
+	m_builtinFunctions["divu256"] = solidity::Instruction::DIV;
+}
+
 void CodeTransform::operator()(assembly::Instruction const& _instruction)
 {
 	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
