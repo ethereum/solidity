@@ -103,16 +103,22 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 		if (success)
 			if (!StaticAnalyzer(errorReporter).analyze(*sourceUnit))
 				success = false;
-		if (errorReporter.errors().size() > 1 && !_allowMultipleErrors)
-			BOOST_FAIL("Multiple errors found");
+		std::shared_ptr<Error const> error;
 		for (auto const& currentError: errorReporter.errors())
 		{
 			if (
 				(_reportWarnings && currentError->type() == Error::Type::Warning) ||
 				(!_reportWarnings && currentError->type() != Error::Type::Warning)
 			)
-				return make_pair(sourceUnit, currentError);
+			{
+				if (error && !_allowMultipleErrors)
+					BOOST_FAIL("Multiple errors found");
+				if (!error)
+					error = currentError;
+			}
 		}
+		if (error)
+			return make_pair(sourceUnit, error);
 	}
 	catch (InternalCompilerError const& _e)
 	{
