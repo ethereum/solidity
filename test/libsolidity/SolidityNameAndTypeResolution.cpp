@@ -1781,6 +1781,28 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 }
 
+
+BOOST_AUTO_TEST_CASE(warn_var_from_zero)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint) {
+				var i = 1;
+				return i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "type uint8, which can only hold");
+	sourceCode = R"(
+		 contract test {
+			 function f() {
+				 for (var i = 0; i < msg.data.length; i++) { }
+			 }
+		 }
+	 )";
+	CHECK_WARNING(sourceCode, "type uint8, which can only hold");
+}
+
 BOOST_AUTO_TEST_CASE(enum_member_access)
 {
 	char const* text = R"(
