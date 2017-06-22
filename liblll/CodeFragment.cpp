@@ -192,7 +192,13 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			if (_t.size() != 2)
 				error<IncorrectParameterCount>();
-			m_asm.append(CodeFragment::compile(contentsString(firstAsString()), _s).m_asm);
+			string fileName = firstAsString();
+			if (fileName.empty())
+				error<InvalidName>("Empty file name provided");
+			string contents = contentsString(fileName);
+			if (contents.empty())
+				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
+			m_asm.append(CodeFragment::compile(contents, _s).m_asm);
 		}
 		else if (us == "SET")
 		{
