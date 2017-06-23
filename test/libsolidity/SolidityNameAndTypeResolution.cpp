@@ -2284,6 +2284,16 @@ BOOST_AUTO_TEST_CASE(constant_struct)
 	CHECK_ERROR(text, TypeError, "implemented");
 }
 
+BOOST_AUTO_TEST_CASE(address_is_constant)
+{
+	char const* text = R"(
+		contract C {
+			address constant x = 0x1212121212121212121212121212121212121212;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(uninitialized_const_variable)
 {
 	char const* text = R"(

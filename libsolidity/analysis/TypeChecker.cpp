@@ -1726,10 +1726,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
-		{
 			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
-			return;
-		}
 		else
 			m_errorReporter.warning(
 				_literal.location(),
@@ -1737,10 +1734,13 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"If this is not used as an address, please prepend '00'."
 			);
 	}
-	_literal.annotation().type = Type::forLiteral(_literal);
-	_literal.annotation().isPure = true;
+	if (!_literal.annotation().type)
+		_literal.annotation().type = Type::forLiteral(_literal);
+
 	if (!_literal.annotation().type)
 		m_errorReporter.fatalTypeError(_literal.location(), "Invalid literal value.");
+
+	_literal.annotation().isPure = true;
 }
 
 bool TypeChecker::contractDependenciesAreCyclic(
