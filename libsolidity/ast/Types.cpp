@@ -2248,6 +2248,16 @@ TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
 	return TypePointer();
 }
 
+TypePointer FunctionType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	if (_other->category() != category() || !Token::isCompareOp(_operator))
+		return TypePointer();
+	FunctionType const& other = dynamic_cast<FunctionType const&>(*_other);
+	if (kind() == Kind::Internal && other.kind() == Kind::Internal && sizeOnStack() == 1 && other.sizeOnStack() == 1)
+		return commonType(shared_from_this(), _other);
+	return TypePointer();
+}
+
 string FunctionType::canonicalName(bool) const
 {
 	solAssert(m_kind == Kind::External, "");
