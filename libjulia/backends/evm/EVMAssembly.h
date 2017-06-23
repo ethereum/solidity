@@ -70,6 +70,8 @@ public:
 	/// Return from a subroutine.
 	virtual void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
+	/// Append the assembled size as a constant.
+	virtual void appendAssemblySize() override;
 
 	/// Resolves references inside the bytecode and returns the linker object.
 	eth::LinkerObject finalize();
@@ -77,6 +79,7 @@ public:
 private:
 	void setLabelToCurrentPosition(AbstractAssembly::LabelID _labelId);
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
+	void updateReference(size_t pos, size_t size, u256 value);
 
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
@@ -84,6 +87,7 @@ private:
 	bytes m_bytecode;
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;
+	std::vector<size_t> m_assemblySizePositions;
 };
 
 }

@@ -32,6 +32,8 @@ namespace
 {
 /// Size of labels in bytes. Four-byte labels are required by some EVM1.5 instructions.
 size_t constexpr labelReferenceSize = 4;
+
+size_t constexpr assemblySizeReferenceSize = 4;
 }
 
 
@@ -145,17 +147,19 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 
 eth::LinkerObject EVMAssembly::finalize()
 {
+	size_t bytecodeSize = m_bytecode.size();
+	for (auto const& ref: m_assemblySizePositions)
+		updateReference(ref, assemblySizeReferenceSize, u256(bytecodeSize));
+
 	for (auto const& ref: m_labelReferences)
 	{
 		size_t referencePos = ref.first;
 		solAssert(m_labelPositions.count(ref.second), "");
 		size_t labelPos = m_labelPositions.at(ref.second);
 		solAssert(labelPos != size_t(-1), "Undefined but allocated label used.");
-		solAssert(m_bytecode.size() >= 4 && referencePos <= m_bytecode.size() - 4, "");
-		solAssert(uint64_t(labelPos) < (uint64_t(1) << (8 * labelReferenceSize)), "");
-		for (size_t i = 0; i < labelReferenceSize; i++)
-			m_bytecode[referencePos + i] = byte((labelPos >> (8 * (labelReferenceSize - i - 1))) & 0xff);
+		updateReference(referencePos, labelReferenceSize, u256(labelPos));
 	}
+
 	eth::LinkerObject obj;
 	obj.bytecode = m_bytecode;
 	return obj;
@@ -172,4 +176,19 @@ void EVMAssembly::appendLabelReferenceInternal(LabelID _labelId)
 {
 	m_labelReferences[m_bytecode.size()] = _labelId;
 	m_bytecode += bytes(labelReferenceSize);
+}
+
+void EVMAssembly::appendAssemblySize()
+{
+	appendInstruction(solidity::pushInstruction(assemblySizeReferenceSize));
+	m_assemblySizePositions.push_back(m_bytecode.size());
+	m_bytecode += bytes(assemblySizeReferenceSize);
+}
+
+void EVMAssembly::updateReference(size_t pos, size_t size, u256 value)
+{
+	solAssert(m_bytecode.size() >= size && pos <= m_bytecode.size() - size, "");
+	solAssert(value < (u256(1) << (8 * size)), "");
+	for (size_t i = 0; i < size; i++)
+		m_bytecode[pos + i] = byte((value >> (8 * (size - i - 1))) & 0xff);
 }

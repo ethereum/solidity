@@ -121,6 +121,11 @@ public:
 		solAssert(false, "RETURNSUB not implemented for EVM 1.0");
 	}
 
+	virtual void appendAssemblySize() override
+	{
+		m_assembly.appendProgramSize();
+	}
+
 private:
 	LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
 	{
