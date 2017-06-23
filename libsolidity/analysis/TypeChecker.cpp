@@ -466,13 +466,26 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 		var->accept(*this);
 	}
+	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
+	{
 		visitManually(
 			*modifier,
 			_function.isConstructor() ?
 			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
 			vector<ContractDefinition const*>()
 		);
+		Declaration const* decl = &dereference(*modifier->name());
+		if (modifiers.count(decl))
+		{
+			if (dynamic_cast<ContractDefinition const*>(decl))
+				m_errorReporter.declarationError(modifier->location(), "Base constructor already provided.");
+			else
+				m_errorReporter.declarationError(modifier->location(), "Modifier already used for this function.");
+		}
+		else
+			modifiers.insert(decl);
+	}
 	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
 	{
 		if (_function.isImplemented())
