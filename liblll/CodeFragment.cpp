@@ -171,11 +171,23 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			return string();
 		};
 
-		auto varAddress = [&](string const& n)
+		auto varAddress = [&](string const& n, bool createMissing = false)
 		{
+			if (n.empty())
+				error<InvalidName>("Empty variable name not allowed");
 			auto it = _s.vars.find(n);
 			if (it == _s.vars.end())
-				error<InvalidName>(std::string("Symbol not found: ") + s);
+			{
+				if (createMissing)
+				{
+					// Create new variable
+					bool ok;
+					tie(it, ok) = _s.vars.insert(make_pair(n, make_pair(_s.stackSize, 32)));
+					_s.stackSize += 32;
+				}
+				else
+					error<InvalidName>(std::string("Symbol not found: ") + n);
+			}
 			return it->second.first;
 		};
 
@@ -208,7 +220,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			for (auto const& i: _t)
 				if (c++ == 2)
 					m_asm.append(CodeFragment(i, _s, false).m_asm);
-			m_asm.append((u256)varAddress(firstAsString()));
+			m_asm.append((u256)varAddress(firstAsString(), true));
 			m_asm.append(Instruction::MSTORE);
 		}
 		else if (us == "GET")
