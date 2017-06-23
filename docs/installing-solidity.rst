@@ -267,7 +267,7 @@ If there are local modifications, the commit will be postfixed with ``.mod``.
 These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
 and the Solidity commit and platform combined make up the Semver build metadata.
 
-A relase example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
+A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
 A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
 
