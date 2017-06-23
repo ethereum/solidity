@@ -267,12 +267,16 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context << notFound;
 	if (fallback)
 	{
+		m_context.setStackOffset(0);
 		if (!fallback->isPayable())
 			appendCallValueCheck();
 
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
+		m_context.adjustStackOffset(
+			CompilerUtils(m_context).sizeOnStack(FunctionType(*fallback).returnParameterTypes()) - 1
+		);
 		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
@@ -285,6 +289,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		CompilerContext::LocationSetter locationSetter(m_context, functionType->declaration());
 
 		m_context << callDataUnpackerEntryPoints.at(it.first);
+		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
 		if (!functionType->isPayable() && !_contract.isLibrary())
@@ -295,6 +300,11 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendCalldataUnpacker(functionType->parameterTypes());
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
+		m_context.adjustStackOffset(
+			CompilerUtils(m_context).sizeOnStack(functionType->returnParameterTypes()) -
+			CompilerUtils(m_context).sizeOnStack(functionType->parameterTypes()) -
+			1
+		);
 		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
 }

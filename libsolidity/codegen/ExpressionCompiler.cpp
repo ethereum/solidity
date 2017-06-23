@@ -88,6 +88,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	FunctionType accessorType(_varDecl);
 
 	TypePointers paramTypes = accessorType.parameterTypes();
+	m_context.adjustStackOffset(1 + CompilerUtils::sizeOnStack(paramTypes));
 
 	// retrieve the position of the variable
 	auto const& location = m_context.storageLocationOfVariable(_varDecl);
