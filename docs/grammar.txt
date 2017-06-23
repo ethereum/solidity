@@ -20,9 +20,12 @@ StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Ident
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
+ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
+
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( FunctionCall | Identifier | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
@@ -72,8 +75,13 @@ VariableDefinition = ('var' IdentifierList | VariableDeclaration) ( '=' Expressi
 IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
-Expression =
-  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | '(' Expression ')' )
+Expression
+  = Expression ('++' | '--')
+  | NewExpression
+  | IndexAccess
+  | MemberAccess
+  | FunctionCall
+  | '(' Expression ')'
   | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
@@ -90,18 +98,18 @@ Expression =
   | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
   | PrimaryExpression
 
-PrimaryExpression = Identifier
-                  | BooleanLiteral
+PrimaryExpression = BooleanLiteral
                   | NumberLiteral
                   | HexLiteral
                   | StringLiteral
                   | TupleExpression
+                  | Identifier
                   | ElementaryTypeNameExpression
 
 ExpressionList = Expression ( ',' Expression )*
 NameValueList = Identifier ':' Expression ( ',' Identifier ':' Expression )*
 
-FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' FunctionCallArguments ')'
+FunctionCall = Expression '(' FunctionCallArguments ')'
 FunctionCallArguments = '{' NameValueList? '}'
                       | ExpressionList?
 
