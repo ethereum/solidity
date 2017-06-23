@@ -148,10 +148,8 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 eth::LinkerObject EVMAssembly::finalize()
 {
 	size_t bytecodeSize = m_bytecode.size();
-	solAssert(uint64_t(bytecodeSize) < (uint64_t(1) << (8 * assemblySizeReferenceSize)), "Bytecode too big.");
 	for (auto const& ref: m_assemblySizePositions)
-		for (size_t i = 0; i < assemblySizeReferenceSize; i++)
-			m_bytecode[ref + i] = byte((bytecodeSize >> (8 * (assemblySizeReferenceSize - i - 1))) & 0xff);
+		updateReference(ref, assemblySizeReferenceSize, u256(bytecodeSize));
 
 	for (auto const& ref: m_labelReferences)
 	{
@@ -159,10 +157,7 @@ eth::LinkerObject EVMAssembly::finalize()
 		solAssert(m_labelPositions.count(ref.second), "");
 		size_t labelPos = m_labelPositions.at(ref.second);
 		solAssert(labelPos != size_t(-1), "Undefined but allocated label used.");
-		solAssert(m_bytecode.size() >= 4 && referencePos <= m_bytecode.size() - 4, "");
-		solAssert(uint64_t(labelPos) < (uint64_t(1) << (8 * labelReferenceSize)), "");
-		for (size_t i = 0; i < labelReferenceSize; i++)
-			m_bytecode[referencePos + i] = byte((labelPos >> (8 * (labelReferenceSize - i - 1))) & 0xff);
+		updateReference(referencePos, labelReferenceSize, u256(labelPos));
 	}
 
 	eth::LinkerObject obj;
@@ -188,4 +183,12 @@ void EVMAssembly::appendAssemblySize()
 	appendInstruction(solidity::pushInstruction(assemblySizeReferenceSize));
 	m_assemblySizePositions.push_back(m_bytecode.size());
 	m_bytecode += bytes(assemblySizeReferenceSize);
+}
+
+void EVMAssembly::updateReference(size_t pos, size_t size, u256 value)
+{
+	solAssert(m_bytecode.size() >= size && pos <= m_bytecode.size() - size, "");
+	solAssert(value < (u256(1) << (8 * size)), "");
+	for (size_t i = 0; i < size; i++)
+		m_bytecode[pos + i] = byte((value >> (8 * (size - i - 1))) & 0xff);
 }

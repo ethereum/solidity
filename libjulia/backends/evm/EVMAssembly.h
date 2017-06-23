@@ -79,6 +79,7 @@ public:
 private:
 	void setLabelToCurrentPosition(AbstractAssembly::LabelID _labelId);
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
+	void updateReference(size_t pos, size_t size, u256 value);
 
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
