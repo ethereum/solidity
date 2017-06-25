@@ -412,11 +412,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (c_instructions.count(us))
 		{
 			auto it = c_instructions.find(us);
-			int ea = instructionInfo(it->second).args;
-			if (ea >= 0)
-				requireSize(ea);
-			else
-				requireMinSize(-ea);
+			requireSize(instructionInfo(it->second).args);
 
 			for (unsigned i = code.size(); i; --i)
 				m_asm.append(code[i - 1].m_asm, 1);
