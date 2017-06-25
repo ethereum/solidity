@@ -244,6 +244,20 @@ CompilerContext& CompilerContext::appendConditionalInvalid()
 	return *this;
 }
 
+CompilerContext& CompilerContext::appendRevert()
+{
+	return *this << u256(0) << u256(0) << Instruction::REVERT;
+}
+
+CompilerContext& CompilerContext::appendConditionalRevert()
+{
+	*this << Instruction::ISZERO;
+	eth::AssemblyItem afterTag = appendConditionalJump();
+	appendRevert();
+	*this << afterTag;
+	return *this;
+}
+
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 {
 	stack<ASTNode const*> newStack;

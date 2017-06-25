@@ -79,13 +79,23 @@ Block and Transaction Properties
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
 
-.. index:: assert, revert, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, revert, require
+
+Error Handling
+--------------
+
+``assert(bool condition)``:
+    throws if the condition is not met - to be used for internal errors.
+``require(bool condition)``:
+    throws if the condition is not met - to be used for errors in inputs or external components.
+``revert()``:
+    abort execution and revert state changes
+
+.. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
 Mathematical and Cryptographic Functions
 ----------------------------------------
 
-``assert(bool condition)``:
-    throws if the condition is not met.
 ``addmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
@@ -101,8 +111,6 @@ Mathematical and Cryptographic Functions
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
     (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
-``revert()``:
-    abort execution and revert state changes
 
 In the above, "tightly packed" means that the arguments are concatenated without padding.
 This means that the following are all identical::
@@ -122,6 +130,7 @@ This means that, for example, ``keccak256(0) == keccak256(uint8(0))`` and
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
+.. index:: balance, send, transfer, call, callcode, delegatecall
 .. _address_related:
 
 Address Related

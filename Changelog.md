@@ -14,6 +14,7 @@ Features:
  * Code Generator: Added the Whiskers template system.
 
 Bugfixes:
+ * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
  * Type Checker: Fix address literals not being treated as compile-time constants.
  * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
  * Fixed crash concerning non-callable types.

@@ -135,7 +135,15 @@ public:
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	/// If @a _chopSignBits, the function resets the signed bits out of the width of the signed integer.
-	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false, bool _chopSignBits = false);
+	/// If @a _asPartOfArgumentDecoding is true, failed conversions are flagged via REVERT,
+	/// otherwise they are flagged with INVALID.
+	void convertType(
+		Type const& _typeOnStack,
+		Type const& _targetType,
+		bool _cleanupNeeded = false,
+		bool _chopSignBits = false,
+		bool _asPartOfArgumentDecoding = false
+	);
 
 	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
 	/// memory for memory references.

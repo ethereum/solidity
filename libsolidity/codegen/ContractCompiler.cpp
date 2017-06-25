@@ -111,7 +111,7 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
-	m_context.appendConditionalInvalid();
+	m_context.appendConditionalRevert();
 }
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
@@ -276,7 +276,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
-		m_context.appendInvalid();
+		m_context.appendRevert();
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -368,7 +368,7 @@ void ContractCompiler::appendCalldataUnpacker(TypePointers const& _typeParameter
 					// copy to memory
 					// move calldata type up again
 					CompilerUtils(m_context).moveIntoStack(calldataType->sizeOnStack());
-					CompilerUtils(m_context).convertType(*calldataType, arrayType);
+					CompilerUtils(m_context).convertType(*calldataType, arrayType, false, false, true);
 					// fetch next pointer again
 					CompilerUtils(m_context).moveToStackTop(arrayType.sizeOnStack());
 				}
@@ -805,8 +805,7 @@ bool ContractCompiler::visit(Throw const& _throw)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _throw);
 	// Do not send back an error detail.
-	m_context << u256(0) << u256(0);
-	m_context << Instruction::REVERT;
+	m_context.appendRevert();
 	return false;
 }
 
