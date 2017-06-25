@@ -436,6 +436,60 @@ BOOST_AUTO_TEST_CASE(send_three_args)
 	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
 }
 
+// This test commented until issue #2465 is resolved.
+//BOOST_AUTO_TEST_CASE(alloc_zero)
+//{
+//	char const* sourceCode = R"(
+//		(returnlll
+//			(seq
+//				(mstore 0x00 1)
+//				(alloc 0)
+//				(return 0x00 0x20)))
+//	)";
+//	compileAndRun(sourceCode);
+//	BOOST_CHECK(callFallback() == encodeArgs(u256(1)));
+//}
+
+BOOST_AUTO_TEST_CASE(alloc_size)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (- (msize) (alloc (calldataload 0x04)))))
+	)";
+	compileAndRun(sourceCode);
+	// Note that (msize) is always a multiple of 32.
+	// First test (alloc 0) commented until issue #2465 is resolved.
+	//BOOST_CHECK(callContractFunction("test()", 0) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("test()", 1) == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 32) == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 33) == encodeArgs(u256(64)));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_start)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x40 0)
+				(return (alloc 0x01))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(fromHex("60")));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_with_variable)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(set 'x (alloc 0x01))
+				(mstore8 (get 'x) 42) ; ASCII '*'
+				(return (get 'x) 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs("*"));
+}
+
 BOOST_AUTO_TEST_CASE(msg_six_args)
 {
 	char const* sourceCode = R"(
