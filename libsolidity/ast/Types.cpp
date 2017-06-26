@@ -2250,7 +2250,7 @@ TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
 
 TypePointer FunctionType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != category() || !Token::isCompareOp(_operator))
+	if (_other->category() != category() || !(_operator == Token::Equal || _operator == Token::NotEqual))
 		return TypePointer();
 	FunctionType const& other = dynamic_cast<FunctionType const&>(*_other);
 	if (kind() == Kind::Internal && other.kind() == Kind::Internal && sizeOnStack() == 1 && other.sizeOnStack() == 1)
