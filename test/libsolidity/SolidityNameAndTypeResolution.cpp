@@ -554,6 +554,51 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(comparison_of_function_types)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return this.f < this.f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f < f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f == f;
+			}
+			function g() returns (bool ret) {
+				return f != f;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_of_mapping_types)
+{
+	char const* text = R"(
+		contract C {
+			mapping(uint => uint) x;
+			function f() returns (bool ret) {
+				var y = x;
+				return x == y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator == not compatible");
+}
+
 BOOST_AUTO_TEST_CASE(function_no_implementation)
 {
 	ASTPointer<SourceUnit> sourceUnit;

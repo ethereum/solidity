@@ -933,6 +933,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override;
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
 	virtual std::string toString(bool _short) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
@@ -1038,6 +1039,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual TypePointer encodingType() const override
 	{
 		return std::make_shared<IntegerType>(256);
@@ -1116,11 +1118,7 @@ public:
 
 	explicit ModuleType(SourceUnit const& _source): m_sourceUnit(_source) {}
 
-	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
-	{
-		return TypePointer();
-	}
-
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
@@ -1178,6 +1176,7 @@ public:
 	virtual std::string identifier() const override { return "t_inaccessible"; }
 	virtual bool isImplicitlyConvertibleTo(Type const&) const override { return false; }
 	virtual bool isExplicitlyConvertibleTo(Type const&) const override { return false; }
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual unsigned calldataEncodedSize(bool _padded) const override { (void)_padded; return 32; }
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return false; }
