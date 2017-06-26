@@ -22,6 +22,7 @@
 
 #include <libsolidity/analysis/TypeChecker.h>
 #include <memory>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
@@ -1800,7 +1801,23 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				_expectedType.toString() +
 				"."
 			);
-	}		
+	}
+
+	if (
+		type(_expression)->category() == Type::Category::RationalNumber &&
+		_expectedType.category() == Type::Category::FixedBytes
+	)
+	{
+		auto literal = dynamic_cast<Literal const*>(&_expression);
+
+		if (literal && !boost::starts_with(literal->value(), "0x"))
+			m_errorReporter.warning(
+				_expression.location(),
+				"Decimal literal assigned to bytesXX variable will be left-aligned. "
+				"Use an explicit conversion to silence this warning."
+			);
+	}
+
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)
