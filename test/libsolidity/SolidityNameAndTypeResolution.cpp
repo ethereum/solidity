@@ -1798,14 +1798,32 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "uint8, which can hold");
+	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = -2;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
 	sourceCode = R"(
 		 contract test {
 			 function f() {
 				 for (var i = 0; i < msg.data.length; i++) { }
 			 }
 		 }
-	 )";
+	)";
 	CHECK_WARNING(sourceCode, "uint8, which can hold");
 }
 
