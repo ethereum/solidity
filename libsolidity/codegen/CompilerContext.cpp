@@ -124,6 +124,7 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 								  unsigned _offsetToCurrent)
 {
 	solAssert(m_asm->deposit() >= 0 && unsigned(m_asm->deposit()) >= _offsetToCurrent, "");
+	solAssert(m_localVariables.count(&_declaration) == 0, "Variable already present");
 	m_localVariables[&_declaration] = unsigned(m_asm->deposit()) - _offsetToCurrent;
 }
 

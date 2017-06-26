@@ -1049,6 +1049,28 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
+{
+	char const* text = R"(
+		contract B {
+			function f(uint x) mod(x) mod(2) { }
+			modifier mod(uint a) { if (a > 0) _; }
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Modifier already used for this function");
+}
+
+BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
+{
+	char const* text = R"(
+		contract C { function C(uint a) {} }
+		contract B is C {
+			function B() C(2) C(2) {}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Base constructor already provided");
+}
+
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
 {
 	char const* text = R"(

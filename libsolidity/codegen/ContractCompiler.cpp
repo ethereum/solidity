@@ -878,6 +878,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 	solAssert(m_currentFunction, "");
 	unsigned stackSurplus = 0;
 	Block const* codeBlock = nullptr;
+	vector<VariableDeclaration const*> addedVariables;
 
 	m_modifierDepth++;
 
@@ -901,6 +902,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			for (unsigned i = 0; i < modifier.parameters().size(); ++i)
 			{
 				m_context.addVariable(*modifier.parameters()[i]);
+				addedVariables.push_back(modifier.parameters()[i].get());
 				compileExpression(
 					*modifierInvocation->arguments()[i],
 					modifier.parameters()[i]->annotation().type
@@ -927,6 +929,8 @@ void ContractCompiler::appendModifierOrFunctionCode()
 		m_returnTags.pop_back();
 
 		CompilerUtils(m_context).popStackSlots(stackSurplus);
+		for (auto var: addedVariables)
+			m_context.removeVariable(*var);
 	}
 	m_modifierDepth--;
 }
