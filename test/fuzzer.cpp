@@ -152,7 +152,6 @@ void testCompiler()
 				"Exception during compilation",
 				"Unknown exception during compilation",
 				"Unknown exception while generating contract data output",
-				"Unknown exception while generating formal method output",
 				"Unknown exception while generating source name output",
 				"Unknown error while generating JSON"
 			});

@@ -37,7 +37,6 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/AssemblyStack.h>
-#include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
@@ -391,17 +390,6 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 			cout << internalFunctions[name].asString() << endl;
 		}
 	}
-}
-
-void CommandLineInterface::handleFormal()
-{
-	if (!m_args.count(g_argFormal))
-		return;
-
-	if (m_args.count(g_argOutputDir))
-		createFile("solidity.mlw", m_compiler->formalTranslation());
-	else
-		cout << "Formal version:" << endl << m_compiler->formalTranslation() << endl;
 }
 
 void CommandLineInterface::readInputFilesAndConfigureRemappings()
@@ -789,10 +777,6 @@ bool CommandLineInterface::processInput()
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
 		bool successful = m_compiler->compile(optimize, runs, m_libraries);
-
-		if (successful && m_args.count(g_argFormal))
-			if (!m_compiler->prepareFormalAnalysis())
-				successful = false;
 
 		for (auto const& error: m_compiler->errors())
 			SourceReferenceFormatter::printExceptionInformation(
@@ -1185,7 +1169,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
 
-	handleFormal();
+	if (m_args.count(g_argFormal))
+		cerr << "Support for the Why3 output was removed." << endl;
 }
 
 }

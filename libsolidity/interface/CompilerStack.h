@@ -129,12 +129,6 @@ public:
 	/// @returns false on error.
 	bool compile(std::string const& _sourceCode, bool _optimize = false, unsigned _runs = 200);
 
-	/// Tries to translate all source files into a language suitable for formal analysis.
-	/// @param _errors list to store errors - defaults to the internal error list.
-	/// @returns false on error.
-	bool prepareFormalAnalysis(ErrorReporter* _errorReporter = nullptr);
-	std::string const& formalTranslation() const { return m_formalTranslation; }
-
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
 	/// @returns the runtime object for the contract.
@@ -290,7 +284,6 @@ private:
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
-	std::string m_formalTranslation;
 	ErrorList m_errorList;
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
