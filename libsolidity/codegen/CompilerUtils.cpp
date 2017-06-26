@@ -322,12 +322,15 @@ void CompilerUtils::memoryCopy()
 	m_context.appendInlineAssembly(R"(
 		{
 			// copy 32 bytes at once
-			for {} iszero(lt(len, 32)) {
-						dst := add(dst, 32)
-						src := add(src, 32)
-						len := sub(len, 32)
-					}
-			{ mstore(dst, mload(src)) }
+			for
+				{}
+				iszero(lt(len, 32))
+				{
+					dst := add(dst, 32)
+					src := add(src, 32)
+					len := sub(len, 32)
+				}
+				{ mstore(dst, mload(src)) }
 
 			// copy the remainder (0 < len < 32)
 			let mask := sub(exp(256, sub(32, len)), 1)
