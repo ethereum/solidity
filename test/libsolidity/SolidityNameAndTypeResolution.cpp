@@ -571,6 +571,17 @@ BOOST_AUTO_TEST_CASE(comparison_of_function_types)
 			}
 		}
 	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f == f;
+			}
+			function g() returns (bool ret) {
+				return f != f;
+			}
+		}
+	)";
 	CHECK_SUCCESS(text);
 }
 
