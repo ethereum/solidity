@@ -534,6 +534,8 @@ bool Literal::looksLikeAddress() const
 {
 	if (subDenomination() != SubDenomination::None)
 		return false;
+	if (token() != Token::Number)
+		return false;
 
 	string lit = value();
 	return lit.substr(0, 2) == "0x" && abs(int(lit.length()) - 42) <= 1;

@@ -5487,6 +5487,25 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 	CHECK_WARNING(text, "checksum");
 }
 
+BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
+{
+	// A previous implementation claimed the string would be an address
+	char const* text = R"(
+		contract AddrString {
+			address public test = "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type address");
+	text = R"(
+		contract AddrString {
+			function f() returns (address) {
+				return "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
+		   }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type");
+}
+
 BOOST_AUTO_TEST_CASE(early_exit_on_fatal_errors)
 {
 	// This tests a crash that occured because we did not stop for fatal errors.
