@@ -554,6 +554,51 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(comparison_of_function_types)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return this.f < this.f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f < f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f == f;
+			}
+			function g() returns (bool ret) {
+				return f != f;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_of_mapping_types)
+{
+	char const* text = R"(
+		contract C {
+			mapping(uint => uint) x;
+			function f() returns (bool ret) {
+				var y = x;
+				return x == y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator == not compatible");
+}
+
 BOOST_AUTO_TEST_CASE(function_no_implementation)
 {
 	ASTPointer<SourceUnit> sourceUnit;
@@ -5769,6 +5814,80 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 		}
 	)";
 	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_right)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y, ) = (y, x, 1, 2);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_left)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(,x, y) = (1, 2, y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_memory)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			function f() {
+				S memory x;
+				S memory y;
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_storage_pointers)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				S storage x_local = x;
+				S storage y_local = y;
+				S storage z_local = x;
+				(x, y_local, x_local, z_local) = (y, x_local, y_local, y);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_unused_local)

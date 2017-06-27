@@ -11,6 +11,7 @@ Features:
  * Inline Assembly: introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
  * Inline Assembly: ``for`` and ``switch`` statements.
  * Inline Assembly: function definitions and function calls.
+ * Type Checker: Warn about copies in storage that might overwrite unexpectedly.
  * Code Generator: Added the Whiskers template system.
  * Remove obsolete Why3 output.
  * Type Checker: Enforce strict UTF-8 validation.
@@ -19,6 +20,8 @@ Bugfixes:
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
  * Type Checker: Fix address literals not being treated as compile-time constants.
  * Type Checker: Disallow invoking the same modifier multiple times.
+ * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
+ * Type Checker: Disallow comparisons between mapping and non-internal function types.
  * Type Checker: Do not treat strings that look like addresses as addresses.
  * Type Checker: Support valid, but incorrectly rejected UTF-8 sequences.
  * Fixed crash concerning non-callable types.

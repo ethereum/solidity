@@ -305,15 +305,9 @@ void CompilerUtils::memoryCopy32()
 
 	m_context.appendInlineAssembly(R"(
 		{
-		jumpi(end, eq(len, 0))
-		start:
-		mstore(dst, mload(src))
-		jumpi(end, iszero(gt(len, 32)))
-		dst := add(dst, 32)
-		src := add(src, 32)
-		len := sub(len, 32)
-		jump(start)
-		end:
+			for { let i := 0 } lt(i, len) { i := add(i, 32) } {
+				mstore(add(dst, i), mload(add(src, i)))
+			}
 		}
 	)",
 		{ "len", "dst", "src" }
@@ -327,21 +321,22 @@ void CompilerUtils::memoryCopy()
 
 	m_context.appendInlineAssembly(R"(
 		{
-		// copy 32 bytes at once
-		start32:
-		jumpi(end32, lt(len, 32))
-		mstore(dst, mload(src))
-		dst := add(dst, 32)
-		src := add(src, 32)
-		len := sub(len, 32)
-		jump(start32)
-		end32:
+			// copy 32 bytes at once
+			for
+				{}
+				iszero(lt(len, 32))
+				{
+					dst := add(dst, 32)
+					src := add(src, 32)
+					len := sub(len, 32)
+				}
+				{ mstore(dst, mload(src)) }
 
-		// copy the remainder (0 < len < 32)
-		let mask := sub(exp(256, sub(32, len)), 1)
-		let srcpart := and(mload(src), not(mask))
-		let dstpart := and(mload(dst), mask)
-		mstore(dst, or(srcpart, dstpart))
+			// copy the remainder (0 < len < 32)
+			let mask := sub(exp(256, sub(32, len)), 1)
+			let srcpart := and(mload(src), not(mask))
+			let dstpart := and(mload(dst), mask)
+			mstore(dst, or(srcpart, dstpart))
 		}
 	)",
 		{ "len", "dst", "src" }
