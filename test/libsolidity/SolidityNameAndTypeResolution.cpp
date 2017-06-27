@@ -5816,6 +5816,80 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_right)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y, ) = (y, x, 1, 2);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_left)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(,x, y) = (1, 2, y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_memory)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			function f() {
+				S memory x;
+				S memory y;
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_storage_pointers)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				S storage x_local = x;
+				S storage y_local = y;
+				S storage z_local = x;
+				(x, y_local, x_local, z_local) = (y, x_local, y_local, y);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_unused_local)
 {
 	char const* text = R"(

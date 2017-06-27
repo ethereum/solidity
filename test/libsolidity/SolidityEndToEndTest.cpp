@@ -4483,6 +4483,38 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
+BOOST_AUTO_TEST_CASE(swap_in_storage_overwrite)
+{
+	// This tests a swap in storage which does not work as one
+	// might expect because we do not have temporary storage.
+	// (x, y) = (y, x) is the same as
+	// y = x;
+	// x = y;
+	char const* sourceCode = R"(
+		contract c {
+			struct S { uint a; uint b; }
+			S public x;
+			S public y;
+			function set() {
+				x.a = 1; x.b = 2;
+				y.a = 3; y.b = 4;
+			}
+			function swap() {
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(0), u256(0)));
+	BOOST_CHECK(callContractFunction("y()") == encodeArgs(u256(0), u256(0)));
+	BOOST_CHECK(callContractFunction("set()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1), u256(2)));
+	BOOST_CHECK(callContractFunction("y()") == encodeArgs(u256(3), u256(4)));
+	BOOST_CHECK(callContractFunction("swap()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(1), u256(2)));
+	BOOST_CHECK(callContractFunction("y()") == encodeArgs(u256(1), u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 {
 	char const* sourceCode = R"(
