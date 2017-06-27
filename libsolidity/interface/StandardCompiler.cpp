@@ -262,6 +262,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
+	m_compilerStack.disableOnChainMetadata(metadataSettings.get("disableOnChainMetadata", Json::Value(false)).asBool());
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 

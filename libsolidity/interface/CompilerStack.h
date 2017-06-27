@@ -177,6 +177,7 @@ public:
 
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
+	void disableOnChainMetadata(bool _disableOnChainMetadata) { m_disableOnChainMetadata = _disableOnChainMetadata; }
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
@@ -287,6 +288,7 @@ private:
 	ErrorList m_errorList;
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
+	bool m_disableOnChainMetadata = false;
 	State m_stackState = Empty;
 };
 
