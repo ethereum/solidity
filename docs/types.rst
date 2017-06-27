@@ -387,10 +387,10 @@ Example that shows how to use internal function types::
       }
       function reduce(
         uint[] memory self,
-        function (uint x, uint y) returns (uint) f
+        function (uint, uint) returns (uint) f
       )
         internal
-        returns (uint r)
+        returns (uint)
       {
         r = self[0];
         for (uint i = 1; i < self.length; i++) {

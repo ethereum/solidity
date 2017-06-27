@@ -5129,6 +5129,26 @@ BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
 	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
 }
 
+BOOST_AUTO_TEST_CASE(warn_function_type_parameters_with_names)
+{
+	char const* text = R"(
+		contract C {
+			function(uint a) f;
+		}
+	)";
+	CHECK_WARNING(text, "Naming function type parameters is deprecated.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_function_type_return_parameters_with_names)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) returns(bool ret) f;
+		}
+	)";
+	CHECK_WARNING(text, "Naming function type return parameters is deprecated.");
+}
+
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
 {
 	char const* text = R"(

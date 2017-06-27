@@ -148,3 +148,15 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 	return true;
 }
 
+bool SyntaxChecker::visit(FunctionTypeName const& _node)
+{
+	for (auto const& decl: _node.parameterTypeList()->parameters())
+		if (!decl->name().empty())
+			m_errorReporter.warning(decl->location(), "Naming function type parameters is deprecated.");
+
+	for (auto const& decl: _node.returnParameterTypeList()->parameters())
+		if (!decl->name().empty())
+			m_errorReporter.warning(decl->location(), "Naming function type return parameters is deprecated.");
+
+	return true;
+}
