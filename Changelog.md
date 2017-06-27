@@ -14,6 +14,7 @@ Features:
  * Type Checker: Warn about copies in storage that might overwrite unexpectedly.
  * Code Generator: Added the Whiskers template system.
  * Remove obsolete Why3 output.
+ * Type Checker: Enforce strict UTF-8 validation.
 
 Bugfixes:
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
@@ -22,6 +23,7 @@ Bugfixes:
  * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
  * Type Checker: Disallow comparisons between mapping and non-internal function types.
  * Type Checker: Do not treat strings that look like addresses as addresses.
+ * Type Checker: Support valid, but incorrectly rejected UTF-8 sequences.
  * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
  * Code Generator: Fix ABI encoding of empty literal string.
