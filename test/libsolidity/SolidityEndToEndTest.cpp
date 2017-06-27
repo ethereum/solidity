@@ -10051,6 +10051,30 @@ BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(function_types_sig)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes4) {
+				return this.f.sig;
+			}
+			function g() returns (bytes4) {
+				function () external returns (bytes4) fun = this.f;
+				return fun.sig;
+			}
+			function h() returns (bytes4) {
+				function () external returns (bytes4) fun = this.f;
+				var funvar = fun;
+				return funvar.sig;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == fromHex("0x26121ff0"));
+	BOOST_CHECK(callContractFunction("g()") == fromHex("0x26121ff0"));
+	BOOST_CHECK(callContractFunction("h()") == fromHex("0x26121ff0"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
