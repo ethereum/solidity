@@ -2436,6 +2436,11 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Kind::BareDelegateCall:
 	{
 		MemberList::MemberMap members;
+		if (m_kind == Kind::External)
+			members.push_back(MemberList::Member(
+				"sig",
+				make_shared<FixedBytesType>(4)
+			));
 		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
 		{
 			if (isPayable())
