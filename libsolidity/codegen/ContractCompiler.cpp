@@ -267,13 +267,19 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context << notFound;
 	if (fallback)
 	{
+		m_context.setStackOffset(0);
 		if (!fallback->isPayable())
 			appendCallValueCheck();
 
+		// Return tag is used to jump out of the function.
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
-		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
+		solAssert(FunctionType(*fallback).parameterTypes().empty(), "");
+		solAssert(FunctionType(*fallback).returnParameterTypes().empty(), "");
+		// Return tag gets consumed.
+		m_context.adjustStackOffset(-1);
+		m_context << Instruction::STOP;
 	}
 	else
 		m_context.appendRevert();
@@ -285,16 +291,26 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		CompilerContext::LocationSetter locationSetter(m_context, functionType->declaration());
 
 		m_context << callDataUnpackerEntryPoints.at(it.first);
+		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
 		if (!functionType->isPayable() && !_contract.isLibrary())
 			appendCallValueCheck();
 
+		// Return tag is used to jump out of the function.
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
+		// Parameter for calldataUnpacker
 		m_context << CompilerUtils::dataStartOffset;
 		appendCalldataUnpacker(functionType->parameterTypes());
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
+		// Return tag and input parameters get consumed.
+		m_context.adjustStackOffset(
+			CompilerUtils(m_context).sizeOnStack(functionType->returnParameterTypes()) -
+			CompilerUtils(m_context).sizeOnStack(functionType->parameterTypes()) -
+			1
+		);
+		// Consumes the return parameters.
 		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
 }

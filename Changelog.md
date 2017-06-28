@@ -28,6 +28,7 @@ Bugfixes:
  * Fixed crash concerning non-callable types.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
  * Code Generator: Fix ABI encoding of empty literal string.
+ * Code Generator: Fix negative stack size checks.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
  * Fixed segfault with constant function parameters
 
