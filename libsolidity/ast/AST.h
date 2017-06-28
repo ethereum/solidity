@@ -1591,7 +1591,7 @@ public:
 	SubDenomination subDenomination() const { return m_subDenomination; }
 
 	/// @returns true if this is a number with a hex prefix.
-	bool hasHexPrefix() const;
+	bool isHexNumber() const;
 
 	/// @returns true if this looks like a checksummed address.
 	bool looksLikeAddress() const;

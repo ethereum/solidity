@@ -530,7 +530,7 @@ IdentifierAnnotation& Identifier::annotation() const
 	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
-bool Literal::hasHexPrefix() const
+bool Literal::isHexNumber() const
 {
 	if (token() != Token::Number)
 		return false;
@@ -542,7 +542,7 @@ bool Literal::looksLikeAddress() const
 	if (subDenomination() != SubDenomination::None)
 		return false;
 
-	if (!hasHexPrefix())
+	if (!isHexNumber())
 		return false;
 
 	return abs(int(value().length()) - 42) <= 1;
@@ -550,6 +550,6 @@ bool Literal::looksLikeAddress() const
 
 bool Literal::passesAddressChecksum() const
 {
-	solAssert(hasHexPrefix(), "Expected hex prefix");
+	solAssert(isHexNumber(), "Expected hex number");
 	return dev::passesAddressChecksum(value(), true);
 }
