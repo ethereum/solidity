@@ -1068,7 +1068,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Invalid member access to integer");
 		break;
 	case Type::Category::Function:
-		if (member == "sig")
+		if (member == "selector")
 		{
 			m_context << Instruction::SWAP1 << Instruction::POP;
 			/// need to store store it as bytes4

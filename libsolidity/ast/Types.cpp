@@ -2438,7 +2438,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
 			members.push_back(MemberList::Member(
-				"sig",
+				"selector",
 				make_shared<FixedBytesType>(4)
 			));
 		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
