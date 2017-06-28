@@ -534,7 +534,7 @@ bool Literal::isHexNumber() const
 {
 	if (token() != Token::Number)
 		return false;
-	return value().substr(0, 2) == "0x";
+	return boost::starts_with(value(), "0x");
 }
 
 bool Literal::looksLikeAddress() const
