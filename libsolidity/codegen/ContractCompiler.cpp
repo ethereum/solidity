@@ -297,16 +297,20 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		if (!functionType->isPayable() && !_contract.isLibrary())
 			appendCallValueCheck();
 
+		// Return tag is used to jump out of the function.
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
+		// Parameter for calldataUnpacker
 		m_context << CompilerUtils::dataStartOffset;
 		appendCalldataUnpacker(functionType->parameterTypes());
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
+		// Return tag and input parameters get consumed.
 		m_context.adjustStackOffset(
 			CompilerUtils(m_context).sizeOnStack(functionType->returnParameterTypes()) -
 			CompilerUtils(m_context).sizeOnStack(functionType->parameterTypes()) -
 			1
 		);
+		// Consumes the return parameters.
 		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
 }
