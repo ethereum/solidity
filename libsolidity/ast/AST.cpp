@@ -530,20 +530,26 @@ IdentifierAnnotation& Identifier::annotation() const
 	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
+bool Literal::isHexNumber() const
+{
+	if (token() != Token::Number)
+		return false;
+	return boost::starts_with(value(), "0x");
+}
+
 bool Literal::looksLikeAddress() const
 {
 	if (subDenomination() != SubDenomination::None)
 		return false;
-	if (token() != Token::Number)
+
+	if (!isHexNumber())
 		return false;
 
-	string lit = value();
-	return lit.substr(0, 2) == "0x" && abs(int(lit.length()) - 42) <= 1;
+	return abs(int(value().length()) - 42) <= 1;
 }
 
 bool Literal::passesAddressChecksum() const
 {
-	string lit = value();
-	solAssert(lit.substr(0, 2) == "0x", "Expected hex prefix");
-	return dev::passesAddressChecksum(lit, true);
+	solAssert(isHexNumber(), "Expected hex number");
+	return dev::passesAddressChecksum(value(), true);
 }

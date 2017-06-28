@@ -1886,7 +1886,7 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	{
 		auto literal = dynamic_cast<Literal const*>(&_expression);
 
-		if (literal && !boost::starts_with(literal->value(), "0x"))
+		if (literal && !literal->isHexNumber())
 			m_errorReporter.warning(
 				_expression.location(),
 				"Decimal literal assigned to bytesXX variable will be left-aligned. "
