@@ -57,6 +57,32 @@ BOOST_AUTO_TEST_CASE(panic)
 	BOOST_REQUIRE(m_output.empty());
 }
 
+BOOST_AUTO_TEST_CASE(macro_zeroarg)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'zeroarg () (seq (mstore 0 0x1234) (return 0 32)))
+				(zeroarg)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(0x1234)));
+}
+
+BOOST_AUTO_TEST_CASE(macros)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'x 1)
+				(def 'y () { (def 'x (+ x 2)) })
+				(y)
+				(return x)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_CASE(variables)
 {
 	char const* sourceCode = R"(
@@ -361,17 +387,6 @@ BOOST_AUTO_TEST_CASE(assembly_codecopy)
 	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
 }
 
-BOOST_AUTO_TEST_CASE(zeroarg_macro)
-{
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(def 'zeroarg () (seq (mstore 0 0x1234) (return 0 32)))
-				(zeroarg)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(u256(0x1234)));
-}
 
 BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 {

@@ -258,7 +258,11 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				else if (ii == 2)
 					if (_t.size() == 3)
-						_s.defs[n] = CodeFragment(i, _s);
+					{
+						/// NOTE: some compilers could do the assignment first if this is done in a single line
+						CodeFragment code = CodeFragment(i, _s);
+						_s.defs[n] = code;
+					}
 					else
 						for (auto const& j: i)
 						{
