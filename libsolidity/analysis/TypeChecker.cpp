@@ -956,6 +956,38 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 					var.location(),
 					"Cannot declare variable with void (empty tuple) type."
 				);
+			else if (valueComponentType->category() == Type::Category::RationalNumber)
+			{
+				string typeName = var.annotation().type->toString(true);
+				string extension;
+				if (auto type = dynamic_cast<IntegerType const*>(var.annotation().type.get()))
+				{
+					int numBits = type->numBits();
+					bool isSigned = type->isSigned();
+					string minValue;
+					string maxValue;
+					if (isSigned)
+					{
+						numBits--;
+						minValue = "-" + bigint(bigint(1) << numBits).str();
+					}
+					else
+						minValue = "0";
+					maxValue = bigint((bigint(1) << numBits) - 1).str();
+					extension = ", which can hold values between " + minValue + " and " + maxValue;
+				}
+				else
+					solAssert(dynamic_cast<FixedPointType const*>(var.annotation().type.get()), "Unknown type.");
+
+				m_errorReporter.warning(
+					_statement.location(),
+					"The type of this variable was inferred as " +
+					typeName +
+					extension +
+					". This is probably not desired. Use an explicit type to silence this warning."
+				);
+			}
+
 			var.accept(*this);
 		}
 		else

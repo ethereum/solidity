@@ -103,16 +103,22 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 		if (success)
 			if (!StaticAnalyzer(errorReporter).analyze(*sourceUnit))
 				success = false;
-		if (errorReporter.errors().size() > 1 && !_allowMultipleErrors)
-			BOOST_FAIL("Multiple errors found");
+		std::shared_ptr<Error const> error;
 		for (auto const& currentError: errorReporter.errors())
 		{
 			if (
 				(_reportWarnings && currentError->type() == Error::Type::Warning) ||
 				(!_reportWarnings && currentError->type() != Error::Type::Warning)
 			)
-				return make_pair(sourceUnit, currentError);
+			{
+				if (error && !_allowMultipleErrors)
+					BOOST_FAIL("Multiple errors found");
+				if (!error)
+					error = currentError;
+			}
 		}
+		if (error)
+			return make_pair(sourceUnit, error);
 	}
 	catch (InternalCompilerError const& _e)
 	{
@@ -1142,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 	)";
 	// Error: Identifier already declared.
 	// Error: Override changes modifier to function.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1779,6 +1785,46 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 		}
 	)";
 	CHECK_SUCCESS(sourceCode);
+}
+
+
+BOOST_AUTO_TEST_CASE(warn_var_from_zero)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint) {
+				var i = 1;
+				return i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = -2;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
+	sourceCode = R"(
+		 contract test {
+			 function f() {
+				 for (var i = 0; i < msg.data.length; i++) { }
+			 }
+		 }
+	)";
+	CHECK_WARNING(sourceCode, "uint8, which can hold");
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -3175,9 +3221,9 @@ BOOST_AUTO_TEST_CASE(tuples)
 		contract C {
 			function f() {
 				uint a = (1);
-				var (b,) = (1,);
-				var (c,d) = (1, 2 + a);
-				var (e,) = (1, 2, b);
+				var (b,) = (uint8(1),);
+				var (c,d) = (uint32(1), 2 + a);
+				var (e,) = (uint64(1), 2, b);
 				a;b;c;d;e;
 			}
 		}
@@ -5518,7 +5564,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				address x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
 		}
@@ -5531,7 +5577,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+				address x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
 				x;
 			}
 		}
@@ -5544,7 +5590,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				address x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
 		}
@@ -5927,7 +5973,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var a = 1;
+				uint a = 1;
 			}
 		}
 	)";
