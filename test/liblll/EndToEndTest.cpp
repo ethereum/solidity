@@ -401,6 +401,41 @@ BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
 }
 
+// The following tests are for the built-in macros.
+// Note that panic, returnlll and return_one_arg are well covered above.
+
+BOOST_AUTO_TEST_CASE(allgas)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (- (gas) allgas)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(16))); // == 21 - SUB - GAS
+}
+
+BOOST_AUTO_TEST_CASE(send_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(send 0xdead 42))
+	)";
+	compileAndRun(sourceCode);
+	callFallbackWithValue(42);
+	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+}
+
+BOOST_AUTO_TEST_CASE(send_three_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(send allgas 0xdead 42))
+	)";
+	compileAndRun(sourceCode);
+	callFallbackWithValue(42);
+	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+}
+
 BOOST_AUTO_TEST_CASE(msg_six_args)
 {
 	char const* sourceCode = R"(
@@ -418,7 +453,64 @@ BOOST_AUTO_TEST_CASE(msg_six_args)
 	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
 }
 
-BOOST_AUTO_TEST_CASE(create_1_arg)
+BOOST_AUTO_TEST_CASE(msg_five_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= 0 (calldatasize))
+					(seq
+						(mstore 0x20 1)
+						(mstore 0x40 2)
+						(return (msg 1000 (address) 42 0x20 0x40))))
+				(when (= 3 (+ (calldataload 0x00) (calldataload 0x20)))
+					(return (callvalue)))))
+
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(msg_four_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= 0 (calldatasize))
+					(return (msg 1000 (address) 42 0xff)))
+				(return (callvalue))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(msg_three_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= 0 (calldatasize))
+					(return (msg (address) 42 0xff)))
+				(return (callvalue))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(msg_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(when (= 0 (calldatasize))
+					(return (msg (address) 0xff)))
+				(return 42)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(create_one_arg)
 {
 	char const* sourceCode = R"(
 		(returnlll
@@ -432,7 +524,7 @@ BOOST_AUTO_TEST_CASE(create_1_arg)
 	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
 }
 
-BOOST_AUTO_TEST_CASE(create_2_args)
+BOOST_AUTO_TEST_CASE(create_two_args)
 {
 	char const* sourceCode = R"(
 		(returnlll
@@ -470,6 +562,42 @@ BOOST_AUTO_TEST_CASE(sha3_one_arg)
 		fromHex("b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6")));
 }
 
+BOOST_AUTO_TEST_CASE(sha3pair)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (sha3pair 0x01 0x02)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0xe90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0")));
+}
+
+BOOST_AUTO_TEST_CASE(sha3trip)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (sha3trip 0x01 0x02 0x03)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0x6e0c627900b24bd432fe7b1f713f1b0744091a646a9fe4a65a18dfed21f2949c")));
+}
+
+BOOST_AUTO_TEST_CASE(makeperm) // Covers makeperm (implicit), permcount and perm
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(perm 'x) (x (+ 1 x))
+				(perm 'y) (y (+ 10 y))
+				(when (= 2 permcount)
+					(return (+ x y)))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(11)));
+}
+
 BOOST_AUTO_TEST_CASE(ecrecover)
 {
 	char const* sourceCode = R"(
@@ -487,6 +615,72 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callFallback() == encodeArgs(fromHex("0x8743523d96a1b2cbe0c6909653a56da18ed484af")));
+}
+
+BOOST_AUTO_TEST_CASE(sha256_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
+				(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
+				(sha256 0x20 0x40)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0xcf25a9fe3d86ae228c226c81d2d8c64c687cd6dc4586d10d8e7e4e5b6706d429")));
+}
+
+BOOST_AUTO_TEST_CASE(ripemd160_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
+				(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
+				(ripemd160 0x20 0x40)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0x36c6b90a49e17d4c1e1b0e634ec74124d9b207da")));
+}
+
+BOOST_AUTO_TEST_CASE(sha256_one_arg)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(sha256 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0xcfd2f1fad75a1978da0a444883db7251414b139f31f5a04704c291fdb0e175e6")));
+}
+
+BOOST_AUTO_TEST_CASE(ripemd160_one_arg)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(ripemd160 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(
+		fromHex("0xac5ab22e07b0fb80c69b6207902f725e2507e546")));
+}
+
+BOOST_AUTO_TEST_CASE(wei_szabo_finney_ether)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return (+ wei (+ szabo (+ finney ether)))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(1001001000000000001)));
 }
 
 BOOST_AUTO_TEST_CASE(shift_left)
