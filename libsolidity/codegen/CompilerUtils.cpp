@@ -773,9 +773,9 @@ void CompilerUtils::convertType(
 		if (_cleanupNeeded)
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		break;
-	default:
+	case Type::Category::Function:
 	{
-		if (stackTypeCategory == Type::Category::Function)
+		if (targetTypeCategory == Type::Category::Integer)
 		{
 			IntegerType const& targetType = dynamic_cast<IntegerType const&>(_targetType);
 			solAssert(targetType.isAddress(), "Function type can only be converted to address.");
@@ -784,8 +784,10 @@ void CompilerUtils::convertType(
 
 			// stack: <address> <function_id>
 			m_context << Instruction::POP;
-			// "fall-through"
+			break;
 		}
+	}
+	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
@@ -793,7 +795,6 @@ void CompilerUtils::convertType(
 					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
 					<< Instruction::AND;
 		break;
-	}
 	}
 
 	solAssert(!enumOverflowCheckPending, "enum overflow checking missing.");

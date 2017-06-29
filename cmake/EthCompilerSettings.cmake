@@ -65,7 +65,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Build everything as shared libraries (.so files)
 	add_definitions(-DSHAREDLIB)
-	
+
 	# If supported for the target machine, emit position-independent code, suitable for dynamic
 	# linking and avoiding any limit on the size of the global offset table.
 	add_compile_options(-fPIC)
@@ -92,6 +92,12 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
 			add_compile_options(-fstack-protector-strong)
 			add_compile_options(-fstack-protector)
+		endif()
+
+		# Until https://github.com/ethereum/solidity/issues/2479 is handled
+		# disable all implicit fallthrough warnings in the codebase for GCC > 7.0
+		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
+			add_compile_options(-Wno-implicit-fallthrough)
 		endif()
 
 	# Additional Clang-specific compiler settings.
