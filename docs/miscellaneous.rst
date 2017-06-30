@@ -491,7 +491,7 @@ Function Visibility Specifiers
         return true;
     }
 
-- ``public``: visible externally and internally (creates getter function for storage/state variables)
+- ``public``: visible externally and internally (creates a :ref:`getter function <Getter Functions>` for storage/state variables)
 - ``private``: only visible in the current contract
 - ``external``: only visible externally (only for functions) - i.e. can only be message-called (via ``this.func``)
 - ``internal``: only visible internally
