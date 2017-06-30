@@ -523,14 +523,17 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireSize(1);
 			requireDeposit(0, 1);
 
+			/// Save starting offset on stack.
 			m_asm.append(Instruction::MSIZE);
-			m_asm.append(u256(0));
-			m_asm.append(u256(1));
+
+			/// Calculate needed memory size.
 			m_asm.append(code[0].m_asm, 1);
 			m_asm.append(Instruction::MSIZE);
 			m_asm.append(Instruction::ADD);
-			m_asm.append(Instruction::SUB);
-			m_asm.append(Instruction::MSTORE8);
+
+			/// Trigger memory expansion
+			m_asm.append(Instruction::MLOAD);
+			m_asm.append(Instruction::POP);
 
 			_s.usedAlloc = true;
 		}
