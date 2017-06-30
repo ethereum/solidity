@@ -557,7 +557,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
-It is possible to mark arrays ``public`` and have Solidity create a getter.
+It is possible to mark arrays ``public`` and have Solidity create a _`[getter](https://solidity.readthedocs.io/en/develop/contracts.html#getter-functions)`_.
 The numeric index will become a required parameter for the getter.
 
 .. index:: ! array;allocating, new
@@ -806,7 +806,7 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
-It is possible to mark mappings ``public`` and have Solidity create a getter.
+It is possible to mark mappings ``public`` and have Solidity create a `_getter <https://solidity.readthedocs.io/en/develop/contracts.html#getter-functions>`.
 The ``_KeyType`` will become a required parameter for the getter and it will
 return ``_ValueType``.
 
