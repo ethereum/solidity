@@ -46,9 +46,6 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 	case Type::TypeError:
 		m_typeName = "TypeError";
 		break;
-	case Type::Why3TranslatorError:
-		m_typeName = "Why3TranslatorError";
-		break;
 	case Type::Warning:
 		m_typeName = "Warning";
 		break;

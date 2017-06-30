@@ -79,10 +79,6 @@ public:
 
 	void docstringParsingError(std::string const& _location);
 
-	void why3TranslatorError(ASTNode const& _location, std::string const& _description);
-
-	void fatalWhy3TranslatorError(ASTNode const& _location, std::string const& _description);
-
 	ErrorList const& errors() const;
 
 	void clear();
