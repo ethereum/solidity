@@ -3,7 +3,7 @@
 set -e
 
 docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/../CMakeLists.txt)
+version=$($(dirname "$0")/get_version.sh)
 if [ "$TRAVIS_BRANCH" = "develop" ]
 then
     docker tag ethereum/solc:build ethereum/solc:nightly;

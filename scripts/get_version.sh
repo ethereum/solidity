@@ -28,26 +28,4 @@
 
 set -e
 
-REPO_ROOT="$(dirname "$0")"/..
-
-cd $REPO_ROOT/build
-
-echo "Preparing solc-js..."
-rm -rf solc-js
-git clone https://github.com/ethereum/solc-js
-cd solc-js
-npm install
-
-# Replace soljson with current build
-echo "Replacing soljson.js"
-rm -f soljson.js
-# Make a copy because paths might not be absolute
-cp ../solc/soljson.js soljson.js
-
-# Update version (needed for some tests)
-VERSION=$(../../scripts/get_version.sh)
-echo "Updating package.json to version $VERSION"
-npm version $VERSION
-
-echo "Running solc-js tests..."
-npm run test
+grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/../CMakeLists.txt
