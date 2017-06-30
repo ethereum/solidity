@@ -4679,7 +4679,7 @@ BOOST_AUTO_TEST_CASE(unused_return_value_callcode)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Return value of low-level calls not used");
+	CHECK_WARNING_ALLOW_MULTI(text, "Return value of low-level calls not used");
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
@@ -4692,6 +4692,31 @@ BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
 		}
 	)";
 	CHECK_WARNING(text, "Return value of low-level calls not used");
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_callcode)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var x = address(0x12).callcode;
+				x;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"callcode\" has been deprecated in favour");
+}
+
+BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_local)
+{
+	char const* text = R"(
+		contract test {
+			function callcode() {
+				var x = this.callcode;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(modifier_without_underscore)
