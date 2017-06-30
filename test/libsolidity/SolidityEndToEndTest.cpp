@@ -9698,7 +9698,10 @@ BOOST_AUTO_TEST_CASE(return_structs)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
+	// This will throw "unimplemented" until it is implemented.
+	BOOST_CHECK_THROW(
+		compileAndRun(sourceCode, 0, "C"),
+		Exception);
 
 //	Will calculate the exact encoding later.
 //	BOOST_CHECK(callContractFunction("f()") == encodeArgs(
