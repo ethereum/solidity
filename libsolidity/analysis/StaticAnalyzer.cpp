@@ -123,6 +123,14 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					"\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?"
 				);
 
+	if (_memberAccess.memberName() == "callcode")
+		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
+			if (type->kind() == FunctionType::Kind::BareCallCode)
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"\"callcode\" has been deprecated in favour of \"delegatecall\"."
+				);
+
 	return true;
 }
 

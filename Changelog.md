@@ -16,6 +16,7 @@ Features:
  * Code Generator: Added the Whiskers template system.
  * Remove obsolete Why3 output.
  * Type Checker: Enforce strict UTF-8 validation.
+ * Static Analyzer: Warn about deprecation of ``callcode``.
 
 Bugfixes:
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
