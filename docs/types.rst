@@ -806,7 +806,7 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
-It is possible to mark mappings ``public`` and have Solidity create a `_getter <https://solidity.readthedocs.io/en/develop/contracts.html#getter-functions>`.
+It is possible to mark mappings ``public`` and have Solidity create a :ref:`getters <visibility-and-getters>`.
 The ``_KeyType`` will become a required parameter for the getter and it will
 return ``_ValueType``.
 
