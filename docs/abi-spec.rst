@@ -285,13 +285,15 @@ In effect, a log entry using this ABI is described as:
 JSON
 ====
 
-The JSON format for a contract's interface is given by an array of function and/or event descriptions. A function description is a JSON object with the fields:
+The JSON format for a contract's interface is given by an array of function and/or event descriptions.
+A function description is a JSON object with the fields:
 
 - `type`: `"function"`, `"constructor"`, or `"fallback"` (the :ref:`unnamed "default" function <fallback-function>`);
 - `name`: the name of the function;
 - `inputs`: an array of objects, each of which contains:
   * `name`: the name of the parameter;
-  * `type`: the canonical type of the parameter.
+  * `type`: the canonical type of the parameter (more below).
+  * `components`: used for tuple types (more below).
 - `outputs`: an array of objects similar to `inputs`, can be omitted if function doesn't return anything;
 - `constant`: `true` if function is :ref:`specified to not modify blockchain state <constant-functions>`);
 - `payable`: `true` if function accepts ether, defaults to `false`.
@@ -309,6 +311,7 @@ An event description is a JSON object with fairly similar fields:
 - `inputs`: an array of objects, each of which contains:
   * `name`: the name of the parameter;
   * `type`: the canonical type of the parameter.
+  * `components`: used for tuple types (more below).
   * `indexed`: `true` if the field is part of the log's topics, `false` if it one of the log's data segment.
 - `anonymous`: `true` if the event was declared as `anonymous`.
 
@@ -344,3 +347,86 @@ would result in the JSON:
   "name":"foo",
   "outputs": []
   }]
+
+Use of Structs in Types
+-----------------------
+
+If structs are part of the type, we still want to know the name of the components. Because of that,
+the json structure gets arbitrarily nested in the following way:
+
+An object with members ``name``, ``type`` and potentially ``components`` describes a typed variable.
+The canonical type is determined until a struct type is reached and the string description up
+to that point is stored in ``type``, i.e. it will be a sequence of ``[]`` and ``[k]`` with
+integers ``k``. The components of the struct are then stored in the member ``components``,
+which is of array type and has the same structure as the top-level object except that
+``indexed`` is not allowed there.
+
+As an example, the code
+
+::
+
+  contract Test {
+    struct S { uint a; uint[] b; T[] c; }
+    struct T { uint x; uint y; }
+    function f(S s, T t, uint a) { }
+  }
+
+would result in the JSON:
+
+.. code:: json
+
+  [
+    {
+      "name": "f",
+      "type": "function",
+      "inputs": [
+        {
+          "name": "s",
+          "type": "",
+          "components": [
+            {
+              "name": "a",
+              "type": "uint256"
+            },
+            {
+              "name": "b",
+              "type": "uint256[]"
+            },
+            {
+              "name": "c",
+              "type": "[]",
+              "components": [
+                {
+                  "name": "x",
+                  "type": "uint256"
+                },
+                {
+                  "name": "y",
+                  "type": "uint256"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "t",
+          "type": "",
+          "components": [
+            {
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "name": "y",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "a",
+          "type": "uint256"
+        }
+      ],
+      "outputs": []
+    }
+  ]
