@@ -266,8 +266,8 @@ extern "C"
 {
 extern char const* license()
 {
-	/// TOOD: include the copyright information on the top.
-	return licenseText;
+	static string fullLicenseText = otherLicenses + licenseText;
+	return fullLicenseText.c_str();
 }
 extern char const* version()
 {
