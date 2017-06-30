@@ -45,20 +45,7 @@ rm -f soljson.js
 cp ../solc/soljson.js soljson.js
 
 # Update version (needed for some tests)
-echo "Creating version.c"
-rm -f version version.c
-cat <<EOF > version.c
-#include <stdio.h>
-#include "../include/solidity/BuildInfo.h"
-int main(int argc, char **argv) {
-  printf(ETH_PROJECT_VERSION);
-  return 0;
-}
-EOF
-echo "Compiling version.c"
-gcc -o version version.c
-echo "Running version"
-VERSION=`./version`
+VERSION=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? $(dirname "$0")/../CMakeLists.txt)
 echo "Updating package.json to version $VERSION"
 npm version $VERSION
 
