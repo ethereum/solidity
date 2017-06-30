@@ -132,25 +132,25 @@ Json::Value ABI::formatType(string const& _name, Type const& _type, bool _forLib
 				suffix = string("[") + arrayType->length().str() + "]";
 			solAssert(arrayType->baseType(), "");
 			Json::Value subtype = formatType("", *arrayType->baseType(), _forLibrary);
-			if (subtype["type"].isString() && !subtype.isMember("subtype"))
-				ret["type"] = subtype["type"].asString() + suffix;
-			else
+			if (subtype.isMember("components"))
 			{
-				ret["type"] = suffix;
-				solAssert(!subtype.isMember("subtype"), "");
-				ret["subtype"] = subtype["type"];
+				ret["type"] = subtype["type"].asString() + suffix;
+				ret["components"] = subtype["components"];
 			}
+			else
+				ret["type"] = subtype["type"].asString() + suffix;
 		}
 	}
 	else if (StructType const* structType = dynamic_cast<StructType const*>(&_type))
 	{
-		ret["type"] = Json::arrayValue;
+		ret["type"] = string();
+		ret["components"] = Json::arrayValue;
 		for (auto const& member: structType->members(nullptr))
 		{
 			solAssert(member.type, "");
 			auto t = member.type->interfaceType(_forLibrary);
 			solAssert(t, "");
-			ret["type"].append(formatType(member.name, *t, _forLibrary));
+			ret["components"].append(formatType(member.name, *t, _forLibrary));
 		}
 	}
 	else

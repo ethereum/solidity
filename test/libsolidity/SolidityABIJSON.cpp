@@ -765,32 +765,39 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		}
 	)";
 	char const* interface = R"(
-	[
-	{
+	[{
 		"constant" : false,
-		"payable": false,
-		"inputs": [],
-		"name": "f",
-		"outputs": [{
-			"name": "x",
-			"type": "uint256"
-		}, {
-			"name": "s",
-			"type": [{
-				"name": "a",
-				"type": "uint256"
-			}, {
-				"name": "sub",
-				"subtype": [{
-					"name": "x",
-					"type": "uint256[2]"
-				}],
-				"type": "[]"
-			}]
-		}],
+		"inputs" : [],
+		"name" : "f",
+		"outputs" : [
+			{
+			"name" : "x",
+			"type" : "uint256"
+			},
+			{
+			"components" : [
+				{
+					"name" : "a",
+					"type" : "uint256"
+				},
+				{
+					"components" : [
+						{
+						"name" : "x",
+						"type" : "uint256[2]"
+						}
+					],
+					"name" : "sub",
+					"type" : "[]"
+				}
+			],
+			"name" : "s",
+			"type" : ""
+			}
+		],
+		"payable" : false,
 		"type" : "function"
-	}
-	]
+	}]
 	)";
 	checkInterface(text, interface);
 }
@@ -805,28 +812,33 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 		}
 	)";
 	char const* interface = R"(
-	[
-	{
-		"constant" : false,
-		"payable": false,
+	[{
+		"constant": false,
 		"inputs": [],
 		"name": "f",
-		"outputs" : [{
-			"name" : "s",
-			"type" : [{
-				"name" : "x",
-				"type" : "address[]"
-			}, {
-				"name" : "y",
-				"type" : "address"
-			}]
-		}, {
-			"name" : "c",
-			"type" : "address"
-		}],
-		"type" : "function"
-	}
-	]
+		"outputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "address[]"
+					},
+					{
+						"name": "y",
+						"type": "address"
+					}
+				],
+				"name": "s",
+				"type": ""
+			},
+			{
+				"name": "c",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"type": "function"
+	}]
 	)";
 	checkInterface(text, interface);
 }
@@ -840,36 +852,49 @@ BOOST_AUTO_TEST_CASE(event_structs)
 			event E(T t, S s);
 		}
 	)";
-	char const* interface = R"(
-	[{
-		"anonymous" : false,
-		"inputs" : [{
-			"indexed" : false,
-			"name" : "t",
-			"type" : [{
-				"name" : "x",
-				"type" : "uint256[2]"
-			}]
-		}, {
-			"indexed" : false,
-			"name" : "s",
-			"type" : [{
-					"name" : "a",
-					"type" : "uint256"
-				}, {
-					"name" : "sub",
-					"subtype" : [{
-						"name" : "x",
-						"type" : "uint256[2]"
-					}],
-					"type" : "[]"
-				}, {
-					"name" : "b",
-					"type" : "bytes"
-				}]
-		}],
-		"name" : "E",
-		"type" : "event"
+	char const *interface = R"(
+		[{
+		"anonymous": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "uint256[2]"
+					}
+				],
+				"indexed": false,
+				"name": "t",
+				"type": ""
+			},
+			{
+				"components": [
+					{
+						"name": "a",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"name": "x",
+								"type": "uint256[2]"
+							}
+						],
+						"name": "sub",
+						"type": "[]"
+					},
+					{
+						"name": "b",
+						"type": "bytes"
+					}
+				],
+				"indexed": false,
+				"name": "s",
+				"type": ""
+			}
+		],
+		"name": "E",
+		"type": "event"
 	}]
 	)";
 	checkInterface(text, interface);
@@ -887,38 +912,50 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 	)";
 	char const* interface = R"(
 	[{
-		"constant" : false,
-		"inputs" : [{
-			"name" : "s",
-			"type" : [{
-				"name" : "a",
-				"type" : "uint256"
-			}, {
-				"name" : "sub",
-				"subtype" : [{
-					"name" : "x",
-					"type" : "uint256[2]"
-				}],
-				"type" : "[]"
-			}, {
-				"name" : "b",
-				"type" : "bytes"
-			}]
-		}],
-		"name" : "g",
-		"outputs" : [],
-		"payable" : false,
-		"type" : "function"
-	}, {
-		"constant" : false,
-		"inputs" : [{
-			"name" : "s",
-			"type" : "L.S storage"
-		}],
-		"name" : "f",
-		"outputs" : [],
-		"payable" : false,
-		"type" : "function"
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "a",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"name": "x",
+								"type": "uint256[2]"
+							}
+						],
+						"name": "sub",
+						"type": "[]"
+					},
+					{
+						"name": "b",
+						"type": "bytes"
+					}
+				],
+				"name": "s",
+				"type": ""
+			}
+		],
+		"name": "g",
+		"outputs": [],
+		"payable": false,
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "s",
+				"type": "L.S storage"
+			}
+		],
+		"name": "f",
+		"outputs": [],
+		"payable": false,
+		"type": "function"
 	}]
 	)";
 	checkInterface(text, interface);
