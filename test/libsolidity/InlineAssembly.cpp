@@ -67,23 +67,19 @@ boost::optional<Error> parseAndReturnFirstError(
 		BOOST_FAIL("Fatal error leaked.");
 		success = false;
 	}
+	shared_ptr<Error const> error;
+	for (auto const& e: stack.errors())
+	{
+		if (_allowWarnings && e->type() == Error::Type::Warning)
+			continue;
+		if (error)
+			BOOST_FAIL("Found more than one error.");
+		error = e;
+	}
 	if (!success)
-	{
-		BOOST_REQUIRE_EQUAL(stack.errors().size(), 1);
-		return *stack.errors().front();
-	}
-	else
-	{
-		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(stack.errors()))
-			return {};
-		else if (!stack.errors().empty())
-		{
-			if (!_allowWarnings)
-				BOOST_CHECK_EQUAL(stack.errors().size(), 1);
-			return *stack.errors().front();
-		}
-	}
+		BOOST_REQUIRE(error);
+	if (error)
+		return *error;
 	return {};
 }
 
@@ -111,29 +107,35 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 	return *error;
 }
 
-void parsePrintCompare(string const& _source)
+void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
 	AssemblyStack stack;
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
-	BOOST_REQUIRE(stack.errors().empty());
+	if (_canWarn)
+		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
+	else
+		BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), _source);
 }
 
 }
 
-#define CHECK_ERROR(text, assemble, typ, substring) \
+#define CHECK_ERROR(text, assemble, typ, substring, warnings) \
 do \
 { \
-	Error err = expectError((text), (assemble), false); \
+	Error err = expectError((text), (assemble), warnings); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
 #define CHECK_PARSE_ERROR(text, type, substring) \
-CHECK_ERROR(text, false, type, substring)
+CHECK_ERROR(text, false, type, substring, false)
+
+#define CHECK_PARSE_WARNING(text, type, substring) \
+CHECK_ERROR(text, false, type, substring, false)
 
 #define CHECK_ASSEMBLE_ERROR(text, type, substring) \
-CHECK_ERROR(text, true, type, substring)
+CHECK_ERROR(text, true, type, substring, false)
 
 
 
@@ -411,7 +413,7 @@ BOOST_AUTO_TEST_CASE(print_functional)
 
 BOOST_AUTO_TEST_CASE(print_label)
 {
-	parsePrintCompare("{\n    loop:\n    jump(loop)\n}");
+	parsePrintCompare("{\n    loop:\n    jump(loop)\n}", true);
 }
 
 BOOST_AUTO_TEST_CASE(print_assignments)
@@ -515,7 +517,7 @@ BOOST_AUTO_TEST_CASE(imbalanced_stack)
 
 BOOST_AUTO_TEST_CASE(error_tag)
 {
-	CHECK_ASSEMBLE_ERROR("{ jump(invalidJumpLabel) }", DeclarationError, "Identifier not found");
+	CHECK_ERROR("{ jump(invalidJumpLabel) }", true, DeclarationError, "Identifier not found", true);
 }
 
 BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
@@ -628,6 +630,14 @@ BOOST_AUTO_TEST_CASE(staticcall)
 BOOST_AUTO_TEST_CASE(create2)
 {
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(jump_warning)
+{
+	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ 1 2 jumpi }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ a: jump(a) }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ a: jumpi(a, 2) }", Warning, "Jump instructions");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
