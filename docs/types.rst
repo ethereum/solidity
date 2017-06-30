@@ -557,7 +557,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
-It is possible to mark arrays ``public`` and have Solidity create a _`[getter](https://solidity.readthedocs.io/en/develop/contracts.html#getter-functions)`_.
+It is possible to mark arrays ``public`` and have Solidity create a :ref:`getters <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
 
 .. index:: ! array;allocating, new
