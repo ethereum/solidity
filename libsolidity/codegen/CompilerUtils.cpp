@@ -180,6 +180,9 @@ void CompilerUtils::encodeToMemory(
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 	}
 
+	if (_givenTypes.empty())
+		return;
+
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>
 	// The values dyn_head_i are added during the first loop and they point to the head part
