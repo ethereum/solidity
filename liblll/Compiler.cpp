@@ -34,7 +34,10 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		bytes ret = CodeFragment::compile(_src, cs).assembly(cs).optimise(_opt).assemble().bytecode;
+		auto assembly = CodeFragment::compile(_src, cs).assembly(cs);
+		if (_opt)
+			assembly = assembly.optimise(true);
+		bytes ret = assembly.assemble().bytecode;
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
@@ -70,7 +73,10 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 		CompilerState cs;
 		cs.populateStandard();
 		stringstream ret;
-		CodeFragment::compile(_src, cs).assembly(cs).optimise(_opt).stream(ret);
+		auto assembly = CodeFragment::compile(_src, cs).assembly(cs);
+		if (_opt)
+			assembly = assembly.optimise(true);
+		assembly.stream(ret);
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret.str();
