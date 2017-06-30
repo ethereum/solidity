@@ -97,12 +97,28 @@ public:
 	LinkerObject const& assemble() const;
 	bytes const& data(h256 const& _i) const { return m_data.at(_i); }
 
+	struct OptimiserSettings
+	{
+		bool isCreation = false;
+		bool runPeephole = false;
+		bool runDeduplicate = false;
+		bool runCSE = false;
+		bool runConstantOptimiser = false;
+		/// This specifies an estimate on how often each opcode in this assembly will be executed,
+		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
+		size_t expectedExecutionsPerDeployment = 200;
+	};
+
+	/// Execute optimisation passes as defined by @a _settings and return the optimised assembly.
+	Assembly& optimise(OptimiserSettings _settings);
+
 	/// Modify (if @a _enable is set) and return the current assembly such that creation and
 	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
 	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
 	Assembly& optimise(bool _enable, bool _isCreation = true, size_t _runs = 200);
+
 	Json::Value stream(
 		std::ostream& _out,
 		std::string const& _prefix = "",
@@ -113,7 +129,7 @@ public:
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags.
-	std::map<u256, u256> optimiseInternal(bool _enable, bool _isCreation, size_t _runs);
+	std::map<u256, u256> optimiseInternal(OptimiserSettings _settings);
 
 	unsigned bytesRequired(unsigned subTagSize) const;
 
