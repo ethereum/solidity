@@ -299,9 +299,12 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 
 		// Return tag is used to jump out of the function.
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
-		// Parameter for calldataUnpacker
-		m_context << CompilerUtils::dataStartOffset;
-		appendCalldataUnpacker(functionType->parameterTypes());
+		if (!functionType->parameterTypes().empty())
+		{
+			// Parameter for calldataUnpacker
+			m_context << CompilerUtils::dataStartOffset;
+			appendCalldataUnpacker(functionType->parameterTypes());
+		}
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
 		// Return tag and input parameters get consumed.
