@@ -55,10 +55,10 @@ wget -O ./solc/deps/downloads/jsoncpp-1.7.7.tar.gz https://github.com/open-sourc
 
 # Determine version
 cd solc
-version=`grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt`
-commithash=`git rev-parse --short=8 HEAD`
-committimestamp=`git show --format=%ci HEAD | head -n 1`
-commitdate=`git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./'`
+version=$($(dirname "$0")/get_version.sh)
+commithash=$(git rev-parse --short=8 HEAD)
+committimestamp=$(git show --format=%ci HEAD | head -n 1)
+commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
 echo "$commithash" > commit_hash.txt
 if [ $branch = develop ]
