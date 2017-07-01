@@ -387,6 +387,37 @@ BOOST_AUTO_TEST_CASE(assembly_codecopy)
 	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
 }
 
+BOOST_AUTO_TEST_CASE(for_loop)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(for
+					{ (set 'i 1) (set 'j 1) } ; INIT
+					(<= @i 10)                ; PRED
+					[i]:(+ @i 1)              ; POST
+					[j]:(* @j @i))            ; BODY
+				(return j 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(3628800))); // 10!
+}
+
+BOOST_AUTO_TEST_CASE(while_loop)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				;; Euclid's GCD algorithm
+				(set 'a 1071)
+				(set 'b 462)
+				(while @b
+					[a]:(raw @b [b]:(mod @a @b)))
+				(return a 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(21))); // GCD(1071,462)
+}
 
 BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 {
