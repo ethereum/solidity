@@ -307,6 +307,19 @@ Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 	return visibility;
 }
 
+StateMutability Parser::parseStateMutability(Token::Value _token)
+{
+	StateMutability stateMutability(StateMutability::NonPayable);
+	if (_token == Token::Payable)
+		stateMutability = StateMutability::Payable;
+	else if (_token == Token::Constant)
+		stateMutability = StateMutability::View;
+	else
+		solAssert(false, "Invalid state mutability specifier.");
+	m_scanner->next();
+	return stateMutability;
+}
+
 Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
 {
 	FunctionHeaderParserResult result;
@@ -321,23 +334,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	while (true)
 	{
 		Token::Value token = m_scanner->currentToken();
-		if (token == Token::Constant)
-		{
-			if (result.isDeclaredConst)
-				parserError(string("Multiple \"constant\" specifiers."));
-
-			result.isDeclaredConst = true;
-			m_scanner->next();
-		}
-		else if (m_scanner->currentToken() == Token::Payable)
-		{
-			if (result.isPayable)
-				parserError(string("Multiple \"payable\" specifiers."));
-
-			result.isPayable = true;
-			m_scanner->next();
-		}
-		else if (_allowModifiers && token == Token::Identifier)
+		if (_allowModifiers && token == Token::Identifier)
 		{
 			// This can either be a modifier (function declaration) or the name of the
 			// variable (function type name plus variable).
@@ -363,6 +360,20 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 			}
 			else
 				result.visibility = parseVisibilitySpecifier(token);
+		}
+		else if (Token::isStateMutabilitySpecifier(token))
+		{
+			if (result.stateMutability != StateMutability::NonPayable)
+			{
+				parserError(string(
+					"State mutability already specified as \"" +
+					stateMutabilityToString(result.stateMutability) +
+					"\"."
+				));
+				m_scanner->next();
+			}
+			else
+				result.stateMutability = parseStateMutability(token);
 		}
 		else
 			break;
@@ -408,13 +419,12 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 		return nodeFactory.createNode<FunctionDefinition>(
 			header.name,
 			header.visibility,
+			header.stateMutability,
 			c_isConstructor,
 			docstring,
 			header.parameters,
-			header.isDeclaredConst,
 			header.modifiers,
 			header.returnParameters,
-			header.isPayable,
 			block
 		);
 	}
@@ -425,8 +435,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 			header.parameters,
 			header.returnParameters,
 			header.visibility,
-			header.isDeclaredConst,
-			header.isPayable
+			header.stateMutability
 		);
 		type = parseTypeNameSuffix(type, nodeFactory);
 		VarDeclParserOptions options;
@@ -751,8 +760,7 @@ ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 		header.parameters,
 		header.returnParameters,
 		header.visibility,
-		header.isDeclaredConst,
-		header.isPayable
+		header.stateMutability
 	);
 }
 
