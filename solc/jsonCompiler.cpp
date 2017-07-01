@@ -164,10 +164,6 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	//       "srcmapRuntime" = "0:1:2",
 	//       "assembly" = {}
 	//     }
-	//   },
-	//   "formal": {
-	//     "errors": [ "Error 1" ],
-	//     "why3": "why3 source"
 	//   }
 	// }
 	Json::Value output = Json::objectValue;

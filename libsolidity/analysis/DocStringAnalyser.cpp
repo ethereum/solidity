@@ -40,7 +40,7 @@ bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 
 bool DocStringAnalyser::visit(ContractDefinition const& _node)
 {
-	static const set<string> validTags = set<string>{"author", "title", "dev", "notice", "why3"};
+	static const set<string> validTags = set<string>{"author", "title", "dev", "notice"};
 	parseDocStrings(_node, _node.annotation(), validTags, "contracts");
 
 	return true;
@@ -63,16 +63,6 @@ bool DocStringAnalyser::visit(EventDefinition const& _node)
 {
 	handleCallable(_node, _node, _node.annotation());
 
-	return true;
-}
-
-bool DocStringAnalyser::visitNode(ASTNode const& _node)
-{
-	if (auto node = dynamic_cast<Statement const*>(&_node))
-	{
-		static const set<string> validTags = {"why3"};
-		parseDocStrings(*node, node->annotation(), validTags, "statements");
-	}
 	return true;
 }
 

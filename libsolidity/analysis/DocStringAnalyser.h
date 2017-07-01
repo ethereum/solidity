@@ -48,8 +48,6 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual bool visit(EventDefinition const& _event) override;
 
-	virtual bool visitNode(ASTNode const&) override;
-
 	void handleCallable(
 		CallableDeclaration const& _callable,
 		Documented const& _node,

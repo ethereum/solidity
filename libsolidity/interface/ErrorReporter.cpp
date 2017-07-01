@@ -165,22 +165,3 @@ void ErrorReporter::docstringParsingError(string const& _description)
 		_description
 	);
 }
-
-void ErrorReporter::why3TranslatorError(ASTNode const& _location, std::string const& _description)
-{
-	error(
-		Error::Type::Why3TranslatorError,
-		_location.location(),
-		_description
-	);
-}
-
-void ErrorReporter::fatalWhy3TranslatorError(ASTNode const& _location, std::string const& _description)
-{
-	fatalError(
-		Error::Type::Why3TranslatorError,
-		_location.location(),
-		_description
-	);
-}
-
