@@ -33,7 +33,6 @@ Bugfixes:
  * Type Checker: Disallow comparisons between mapping and non-internal function types.
  * Type Checker: Disallow invoking the same modifier multiple times.
  * Type Checker: Do not treat strings that look like addresses as addresses.
- * Type Checker: Make UTF8-validation a bit more sloppy to include more valid sequences.
  * Type Checker: Support valid, but incorrectly rejected UTF-8 sequences.
  * Unused variable warnings no longer issued for variables used inside inline assembly.
 
