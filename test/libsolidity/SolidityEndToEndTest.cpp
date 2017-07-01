@@ -9622,7 +9622,7 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK(callContractFunction("k()") == encodeArgs(u256(-25)));
 }
 
-BOOST_AUTO_TEST_CASE(interface)
+BOOST_AUTO_TEST_CASE(interface_contract)
 {
 	char const* sourceCode = R"(
 		interface I {
