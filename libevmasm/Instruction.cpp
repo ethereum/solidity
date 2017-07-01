@@ -216,7 +216,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::DIFFICULTY,	{ "DIFFICULTY",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::GASLIMIT,	{ "GASLIMIT",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::POP,			{ "POP",			0, 1, 0, false, Tier::Base } },
-	{ Instruction::MLOAD,		{ "MLOAD",			0, 1, 1, false, Tier::VeryLow } },
+	{ Instruction::MLOAD,		{ "MLOAD",			0, 1, 1, true, Tier::VeryLow } },
 	{ Instruction::MSTORE,		{ "MSTORE",			0, 2, 0, true, Tier::VeryLow } },
 	{ Instruction::MSTORE8,		{ "MSTORE8",		0, 2, 0, true, Tier::VeryLow } },
 	{ Instruction::SLOAD,		{ "SLOAD",			0, 1, 1, false, Tier::Special } },

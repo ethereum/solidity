@@ -20,6 +20,7 @@ Features:
  * Static Analyzer: Warn about deprecation of ``callcode``.
 
 Bugfixes:
+ * Assembly: mark ``MLOAD`` to have side effects in the optimiser.
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
  * Type Checker: Fix address literals not being treated as compile-time constants.
  * Type Checker: Disallow invoking the same modifier multiple times.
@@ -33,6 +34,7 @@ Bugfixes:
  * Code Generator: Fix negative stack size checks.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
  * Fixed segfault with constant function parameters
+ * Optimizer: Disallow optimizations involving ``MLOAD`` because it changes ``MSIZE``.
 
 ### 0.4.11 (2017-05-03)
 

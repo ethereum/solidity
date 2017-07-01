@@ -697,59 +697,6 @@ BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location_offset)
 	});
 }
 
-BOOST_AUTO_TEST_CASE(cse_interleaved_memory_at_known_location_offset)
-{
-	// stores and reads to/from two locations which are known to be different,
-	// should not optimize away the first store, because the location overlaps with the load,
-	// but it should optimize away the second, because we know that the location is different by 32
-	AssemblyItems input{
-		u256(0x50),
-		Instruction::DUP2,
-		u256(2),
-		Instruction::ADD,
-		Instruction::MSTORE, // ["DUP1"+2] = 0x50
-		u256(0x60),
-		Instruction::DUP2,
-		u256(32),
-		Instruction::ADD,
-		Instruction::MSTORE, // ["DUP1"+32] = 0x60
-		Instruction::DUP1,
-		Instruction::MLOAD, // read from "DUP1"
-		u256(0x70),
-		Instruction::DUP3,
-		u256(32),
-		Instruction::ADD,
-		Instruction::MSTORE, // ["DUP1"+32] = 0x70
-		u256(0x80),
-		Instruction::DUP3,
-		u256(2),
-		Instruction::ADD,
-		Instruction::MSTORE, // ["DUP1"+2] = 0x80
-	};
-	// If the actual code changes too much, we could also simply check that the output contains
-	// exactly 3 MSTORE and exactly 1 MLOAD instruction.
-	checkCSE(input, {
-		u256(0x50),
-		u256(2),
-		Instruction::DUP3,
-		Instruction::ADD,
-		Instruction::SWAP1,
-		Instruction::DUP2,
-		Instruction::MSTORE, // ["DUP1"+2] = 0x50
-		Instruction::DUP2,
-		Instruction::MLOAD, // read from "DUP1"
-		u256(0x70),
-		u256(32),
-		Instruction::DUP5,
-		Instruction::ADD,
-		Instruction::MSTORE, // ["DUP1"+32] = 0x70
-		u256(0x80),
-		Instruction::SWAP1,
-		Instruction::SWAP2,
-		Instruction::MSTORE // ["DUP1"+2] = 0x80
-	});
-}
-
 BOOST_AUTO_TEST_CASE(cse_deep_stack)
 {
 	AssemblyItems input{
