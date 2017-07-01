@@ -12,6 +12,7 @@ Features:
  * Inline Assembly: Introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
  * Inline Assembly: Present proper error message when not supplying enough arguments to a functional
    instruction.
+ * Inline Assembly: Warn when instructions shadow Solidity variables.
  * Inline Assembly: Warn when using ``jump``s.
  * Remove obsolete Why3 output.
  * Type Checker: Enforce strict UTF-8 validation.
