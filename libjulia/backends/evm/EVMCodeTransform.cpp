@@ -37,10 +37,19 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
 	solAssert(m_scope, "");
 
-	int expectedItems = _varDecl.variables.size();
+	int const expectedItems = _varDecl.variables.size();
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_varDecl.value);
-	expectDeposit(expectedItems, height);
+	if (_varDecl.value)
+	{
+		boost::apply_visitor(*this, *_varDecl.value);
+		expectDeposit(expectedItems, height);
+	}
+	else
+	{
+		int variablesLeft = expectedItems;
+		while (variablesLeft--)
+			m_assembly.appendConstant(u256(0));
+	}
 	for (auto const& variable: _varDecl.variables)
 	{
 		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(variable.name));
