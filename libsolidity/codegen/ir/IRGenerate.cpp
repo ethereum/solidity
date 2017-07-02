@@ -65,7 +65,10 @@ string uniqueFunctionName(FunctionDefinition const& _function)
 	if (_function.name().empty())
 		return "fallback";
 
-	return "_" + _function.name() + "_" + toHex(dev::keccak256(function.externalSignature()));
+	auto functionType = _function.functionType(true);
+	solAssert(functionType, "");
+
+	return "_" + _function.name() + "_" + functionType->identifier();
 }
 
 }
