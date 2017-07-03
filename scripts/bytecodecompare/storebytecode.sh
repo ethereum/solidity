@@ -98,9 +98,8 @@ EOF
         REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
         cp ../report.txt "$REPORT"
         # Only push if adding actually worked, i.e. there were changes.
-        if git add "$REPORT"
+        if git add "$REPORT" && git commit -a -m "Added report $REPORT"
         then
-            git commit -a -m "Added report $REPORT"
             git pull --rebase
             git push origin
         else
