@@ -23,21 +23,20 @@
 #pragma once
 
 #include <memory>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/Token.h>
-#include <libsolidity/ast/ASTForward.h>
 
 namespace dev
 {
 namespace solidity
 {
 
+class ErrorReporter;
 class Scanner;
 
 class ParserBase
 {
 public:
-	ParserBase(ErrorList& errors): m_errors(errors) {}
+	ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
 
 	std::shared_ptr<std::string const> const& sourceName() const;
 
@@ -47,14 +46,14 @@ protected:
 	/// End position of the current token
 	int endPosition() const;
 
-
 	///@{
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
-	Token::Value expectAssignmentOperator();
-	ASTPointer<ASTString> expectIdentifierToken();
-	ASTPointer<ASTString> getLiteralAndAdvance();
+	Token::Value currentToken() const;
+	Token::Value peekNextToken() const;
+	std::string currentLiteral() const;
+	Token::Value advance();
 	///@}
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
@@ -67,7 +66,7 @@ protected:
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 };
 
 }

@@ -22,7 +22,6 @@
 
 #include <libsolidity/ast/Types.h>
 
-#include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/CommonIO.h>
@@ -2183,6 +2182,8 @@ string FunctionType::identifier() const
 	case Kind::ArrayPush: id += "arraypush"; break;
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
+	case Kind::Assert: id += "assert"; break;
+	case Kind::Require: id += "require";break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	if (isConstant())
@@ -2244,6 +2245,16 @@ TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
 {
 	if (_operator == Token::Value::Delete)
 		return make_shared<TupleType>();
+	return TypePointer();
+}
+
+TypePointer FunctionType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	if (_other->category() != category() || !(_operator == Token::Equal || _operator == Token::NotEqual))
+		return TypePointer();
+	FunctionType const& other = dynamic_cast<FunctionType const&>(*_other);
+	if (kind() == Kind::Internal && other.kind() == Kind::Internal && sizeOnStack() == 1 && other.sizeOnStack() == 1)
+		return commonType(shared_from_this(), _other);
 	return TypePointer();
 }
 

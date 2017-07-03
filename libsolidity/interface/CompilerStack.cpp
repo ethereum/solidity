@@ -37,9 +37,9 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
-#include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/ABI.h>
+#include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/formal/Why3Translator.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -55,9 +55,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
-
-CompilerStack::CompilerStack(ReadFile::Callback const& _readFile):
-	m_readFile(_readFile) {}
 
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
@@ -87,6 +84,7 @@ void CompilerStack::reset(bool _keepSources)
 	}
 	else
 	{
+		m_stackState = Empty;
 		m_sources.clear();
 	}
 	m_optimize = false;
@@ -95,8 +93,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
-	m_errors.clear();
-	m_stackState = Empty;
+	m_errorReporter.clear();
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -120,15 +117,11 @@ bool CompilerStack::parse()
 	//reset
 	if(m_stackState != SourcesSet)
 		return false;
-	m_errors.clear();
+	m_errorReporter.clear();
 	ASTNode::resetID();
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
-	{
-		auto err = make_shared<Error>(Error::Type::Warning);
-		*err << errinfo_comment("This is a pre-release compiler version, please do not use it in production.");
-		m_errors.push_back(err);
-	}
+		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -138,9 +131,9 @@ bool CompilerStack::parse()
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
-		source.ast = Parser(m_errors).parse(source.scanner);
+		source.ast = Parser(m_errorReporter).parse(source.scanner);
 		if (!source.ast)
-			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
 		{
 			source.ast->annotation().path = path;
@@ -153,7 +146,7 @@ bool CompilerStack::parse()
 			}
 		}
 	}
-	if (Error::containsOnlyWarnings(m_errors))
+	if (Error::containsOnlyWarnings(m_errorReporter.errors()))
 	{
 		m_stackState = ParsingSuccessful;
 		return true;
@@ -169,18 +162,18 @@ bool CompilerStack::analyze()
 	resolveImports();
 
 	bool noErrors = true;
-	SyntaxChecker syntaxChecker(m_errors);
+	SyntaxChecker syntaxChecker(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
 
-	DocStringAnalyser docStringAnalyser(m_errors);
+	DocStringAnalyser docStringAnalyser(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!docStringAnalyser.analyseDocStrings(*source->ast))
 			noErrors = false;
 
 	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errors);
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
 			return false;
@@ -216,11 +209,11 @@ bool CompilerStack::analyze()
 			{
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->currentThis());
-				TypeChecker typeChecker(m_errors);
+				TypeChecker typeChecker(m_errorReporter);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
-					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
-					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
+					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
+					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
 				}
 				else
 					noErrors = false;
@@ -236,7 +229,7 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
-		PostTypeChecker postTypeChecker(m_errors);
+		PostTypeChecker postTypeChecker(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!postTypeChecker.check(*source->ast))
 				noErrors = false;
@@ -244,7 +237,7 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
-		StaticAnalyzer staticAnalyzer(m_errors);
+		StaticAnalyzer staticAnalyzer(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
@@ -322,20 +315,6 @@ void CompilerStack::link()
 	}
 }
 
-bool CompilerStack::prepareFormalAnalysis(ErrorList* _errors)
-{
-	if (!_errors)
-		_errors = &m_errors;
-	Why3Translator translator(*_errors);
-	for (Source const* source: m_sourceOrder)
-		if (!translator.process(*source->ast))
-			return false;
-
-	m_formalTranslation = translator.translation();
-
-	return true;
-}
-
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
 {
 	Contract const& currentContract = contract(_contractName);
@@ -406,15 +385,6 @@ eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName)
 	return contract(_contractName).cloneObject;
 }
 
-dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
-{
-	auto const& obj = runtimeObject(_contractName);
-	if (obj.bytecode.empty() || !obj.linkReferences.empty())
-		return dev::h256();
-	else
-		return dev::keccak256(obj.bytecode);
-}
-
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
 {
 	Contract const& currentContract = contract(_contractName);
@@ -444,20 +414,31 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json::Value const& CompilerStack::interface(string const& _contractName) const
+Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 {
-	return metadata(_contractName, DocumentationType::ABIInterface);
+	return contractABI(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::metadata(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	return metadata(contract(_contractName), _type);
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.abi)
+		_contract.abi.reset(new Json::Value(ABI::generate(*_contract.contract)));
+
+	return *_contract.abi;
 }
 
-Json::Value const& CompilerStack::metadata(Contract const& _contract, DocumentationType _type) const
+Json::Value const& CompilerStack::natspec(string const& _contractName, DocumentationType _type) const
+{
+	return natspec(contract(_contractName), _type);
+}
+
+Json::Value const& CompilerStack::natspec(Contract const& _contract, DocumentationType _type) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -474,40 +455,54 @@ Json::Value const& CompilerStack::metadata(Contract const& _contract, Documentat
 	case DocumentationType::NatspecDev:
 		doc = &_contract.devDocumentation;
 		break;
-	case DocumentationType::ABIInterface:
-		doc = &_contract.interface;
-		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new Json::Value(InterfaceHandler::documentation(*_contract.contract, _type)));
+		doc->reset(new Json::Value(Natspec::documentation(*_contract.contract, _type)));
 
 	return *(*doc);
+}
+
+Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
+{
+	Json::Value methodIdentifiers(Json::objectValue);
+	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
+		methodIdentifiers[it.second->externalSignature()] = toHex(it.first.ref());
+	return methodIdentifiers;
 }
 
 string const& CompilerStack::onChainMetadata(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return contract(_contractName).onChainMetadata;
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
 {
+	if (m_stackState < SourcesSet)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No sources set."));
+
 	return *source(_sourceName).scanner;
 }
 
 SourceUnit const& CompilerStack::ast(string const& _sourceName) const
 {
+	if (m_stackState < ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
 	return *source(_sourceName).ast;
 }
 
 ContractDefinition const& CompilerStack::contractDefinition(string const& _contractName) const
 {
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
 	return *contract(_contractName).contract;
 }
 
@@ -564,11 +559,10 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 				newSources[importPath] = result.contentsOrErrorMessage;
 			else
 			{
-				auto err = make_shared<Error>(Error::Type::ParserError);
-				*err <<
-					errinfo_sourceLocation(import->location()) <<
-					errinfo_comment("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage);
-				m_errors.push_back(std::move(err));
+				m_errorReporter.parserError(
+					import->location(),
+					string("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage)
+				);
 				continue;
 			}
 		}
@@ -734,11 +728,6 @@ void CompilerStack::compileContract(
 	}
 }
 
-std::string CompilerStack::defaultContractName() const
-{
-	return contract("").contract->name();
-}
-
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
 {
 	if (m_contracts.empty())
@@ -821,9 +810,9 @@ string CompilerStack::createOnChainMetadata(Contract const& _contract) const
 	for (auto const& library: m_libraries)
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
-	meta["output"]["abi"] = metadata(_contract, DocumentationType::ABIInterface);
-	meta["output"]["userdoc"] = metadata(_contract, DocumentationType::NatspecUser);
-	meta["output"]["devdoc"] = metadata(_contract, DocumentationType::NatspecDev);
+	meta["output"]["abi"] = contractABI(_contract);
+	meta["output"]["userdoc"] = natspec(_contract, DocumentationType::NatspecUser);
+	meta["output"]["devdoc"] = natspec(_contract, DocumentationType::NatspecDev);
 
 	return jsonCompactPrint(meta);
 }

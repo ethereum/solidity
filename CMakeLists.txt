@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.4.11")
+set(PROJECT_VERSION "0.4.12")
 project(solidity VERSION ${PROJECT_VERSION})
 
 # Let's find our dependencies
@@ -23,6 +23,15 @@ include(EthExecutableHelper)
 
 # Include utils
 include(EthUtils)
+
+# Create license.h from LICENSE.txt and template
+# Converting to char array is required due to MSVC's string size limit.
+file(READ ${CMAKE_SOURCE_DIR}/LICENSE.txt LICENSE_TEXT HEX)
+string(REGEX MATCHALL ".." LICENSE_TEXT "${LICENSE_TEXT}")
+string(REGEX REPLACE ";" ",\n\t0x" LICENSE_TEXT "${LICENSE_TEXT}")
+set(LICENSE_TEXT "0x${LICENSE_TEXT}")
+
+configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" "license.h")
 
 include(EthOptions)
 configure_project(TESTS)

@@ -69,7 +69,13 @@ public:
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(solidity::Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMPI); return ret; }
-	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
+
+	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
+	/// on the stack. @returns the pushsub assembly item.
+	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly) { auto sub = newSub(_assembly); append(newPushSubSize(size_t(sub.data()))); return sub; }
+	void pushSubroutineSize(size_t _subRoutine) { append(newPushSubSize(_subRoutine)); }
+	/// Pushes the offset of the subroutine.
+	void pushSubroutineOffset(size_t _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
 
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
@@ -79,19 +85,10 @@ public:
 	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
-	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
-	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
-	void donePaths() { donePath(); m_totalDeposit = m_baseDeposit = 0; }
-	void ignored() { m_baseDeposit = m_deposit; }
-	void endIgnored() { m_deposit = m_baseDeposit; m_baseDeposit = 0; }
-
-	void popTo(int _deposit) { while (m_deposit > _deposit) append(solidity::Instruction::POP); }
-
 	void injectStart(AssemblyItem const& _i);
-	std::string out() const;
 	int deposit() const { return m_deposit; }
-	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
-	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
+	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
+	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
@@ -118,7 +115,6 @@ protected:
 	/// returns the replaced tags.
 	std::map<u256, u256> optimiseInternal(bool _enable, bool _isCreation, size_t _runs);
 
-	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired(unsigned subTagSize) const;
 
 private:
@@ -141,8 +137,6 @@ protected:
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
 
 	int m_deposit = 0;
-	int m_baseDeposit = 0;
-	int m_totalDeposit = 0;
 
 	SourceLocation m_currentSourceLocation;
 };

@@ -93,12 +93,19 @@ EOF
         git config user.email "chris@ethereum.org"
         git clean -f -d -x
 
-        mkdir -p "$TRAVIS_COMMIT"
-        REPORT="$TRAVIS_COMMIT/$ZIP_SUFFIX.txt"
+        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-%H" --date=short)
+        mkdir -p "$DIRNAME"
+        REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
         cp ../report.txt "$REPORT"
-        git add "$REPORT"
-        git commit -a -m "Added report $REPORT"
-        git push origin
+        # Only push if adding actually worked, i.e. there were changes.
+        if git add "$REPORT"
+        then
+            git commit -a -m "Added report $REPORT"
+            git pull --rebase
+            git push origin
+        else
+            echo "Adding report failed, it might already exist in the repository."
+        fi
     fi
 )
 rm -rf "$TMPDIR"

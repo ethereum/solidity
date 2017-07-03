@@ -20,10 +20,13 @@
 
 #pragma once
 
+#include <libsolidity/inlineasm/AsmDataForward.h>
+
 #include <boost/variant.hpp>
 
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace dev
 {
@@ -32,21 +35,7 @@ namespace solidity
 namespace assembly
 {
 
-struct Literal;
-struct Block;
-struct Label;
-struct FunctionalInstruction;
-struct FunctionalAssignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct Assignment;
-struct FunctionDefinition;
-struct FunctionCall;
-
 struct Scope;
-
-using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Block>;
 
 struct AsmAnalysisInfo
 {
@@ -54,6 +43,8 @@ struct AsmAnalysisInfo
 	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
 	Scopes scopes;
 	StackHeightInfo stackHeightInfo;
+	/// Virtual blocks which will be used for scopes for function arguments and return values.
+	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks;
 };
 
 }

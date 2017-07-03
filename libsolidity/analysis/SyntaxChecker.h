@@ -38,14 +38,11 @@ class SyntaxChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
-	SyntaxChecker(ErrorList& _errors): m_errors(_errors) {}
+	SyntaxChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool checkSyntax(ASTNode const& _astRoot);
 
 private:
-	/// Adds a new error to the list of errors.
-	void warning(SourceLocation const& _location, std::string const& _description);
-	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(SourceUnit const& _sourceUnit) override;
 	virtual void endVisit(SourceUnit const& _sourceUnit) override;
@@ -66,7 +63,9 @@ private:
 
 	virtual bool visit(PlaceholderStatement const& _placeholderStatement) override;
 
-	ErrorList& m_errors;
+	virtual bool visit(FunctionTypeName const& _node) override;
+
+	ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether a function modifier actually contains '_'.
 	bool m_placeholderFound = false;

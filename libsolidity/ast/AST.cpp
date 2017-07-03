@@ -20,10 +20,8 @@
  * Solidity abstract syntax tree.
  */
 
-#include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>
@@ -532,18 +530,26 @@ IdentifierAnnotation& Identifier::annotation() const
 	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
+bool Literal::isHexNumber() const
+{
+	if (token() != Token::Number)
+		return false;
+	return boost::starts_with(value(), "0x");
+}
+
 bool Literal::looksLikeAddress() const
 {
 	if (subDenomination() != SubDenomination::None)
 		return false;
 
-	string lit = value();
-	return lit.substr(0, 2) == "0x" && abs(int(lit.length()) - 42) <= 1;
+	if (!isHexNumber())
+		return false;
+
+	return abs(int(value().length()) - 42) <= 1;
 }
 
 bool Literal::passesAddressChecksum() const
 {
-	string lit = value();
-	solAssert(lit.substr(0, 2) == "0x", "Expected hex prefix");
-	return dev::passesAddressChecksum(lit, true);
+	solAssert(isHexNumber(), "Expected hex number");
+	return dev::passesAddressChecksum(value(), true);
 }

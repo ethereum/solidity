@@ -99,10 +99,7 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 {
-	size_t size = 0;
-	for (AssemblyItem const& item: _items)
-		size += item.bytesRequired(3); // assume 3 byte addresses
-	return size;
+	return eth::bytesRequired(_items, 3); // assume 3 byte addresses
 }
 
 void ConstantOptimisationMethod::replaceConstants(

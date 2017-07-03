@@ -22,7 +22,7 @@
 
 #include "../TestHelper.h"
 
-#include <libsolidity/inlineasm/AsmStack.h>
+#include <libsolidity/interface/AssemblyStack.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
@@ -47,49 +47,56 @@ namespace test
 namespace
 {
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _assemble = false, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	assembly::InlineAssemblyStack stack;
+	AssemblyStack stack;
 	bool success = false;
 	try
 	{
-		success = stack.parse(std::make_shared<Scanner>(CharStream(_source)));
+		success = stack.parseAndAnalyze("", _source);
 		if (success && _assemble)
-			stack.assemble();
+			stack.assemble(_machine);
 	}
 	catch (FatalError const&)
 	{
 		BOOST_FAIL("Fatal error leaked.");
 		success = false;
 	}
+	shared_ptr<Error const> error;
+	for (auto const& e: stack.errors())
+	{
+		if (_allowWarnings && e->type() == Error::Type::Warning)
+			continue;
+		if (error)
+			BOOST_FAIL("Found more than one error.");
+		error = e;
+	}
 	if (!success)
-	{
-		BOOST_REQUIRE_EQUAL(stack.errors().size(), 1);
-		return *stack.errors().front();
-	}
-	else
-	{
-		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(stack.errors()))
-			return {};
-		else if (!stack.errors().empty())
-		{
-			if (!_allowWarnings)
-				BOOST_CHECK_EQUAL(stack.errors().size(), 1);
-			return *stack.errors().front();
-		}
-	}
+		BOOST_REQUIRE(error);
+	if (error)
+		return *error;
 	return {};
 }
 
-bool successParse(std::string const& _source, bool _assemble = false, bool _allowWarnings = true)
+bool successParse(
+	string const& _source,
+	bool _assemble = false,
+	bool _allowWarnings = true,
+	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+)
 {
-	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _machine);
 }
 
 bool successAssemble(string const& _source, bool _allowWarnings = true)
 {
-	return successParse(_source, true, _allowWarnings);
+	return successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM) &&
+		successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM15);
 }
 
 Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
@@ -100,29 +107,35 @@ Error expectError(std::string const& _source, bool _assemble, bool _allowWarning
 	return *error;
 }
 
-void parsePrintCompare(string const& _source)
+void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(_source))));
-	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), _source);
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
+	if (_canWarn)
+		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
+	else
+		BOOST_REQUIRE(stack.errors().empty());
+	BOOST_CHECK_EQUAL(stack.print(), _source);
 }
 
 }
 
-#define CHECK_ERROR(text, assemble, typ, substring) \
+#define CHECK_ERROR(text, assemble, typ, substring, warnings) \
 do \
 { \
-	Error err = expectError((text), (assemble), false); \
+	Error err = expectError((text), (assemble), warnings); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
 #define CHECK_PARSE_ERROR(text, type, substring) \
-CHECK_ERROR(text, false, type, substring)
+CHECK_ERROR(text, false, type, substring, false)
+
+#define CHECK_PARSE_WARNING(text, type, substring) \
+CHECK_ERROR(text, false, type, substring, false)
 
 #define CHECK_ASSEMBLE_ERROR(text, type, substring) \
-CHECK_ERROR(text, true, type, substring)
+CHECK_ERROR(text, true, type, substring, false)
 
 
 
@@ -161,6 +174,27 @@ BOOST_AUTO_TEST_CASE(vardecl)
 	BOOST_CHECK(successParse("{ let x := 7 }"));
 }
 
+BOOST_AUTO_TEST_CASE(vardecl_name_clashes)
+{
+	CHECK_PARSE_ERROR("{ let x := 1 let x := 2 }", DeclarationError, "Variable name x already taken in this scope.");
+}
+
+BOOST_AUTO_TEST_CASE(vardecl_multi)
+{
+	BOOST_CHECK(successParse("{ function f() -> x, y {} let x, y := f() }"));
+}
+
+BOOST_AUTO_TEST_CASE(vardecl_multi_conflict)
+{
+	CHECK_PARSE_ERROR("{ function f() -> x, y {} let x, x := f() }", DeclarationError, "Variable name x already taken in this scope.");
+}
+
+BOOST_AUTO_TEST_CASE(vardecl_bool)
+{
+	CHECK_PARSE_ERROR("{ let x := true }", ParserError, "True and false are not valid literals.");
+	CHECK_PARSE_ERROR("{ let x := false }", ParserError, "True and false are not valid literals.");
+}
+
 BOOST_AUTO_TEST_CASE(assignment)
 {
 	BOOST_CHECK(successParse("{ let x := 2 7 8 add =: x }"));
@@ -179,6 +213,16 @@ BOOST_AUTO_TEST_CASE(label_complex)
 BOOST_AUTO_TEST_CASE(functional)
 {
 	BOOST_CHECK(successParse("{ let x := 2 add(7, mul(6, x)) mul(7, 8) add =: x }"));
+}
+
+BOOST_AUTO_TEST_CASE(functional_partial)
+{
+	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected token \"(\"");
+}
+
+BOOST_AUTO_TEST_CASE(functional_partial_success)
+{
+	BOOST_CHECK(successParse("{ let x := byte(1, 2) }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_assignment)
@@ -200,6 +244,89 @@ BOOST_AUTO_TEST_CASE(variable_use_before_decl)
 {
 	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
 	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_statement)
+{
+	BOOST_CHECK(successParse("{ switch 42 default {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} default {} }"));
+	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} default {} }"));
+	BOOST_CHECK(successParse("{ switch mul(1, 2) case 1 {} case 2 {} default {} }"));
+	BOOST_CHECK(successParse("{ function f() -> x {} switch f() case 1 {} case 2 {} default {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(switch_no_cases)
+{
+	CHECK_PARSE_ERROR("{ switch 42 }", ParserError, "Switch statement without any cases.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_duplicate_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case 1 {} case 1 {} default {} }", DeclarationError, "Duplicate case defined");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_expression)
+{
+	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch.");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+}
+
+BOOST_AUTO_TEST_CASE(switch_default_before_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 default {} case 1 {} }", ParserError, "Case not allowed after default case.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_duplicate_default_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 default {} default {} }", ParserError, "Only one default case allowed.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_case)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case mul(1, 2) {} case 2 {} default {} }", ParserError, "Literal expected.");
+}
+
+BOOST_AUTO_TEST_CASE(switch_invalid_body)
+{
+	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected token LBrace got 'Identifier'");
+}
+
+BOOST_AUTO_TEST_CASE(for_statement)
+{
+	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
+	BOOST_CHECK(successParse("{ for { let i := 1 } lt(i, 5) { i := add(i, 1) } {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(for_invalid_expression)
+{
+	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected token LBrace got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected token LBrace got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected token LBrace got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} calldatasize {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+}
+
+BOOST_AUTO_TEST_CASE(for_visibility)
+{
+	BOOST_CHECK(successParse("{ for { let i := 1 } i { pop(i) } { pop(i) } }"));
+	CHECK_PARSE_ERROR("{ for {} i { let i := 1 } {} }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for {} 1 { let i := 1 } { pop(i) } }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { let i := 1 } {} }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { } { let i := 1 } }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for {} i {} { let i := 1 } }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name x already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
+	// Check that body and post are not sub-scopes of each other.
+	BOOST_CHECK(successParse("{ for {} 1 { let x := 1 } { let x := 1 } }"));
 }
 
 BOOST_AUTO_TEST_CASE(blocks)
@@ -243,6 +370,23 @@ BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
 	CHECK_PARSE_ERROR("{ let x := 2 function g() { x pop } }", DeclarationError, "Identifier not found.");
 }
 
+BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
+{
+	/// The push(42) is added here to silence the unbalanced stack error, so that there's only one error reported.
+	CHECK_PARSE_ERROR("{ 42 let x, y := 1 }", DeclarationError, "Variable count mismatch.");
+}
+
+BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
+{
+	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (\"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected comma (\"mul\" expects 2 arguments)");
+}
+
+BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
+{
+	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (\"mul\" expects 2 arguments)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Printing)
@@ -269,12 +413,17 @@ BOOST_AUTO_TEST_CASE(print_functional)
 
 BOOST_AUTO_TEST_CASE(print_label)
 {
-	parsePrintCompare("{\n    loop:\n    jump(loop)\n}");
+	parsePrintCompare("{\n    loop:\n    jump(loop)\n}", true);
 }
 
 BOOST_AUTO_TEST_CASE(print_assignments)
 {
 	parsePrintCompare("{\n    let x := mul(2, 3)\n    7\n    =: x\n    x := add(1, 2)\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_multi_assignments)
+{
+	parsePrintCompare("{\n    function f() -> x, y\n    {\n    }\n    let x, y := f()\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_string_literals)
@@ -286,11 +435,21 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
-	assembly::InlineAssemblyStack stack;
-	BOOST_REQUIRE(stack.parse(std::make_shared<Scanner>(CharStream(source))));
+	AssemblyStack stack;
+	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.toString(), parsed);
+	BOOST_CHECK_EQUAL(stack.print(), parsed);
 	parsePrintCompare(parsed);
+}
+
+BOOST_AUTO_TEST_CASE(print_switch)
+{
+	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
+}
+
+BOOST_AUTO_TEST_CASE(print_for)
+{
+	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    lt(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
@@ -358,7 +517,7 @@ BOOST_AUTO_TEST_CASE(imbalanced_stack)
 
 BOOST_AUTO_TEST_CASE(error_tag)
 {
-	BOOST_CHECK(successAssemble("{ jump(invalidJumpLabel) }"));
+	CHECK_ERROR("{ jump(invalidJumpLabel) }", true, DeclarationError, "Identifier not found", true);
 }
 
 BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
@@ -384,6 +543,101 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	BOOST_CHECK(successAssemble("{ function f() {} }"));
+	BOOST_CHECK(successAssemble("{ function f() { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f() -> z { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f(a) { let y := 2 } }"));
+	BOOST_CHECK(successAssemble("{ function f(a) { let y := a } }"));
+	BOOST_CHECK(successAssemble("{ function f() -> x, y, z {} }"));
+	BOOST_CHECK(successAssemble("{ function f(x, y, z) {} }"));
+	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y, z { y := a } }"));
+	BOOST_CHECK(successAssemble("{ function f() {} f() }"));
+	BOOST_CHECK(successAssemble("{ function f() -> x, y { x := 1 y := 2} let a, b := f() }"));
+	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y { x := b y := a } let a, b := f(2, 3) }"));
+	BOOST_CHECK(successAssemble("{ function rec(a) { rec(sub(a, 1)) } rec(2) }"));
+	BOOST_CHECK(successAssemble("{ let r := 2 function f() -> x, y { x := 1 y := 2} let a, b := f() b := r }"));
+	BOOST_CHECK(successAssemble("{ function f() { g() } function g() { f() } }"));
+}
+
+BOOST_AUTO_TEST_CASE(embedded_functions)
+{
+	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
+}
+
+BOOST_AUTO_TEST_CASE(switch_statement)
+{
+	BOOST_CHECK(successAssemble("{ switch 1 default {} }"));
+	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} default {} }"));
+	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} }"));
+	BOOST_CHECK(successAssemble("{ let a := 3 switch a case 1 { a := 1 } case 2 { a := 5 } a := 9}"));
+	BOOST_CHECK(successAssemble("{ let a := 2 switch calldataload(0) case 1 { a := 1 } case 2 { a := 5 } }"));
+}
+
+BOOST_AUTO_TEST_CASE(for_statement)
+{
+	BOOST_CHECK(successAssemble("{ for {} 1 {} {} }"));
+	BOOST_CHECK(successAssemble("{ let x := calldatasize() for { let i := 0} lt(i, x) { i := add(i, 1) } { mstore(i, 2) } }"));
+}
+
+
+BOOST_AUTO_TEST_CASE(large_constant)
+{
+	auto source = R"({
+		switch mul(1, 2)
+		case 0x0000000000000000000000000000000000000000000000000000000026121ff0 {
+		}
+	})";
+	BOOST_CHECK(successAssemble(source));
+}
+
+BOOST_AUTO_TEST_CASE(keccak256)
+{
+	BOOST_CHECK(successAssemble("{ 0 0 keccak256 pop }"));
+	BOOST_CHECK(successAssemble("{ pop(keccak256(0, 0)) }"));
+	BOOST_CHECK(successAssemble("{ 0 0 sha3 pop }"));
+	BOOST_CHECK(successAssemble("{ pop(sha3(0, 0)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(returndatasize)
+{
+	BOOST_CHECK(successAssemble("{ let r := returndatasize }"));
+}
+
+BOOST_AUTO_TEST_CASE(returndatasize_functional)
+{
+	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
+}
+
+BOOST_AUTO_TEST_CASE(returndatacopy)
+{
+	BOOST_CHECK(successAssemble("{ 64 32 0 returndatacopy }"));
+}
+
+BOOST_AUTO_TEST_CASE(returndatacopy_functional)
+{
+	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
+}
+
+BOOST_AUTO_TEST_CASE(staticcall)
+{
+	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(create2)
+{
+	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(jump_warning)
+{
+	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ 1 2 jumpi }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ a: jump(a) }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ a: jumpi(a, 2) }", Warning, "Jump instructions");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

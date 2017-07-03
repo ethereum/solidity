@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
 
 #include <boost/range/adaptor/map.hpp>
@@ -32,17 +33,7 @@ using namespace dev::solidity;
 bool PostTypeChecker::check(ASTNode const& _astRoot)
 {
 	_astRoot.accept(*this);
-	return Error::containsOnlyWarnings(m_errors);
-}
-
-void PostTypeChecker::typeError(SourceLocation const& _location, std::string const& _description)
-{
-	auto err = make_shared<Error>(Error::Type::TypeError);
-	*err <<
-		errinfo_sourceLocation(_location) <<
-		errinfo_comment(_description);
-
-	m_errors.push_back(err);
+	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
 bool PostTypeChecker::visit(ContractDefinition const&)
@@ -57,7 +48,11 @@ void PostTypeChecker::endVisit(ContractDefinition const&)
 	solAssert(!m_currentConstVariable, "");
 	for (auto declaration: m_constVariables)
 		if (auto identifier = findCycle(declaration))
-			typeError(declaration->location(), "The value of the constant " + declaration->name() + " has a cyclic dependency via " + identifier->name() + ".");
+			m_errorReporter.typeError(
+				declaration->location(),
+				"The value of the constant " + declaration->name() +
+				" has a cyclic dependency via " + identifier->name() + "."
+			);
 
 	m_constVariables.clear();
 	m_constVariableDependencies.clear();

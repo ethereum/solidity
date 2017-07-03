@@ -31,6 +31,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -48,28 +49,29 @@ namespace
 eth::AssemblyItems compileContract(const string& _sourceCode)
 {
 	ErrorList errors;
-	Parser parser(errors);
+	ErrorReporter errorReporter(errors);
+	Parser parser(errorReporter);
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	BOOST_CHECK(!!sourceUnit);
 
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver({}, scopes, errors);
-	solAssert(Error::containsOnlyWarnings(errors), "");
+	NameAndTypeResolver resolver({}, scopes, errorReporter);
+	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-			if (!Error::containsOnlyWarnings(errors))
+			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker(errors);
+			TypeChecker checker(errorReporter);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
-			if (!Error::containsOnlyWarnings(errors))
+			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -117,8 +119,8 @@ BOOST_AUTO_TEST_CASE(location_test)
 	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(17, SourceLocation(2, 75, n)) +
-		vector<SourceLocation>(30, SourceLocation(20, 72, n)) +
+		vector<SourceLocation>(19, SourceLocation(2, 75, n)) +
+		vector<SourceLocation>(32, SourceLocation(20, 72, n)) +
 		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
 		vector<SourceLocation>(2, SourceLocation(58, 67, n)) +
 		vector<SourceLocation>(3, SourceLocation(20, 72, n));

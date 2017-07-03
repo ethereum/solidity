@@ -32,6 +32,9 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
+#include <libjulia/backends/evm/AbstractAssembly.h>
+#include <libjulia/backends/evm/EVMCodeTransform.h>
+
 #include <libdevcore/CommonIO.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -46,268 +49,101 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-struct GeneratorState
+class EthAssemblyAdapter: public julia::AbstractAssembly
 {
-	GeneratorState(ErrorList& _errors, AsmAnalysisInfo& _analysisInfo, eth::Assembly& _assembly):
-		errors(_errors), info(_analysisInfo), assembly(_assembly) {}
-
-	size_t newLabelId()
+public:
+	EthAssemblyAdapter(eth::Assembly& _assembly):
+		m_assembly(_assembly)
 	{
-		return assemblyTagToIdentifier(assembly.newTag());
+	}
+	virtual void setSourceLocation(SourceLocation const& _location) override
+	{
+		m_assembly.setSourceLocation(_location);
+	}
+	virtual int stackHeight() const override { return m_assembly.deposit(); }
+	virtual void appendInstruction(solidity::Instruction _instruction) override
+	{
+		m_assembly.append(_instruction);
+	}
+	virtual void appendConstant(u256 const& _constant) override
+	{
+		m_assembly.append(_constant);
+	}
+	/// Append a label.
+	virtual void appendLabel(LabelID _labelId) override
+	{
+		m_assembly.append(eth::AssemblyItem(eth::Tag, _labelId));
+	}
+	/// Append a label reference.
+	virtual void appendLabelReference(LabelID _labelId) override
+	{
+		m_assembly.append(eth::AssemblyItem(eth::PushTag, _labelId));
+	}
+	virtual size_t newLabelId() override
+	{
+		return assemblyTagToIdentifier(m_assembly.newTag());
+	}
+	virtual void appendLinkerSymbol(std::string const& _linkerSymbol) override
+	{
+		m_assembly.appendLibraryAddress(_linkerSymbol);
+	}
+	virtual void appendJump(int _stackDiffAfter) override
+	{
+		appendInstruction(solidity::Instruction::JUMP);
+		m_assembly.adjustDeposit(_stackDiffAfter);
+	}
+	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override
+	{
+		appendLabelReference(_labelId);
+		appendJump(_stackDiffAfter);
+	}
+	virtual void appendJumpToIf(LabelID _labelId) override
+	{
+		appendLabelReference(_labelId);
+		appendInstruction(solidity::Instruction::JUMPI);
+	}
+	virtual void appendBeginsub(LabelID, int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "BEGINSUB not implemented for EVM 1.0");
+	}
+	/// Call a subroutine.
+	virtual void appendJumpsub(LabelID, int, int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "JUMPSUB not implemented for EVM 1.0");
 	}
 
-	size_t assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
+	/// Return from a subroutine.
+	virtual void appendReturnsub(int, int) override
+	{
+		// TODO we could emulate that, though
+		solAssert(false, "RETURNSUB not implemented for EVM 1.0");
+	}
+
+	virtual void appendAssemblySize() override
+	{
+		m_assembly.appendProgramSize();
+	}
+
+private:
+	LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
 	{
 		u256 id = _tag.data();
-		solAssert(id <= std::numeric_limits<size_t>::max(), "Tag id too large.");
-		return size_t(id);
+		solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
+		return LabelID(id);
 	}
 
-	ErrorList& errors;
-	AsmAnalysisInfo info;
-	eth::Assembly& assembly;
+	eth::Assembly& m_assembly;
 };
-
-class CodeTransform: public boost::static_visitor<>
-{
-public:
-	/// Create the code transformer which appends assembly to _state.assembly when called
-	/// with parsed assembly data.
-	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
-	explicit CodeTransform(
-		GeneratorState& _state,
-		assembly::Block const& _block,
-		assembly::ExternalIdentifierAccess const& _identifierAccess = assembly::ExternalIdentifierAccess()
-	): CodeTransform(_state, _block, _identifierAccess, _state.assembly.deposit())
-	{
-	}
-
-private:
-	CodeTransform(
-		GeneratorState& _state,
-		assembly::Block const& _block,
-		assembly::ExternalIdentifierAccess const& _identifierAccess,
-		int _initialDeposit
-	):
-		m_state(_state),
-		m_scope(*m_state.info.scopes.at(&_block)),
-		m_identifierAccess(_identifierAccess),
-		m_initialDeposit(_initialDeposit)
-	{
-		int blockStartDeposit = m_state.assembly.deposit();
-		std::for_each(_block.statements.begin(), _block.statements.end(), boost::apply_visitor(*this));
-
-		m_state.assembly.setSourceLocation(_block.location);
-
-		// pop variables
-		for (auto const& identifier: m_scope.identifiers)
-			if (identifier.second.type() == typeid(Scope::Variable))
-				m_state.assembly.append(solidity::Instruction::POP);
-
-		int deposit = m_state.assembly.deposit() - blockStartDeposit;
-		solAssert(deposit == 0, "Invalid stack height at end of block.");
-	}
-
-public:
-	void operator()(assembly::Instruction const& _instruction)
-	{
-		m_state.assembly.setSourceLocation(_instruction.location);
-		m_state.assembly.append(_instruction.instruction);
-		checkStackHeight(&_instruction);
-	}
-	void operator()(assembly::Literal const& _literal)
-	{
-		m_state.assembly.setSourceLocation(_literal.location);
-		if (_literal.isNumber)
-			m_state.assembly.append(u256(_literal.value));
-		else
-		{
-			solAssert(_literal.value.size() <= 32, "");
-			m_state.assembly.append(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
-		}
-		checkStackHeight(&_literal);
-	}
-	void operator()(assembly::Identifier const& _identifier)
-	{
-		m_state.assembly.setSourceLocation(_identifier.location);
-		// First search internals, then externals.
-		if (m_scope.lookup(_identifier.name, Scope::NonconstVisitor(
-			[=](Scope::Variable& _var)
-			{
-				if (int heightDiff = variableHeightDiff(_var, _identifier.location, false))
-					m_state.assembly.append(solidity::dupInstruction(heightDiff));
-				else
-					// Store something to balance the stack
-					m_state.assembly.append(u256(0));
-			},
-			[=](Scope::Label& _label)
-			{
-				assignLabelIdIfUnset(_label);
-				m_state.assembly.append(eth::AssemblyItem(eth::PushTag, _label.id));
-			},
-			[=](Scope::Function&)
-			{
-				solAssert(false, "Function not removed during desugaring.");
-			}
-		)))
-		{
-			return;
-		}
-		solAssert(
-			m_identifierAccess.generateCode,
-			"Identifier not found and no external access available."
-		);
-		m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_state.assembly);
-		checkStackHeight(&_identifier);
-	}
-	void operator()(FunctionalInstruction const& _instr)
-	{
-		for (auto it = _instr.arguments.rbegin(); it != _instr.arguments.rend(); ++it)
-		{
-			int height = m_state.assembly.deposit();
-			boost::apply_visitor(*this, *it);
-			expectDeposit(1, height);
-		}
-		(*this)(_instr.instruction);
-		checkStackHeight(&_instr);
-	}
-	void operator()(assembly::FunctionCall const&)
-	{
-		solAssert(false, "Function call not removed during desugaring phase.");
-	}
-	void operator()(Label const& _label)
-	{
-		m_state.assembly.setSourceLocation(_label.location);
-		solAssert(m_scope.identifiers.count(_label.name), "");
-		Scope::Label& label = boost::get<Scope::Label>(m_scope.identifiers.at(_label.name));
-		assignLabelIdIfUnset(label);
-		m_state.assembly.append(eth::AssemblyItem(eth::Tag, label.id));
-		checkStackHeight(&_label);
-	}
-	void operator()(assembly::Assignment const& _assignment)
-	{
-		m_state.assembly.setSourceLocation(_assignment.location);
-		generateAssignment(_assignment.variableName, _assignment.location);
-		checkStackHeight(&_assignment);
-	}
-	void operator()(FunctionalAssignment const& _assignment)
-	{
-		int height = m_state.assembly.deposit();
-		boost::apply_visitor(*this, *_assignment.value);
-		expectDeposit(1, height);
-		m_state.assembly.setSourceLocation(_assignment.location);
-		generateAssignment(_assignment.variableName, _assignment.location);
-		checkStackHeight(&_assignment);
-	}
-	void operator()(assembly::VariableDeclaration const& _varDecl)
-	{
-		int height = m_state.assembly.deposit();
-		boost::apply_visitor(*this, *_varDecl.value);
-		expectDeposit(1, height);
-		auto& var = boost::get<Scope::Variable>(m_scope.identifiers.at(_varDecl.name));
-		var.stackHeight = height;
-		var.active = true;
-	}
-	void operator()(assembly::Block const& _block)
-	{
-		CodeTransform(m_state, _block, m_identifierAccess, m_initialDeposit);
-		checkStackHeight(&_block);
-	}
-	void operator()(assembly::FunctionDefinition const&)
-	{
-		solAssert(false, "Function definition not removed during desugaring phase.");
-	}
-
-private:
-	void generateAssignment(assembly::Identifier const& _variableName, SourceLocation const& _location)
-	{
-		auto var = m_scope.lookup(_variableName.name);
-		if (var)
-		{
-			Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
-			if (int heightDiff = variableHeightDiff(_var, _location, true))
-				m_state.assembly.append(solidity::swapInstruction(heightDiff - 1));
-			m_state.assembly.append(solidity::Instruction::POP);
-		}
-		else
-		{
-			solAssert(
-				m_identifierAccess.generateCode,
-				"Identifier not found and no external access available."
-			);
-			m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_state.assembly);
-		}
-	}
-
-	/// Determines the stack height difference to the given variables. Automatically generates
-	/// errors if it is not yet in scope or the height difference is too large. Returns 0 on
-	/// errors and the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, SourceLocation const& _location, bool _forSwap)
-	{
-		int heightDiff = m_state.assembly.deposit() - _var.stackHeight;
-		if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
-		{
-			//@TODO move this to analysis phase.
-			m_state.errors.push_back(make_shared<Error>(
-				Error::Type::TypeError,
-				"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")",
-				_location
-			));
-			return 0;
-		}
-		else
-			return heightDiff;
-	}
-
-	void expectDeposit(int _deposit, int _oldHeight)
-	{
-		solAssert(m_state.assembly.deposit() == _oldHeight + _deposit, "Invalid stack deposit.");
-	}
-
-	void checkStackHeight(void const* _astElement)
-	{
-		solAssert(m_state.info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
-		solAssert(
-			m_state.info.stackHeightInfo.at(_astElement) == m_state.assembly.deposit() - m_initialDeposit,
-			"Stack height mismatch between analysis and code generation phase."
-		);
-	}
-
-	/// Assigns the label's id to a value taken from eth::Assembly if it has not yet been set.
-	void assignLabelIdIfUnset(Scope::Label& _label)
-	{
-		if (_label.id == Scope::Label::unassignedLabelId)
-			_label.id = m_state.newLabelId();
-		else if (_label.id == Scope::Label::errorLabelId)
-			_label.id = size_t(m_state.assembly.errorTag().data());
-	}
-
-
-	GeneratorState& m_state;
-	Scope& m_scope;
-	ExternalIdentifierAccess m_identifierAccess;
-	int const m_initialDeposit;
-};
-
-eth::Assembly assembly::CodeGenerator::assemble(
-	Block const& _parsedData,
-	AsmAnalysisInfo& _analysisInfo,
-	ExternalIdentifierAccess const& _identifierAccess
-)
-{
-	eth::Assembly assembly;
-	GeneratorState state(m_errors, _analysisInfo, assembly);
-	CodeTransform(state, _parsedData, _identifierAccess);
-	return assembly;
-}
 
 void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	ExternalIdentifierAccess const& _identifierAccess
+	julia::ExternalIdentifierAccess const& _identifierAccess
 )
 {
-	GeneratorState state(m_errors, _analysisInfo, _assembly);
-	CodeTransform(state, _parsedData, _identifierAccess);
+	EthAssemblyAdapter assemblyAdapter(_assembly);
+	julia::CodeTransform(assemblyAdapter, _analysisInfo, false, false, _identifierAccess)(_parsedData);
 }

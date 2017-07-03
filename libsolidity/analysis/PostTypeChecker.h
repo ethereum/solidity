@@ -28,6 +28,8 @@ namespace dev
 namespace solidity
 {
 
+class ErrorReporter;
+
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
  *  - whether there are circular references in constant state variables
@@ -37,7 +39,7 @@ class PostTypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
-	PostTypeChecker(ErrorList& _errors): m_errors(_errors) {}
+	PostTypeChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool check(ASTNode const& _astRoot);
 
@@ -55,10 +57,10 @@ private:
 
 	VariableDeclaration const* findCycle(
 		VariableDeclaration const* _startingFrom,
-		std::set<VariableDeclaration const*> const& _seen = {}
+		std::set<VariableDeclaration const*> const& _seen = std::set<VariableDeclaration const*>{}
 	);
 
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
 
 	VariableDeclaration const* m_currentConstVariable = nullptr;
 	std::vector<VariableDeclaration const*> m_constVariables; ///< Required for determinism.

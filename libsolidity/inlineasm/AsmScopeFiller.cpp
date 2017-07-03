@@ -22,9 +22,10 @@
 
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmScope.h>
+#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/Utils.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -36,13 +37,9 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-ScopeFiller::ScopeFiller(ScopeFiller::Scopes& _scopes, ErrorList& _errors):
-	m_scopes(_scopes), m_errors(_errors)
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
+	m_info(_info), m_errorReporter(_errorReporter)
 {
-	// Make the Solidity ErrorTag available to inline assembly
-	Scope::Label errorLabel;
-	errorLabel.id = Scope::Label::errorLabelId;
-	scope(nullptr).identifiers["invalidJumpLabel"] = errorLabel;
 	m_currentScope = &scope(nullptr);
 }
 
@@ -51,11 +48,10 @@ bool ScopeFiller::operator()(Label const& _item)
 	if (!m_currentScope->registerLabel(_item.name))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Label name " + _item.name + " already taken in this scope.",
-			_item.location
-		));
+		m_errorReporter.declarationError(
+			_item.location,
+			"Label name " + _item.name + " already taken in this scope."
+		);
 		return false;
 	}
 	return true;
@@ -63,31 +59,74 @@ bool ScopeFiller::operator()(Label const& _item)
 
 bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 {
-	return registerVariable(_varDecl.name, _varDecl.location, *m_currentScope);
+	for (auto const& variable: _varDecl.variables)
+		if (!registerVariable(variable, _varDecl.location, *m_currentScope))
+			return false;
+	return true;
 }
 
 bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	bool success = true;
-	if (!m_currentScope->registerFunction(_funDef.name, _funDef.arguments.size(), _funDef.returns.size()))
+	vector<Scope::JuliaType> arguments;
+	for (auto const& _argument: _funDef.arguments)
+		arguments.push_back(_argument.type);
+	vector<Scope::JuliaType> returns;
+	for (auto const& _return: _funDef.returns)
+		returns.push_back(_return.type);
+	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Function name " + _funDef.name + " already taken in this scope.",
-			_funDef.location
-		));
+		m_errorReporter.declarationError(
+			_funDef.location,
+			"Function name " + _funDef.name + " already taken in this scope."
+		);
 		success = false;
 	}
-	Scope& body = scope(&_funDef.body);
-	body.superScope = m_currentScope;
-	body.functionScope = true;
+
+	auto virtualBlock = m_info.virtualBlocks[&_funDef] = make_shared<Block>();
+	Scope& varScope = scope(virtualBlock.get());
+	varScope.superScope = m_currentScope;
+	m_currentScope = &varScope;
+	varScope.functionScope = true;
 	for (auto const& var: _funDef.arguments + _funDef.returns)
-		if (!registerVariable(var, _funDef.location, body))
+		if (!registerVariable(var, _funDef.location, varScope))
 			success = false;
 
 	if (!(*this)(_funDef.body))
 		success = false;
+
+	solAssert(m_currentScope == &varScope, "");
+	m_currentScope = m_currentScope->superScope;
+
+	return success;
+}
+
+bool ScopeFiller::operator()(Switch const& _switch)
+{
+	bool success = true;
+	for (auto const& _case: _switch.cases)
+		if (!(*this)(_case.body))
+			success = false;
+	return success;
+}
+
+bool ScopeFiller::operator()(ForLoop const& _forLoop)
+{
+	Scope* originalScope = m_currentScope;
+
+	bool success = true;
+	if (!(*this)(_forLoop.pre))
+		success = false;
+	m_currentScope = &scope(&_forLoop.pre);
+	if (!boost::apply_visitor(*this, *_forLoop.condition))
+		success = false;
+	if (!(*this)(_forLoop.body))
+		success = false;
+	if (!(*this)(_forLoop.post))
+		success = false;
+
+	m_currentScope = originalScope;
 
 	return success;
 }
@@ -106,16 +145,15 @@ bool ScopeFiller::operator()(Block const& _block)
 	return success;
 }
 
-bool ScopeFiller::registerVariable(string const& _name, SourceLocation const& _location, Scope& _scope)
+bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const& _location, Scope& _scope)
 {
-	if (!_scope.registerVariable(_name))
+	if (!_scope.registerVariable(_name.name, _name.type))
 	{
 		//@TODO secondary location
-		m_errors.push_back(make_shared<Error>(
-			Error::Type::DeclarationError,
-			"Variable name " + _name + " already taken in this scope.",
-			_location
-		));
+		m_errorReporter.declarationError(
+			_location,
+			"Variable name " + _name.name + " already taken in this scope."
+		);
 		return false;
 	}
 	return true;
@@ -123,7 +161,7 @@ bool ScopeFiller::registerVariable(string const& _name, SourceLocation const& _l
 
 Scope& ScopeFiller::scope(Block const* _block)
 {
-	auto& scope = m_scopes[_block];
+	auto& scope = m_info.scopes[_block];
 	if (!scope)
 		scope = make_shared<Scope>();
 	return *scope;

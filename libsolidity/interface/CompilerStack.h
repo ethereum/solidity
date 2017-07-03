@@ -35,7 +35,7 @@
 #include <libdevcore/FixedHash.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/ReadFile.h>
 
 namespace dev
@@ -59,15 +59,14 @@ class FunctionDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
-class InterfaceHandler;
+class Natspec;
 class Error;
 class DeclarationContainer;
 
 enum class DocumentationType: uint8_t
 {
 	NatspecUser = 1,
-	NatspecDev,
-	ABIInterface
+	NatspecDev
 };
 
 /**
@@ -78,10 +77,21 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
+	enum State {
+		Empty,
+		SourcesSet,
+		ParsingSuccessful,
+		AnalysisSuccessful,
+		CompilationSuccessful
+	};
+
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback());
+	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback()):
+		m_readFile(_readFile),
+		m_errorList(),
+		m_errorReporter(m_errorList) {}
 
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
@@ -115,7 +125,6 @@ public:
 	bool parseAndAnalyze(std::string const& _sourceCode);
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
-	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	/// @returns false on error.
@@ -127,12 +136,6 @@ public:
 	/// Parses and compiles the given source code.
 	/// @returns false on error.
 	bool compile(std::string const& _sourceCode, bool _optimize = false, unsigned _runs = 200);
-
-	/// Tries to translate all source files into a language suitable for formal analysis.
-	/// @param _errors list to store errors - defaults to the internal error list.
-	/// @returns false on error.
-	bool prepareFormalAnalysis(ErrorList* _errors = nullptr);
-	std::string const& formalTranslation() const { return m_formalTranslation; }
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
@@ -157,11 +160,6 @@ public:
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
-	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
-	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
-	/// does not have runtime code.
-	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
-
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFromat shows whether the out should be in Json format
@@ -173,14 +171,18 @@ public:
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
-	/// @returns a JSON representing the contract interface.
+	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& interface(std::string const& _contractName = "") const;
+	Json::Value const& contractABI(std::string const& _contractName = "") const;
 	/// @returns a JSON representing the contract's documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
-	Json::Value const& metadata(std::string const& _contractName, DocumentationType _type) const;
+	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
+
+	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
+	Json::Value methodIdentifiers(std::string const& _contractName) const;
+
 	std::string const& onChainMetadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
@@ -191,16 +193,6 @@ public:
 	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& ast(std::string const& _sourceName = "") const;
-	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
-	/// does not exist.
-	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
-
-	/// @returns the offset of the entry point of the given function into the list of assembly items
-	/// or zero if it is not found or does not exist.
-	size_t functionEntryPoint(
-		std::string const& _contractName,
-		FunctionDefinition const& _function
-	) const;
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
@@ -208,7 +200,9 @@ public:
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
 	/// @returns the list of errors that occured during parsing and type checking.
-	ErrorList const& errors() const { return m_errors; }
+	ErrorList const& errors() { return m_errorReporter.errors(); }
+
+	State state() const { return m_stackState; }
 
 private:
 	/**
@@ -230,20 +224,12 @@ private:
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
 		std::string onChainMetadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> interface;
+		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
-	enum State {
-		Empty,
-		SourcesSet,
-		ParsingSuccessful,
-		AnalysisSuccessful,
-		CompilationSuccessful
-	};
-
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
@@ -265,9 +251,21 @@ private:
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
 
+	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
+	/// does not exist.
+	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
+
 	std::string createOnChainMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
-	Json::Value const& metadata(Contract const&, DocumentationType _type) const;
+	Json::Value const& contractABI(Contract const&) const;
+	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
+
+	/// @returns the offset of the entry point of the given function into the list of assembly items
+	/// or zero if it is not found or does not exist.
+	size_t functionEntryPoint(
+		std::string const& _contractName,
+		FunctionDefinition const& _function
+	) const;
 
 	struct Remapping
 	{
@@ -288,8 +286,8 @@ private:
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
-	std::string m_formalTranslation;
-	ErrorList m_errors;
+	ErrorList m_errorList;
+	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
 };

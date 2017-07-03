@@ -1,6 +1,7 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
-#include <libsolidity/interface/Utils.h>
+#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/interface/Exceptions.h>
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>
@@ -51,9 +52,9 @@ string::const_iterator skipWhitespace(
 
 }
 
-bool DocStringParser::parse(string const& _docString, ErrorList& _errors)
+bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
 {
-	m_errors = &_errors;
+	m_errorReporter = &_errorReporter;
 	m_errorsOccurred = false;
 	m_lastTag = nullptr;
 
@@ -172,8 +173,6 @@ void DocStringParser::newTag(string const& _tagName)
 
 void DocStringParser::appendError(string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::DocstringParsingError);
-	*err << errinfo_comment(_description);
-	m_errors->push_back(err);
 	m_errorsOccurred = true;
+	m_errorReporter->docstringParsingError(_description);
 }

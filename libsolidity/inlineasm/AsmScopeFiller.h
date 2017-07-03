@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 
@@ -29,24 +29,16 @@
 
 namespace dev
 {
+struct SourceLocation;
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
 
-struct Literal;
-struct Block;
-struct Label;
-struct FunctionalInstruction;
-struct FunctionalAssignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct Assignment;
-struct FunctionDefinition;
-struct FunctionCall;
-
+struct TypedName;
 struct Scope;
+struct AsmAnalysisInfo;
 
 /**
  * Fills scopes with identifiers and checks for name clashes.
@@ -55,24 +47,25 @@ struct Scope;
 class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
-	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	ScopeFiller(Scopes& _scopes, ErrorList& _errors);
+	ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter);
 
 	bool operator()(assembly::Instruction const&) { return true; }
 	bool operator()(assembly::Literal const&) { return true; }
 	bool operator()(assembly::Identifier const&) { return true; }
 	bool operator()(assembly::FunctionalInstruction const&) { return true; }
 	bool operator()(assembly::Label const& _label);
+	bool operator()(assembly::StackAssignment const&) { return true; }
 	bool operator()(assembly::Assignment const&) { return true; }
-	bool operator()(assembly::FunctionalAssignment const&) { return true; }
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const&) { return true; }
+	bool operator()(assembly::Switch const& _switch);
+	bool operator()(assembly::ForLoop const& _forLoop);
 	bool operator()(assembly::Block const& _block);
 
 private:
 	bool registerVariable(
-		std::string const& _name,
+		TypedName const& _name,
 		SourceLocation const& _location,
 		Scope& _scope
 	);
@@ -80,8 +73,8 @@ private:
 	Scope& scope(assembly::Block const* _block);
 
 	Scope* m_currentScope = nullptr;
-	Scopes& m_scopes;
-	ErrorList& m_errors;
+	AsmAnalysisInfo& m_info;
+	ErrorReporter& m_errorReporter;
 };
 
 }

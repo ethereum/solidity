@@ -16,30 +16,37 @@
 */
 /**
  * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity Utilities.
+ * @date 2016
+ * Forward declaration of classes for inline assembly / JULIA AST
  */
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <boost/variant.hpp>
 
 namespace dev
 {
 namespace solidity
 {
-struct InternalCompilerError;
-struct UnimplementedFeatureError;
+namespace assembly
+{
+
+struct Instruction;
+struct Literal;
+struct Label;
+struct StackAssignment;
+struct Identifier;
+struct Assignment;
+struct VariableDeclaration;
+struct FunctionalInstruction;
+struct FunctionDefinition;
+struct FunctionCall;
+struct Switch;
+struct ForLoop;
+struct Block;
+
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, ForLoop, Block>;
+
 }
 }
-
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
-
-#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
-
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)
+}

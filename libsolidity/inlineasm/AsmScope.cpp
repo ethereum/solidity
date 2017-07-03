@@ -32,19 +32,21 @@ bool Scope::registerLabel(string const& _name)
 	return true;
 }
 
-bool Scope::registerVariable(string const& _name)
+bool Scope::registerVariable(string const& _name, JuliaType const& _type)
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Variable();
+	Variable variable;
+	variable.type = _type;
+	identifiers[_name] = variable;
 	return true;
 }
 
-bool Scope::registerFunction(string const& _name, size_t _arguments, size_t _returns)
+bool Scope::registerFunction(string const& _name, std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns)
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Function(_arguments, _returns);
+	identifiers[_name] = Function{_arguments, _returns};
 	return true;
 }
 
@@ -76,4 +78,21 @@ bool Scope::exists(string const& _name)
 		return superScope->exists(_name);
 	else
 		return false;
+}
+
+size_t Scope::numberOfVariables() const
+{
+	size_t count = 0;
+	for (auto const& identifier: identifiers)
+		if (identifier.second.type() == typeid(Scope::Variable))
+			count++;
+	return count;
+}
+
+bool Scope::insideFunction() const
+{
+	for (Scope const* s = this; s; s = s->superScope)
+		if (s->functionScope)
+			return true;
+	return false;
 }

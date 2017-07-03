@@ -25,6 +25,7 @@
 #include <string>
 #include <utility>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/Assertions.h>
 #include <libevmasm/SourceLocation.h>
 
 namespace dev
@@ -39,6 +40,16 @@ struct InternalCompilerError: virtual Exception {};
 struct FatalError: virtual Exception {};
 struct UnimplementedFeatureError: virtual Exception{};
 
+/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
+#define solAssert(CONDITION, DESCRIPTION) \
+        assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
+
+#define solUnimplementedAssert(CONDITION, DESCRIPTION) \
+        assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
+
+#define solUnimplemented(DESCRIPTION) \
+        solUnimplementedAssert(false, DESCRIPTION)
+
 class Error: virtual public Exception
 {
 public:
@@ -49,7 +60,6 @@ public:
 		ParserError,
 		TypeError,
 		SyntaxError,
-		Why3TranslatorError,
 		Warning
 	};
 

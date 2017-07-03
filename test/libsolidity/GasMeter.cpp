@@ -151,20 +151,20 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 		contract test {
 			bytes32 public shaValue;
 			function f(uint a) {
-				shaValue = sha3(a);
+				shaValue = keccak256(a);
 			}
 		}
 	)";
 	testCreationTimeGas(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(store_sha3)
+BOOST_AUTO_TEST_CASE(store_keccak256)
 {
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
 			function test(uint a) {
-				shaValue = sha3(a);
+				shaValue = keccak256(a);
 			}
 		}
 	)";

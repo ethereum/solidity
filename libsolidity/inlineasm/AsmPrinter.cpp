@@ -21,8 +21,8 @@
  */
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
-
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/interface/Exceptions.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -40,13 +40,22 @@ using namespace dev::solidity::assembly;
 
 string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 {
+	solAssert(!m_julia, "");
 	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
 }
 
 string AsmPrinter::operator()(assembly::Literal const& _literal)
 {
-	if (_literal.isNumber)
-		return _literal.value;
+	switch (_literal.kind)
+	{
+	case LiteralKind::Number:
+		return _literal.value + appendTypeName(_literal.type);
+	case LiteralKind::Boolean:
+		return ((_literal.value == "true") ? "true" : "false") + appendTypeName(_literal.type);
+	case LiteralKind::String:
+		break;
+	}
+
 	string out;
 	for (char c: _literal.value)
 		if (c == '\\')
@@ -73,7 +82,7 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 		}
 		else
 			out += c;
-	return "\"" + out + "\"";
+	return "\"" + out + "\"" + appendTypeName(_literal.type);
 }
 
 string AsmPrinter::operator()(assembly::Identifier const& _identifier)
@@ -83,6 +92,7 @@ string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
 {
+	solAssert(!m_julia, "");
 	return
 		(*this)(_functionalInstruction.instruction) +
 		"(" +
@@ -94,29 +104,56 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
+	solAssert(!m_julia, "");
 	return _label.name + ":";
+}
+
+string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
+{
+	solAssert(!m_julia, "");
+	return "=: " + (*this)(_assignment.variableName);
 }
 
 string AsmPrinter::operator()(assembly::Assignment const& _assignment)
 {
-	return "=: " + (*this)(_assignment.variableName);
-}
-
-string AsmPrinter::operator()(assembly::FunctionalAssignment const& _functionalAssignment)
-{
-	return (*this)(_functionalAssignment.variableName) + " := " + boost::apply_visitor(*this, *_functionalAssignment.value);
+	return (*this)(_assignment.variableName) + " := " + boost::apply_visitor(*this, *_assignment.value);
 }
 
 string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDeclaration)
 {
-	return "let " + _variableDeclaration.name + " := " + boost::apply_visitor(*this, *_variableDeclaration.value);
+	string out = "let ";
+	out += boost::algorithm::join(
+		_variableDeclaration.variables | boost::adaptors::transformed(
+			[this](TypedName variable) { return variable.name + appendTypeName(variable.type); }
+		),
+		", "
+	);
+	out += " := ";
+	out += boost::apply_visitor(*this, *_variableDeclaration.value);
+	return out;
 }
 
 string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
-	string out = "function " + _functionDefinition.name + "(" + boost::algorithm::join(_functionDefinition.arguments, ", ") + ")";
+	string out = "function " + _functionDefinition.name + "(";
+	out += boost::algorithm::join(
+		_functionDefinition.arguments | boost::adaptors::transformed(
+			[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+		),
+		", "
+	);
+	out += ")";
 	if (!_functionDefinition.returns.empty())
-		out += " -> " + boost::algorithm::join(_functionDefinition.returns, ", ");
+	{
+		out += " -> ";
+		out += boost::algorithm::join(
+			_functionDefinition.returns | boost::adaptors::transformed(
+				[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+			),
+			", "
+		);
+	}
+
 	return out + "\n" + (*this)(_functionDefinition.body);
 }
 
@@ -130,6 +167,33 @@ string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
 		")";
 }
 
+string AsmPrinter::operator()(Switch const& _switch)
+{
+	string out = "switch " + boost::apply_visitor(*this, *_switch.expression);
+	for (auto const& _case: _switch.cases)
+	{
+		if (!_case.value)
+			out += "\ndefault ";
+		else
+			out += "\ncase " + (*this)(*_case.value) + " ";
+		out += (*this)(_case.body);
+	}
+	return out;
+}
+
+string AsmPrinter::operator()(assembly::ForLoop const& _forLoop)
+{
+	string out = "for ";
+	out += (*this)(_forLoop.pre);
+	out += "\n";
+	out += boost::apply_visitor(*this, *_forLoop.condition);
+	out += "\n";
+	out += (*this)(_forLoop.post);
+	out += "\n";
+	out += (*this)(_forLoop.body);
+	return out;
+}
+
 string AsmPrinter::operator()(Block const& _block)
 {
 	if (_block.statements.empty())
@@ -140,4 +204,11 @@ string AsmPrinter::operator()(Block const& _block)
 	);
 	boost::replace_all(body, "\n", "\n    ");
 	return "{\n    " + body + "\n}";
+}
+
+string AsmPrinter::appendTypeName(std::string const& _type)
+{
+	if (m_julia)
+		return ":" + _type;
+	return "";
 }

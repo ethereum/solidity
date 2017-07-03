@@ -94,7 +94,7 @@ of votes.
             // called incorrectly. But watch out, this
             // will currently also consume all provided gas
             // (this is planned to change in the future).
-            require((msg.sender == chairperson) && !voters[voter].voted);
+            require((msg.sender == chairperson) && !voters[voter].voted && (voters[voter].weight == 0));
             voters[voter].weight = 1;
         }
 
@@ -165,7 +165,7 @@ of votes.
                 }
             }
         }
-        
+
         // Calls winningProposal() function to get the index
         // of the winner contained in the proposals array and then
         // returns the name of the winner
@@ -273,7 +273,7 @@ activate themselves.
             // If the bid is not higher, send the
             // money back.
             require(msg.value > highestBid);
-            
+
             if (highestBidder != 0) {
                 // Sending back the money by simply using
                 // highestBidder.send(highestBid) is a security risk
@@ -296,7 +296,7 @@ activate themselves.
                 // before `send` returns.
                 pendingReturns[msg.sender] = 0;
 
-                if (!msg.sender.send(amount)) { 
+                if (!msg.sender.send(amount)) {
                     // No need to call throw here, just reset the amount owing
                     pendingReturns[msg.sender] = amount;
                     return false;
@@ -316,7 +316,7 @@ activate themselves.
             // 3. interacting with other contracts
             // If these phases are mixed up, the other contract could call
             // back into the current contract and modify the state or cause
-            // effects (ether payout) to be perfromed multiple times.
+            // effects (ether payout) to be performed multiple times.
             // If functions called internally include interaction with external
             // contracts, they also have to be considered interaction with
             // external contracts.
@@ -566,9 +566,9 @@ Safe Remote Purchase
             _;
         }
 
-        event aborted();
-        event purchaseConfirmed();
-        event itemReceived();
+        event Aborted();
+        event PurchaseConfirmed();
+        event ItemReceived();
 
         /// Abort the purchase and reclaim the ether.
         /// Can only be called by the seller before
@@ -577,7 +577,7 @@ Safe Remote Purchase
             onlySeller
             inState(State.Created)
         {
-            aborted();
+            Aborted();
             state = State.Inactive;
             seller.transfer(this.balance);
         }
@@ -591,7 +591,7 @@ Safe Remote Purchase
             condition(msg.value == (2 * value))
             payable
         {
-            purchaseConfirmed();
+            PurchaseConfirmed();
             buyer = msg.sender;
             state = State.Locked;
         }
@@ -602,7 +602,7 @@ Safe Remote Purchase
             onlyBuyer
             inState(State.Locked)
         {
-            itemReceived();
+            ItemReceived();
             // It is important to change the state first because
             // otherwise, the contracts called using `send` below
             // can call in again here.
@@ -612,7 +612,7 @@ Safe Remote Purchase
             // block the refund - the withdraw pattern should be used.
 
             buyer.transfer(value);
-            seller.transfer(this.balance));
+            seller.transfer(this.balance);
         }
     }
 

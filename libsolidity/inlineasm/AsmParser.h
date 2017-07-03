@@ -37,7 +37,7 @@ namespace assembly
 class Parser: public ParserBase
 {
 public:
-	explicit Parser(ErrorList& _errors, bool _julia = false): ParserBase(_errors), m_julia(_julia) {}
+	explicit Parser(ErrorReporter& _errorReporter, bool _julia = false): ParserBase(_errorReporter), m_julia(_julia) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.
@@ -62,13 +62,17 @@ protected:
 
 	Block parseBlock();
 	Statement parseStatement();
+	Case parseCase();
+	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Statement parseExpression();
-	std::map<std::string, dev::solidity::Instruction> const& instructions();
+	static std::map<std::string, dev::solidity::Instruction> const& instructions();
+	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
 	Statement parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	Statement parseFunctionalInstruction(Statement&& _instruction);
+	Statement parseCall(Statement&& _instruction);
+	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
 private:

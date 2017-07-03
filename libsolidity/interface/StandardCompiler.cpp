@@ -115,14 +115,6 @@ StringMap createSourceList(Json::Value const& _input)
 	return sources;
 }
 
-Json::Value methodIdentifiers(ContractDefinition const& _contract)
-{
-	Json::Value methodIdentifiers(Json::objectValue);
-	for (auto const& it: _contract.interfaceFunctions())
-		methodIdentifiers[it.second->externalSignature()] = toHex(it.first.ref());
-	return methodIdentifiers;
-}
-
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
 	Json::Value ret(Json::objectValue);
@@ -273,11 +265,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
-	bool success = false;
-
 	try
 	{
-		success = m_compilerStack.compile(optimize, optimizeRuns, libraries);
+		m_compilerStack.compile(optimize, optimizeRuns, libraries);
 
 		for (auto const& error: m_compilerStack.errors())
 		{
@@ -367,22 +357,26 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (errors.size() > 0)
 		output["errors"] = errors;
 
+	bool parsingSuccess = m_compilerStack.state() >= CompilerStack::State::ParsingSuccessful;
+	bool compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
+
 	/// Inconsistent state - stop here to receive error reports from users
-	if (!success && (errors.size() == 0))
+	if (!compilationSuccess && (errors.size() == 0))
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (auto const& source: m_compilerStack.sourceNames())
+	for (auto const& source: parsingSuccess ? m_compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		sourceResult["legacyAST"] = ASTJsonConverter(m_compilerStack.ast(source), m_compilerStack.sourceIndices()).json();
+		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
+		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
 		output["sources"][source] = sourceResult;
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: success ? m_compilerStack.contractNames() : vector<string>())
+	for (string const& contractName: compilationSuccess ? m_compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.find(':');
 		solAssert(colon != string::npos, "");
@@ -391,10 +385,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
-		contractData["abi"] = m_compilerStack.metadata(contractName, DocumentationType::ABIInterface);
+		contractData["abi"] = m_compilerStack.contractABI(contractName);
 		contractData["metadata"] = m_compilerStack.onChainMetadata(contractName);
-		contractData["userdoc"] = m_compilerStack.metadata(contractName, DocumentationType::NatspecUser);
-		contractData["devdoc"] = m_compilerStack.metadata(contractName, DocumentationType::NatspecDev);
+		contractData["userdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecUser);
+		contractData["devdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecDev);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
@@ -403,7 +397,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), false);
 		evmData["assembly"] = tmp.str();
 		evmData["legacyAssembly"] = m_compilerStack.streamAssembly(tmp, contractName, createSourceList(_input), true);
-		evmData["methodIdentifiers"] = methodIdentifiers(m_compilerStack.contractDefinition(contractName));
+		evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
 		evmData["bytecode"] = collectEVMObject(

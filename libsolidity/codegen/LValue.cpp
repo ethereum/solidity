@@ -186,7 +186,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			solUnimplemented("Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
 		{
-			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
+			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
 			cleaned = true;
 		}
 		else if (
@@ -267,9 +267,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 			{
 				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
-				m_context
-					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
-					<< Instruction::SWAP1 << Instruction::DIV;
+				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes(), false);
 			}
 			else
 			{

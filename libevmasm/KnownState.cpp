@@ -136,10 +136,10 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 					m_stackHeight + _item.deposit(),
 					loadFromMemory(arguments[0], _item.location())
 				);
-			else if (_item.instruction() == Instruction::SHA3)
+			else if (_item.instruction() == Instruction::KECCAK256)
 				setStackElement(
 					m_stackHeight + _item.deposit(),
-					applySha3(arguments.at(0), arguments.at(1), _item.location())
+					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
 				);
 			else
 			{
@@ -346,18 +346,18 @@ ExpressionClasses::Id KnownState::loadFromMemory(Id _slot, SourceLocation const&
 	return m_memoryContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
-KnownState::Id KnownState::applySha3(
+KnownState::Id KnownState::applyKeccak256(
 	Id _start,
 	Id _length,
 	SourceLocation const& _location
 )
 {
-	AssemblyItem sha3Item(Instruction::SHA3, _location);
+	AssemblyItem keccak256Item(Instruction::KECCAK256, _location);
 	// Special logic if length is a short constant, otherwise we cannot tell.
 	u256 const* l = m_expressionClasses->knownConstant(_length);
 	// unknown or too large length
 	if (!l || *l > 128)
-		return m_expressionClasses->find(sha3Item, {_start, _length}, true, m_sequenceNumber);
+		return m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
 
 	vector<Id> arguments;
 	for (u256 i = 0; i < *l; i += 32)
@@ -368,10 +368,10 @@ KnownState::Id KnownState::applySha3(
 		);
 		arguments.push_back(loadFromMemory(slot, _location));
 	}
-	if (m_knownSha3Hashes.count(arguments))
-		return m_knownSha3Hashes.at(arguments);
+	if (m_knownKeccak256Hashes.count(arguments))
+		return m_knownKeccak256Hashes.at(arguments);
 	Id v;
-	// If all arguments are known constants, compute the sha3 here
+	// If all arguments are known constants, compute the Keccak-256 here
 	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses->knownConstant(_a); }))
 	{
 		bytes data;
@@ -381,8 +381,8 @@ KnownState::Id KnownState::applySha3(
 		v = m_expressionClasses->find(AssemblyItem(u256(dev::keccak256(data)), _location));
 	}
 	else
-		v = m_expressionClasses->find(sha3Item, {_start, _length}, true, m_sequenceNumber);
-	return m_knownSha3Hashes[arguments] = v;
+		v = m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
+	return m_knownKeccak256Hashes[arguments] = v;
 }
 
 set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)

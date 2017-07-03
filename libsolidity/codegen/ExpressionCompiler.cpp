@@ -32,6 +32,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/GasMeter.h>
+
 using namespace std;
 
 namespace dev
@@ -87,6 +88,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	FunctionType accessorType(_varDecl);
 
 	TypePointers paramTypes = accessorType.parameterTypes();
+	m_context.adjustStackOffset(1 + CompilerUtils::sizeOnStack(paramTypes));
 
 	// retrieve the position of the variable
 	auto const& location = m_context.storageLocationOfVariable(_varDecl);
@@ -110,7 +112,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			// move key to memory.
 			utils().copyToStackTop(paramTypes.size() - i, 1);
 			utils().storeInMemory(0);
-			m_context << u256(64) << u256(0) << Instruction::SHA3;
+			m_context << u256(64) << u256(0) << Instruction::KECCAK256;
 			// push offset
 			m_context << u256(0);
 			returnType = mappingType->valueType();
@@ -434,7 +436,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
-	if (_functionCall.annotation().isTypeConversion)
+	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
@@ -445,7 +447,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	}
 
 	FunctionTypePointer functionType;
-	if (_functionCall.annotation().isStructConstructorCall)
+	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -476,7 +478,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			solAssert(found, "");
 		}
 
-	if (_functionCall.annotation().isStructConstructorCall)
+	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -524,7 +526,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			if (m_context.runtimeContext())
 				// We have a runtime context, so we need the creation part.
-				m_context << (u256(1) << 32) << Instruction::SWAP1 << Instruction::DIV;
+				utils().rightShiftNumberOnStack(32, false);
 			else
 				// Extract the runtime part.
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
@@ -586,7 +588,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalInvalid();
+			m_context.appendConditionalRevert();
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -650,7 +652,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				// Check if zero (out of stack or not enough balance).
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalInvalid();
+				m_context.appendConditionalRevert();
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -659,9 +661,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			// memory offset returned - zero length
-			m_context << u256(0) << u256(0);
-			m_context << Instruction::REVERT;
+			m_context.appendRevert();
 			break;
 		case FunctionType::Kind::SHA3:
 		{
@@ -674,7 +674,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
 			utils().toSizeAfterFreeMemoryPointer();
-			m_context << Instruction::SHA3;
+			m_context << Instruction::KECCAK256;
 			break;
 		}
 		case FunctionType::Kind::Log0:
@@ -721,7 +721,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 							true
 						);
 						utils().toSizeAfterFreeMemoryPointer();
-						m_context << Instruction::SHA3;
+						m_context << Instruction::KECCAK256;
 					}
 					else
 						utils().convertType(
@@ -887,9 +887,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
-				m_context << Instruction::INVALID;
+				m_context.appendInvalid();
 			else
-				m_context << u256(0) << u256(0) << Instruction::REVERT;
+				m_context.appendRevert();
 			// the success branch
 			m_context << success;
 			break;
@@ -1214,7 +1214,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			utils().storeInMemoryDynamic(IntegerType(256));
 			m_context << u256(0);
 		}
-		m_context << Instruction::SHA3;
+		m_context << Instruction::KECCAK256;
 		m_context << u256(0);
 		setLValueToStorageItem(_indexAccess);
 	}
@@ -1269,7 +1269,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		m_context.appendConditionalInvalid();
 
 		m_context << Instruction::BYTE;
-		m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
+		utils().leftShiftNumberOnStack(256 - 8);
 	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{
@@ -1367,6 +1367,7 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 
 void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type const& _type)
 {
+	solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
 		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
@@ -1694,7 +1695,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
 
@@ -1730,7 +1731,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalRevert();
 	}
 
 	utils().popStackSlots(remainsSize);

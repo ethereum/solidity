@@ -119,6 +119,12 @@ Install it using ``brew``:
     # Install 0.4.8
     brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
+Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
+
+.. code:: bash
+
+    demerge ev-lang/solidity
+
 .. _building-from-source:
 
 Building from Source
@@ -261,7 +267,7 @@ If there are local modifications, the commit will be postfixed with ``.mod``.
 These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
 and the Solidity commit and platform combined make up the Semver build metadata.
 
-A relase example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
+A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
 A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
 

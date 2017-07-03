@@ -109,15 +109,13 @@ public:
 	/// Stack post: <updated_memptr>
 	void zeroInitialiseMemoryArray(ArrayType const& _type);
 
-	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
-	/// Stack pre: <size> <target> <source>
-	/// Stack post:
-	void memoryCopyPrecompile();
 	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than length.
+	/// Length can be zero, in this case, it copies nothing.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:
 	void memoryCopy32();
 	/// Copies data in memory (regions cannot overlap).
+	/// Length can be zero, in this case, it copies nothing.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:
 	void memoryCopy();
@@ -139,7 +137,15 @@ public:
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	/// If @a _chopSignBits, the function resets the signed bits out of the width of the signed integer.
-	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false, bool _chopSignBits = false);
+	/// If @a _asPartOfArgumentDecoding is true, failed conversions are flagged via REVERT,
+	/// otherwise they are flagged with INVALID.
+	void convertType(
+		Type const& _typeOnStack,
+		Type const& _targetType,
+		bool _cleanupNeeded = false,
+		bool _chopSignBits = false,
+		bool _asPartOfArgumentDecoding = false
+	);
 
 	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
 	/// memory for memory references.
@@ -170,7 +176,13 @@ public:
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
 	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
-	/// Appends code that computes tha SHA3 hash of the topmost stack element of 32 byte type.
+	/// Helper function to shift top value on the stack to the left.
+	void leftShiftNumberOnStack(unsigned _bits);
+
+	/// Helper function to shift top value on the stack to the right.
+	void rightShiftNumberOnStack(unsigned _bits, bool _isSigned = false);
+
+	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.

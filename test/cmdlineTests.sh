@@ -79,7 +79,14 @@ TMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     for f in *.sol
     do
+        set +e
         "$REPO_ROOT"/build/test/solfuzzer --quiet < "$f"
+        if [ $? -ne 0 ]; then
+            echo "Fuzzer failed on:"
+            cat "$f"
+            exit 1
+        fi
+        set -e
     done
 )
 rm -rf "$TMPDIR"

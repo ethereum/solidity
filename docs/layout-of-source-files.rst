@@ -33,7 +33,7 @@ be sure that our code will compile the way we intended it to. We do not fix
 the exact version of the compiler, so that bugfix releases are still possible.
 
 It is possible to specify much more complex rules for the compiler version,
-the expression follows those used by npm.
+the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
 
 .. index:: source file, ! import
 
@@ -185,7 +185,7 @@ Additionally, there is another type of comment called a natspec comment,
 for which the documentation is not yet written. They are written with a
 triple slash (``///``) or a double asterisk block(``/** ... */``) and
 they should be used directly above function declarations or statements.
-You can use Doxygen-style tags inside these comments to document
+You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
 functions, annotate conditions for formal verification, and provide a
 **confirmation text** which is shown to users when they attempt to invoke a
 function.

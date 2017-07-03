@@ -24,7 +24,7 @@
 #include <memory>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include "../TestHelper.h"
 #include "ErrorCheck.h"
 
@@ -41,7 +41,8 @@ namespace
 {
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
-	ASTPointer<SourceUnit> sourceUnit = Parser(_errors).parse(std::make_shared<Scanner>(CharStream(_source)));
+	ErrorReporter errorReporter(_errors);
+	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source)));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -196,6 +197,17 @@ BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 		}
 	)";
 	CHECK_PARSE_ERROR(text, "Expected primary expression");
+}
+
+BOOST_AUTO_TEST_CASE(trailing_comma_in_named_args)
+{
+	char const* text = R"(
+		contract test {
+			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
+			function b() returns (uint r) { r = a({a: 1, b: 2, c: 3, }); }
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma");
 }
 
 BOOST_AUTO_TEST_CASE(two_exact_functions)
@@ -887,6 +899,24 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 			uint private internal a;
 		})";
 	CHECK_PARSE_ERROR(text, "Visibility already specified");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_payable_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			function f() payable payable {}
+		})";
+	CHECK_PARSE_ERROR(text, "Multiple \"payable\" specifiers.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_constant_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			function f() constant constant {}
+		})";
+	CHECK_PARSE_ERROR(text, "Multiple \"constant\" specifiers.");
 }
 
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)

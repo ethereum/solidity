@@ -40,7 +40,7 @@ void Assembly::append(Assembly const& _a)
 	auto newDeposit = m_deposit + _a.deposit();
 	for (AssemblyItem i: _a.m_items)
 	{
-		if (i.type() == Tag || (i.type() == PushTag && i != errorTag()))
+		if (i.type() == Tag || i.type() == PushTag)
 			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
 			i.setData(i.data() + m_subs.size());
@@ -55,28 +55,15 @@ void Assembly::append(Assembly const& _a)
 	m_subs += _a.m_subs;
 	for (auto const& lib: _a.m_libraries)
 		m_libraries.insert(lib);
-
-	assert(!_a.m_baseDeposit);
-	assert(!_a.m_totalDeposit);
 }
 
 void Assembly::append(Assembly const& _a, int _deposit)
 {
-	if (_deposit > _a.m_deposit)
-		BOOST_THROW_EXCEPTION(InvalidDeposit());
-	else
-	{
-		append(_a);
-		while (_deposit++ < _a.m_deposit)
-			append(Instruction::POP);
-	}
-}
+	assertThrow(_deposit <= _a.m_deposit, InvalidDeposit, "");
 
-string Assembly::out() const
-{
-	stringstream ret;
-	stream(ret);
-	return ret.str();
+	append(_a);
+	while (_deposit++ < _a.m_deposit)
+		append(Instruction::POP);
 }
 
 unsigned Assembly::bytesRequired(unsigned subTagSize) const
@@ -216,6 +203,9 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		}
 	}
 
+	if (m_auxiliaryData.size() > 0)
+		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
+
 	return _out;
 }
 
@@ -315,8 +305,13 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
 		}
 		root[".data"] = data;
-		_out << root;
 	}
+
+	if (m_auxiliaryData.size() > 0)
+		root[".auxdata"] = toHex(m_auxiliaryData);
+
+	_out << root;
+
 	return root;
 }
 
@@ -333,6 +328,7 @@ Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap con
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
+	assertThrow(m_deposit >= 0, AssemblyException, "");
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())

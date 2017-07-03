@@ -44,7 +44,7 @@ public:
 	{
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parseAndAnalyze("pragma solidity >=0.0;\n" + _code), "Parsing contract failed");
 
-		Json::Value generatedInterface = m_compilerStack.metadata("", DocumentationType::ABIInterface);
+		Json::Value generatedInterface = m_compilerStack.contractABI("");
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
 		BOOST_CHECK_MESSAGE(
@@ -750,26 +750,6 @@ BOOST_AUTO_TEST_CASE(function_type)
 	]
 	)";
 	checkInterface(sourceCode, interface);
-}
-
-BOOST_AUTO_TEST_CASE(metadata_stamp)
-{
-	// Check that the metadata stamp is at the end of the runtime bytecode.
-	char const* sourceCode = R"(
-		pragma solidity >=0.0;
-		contract test {
-			function g(function(uint) external returns (uint) x) {}
-		}
-	)";
-	BOOST_REQUIRE(m_compilerStack.compile(std::string(sourceCode)));
-	bytes const& bytecode = m_compilerStack.runtimeObject("test").bytecode;
-	bytes hash = dev::swarmHash(m_compilerStack.onChainMetadata("test")).asBytes();
-	BOOST_REQUIRE(hash.size() == 32);
-	BOOST_REQUIRE(bytecode.size() >= 2);
-	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
-	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
-	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
-	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

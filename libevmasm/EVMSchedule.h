@@ -32,8 +32,8 @@ struct EVMSchedule
 	unsigned stackLimit = 1024;
 	unsigned expGas = 10;
 	unsigned expByteGas = 10;
-	unsigned sha3Gas = 30;
-	unsigned sha3WordGas = 6;
+	unsigned keccak256Gas = 30;
+	unsigned keccak256WordGas = 6;
 	unsigned sloadGas = 200;
 	unsigned sstoreSetGas = 20000;
 	unsigned sstoreResetGas = 5000;

@@ -23,6 +23,7 @@
 #include <libsolidity/interface/Exceptions.h>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <functional>
 #include <memory>
@@ -61,36 +62,28 @@ struct GenericVisitor<>: public boost::static_visitor<> {
 
 struct Scope
 {
-	struct Variable
-	{
-		/// Used during code generation to store the stack height. @todo move there.
-		int stackHeight = 0;
-		/// Used during analysis to check whether we already passed the declaration inside the block.
-		/// @todo move there.
-		bool active = false;
-	};
+	using JuliaType = std::string;
+	using LabelID = size_t;
 
-	struct Label
-	{
-		size_t id = unassignedLabelId;
-		static const size_t errorLabelId = -1;
-		static const size_t unassignedLabelId = 0;
-	};
-
+	struct Variable { JuliaType type; };
+	struct Label { };
 	struct Function
 	{
-		Function(size_t _arguments, size_t _returns): arguments(_arguments), returns(_returns) {}
-		size_t arguments = 0;
-		size_t returns = 0;
+		std::vector<JuliaType> arguments;
+		std::vector<JuliaType> returns;
 	};
 
 	using Identifier = boost::variant<Variable, Label, Function>;
 	using Visitor = GenericVisitor<Variable const, Label const, Function const>;
 	using NonconstVisitor = GenericVisitor<Variable, Label, Function>;
 
-	bool registerVariable(std::string const& _name);
+	bool registerVariable(std::string const& _name, JuliaType const& _type);
 	bool registerLabel(std::string const& _name);
-	bool registerFunction(std::string const& _name, size_t _arguments, size_t _returns);
+	bool registerFunction(
+		std::string const& _name,
+		std::vector<JuliaType> const& _arguments,
+		std::vector<JuliaType> const& _returns
+	);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if found
 	/// or a nullptr if not found. Variable lookups up across function boundaries will fail, as
@@ -115,6 +108,11 @@ struct Scope
 	/// @returns true if the name exists in this scope or in super scopes (also searches
 	/// across function and assembly boundaries).
 	bool exists(std::string const& _name);
+
+	/// @returns the number of variables directly registered inside the scope.
+	size_t numberOfVariables() const;
+	/// @returns true if this scope is inside a function.
+	bool insideFunction() const;
 
 	Scope* superScope = nullptr;
 	/// If true, variables from the super scope are not visible here (other identifiers are),

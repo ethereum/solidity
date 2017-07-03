@@ -1,6 +1,11 @@
 Solidity
 ========
 
+.. image:: logo.svg
+    :width: 120px
+    :alt: Solidity logo
+    :align: center
+
 Solidity is a contract-oriented, high-level language whose syntax is similar to that of JavaScript
 and it is designed to target the Ethereum Virtual Machine (EVM).
 
@@ -53,6 +58,9 @@ Available Solidity Integrations
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
+
+* `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
+    Configurable Solidty linter for Atom using Solium as a base.
 
 * `Solium <https://github.com/duaraghav8/Solium/>`_
     A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
@@ -137,6 +145,7 @@ Contents
    solidity-in-depth.rst
    security-considerations.rst
    using-the-compiler.rst
+   abi-spec.rst
    style-guide.rst
    common-patterns.rst
    bugs.rst

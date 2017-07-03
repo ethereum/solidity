@@ -1,3 +1,41 @@
+### 0.4.12 (2017-07-03)
+
+Features:
+ * Assembly: Add ``CREATE2`` (EIP86), ``STATICCALL`` (EIP214), ``RETURNDATASIZE`` and ``RETURNDATACOPY`` (EIP211) instructions.
+ * Assembly: Display auxiliary data in the assembly output.
+ * Assembly: Renamed ``SHA3`` to ``KECCAK256``.
+ * AST: export all attributes to JSON format.
+ * C API (``jsonCompiler``): Use the Standard JSON I/O internally.
+ * Code Generator: Added the Whiskers template system.
+ * Inline Assembly: ``for`` and ``switch`` statements.
+ * Inline Assembly: Function definitions and function calls.
+ * Inline Assembly: Introduce ``keccak256`` as an opcode. ``sha3`` is still a valid alias.
+ * Inline Assembly: Present proper error message when not supplying enough arguments to a functional
+   instruction.
+ * Inline Assembly: Warn when instructions shadow Solidity variables.
+ * Inline Assembly: Warn when using ``jump``s.
+ * Remove obsolete Why3 output.
+ * Type Checker: Enforce strict UTF-8 validation.
+ * Type Checker: Warn about copies in storage that might overwrite unexpectedly.
+ * Type Checker: Warn about type inference from literal numbers.
+ * Static Analyzer: Warn about deprecation of ``callcode``.
+
+Bugfixes:
+ * Assembly: mark ``MLOAD`` to have side effects in the optimiser.
+ * Code Generator: Fix ABI encoding of empty literal string.
+ * Code Generator: Fix negative stack size checks.
+ * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
+ * Inline Assembly: Enforce function arguments when parsing functional instructions.
+ * Optimizer: Disallow optimizations involving ``MLOAD`` because it changes ``MSIZE``.
+ * Static Analyzer: Unused variable warnings no longer issued for variables used inside inline assembly.
+ * Type Checker: Fix address literals not being treated as compile-time constants.
+ * Type Checker: Fixed crash concerning non-callable types.
+ * Type Checker: Fixed segfault with constant function parameters
+ * Type Checker: Disallow comparisons between mapping and non-internal function types.
+ * Type Checker: Disallow invoking the same modifier multiple times.
+ * Type Checker: Do not treat strings that look like addresses as addresses.
+ * Type Checker: Support valid, but incorrectly rejected UTF-8 sequences.
+
 ### 0.4.11 (2017-05-03)
 
 Features:

@@ -191,6 +191,7 @@ before_script:
       && scripts/create_source_tarball.sh)
 
 script:
+    - test $SOLC_EMSCRIPTEN != On || (scripts/test_emscripten.sh)
     - test $SOLC_DOCS != On || (scripts/docs.sh)
     - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
     - test $SOLC_STOREBYTECODE != On || (cd $TRAVIS_BUILD_DIR && scripts/bytecodecompare/storebytecode.sh)

@@ -22,6 +22,7 @@
 
 #include <libsolidity/parsing/ParserBase.h>
 #include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
 using namespace dev;
@@ -40,6 +41,26 @@ int ParserBase::position() const
 int ParserBase::endPosition() const
 {
 	return m_scanner->currentLocation().end;
+}
+
+Token::Value ParserBase::currentToken() const
+{
+	return m_scanner->currentToken();
+}
+
+Token::Value ParserBase::peekNextToken() const
+{
+	return m_scanner->peekNextToken();
+}
+
+std::string ParserBase::currentLiteral() const
+{
+	return m_scanner->currentLiteral();
+}
+
+Token::Value ParserBase::advance()
+{
+	return m_scanner->next();
 }
 
 void ParserBase::expectToken(Token::Value _value)
@@ -80,74 +101,12 @@ void ParserBase::expectToken(Token::Value _value)
 	m_scanner->next();
 }
 
-Token::Value ParserBase::expectAssignmentOperator()
-{
-	Token::Value op = m_scanner->currentToken();
-	if (!Token::isAssignmentOp(op))
-	{
-		if (Token::isElementaryTypeName(op)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected assignment operator,  got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
-		}
-		else
-			fatalParserError(
-				string("Expected assignment operator,  got '") +
-				string(Token::name(m_scanner->currentToken())) +
-				string("'")
-			);
-	}
-	m_scanner->next();
-	return op;
-}
-
-ASTPointer<ASTString> ParserBase::expectIdentifierToken()
-{
-	Token::Value id = m_scanner->currentToken();
-	if (id != Token::Identifier)
-	{
-		if (Token::isElementaryTypeName(id)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected identifier, got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
-		}
-		else
-			fatalParserError(
-				string("Expected identifier, got '") +
-				string(Token::name(id)) +
-				string("'")
-			);
-	}
-	return getLiteralAndAdvance();
-}
-
-ASTPointer<ASTString> ParserBase::getLiteralAndAdvance()
-{
-	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
-	m_scanner->next();
-	return identifier;
-}
-
 void ParserBase::parserError(string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::ParserError);
-	*err <<
-		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
-		errinfo_comment(_description);
-
-	m_errors.push_back(err);
+	m_errorReporter.parserError(SourceLocation(position(), position(), sourceName()), _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	parserError(_description);
-	BOOST_THROW_EXCEPTION(FatalError());
+	m_errorReporter.fatalParserError(SourceLocation(position(), position(), sourceName()), _description);
 }

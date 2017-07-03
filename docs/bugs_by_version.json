@@ -1,6 +1,7 @@
 {
     "0.1.0": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -15,6 +16,7 @@
     }, 
     "0.1.1": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -29,6 +31,7 @@
     }, 
     "0.1.2": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -43,6 +46,7 @@
     }, 
     "0.1.3": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -57,6 +61,7 @@
     }, 
     "0.1.4": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -71,6 +76,7 @@
     }, 
     "0.1.5": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStaleKnowledgeAboutSHA3", 
@@ -85,6 +91,7 @@
     }, 
     "0.1.6": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -100,6 +107,7 @@
     }, 
     "0.1.7": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -115,6 +123,7 @@
     }, 
     "0.2.0": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -130,6 +139,7 @@
     }, 
     "0.2.1": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -145,6 +155,7 @@
     }, 
     "0.2.2": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -160,6 +171,7 @@
     }, 
     "0.3.0": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -174,6 +186,7 @@
     }, 
     "0.3.1": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -187,6 +200,7 @@
     }, 
     "0.3.2": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -200,6 +214,7 @@
     }, 
     "0.3.3": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -212,6 +227,7 @@
     }, 
     "0.3.4": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -224,6 +240,7 @@
     }, 
     "0.3.5": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -236,6 +253,7 @@
     }, 
     "0.3.6": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -246,6 +264,7 @@
     }, 
     "0.4.0": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -256,6 +275,7 @@
     }, 
     "0.4.1": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -266,16 +286,24 @@
     }, 
     "0.4.10": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
         ], 
         "released": "2017-03-15"
     }, 
     "0.4.11": {
-        "bugs": [], 
+        "bugs": [
+            "SkipEmptyStringLiteral"
+        ], 
         "released": "2017-05-03"
+    }, 
+    "0.4.12": {
+        "bugs": [], 
+        "released": "2017-07-03"
     }, 
     "0.4.2": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage", 
@@ -285,6 +313,7 @@
     }, 
     "0.4.3": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "HighOrderByteCleanStorage"
@@ -293,6 +322,7 @@
     }, 
     "0.4.4": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored"
         ], 
@@ -300,6 +330,7 @@
     }, 
     "0.4.5": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored", 
             "OptimizerStateKnowledgeNotResetForJumpdest"
@@ -308,6 +339,7 @@
     }, 
     "0.4.6": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
             "IdentityPrecompileReturnIgnored"
         ], 
@@ -315,18 +347,21 @@
     }, 
     "0.4.7": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
         ], 
         "released": "2016-12-15"
     }, 
     "0.4.8": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
         ], 
         "released": "2017-01-13"
     }, 
     "0.4.9": {
         "bugs": [
+            "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
         ], 
         "released": "2017-01-31"

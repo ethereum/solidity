@@ -26,8 +26,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/interface/ErrorReporter.h>
 
 using namespace std;
 
@@ -95,7 +94,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 	catch (FatalError const&)
 	{
-		if (m_errors.empty())
+		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
 		return nullptr;
 	}
@@ -324,11 +323,17 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		Token::Value token = m_scanner->currentToken();
 		if (token == Token::Const)
 		{
+			if (result.isDeclaredConst)
+				parserError(string("Multiple \"constant\" specifiers."));
+
 			result.isDeclaredConst = true;
 			m_scanner->next();
 		}
 		else if (m_scanner->currentToken() == Token::Payable)
 		{
+			if (result.isPayable)
+				parserError(string("Multiple \"payable\" specifiers."));
+
 			result.isPayable = true;
 			m_scanner->next();
 		}
@@ -348,8 +353,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		else if (Token::isVisibilitySpecifier(token))
 		{
 			if (result.visibility != Declaration::Visibility::Default)
-				fatalParserError(string("Multiple visibility specifiers."));
-			result.visibility = parseVisibilitySpecifier(token);
+			{
+				parserError(string("Multiple visibility specifiers."));
+				m_scanner->next();
+			}
+			else
+				result.visibility = parseVisibilitySpecifier(token);
 		}
 		else
 			break;
@@ -502,8 +511,12 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		{
 			if (visibility != Declaration::Visibility::Default)
-				fatalParserError(string("Visibility already specified."));
-			visibility = parseVisibilitySpecifier(token);
+			{
+				parserError(string("Visibility already specified."));
+				m_scanner->next();
+			}
+			else
+				visibility = parseVisibilitySpecifier(token);
 		}
 		else
 		{
@@ -514,14 +527,15 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Default)
-					fatalParserError(string("Location already specified."));
-				if (!type)
-					fatalParserError(string("Location specifier needs explicit type name."));
-				location = (
-					token == Token::Memory ?
-					VariableDeclaration::Location::Memory :
-					VariableDeclaration::Location::Storage
-				);
+					parserError(string("Location already specified."));
+				else if (!type)
+					parserError(string("Location specifier needs explicit type name."));
+				else
+					location = (
+						token == Token::Memory ?
+						VariableDeclaration::Location::Memory :
+						VariableDeclaration::Location::Storage
+					);
 			}
 			else
 				break;
@@ -703,7 +717,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Var)
 	{
 		if (!_allowVar)
-			fatalParserError(string("Expected explicit type name."));
+			parserError(string("Expected explicit type name."));
 		m_scanner->next();
 	}
 	else if (token == Token::Function)
@@ -866,7 +880,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	assembly::Parser asmParser(m_errors);
+	assembly::Parser asmParser(m_errorReporter);
 	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
@@ -1329,16 +1343,27 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	{
 		// call({arg1 : 1, arg2 : 2 })
 		expectToken(Token::LBrace);
+
+		bool first = true;
 		while (m_scanner->currentToken() != Token::RBrace)
 		{
+			if (!first)
+				expectToken(Token::Comma);
+
 			ret.second.push_back(expectIdentifierToken());
 			expectToken(Token::Colon);
 			ret.first.push_back(parseExpression());
 
-			if (m_scanner->currentToken() == Token::Comma)
-				expectToken(Token::Comma);
-			else
-				break;
+			if (
+				m_scanner->currentToken() == Token::Comma &&
+				m_scanner->peekNextToken() == Token::RBrace
+			)
+			{
+				parserError("Unexpected trailing comma.");
+				m_scanner->next();
+			}
+
+			first = false;
 		}
 		expectToken(Token::RBrace);
 	}
@@ -1436,6 +1461,50 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.setLocationEmpty();
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
+}
+
+string Parser::currentTokenName()
+{
+	Token::Value token = m_scanner->currentToken();
+	if (Token::isElementaryTypeName(token)) //for the sake of accuracy in reporting
+	{
+		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+		return elemTypeName.toString();
+	}
+	else
+		return Token::name(token);
+}
+
+Token::Value Parser::expectAssignmentOperator()
+{
+	Token::Value op = m_scanner->currentToken();
+	if (!Token::isAssignmentOp(op))
+		fatalParserError(
+			string("Expected assignment operator,  got '") +
+			currentTokenName() +
+			string("'")
+		);
+	m_scanner->next();
+	return op;
+}
+
+ASTPointer<ASTString> Parser::expectIdentifierToken()
+{
+	Token::Value id = m_scanner->currentToken();
+	if (id != Token::Identifier)
+		fatalParserError(
+			string("Expected identifier, got '") +
+			currentTokenName() +
+			string("'")
+		);
+	return getLiteralAndAdvance();
+}
+
+ASTPointer<ASTString> Parser::getLiteralAndAdvance()
+{
+	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
+	m_scanner->next();
+	return identifier;
 }
 
 }

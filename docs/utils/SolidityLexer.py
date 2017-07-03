@@ -26,7 +26,7 @@ class SolidityLexer(RegexLexer):
             (r'/\*.*?\*/', Comment.Multiline)
         ],
         'natspec': [
-            (r'@author|@dev|@notice|@return|@param|@why3|@title', Keyword),
+            (r'@author|@dev|@notice|@return|@param|@title', Keyword),
             (r'.[^@*\n]*?', Comment.Special)
         ],
         'docstringsingle': [

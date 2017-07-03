@@ -136,13 +136,15 @@ public:
 	/// Appends a JUMP to a new tag and @returns the tag
 	eth::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	CompilerContext& appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
 	/// Appends an INVALID instruction
-	CompilerContext&  appendInvalid();
+	CompilerContext& appendInvalid();
 	/// Appends a conditional INVALID instruction
-	CompilerContext&  appendConditionalInvalid();
-	/// Returns an "ErrorTag"
-	eth::AssemblyItem errorTag() { return m_asm->errorTag(); }
+	CompilerContext& appendConditionalInvalid();
+	/// Appends a REVERT(0, 0) call
+	CompilerContext& appendRevert();
+	/// Appends a conditional REVERT(0, 0) call
+	CompilerContext& appendConditionalRevert();
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
@@ -151,10 +153,10 @@ public:
 	eth::AssemblyItem newTag() { return m_asm->newTag(); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { auto sub = m_asm->newSub(_assembly); m_asm->append(m_asm->newPushSubSize(size_t(sub.data()))); return sub; }
-	void pushSubroutineSize(size_t _subRoutine) { m_asm->append(m_asm->newPushSubSize(_subRoutine)); }
+	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
+	void pushSubroutineSize(size_t _subRoutine) { m_asm->pushSubroutineSize(_subRoutine); }
 	/// Pushes the offset of the subroutine.
-	void pushSubroutineOffset(size_t _subRoutine) { m_asm->append(eth::AssemblyItem(eth::PushSub, _subRoutine)); }
+	void pushSubroutineOffset(size_t _subRoutine) { m_asm->pushSubroutineOffset(_subRoutine); }
 	/// Pushes the size of the final program
 	void appendProgramSize() { m_asm->appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack

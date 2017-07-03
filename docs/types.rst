@@ -54,13 +54,13 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
+Division always truncates (it is just compiled to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws a runtime exception.
 
 The result of a shift operation is the type of the left operand. The
-expression ``x << y`` is equivalent to ``x * 2**y`` and ``x >> y`` is
+expression ``x << y`` is equivalent to ``x * 2**y``, and ``x >> y`` is
 equivalent to ``x / 2**y``. This means that shifting negative numbers
 sign extends. Shifting by a negative amount throws a runtime exception.
 
@@ -77,7 +77,7 @@ sign extends. Shifting by a negative amount throws a runtime exception.
 Address
 -------
 
-``address``: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
+``address``: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as a base for all contracts.
 
 Operators:
 
@@ -125,7 +125,7 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 
 ``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
-In a similar way, the function ``delegatecall`` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
+In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
@@ -387,10 +387,10 @@ Example that shows how to use internal function types::
       }
       function reduce(
         uint[] memory self,
-        function (uint x, uint y) returns (uint) f
+        function (uint, uint) returns (uint) f
       )
         internal
-        returns (uint r)
+        returns (uint)
       {
         r = self[0];
         for (uint i = 1; i < self.length; i++) {
@@ -472,19 +472,19 @@ context, there is always a default, but it can be overridden by appending
 either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
 to ``storage`` for state variables (obviously).
 
-There is also a third data location, "calldata", which is a non-modifyable
+There is also a third data location, "calldata", which is a non-modifiable,
 non-persistent area where function arguments are stored. Function parameters
 (not return parameters) of external functions are forced to "calldata" and
-it behaves mostly like memory.
+behave mostly like memory.
 
 Data locations are important because they change how assignments behave:
-Assignments between storage and memory and also to a state variable (even from other state variables)
+assignments between storage and memory and also to a state variable (even from other state variables)
 always create an independent copy.
 Assignments to local storage variables only assign a reference though, and
 this reference always points to the state variable even if the latter is changed
 in the meantime.
 On the other hand, assignments from a memory stored reference type to another
-memory-stored reference type does not create a copy.
+memory-stored reference type do not create a copy.
 
 ::
 
@@ -655,7 +655,8 @@ Members
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
-        // Note that the following is not a pair of arrays but an array of pairs.
+        // Note that the following is not a pair of dynamic arrays but a
+        // dynamic array of pairs (i.e. of fixed size arrays of length two).
         bool[2][] m_pairsOfFlags;
         // newPairs is stored in memory - the default for function arguments
 
@@ -795,7 +796,7 @@ Mapping types are declared as ``mapping(_KeyType => _ValueType)``.
 Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
 ``_ValueType`` can actually be any type, including mappings.
 
-Mappings can be seen as hashtables which are virtually initialized such that
+Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
 all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
 in a mapping, only its ``keccak256`` hash used to look up the value.

@@ -35,7 +35,7 @@ class Scanner;
 class Parser: public ParserBase
 {
 public:
-	Parser(ErrorList& _errors): ParserBase(_errors) {}
+	Parser(ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 
@@ -154,6 +154,11 @@ private:
 		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
+
+	std::string currentTokenName();
+	Token::Value expectAssignmentOperator();
+	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).

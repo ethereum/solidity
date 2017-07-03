@@ -20,9 +20,13 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmStack.h>
-
 #include <libsolidity/interface/Exceptions.h>
+
+#include <libsolidity/inlineasm/AsmScope.h>
+
+#include <libjulia/backends/evm/AbstractAssembly.h>
+
+#include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 
@@ -33,22 +37,9 @@ namespace dev
 {
 namespace solidity
 {
+class ErrorReporter;
 namespace assembly
 {
-
-struct Literal;
-struct Block;
-struct Label;
-struct FunctionalInstruction;
-struct FunctionalAssignment;
-struct VariableDeclaration;
-struct Instruction;
-struct Identifier;
-struct Assignment;
-struct FunctionDefinition;
-struct FunctionCall;
-
-struct Scope;
 
 struct AsmAnalysisInfo;
 
@@ -60,11 +51,12 @@ struct AsmAnalysisInfo;
 class AsmAnalyzer: public boost::static_visitor<bool>
 {
 public:
-	AsmAnalyzer(
+	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
-		ErrorList& _errors,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
-	);
+		ErrorReporter& _errorReporter,
+		bool _julia = false,
+		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_julia(_julia) {}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -73,29 +65,37 @@ public:
 	bool operator()(assembly::Identifier const&);
 	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
 	bool operator()(assembly::Label const& _label);
-	bool operator()(assembly::Assignment const&);
-	bool operator()(assembly::FunctionalAssignment const& _functionalAssignment);
+	bool operator()(assembly::StackAssignment const&);
+	bool operator()(assembly::Assignment const& _assignment);
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const& _functionCall);
+	bool operator()(assembly::Switch const& _switch);
+	bool operator()(assembly::ForLoop const& _forLoop);
 	bool operator()(assembly::Block const& _block);
 
 private:
+	/// Visits the statement and expects it to deposit one item onto the stack.
+	bool expectExpression(Statement const& _statement);
+	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
+
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
 	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
-	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
-	Scope& scope(assembly::Block const* _block);
 
-	/// This is used when we enter the body of a function definition. There, the parameters
-	/// and return parameters appear as variables which are already on the stack before
-	/// we enter the block.
-	int m_virtualVariablesInNextBlock = 0;
+	Scope& scope(assembly::Block const* _block);
+	void expectValidType(std::string const& type, SourceLocation const& _location);
+	void warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location);
+
 	int m_stackHeight = 0;
-	ExternalIdentifierAccess::Resolver const& m_resolver;
+	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
+	/// Variables that are active at the current point in assembly (as opposed to
+	/// "part of the scope but not yet declared")
+	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
-	ErrorList& m_errors;
+	ErrorReporter& m_errorReporter;
+	bool m_julia = false;
 };
 
 }

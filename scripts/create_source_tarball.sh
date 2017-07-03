@@ -6,7 +6,7 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 (
     cd "$REPO_ROOT"
-    version=$(grep -oP "PROJECT_VERSION \"?\K[0-9.]+(?=\")"? CMakeLists.txt)
+    version=$(scripts/get_version.sh)
     commithash=$(git rev-parse --short=8 HEAD)
     commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 

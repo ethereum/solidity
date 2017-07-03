@@ -30,7 +30,7 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/TypeChecker.h>
 
@@ -56,7 +56,8 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 	// Silence compiler version warning
 	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
 	ErrorList errors;
-	Parser parser(errors);
+	ErrorReporter errorReporter(errors);
+	Parser parser(errorReporter);
 	ASTPointer<SourceUnit> sourceUnit;
 	// catch exceptions for a transition period
 	try
@@ -65,14 +66,14 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 		if(!sourceUnit)
 			BOOST_FAIL("Parsing failed in type checker test.");
 
-		SyntaxChecker syntaxChecker(errors);
+		SyntaxChecker syntaxChecker(errorReporter);
 		if (!syntaxChecker.checkSyntax(*sourceUnit))
-			return make_pair(sourceUnit, errors.at(0));
+			return make_pair(sourceUnit, errorReporter.errors().at(0));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errors);
-		solAssert(Error::containsOnlyWarnings(errors), "");
+		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errorReporter);
+		solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 		resolver.registerDeclarations(*sourceUnit);
 
 		bool success = true;
@@ -92,26 +93,32 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					globalContext->setCurrentContract(*contract);
 					resolver.updateDeclaration(*globalContext->currentThis());
 
-					TypeChecker typeChecker(errors);
+					TypeChecker typeChecker(errorReporter);
 					bool success = typeChecker.checkTypeRequirements(*contract);
-					BOOST_CHECK(success || !errors.empty());
+					BOOST_CHECK(success || !errorReporter.errors().empty());
 				}
 		if (success)
-			if (!PostTypeChecker(errors).check(*sourceUnit))
+			if (!PostTypeChecker(errorReporter).check(*sourceUnit))
 				success = false;
 		if (success)
-			if (!StaticAnalyzer(errors).analyze(*sourceUnit))
+			if (!StaticAnalyzer(errorReporter).analyze(*sourceUnit))
 				success = false;
-		if (errors.size() > 1 && !_allowMultipleErrors)
-			BOOST_FAIL("Multiple errors found");
-		for (auto const& currentError: errors)
+		std::shared_ptr<Error const> error;
+		for (auto const& currentError: errorReporter.errors())
 		{
 			if (
 				(_reportWarnings && currentError->type() == Error::Type::Warning) ||
 				(!_reportWarnings && currentError->type() != Error::Type::Warning)
 			)
-				return make_pair(sourceUnit, currentError);
+			{
+				if (error && !_allowMultipleErrors)
+					BOOST_FAIL("Multiple errors found");
+				if (!error)
+					error = currentError;
+			}
 		}
+		if (error)
+			return make_pair(sourceUnit, error);
 	}
 	catch (InternalCompilerError const& _e)
 	{
@@ -192,10 +199,15 @@ CHECK_ERROR_OR_WARNING(text, type, substring, false, false)
 #define CHECK_ERROR_ALLOW_MULTI(text, type, substring) \
 CHECK_ERROR_OR_WARNING(text, type, substring, false, true)
 
-// [checkWarning(text, type, substring)] asserts that the compilation down to typechecking
-// emits a warning of type [type] and with a message containing [substring].
+// [checkWarning(text, substring)] asserts that the compilation down to typechecking
+// emits a warning and with a message containing [substring].
 #define CHECK_WARNING(text, substring) \
 CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
+
+// [checkWarningAllowMulti(text, substring)] aserts that the compilation down to typechecking
+// emits a warning and with a message containing [substring].
+#define CHECK_WARNING_ALLOW_MULTI(text, substring) \
+CHECK_ERROR_OR_WARNING(text, Warning, substring, true, true)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
 #define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
@@ -546,6 +558,51 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 		}
 	)";
 	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_of_function_types)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return this.f < this.f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f < f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator < not compatible");
+	text = R"(
+		contract C {
+			function f() returns (bool ret) {
+				return f == f;
+			}
+			function g() returns (bool ret) {
+				return f != f;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_of_mapping_types)
+{
+	char const* text = R"(
+		contract C {
+			mapping(uint => uint) x;
+			function f() returns (bool ret) {
+				var y = x;
+				return x == y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator == not compatible");
 }
 
 BOOST_AUTO_TEST_CASE(function_no_implementation)
@@ -1043,6 +1100,28 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
+{
+	char const* text = R"(
+		contract B {
+			function f(uint x) mod(x) mod(2) { }
+			modifier mod(uint a) { if (a > 0) _; }
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Modifier already used for this function");
+}
+
+BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
+{
+	char const* text = R"(
+		contract C { function C(uint a) {} }
+		contract B is C {
+			function B() C(2) C(2) {}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Base constructor already provided");
+}
+
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
 {
 	char const* text = R"(
@@ -1069,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 	)";
 	// Error: Identifier already declared.
 	// Error: Override changes modifier to function.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared");
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1591,6 +1670,16 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(constant_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint[] constant a) { }
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Illegal use of \"constant\" specifier.");
+}
+
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 {
 	char const* text = R"(
@@ -1696,6 +1785,46 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 		}
 	)";
 	CHECK_SUCCESS(sourceCode);
+}
+
+
+BOOST_AUTO_TEST_CASE(warn_var_from_zero)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint) {
+				var i = 1;
+				return i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	sourceCode = R"(
+		contract test {
+			function f() {
+				var i = -2;
+				i;
+			}
+		}
+	)";
+	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
+	sourceCode = R"(
+		 contract test {
+			 function f() {
+				 for (var i = 0; i < msg.data.length; i++) { }
+			 }
+		 }
+	)";
+	CHECK_WARNING(sourceCode, "uint8, which can hold");
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -2167,6 +2296,36 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(text), "Type resolving failed");
 }
 
+BOOST_AUTO_TEST_CASE(warns_assigning_decimal_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = 7;
+		}
+	)";
+	CHECK_WARNING(text, "Decimal literal assigned to bytesXX variable will be left-aligned.");
+}
+
+BOOST_AUTO_TEST_CASE(does_not_warn_assigning_hex_number_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = 0x1234;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes32 a = bytes32(7);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 {
 	char const* text = R"(
@@ -2266,6 +2425,16 @@ BOOST_AUTO_TEST_CASE(constant_struct)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "implemented");
+}
+
+BOOST_AUTO_TEST_CASE(address_is_constant)
+{
+	char const* text = R"(
+		contract C {
+			address constant x = 0x1212121212121212121212121212121212121212;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_const_variable)
@@ -2414,6 +2583,16 @@ BOOST_AUTO_TEST_CASE(invalid_utf8_explicit)
 		}
 	)";
 	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed");
+}
+
+BOOST_AUTO_TEST_CASE(large_utf8_codepoint)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = "\xf0\x9f\xa6\x84";
+		}
+	)";
+	CHECK_SUCCESS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(string_index)
@@ -2933,12 +3112,12 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	CHECK_WARNING(text, "Uninitialized storage pointer");
 }
 
-BOOST_AUTO_TEST_CASE(sha3_with_large_integer_constant)
+BOOST_AUTO_TEST_CASE(keccak256_with_large_integer_constant)
 {
 	char const* text = R"(
 		contract c
 		{
-			function f() { sha3(2**500); }
+			function f() { keccak256(2**500); }
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "");
@@ -3042,9 +3221,9 @@ BOOST_AUTO_TEST_CASE(tuples)
 		contract C {
 			function f() {
 				uint a = (1);
-				var (b,) = (1,);
-				var (c,d) = (1, 2 + a);
-				var (e,) = (1, 2, b);
+				var (b,) = (uint8(1),);
+				var (c,d) = (uint32(1), 2 + a);
+				var (e,) = (uint64(1), 2, b);
 				a;b;c;d;e;
 			}
 		}
@@ -3682,12 +3861,12 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				byte[2] memory a;
 				byte[2] memory b;
 				var k = true ? a : b;
-				k[0] = 0; //Avoid unused var warning
+				k[0] = byte(0); //Avoid unused var warning
 
 				bytes memory e;
 				bytes memory f;
 				var l = true ? e : f;
-				l[0] = 0; // Avoid unused var warning
+				l[0] = byte(0); // Avoid unused var warning
 
 				// fixed bytes
 				bytes2 c;
@@ -4500,7 +4679,7 @@ BOOST_AUTO_TEST_CASE(unused_return_value_callcode)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Return value of low-level calls not used");
+	CHECK_WARNING_ALLOW_MULTI(text, "Return value of low-level calls not used");
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
@@ -4513,6 +4692,31 @@ BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
 		}
 	)";
 	CHECK_WARNING(text, "Return value of low-level calls not used");
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_callcode)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var x = address(0x12).callcode;
+				x;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"callcode\" has been deprecated in favour");
+}
+
+BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_local)
+{
+	char const* text = R"(
+		contract test {
+			function callcode() {
+				var x = this.callcode;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(modifier_without_underscore)
@@ -4996,6 +5200,26 @@ BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
 	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
 }
 
+BOOST_AUTO_TEST_CASE(warn_function_type_parameters_with_names)
+{
+	char const* text = R"(
+		contract C {
+			function(uint a) f;
+		}
+	)";
+	CHECK_WARNING(text, "Naming function type parameters is deprecated.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_function_type_return_parameters_with_names)
+{
+	char const* text = R"(
+		contract C {
+			function(uint) returns(bool ret) f;
+		}
+	)";
+	CHECK_WARNING(text, "Naming function type return parameters is deprecated.");
+}
+
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
 {
 	char const* text = R"(
@@ -5156,6 +5380,52 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint a;
+				assembly {
+					function g() -> x { x := a }
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Cannot access local Solidity variables from inside an inline assembly function.");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions_storage_ptr)
+{
+	char const* text = R"(
+		contract test {
+			uint[] r;
+			function f() {
+				uint[] storage a = r;
+				assembly {
+					function g() -> x { x := a_offset }
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Cannot access local Solidity variables from inside an inline assembly function.");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
+{
+	char const* text = R"(
+		contract test {
+			uint a;
+			function f() {
+				assembly {
+					function g() -> x { x := a_slot }
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
@@ -5319,7 +5589,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				address x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
 		}
@@ -5332,7 +5602,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
+				address x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
 				x;
 			}
 		}
@@ -5345,12 +5615,31 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
+				address x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
 		}
 	)";
 	CHECK_WARNING(text, "checksum");
+}
+
+BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
+{
+	// A previous implementation claimed the string would be an address
+	char const* text = R"(
+		contract AddrString {
+			address public test = "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type address");
+	text = R"(
+		contract AddrString {
+			function f() returns (address) {
+				return "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
+		   }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type");
 }
 
 BOOST_AUTO_TEST_CASE(early_exit_on_fatal_errors)
@@ -5400,7 +5689,7 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 		contract C {
 			uint constant a = b * c;
 			uint constant b = 7;
-			uint constant c = b + uint(sha3(d));
+			uint constant c = b + uint(keccak256(d));
 			uint constant d = 2 + a;
 		}
 	)";
@@ -5409,7 +5698,7 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 		contract C {
 			uint constant a = b * c;
 			uint constant b = 7;
-			uint constant c = 4 + uint(sha3(d));
+			uint constant c = 4 + uint(keccak256(d));
 			uint constant d = 2 + b;
 		}
 	)";
@@ -5520,6 +5809,16 @@ BOOST_AUTO_TEST_CASE(interface_variables)
 	CHECK_ERROR(text, TypeError, "Variables cannot be declared in interfaces");
 }
 
+BOOST_AUTO_TEST_CASE(interface_function_parameters)
+{
+	char const* text = R"(
+		interface I {
+			function f(uint a) returns(bool);
+		}
+	)";
+	success(text);
+}
+
 BOOST_AUTO_TEST_CASE(interface_enums)
 {
 	char const* text = R"(
@@ -5608,6 +5907,80 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_right)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(x, y, ) = (y, x, 1, 2);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_left)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				(,x, y) = (1, 2, y, x);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "This assignment performs two copies to storage.");
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_memory)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			function f() {
+				S memory x;
+				S memory y;
+				(x, y) = (y, x);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(nowarn_swap_storage_pointers)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+			S x; S y;
+			function f() {
+				S storage x_local = x;
+				S storage y_local = y;
+				S storage z_local = x;
+				(x, y_local, x_local, z_local) = (y, x_local, y_local, y);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_unused_local)
 {
 	char const* text = R"(
@@ -5625,7 +5998,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
 	char const* text = R"(
 		contract C {
 			function f() {
-				var a = 1;
+				uint a = 1;
 			}
 		}
 	)";
@@ -5718,7 +6091,58 @@ BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint a;
+				assembly {
+					a := 1
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
 
+BOOST_AUTO_TEST_CASE(callable_crash)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			S public s;
+			function C() {
+				3({a: 1, x: true});
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type is not callable");
+}
+
+BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() { uint returndatasize; assembly { returndatasize }}}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+}
+
+BOOST_AUTO_TEST_CASE(create2_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() { uint create2; assembly { create2(0, 0, 0, 0) }}}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
+{
+	char const* text = R"(
+		contract C {function f() {assembly {}}}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -62,7 +62,7 @@ enum class Instruction: uint8_t
 	NOT,				///< bitwise NOT opertation
 	BYTE,				///< retrieve single byte from word
 
-	SHA3 = 0x20,		///< compute SHA3-256 hash
+	KECCAK256 = 0x20,		///< compute KECCAK-256 hash
 
 	ADDRESS = 0x30,		///< get address of currently executing account
 	BALANCE,			///< get balance of the given account
@@ -77,6 +77,8 @@ enum class Instruction: uint8_t
 	GASPRICE,			///< get price of gas in current environment
 	EXTCODESIZE,		///< get external code size (from another contract)
 	EXTCODECOPY,		///< copy external code (from another contract)
+	RETURNDATASIZE = 0x3d,	///< get size of return data buffer
+	RETURNDATACOPY = 0x3e,	///< copy return data in current environment to memory
 
 	BLOCKHASH = 0x40,	///< get hash of most recent complete block
 	COINBASE,			///< get the block's coinbase address
@@ -84,6 +86,13 @@ enum class Instruction: uint8_t
 	NUMBER,				///< get the block's number
 	DIFFICULTY,			///< get the block's difficulty
 	GASLIMIT,			///< get the block's gas limit
+
+	JUMPTO = 0x4a,      ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
+	JUMPIF,             ///< conditionally alter the program counter -- not part of Instructions.cpp
+	JUMPV,              ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
+	JUMPSUB,            ///< alter the program counter to a beginsub -- not part of Instructions.cpp
+	JUMPSUBV,           ///< alter the program counter to a beginsub -- not part of Instructions.cpp
+	RETURNSUB,          ///< return to subroutine jumped from -- not part of Instructions.cpp
 
 	POP = 0x50,			///< remove item from stack
 	MLOAD,				///< load word from memory
@@ -97,6 +106,8 @@ enum class Instruction: uint8_t
 	MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
+	BEGINSUB,           ///< set a potential jumpsub destination -- not part of Instructions.cpp
+	BEGINDATA,          ///< begine the data section -- not part of Instructions.cpp
 
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack
@@ -176,6 +187,8 @@ enum class Instruction: uint8_t
 	CALLCODE,			///< message-call with another account's code only
 	RETURN,				///< halt execution returning output data
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
+	STATICCALL = 0xfa,	///< like CALL but disallow state modifications
+	CREATE2 = 0xfb,		///< create new account with associated code at address `sha3(sender + salt + sha3(init code)) % 2**160`
 
 	REVERT = 0xfd,		///< halt execution, revert state and return output data
 	INVALID = 0xfe,		///< invalid instruction for expressing runtime errors (e.g., division-by-zero)

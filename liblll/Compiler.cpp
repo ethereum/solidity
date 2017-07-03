@@ -69,10 +69,11 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		string ret = CodeFragment::compile(_src, cs).assembly(cs).optimise(_opt).out();
+		stringstream ret;
+		CodeFragment::compile(_src, cs).assembly(cs).optimise(_opt).stream(ret);
 		for (auto i: cs.treesToKill)
 			killBigints(i);
-		return ret;
+		return ret.str();
 	}
 	catch (Exception const& _e)
 	{
