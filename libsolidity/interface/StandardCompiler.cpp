@@ -265,11 +265,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
-	bool success = false;
-
 	try
 	{
-		success = m_compilerStack.compile(optimize, optimizeRuns, libraries);
+		m_compilerStack.compile(optimize, optimizeRuns, libraries);
 
 		for (auto const& error: m_compilerStack.errors())
 		{
@@ -359,13 +357,16 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (errors.size() > 0)
 		output["errors"] = errors;
 
+	bool parsingSuccess = m_compilerStack.state() >= CompilerStack::State::ParsingSuccessful;
+	bool compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
+
 	/// Inconsistent state - stop here to receive error reports from users
-	if (!success && (errors.size() == 0))
+	if (!compilationSuccess && (errors.size() == 0))
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (auto const& source: m_compilerStack.sourceNames())
+	for (auto const& source: parsingSuccess ? m_compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
@@ -375,7 +376,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: success ? m_compilerStack.contractNames() : vector<string>())
+	for (string const& contractName: compilationSuccess ? m_compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.find(':');
 		solAssert(colon != string::npos, "");

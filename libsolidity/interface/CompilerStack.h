@@ -77,6 +77,14 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
+	enum State {
+		Empty,
+		SourcesSet,
+		ParsingSuccessful,
+		AnalysisSuccessful,
+		CompilationSuccessful
+	};
+
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
@@ -194,6 +202,8 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() { return m_errorReporter.errors(); }
 
+	State state() const { return m_stackState; }
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -220,14 +230,6 @@ private:
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
-	enum State {
-		Empty,
-		SourcesSet,
-		ParsingSuccessful,
-		AnalysisSuccessful,
-		CompilationSuccessful
-	};
-
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
