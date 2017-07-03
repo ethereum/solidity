@@ -25,11 +25,11 @@ Bugfixes:
  * Code Generator: Fix ABI encoding of empty literal string.
  * Code Generator: Fix negative stack size checks.
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
- * Fixed crash concerning non-callable types.
- * Fixed segfault with constant function parameters
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
  * Optimizer: Disallow optimizations involving ``MLOAD`` because it changes ``MSIZE``.
  * Type Checker: Fix address literals not being treated as compile-time constants.
+ * Type Checker: Fixed crash concerning non-callable types.
+ * Type Checker: Fixed segfault with constant function parameters
  * Type Checker: Disallow comparisons between mapping and non-internal function types.
  * Type Checker: Disallow invoking the same modifier multiple times.
  * Type Checker: Do not treat strings that look like addresses as addresses.
