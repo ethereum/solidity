@@ -137,7 +137,6 @@ private:
 	eth::Assembly& m_assembly;
 };
 
-
 void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
@@ -146,5 +145,5 @@ void assembly::CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	julia::CodeTransform(assemblyAdapter, _analysisInfo, false, _identifierAccess)(_parsedData);
+	julia::CodeTransform(assemblyAdapter, _analysisInfo, false, false, _identifierAccess)(_parsedData);
 }

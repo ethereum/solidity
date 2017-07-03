@@ -72,7 +72,7 @@ bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scann
 bool AssemblyStack::analyzeParsed()
 {
 	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter);
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_language == Language::JULIA);
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }
@@ -100,7 +100,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		julia::EVMAssembly assembly(true);
-		julia::CodeTransform(assembly, *m_analysisInfo, true)(*m_parserResult);
+		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::JULIA, true)(*m_parserResult);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TOOD: fill out text representation
 		return object;
