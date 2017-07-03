@@ -112,10 +112,12 @@ static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
+static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argAddStandard = g_strAddStandard;
+static string const g_argPrettyJson = g_strPrettyJson;
 static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
@@ -508,9 +510,9 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
 }
 
-void CommandLineInterface::createJson(string const& _fileName, Json::Value const& _json)
+void CommandLineInterface::createJson(string const& _fileName, string const& _json)
 {
-	createFile(boost::filesystem::basename(_fileName) + string(".json"), dev::jsonCompactPrint(_json));
+	createFile(boost::filesystem::basename(_fileName) + string(".json"), _json);
 }
 
 bool CommandLineInterface::parseArguments(int _argc, char** _argv)
@@ -546,6 +548,7 @@ Allowed options)",
 			"Estimated number of contract runs for optimizer tuning."
 		)
 		(g_argAddStandard.c_str(), "Add standard contracts.")
+		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
@@ -911,10 +914,12 @@ void CommandLineInterface::handleCombinedJSON()
 		}
 	}
 
+	string json = m_args.count(g_argPrettyJson) ? dev::jsonPrettyPrint(output) : dev::jsonCompactPrint(output);
+
 	if (m_args.count(g_argOutputDir))
-		createJson("combined", output);
+		createJson("combined", json);
 	else
-		cout << dev::jsonCompactPrint(output) << endl;
+		cout << json << endl;
 }
 
 void CommandLineInterface::handleAst(string const& _argStr)

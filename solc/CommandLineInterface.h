@@ -83,8 +83,8 @@ private:
 
 	/// Create a json file in the given directory
 	/// @arg _fileName the name of the file (the extension will be replaced with .json)
-	/// @arg _json to be written
-	void createJson(std::string const& _fileName, Json::Value const& _json);
+	/// @arg _json json string to be written
+	void createJson(std::string const& _fileName, std::string const& _json);
 
 	bool m_error = false; ///< If true, some error occurred.
 
