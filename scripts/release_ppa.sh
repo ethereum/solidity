@@ -15,6 +15,21 @@
 ## It will clone the Solidity git from github, determine the version,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
+## This requires the following entries in /etc/dput.cf:
+##
+##  [ethereum-dev]
+##  fqdn			= ppa.launchpad.net
+##  method			= ftp
+##  incoming		= ~ethereum/ethereum-dev
+##  login			= anonymous
+## 
+##  [ethereum]
+##  fqdn			= ppa.launchpad.net
+##  method			= ftp
+##  incoming		= ~ethereum/ethereum
+##  login			= anonymous
+
+##
 ##############################################################################
 
 set -ev
@@ -28,10 +43,10 @@ fi
 
 if [ "$branch" = develop ]
 then
-    pparepo=ethereum/ethereum-dev
+    pparepo=ethereum-dev
     ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-dev/+files
 else
-    pparepo=ethereum/ethereum
+    pparepo=ethereum
     ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/ethereum/+files
 fi
 
@@ -192,7 +207,8 @@ EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithas
 # build source package
 # If packages is rejected because original source is already present, add
 # -sd to remove it from the .changes file
-debuild -S -sa -us -uc
+# -d disables the build dependencies check
+debuild -S -d -sa -us -uc
 
 # prepare .changes file for Launchpad
 sed -i -e s/UNRELEASED/${distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
@@ -223,6 +239,6 @@ fi
 debsign --re-sign -k ${keyid} ../${packagename}_${debversion}-${versionsuffix}_source.changes
 
 # upload
-dput ppa:${pparepo} ../${packagename}_${debversion}-${versionsuffix}_source.changes
+dput ${pparepo} ../${packagename}_${debversion}-${versionsuffix}_source.changes
 
 done
