@@ -408,6 +408,7 @@ An ``assert``-style exception is generated in the following situations:
 #. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. If you divide the smallest 256-bit signed integer by -1.
 #. If you shift by a negative amount.
 #. If you convert a value too big or negative into an enum type.
 #. If you call a zero-initialized variable of internal function type.

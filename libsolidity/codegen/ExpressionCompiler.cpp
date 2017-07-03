@@ -1451,6 +1451,16 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::DUP2 << Instruction::ISZERO;
 		m_context.appendConditionalInvalid();
 
+		// Test for (minInt) / (-1)
+		if (c_isSigned && _operator == Token::Div)
+		{
+			m_context.appendInlineAssembly(R"({
+				jumpi(invalidJumpLabel, and(eq(y, exp(2,255)), iszero(add(x, 1))))
+			})",
+			{ "x", "y" }
+			);
+		}
+
 		if (_operator == Token::Div)
 			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 		else

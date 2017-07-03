@@ -1,3 +1,8 @@
+### 0.5.0 (unreleased)
+
+Breaking Changes:
+ * codegen: The execution throws when the smallest 256-bit signed integer is divided by -1.
+
 ### 0.4.12 (unreleased)
 
 Features:
