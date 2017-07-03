@@ -1,4 +1,4 @@
-### 0.4.12 (unreleased)
+### 0.4.12 (2017-07-03)
 
 Features:
  * Assembly: Add ``CREATE2`` (EIP86), ``STATICCALL`` (EIP214), ``RETURNDATASIZE`` and ``RETURNDATACOPY`` (EIP211) instructions.
@@ -27,6 +27,7 @@ Bugfixes:
  * Code generator: Use ``REVERT`` instead of ``INVALID`` for generated input validation routines.
  * Inline Assembly: Enforce function arguments when parsing functional instructions.
  * Optimizer: Disallow optimizations involving ``MLOAD`` because it changes ``MSIZE``.
+ * Static Analyzer: Unused variable warnings no longer issued for variables used inside inline assembly.
  * Type Checker: Fix address literals not being treated as compile-time constants.
  * Type Checker: Fixed crash concerning non-callable types.
  * Type Checker: Fixed segfault with constant function parameters
@@ -34,7 +35,6 @@ Bugfixes:
  * Type Checker: Disallow invoking the same modifier multiple times.
  * Type Checker: Do not treat strings that look like addresses as addresses.
  * Type Checker: Support valid, but incorrectly rejected UTF-8 sequences.
- * Unused variable warnings no longer issued for variables used inside inline assembly.
 
 ### 0.4.11 (2017-05-03)
 

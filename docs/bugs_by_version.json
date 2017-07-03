@@ -297,6 +297,10 @@
         ], 
         "released": "2017-05-03"
     }, 
+    "0.4.12": {
+        "bugs": [], 
+        "released": "2017-07-03"
+    }, 
     "0.4.2": {
         "bugs": [
             "SkipEmptyStringLiteral", 
