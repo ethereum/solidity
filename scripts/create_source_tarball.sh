@@ -26,6 +26,10 @@ REPO_ROOT="$(dirname "$0")"/..
     git submodule foreach 'git checkout-index -a --prefix="'"$SOLDIR"'/$path/"'
     # Store the commit hash
     echo "$commithash" > "$SOLDIR/commit_hash.txt"
+    if [ -e prerelease.txt -a ! -s prerelease.txt ]
+    then
+        cp prerelease.txt "$SOLDIR/"
+    fi
     # Add dependencies
     mkdir -p "$SOLDIR/deps/downloads/" 2>/dev/null || true
     wget -O "$SOLDIR/deps/downloads/jsoncpp-1.7.7.tar.gz" https://github.com/open-source-parsers/jsoncpp/archive/1.7.7.tar.gz
