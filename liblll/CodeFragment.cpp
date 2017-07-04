@@ -259,6 +259,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		}
 		else if (us == "SET")
 		{
+			// TODO: move this to be a stack variable (and not a memory variable)
 			if (_t.size() != 3)
 				error<IncorrectParameterCount>(us);
 			int c = 0;
@@ -267,6 +268,15 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					m_asm.append(CodeFragment(i, _s, m_readFile, false).m_asm);
 			m_asm.append((u256)varAddress(firstAsString(), true));
 			m_asm.append(Instruction::MSTORE);
+		}
+		else if (us == "UNSET")
+		{
+			// TODO: this doesn't actually free up anything, since it is a memory variable (see "SET")
+			if (_t.size() != 2)
+				error<IncorrectParameterCount>();
+			auto it = _s.vars.find(firstAsString());
+			if (it != _s.vars.end())
+				_s.vars.erase(it);
 		}
 		else if (us == "GET")
 		{
