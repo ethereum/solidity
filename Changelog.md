@@ -1,5 +1,8 @@
 ### 0.4.13 (unreleased)
 
+Features:
+ * Type Checker: Warn if a local storage reference variable does not explicitly use the keyword ``storage``.
+
 Bugfixes:
  * Code Generator: Correctly unregister modifier variables.
 

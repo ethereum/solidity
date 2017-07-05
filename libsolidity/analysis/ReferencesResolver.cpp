@@ -289,7 +289,20 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					typeLoc = DataLocation::Memory;
 				}
 				else if (varLoc == Location::Default)
-					typeLoc = _variable.isCallableParameter() ? DataLocation::Memory : DataLocation::Storage;
+				{
+					if (_variable.isCallableParameter())
+						typeLoc = DataLocation::Memory;
+					else
+					{
+						typeLoc = DataLocation::Storage;
+						if (!_variable.isStateVariable())
+							m_errorReporter.warning(
+								_variable.location(),
+								"Variable is declared as a storage pointer. "
+								"Use an explicit \"storage\" keyword to silence this warning."
+							);
+					}
+				}
 				else
 					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
 				isPointer = !_variable.isStateVariable();
