@@ -9696,6 +9696,33 @@ BOOST_AUTO_TEST_CASE(keccak256_assembly)
 	BOOST_CHECK(callContractFunction("i()") == fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 }
 
+BOOST_AUTO_TEST_CASE(multi_modifiers)
+{
+	// This triggered a bug in some version because the variable in the modifier was not
+	// unregistered correctly.
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier m1 {
+				address a1 = msg.sender;
+				x++;
+				_;
+			}
+			function f1() m1() {
+				x += 7;
+			}
+			function f2() m1() {
+				x += 3;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f1()") == bytes());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("f2()") == bytes());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(12)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

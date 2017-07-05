@@ -1,5 +1,8 @@
 ### 0.4.13 (unreleased)
 
+Bugfixes:
+ * Code Generator: Correctly unregister modifier variables.
+
 ### 0.4.12 (2017-07-03)
 
 Features:
