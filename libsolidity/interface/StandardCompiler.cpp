@@ -71,7 +71,7 @@ Json::Value formatErrorWithException(
 )
 {
 	string message;
-	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _message, _scannerFromSourceName);
+	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type, _scannerFromSourceName);
 
 	// NOTE: the below is partially a copy from SourceReferenceFormatter
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -271,12 +271,12 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		for (auto const& error: m_compilerStack.errors())
 		{
-			auto err = dynamic_pointer_cast<Error const>(error);
+			Error const& err = dynamic_cast<Error const&>(*error);
 
 			errors.append(formatErrorWithException(
 				*error,
-				err->type() == Error::Type::Warning,
-				err->typeName(),
+				err.type() == Error::Type::Warning,
+				err.typeName(),
 				"general",
 				"",
 				scannerFromSourceName
