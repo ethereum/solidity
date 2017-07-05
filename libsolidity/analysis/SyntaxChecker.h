@@ -33,6 +33,7 @@ namespace solidity
  *  - whether continue/break is in a for/while loop.
  *  - whether a modifier contains at least one '_'
  *  - issues deprecation warnings for unary '+'
+ *  - issues deprecation warning for throw
  */
 class SyntaxChecker: private ASTConstVisitor
 {
@@ -58,6 +59,8 @@ private:
 
 	virtual bool visit(Continue const& _continueStatement) override;
 	virtual bool visit(Break const& _breakStatement) override;
+
+	virtual bool visit(Throw const& _throwStatement) override;
 
 	virtual bool visit(UnaryOperation const& _operation) override;
 

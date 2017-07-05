@@ -135,6 +135,16 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 	return true;
 }
 
+bool SyntaxChecker::visit(Throw const& _throwStatement)
+{
+	m_errorReporter.warning(
+		_throwStatement.location(),
+		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+	);
+
+	return true;
+}
+
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
 	if (_operation.getOperator() == Token::Add)
