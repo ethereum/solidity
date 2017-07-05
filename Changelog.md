@@ -2,6 +2,7 @@
 
 Bugfixes:
  * Code Generator: Correctly unregister modifier variables.
+ * Error Output: Do not omit the error type.
 
 ### 0.4.12 (2017-07-03)
 
