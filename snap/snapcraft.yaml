@@ -1,0 +1,29 @@
+name: solc
+version: master
+summary: The Solidity Contract-Oriented Programming Language
+description: |
+  Solidity is a contract-oriented, high-level language whose syntax is similar
+  to that of JavaScript and it is designed to target the Ethereum Virtual
+  Machine (EVM).
+
+  Solidity is statically typed, supports inheritance, libraries and complex
+  user-defined types among other features.
+
+  It is possible to create contracts for voting, crowdfunding, blind auctions,
+  multi-signature wallets and more.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+apps:
+  solc:
+    command: solc
+    plugs: [home]
+
+parts:
+  solidity:
+    source: .
+    source-type: git
+    plugin: cmake
+    build-packages: [build-essential, libboost-all-dev]
+    stage-packages: [libicu55]
