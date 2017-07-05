@@ -1,6 +1,7 @@
 ### 0.4.13 (unreleased)
 
 Bugfixes:
+ * Compiler Interface: Only output AST if analysis was successful.
  * Code Generator: Correctly unregister modifier variables.
 
 ### 0.4.12 (2017-07-03)

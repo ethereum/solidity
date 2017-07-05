@@ -357,7 +357,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (errors.size() > 0)
 		output["errors"] = errors;
 
-	bool parsingSuccess = m_compilerStack.state() >= CompilerStack::State::ParsingSuccessful;
+	bool analysisSuccess = m_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
 	bool compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
@@ -366,7 +366,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (auto const& source: parsingSuccess ? m_compilerStack.sourceNames() : vector<string>())
+	for (auto const& source: analysisSuccess ? m_compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
