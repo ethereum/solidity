@@ -416,6 +416,23 @@ bool VariableDeclaration::isCallableParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isLocalOrReturn() const
+{
+	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
+}
+
+bool VariableDeclaration::isReturnParameter() const
+{
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
+	if (!callable)
+		return false;
+	if (callable->returnParameterList())
+		for (auto const& variable: callable->returnParameterList()->parameters())
+			if (variable.get() == this)
+				return true;
+	return false;
+}
+
 bool VariableDeclaration::isExternalCallableParameter() const
 {
 	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
