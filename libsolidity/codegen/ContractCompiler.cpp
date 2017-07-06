@@ -928,7 +928,10 @@ void ContractCompiler::appendModifierOrFunctionCode()
 				);
 			}
 			for (VariableDeclaration const* localVariable: modifier.localVariables())
+			{
+				addedVariables.push_back(localVariable);
 				appendStackVariableInitialisation(*localVariable);
+			}
 
 			stackSurplus =
 				CompilerUtils::sizeOnStack(modifier.parameters()) +

@@ -1,3 +1,14 @@
+### 0.4.13 (2017-07-06)
+
+Features:
+ * Syntax Checker: Deprecated "throw" in favour of require(), assert() and revert().
+ * Type Checker: Warn if a local storage reference variable does not explicitly use the keyword ``storage``.
+
+Bugfixes:
+ * Code Generator: Correctly unregister modifier variables.
+ * Compiler Interface: Only output AST if analysis was successful.
+ * Error Output: Do not omit the error type.
+
 ### 0.4.12 (2017-07-03)
 
 Features:

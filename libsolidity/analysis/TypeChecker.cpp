@@ -854,10 +854,12 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
-				m_errorReporter.warning(
-					varDecl.location(),
-					"Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?"
-				);
+			{
+				string errorText{"Uninitialized storage pointer."};
+				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
+					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
+				m_errorReporter.warning(varDecl.location(), errorText);
+			}
 		}
 		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))
 			m_errorReporter.typeError(

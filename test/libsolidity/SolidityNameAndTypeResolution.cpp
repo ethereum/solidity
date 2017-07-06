@@ -2817,7 +2817,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 	char const* sourceCode = R"(
 		contract C {
 			function f() {
-				mapping(uint => uint)[] x;
+				mapping(uint => uint)[] storage x;
 				x;
 			}
 		}
@@ -3103,7 +3103,7 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 			}
 			function f()
 			{
-				s x;
+				s storage x;
 				x.a = 2;
 			}
 		}
@@ -5860,6 +5860,18 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 	success(text);
 }
 
+BOOST_AUTO_TEST_CASE(warn_about_throw)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				throw;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"throw\" is deprecated");
+}
+
 BOOST_AUTO_TEST_CASE(bare_revert)
 {
 	char const* text = R"(
@@ -6142,6 +6154,32 @@ BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
 		contract C {function f() {assembly {}}}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; }
+			S x;
+			function f() {
+				S storage y = x;
+				y;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			struct S { uint a; }
+			S x;
+			function f() {
+				S y = x;
+				y;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
 }
 
 
