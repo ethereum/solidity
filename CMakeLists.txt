@@ -16,6 +16,7 @@ option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms"
 # Let's find our dependencies
 include(EthDependencies)
 include(deps/jsoncpp.cmake)
+include(deps/z3.cmake)
 
 find_package(Threads)
 

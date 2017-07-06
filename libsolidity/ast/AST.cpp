@@ -22,6 +22,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>

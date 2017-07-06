@@ -25,7 +25,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "solidity" OR ${SUBMODULE} STREQUAL "")
 		eth_use(${TARGET} ${REQUIRED} Dev::soldevcore Solidity::solevmasm)
-		target_link_libraries(${TARGET} ${Solidity_SOLIDITY_LIBRARIES})
+		target_link_libraries(${TARGET} ${Solidity_SOLIDITY_LIBRARIES} z3)
 	endif()
 
 	target_compile_definitions(${TARGET} PUBLIC ETH_SOLIDITY)
