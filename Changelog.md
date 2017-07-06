@@ -1,4 +1,4 @@
-### 0.4.13 (unreleased)
+### 0.4.13 (2017-07-06)
 
 Features:
  * Syntax Checker: Deprecated "throw" in favour of require(), assert() and revert().
