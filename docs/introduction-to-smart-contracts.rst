@@ -133,7 +133,7 @@ too far, though, as it is neither possible to obtain a list of all keys of
 a mapping, nor a list of all values. So either keep in mind (or
 better, keep a list or use a more advanced data type) what you
 added to the mapping or use it in a context where this is not needed,
-like this one. The :ref:`getter function <Getter Functions>` created by the ``public`` keyword
+like this one. The :ref:`getter function <_getter_functions>` created by the ``public`` keyword
 is a bit more complex in this case. It roughly looks like the
 following::
 
