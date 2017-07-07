@@ -366,6 +366,9 @@ As a result, the following code is legal, despite being poorly written::
 Error handling: Assert, Require, Revert and Exceptions
 ======================================================
 
+.. warning::
+    From Solidity release 0.4.13 the throw keyword has been deprecated. Below is the documentation prior to this update.
+
 Solidity uses state-reverting exceptions to handle errors. Such an exception will undo all changes made to the
 state in the current call (and all its sub-calls) and also flag an error to the caller.
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
@@ -375,9 +378,9 @@ The idea behind that is that analysis tools can check your contract and try to c
 series of function calls that will reach a failing assertion. If this is possible, this means there is a bug
 in your contract you should fix.
 
-There are two other ways to trigger execptions: The ``revert`` function can be used to flag an error and
+There is an other way to to trigger execptions: The ``revert`` function can be used to flag an error and
 revert the current call. In the future it might be possible to also include details about the error
-in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
+in a call to ``revert``. 
 
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send`` 
 and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those return ``false`` in case
@@ -415,7 +418,6 @@ An ``assert``-style exception is generated in the following situations:
 
 A ``require``-style exception is generated in the following situations:
 
-#. Calling ``throw``.
 #. Calling ``require`` with an argument that evaluates to ``false``.
 #. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 #. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
