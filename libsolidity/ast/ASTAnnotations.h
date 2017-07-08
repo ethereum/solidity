@@ -61,6 +61,8 @@ struct SourceUnitAnnotation: ASTAnnotation
 	std::string path;
 	/// The exported symbols (all global symbols).
 	std::map<ASTString, std::vector<Declaration const*>> exportedSymbols;
+	/// Experimental feature pragmas.
+	std::set<ASTString> experimentalFeatures;
 };
 
 struct ImportAnnotation: ASTAnnotation

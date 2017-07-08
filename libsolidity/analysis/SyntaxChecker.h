@@ -77,6 +77,8 @@ private:
 	bool m_versionPragmaFound = false;
 
 	int m_inLoopDepth = 0;
+
+	SourceUnit const* m_sourceUnit = nullptr;
 };
 
 }
