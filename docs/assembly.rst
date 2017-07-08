@@ -965,7 +965,7 @@ adjustment. Every time a new
 local variable is introduced, it is registered together with the current
 stack height. If a variable is accessed (either for copying its value or for
 assignment), the appropriate DUP or SWAP instruction is selected depending
-on the difference bitween the current stack height and the
+on the difference between the current stack height and the
 stack height at the point the variable was introduced.
 
 Pseudocode::
