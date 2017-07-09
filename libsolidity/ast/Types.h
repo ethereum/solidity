@@ -675,6 +675,10 @@ public:
 	}
 
 	bool isSuper() const { return m_super; }
+
+	// @returns true if and only if the contract has a payable fallback function
+	bool isPayable() const;
+
 	ContractDefinition const& contractDefinition() const { return m_contract; }
 
 	/// Returns the function type of the constructor modified to return an object of the contract's type.
