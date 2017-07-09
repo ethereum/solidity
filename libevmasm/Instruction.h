@@ -64,8 +64,6 @@ enum class Instruction: uint8_t
 	SHL,				///< bitwise SHL operation
 	SHR,				///< bitwise SHR operation
 	SAR,				///< bitwise SAR operation
-	ROL,				///< bitwise ROL operation
-	ROR,				///< bitwise ROR operation
 
 	KECCAK256 = 0x20,		///< compute KECCAK-256 hash
 

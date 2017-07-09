@@ -551,9 +551,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	static set<solidity::Instruction> experimentalInstructions{
 		solidity::Instruction::SHL,
 		solidity::Instruction::SHR,
-		solidity::Instruction::SAR,
-		solidity::Instruction::ROL,
-		solidity::Instruction::ROR
+		solidity::Instruction::SAR
 	};
 	if (experimentalInstructions.count(_instr))
 		m_errorReporter.warning(
