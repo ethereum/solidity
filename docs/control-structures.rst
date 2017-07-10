@@ -181,7 +181,9 @@ parameters from the function declaration, but can be in arbitrary order.
     pragma solidity ^0.4.0;
 
     contract C {
-        function f(uint key, uint value) { ... }
+        function f(uint key, uint value) {
+            // ...
+        }
 
         function g() {
             // named arguments
@@ -322,6 +324,8 @@ A variable declared anywhere within a function will be in scope for the *entire 
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
 As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
+
+    // This will not compile
 
     pragma solidity ^0.4.0;
 
