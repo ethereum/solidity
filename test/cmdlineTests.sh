@@ -49,6 +49,30 @@ do
     test -z "$output" -a "$failed" -eq 0
 done
 
+echo "Compiling all examples from the documentation..."
+TMPDIR=$(mktemp -d)
+(
+    set -e
+    cd "$REPO_ROOT"
+    REPO_ROOT=$(pwd) # make it absolute
+    cd "$TMPDIR"
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    for f in *.sol
+    do
+        echo "trying $f"
+        set +e
+        output=$("$SOLC" "$f" 2>&1)
+        failed=$?
+        # Remove the pre-release warning from the compiler output
+        output=$(echo "$output" | grep -v 'pre-release')
+        echo "$output"
+        set -e
+        test -z "$output" -a "$failed" -eq 0
+    done
+)
+rm -rf "$TMPDIR"
+echo "Done."
+
 echo "Testing library checksum..."
 echo '' | "$SOLC" --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222
 ! echo '' | "$SOLC" --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 2>/dev/null
@@ -77,6 +101,7 @@ TMPDIR=$(mktemp -d)
     REPO_ROOT=$(pwd) # make it absolute
     cd "$TMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
     do
         set +e
