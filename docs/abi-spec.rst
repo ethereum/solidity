@@ -182,6 +182,8 @@ Given the contract:
 
 ::
 
+    pragma solidity ^0.4.0;
+
     contract Foo {
       function bar(bytes3[2] xy) {}
       function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }

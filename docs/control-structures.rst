@@ -20,6 +20,8 @@ For example, suppose we want our contract to
 accept one kind of external calls with two integers, we would write
 something like::
 
+    pragma solidity ^0.4.0;
+
     contract Simple {
         function taker(uint _a, uint _b) {
             // do something with _a and _b.
@@ -33,6 +35,8 @@ The output parameters can be declared with the same syntax after the
 ``returns`` keyword. For example, suppose we wished to return two results:
 the sum and the product of the two given integers, then we would
 write::
+
+    pragma solidity ^0.4.0;
 
     contract Simple {
         function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
@@ -91,6 +95,8 @@ Internal Function Calls
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function g(uint a) returns (uint ret) { return f(); }
         function f() returns (uint ret) { return g(7) + f(); }
@@ -115,6 +121,8 @@ all function arguments have to be copied to memory.
 
 When calling functions of other contracts, the amount of Wei sent with the call and
 the gas can be specified with special options ``.value()`` and ``.gas()``, respectively::
+
+    pragma solidity ^0.4.0;
 
     contract InfoFeed {
         function info() payable returns (uint ret) { return 42; }
@@ -260,6 +268,8 @@ Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------
 
 Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         uint[] data;
