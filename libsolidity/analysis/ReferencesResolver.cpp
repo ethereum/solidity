@@ -295,7 +295,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					else
 					{
 						typeLoc = DataLocation::Storage;
-						if (!_variable.isStateVariable())
+						if (_variable.isLocalVariable())
 							m_errorReporter.warning(
 								_variable.location(),
 								"Variable is declared as a storage pointer. "

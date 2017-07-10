@@ -3,6 +3,7 @@
 Features:
 
 Bugfixes:
+ * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
 
 
 ### 0.4.13 (2017-07-06)

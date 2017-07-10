@@ -6160,7 +6160,7 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 {
 	char const* text = R"(
 		contract C {
-			struct S { uint a; }
+			struct S { uint a; string b; }
 			S x;
 			function f() {
 				S storage y = x;
