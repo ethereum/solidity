@@ -18,8 +18,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-
-#include <z3++.h>
+#include <libsolidity/formal/SMTLib2Interface.h>
 
 #include <map>
 #include <string>
@@ -60,11 +59,11 @@ private:
 	void booleanOperation(BinaryOperation const& _op);
 
 	void checkCondition(
-		z3::expr _condition,
+		smt::Expression _condition,
 		SourceLocation const& _location,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
-		z3::expr* _additionalValue = nullptr
+		smt::Expression* _additionalValue = nullptr
 	);
 
 	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
@@ -72,24 +71,23 @@ private:
 	std::string uniqueSymbol(Declaration const& _decl);
 	std::string uniqueSymbol(Expression const& _expr);
 	bool knownVariable(Declaration const& _decl);
-	z3::expr currentValue(Declaration const& _decl);
-	z3::expr newValue(Declaration const& _decl);
+	smt::Expression currentValue(Declaration const& _decl);
+	smt::Expression newValue(Declaration const& _decl);
 
-	z3::expr minValue(IntegerType const& _t);
-	z3::expr maxValue(IntegerType const& _t);
+	smt::Expression minValue(IntegerType const& _t);
+	smt::Expression maxValue(IntegerType const& _t);
 
 	/// Returns the z3 expression corresponding to the AST node. Creates a new expression
 	/// if it does not exist yet.
-	z3::expr expr(Expression const& _e);
+	smt::Expression expr(Expression const& _e);
 	/// Returns the z3 function declaration corresponding to the given variable.
 	/// The function takes one argument which is the "sequence number".
-	z3::func_decl var(Declaration const& _decl);
+	smt::Expression var(Declaration const& _decl);
 
-	z3::context m_context;
-	z3::solver m_solver;
+	smt::SMTLib2Interface m_interface;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
-	std::map<Expression const*, z3::expr> m_z3Expressions;
-	std::map<Declaration const*, z3::func_decl> m_z3Variables;
+	std::map<Expression const*, smt::Expression> m_z3Expressions;
+	std::map<Declaration const*, smt::Expression> m_z3Variables;
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
