@@ -17,11 +17,14 @@
 
 #pragma once
 
+#include <libsolidity/interface/Exceptions.h>
+
+#include <libdevcore/Common.h>
+
 #include <map>
 #include <string>
 #include <vector>
-
-#include <libdevcore/Common.h>
+#include <cstdio>
 
 namespace dev
 {
@@ -49,7 +52,8 @@ class Expression
 
 public:
 	Expression(size_t _number): m_name(std::to_string(_number)) {}
-	Expression(u256 const& _number): m_name(std::to_string(_number)) {}
+	Expression(u256 const& _number): m_name(_number.str()) {}
+	Expression(bigint const& _number): m_name(_number.str()) {}
 
 	Expression(Expression const& _other) = default;
 	Expression(Expression&& _other) = default;
@@ -104,9 +108,16 @@ public:
 	{
 		return Expression("*", std::move(_a), std::move(_b));
 	}
+	Expression operator()(Expression _a) const
+	{
+		solAssert(m_arguments.empty(), "Attempted function application to non-function.");
+		return Expression(m_name, _a);
+	}
 
 	std::string toSExpr() const
 	{
+		if (m_arguments.empty())
+			return m_name;
 		std::string sexpr = "(" + m_name;
 		for (auto const& arg: m_arguments)
 			sexpr += " " + arg.toSExpr();
@@ -126,9 +137,11 @@ private:
 	std::vector<Expression> const m_arguments;
 };
 
-class SMTLib2Interface
+class SMTLib2Interface: public boost::noncopyable
 {
 public:
+	SMTLib2Interface();
+	~SMTLib2Interface();
 
 	void reset();
 
@@ -140,8 +153,18 @@ public:
 	Expression newBool(std::string _name);
 
 	void addAssertion(Expression _expr);
-	CheckResult check();
-	std::string eval(Expression _expr);
+	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate);
+//	std::string eval(Expression _expr);
+
+private:
+	void write(std::string _data);
+	std::string communicate(std::string const& _input);
+
+	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
+
+	std::vector<std::string> m_accumulatedOutput;
+//	FILE* m_solverWrite = nullptr;
+//	FILE* m_solverRead = nullptr;
 };
 
 

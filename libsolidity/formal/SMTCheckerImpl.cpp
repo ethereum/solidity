@@ -325,25 +325,40 @@ void SMTCheckerImpl::checkCondition(
 {
 	m_interface.push();
 	m_interface.addAssertion(_condition);
-	switch (m_interface.check())
+
+	vector<smt::Expression> expressionsToEvaluate;
+	if (m_currentFunction)
+	{
+		if (_additionalValue)
+			expressionsToEvaluate.emplace_back(*_additionalValue);
+		for (auto const& param: m_currentFunction->parameters())
+			if (knownVariable(*param))
+				expressionsToEvaluate.emplace_back(currentValue(*param));
+		for (auto const& var: m_currentFunction->localVariables())
+			if (knownVariable(*var))
+				expressionsToEvaluate.emplace_back(currentValue(*var));
+	}
+	smt::CheckResult result;
+	vector<string> values;
+	tie(result, values) = m_interface.check(expressionsToEvaluate);
+	switch (result)
 	{
 	case smt::CheckResult::SAT:
 	{
 		std::ostringstream message;
 		message << _description << " happens here";
+		size_t i = 0;
 		if (m_currentFunction)
 		{
 			message << " for:\n";
 			if (_additionalValue)
-				message << "  " << _additionalValueName << " = " << m_interface.eval(*_additionalValue) << "\n";
+				message << "  " << _additionalValueName << " = " << values.at(i++) << "\n";
 			for (auto const& param: m_currentFunction->parameters())
 				if (knownVariable(*param))
-					message << "  " << param->name() << " = " << m_interface.eval(currentValue(*param)) << "\n";
+					message << "  " << param->name() << " = " << values.at(i++) << "\n";
 			for (auto const& var: m_currentFunction->localVariables())
 				if (knownVariable(*var))
-					message << "  " << var->name() << " = " << m_interface.eval(currentValue(*var)) << "\n";
-//			message << m << endl;
-//			message << m_solver << endl;
+					message << "  " << var->name() << " = " << values.at(i++) << "\n";
 		}
 		else
 			message << ".";
@@ -412,12 +427,12 @@ smt::Expression SMTCheckerImpl::newValue(const Declaration& _decl)
 
 smt::Expression SMTCheckerImpl::minValue(IntegerType const& _t)
 {
-	return m_interface.newInteger(_t.minValue());
+	return smt::Expression(_t.minValue());
 }
 
 smt::Expression SMTCheckerImpl::maxValue(IntegerType const& _t)
 {
-	return m_interface.newInteger(_t.maxValue());
+	return smt::Expression(_t.maxValue());
 }
 
 smt::Expression SMTCheckerImpl::expr(Expression const& _e)
