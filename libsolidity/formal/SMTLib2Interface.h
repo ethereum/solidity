@@ -17,9 +17,14 @@
 
 #pragma once
 
+#include <libsolidity/formal/SMTSolverCommunicator.h>
+
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ReadFile.h>
 
 #include <libdevcore/Common.h>
+
+#include <boost/noncopyable.hpp>
 
 #include <map>
 #include <string>
@@ -35,7 +40,7 @@ namespace smt
 
 enum class CheckResult
 {
-	SAT, UNSAT, UNKNOWN
+	SAT, UNSAT, UNKNOWN, ERROR
 };
 
 enum class Sort
@@ -43,6 +48,7 @@ enum class Sort
 	Int, Bool
 };
 
+/// C++ representation of an SMTLIB2 expression.
 class Expression
 {
 	friend class SMTLib2Interface;
@@ -62,23 +68,23 @@ public:
 
 	friend Expression operator!(Expression _a)
 	{
-		return Expression("not", _a);
+		return Expression("not", std::move(_a));
 	}
 	friend Expression operator&&(Expression _a, Expression _b)
 	{
-		return Expression("and", _a, _b);
+		return Expression("and", std::move(_a), std::move(_b));
 	}
 	friend Expression operator||(Expression _a, Expression _b)
 	{
-		return Expression("or", _a, _b);
+		return Expression("or", std::move(_a), std::move(_b));
 	}
 	friend Expression operator==(Expression _a, Expression _b)
 	{
-		return Expression("=", _a, _b);
+		return Expression("=", std::move(_a), std::move(_b));
 	}
 	friend Expression operator!=(Expression _a, Expression _b)
 	{
-		return !(_a == _b);
+		return !(std::move(_a) == std::move(_b));
 	}
 	friend Expression operator<(Expression _a, Expression _b)
 	{
@@ -140,8 +146,7 @@ private:
 class SMTLib2Interface: public boost::noncopyable
 {
 public:
-	SMTLib2Interface();
-	~SMTLib2Interface();
+	SMTLib2Interface(ReadFile::Callback const& _readFileCallback);
 
 	void reset();
 
@@ -152,19 +157,17 @@ public:
 	Expression newInteger(std::string _name);
 	Expression newBool(std::string _name);
 
-	void addAssertion(Expression _expr);
+	void addAssertion(Expression const& _expr);
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate);
-//	std::string eval(Expression _expr);
 
 private:
 	void write(std::string _data);
-	std::string communicate(std::string const& _input);
 
+	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
 	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
+	SMTSolverCommunicator m_communicator;
 	std::vector<std::string> m_accumulatedOutput;
-//	FILE* m_solverWrite = nullptr;
-//	FILE* m_solverRead = nullptr;
 };
 
 

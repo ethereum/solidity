@@ -17,9 +17,12 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/formal/SMTLib2Interface.h>
+#include <libsolidity/interface/ReadFile.h>
+
 #include <map>
 #include <string>
-#include <memory>
 
 namespace dev
 {
@@ -27,18 +30,68 @@ namespace solidity
 {
 
 class ErrorReporter;
-class SourceUnit;
-class SMTCheckerImpl;
 
-class SMTChecker
+class SMTChecker: private ASTConstVisitor
 {
 public:
-	SMTChecker(ErrorReporter& _errorReporter);
+	SMTChecker(ErrorReporter& _errorReporter, ReadFile::Callback const& _readCallback);
 
 	void analyze(SourceUnit const& _sources);
 
 private:
-	std::shared_ptr<SMTCheckerImpl> m_impl;
+	// TODO: Check that we do not have concurrent reads and writes to a variable,
+	// because the order of expression evaluation is undefined
+	// TODO: or just force a certain order, but people might have a different idea about that.
+
+	virtual void endVisit(VariableDeclaration const& _node) override;
+	virtual bool visit(FunctionDefinition const& _node) override;
+	virtual void endVisit(FunctionDefinition const& _node) override;
+	virtual void endVisit(VariableDeclarationStatement const& _node) override;
+	virtual void endVisit(ExpressionStatement const& _node) override;
+	virtual void endVisit(Assignment const& _node) override;
+	virtual void endVisit(TupleExpression const& _node) override;
+	virtual void endVisit(BinaryOperation const& _node) override;
+	virtual void endVisit(FunctionCall const& _node) override;
+	virtual void endVisit(Identifier const& _node) override;
+	virtual void endVisit(Literal const& _node) override;
+
+	void arithmeticOperation(BinaryOperation const& _op);
+	void compareOperation(BinaryOperation const& _op);
+	void booleanOperation(BinaryOperation const& _op);
+
+	void checkCondition(
+		smt::Expression _condition,
+		SourceLocation const& _location,
+		std::string const& _description,
+		std::string const& _additionalValueName = "",
+		smt::Expression* _additionalValue = nullptr
+	);
+
+	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
+
+	std::string uniqueSymbol(Declaration const& _decl);
+	std::string uniqueSymbol(Expression const& _expr);
+	bool knownVariable(Declaration const& _decl);
+	smt::Expression currentValue(Declaration const& _decl);
+	smt::Expression newValue(Declaration const& _decl);
+
+	smt::Expression minValue(IntegerType const& _t);
+	smt::Expression maxValue(IntegerType const& _t);
+
+	/// Returns the expression corresponding to the AST node. Creates a new expression
+	/// if it does not exist yet.
+	smt::Expression expr(Expression const& _e);
+	/// Returns the function declaration corresponding to the given variable.
+	/// The function takes one argument which is the "sequence number".
+	smt::Expression var(Declaration const& _decl);
+
+	smt::SMTLib2Interface m_interface;
+	std::map<Declaration const*, int> m_currentSequenceCounter;
+	std::map<Expression const*, smt::Expression> m_z3Expressions;
+	std::map<Declaration const*, smt::Expression> m_z3Variables;
+	ErrorReporter& m_errorReporter;
+
+	FunctionDefinition const* m_currentFunction = nullptr;
 };
 
 }
