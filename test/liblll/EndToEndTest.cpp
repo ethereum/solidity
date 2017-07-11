@@ -467,6 +467,61 @@ BOOST_AUTO_TEST_CASE(send_three_args)
 	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
 }
 
+// Regression test for edge case that previously failed
+BOOST_AUTO_TEST_CASE(alloc_zero)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 (~ 0))
+				(alloc 0)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(-1)));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_size)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 0) ; reserve space for the result of the alloc
+				(mstore 0x00 (alloc (calldataload 0x04)))
+				(return (- (msize) (mload 0x00)))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0)  == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("test()", 1)  == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 32) == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 33) == encodeArgs(u256(64)));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_start)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x40 0)     ; Set initial MSIZE to 0x60
+				(return (alloc 1))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(96));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_with_variable)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(set 'x (alloc 1))
+				(mstore8 @x 42)    ; ASCII '*'
+				(return @x 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs("*"));
+}
+
 BOOST_AUTO_TEST_CASE(msg_six_args)
 {
 	char const* sourceCode = R"(
