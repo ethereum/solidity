@@ -1,6 +1,7 @@
 ### 0.4.14 (unreleased)
 
 Features:
+ * Inline Assembly: Show useful error message if trying to access calldata variables.
 
 Bugfixes:
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
