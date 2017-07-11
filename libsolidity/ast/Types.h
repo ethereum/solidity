@@ -616,6 +616,9 @@ public:
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 	virtual bool canBeUsedExternally(bool _inLibrary) const override;
 
+	/// @returns true if this is valid to be stored in calldata
+	bool validForCalldata() const;
+
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
 	/// @returns true if this is a string
@@ -629,6 +632,8 @@ public:
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
+
+	bigint unlimitedCalldataEncodedSize(bool _padded) const;
 
 	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
 	ArrayKind m_arrayKind = ArrayKind::Ordinary;
