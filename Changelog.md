@@ -1,6 +1,7 @@
 ### 0.4.19 (unreleased)
 
 Features:
+ * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
 
 Bugfixes:
 
