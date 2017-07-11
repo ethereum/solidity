@@ -650,6 +650,10 @@ public:
 	bool isLocalVariable() const { return !!dynamic_cast<CallableDeclaration const*>(scope()); }
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
+	/// @returns true if this variable is a return parameter of a function.
+	bool isReturnParameter() const;
+	/// @returns true if this variable is a local variable or return parameter.
+	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
 	bool isExternalCallableParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared

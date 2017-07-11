@@ -323,6 +323,9 @@ public:
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
+	bigint minValue() const;
+	bigint maxValue() const;
+
 private:
 	int m_bits;
 	Modifier m_modifier;
