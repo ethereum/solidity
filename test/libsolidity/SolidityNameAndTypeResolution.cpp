@@ -6182,6 +6182,18 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 	CHECK_WARNING(text, "is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
 }
 
+BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bytes4) {
+				uint32 tmp = 1;
+				return tmp;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Return argument type uint32 is not implicitly convertible to expected type (type of first return variable) bytes4.");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
