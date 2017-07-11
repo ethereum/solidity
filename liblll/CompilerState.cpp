@@ -46,6 +46,8 @@ void CompilerState::populateStandard()
 {
 	static const string s = "{"
 	"(def 'panic () (asm INVALID))"
+	// Alternative macro version of alloc, which is currently implemented in the parser
+	// "(def 'alloc (n) (raw (msize) (when n (pop (mload (+ (msize) (& (- n 1) (~ 0x1f))))))))"
 	"(def 'allgas (- (gas) 21))"
 	"(def 'send (to value) (call allgas to value 0 0 0 0))"
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
