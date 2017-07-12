@@ -723,7 +723,10 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (var->type()->sizeOnStack() != 1)
 			{
-				m_errorReporter.typeError(_identifier.location, "Only types that use one stack slot are supported.");
+				if (var->type()->dataStoredIn(DataLocation::CallData))
+					m_errorReporter.typeError(_identifier.location, "Call data elements cannot be accessed directly. Copy to a local variable first or use \"calldataload\" or \"calldatacopy\" with manually determined offsets and sizes.");
+				else
+					m_errorReporter.typeError(_identifier.location, "Only types that use one stack slot are supported.");
 				return size_t(-1);
 			}
 		}

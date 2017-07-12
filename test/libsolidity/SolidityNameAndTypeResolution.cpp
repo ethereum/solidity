@@ -5428,6 +5428,20 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)
+{
+	char const* text = R"(
+		contract C {
+			function f(bytes bytesAsCalldata) external {
+				assembly {
+					let x := bytesAsCalldata
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Call data elements cannot be accessed directly.");
+}
+
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 {
 	char const* text = R"(
