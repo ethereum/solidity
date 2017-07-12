@@ -6,14 +6,14 @@
 Application Binary Interface Specification
 ******************************************
 
-Basic design
+Basic Design
 ============
 
 The Application Binary Interface is the standard way to interact with contracts in the Ethereum ecosystem, both
 from outside the blockchain and for contract-to-contract interaction. Data is encoded following its type,
-according to this specification.
+according to this specification.  The types are not encoded.
 
-We assume the Application Binary Interface (ABI) is strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assert that all contracts will have the interface definitions of any contracts they call available at compile-time.
+We assume the interface functions of a contract are strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Should these cases become important they can be adequately handled as facilities built within the Ethereum ecosystem.
 
@@ -58,7 +58,7 @@ The following (fixed-size) array type exists:
 
 - `<type>[M]`: a fixed-length array of the given fixed-length type.
 
-The following non-fixed-size types exist: 
+The following non-fixed-size types exist:
 
 - `bytes`: dynamic sized byte sequence.
 
@@ -93,6 +93,7 @@ We distinguish static and dynamic types. Static types are encoded in-place and d
 * `string`
 * `T[]` for any `T`
 * `T[k]` for any dynamic `T` and any `k > 0`
+* `(T1,...,Tk)` if any `Ti` is dynamic for `1 <= i <= k`
 
 All other types are called "static".
 
@@ -329,10 +330,6 @@ would result in the JSON:
   "type":"event",
   "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
   "name":"Event"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event2"
   }, {
   "type":"event",
   "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
