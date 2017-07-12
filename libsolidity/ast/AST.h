@@ -136,6 +136,9 @@ public:
 
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
+	/// @returns a vector of referenced SourceUnits.
+	std::vector<SourceUnit const*> referencedSourceUnits() const;
+
 private:
 	std::vector<ASTPointer<ASTNode>> m_nodes;
 };
