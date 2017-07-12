@@ -89,7 +89,7 @@ Grammar::
     Expression =
         FunctionCall | Identifier | Literal
     Switch =
-        'switch' Expression Case+ ( 'default' Block )?
+        'switch' Expression Case* ( 'default' Block )?
     Case =
         'case' Literal Block
     ForLoop =
@@ -116,134 +116,154 @@ Grammar::
 Restrictions on the Grammar
 ---------------------------
 
-Scopes in JULIA are tied to Blocks (exceptions are functions and the for loop) and all declarations
-(``FunctionDefinition``, ``VariableDeclaration``)
-introduce new identifiers into these scopes. Identifiers are visible in
-the block they are defined in (including all sub-nodes and sub-blocks).
-Shadowing is disallowed, i.e. you cannot declare an identifier at a point
-where another identifier with the same name is also visible.
-
-Switches must have at least one (or the default) and at most one default case.
+Switches must have at least one case (including the default case).
 If all possible values of the expression is covered, the default case should
 not be allowed (i.e. a switch with a ``bool`` expression and having both a
 true and false case should not allow a default case).
 
-In for-loops, identifiers declared in the first block (the init block)
-are visible in all other parts of the for loop (but not outside of the loop).
-Identifiers declared in the other parts of the for loop respect the regular
-syntatical scoping rules.
-
-Inside functions, it is not possible to access a variable that was declared
-outside of that function.
-
-Every expression evaluates to zero or more values. Literals evaluate to exactly
+Every expression evaluates to zero or more values. Identifiers and Literals
+evaluate to exactly
 one value and function calls evaluate to a number of values equal to the
-number of return values of the function called. An expression that is also
-a statement is invalid if it evaluates to more than one value, i.e. at the
-block-level, only expressions evaluating to zero values are allowed.
+number of return values of the function called.
 
-For variable declarations and assignments, the right-hand-side expression
+In variable declarations and assignments, the right-hand-side expression
 (if present) has to evaluate to a number of values equal to the number of
 variables on the left-hand-side.
+This is the only situation where an expression evaluating
+to more than one value is allowed.
 
-An expression used as an argument to a function call has to evaluate to exactly
-one value.
+Expressions that are also statements (i.e. at the block level) have to
+evaluate to zero values.
 
-The ``continue`` and ``break`` statements can only be used inside loop bodies.
+In all other situations, expressions have to evaluate to exactly one value.
+
+The ``continue`` and ``break`` statements can only be used inside loop bodies
+and have to be in the same function as the loop (or both have to be at the
+top level).
 The condition part of the for-loop has to evaluate to exactly one value.
 
 Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
+
+Scoping Rules
+-------------
+
+Scopes in JULIA are tied to Blocks (exceptions are functions and the for loop
+as explained below) and all declarations
+(``FunctionDefinition``, ``VariableDeclaration``)
+introduce new identifiers into these scopes.
+
+Identifiers are visible in
+the block they are defined in (including all sub-nodes and sub-blocks).
+As an exception, identifiers defined in the "init" part of the for-loop
+(the first block) are visible in all other parts of the for-loop
+(but not outside of the loop).
+Identifiers declared in the other parts of the for loop respect the regular
+syntatical scoping rules.
+The parameters and return parameters of functions are visible in the
+function body and their names cannot overlap.
+
+Variables can only be referenced after their declaration. In particular,
+variables cannot be referenced in the right hand side of their own variable
+declaration.
+Functions can be referenced already before their declaration (if they are visible).
+
+Shadowing is disallowed, i.e. you cannot declare an identifier at a point
+where another identifier with the same name is also visible, even if it is
+not accessible.
+
+Inside functions, it is not possible to access a variable that was declared
+outside of that function.
 
 Formal Specification
 --------------------
 
 We formally specify JULIA by providing an evaluation function E overloaded
 on the various nodes of the AST. Any functions can have side effects, so
-E takes a state objects and the actual argument and also returns new
-state objects and new arguments. There is a global state object
+E takes two state objects and the AST node and returns two new
+state objects and a variable number of other values.
+The two state objects are the global state object
 (which in the context of the EVM is the memory, storage and state of the
-blockchain) and a local state object (the state of local variables, i.e. a
+blockchain) and the local state object (the state of local variables, i.e. a
 segment of the stack in the EVM).
+If the AST node is a statement, E returns the two state objects and a "mode",
+which is used for the ``break`` and ``continue`` statements.
+If the AST node is an expression, E returns the two state objects and
+as many values as the expression evaluates to.
 
-The evaluation function E takes a global state, a local state and
-a node of the AST and returns a new global state, a new local state
-and a variable number of values.
 
 The exact nature of the global state is unspecified for this high level
-description. The local state `L` is a mapping of identifiers `i` to values `v`,
-denoted as `L[i] = v`.
-The special value `⊥` is used to signify that a variable cannot be
-used yet.
+description. The local state ``L`` is a mapping of identifiers ``i`` to values ``v``,
+denoted as ``L[i] = v``.
+
+For an identifier ``v``, let ``$v`` be the name of the identifier.
+
+We will use a destructuring notation for the AST nodes.
 
 .. code::
 
     E(G, L, <{St1, ..., Stn}>: Block) =
-        let L' be an extension of L to all variables v declared in Block
-        (but not in its sub-blocks), such that L'[v] = ⊥.
-        let Gi, Li, mode = E(G, L', St1, ..., Stn)
-        let L'' be a restriction of Li to the identifiers of L
-        Gi, L'', mode
+        let G1, L1, mode = E(G, L, St1, ..., Stn)
+        let L2 be a restriction of L1 to the identifiers of L
+        G1, L2, mode
     E(G, L, St1, ..., Stn: Statement) =
         if n is zero:
             G, L
         else:
-            let G', L', mode = E(G, L, St1)
+            let G1, L1, mode = E(G, L, St1)
             if mode is regular then
-                E(G', L', St2, ..., Stn)
+                E(G1, L1, St2, ..., Stn)
             otherwise
-                G', L', mode
-    E(G, L, <function fname (param1, ..., paramn) -> (ret1, ..., retm) block>: FunctionDefinition) =
+                G1, L1, mode
+    E(G, L, FunctionDefinition) =
         G, L, regular
     E(G, L, <let var1, ..., varn := rhs>: VariableDeclaration) =
         E(G, L, <var1, ..., varn := rhs>: Assignment)
     E(G, L, <let var1, ..., varn>: VariableDeclaration) =
-        let L' be a copy of L where L'[vi] = 0 for i = 1, ..., n
-        G, L', regular
+        let L1 be a copy of L where L1[$vari] = 0 for i = 1, ..., n
+        G, L1, regular
     E(G, L, <var1, ..., varn := rhs>: Assignment) =
-        let G', L', v1, ..., vn = E(G, L, rhs)
-        let L'' be a copy of L' where L'[vi] = vi for i = 1, ..., n
-        G, L'', regular
+        let G1, L1, v1, ..., vn = E(G, L, rhs)
+        let L2 be a copy of L1 where L2[$vari] = vi for i = 1, ..., n
+        G, L2, regular
     E(G, L, <for { i1, ..., in } condition post body>: ForLoop) =
         if n >= 1:
-            let L' be an extension of L to all variables v declared in i1, ..., in
-            (but not in sub-blocks), such that L'[v] = ⊥.
-            let G'', L'', mode = E(G, L', i1, ..., in)
-            explode if mode is not regular
-            let G''', L''', mode = E(G'', L'', for {} condition post body)
-            explode if mode is not regular
-            let Lend be the restriction of L''' to only variables of L
-            G''', Lend
+            let G1, L1, mode = E(G, L, i1, ..., in)
+            // mode has to be regular due to the syntactic restrictions
+            let G2, L2, mode = E(G1, L1, for {} condition post body)
+            // mode has to be regular due to the syntactic restrictions
+            let L3 be the restriction of L2 to only variables of L
+            G2, L3
         else:
-            let G', L', v = E(G, L, condition)
+            let G1, L1, v = E(G, L, condition)
             if v is false:
-                G', L', regular
+                G1, L1, regular
             else:
-                let G'', L'', mode = E(G, L, body)
+                let G2, L2, mode = E(G1, L, body)
                 if mode is break:
-                    G'', L'', regular
+                    G2, L2, regular
                 else:
-                    G''', L''', mode = E(G'', L'', post)
-                    E(G''', L''', for {} condition post body)
+                    G3, L3, mode = E(G2, L2, post)
+                    E(G3, L3, for {} condition post body)
     E(G, L, break: BreakContinue) =
         G, L, break
     E(G, L, continue: BreakContinue) =
         G, L, continue
 
     E(G, L, <name>: Identifier) =
-        G, L, regular, L[name]
+        G, L, regular, L[$name]
     E(G, L, <fname(arg1, ..., argn)>: FunctionCall) =
         G1, L1, vn = E(G, L, argn)
         ...
         G(n-1), L(n-1), v2 = E(G(n-2), L(n-2), arg2)
         Gn, Ln, v1 = E(G(n-1), L(n-1), arg1)
         Let <function fname (param1, ..., paramn) -> ret1, ..., retm block>
-        be the function of name fname visible at the point of the call.
+        be the function of name $fname visible at the point of the call.
         Let L' be a new local state such that
-        L'[parami] = vi and L'[reti] = 0 for all i.
+        L'[$parami] = vi and L'[$reti] = 0 for all i.
         Let G'', L'', rv1, ..., rvm = E(Gn, L', block)
         G'', Ln, rv1, ..., rvm
     E(G, L, l: HexLiteral) = G, L, hexString(l),
-        where hexString decodes l from hex and left-aligns in into 32 bytes
+        where hexString decodes l from hex and left-aligns it into 32 bytes
     E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
         where utf8EncodeLeftAligned performs a utf8 encoding of l
         and aligns it left into 32 bytes
