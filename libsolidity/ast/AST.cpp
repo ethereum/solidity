@@ -84,12 +84,17 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
 }
 
-vector<SourceUnit const*> SourceUnit::referencedSourceUnits() const
+set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse) const
 {
-	vector<SourceUnit const*> sourceUnits;
+	set<SourceUnit const*> sourceUnits;
 	for (ImportDirective const* importDirective: filteredNodes<ImportDirective>(nodes()))
 	{
-		sourceUnits.push_back(importDirective->annotation().sourceUnit);
+		sourceUnits.insert(importDirective->annotation().sourceUnit);
+		if (_recurse)
+		{
+			set<SourceUnit const*> referencedSourceUnits = importDirective->annotation().sourceUnit->referencedSourceUnits(true);
+			sourceUnits.insert(referencedSourceUnits.begin(), referencedSourceUnits.end());
+		}
 	}
 	return sourceUnits;
 }
