@@ -353,12 +353,10 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
 
-		if (((u256(1) << m_bits) <= convertTo.numBits() && convertTo.fractionalDigits() == 0) || isAddress())
+		if (isAddress())
 			return false;
-		else if (isSigned())
-			return convertTo.isSigned();
 		else
-			return !convertTo.isSigned() || convertTo.numBits() > m_bits;
+			return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
 	}
 	else
 		return false;
@@ -501,7 +499,7 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 
 string FixedPointType::identifier() const
 {
-	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(numBits()) + "x" + std::to_string(fractionalDigits());
+	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(m_totalBits) + "x" + std::to_string(m_fractionalDigits);
 }
 
 bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -512,7 +510,7 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		if (convertTo.numBits() < m_totalBits || convertTo.fractionalDigits() < m_fractionalDigits)
 			return false;
 		else
-			return convertTo.maximumPossibleInteger() >= maximumPossibleInteger();
+			return convertTo.maxIntegerValue() >= maxIntegerValue() && convertTo.minIntegerValue() <= minIntegerValue();
 	}
 	return false;
 }
@@ -523,31 +521,6 @@ bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		_convertTo.category() == Category::Integer ||
 		_convertTo.category() == Category::FixedBytes;
 }
-
-/*bool FixedPointType::canHoldInteger(unsigned const _bits, bool const _signed) const 
-{
-	// If fixed type has 200 bits and 2 fractional digits, integer has 8 bits, then conversion is possible. 
-	// Write helper function that returns max integer number, not necessarily the bits. 
-	// 2^m_bits <= integer
-
-	// REMINDER: The below was a work in progress until better solution thought up, see below:
-	// add min and max number functions to integer and fixed types, use them when converting types.
-	if (_signed && isSigned()) 
-	{
-		u256 maxInteger = (u256(1) << _bits) - 1;
-		u256 maxFixedInteger = u256(((u256(1) << numBits()) - 1) / (pow(bigint(10), decimalDigits())));
-	} 
-	else if (_signed && !isSigned())
-	{
-
-	}
-	else 
-	{
-		u256 maxInteger = (u256(1) << _bits) - 1;
-		u256 maxFixedInteger = u256(((u256(1) << numBits()) - 1) / (pow(bigint(10), decimalDigits())));
-		return maxInteger <= maxFixedInteger;
-	}
-}*/
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 {
@@ -578,6 +551,23 @@ string FixedPointType::toString(bool) const
 {
 	string prefix = isSigned() ? "fixed" : "ufixed";
 	return prefix + dev::toString(m_totalBits) + "x" + dev::toString(m_fractionalDigits);
+}
+
+bigint FixedPointType::maxIntegerValue() const
+{
+	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
+	return maxValue / pow(bigint(10), m_fractionalDigits);
+}
+
+bigint FixedPointType::minIntegerValue() const
+{
+	if (isSigned())
+	{
+		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
+		return minValue / pow(bigint(10), m_fractionalDigits);
+	}
+	else
+		return bigint(0);
 }
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
@@ -765,16 +755,9 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		if (auto fixed = fixedPointType())
-		{
-			// We disallow implicit conversion if we would have to truncate (fixedPointType()
-			// can return a type that requires truncation).
-			rational value = m_value * boost::multiprecision::pow(bigint(10), fixed->fractionalDigits());
-			cout << "value denominator: " << value.denominator() << endl;
-			cout << "value: " << value << endl;
-			return value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo);
-		}
-		cout << "could not convert to fixed type" << endl;
-		return false;
+			return fixed->isImplicitlyConvertibleTo(_convertTo);
+		else
+			return false;
 	}
 	else if (_convertTo.category() == Category::FixedBytes)
 	{
@@ -978,10 +961,9 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	else
 	{
 		auto fixed = fixedPointType();
-		solAssert(!!fixed, "");
-		// truncate
-		shiftedValue = m_value.numerator() / m_value.denominator();
-		cout << "Shifted value: " << shiftedValue << endl;
+		solAssert(fixed, "");
+		int fractionalDigits = fixed->fractionalDigits();
+		shiftedValue = (m_value.numerator() / m_value.denominator()) * pow(bigint(10), fractionalDigits);
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
@@ -1035,14 +1017,9 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	}
 	
 	if (value > maxValue)
-	{
-		cout << "value > maxValue" << endl;
 		return shared_ptr<FixedPointType const>();
-	}
-	// u256(v) is the actual value that will be put on the stack
-	// From here on, very similar to integerType()
+	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
-	cout << "Big int: " << u256(v) << endl;
 	if (negative)
 		// modify value to satisfy bit requirements for negative numbers:
 		// add one bit for sign and decrement because negative numbers can be larger
@@ -1054,7 +1031,6 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
 
-	cout << "rational turned into " << (negative ? "fixed" : "ufixed") << totalBits << "x" << fractionalDigits << endl;
 	return make_shared<FixedPointType>(
 		totalBits, fractionalDigits,
 		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned

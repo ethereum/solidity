@@ -321,10 +321,6 @@ public:
 	int numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
-	u256 maximumPossibleInteger() const { return isSigned() ? 
-		u256((u256(1) << m_bits) - 1):
-		u256((u256(1) << m_bits));
-	}
 
 	bigint minValue() const;
 	bigint maxValue() const;
@@ -365,13 +361,17 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
+	/// Number of bits used for this type in total.
 	int numBits() const { return m_totalBits; }
+	/// Number of decimal digits after the radix point.
 	int fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
-	u256 maximumPossibleInteger() const { return isSigned() ? 
-		u256(((u256(1) << m_totalBits) - 1) / (pow(bigint(10), m_fractionalDigits))):
-		u256(((u256(1) << m_totalBits)) / (pow(bigint(10), m_fractionalDigits)));
-	}
+	/// @returns the largest integer value this type con hold. Note that this is not the
+	/// largest value in general.
+	bigint maxIntegerValue() const;
+	/// @returns the smallest integer value this type can hold. Note hat this is not the
+	/// smallest value in general.
+	bigint minIntegerValue() const;
 
 private:
 	int m_totalBits;

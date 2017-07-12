@@ -70,7 +70,7 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
 	{
 		solAssert(
-			_first <= 256 && _first % 8 == 0 && _second >= 0 && _second <= 80,
+			_first >= 8 && _first <= 256 && _first % 8 == 0 && _second <= 80,
 			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
 		);
 	}
