@@ -28,7 +28,6 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/UndefMacros.h>
 
 #include <boost/noncopyable.hpp>
 #include <boost/rational.hpp>
