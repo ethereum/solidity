@@ -8,7 +8,8 @@ Joyfully Universal Language for (Inline) Assembly
 
 JULIA is an intermediate language that can compile to various different backends
 (EVM 1.0, EVM 1.5 and eWASM are planned).
-Because of that, it is designed to be as featureless as possible.
+Because of that, it is designed to be a usable common denominator of all three
+platforms.
 It can already be used for "inline assembly" inside Solidity and
 future versions of the Solidity compiler will even use JULIA as intermediate
 language. It should also be easy to build high-level optimizer stages for JULIA.
@@ -45,7 +46,7 @@ and ``mod`` are available either natively or as functions and computes exponenti
     }
 
 It is also possible to implement the same function using a for-loop
-instead of recursion. Here, we need the EVM opcodes ``lt`` (less-than)
+instead of with recursion. Here, we need the EVM opcodes ``lt`` (less-than)
 and ``add`` to be available.
 
 .. code::
@@ -115,7 +116,7 @@ Grammar::
 Restrictions on the Grammar
 ---------------------------
 
-Scopes in JULIA are tied to Blocks and all declarations
+Scopes in JULIA are tied to Blocks (exceptions are functions and the for loop) and all declarations
 (``FunctionDefinition``, ``VariableDeclaration``)
 introduce new identifiers into these scopes. Identifiers are visible in
 the block they are defined in (including all sub-nodes and sub-blocks).
@@ -164,7 +165,7 @@ state objects and new arguments. There is a global state object
 blockchain) and a local state object (the state of local variables, i.e. a
 segment of the stack in the EVM).
 
-The the evaluation function E takes a global state, a local state and
+The evaluation function E takes a global state, a local state and
 a node of the AST and returns a new global state, a new local state
 and a variable number of values.
 
