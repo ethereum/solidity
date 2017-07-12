@@ -4,6 +4,7 @@ Features:
  * C API (``jsonCompiler``): Export the ``license`` method.
  * Inline Assembly: Show useful error message if trying to access calldata variables.
  * Inline Assembly: Support variable declaration without initial value (defaults to 0).
+ * Metadata: Only include files which were used to compile the given contract.
  * Type Checker: Disallow value transfers to contracts without a payable fallback function.
  * Type Checker: Include types in explicit conversion error message.
  * Type Checker: Raise proper error for arrays too large for ABI encoding.
