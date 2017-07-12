@@ -10,8 +10,8 @@ Basic Design
 ============
 
 The Application Binary Interface is the standard way to interact with contracts in the Ethereum ecosystem, both
-from outside the blockchain and for contract-to-contract interaction. Data is encoded following its type,
-according to this specification.  The types are not encoded.
+from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
+as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
 We assume the interface functions of a contract are strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
