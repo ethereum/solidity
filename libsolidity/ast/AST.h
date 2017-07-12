@@ -168,6 +168,9 @@ public:
 	ASTNode const* scope() const { return m_scope; }
 	void setScope(ASTNode const* _scope) { m_scope = _scope; }
 
+	/// @returns the source unit this declaration is present in.
+	SourceUnit const& sourceUnit() const;
+
 	/// @returns the source name this declaration is present in.
 	/// Can be combined with annotation().canonicalName to form a globally unique name.
 	std::string sourceUnitName() const;
