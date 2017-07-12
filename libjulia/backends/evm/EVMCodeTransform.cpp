@@ -37,16 +37,16 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
 	solAssert(m_scope, "");
 
-	int const expectedItems = _varDecl.variables.size();
+	int const numVariables = _varDecl.variables.size();
 	int height = m_assembly.stackHeight();
 	if (_varDecl.value)
 	{
 		boost::apply_visitor(*this, *_varDecl.value);
-		expectDeposit(expectedItems, height);
+		expectDeposit(numVariables, height);
 	}
 	else
 	{
-		int variablesLeft = expectedItems;
+		int variablesLeft = numVariables;
 		while (variablesLeft--)
 			m_assembly.appendConstant(u256(0));
 	}
