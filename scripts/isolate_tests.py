@@ -83,7 +83,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 2 and sys.argv[2] == 'docs':
       docs = True
 
-    for root, dir, files in os.walk(path):
+    for root, subdirs, files in os.walk(path):
+        if '_build' in subdirs:
+          subdirs.remove('_build')
         for f in files:
             path = join(root, f)
             if docs:
