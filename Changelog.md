@@ -2,6 +2,7 @@
 
 Features:
  * Inline Assembly: Show useful error message if trying to access calldata variables.
+ * Inline Assembly: Support variable declaration without initial value (defaults to 0).
  * Type Checker: Disallow value transfers to contracts without a payable fallback function
 
 Bugfixes:

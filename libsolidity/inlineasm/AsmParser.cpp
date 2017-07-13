@@ -347,10 +347,15 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 		else
 			break;
 	}
-	expectToken(Token::Colon);
-	expectToken(Token::Assign);
-	varDecl.value.reset(new Statement(parseExpression()));
-	varDecl.location.end = locationOf(*varDecl.value).end;
+	if (currentToken() == Token::Colon)
+	{
+		expectToken(Token::Colon);
+		expectToken(Token::Assign);
+		varDecl.value.reset(new Statement(parseExpression()));
+		varDecl.location.end = locationOf(*varDecl.value).end;
+	}
+	else
+		varDecl.location.end = varDecl.variables.back().location.end;
 	return varDecl;
 }
 

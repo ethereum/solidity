@@ -9723,6 +9723,24 @@ BOOST_AUTO_TEST_CASE(multi_modifiers)
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(12)));
 }
 
+BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint a, uint b) {
+				assembly {
+					let x
+					let y, z
+					a := x
+					b := z
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0), u256(0)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
