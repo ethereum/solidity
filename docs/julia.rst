@@ -27,6 +27,7 @@ The following example program assumes that the EVM opcodes ``mul``, ``div``
 and ``mod`` are available either natively or as functions and computes exponentiation.
 
 .. code::
+
     {
         function power(base:u256, exponent:u256) -> result:u256
         {
@@ -47,6 +48,7 @@ instead of with recursion. Here, we need the EVM opcodes ``lt`` (less-than)
 and ``add`` to be available.
 
 .. code::
+
     {
         function power(base:u256, exponent:u256) -> result:u256
         {
@@ -196,6 +198,7 @@ For an identifier ``v``, let ``$v`` be the name of the identifier.
 We will use a destructuring notation for the AST nodes.
 
 .. code::
+
     E(G, L, <{St1, ..., Stn}>: Block) =
         let G1, L1, mode = E(G, L, St1, ..., Stn)
         let L2 be a restriction of L1 to the identifiers of L
@@ -359,9 +362,9 @@ The following functions must be available:
 |                                             | and return the new address                                      |
 +---------------------------------------------------------------------------------------------------------------+
 | call(g:u256, a:u256, v:u256, in:u256,       | call contract at address a with input mem[in..(in+insize))      |
-|      insize:u256, out:u256,                 | providing g gas and v wei and output area                       |
-|      outsize:u256) -> r:u256                | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
-|                                             | and 1 on success                                                |
+| insize:u256, out:u256,                      | providing g gas and v wei and output area                       |
+| outsize:u256)                               | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
+| -> r:u256                                   | and 1 on success                                                |
 +---------------------------------------------------------------------------------------------------------------+
 | callcode(g:u256, a:u256, v:u256, in:u256,   | identical to `call` but only use the code from a and stay       |
 |          insize:u256, out:u256,             | in the context of the current contract otherwise                |
@@ -461,7 +464,7 @@ Backend: EVM
 The EVM target will have all the underlying EVM opcodes exposed with the `evm_` prefix.
 
 Backend: "EVM 1.5"
------------------
+------------------
 
 TBD
 
