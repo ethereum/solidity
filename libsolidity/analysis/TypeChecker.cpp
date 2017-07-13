@@ -1631,6 +1631,25 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	}
 
+	if (exprType->category() == Type::Category::Contract)
+	{
+		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
+		{
+			auto kind = callType->kind();
+			auto contractType = dynamic_cast<ContractType const*>(exprType.get());
+			solAssert(!!contractType, "Should be contract type.");
+
+			if (
+				(kind == FunctionType::Kind::Send || kind == FunctionType::Kind::Transfer) &&
+				!contractType->isPayable()
+			)
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"Value transfer to a contract without a payable fallback function."
+				);
+		}
+	}
+
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
 	// although every subexpression is, so leaving this limited for now.
 	if (auto tt = dynamic_cast<TypeType const*>(exprType.get()))

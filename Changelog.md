@@ -2,6 +2,7 @@
 
 Features:
  * Inline Assembly: Show useful error message if trying to access calldata variables.
+ * Type Checker: Disallow value transfers to contracts without a payable fallback function
 
 Bugfixes:
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.

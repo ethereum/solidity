@@ -1230,6 +1230,12 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		_convertTo.category() == Category::Contract;
 }
 
+bool ContractType::isPayable() const
+{
+	auto fallbackFunction = m_contract.fallbackFunction();
+	return fallbackFunction && fallbackFunction->isPayable();
+}
+
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();

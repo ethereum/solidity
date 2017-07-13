@@ -6146,6 +6146,76 @@ BOOST_AUTO_TEST_CASE(callable_crash)
 	CHECK_ERROR(text, TypeError, "Type is not callable");
 }
 
+BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
+{
+	char const* text = R"(
+		contract A {}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				require(a.send(100));
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() payable {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 {
 	char const* text = R"(
