@@ -23,18 +23,23 @@
 #pragma once
 
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <boost/noncopyable.hpp>
-#include <libevmasm/SourceLocation.h>
-#include <libevmasm/Instruction.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+
+#include <libevmasm/SourceLocation.h>
+#include <libevmasm/Instruction.h>
+
+#include <libdevcore/FixedHash.h>
 #include <json/json.h>
+
+#include <boost/noncopyable.hpp>
+
+#include <string>
+#include <vector>
+#include <memory>
 
 namespace dev
 {

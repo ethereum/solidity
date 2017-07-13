@@ -27,6 +27,8 @@
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Exceptions.h>
 
+#include <libdevcore/CommonData.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <memory>

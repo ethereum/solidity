@@ -14,13 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file GasMeter.cpp
- * @author Christian <c@ethdev.com>
- * @date 2015
- */
 
-#include "GasMeter.h"
+#include <libevmasm/GasMeter.h>
+
 #include <libevmasm/KnownState.h>
+
+#include <libdevcore/FixedHash.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
