@@ -34,7 +34,7 @@ class ErrorReporter;
 class SMTChecker: private ASTConstVisitor
 {
 public:
-	SMTChecker(ErrorReporter& _errorReporter, ReadFile::Callback const& _readCallback);
+	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
 
 	void analyze(SourceUnit const& _sources);
 

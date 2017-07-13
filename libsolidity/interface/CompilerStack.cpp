@@ -239,7 +239,7 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
-		SMTChecker smtChecker(m_errorReporter, m_readFile);
+		SMTChecker smtChecker(m_errorReporter, m_smtQuery);
 		for (Source const* source: m_sourceOrder)
 			smtChecker.analyze(*source->ast);
 	}
@@ -535,17 +535,17 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 			if (m_sources.count(importPath) || newSources.count(importPath))
 				continue;
 
-			ReadFile::Result result{false, string("File not supplied initially.")};
+			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
 				result = m_readFile(importPath);
 
 			if (result.success)
-				newSources[importPath] = result.contentsOrErrorMessage;
+				newSources[importPath] = result.responseOrErrorMessage;
 			else
 			{
 				m_errorReporter.parserError(
 					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage)
+					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
 				);
 				continue;
 			}

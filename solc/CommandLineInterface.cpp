@@ -663,7 +663,7 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadFile::Callback fileReader = [this](string const& _path)
+	ReadCallback::Callback fileReader = [this](string const& _path)
 	{
 		try
 		{
@@ -683,25 +683,25 @@ bool CommandLineInterface::processInput()
 				}
 			}
 			if (!isAllowed)
-				return ReadFile::Result{false, "File outside of allowed directories."};
+				return ReadCallback::Result{false, "File outside of allowed directories."};
 			else if (!boost::filesystem::exists(path))
-				return ReadFile::Result{false, "File not found."};
+				return ReadCallback::Result{false, "File not found."};
 			else if (!boost::filesystem::is_regular_file(canonicalPath))
-				return ReadFile::Result{false, "Not a valid file."};
+				return ReadCallback::Result{false, "Not a valid file."};
 			else
 			{
 				auto contents = dev::contentsString(canonicalPath.string());
 				m_sourceCodes[path.string()] = contents;
-				return ReadFile::Result{true, contents};
+				return ReadCallback::Result{true, contents};
 			}
 		}
 		catch (Exception const& _exception)
 		{
-			return ReadFile::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+			return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
 		}
 		catch (...)
 		{
-			return ReadFile::Result{false, "Unknown exception in read callback."};
+			return ReadCallback::Result{false, "Unknown exception in read callback."};
 		}
 	};
 

@@ -82,7 +82,7 @@ public:
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit CompilerStack(ReadFile::Callback const& _readFile = ReadFile::Callback()):
+	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
 		m_readFile(_readFile),
 		m_errorList(),
 		m_errorReporter(m_errorList) {}
@@ -287,7 +287,8 @@ private:
 		std::string target;
 	};
 
-	ReadFile::Callback m_readFile;
+	ReadCallback::Callback m_readFile;
+	ReadCallback::Callback m_smtQuery;
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
 	std::map<std::string, h160> m_libraries;

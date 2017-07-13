@@ -18,6 +18,7 @@
 #include <libsolidity/formal/SMTLib2Interface.h>
 
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/ReadFile.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -33,10 +34,11 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTLib2Interface::SMTLib2Interface(ReadFile::Callback const& _readFileCallback):
-	m_communicator(_readFileCallback)
+SMTLib2Interface::SMTLib2Interface(ReadCallback::Callback const& _queryCallback):
+	m_queryCallback(_queryCallback)
 {
 	reset();
 }

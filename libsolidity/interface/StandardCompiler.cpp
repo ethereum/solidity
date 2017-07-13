@@ -203,10 +203,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 			for (auto const& url: sources[sourceName]["urls"])
 			{
-				ReadFile::Result result = m_readFile(url.asString());
+				ReadCallback::Result result = m_readFile(url.asString());
 				if (result.success)
 				{
-					if (!hash.empty() && !hashMatchesContent(hash, result.contentsOrErrorMessage))
+					if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
 						errors.append(formatError(
 							false,
 							"IOError",
@@ -215,13 +215,13 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 						));
 					else
 					{
-						m_compilerStack.addSource(sourceName, result.contentsOrErrorMessage);
+						m_compilerStack.addSource(sourceName, result.responseOrErrorMessage);
 						found = true;
 						break;
 					}
 				}
 				else
-					failures.push_back("Cannot import url (\"" + url.asString() + "\"): " + result.contentsOrErrorMessage);
+					failures.push_back("Cannot import url (\"" + url.asString() + "\"): " + result.responseOrErrorMessage);
 			}
 
 			for (auto const& failure: failures)
