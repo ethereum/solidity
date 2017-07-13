@@ -262,14 +262,14 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 		checkCondition(
 			value < minValue(intType),
 			_op.location(),
-			"Underflow (resulting value less than " + intType.minValue().str() + ")",
+			"Underflow (resulting value less than " + formatNumber(intType.minValue()) + ")",
 			"value",
 			&value
 		);
 		checkCondition(
 			value > maxValue(intType),
 			_op.location(),
-			"Overflow (resulting value larger than " + intType.maxValue().str() + ")",
+			"Overflow (resulting value larger than " + formatNumber(intType.maxValue()) + ")",
 			"value",
 			&value
 		);
@@ -341,16 +341,26 @@ void SMTChecker::checkCondition(
 	m_interface->addAssertion(_condition);
 
 	vector<smt::Expression> expressionsToEvaluate;
+	vector<string> expressionNames;
 	if (m_currentFunction)
 	{
 		if (_additionalValue)
+		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
+			expressionNames.push_back(_additionalValueName);
+		}
 		for (auto const& param: m_currentFunction->parameters())
 			if (knownVariable(*param))
+			{
 				expressionsToEvaluate.emplace_back(currentValue(*param));
+				expressionNames.push_back(param->name());
+			}
 		for (auto const& var: m_currentFunction->localVariables())
 			if (knownVariable(*var))
+			{
 				expressionsToEvaluate.emplace_back(currentValue(*var));
+				expressionNames.push_back(var->name());
+			}
 	}
 	smt::CheckResult result;
 	vector<string> values;
@@ -373,18 +383,22 @@ void SMTChecker::checkCondition(
 	{
 		std::ostringstream message;
 		message << _description << " happens here";
-		size_t i = 0;
 		if (m_currentFunction)
 		{
 			message << " for:\n";
-			if (_additionalValue)
-				message << "  " << _additionalValueName << " = " << values.at(i++) << "\n";
-			for (auto const& param: m_currentFunction->parameters())
-				if (knownVariable(*param))
-					message << "  " << param->name() << " = " << values.at(i++) << "\n";
-			for (auto const& var: m_currentFunction->localVariables())
-				if (knownVariable(*var))
-					message << "  " << var->name() << " = " << values.at(i++) << "\n";
+			solAssert(values.size() == expressionNames.size(), "");
+			for (size_t i = 0; i < values.size(); ++i)
+			{
+				string formattedValue = values.at(i);
+				try
+				{
+					// Parse and re-format nicely
+					formattedValue = formatNumber(bigint(formattedValue));
+				}
+				catch (...) { }
+
+				message << "  " << expressionNames.at(i) << " = " << formattedValue << "\n";
+			}
 		}
 		else
 			message << ".";
