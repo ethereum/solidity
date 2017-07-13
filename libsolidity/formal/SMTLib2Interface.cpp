@@ -71,24 +71,24 @@ Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codom
 		(_codomain == Sort::Int ? "Int" : "Bool") +
 		")"
 	);
-	return Expression(std::move(_name), {});
+	return SolverInterface::newFunction(move(_name), _domain, _codomain);
 }
 
 Expression SMTLib2Interface::newInteger(string _name)
 {
 	write("(declare-const |" + _name + "| Int)");
-	return Expression(std::move(_name), {});
+	return SolverInterface::newInteger(move(_name));
 }
 
 Expression SMTLib2Interface::newBool(string _name)
 {
 	write("(declare-const |" + _name + "| Bool)");
-	return Expression(std::move(_name), {});
+	return SolverInterface::newBool(std::move(_name));
 }
 
 void SMTLib2Interface::addAssertion(Expression const& _expr)
 {
-	write("(assert " + _expr.toSExpr() + ")");
+	write("(assert " + toSExpr(_expr) + ")");
 }
 
 pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
@@ -114,6 +114,17 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	return make_pair(result, values);
 }
 
+string SMTLib2Interface::toSExpr(Expression const& _expr)
+{
+	if (_expr.arguments.empty())
+		return _expr.name;
+	std::string sexpr = "(" + _expr.name;
+	for (auto const& arg: _expr.arguments)
+		sexpr += " " + toSExpr(arg);
+	sexpr += ")";
+	return sexpr;
+}
+
 void SMTLib2Interface::write(string _data)
 {
 	solAssert(!m_accumulatedOutput.empty(), "");
@@ -133,7 +144,7 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 			auto const& e = _expressionsToEvaluate.at(i);
 			// TODO they don't have to be ints...
 			command += "(declare-const |EVALEXPR_" + to_string(i) + "| Int)\n";
-			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + e.toSExpr() + "))\n";
+			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";
 		command += "(get-value (";

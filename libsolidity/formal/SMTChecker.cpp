@@ -17,6 +17,7 @@
 
 #include <libsolidity/formal/SMTChecker.h>
 
+#include <libsolidity/formal/SMTLib2Interface.h>
 
 #include <libsolidity/interface/ErrorReporter.h>
 
@@ -25,7 +26,7 @@ using namespace dev;
 using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadFile::Callback const& _readFileCallback):
-	m_interface(_readFileCallback),
+	m_interface(make_shared<smt::SMTLib2Interface>(_readFileCallback)),
 	m_errorReporter(_errorReporter)
 {
 }
@@ -39,7 +40,7 @@ void SMTChecker::analyze(SourceUnit const& _source)
 				pragmaFound = true;
 	if (pragmaFound)
 	{
-		m_interface.reset();
+		m_interface->reset();
 		m_currentSequenceCounter.clear();
 		_source.accept(*this);
 	}
@@ -69,7 +70,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		);
 	// TODO actually we probably also have to reset all local variables and similar things.
 	m_currentFunction = &_function;
-	m_interface.push();
+	m_interface->push();
 	return true;
 }
 
@@ -79,7 +80,7 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	// We only handle local variables, so we clear everything.
 	// If we add storage variables, those should be cleared differently.
 	m_currentSequenceCounter.clear();
-	m_interface.pop();
+	m_interface->pop();
 	m_currentFunction = nullptr;
 }
 
@@ -93,7 +94,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 	else if (knownVariable(*_varDecl.declarations()[0]) && _varDecl.initialValue())
 		// TODO more checks?
 		// TODO add restrictions about type (might be assignment from smaller type)
-		m_interface.addAssertion(newValue(*_varDecl.declarations()[0]) == expr(*_varDecl.initialValue()));
+		m_interface->addAssertion(newValue(*_varDecl.declarations()[0]) == expr(*_varDecl.initialValue()));
 	else
 		m_errorReporter.warning(
 			_varDecl.location(),
@@ -123,7 +124,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		if (knownVariable(*decl))
 			// TODO more checks?
 			// TODO add restrictions about type (might be assignment from smaller type)
-			m_interface.addAssertion(newValue(*decl) == expr(_assignment.rightHandSide()));
+			m_interface->addAssertion(newValue(*decl) == expr(_assignment.rightHandSide()));
 		else
 			m_errorReporter.warning(
 				_assignment.location(),
@@ -145,7 +146,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 			"Assertion checker does not yet implement tules and inline arrays."
 		);
 	else
-		m_interface.addAssertion(expr(_tuple) == expr(*_tuple.components()[0]));
+		m_interface->addAssertion(expr(_tuple) == expr(*_tuple.components()[0]));
 }
 
 void SMTChecker::endVisit(BinaryOperation const& _op)
@@ -173,13 +174,13 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkCondition(!(expr(*args[0])), _funCall.location(), "Assertion violation");
-		m_interface.addAssertion(expr(*args[0]));
+		m_interface->addAssertion(expr(*args[0]));
 	}
 	else if (funType.kind() == FunctionType::Kind::Require)
 	{
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
-		m_interface.addAssertion(expr(*args[0]));
+		m_interface->addAssertion(expr(*args[0]));
 		checkCondition(!(expr(*args[0])), _funCall.location(), "Unreachable code");
 		// TODO is there something meaningful we can check here?
 		// We can check whether the condition is always fulfilled or never fulfilled.
@@ -192,7 +193,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	solAssert(decl, "");
 	if (dynamic_cast<IntegerType const*>(_identifier.annotation().type.get()))
 	{
-		m_interface.addAssertion(expr(_identifier) == currentValue(*decl));
+		m_interface->addAssertion(expr(_identifier) == currentValue(*decl));
 		return;
 	}
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
@@ -217,7 +218,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&type))
 			solAssert(!rational->isFractional(), "");
 
-		m_interface.addAssertion(expr(_literal) == smt::Expression(type.literalValue(&_literal)));
+		m_interface->addAssertion(expr(_literal) == smt::Expression(type.literalValue(&_literal)));
 	}
 	else
 		m_errorReporter.warning(
@@ -264,7 +265,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 			&value
 		);
 
-		m_interface.addAssertion(expr(_op) == value);
+		m_interface->addAssertion(expr(_op) == value);
 		break;
 	}
 	default:
@@ -292,7 +293,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 			/*op == Token::GreaterThanOrEqual*/ (left >= right)
 		);
 		// TODO: check that other values for op are not possible.
-		m_interface.addAssertion(expr(_op) == value);
+		m_interface->addAssertion(expr(_op) == value);
 	}
 	else
 		m_errorReporter.warning(
@@ -308,9 +309,9 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 	if (_op.annotation().commonType->category() == Type::Category::Bool)
 	{
 		if (_op.getOperator() == Token::And)
-			m_interface.addAssertion(expr(_op) == expr(_op.leftExpression()) && expr(_op.rightExpression()));
+			m_interface->addAssertion(expr(_op) == expr(_op.leftExpression()) && expr(_op.rightExpression()));
 		else
-			m_interface.addAssertion(expr(_op) == expr(_op.leftExpression()) || expr(_op.rightExpression()));
+			m_interface->addAssertion(expr(_op) == expr(_op.leftExpression()) || expr(_op.rightExpression()));
 	}
 	else
 		m_errorReporter.warning(
@@ -327,8 +328,8 @@ void SMTChecker::checkCondition(
 	smt::Expression* _additionalValue
 )
 {
-	m_interface.push();
-	m_interface.addAssertion(_condition);
+	m_interface->push();
+	m_interface->addAssertion(_condition);
 
 	vector<smt::Expression> expressionsToEvaluate;
 	if (m_currentFunction)
@@ -344,7 +345,7 @@ void SMTChecker::checkCondition(
 	}
 	smt::CheckResult result;
 	vector<string> values;
-	tie(result, values) = m_interface.check(expressionsToEvaluate);
+	tie(result, values) = m_interface->check(expressionsToEvaluate);
 	switch (result)
 	{
 	case smt::CheckResult::SAT:
@@ -380,7 +381,7 @@ void SMTChecker::checkCondition(
 	default:
 		solAssert(false, "");
 	}
-	m_interface.pop();
+	m_interface->pop();
 }
 
 void SMTChecker::createVariable(VariableDeclaration const& _varDecl, bool _setToZero)
@@ -390,13 +391,13 @@ void SMTChecker::createVariable(VariableDeclaration const& _varDecl, bool _setTo
 		solAssert(m_currentSequenceCounter.count(&_varDecl) == 0, "");
 		solAssert(m_z3Variables.count(&_varDecl) == 0, "");
 		m_currentSequenceCounter[&_varDecl] = 0;
-		m_z3Variables.emplace(&_varDecl, m_interface.newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
+		m_z3Variables.emplace(&_varDecl, m_interface->newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
 		if (_setToZero)
-			m_interface.addAssertion(currentValue(_varDecl) == 0);
+			m_interface->addAssertion(currentValue(_varDecl) == 0);
 		else
 		{
-			m_interface.addAssertion(currentValue(_varDecl) >= minValue(*intType));
-			m_interface.addAssertion(currentValue(_varDecl) <= maxValue(*intType));
+			m_interface->addAssertion(currentValue(_varDecl) >= minValue(*intType));
+			m_interface->addAssertion(currentValue(_varDecl) <= maxValue(*intType));
 		}
 	}
 	else
@@ -455,14 +456,14 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 		{
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
 				solAssert(!rational->isFractional(), "");
-			m_z3Expressions.emplace(&_e, m_interface.newInteger(uniqueSymbol(_e)));
+			m_z3Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;
 		}
 		case Type::Category::Integer:
-			m_z3Expressions.emplace(&_e, m_interface.newInteger(uniqueSymbol(_e)));
+			m_z3Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;
 		case Type::Category::Bool:
-			m_z3Expressions.emplace(&_e, m_interface.newBool(uniqueSymbol(_e)));
+			m_z3Expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
 			break;
 		default:
 			solAssert(false, "Type not implemented.");

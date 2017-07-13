@@ -18,7 +18,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/formal/SMTLib2Interface.h>
+#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <map>
@@ -85,7 +85,7 @@ private:
 	/// The function takes one argument which is the "sequence number".
 	smt::Expression var(Declaration const& _decl);
 
-	smt::SMTLib2Interface m_interface;
+	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_z3Expressions;
 	std::map<Declaration const*, smt::Expression> m_z3Variables;
