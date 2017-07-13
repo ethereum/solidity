@@ -1395,12 +1395,23 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || length() == other.length();
 }
 
-unsigned ArrayType::calldataEncodedSize(bool _padded) const
+bool ArrayType::validForCalldata() const
+{
+	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
+}
+
+bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
 		return 32;
 	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(_padded));
 	size = ((size + 31) / 32) * 32;
+	return size;
+}
+
+unsigned ArrayType::calldataEncodedSize(bool _padded) const
+{
+	bigint size = unlimitedCalldataEncodedSize(_padded);
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
 	return unsigned(size);
 }

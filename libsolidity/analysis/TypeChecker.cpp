@@ -583,6 +583,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		!FunctionType(_variable).interfaceFunctionType()
 	)
 		m_errorReporter.typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+
+	if (varType->category() == Type::Category::Array)
+		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
+			if (
+				((arrayType->location() == DataLocation::Memory) ||
+				(arrayType->location() == DataLocation::CallData)) &&
+				!arrayType->validForCalldata()
+			)
+				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded as calldata.");
+
 	return false;
 }
 
