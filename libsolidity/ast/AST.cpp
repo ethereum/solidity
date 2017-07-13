@@ -84,16 +84,21 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
 }
 
-set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse) const
+set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
 {
 	set<SourceUnit const*> sourceUnits;
 	for (ImportDirective const* importDirective: filteredNodes<ImportDirective>(nodes()))
 	{
-		sourceUnits.insert(importDirective->annotation().sourceUnit);
-		if (_recurse)
+		auto const& sourceUnit = importDirective->annotation().sourceUnit;
+		if (!_skipList.count(sourceUnit))
 		{
-			set<SourceUnit const*> referencedSourceUnits = importDirective->annotation().sourceUnit->referencedSourceUnits(true);
-			sourceUnits.insert(referencedSourceUnits.begin(), referencedSourceUnits.end());
+			_skipList.insert(sourceUnit);
+			sourceUnits.insert(sourceUnit);
+			if (_recurse)
+			{
+				set<SourceUnit const*> referencedSourceUnits = sourceUnit->referencedSourceUnits(true, _skipList);
+				sourceUnits.insert(referencedSourceUnits.begin(), referencedSourceUnits.end());
+			}
 		}
 	}
 	return sourceUnits;
