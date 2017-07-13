@@ -67,16 +67,3 @@ Error::Error(Error::Type _type, const std::string& _description, const SourceLoc
 		*this << errinfo_sourceLocation(_location);
 	*this << errinfo_comment(_description);
 }
-
-string Exception::lineInfo() const
-{
-	char const* const* file = boost::get_error_info<boost::throw_file>(*this);
-	int const* line = boost::get_error_info<boost::throw_line>(*this);
-	string ret;
-	if (file)
-		ret += *file;
-	ret += ':';
-	if (line)
-		ret += boost::lexical_cast<string>(*line);
-	return ret;
-}

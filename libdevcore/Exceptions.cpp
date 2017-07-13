@@ -14,30 +14,36 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ErrorCheck.cpp
- * @author Yoichi Hirai <i@yoichihirai.com>
- * @date 2016
- */
 
-#include <test/libsolidity/ErrorCheck.h>
 #include <libdevcore/Exceptions.h>
 
-#include <string>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
+using namespace dev;
 
-bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _substr)
+char const* Exception::what() const noexcept
 {
-	if (string const* errorMessage = _err.comment())
-	{
-		if (errorMessage->find(_substr) == std::string::npos)
-		{
-			cout << "Expected message \"" << _substr << "\" but found \"" << *errorMessage << "\".\n";
-			return false;
-		}
-		return true;
-	}
+	if (string const* cmt = comment())
+		return cmt->c_str();
 	else
-		cout << "Expected error message but found none." << endl;
-	return _substr.empty();
+		return nullptr;
+}
+
+string Exception::lineInfo() const
+{
+	char const* const* file = boost::get_error_info<boost::throw_file>(*this);
+	int const* line = boost::get_error_info<boost::throw_line>(*this);
+	string ret;
+	if (file)
+		ret += *file;
+	ret += ':';
+	if (line)
+		ret += boost::lexical_cast<string>(*line);
+	return ret;
+}
+
+string const* Exception::comment() const noexcept
+{
+	return boost::get_error_info<errinfo_comment>(*this);
 }
