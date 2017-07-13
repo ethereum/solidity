@@ -32,7 +32,7 @@ bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _su
 	{
 		if (errorMessage->find(_substr) == std::string::npos)
 		{
-			cout << "Expected message \"" << _substr << "\" but found" << *errorMessage << endl;
+			cout << "Expected message \"" << _substr << "\" but found \"" << *errorMessage << "\".\n";
 			return false;
 		}
 		return true;
