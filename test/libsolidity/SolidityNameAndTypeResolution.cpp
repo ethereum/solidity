@@ -6216,6 +6216,24 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
+{
+	char const* text = R"(
+		contract A {
+			function transfer(uint) {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 {
 	char const* text = R"(
