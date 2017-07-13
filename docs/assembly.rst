@@ -679,6 +679,8 @@ Example:
 We will follow an example compilation from Solidity to desugared assembly.
 We consider the runtime bytecode of the following Solidity program::
 
+    pragma solidity ^0.4.0;
+
     contract C {
       function f(uint x) returns (uint y) {
         y = 1;

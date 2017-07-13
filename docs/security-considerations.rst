@@ -179,11 +179,13 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
     }
 
-Now someone tricks you into sending ether to the address of this attack wallet:
+Now someone tricks you into sending ether to the address of this attack wallet::
 
-::
+    pragma solidity ^0.4.11;
 
-    pragma solidity ^0.4.0;
+    interface TxUserWallet {
+        function transferTo(address dest, uint amount);
+    }
 
     contract TxAttackWallet {
         address owner;
