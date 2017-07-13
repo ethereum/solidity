@@ -6319,7 +6319,7 @@ BOOST_AUTO_TEST_CASE(too_large_arrays_for_calldata)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
