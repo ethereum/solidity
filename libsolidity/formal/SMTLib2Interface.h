@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <libsolidity/formal/SMTSolverCommunicator.h>
 #include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/Exceptions.h>
@@ -64,7 +63,10 @@ private:
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
 	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
-	SMTSolverCommunicator m_communicator;
+	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
+	std::string querySolver(std::string const& _input);
+
+	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
 };
 

@@ -95,10 +95,11 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
-	string response = m_communicator.communicate(
+	string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
 		checkSatAndGetValuesCommand(_expressionsToEvaluate)
 	);
+
 	CheckResult result;
 	// TODO proper parsing
 	if (boost::starts_with(response, "sat\n"))
@@ -172,4 +173,15 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 	}
 
 	return values;
+}
+
+string SMTLib2Interface::querySolver(string const& _input)
+{
+	if (!m_queryCallback)
+		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment("No SMT solver available."));
+
+	ReadCallback::Result queryResult = m_queryCallback(_input);
+	if (!queryResult.success)
+		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment(queryResult.responseOrErrorMessage));
+	return queryResult.responseOrErrorMessage;
 }

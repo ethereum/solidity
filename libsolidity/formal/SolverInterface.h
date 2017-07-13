@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include <libsolidity/formal/SMTSolverCommunicator.h>
-
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <libdevcore/Common.h>
+#include <libdevcore/Exceptions.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -132,6 +131,8 @@ private:
 		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}) {}
 };
 
+DEV_SIMPLE_EXCEPTION(SolverError);
+
 class SolverInterface
 {
 public:
@@ -158,6 +159,8 @@ public:
 
 	virtual void addAssertion(Expression const& _expr) = 0;
 
+	/// Checks for satisfiability, evaluates the expressions if a model
+	/// is available. Throws SMTSolverError on error.
 	virtual std::pair<CheckResult, std::vector<std::string>>
 	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
 };

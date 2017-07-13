@@ -17,7 +17,11 @@
 
 #include <libsolidity/formal/SMTChecker.h>
 
+#ifdef HAVE_Z3
+#include <libsolidity/formal/Z3Interface.h>
+#else
 #include <libsolidity/formal/SMTLib2Interface.h>
+#endif
 
 #include <libsolidity/interface/ErrorReporter.h>
 
@@ -25,10 +29,15 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadFile::Callback const& _readFileCallback):
+SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback):
+#ifdef HAVE_Z3
+	m_interface(make_shared<smt::Z3Interface>()),
+#else
 	m_interface(make_shared<smt::SMTLib2Interface>(_readFileCallback)),
+#endif
 	m_errorReporter(_errorReporter)
 {
+	(void)_readFileCallback;
 }
 
 void SMTChecker::analyze(SourceUnit const& _source)
@@ -36,7 +45,7 @@ void SMTChecker::analyze(SourceUnit const& _source)
 	bool pragmaFound = false;
 	for (auto const& node: _source.nodes())
 		if (auto const* pragma = dynamic_cast<PragmaDirective const*>(node.get()))
-			if (pragma->literals()[0] == "checkAssertionsZ3")
+			if (pragma->literals()[0] == "checkAssertions")
 				pragmaFound = true;
 	if (pragmaFound)
 	{
@@ -345,7 +354,19 @@ void SMTChecker::checkCondition(
 	}
 	smt::CheckResult result;
 	vector<string> values;
-	tie(result, values) = m_interface->check(expressionsToEvaluate);
+	try
+	{
+		tie(result, values) = m_interface->check(expressionsToEvaluate);
+	}
+	catch (smt::SolverError const& _e)
+	{
+		string description("Error querying SMT solver");
+		if (_e.comment())
+			description += ": " + *_e.comment();
+		m_errorReporter.warning(_location, description);
+		return;
+	}
+
 	switch (result)
 	{
 	case smt::CheckResult::SAT:
