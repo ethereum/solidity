@@ -76,6 +76,9 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 void SMTChecker::endVisit(FunctionDefinition const&)
 {
 	// TOOD we could check for "reachability", i.e. satisfiability here.
+	// We only handle local variables, so we clear everything.
+	// If we add storage variables, those should be cleared differently.
+	m_currentSequenceCounter.clear();
 	m_interface.pop();
 	m_currentFunction = nullptr;
 }
