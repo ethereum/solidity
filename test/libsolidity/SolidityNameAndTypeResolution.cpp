@@ -6322,6 +6322,43 @@ BOOST_AUTO_TEST_CASE(too_large_arrays_for_calldata)
 	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
 }
 
+BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				string memory x = "abc";
+				x;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f() {
+				string storage x = "abc";
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
+	text = R"(
+		contract C {
+			function f() {
+				string x = "abc";
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
+	text = R"(
+		contract C {
+			function f() {
+				string("abc");
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed from \"literal_string \"abc\"\" to \"string storage pointer\"");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -1364,7 +1364,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				// (data location cannot yet be specified for type conversions)
 				resultType = ReferenceType::copyForLocationIfReference(argRefType->location(), resultType);
 			if (!argType->isExplicitlyConvertibleTo(*resultType))
-				m_errorReporter.typeError(_functionCall.location(), "Explicit type conversion not allowed.");
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Explicit type conversion not allowed from \"" +
+					argType->toString() +
+					"\" to \"" +
+					resultType->toString() +
+					"\"."
+				);
 		}
 		_functionCall.annotation().type = resultType;
 		_functionCall.annotation().isPure = isPure;
