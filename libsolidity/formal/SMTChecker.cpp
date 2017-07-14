@@ -25,6 +25,8 @@
 
 #include <libsolidity/interface/ErrorReporter.h>
 
+#include <boost/range/adaptor/map.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -51,6 +53,7 @@ void SMTChecker::analyze(SourceUnit const& _source)
 	{
 		m_interface->reset();
 		m_currentSequenceCounter.clear();
+		m_nextFreeSequenceCounter.clear();
 		_source.accept(*this);
 	}
 }
@@ -89,8 +92,66 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	// We only handle local variables, so we clear everything.
 	// If we add storage variables, those should be cleared differently.
 	m_currentSequenceCounter.clear();
+	m_nextFreeSequenceCounter.clear();
 	m_interface->pop();
 	m_currentFunction = nullptr;
+}
+
+bool SMTChecker::visit(IfStatement const& _node)
+{
+	_node.condition().accept(*this);
+
+	// TODO Check if condition is always true
+
+	auto countersAtStart = m_currentSequenceCounter;
+	m_interface->push();
+	m_interface->addAssertion(expr(_node.condition()));
+	_node.trueStatement().accept(*this);
+	auto countersAtEndOfTrue = m_currentSequenceCounter;
+	m_interface->pop();
+
+	decltype(m_currentSequenceCounter) countersAtEndOfFalse;
+	if (_node.falseStatement())
+	{
+		m_currentSequenceCounter = countersAtStart;
+		m_interface->push();
+		m_interface->addAssertion(!expr(_node.condition()));
+		_node.falseStatement()->accept(*this);
+		countersAtEndOfFalse = m_currentSequenceCounter;
+		m_interface->pop();
+	}
+	else
+		countersAtEndOfFalse = countersAtStart;
+
+	// Reset all values that have been touched.
+
+	// TODO this should use a previously generated side-effect structure
+
+	solAssert(countersAtEndOfFalse.size() == countersAtEndOfTrue.size(), "");
+	for (auto const& declCounter: countersAtEndOfTrue)
+	{
+		solAssert(countersAtEndOfFalse.count(declCounter.first), "");
+		auto decl = declCounter.first;
+		int trueCounter = countersAtEndOfTrue.at(decl);
+		int falseCounter = countersAtEndOfFalse.at(decl);
+		if (trueCounter == falseCounter)
+			continue; // Was not modified
+		newValue(*decl);
+		setValue(*decl, 0);
+	}
+	return false;
+}
+
+bool SMTChecker::visit(WhileStatement const& _node)
+{
+	_node.condition().accept(*this);
+
+	//m_interface->push();
+	//m_interface->addAssertion(expr(_node.condition()));
+	// TDOO clear knowledge (increment sequence numbers and add bounds assertions	) apart from assertions
+
+	// TODO combine similar to if
+	return true;
 }
 
 void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
@@ -100,10 +161,13 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 			_varDecl.location(),
 			"Assertion checker does not yet support such variable declarations."
 		);
-	else if (knownVariable(*_varDecl.declarations()[0]) && _varDecl.initialValue())
-		// TODO more checks?
-		// TODO add restrictions about type (might be assignment from smaller type)
-		m_interface->addAssertion(newValue(*_varDecl.declarations()[0]) == expr(*_varDecl.initialValue()));
+	else if (knownVariable(*_varDecl.declarations()[0]))
+	{
+		if (_varDecl.initialValue())
+			// TODO more checks?
+			// TODO add restrictions about type (might be assignment from smaller type)
+			m_interface->addAssertion(newValue(*_varDecl.declarations()[0]) == expr(*_varDecl.initialValue()));
+	}
 	else
 		m_errorReporter.warning(
 			_varDecl.location(),
@@ -421,19 +485,15 @@ void SMTChecker::checkCondition(
 
 void SMTChecker::createVariable(VariableDeclaration const& _varDecl, bool _setToZero)
 {
-	if (auto intType = dynamic_cast<IntegerType const*>(_varDecl.type().get()))
+	if (dynamic_cast<IntegerType const*>(_varDecl.type().get()))
 	{
 		solAssert(m_currentSequenceCounter.count(&_varDecl) == 0, "");
+		solAssert(m_nextFreeSequenceCounter.count(&_varDecl) == 0, "");
 		solAssert(m_z3Variables.count(&_varDecl) == 0, "");
 		m_currentSequenceCounter[&_varDecl] = 0;
+		m_nextFreeSequenceCounter[&_varDecl] = 1;
 		m_z3Variables.emplace(&_varDecl, m_interface->newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
-		if (_setToZero)
-			m_interface->addAssertion(currentValue(_varDecl) == 0);
-		else
-		{
-			m_interface->addAssertion(currentValue(_varDecl) >= minValue(*intType));
-			m_interface->addAssertion(currentValue(_varDecl) <= maxValue(*intType));
-		}
+		setValue(_varDecl, _setToZero);
 	}
 	else
 		m_errorReporter.warning(
@@ -460,14 +520,33 @@ bool SMTChecker::knownVariable(Declaration const& _decl)
 smt::Expression SMTChecker::currentValue(Declaration const& _decl)
 {
 	solAssert(m_currentSequenceCounter.count(&_decl), "");
-	return var(_decl)(m_currentSequenceCounter.at(&_decl));
+	return valueAtSequence(_decl, m_currentSequenceCounter.at(&_decl));
 }
 
-smt::Expression SMTChecker::newValue(const Declaration& _decl)
+smt::Expression SMTChecker::valueAtSequence(const Declaration& _decl, int _sequence)
+{
+	return var(_decl)(_sequence);
+}
+
+smt::Expression SMTChecker::newValue(Declaration const& _decl)
 {
 	solAssert(m_currentSequenceCounter.count(&_decl), "");
-	m_currentSequenceCounter[&_decl]++;
+	solAssert(m_nextFreeSequenceCounter.count(&_decl), "");
+	m_currentSequenceCounter[&_decl] = m_nextFreeSequenceCounter[&_decl]++;
 	return currentValue(_decl);
+}
+
+void SMTChecker::setValue(Declaration const& _decl, bool _setToZero)
+{
+	auto const& intType = dynamic_cast<IntegerType const&>(*_decl.type());
+
+	if (_setToZero)
+		m_interface->addAssertion(currentValue(_decl) == 0);
+	else
+	{
+		m_interface->addAssertion(currentValue(_decl) >= minValue(intType));
+		m_interface->addAssertion(currentValue(_decl) <= maxValue(intType));
+	}
 }
 
 smt::Expression SMTChecker::minValue(IntegerType const& _t)

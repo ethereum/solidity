@@ -46,6 +46,8 @@ private:
 	virtual void endVisit(VariableDeclaration const& _node) override;
 	virtual bool visit(FunctionDefinition const& _node) override;
 	virtual void endVisit(FunctionDefinition const& _node) override;
+	virtual bool visit(IfStatement const& _node) override;
+	virtual bool visit(WhileStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
 	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;
@@ -71,9 +73,22 @@ private:
 
 	std::string uniqueSymbol(Declaration const& _decl);
 	std::string uniqueSymbol(Expression const& _expr);
+
+	/// @returns true if _delc is a variable that is known at the current point, i.e.
+	/// has a valid sequence number
 	bool knownVariable(Declaration const& _decl);
+	/// @returns an expression denoting the value of the variable declared in @a _decl
+	/// at the current point.
 	smt::Expression currentValue(Declaration const& _decl);
+	/// @returns an expression denoting the value of the variable declared in @a _decl
+	/// at the given sequence point. Does not ensure that this sequence point exists.
+	smt::Expression valueAtSequence(Declaration const& _decl, int _sequence);
+	/// Allocates a new sequence number for the declaration, updates the current
+	/// sequence number to this value and returns the expression.
 	smt::Expression newValue(Declaration const& _decl);
+
+	/// Sets the value of the declaration either to zero or to its intrinsic range.
+	void setValue(Declaration const& _decl, bool _setToZero);
 
 	smt::Expression minValue(IntegerType const& _t);
 	smt::Expression maxValue(IntegerType const& _t);
@@ -87,6 +102,7 @@ private:
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
+	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_z3Expressions;
 	std::map<Declaration const*, smt::Expression> m_z3Variables;
 	ErrorReporter& m_errorReporter;

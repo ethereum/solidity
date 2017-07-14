@@ -61,6 +61,13 @@ public:
 	Expression& operator=(Expression const& _other) = default;
 	Expression& operator=(Expression&& _other) = default;
 
+	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
+	{
+		return Expression("ite", std::vector<Expression>{
+			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
+		});
+	}
+
 	friend Expression operator!(Expression _a)
 	{
 		return Expression("not", std::move(_a));
