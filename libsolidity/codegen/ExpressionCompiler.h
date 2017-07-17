@@ -124,7 +124,7 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
-	bool m_optimise;
+	bool const m_optimise;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;
 

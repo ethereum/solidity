@@ -28,22 +28,38 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace {
+
+eth::Assembly::OptimiserSettings translateOptimiserSettings(Compiler::OptimiserSettings _settings)
+{
+	eth::Assembly::OptimiserSettings asmsettings;
+	asmsettings.isCreation = true;
+	asmsettings.runPeephole = _settings.runPeephole;
+	asmsettings.runDeduplicate = _settings.runDeduplicate;
+	asmsettings.runCSE = _settings.runCSE;
+	asmsettings.runConstantOptimiser = _settings.runConstantOptimiser;
+	asmsettings.expectedExecutionsPerDeployment = _settings.expectedExecutionsPerDeployment;
+	return asmsettings;
+}
+
+}
+
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts,
 	bytes const& _metadata
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimise);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings.runOrderLiterals);
 	runtimeCompiler.compileContract(_contract, _contracts);
 	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
-	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimise);
+	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimiserSettings.runOrderLiterals);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
-	m_context.optimise(m_optimise, m_optimiseRuns);
+	m_context.optimise(translateOptimiserSettings(m_optimiserSettings));
 }
 
 void Compiler::compileClone(
@@ -51,11 +67,11 @@ void Compiler::compileClone(
 	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimise);
-	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimise);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings.runOrderLiterals);
+	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimiserSettings.runOrderLiterals);
 	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
 
-	m_context.optimise(m_optimise, m_optimiseRuns);
+	m_context.optimise(translateOptimiserSettings(m_optimiserSettings));
 }
 
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const

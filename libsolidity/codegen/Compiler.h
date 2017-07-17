@@ -33,9 +33,20 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(bool _optimise = false, unsigned _runs = 200):
-		m_optimise(_optimise),
-		m_optimiseRuns(_runs),
+	struct OptimiserSettings
+	{
+		bool runOrderLiterals = false;
+		bool runPeephole = false;
+		bool runDeduplicate = false;
+		bool runCSE = false;
+		bool runConstantOptimiser = false;
+		/// This specifies an estimate on how often each opcode in this assembly will be executed,
+		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
+		size_t expectedExecutionsPerDeployment = 200;
+	};
+
+	explicit Compiler(Compiler::OptimiserSettings const _settings):
+		m_optimiserSettings(_settings),
 		m_runtimeContext(),
 		m_context(&m_runtimeContext)
 	{ }
@@ -79,8 +90,7 @@ public:
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
 private:
-	bool const m_optimise;
-	unsigned const m_optimiseRuns;
+	OptimiserSettings const m_optimiserSettings;
 	CompilerContext m_runtimeContext;
 	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_context;

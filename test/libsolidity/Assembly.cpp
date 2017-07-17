@@ -77,7 +77,8 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler compiler;
+			Compiler::OptimiserSettings optimiserSettings;
+			Compiler compiler(optimiserSettings);
 			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();
