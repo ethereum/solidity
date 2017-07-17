@@ -120,6 +120,9 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
 
+	/// Reports a type error with an appropiate message when overriden function signature differs.
+	void overrideTypeError(FunctionDefinition const& function, FunctionDefinition const& super);
+
 	ContractDefinition const* m_scope = nullptr;
 
 	ErrorReporter& m_errorReporter;

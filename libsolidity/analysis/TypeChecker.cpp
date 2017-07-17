@@ -290,7 +290,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 					overriding->isPayable() != function->isPayable() ||
 					overridingType != functionType
 				)
-					m_errorReporter.typeError(overriding->location(), "Override changes extended function signature.");
+					overrideTypeError(*overriding, *function);
 			}
 			functions[name].push_back(function);
 		}
@@ -1950,3 +1950,33 @@ void TypeChecker::requireLValue(Expression const& _expression)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
 }
 
+
+void TypeChecker::overrideTypeError(FunctionDefinition const& function, FunctionDefinition const& super)
+{
+	string message;
+
+	if (function.visibility() != super.visibility())
+		message = "Overriding function visibility differs from extended function.";
+	else if (function.isDeclaredConst() && !super.isDeclaredConst())
+		message = "Overriding function should not be declared constant.";
+	else if (!function.isDeclaredConst() && super.isDeclaredConst())
+		message = "Overriding function should be declared constant.";
+	else if (function.isPayable() && !super.isPayable())
+		message = "Overriding function should not be declared payable.";
+	else if (!function.isPayable() && super.isPayable())
+		message = "Overriding function should be declared payable.";
+
+	if (message.empty())
+	{
+		FunctionType functionType(function);
+		FunctionType superType(super);
+
+		if (functionType != superType)
+			message = "Overriding function return types differ from extended function.";
+	}
+
+	if (message.empty())
+		message = "Override changes extended function signature.";
+
+	m_errorReporter.typeError(function.location(), message);
+}
