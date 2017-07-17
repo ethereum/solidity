@@ -29,6 +29,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
@@ -77,7 +78,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler::OptimiserSettings optimiserSettings;
+			OptimiserSettings optimiserSettings;
 			Compiler compiler(optimiserSettings);
 			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
 

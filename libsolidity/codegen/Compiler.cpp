@@ -30,7 +30,7 @@ using namespace dev::solidity;
 
 namespace {
 
-eth::Assembly::OptimiserSettings translateOptimiserSettings(Compiler::OptimiserSettings _settings)
+eth::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings _settings)
 {
 	eth::Assembly::OptimiserSettings asmsettings;
 	asmsettings.isCreation = true;
