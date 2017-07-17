@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libsolidity/interface/ReadFile.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -127,11 +128,16 @@ public:
 	}
 
 	/// Changes the optimiser settings.
-	/// Will not take effect before running compile.
+	/// Will not take effect until running compile.
 	void setOptimiserSettings(bool _optimize, unsigned _runs = 200)
 	{
-		m_optimize = _optimize;
-		m_optimizeRuns = _runs;
+		m_optimiserSettings = _optimize ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+		m_optimiserSettings.expectedExecutionsPerDeployment = _runs;
+	}
+
+	void setOptimiserSettings(OptimiserSettings _settings)
+	{
+		m_optimiserSettings = std::move(_settings);
 	}
 
 	/// Set the EVM version used before running compile.
@@ -346,8 +352,7 @@ private:
 	) const;
 
 	ReadCallback::Callback m_readFile;
-	bool m_optimize = false;
-	unsigned m_optimizeRuns = 200;
+	OptimiserSettings m_optimiserSettings;
 	langutil::EVMVersion m_evmVersion;
 	std::set<std::string> m_requestedContractNames;
 	std::map<std::string, h160> m_libraries;
