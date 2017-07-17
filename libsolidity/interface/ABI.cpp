@@ -38,6 +38,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
 		method["payable"] = it.second->isPayable();
+		method["statemutability"] = stateMutabilityToString(it.second->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypes(),
@@ -57,6 +58,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		auto externalFunction = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		method["payable"] = externalFunction->isPayable();
+		method["statemutability"] = stateMutabilityToString(externalFunction->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunction->parameterNames(),
 			externalFunction->parameterTypes(),
@@ -71,6 +73,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		Json::Value method;
 		method["type"] = "fallback";
 		method["payable"] = externalFunctionType->isPayable();
+		method["statemutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		abi.append(method);
 	}
 	for (auto const& it: _contractDef.interfaceEvents())

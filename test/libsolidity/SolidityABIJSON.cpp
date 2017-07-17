@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -119,6 +120,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -137,6 +139,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 		"name": "g",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -169,6 +172,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -207,6 +211,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 		"name": "c",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -225,6 +230,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -258,6 +264,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 		"name": "foo",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -280,6 +287,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 		"name": "boo",
 		"constant": true,
 		"payable" : false,
+		"statemutability": "view",
 		"type": "function",
 		"inputs": [{
 			"name": "a",
@@ -311,6 +319,7 @@ BOOST_AUTO_TEST_CASE(events)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -392,6 +401,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 		"name": "baseFunction",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs":
 		[{
@@ -408,6 +418,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 		"name": "derivedFunction",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs":
 		[{
@@ -463,6 +474,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -505,6 +517,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 		"name": "f",
 		"constant": false,
 		"payable" : false,
+		"statemutability": "nonpayable",
 		"type": "function",
 		"inputs": [
 		{
@@ -548,6 +561,7 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 			}
 		],
 		"payable": false,
+		"statemutability": "nonpayable",
 		"type": "constructor"
 	}
 	])";
@@ -574,6 +588,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 		{
 			"constant" : false,
 			"payable" : false,
+			"statemutability": "nonpayable",
 			"inputs" : [],
 			"name" : "ret",
 			"outputs" : [
@@ -592,6 +607,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 				}
 			],
 			"payable": false,
+			"statemutability": "nonpayable",
 			"type": "constructor"
 		}
 	]
@@ -613,6 +629,7 @@ BOOST_AUTO_TEST_CASE(strings_and_arrays)
 		{
 			"constant" : false,
 			"payable" : false,
+			"statemutability": "nonpayable",
 			"name": "f",
 			"inputs": [
 				{ "name": "a", "type": "string" },
@@ -641,6 +658,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 		{
 			"constant" : false,
 			"payable" : false,
+			"statemutability": "nonpayable",
 			"name": "f",
 			"inputs": [
 				{ "name": "b", "type": "test.StructType storage" },
@@ -670,6 +688,7 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 	[
 		{
 			"payable": false,
+			"statemutability": "nonpayable",
 			"type" : "fallback"
 		}
 	]
@@ -691,6 +710,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 		{
 			"constant" : false,
 			"payable": false,
+			"statemutability": "nonpayable",
 			"inputs": [],
 			"name": "f",
 			"outputs": [],
@@ -699,6 +719,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 		{
 			"constant" : false,
 			"payable": true,
+			"statemutability": "payable",
 			"inputs": [],
 			"name": "g",
 			"outputs": [],
@@ -721,6 +742,7 @@ BOOST_AUTO_TEST_CASE(payable_fallback_function)
 	[
 		{
 			"payable": true,
+			"statemutability": "payable",
 			"type" : "fallback"
 		}
 	]
@@ -741,6 +763,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 	{
 		"constant" : false,
 		"payable": false,
+		"statemutability": "nonpayable",
 		"inputs": [{
 			"name": "x",
 			"type": "function"
