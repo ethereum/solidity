@@ -449,7 +449,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		{
 			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::RationalNumber;
 		};
-		bool swap = m_optimize && TokenTraits::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
+		bool swap = m_optimiseOrderLiterals && TokenTraits::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
 			leftExpression.accept(*this);

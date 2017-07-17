@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libsolidity/codegen/CompilerContext.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 #include <liblangutil/EVMVersion.h>
 #include <libevmasm/Assembly.h>
 #include <functional>
@@ -34,9 +35,8 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}, bool _optimize = false, unsigned _runs = 200):
-		m_optimize(_optimize),
-		m_optimizeRuns(_runs),
+	explicit Compiler(langutil::EVMVersion _evmVersion, OptimiserSettings _optimiserSettings):
+		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_runtimeContext(_evmVersion),
 		m_context(_evmVersion, &m_runtimeContext)
 	{ }
@@ -78,8 +78,7 @@ public:
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
 private:
-	bool const m_optimize;
-	unsigned const m_optimizeRuns;
+	OptimiserSettings const m_optimiserSettings;
 	CompilerContext m_runtimeContext;
 	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_context;

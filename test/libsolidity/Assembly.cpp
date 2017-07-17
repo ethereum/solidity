@@ -84,7 +84,10 @@ eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler compiler(dev::test::Options::get().evmVersion());
+			Compiler compiler(
+				dev::test::Options::get().evmVersion(),
+				dev::test::Options::get().optimize ? OptimiserSettings::enabled() : OptimiserSettings::minimal()
+			);
 			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();

@@ -391,7 +391,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			sortedIDs.emplace_back(it.first);
 		}
 		std::sort(sortedIDs.begin(), sortedIDs.end());
-		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
+		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimiseRuns);
 	}
 
 	m_context << notFound;
@@ -484,7 +484,7 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
-			ExpressionCompiler(m_context, m_optimise).appendStateVariableInitialization(*variable);
+			ExpressionCompiler(m_context, m_optimiseOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
 bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -497,9 +497,9 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_continueTags.clear();
 
 	if (_variableDeclaration.isConstant())
-		ExpressionCompiler(m_context, m_optimise).appendConstStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_optimiseOrderLiterals).appendConstStateVariableAccessor(_variableDeclaration);
 	else
-		ExpressionCompiler(m_context, m_optimise).appendStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_optimiseOrderLiterals).appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
 }
@@ -1053,7 +1053,7 @@ void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration con
 
 void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
-	ExpressionCompiler expressionCompiler(m_context, m_optimise);
+	ExpressionCompiler expressionCompiler(m_context, m_optimiseOrderLiterals);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);

@@ -66,10 +66,23 @@ explanatory purposes.
       {
         // Required for Solidity: Sorted list of remappings
         remappings: [ ":g/dir" ],
-        // Optional: Optimizer settings (enabled defaults to false)
+        // Optional: Optimizer settings. The fields "enabled" and "runs" are deprecated
+        // and are only given for backwards-compatibility.
         optimizer: {
           enabled: true,
-          runs: 500
+          runs: 500,
+          details: {
+            // peephole defaults to "true"
+            peephole: true,
+            // jumpdestRemover defaults to "true"
+            jumpdestRemover: true,
+            orderLiterals: false,
+            deduplicate: false,
+            cse: false,
+            constantOptimizer: false,
+            yul: false,
+            yulDetails: {}
+          }
         },
         // Required for Solidity: File and name of the contract or library this
         // metadata is created for.

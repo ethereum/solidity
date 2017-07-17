@@ -113,7 +113,8 @@ public:
 		size_t expectedExecutionsPerDeployment = 200;
 	};
 
-	/// Execute optimisation passes as defined by @a _settings and return the optimised assembly.
+	/// Modify and return the current assembly such that creation and execution gas usage
+	/// is optimised according to the settings in @a _settings.
 	Assembly& optimise(OptimiserSettings const& _settings);
 
 	/// Modify (if @a _enable is set) and return the current assembly such that creation and

@@ -35,16 +35,21 @@ void Compiler::compileContract(
 	bytes const& _metadata
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize, m_optimizeRuns);
+	ContractCompiler runtimeCompiler(
+		nullptr,
+		m_runtimeContext,
+		m_optimiserSettings.runOrderLiterals,
+		m_optimiserSettings.expectedExecutionsPerDeployment
+	);
 	runtimeCompiler.compileContract(_contract, _otherCompilers);
 	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
-	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize, 1);
+	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimiserSettings.runOrderLiterals, 1);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _otherCompilers);
 
-	m_context.optimise(m_optimize, m_optimizeRuns);
+	m_context.optimise(m_optimiserSettings);
 }
 
 std::shared_ptr<eth::Assembly> Compiler::runtimeAssemblyPtr() const

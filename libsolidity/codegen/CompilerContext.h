@@ -27,6 +27,8 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
 #include <liblangutil/EVMVersion.h>
@@ -221,7 +223,7 @@ public:
 	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
 	/// Run optimisation step.
-	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, m_evmVersion, true, _runs); }
+	void optimise(OptimiserSettings const& _settings) { m_asm->optimise(translateOptimiserSettings(_settings)); }
 
 	/// @returns the runtime context if in creation mode and runtime context is set, nullptr otherwise.
 	CompilerContext* runtimeContext() const { return m_runtimeContext; }
@@ -270,6 +272,8 @@ private:
 	std::vector<ContractDefinition const*>::const_iterator superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
+
+	eth::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings const& _settings);
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are
