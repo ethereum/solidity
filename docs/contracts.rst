@@ -968,6 +968,8 @@ Interfaces are denoted by their own keyword:
 
 ::
 
+    pragma solidity ^0.4.11;
+
     interface Token {
         function transfer(address recipient, uint amount);
     }

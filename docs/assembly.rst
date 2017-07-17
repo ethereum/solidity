@@ -490,7 +490,7 @@ is performed by replacing the variable's value on the stack by the new value.
 
 .. code::
 
-    assembly {
+    {
         let v := 0 // functional-style assignment as part of variable declaration
         let g := add(v, 2)
         sload(10)
@@ -509,7 +509,7 @@ case called ``default``.
 
 .. code::
 
-    assembly {
+    {
         let x := 0
         switch calldataload(4)
         case 0 {
@@ -538,7 +538,7 @@ The following example computes the sum of an area in memory.
 
 .. code::
 
-    assembly {
+    {
         let x := 0
         for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
             x := add(x, mload(i))
@@ -565,7 +565,7 @@ The following example implements the power function by square-and-multiply.
 
 .. code::
 
-    assembly {
+    {
         function power(base, exponent) -> result {
             switch exponent
             case 0 { result := 1 }

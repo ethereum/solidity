@@ -116,6 +116,8 @@ array in the return statement. Pretty cool, huh?
 
 Example::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         function f() returns (uint8[5]) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
@@ -192,6 +194,8 @@ should be noted that you must declare them as static memory arrays.
 
 Examples::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         struct S {
             uint a;
@@ -200,9 +204,8 @@ Examples::
 
         S public x = S(1, 2);
         string name = "Ada";
-        string[4] memory adaArr = ["This", "is", "an", "array"];
+        string[4] adaArr = ["This", "is", "an", "array"];
     }
-
 
     contract D {
         C c = new C();
@@ -242,6 +245,8 @@ which will be extended in the future. In addition, Arachnid has written `solidit
 
 For now, if you want to modify a string (even when you only want to know its length),
 you should always convert it to a ``bytes`` first::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         string s;
@@ -288,6 +293,8 @@ situation.
 
 If you do not want to throw, you can return a pair::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint[] counters;
 
@@ -302,9 +309,9 @@ If you do not want to throw, you can return a pair::
         function checkCounter(uint index) {
             var (counter, error) = getCounter(index);
             if (error) {
-                ...
+                // ...
             } else {
-                ...
+                // ...
             }
         }
     }
@@ -363,6 +370,8 @@ of variable it concerns:
 
 Example::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint[] data1;
         uint[] data2;
@@ -375,7 +384,7 @@ Example::
             append(data2);
         }
 
-        function append(uint[] storage d) {
+        function append(uint[] storage d) internal {
             d.push(1);
         }
     }
@@ -393,6 +402,9 @@ A common mistake is to declare a local variable and assume that it will
 be created in memory, although it will be created in storage::
 
     /// THIS CONTRACT CONTAINS AN ERROR
+
+    pragma solidity ^0.4.0;
+
     contract C {
         uint someVariable;
         uint[] data;
@@ -416,6 +428,8 @@ This has the effect that ``someVariable`` (which resides at storage
 slot ``0``) is modified by ``x.push(2)``.
 
 The correct way to do this is the following::
+
+    pragma solidity ^0.4.0;
 
     contract C {
         uint someVariable;
@@ -533,10 +547,11 @@ In the case of a ``contract A`` calling a new instance of ``contract B``, parent
 You will need to make sure that you have both contracts aware of each other's presence and that ``contract B`` has a ``payable`` constructor.
 In this example::
 
+    pragma solidity ^0.4.0;
+
     contract B {
         function B() payable {}
     }
-
 
     contract A {
         address child;
@@ -580,6 +595,8 @@ Can a contract pass an array (static size) or string or ``bytes`` (dynamic size)
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
+    pragma solidity ^0.4.0;
+
     contract C {
         uint[20] x;
 
@@ -588,11 +605,11 @@ independent copies will be created::
             h(x);
         }
 
-        function g(uint[20] y) {
+        function g(uint[20] y) internal {
             y[2] = 3;
         }
 
-        function h(uint[20] storage y) {
+        function h(uint[20] storage y) internal {
             y[3] = 4;
         }
     }

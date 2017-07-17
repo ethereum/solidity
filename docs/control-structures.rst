@@ -128,7 +128,6 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
         function info() payable returns (uint ret) { return 42; }
     }
 
-
     contract Consumer {
         InfoFeed feed;
         function setFeed(address addr) { feed = InfoFeed(addr); }
@@ -230,7 +229,6 @@ creation-dependencies are not possible.
             x = a;
         }
     }
-
 
     contract C {
         D d = new D(4); // will be executed as part of C's constructor
