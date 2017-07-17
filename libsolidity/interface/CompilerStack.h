@@ -103,6 +103,14 @@ public:
 		m_libraries = _libraries;
 	}
 
+	/// Changes the optimiser settings.
+	/// Will not take effect before running compile.
+	void setOptimiserSettings(bool _optimize, unsigned _runs = 200)
+	{
+		m_optimize = _optimize;
+		m_optimizeRuns = _runs;
+	}
+
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
 	/// All settings, with the exception of remappings, are reset.
@@ -126,10 +134,7 @@ public:
 
 	/// Compiles the source units that were previously added and parsed.
 	/// @returns false on error.
-	bool compile(
-		bool _optimize = false,
-		unsigned _runs = 200
-	);
+	bool compile();
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;

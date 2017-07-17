@@ -57,7 +57,8 @@ public:
 		m_compiler.reset(false);
 		m_compiler.addSource("", sourceCode);
 		m_compiler.setLibraries(_libraryAddresses);
-		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
+		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
+		if (!m_compiler.compile())
 		{
 			for (auto const& error: m_compiler.errors())
 				SourceReferenceFormatter::printExceptionInformation(

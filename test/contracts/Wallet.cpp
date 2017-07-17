@@ -450,7 +450,8 @@ protected:
 		{
 			m_compiler.reset(false);
 			m_compiler.addSource("", walletCode);
-			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
+			m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
+			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
 			s_compiledWallet.reset(new bytes(m_compiler.object("Wallet").bytecode));
 		}
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);

@@ -779,7 +779,9 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
-		bool successful = m_compiler->compile(optimize, runs);
+		m_compiler->setOptimiserSettings(optimize, runs);
+
+		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
 			SourceReferenceFormatter::printExceptionInformation(

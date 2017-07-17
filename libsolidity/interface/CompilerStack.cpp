@@ -262,14 +262,11 @@ vector<string> CompilerStack::contractNames() const
 	return contractNames;
 }
 
-bool CompilerStack::compile(bool _optimize, unsigned _runs)
+bool CompilerStack::compile()
 {
 	if (m_stackState < AnalysisSuccessful)
 		if (!parseAndAnalyze())
 			return false;
-
-	m_optimize = _optimize;
-	m_optimizeRuns = _runs;
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)

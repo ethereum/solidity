@@ -249,6 +249,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
 	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
 	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
@@ -268,7 +269,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	try
 	{
-		m_compilerStack.compile(optimize, optimizeRuns);
+		m_compilerStack.compile();
 
 		for (auto const& error: m_compilerStack.errors())
 		{

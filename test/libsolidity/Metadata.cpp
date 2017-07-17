@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	)";
 	CompilerStack compilerStack;
 	compilerStack.addSource("", std::string(sourceCode));
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(dev::test::Options::get().optimize), "Compiling contract failed");
+	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
 	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
 	std::string const& metadata = compilerStack.metadata("test");
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
