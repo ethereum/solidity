@@ -829,7 +829,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	{
 		// Since we do not have a "BoolConstantType", we have to do the acutal comparison
 		// at runtime and convert to mobile typse first. Such a comparison is not a very common
-		// use-case and will be optimized away.
+		// use-case and will be optimised away.
 		TypePointer thisMobile = mobileType();
 		TypePointer otherMobile = other.mobileType();
 		if (!thisMobile || !otherMobile)

@@ -34,16 +34,16 @@ void Compiler::compileContract(
 	bytes const& _metadata
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimise);
 	runtimeCompiler.compileContract(_contract, _contracts);
 	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
-	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize);
+	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimise);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
 
-	m_context.optimise(m_optimize, m_optimizeRuns);
+	m_context.optimise(m_optimise, m_optimiseRuns);
 }
 
 void Compiler::compileClone(
@@ -51,11 +51,11 @@ void Compiler::compileClone(
 	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
-	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimize);
+	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimise);
+	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimise);
 	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
 
-	m_context.optimise(m_optimize, m_optimizeRuns);
+	m_context.optimise(m_optimise, m_optimiseRuns);
 }
 
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const

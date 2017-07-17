@@ -548,7 +548,7 @@ void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	TypePointers const& valueTypes = dynamic_cast<TupleType const&>(_sourceType).components();
 	solAssert(valueTypes.size() == m_lvalues.size(), "");
 	// valuePos .... refPos ...
-	// We will assign from right to left to optimize stack layout.
+	// We will assign from right to left to optimise stack layout.
 	for (size_t i = 0; i < m_lvalues.size(); ++i)
 	{
 		unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];

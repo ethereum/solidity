@@ -409,7 +409,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		{
 			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::RationalNumber;
 		};
-		bool swap = m_optimize && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
+		bool swap = m_optimise && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
 			leftExpression.accept(*this);
@@ -1645,7 +1645,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	// Touch the end of the output area so that we do not pay for memory resize during the call
 	// (which we would have to subtract from the gas left)
-	// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
+	// We could also just use MLOAD; POP right before the gas calculation, but the optimiser
 	// would remove that, so we use MSTORE here.
 	if (!_functionType.gasSet() && retSize > 0)
 	{

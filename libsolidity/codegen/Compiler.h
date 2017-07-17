@@ -33,9 +33,9 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
-		m_optimize(_optimize),
-		m_optimizeRuns(_runs),
+	explicit Compiler(bool _optimise = false, unsigned _runs = 200):
+		m_optimise(_optimise),
+		m_optimiseRuns(_runs),
 		m_runtimeContext(),
 		m_context(&m_runtimeContext)
 	{ }
@@ -79,8 +79,8 @@ public:
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
 private:
-	bool const m_optimize;
-	unsigned const m_optimizeRuns;
+	bool const m_optimise;
+	unsigned const m_optimiseRuns;
 	CompilerContext m_runtimeContext;
 	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_context;
