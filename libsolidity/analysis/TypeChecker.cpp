@@ -1950,13 +1950,12 @@ void TypeChecker::requireLValue(Expression const& _expression)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
 }
 
-
 void TypeChecker::overrideTypeError(FunctionDefinition const& function, FunctionDefinition const& super)
 {
 	string message;
 
 	if (function.visibility() != super.visibility())
-		message = "Overriding function visibility differs from extended function.";
+		message = "Overriding function visibility differs from " + super.fullyQualifiedName() + ".";
 	else if (function.isDeclaredConst() && !super.isDeclaredConst())
 		message = "Overriding function should not be declared constant.";
 	else if (!function.isDeclaredConst() && super.isDeclaredConst())
@@ -1972,11 +1971,11 @@ void TypeChecker::overrideTypeError(FunctionDefinition const& function, Function
 		FunctionType superType(super);
 
 		if (functionType != superType)
-			message = "Overriding function return types differ from extended function.";
+			message = "Overriding function return types differ from " + super.fullyQualifiedName() + ".";
 	}
 
 	if (message.empty())
-		message = "Override changes extended function signature.";
+		message = "Overriding function signature differs from " + super.fullyQualifiedName() + ".";
 
 	m_errorReporter.typeError(function.location(), message);
 }
