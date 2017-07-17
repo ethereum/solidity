@@ -96,6 +96,13 @@ public:
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
 
+	/// Sets library addresses. Addresses are cleared iff @a _libraries is missing.
+	/// Will not take effect before running compile.
+	void setLibraries(std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{})
+	{
+		m_libraries = _libraries;
+	}
+
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
 	/// All settings, with the exception of remappings, are reset.
@@ -121,8 +128,7 @@ public:
 	/// @returns false on error.
 	bool compile(
 		bool _optimize = false,
-		unsigned _runs = 200,
-		std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{}
+		unsigned _runs = 200
 	);
 
 	/// @returns the assembled object for a contract.

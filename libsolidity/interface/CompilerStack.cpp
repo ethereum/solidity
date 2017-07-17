@@ -87,6 +87,7 @@ void CompilerStack::reset(bool _keepSources)
 		m_stackState = Empty;
 		m_sources.clear();
 	}
+	m_libraries.clear();
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();
@@ -261,8 +262,7 @@ vector<string> CompilerStack::contractNames() const
 	return contractNames;
 }
 
-
-bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> const& _libraries)
+bool CompilerStack::compile(bool _optimize, unsigned _runs)
 {
 	if (m_stackState < AnalysisSuccessful)
 		if (!parseAndAnalyze())
@@ -270,7 +270,6 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> co
 
 	m_optimize = _optimize;
 	m_optimizeRuns = _runs;
-	m_libraries = _libraries;
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)

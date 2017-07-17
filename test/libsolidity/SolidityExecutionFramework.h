@@ -56,7 +56,8 @@ public:
 		std::string sourceCode = "pragma solidity >=0.0;\n" + _sourceCode;
 		m_compiler.reset(false);
 		m_compiler.addSource("", sourceCode);
-		if (!m_compiler.compile(m_optimize, m_optimizeRuns, _libraryAddresses))
+		m_compiler.setLibraries(_libraryAddresses);
+		if (!m_compiler.compile(m_optimize, m_optimizeRuns))
 		{
 			for (auto const& error: m_compiler.errors())
 				SourceReferenceFormatter::printExceptionInformation(

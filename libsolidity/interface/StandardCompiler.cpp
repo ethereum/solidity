@@ -259,6 +259,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			// @TODO use libraries only for the given source
 			libraries[library] = h160(jsonSourceName[library].asString());
 	}
+	m_compilerStack.setLibraries(libraries);
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
@@ -267,7 +268,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	try
 	{
-		m_compilerStack.compile(optimize, optimizeRuns, libraries);
+		m_compilerStack.compile(optimize, optimizeRuns);
 
 		for (auto const& error: m_compilerStack.errors())
 		{
