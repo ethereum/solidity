@@ -65,11 +65,15 @@ Comments are of course also not permitted and used here only for explanatory pur
       settings:
       {
         // Required for Solidity: Sorted list of remappings
-        remappings: [ ":g/dir" ],
-        // Optional: Optimizer settings (enabled defaults to false)
-        optimizer: {
-          enabled: true,
-          runs: 500
+        remappings: [ ":g/dir" ]
+        // Optional: Optimiser settings (see defaults below)
+        optimiser: {
+          orderLiterals: false,
+          peephole: false,
+          deduplicate: false,
+          cse: false,
+          constantOptimiser: false,
+          expectedExecutionsPerDeployment: 200
         },
         // Required for Solidity: File and name of the contract or library this
         // metadata is created for.

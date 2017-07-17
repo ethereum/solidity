@@ -832,18 +832,15 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 			);
 		}
 	}
-	/// Backwards compatibility
-	if (
-		m_optimiserSettings->runDeduplicate &&
-		m_optimiserSettings->runCSE &&
-		m_optimiserSettings->runOrderLiterals &&
-		m_optimiserSettings->runConstantOptimiser
-	)
-		meta["settings"]["optimizer"]["enabled"] = true;
-	else
-		meta["settings"]["optimizer"]["enabled"] = false;
+
+	meta["settings"]["optimiser"]["orderLiterals"] = m_optimiserSettings->runOrderLiterals;
+	meta["settings"]["optimiser"]["peephole"] = m_optimiserSettings->runPeephole;
+	meta["settings"]["optimiser"]["deduplicate"] = m_optimiserSettings->runDeduplicate;
+	meta["settings"]["optimiser"]["cse"] = m_optimiserSettings->runCSE;
+	meta["settings"]["optimiser"]["constantOptimiser"] = m_optimiserSettings->runConstantOptimiser;
 	solAssert(m_optimiserSettings->expectedExecutionsPerDeployment < std::numeric_limits<Json::LargestUInt>::max(), "");
-	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings->expectedExecutionsPerDeployment));
+	meta["settings"]["optimiser"]["expectedExecutionsPerDeployment"] = Json::Value(Json::LargestUInt(m_optimiserSettings->expectedExecutionsPerDeployment));
+
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
 
