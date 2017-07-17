@@ -106,12 +106,6 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 	return existed;
 }
 
-void CompilerStack::setSource(string const& _sourceCode)
-{
-	reset();
-	addSource("", _sourceCode);
-}
-
 bool CompilerStack::parse()
 {
 	//reset
@@ -252,21 +246,9 @@ bool CompilerStack::analyze()
 		return false;
 }
 
-bool CompilerStack::parse(string const& _sourceCode)
-{
-	setSource(_sourceCode);
-	return parse();
-}
-
 bool CompilerStack::parseAndAnalyze()
 {
 	return parse() && analyze();
-}
-
-bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
-{
-	setSource(_sourceCode);
-	return parseAndAnalyze();
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -298,11 +280,6 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> co
 	this->link();
 	m_stackState = CompilationSuccessful;
 	return true;
-}
-
-bool CompilerStack::compile(string const& _sourceCode, bool _optimize, unsigned _runs)
-{
-	return parseAndAnalyze(_sourceCode) && compile(_optimize, _runs);
 }
 
 void CompilerStack::link()

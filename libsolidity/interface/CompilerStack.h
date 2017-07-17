@@ -97,32 +97,23 @@ public:
 	void setRemappings(std::vector<std::string> const& _remappings);
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
+	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
+	/// All settings, with the exception of remappings, are reset.
 	void reset(bool _keepSources = false);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
-	void addSources(StringMap const& _nameContents, bool _isLibrary = false)
-	{
-		for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary);
-	}
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
-	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added
 	/// @returns false on error.
 	bool parse();
-	/// Sets the given source code as the only source unit apart from standard sources and parses it.
-	/// @returns false on error.
-	bool parse(std::string const& _sourceCode);
-	/// performs the analyisis steps (imports, scopesetting, syntaxCheck, referenceResolving,
+	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously set sources
 	/// @returns false on error.
 	bool analyze();
 	/// Parses and analyzes all source units that were added
 	/// @returns false on error.
 	bool parseAndAnalyze();
-	/// Sets the given source code as the only source unit apart from standard sources and parses and analyzes it.
-	/// @returns false on error.
-	bool parseAndAnalyze(std::string const& _sourceCode);
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 
@@ -133,9 +124,6 @@ public:
 		unsigned _runs = 200,
 		std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{}
 	);
-	/// Parses and compiles the given source code.
-	/// @returns false on error.
-	bool compile(std::string const& _sourceCode, bool _optimize = false, unsigned _runs = 200);
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
@@ -202,6 +190,7 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() { return m_errorReporter.errors(); }
 
+	/// @returns the current state.
 	State state() const { return m_stackState; }
 
 private:
