@@ -924,16 +924,25 @@ BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 		contract B { function f() internal {} }
 		contract C is B { function f() public {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Override changes extended function signature.");
+	CHECK_ERROR(text, TypeError, "Overriding function visibility differs");
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_constness)
+BOOST_AUTO_TEST_CASE(illegal_override_remove_constness)
 {
 	char const* text = R"(
 		contract B { function f() constant {} }
 		contract C is B { function f() {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Override changes extended function signature.");
+	CHECK_ERROR(text, TypeError, "Overriding function should be declared constant.");
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_add_constness)
+{
+	char const* text = R"(
+		contract B { function f() {} }
+		contract C is B { function f() constant {} }
+	)";
+	CHECK_ERROR(text, TypeError, "Overriding function should not be declared constant.");
 }
 
 BOOST_AUTO_TEST_CASE(complex_inheritance)
@@ -2491,7 +2500,7 @@ BOOST_AUTO_TEST_CASE(override_changes_return_types)
 			function f(uint a) returns (uint8) { }
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Override changes extended function signature.");
+	CHECK_ERROR(sourceCode, TypeError, "Overriding function return types differ");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_constructors)
@@ -4732,7 +4741,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable)
 		contract B { function f() payable {} }
 		contract C is B { function f() {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Override changes extended function signature.");
+	CHECK_ERROR(text, TypeError, "Overriding function should be declared payable.");
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
@@ -4741,7 +4750,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 		contract B { function f() {} }
 		contract C is B { function f() payable {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Override changes extended function signature.");
+	CHECK_ERROR(text, TypeError, "Overriding function should not be declared payable.");
 }
 
 BOOST_AUTO_TEST_CASE(function_variable_mixin)
