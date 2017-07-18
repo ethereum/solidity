@@ -451,17 +451,19 @@ Json::Value const& CompilerStack::natspec(Contract const& _contract, Documentati
 	{
 	case DocumentationType::NatspecUser:
 		doc = &_contract.userDocumentation;
+		// caches the result
+		if (!*doc)
+			doc->reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
 		break;
 	case DocumentationType::NatspecDev:
 		doc = &_contract.devDocumentation;
+		// caches the result
+		if (!*doc)
+			doc->reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
-
-	// caches the result
-	if (!*doc)
-		doc->reset(new Json::Value(Natspec::documentation(*_contract.contract, _type)));
 
 	return *(*doc);
 }
