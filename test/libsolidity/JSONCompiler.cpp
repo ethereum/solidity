@@ -36,6 +36,7 @@ extern "C"
 extern char const* version();
 extern char const* license();
 extern char const* compileJSONMulti(char const* _input, bool _optimize);
+extern char const* compileJSONCallback(char const* _input, bool _optimize, void* _readCallback);
 }
 
 namespace dev
@@ -48,9 +49,13 @@ namespace test
 namespace
 {
 
-Json::Value compile(string const& _input)
+Json::Value compileMulti(string const& _input, bool _callback)
 {
-	string output(compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize));
+	string output(
+		_callback ?
+		compileJSONCallback(_input.c_str(), dev::test::Options::get().optimize, NULL) :
+		compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize)
+	);
 	Json::Value ret;
 	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
 	return ret;
@@ -81,8 +86,15 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		}
 	}
 	)";
-	Json::Value result = compile(input);
+	Json::Value result = compileMulti(input, false);
 	BOOST_CHECK(result.isObject());
+
+	// Compare with compileJSONCallback
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(result),
+		dev::jsonCompactPrint(compileMulti(input, true))
+	);
+
 	BOOST_CHECK(result["contracts"].isObject());
 	BOOST_CHECK(result["contracts"]["fileA:A"].isObject());
 	Json::Value contract = result["contracts"]["fileA:A"];
@@ -119,6 +131,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
 	);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
