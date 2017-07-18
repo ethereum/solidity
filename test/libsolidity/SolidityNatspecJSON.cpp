@@ -45,7 +45,9 @@ public:
 		bool _userDocumentation
 	)
 	{
-		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parseAndAnalyze("pragma solidity >=0.0;\n" + _code), "Parsing failed");
+		m_compilerStack.reset(false);
+		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
 		Json::Value generatedDocumentation;
 		if (_userDocumentation)
