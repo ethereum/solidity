@@ -247,8 +247,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.setRemappings(remappings);
 
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
-	bool optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
-	unsigned optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
+	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
@@ -352,27 +352,27 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		));
 	}
 
-	Json::Value output = Json::objectValue;
-
-	if (errors.size() > 0)
-		output["errors"] = errors;
-
-	bool analysisSuccess = m_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
-	bool compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
+	bool const analysisSuccess = m_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
+	bool const compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
 	if (!compilationSuccess && (errors.size() == 0))
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
+	Json::Value output = Json::objectValue;
+
+	if (errors.size() > 0)
+		output["errors"] = errors;
+
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (auto const& source: analysisSuccess ? m_compilerStack.sourceNames() : vector<string>())
+	for (string const& sourceName: analysisSuccess ? m_compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
-		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
-		output["sources"][source] = sourceResult;
+		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		output["sources"][sourceName] = sourceResult;
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
