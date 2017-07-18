@@ -10,6 +10,7 @@ Features:
 
 Bugfixes:
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
+ * Type Checker: Mark modifiers as internal.
 
 
 ### 0.4.13 (2017-07-06)

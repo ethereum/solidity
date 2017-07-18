@@ -704,7 +704,7 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Default, _parameters),
+		CallableDeclaration(_location, _name, Visibility::Internal, _parameters),
 		Documented(_documentation),
 		m_body(_body)
 	{

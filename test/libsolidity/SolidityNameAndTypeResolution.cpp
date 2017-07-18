@@ -6359,6 +6359,20 @@ BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
 	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed from \"literal_string \"abc\"\" to \"string storage pointer\"");
 }
 
+BOOST_AUTO_TEST_CASE(modifiers_access_storage_pointer)
+{
+	char const* text = R"(
+		contract C {
+			struct S { }
+			modifier m(S storage x) {
+				x;
+				_;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
