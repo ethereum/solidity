@@ -31,5 +31,5 @@ parts:
     prepare: |
       if git describe --exact-match --tags 2> /dev/null
       then
-        touch ../src/prerelease.txt
+        echo -n > ../src/prerelease.txt
       fi
