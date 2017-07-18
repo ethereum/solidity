@@ -443,4 +443,4 @@ Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``
 the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
 (or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
-``revert``-style exceptions will not consume any gas starting from the Metropolis release.
+``require``-style exceptions will not consume any gas starting from the Metropolis release.
