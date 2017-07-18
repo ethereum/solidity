@@ -24,6 +24,7 @@
 #include <regex>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
+#include <libsolidity/interface/Version.h>
 
 #include "../Metadata.h"
 #include "../TestHelper.h"
@@ -32,6 +33,8 @@ using namespace std;
 
 extern "C"
 {
+extern char const* version();
+extern char const* license();
 extern char const* compileJSONMulti(char const* _input, bool _optimize);
 }
 
@@ -56,6 +59,18 @@ Json::Value compile(string const& _input)
 } // end anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(JSONCompiler)
+
+BOOST_AUTO_TEST_CASE(read_version)
+{
+	string output(version());
+	BOOST_CHECK(output.find(VersionString) == 0);
+}
+
+BOOST_AUTO_TEST_CASE(read_license)
+{
+	string output(license());
+	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != string::npos);
+}
 
 BOOST_AUTO_TEST_CASE(basic_compilation)
 {
