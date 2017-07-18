@@ -57,6 +57,73 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
 }
 
+BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
+{
+	CompilerStack compilerStack;
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract A {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	compilerStack.addSource("A", std::string(sourceCode));
+	sourceCode = R"(
+		pragma solidity >=0.0;
+		contract B {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	compilerStack.addSource("B", std::string(sourceCode));
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(dev::test::Options::get().optimize), "Compiling contract failed");
+
+	std::string const& serialisedMetadata = compilerStack.metadata("A");
+	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
+	Json::Value metadata;
+	BOOST_REQUIRE(Json::Reader().parse(serialisedMetadata, metadata, false));
+
+	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
+	BOOST_CHECK(metadata["sources"].isMember("A"));
+}
+
+BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
+{
+	CompilerStack compilerStack;
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract A {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	compilerStack.addSource("A", std::string(sourceCode));
+	sourceCode = R"(
+		pragma solidity >=0.0;
+		import "./A";
+		contract B is A {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	compilerStack.addSource("B", std::string(sourceCode));
+	sourceCode = R"(
+		pragma solidity >=0.0;
+		import "./B";
+		contract C is B {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	compilerStack.addSource("C", std::string(sourceCode));
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(dev::test::Options::get().optimize), "Compiling contract failed");
+
+	std::string const& serialisedMetadata = compilerStack.metadata("C");
+	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
+	Json::Value metadata;
+	BOOST_REQUIRE(Json::Reader().parse(serialisedMetadata, metadata, false));
+
+	BOOST_CHECK_EQUAL(metadata["sources"].size(), 3);
+	BOOST_CHECK(metadata["sources"].isMember("A"));
+	BOOST_CHECK(metadata["sources"].isMember("B"));
+	BOOST_CHECK(metadata["sources"].isMember("C"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
