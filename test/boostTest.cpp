@@ -50,6 +50,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"SolidityFixedFeeRegistrar",
 			"SolidityWallet",
 			"LLLERC20",
+			"LLLENS",
 			"LLLEndToEndTest",
 			"GasMeterTests",
 			"SolidityEndToEndTest",
