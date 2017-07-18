@@ -47,7 +47,9 @@ public:
 	GasMeterTestFramework() { }
 	void compile(string const& _sourceCode)
 	{
-		m_compiler.setSource("pragma solidity >= 0.0;" + _sourceCode);
+		m_compiler.reset(false);
+		m_compiler.addSource("", "pragma solidity >=0.0;\n" + _sourceCode);
+		/// NOTE: compiles without optimisations
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
 
 		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
