@@ -373,8 +373,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		m_context << u256(0) << Instruction::SUB;
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid unary operator: " +
-																		 string(Token::toString(_unaryOperation.getOperator()))));
+		solAssert(false, "Invalid unary operator: " + string(Token::toString(_unaryOperation.getOperator())));
 	}
 	return false;
 }
@@ -895,7 +894,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		default:
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
+			solAssert(false, "Invalid function type.");
 		}
 	}
 	return false;
@@ -1061,7 +1060,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				true
 			);
 		else
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
+			solAssert(false, "Invalid member access to integer");
 		break;
 	case Type::Category::Function:
 		solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
@@ -1095,7 +1094,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << u256(0) << Instruction::CALLDATALOAD
 				<< (u256(0xffffffff) << (256 - 32)) << Instruction::AND;
 		else
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
+			solAssert(false, "Unknown magic member.");
 		break;
 	case Type::Category::Struct:
 	{
@@ -1172,7 +1171,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		break;
 	}
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
+		solAssert(false, "Member access to unknown type.");
 	}
 	return false;
 }
@@ -1327,7 +1326,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	}
 	else
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));
+		solAssert(false, "Identifier type not expected in expression context.");
 	}
 }
 
@@ -1410,7 +1409,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 			m_context << (isSigned ? Instruction::SLT : Instruction::LT);
 			break;
 		default:
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
+			solAssert(false, "Unknown comparison operator.");
 		}
 	}
 }
@@ -1422,7 +1421,7 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 	else if (Token::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
+		solAssert(false, "Unknown binary operator.");
 }
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
@@ -1461,7 +1460,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::EXP;
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
+		solAssert(false, "Unknown arithmetic operator.");
 	}
 }
 
@@ -1479,7 +1478,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 		m_context << Instruction::XOR;
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown bit operator."));
+		solAssert(false, "Unknown bit operator.");
 	}
 }
 
@@ -1523,7 +1522,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		break;
 	case Token::SHR:
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
+		solAssert(false, "Unknown shift operator.");
 	}
 }
 

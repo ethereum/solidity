@@ -196,8 +196,7 @@ ModifierDefinition const& CompilerContext::functionModifier(string const& _name)
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
 			if (modifier->name() == _name)
 				return *modifier;
-	BOOST_THROW_EXCEPTION(InternalCompilerError()
-		<< errinfo_comment("Function modifier " + _name + " not found."));
+	solAssert(false, "Function modifier " + _name + " not found.");
 }
 
 unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declaration) const
