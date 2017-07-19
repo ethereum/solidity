@@ -306,40 +306,31 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 		return;
 
 	if (function.visibility() != super.visibility())
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function visibility differs from " + super.fullyQualifiedName() + "."
-		);
+		overrideError(function, super, "Overriding function visibility differs.");
 
 	if (function.isDeclaredConst() && !super.isDeclaredConst())
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function should not be declared constant."
-		);
+		overrideError(function, super, "Overriding function should not be declared constant.");
 
 	if (!function.isDeclaredConst() && super.isDeclaredConst())
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function should be declared constant."
-		);
+		overrideError(function, super, "Overriding function should be declared constant.");
 
 	if (function.isPayable() && !super.isPayable())
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function should not be declared payable."
-		);
+		overrideError(function, super, "Overriding function should not be declared payable.");
 
 	if (!function.isPayable() && super.isPayable())
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function should be declared payable."
-		);
+		overrideError(function, super, "Overriding function should be declared payable.");
 
 	if (functionType != superType)
-		m_errorReporter.typeError(
-			function.location(),
-			"Overriding function return types differ from " + super.fullyQualifiedName() + "."
-		);
+		overrideError(function, super, "Overriding function return types differ.");
+}
+
+void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
+{
+	m_errorReporter.typeError(
+		function.location(),
+		SecondarySourceLocation().append("Overriden function is here:", super.location()),
+		message
+	);
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
