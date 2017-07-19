@@ -43,11 +43,13 @@ test "${output//[[:blank:]]/}" = "3"
 
 function compileFull()
 {
-    files="$*"
+    local files="$*"
+
     set +e
-    output=$( ("$SOLC" $FULLARGS  $files) 2>&1 )
-    failed=$?
+    local output=$( ("$SOLC" $FULLARGS $files) 2>&1 )
+    local failed=$?
     set -e
+
     if [ $failed -ne 0 ]
     then
         echo "Compilation failed on:"
@@ -58,14 +60,16 @@ function compileFull()
 
 function compileWithoutWarning()
 {
-    files="$*"
+    local files="$*"
+
     set +e
-    output=$("$SOLC" $files 2>&1)
-    failed=$?
+    local output=$("$SOLC" $files 2>&1)
+    local failed=$?
     # Remove the pre-release warning from the compiler output
     output=$(echo "$output" | grep -v 'pre-release')
     echo "$output"
     set -e
+
     test -z "$output" -a "$failed" -eq 0
 }
 
