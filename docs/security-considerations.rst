@@ -289,3 +289,18 @@ of "failsafe" mode, which, for example, disables most of the features, hands ove
 control to a fixed and trusted third party or just converts the contract into
 a simple "give me back my money" contract.
 
+
+Method visibility from mother contracts and ABI
+===============================================
+
+
+When compiling a contract that inherits from other contracts, the generated JSON ABI for the child contract does not contain all the methods from contracts in the upper hierarchy. However, that does not prevent public methods from being executed. You should take care of which methods can be executed. Use `internal` function modifier to control visibility.
+
+
+
+
+
+
+
+
+
