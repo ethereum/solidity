@@ -49,8 +49,7 @@ public:
 	{
 		m_compiler.reset(false);
 		m_compiler.addSource("", "pragma solidity >=0.0;\n" + _sourceCode);
-		/// NOTE: compiles without optimisations
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
+		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(dev::test::Options::get().optimize), "Compiling contract failed");
 
 		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
 		ASTNode const& sourceUnit = m_compiler.ast();
