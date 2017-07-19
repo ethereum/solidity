@@ -386,7 +386,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
 		contractData["abi"] = m_compilerStack.contractABI(contractName);
-		contractData["metadata"] = m_compilerStack.onChainMetadata(contractName);
+		contractData["metadata"] = m_compilerStack.metadata(contractName);
 		contractData["userdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecUser);
 		contractData["devdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecDev);
 

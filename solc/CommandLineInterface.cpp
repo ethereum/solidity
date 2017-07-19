@@ -292,12 +292,12 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		cout << "Function signatures: " << endl << out;
 }
 
-void CommandLineInterface::handleOnChainMetadata(string const& _contract)
+void CommandLineInterface::handleMetadata(string const& _contract)
 {
 	if (!m_args.count(g_argMetadata))
 		return;
 
-	string data = m_compiler->onChainMetadata(_contract);
+	string data = m_compiler->metadata(_contract);
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
@@ -850,7 +850,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strAbi))
 			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
-			contractData["metadata"] = m_compiler->onChainMetadata(contractName);
+			contractData["metadata"] = m_compiler->metadata(contractName);
 		if (requests.count(g_strBinary))
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
 		if (requests.count(g_strBinaryRuntime))
@@ -1164,7 +1164,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleSignatureHashes(contract);
-		handleOnChainMetadata(contract);
+		handleMetadata(contract);
 		handleABI(contract);
 		handleNatspec(DocumentationType::NatspecDev, contract);
 		handleNatspec(DocumentationType::NatspecUser, contract);

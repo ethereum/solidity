@@ -476,12 +476,12 @@ Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 	return methodIdentifiers;
 }
 
-string const& CompilerStack::onChainMetadata(string const& _contractName) const
+string const& CompilerStack::metadata(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
-	return contract(_contractName).onChainMetadata;
+	return contract(_contractName).metadata;
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
@@ -675,11 +675,11 @@ void CompilerStack::compileContract(
 
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
-	string onChainMetadata = createOnChainMetadata(compiledContract);
+	string metadata = createMetadata(compiledContract);
 	bytes cborEncodedMetadata =
-		// CBOR-encoding of {"bzzr0": dev::swarmHash(onChainMetadata)}
+		// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
 		bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
-		dev::swarmHash(onChainMetadata).asBytes();
+		dev::swarmHash(metadata).asBytes();
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
@@ -712,7 +712,7 @@ void CompilerStack::compileContract(
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for deployed bytecode"));
 	}
 
-	compiledContract.onChainMetadata = onChainMetadata;
+	compiledContract.metadata = metadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	try
@@ -773,7 +773,7 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 	return it->second;
 }
 
-string CompilerStack::createOnChainMetadata(Contract const& _contract) const
+string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
