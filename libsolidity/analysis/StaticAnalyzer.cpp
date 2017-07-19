@@ -138,7 +138,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	if (m_constructor && m_currentContract)
 		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type.get()))
 			if (type->contractDefinition() == *m_currentContract)
-				warning(_memberAccess.location(), "\"this\" used in constructor.");
+				m_errorReporter.warning(_memberAccess.location(), "\"this\" used in constructor.");
 
 	return true;
 }
