@@ -32,6 +32,8 @@ REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 echo $REPO_ROOT
 SOLC="$REPO_ROOT/build/solc/solc"
 
+FULLARGS="--optimize --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
+
 echo "Checking that the bug list is up to date..."
 "$REPO_ROOT"/scripts/update_bugs_by_version.py
 
@@ -43,15 +45,13 @@ function compileFull()
 {
     files="$*"
     set +e
-    "$SOLC" --optimize \
-    --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc \
-    $files >/dev/null 2>&1
+    output=$( ("$SOLC" $FULLARGS  $files) 2>&1 )
     failed=$?
     set -e
     if [ $failed -ne 0 ]
     then
         echo "Compilation failed on:"
-        cat $files
+        echo "$output"
         false
     fi
 }
