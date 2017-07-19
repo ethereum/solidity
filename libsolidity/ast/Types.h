@@ -342,7 +342,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _integerBits, int _fractionalBits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string identifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -352,8 +352,8 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 
-	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_integerBits + m_fractionalBits) / 8; }
-	virtual unsigned storageBytes() const override { return (m_integerBits + m_fractionalBits) / 8; }
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_totalBits / 8; }
+	virtual unsigned storageBytes() const override { return m_totalBits / 8; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString(bool _short) const override;
@@ -361,14 +361,21 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_integerBits + m_fractionalBits; }
-	int integerBits() const { return m_integerBits; }
-	int fractionalBits() const { return m_fractionalBits; }
+	/// Number of bits used for this type in total.
+	int numBits() const { return m_totalBits; }
+	/// Number of decimal digits after the radix point.
+	int fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
+	/// @returns the largest integer value this type con hold. Note that this is not the
+	/// largest value in general.
+	bigint maxIntegerValue() const;
+	/// @returns the smallest integer value this type can hold. Note hat this is not the
+	/// smallest value in general.
+	bigint minIntegerValue() const;
 
 private:
-	int m_integerBits;
-	int m_fractionalBits;
+	int m_totalBits;
+	int m_fractionalDigits;
 	Modifier m_modifier;
 };
 

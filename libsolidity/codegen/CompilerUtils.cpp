@@ -504,7 +504,7 @@ void CompilerUtils::convertType(
 			//shift all integer bits onto the left side of the fixed type
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetFixedPointType.integerBits() > typeOnStack->numBits())
+				if (targetFixedPointType.numBits() > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
 			solUnimplemented("Not yet implemented - FixedPointType.");
 		}
