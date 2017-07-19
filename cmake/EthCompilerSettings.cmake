@@ -160,10 +160,26 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		endif()
 
 		if (EMSCRIPTEN)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_DYNAMIC_EXECUTION=1")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc-sections")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1 -s AGGRESSIVE_VARIABLE_ELIMINATION=1")
+			# Do emit a separate memory initialiser file
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0")
+			# Leave only exported symbols as public and agressively remove others
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc-sections -fvisibility=hidden")
+			# Optimisation level
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+			# Keep every public symbols (disables dead code elimination)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s LINKABLE=1")
+			# Re-enable exception catching (optimisations above -O1 disable it)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
+			# Remove any code related to exit (such as atexit)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1")
+			# Remove any code related to filesystem access
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1")
+			# Remove variables even if it needs to be duplicated (can improve speed at the cost of size)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s AGGRESSIVE_VARIABLE_ELIMINATION=1")
+			# Allow memory growth, but disable some optimisations
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
+			# Disable eval()
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_DYNAMIC_EXECUTION=1")
 			add_definitions(-DETH_EMSCRIPTEN=1)
 		endif()
 	endif()
