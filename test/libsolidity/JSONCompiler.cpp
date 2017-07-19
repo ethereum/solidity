@@ -38,6 +38,7 @@ extern char const* license();
 extern char const* compileJSON(char const* _input, bool _optimize);
 extern char const* compileJSONMulti(char const* _input, bool _optimize);
 extern char const* compileJSONCallback(char const* _input, bool _optimize, void* _readCallback);
+extern char const* compileStandard(char const* _input, void* _readCallback);
 }
 
 namespace dev
@@ -65,6 +66,14 @@ Json::Value compileMulti(string const& _input, bool _callback)
 		compileJSONCallback(_input.c_str(), dev::test::Options::get().optimize, NULL) :
 		compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize)
 	);
+	Json::Value ret;
+	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
+	return ret;
+}
+
+Json::Value compile(string const& _input)
+{
+	string output(compileStandard(_input.c_str(), NULL));
 	Json::Value ret;
 	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
 	return ret;
@@ -181,6 +190,26 @@ BOOST_AUTO_TEST_CASE(single_compilation)
 		"\"name\":\"A\",\"nodes\":[null],\"scope\":2},\"id\":1,\"name\":\"ContractDefinition\","
 		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
 	);
+}
+
+BOOST_AUTO_TEST_CASE(standard_compilation)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(result.isObject());
+
+	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
+	BOOST_CHECK(result.isMember("sources"));
+	BOOST_CHECK(result.isMember("contracts"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
