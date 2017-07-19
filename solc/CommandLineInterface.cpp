@@ -98,6 +98,7 @@ static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMetadata = "metadata";
+static string const g_strMetadataDisable = "metadata-disable";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
@@ -137,6 +138,7 @@ static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = "machine";
 static string const g_argMetadata = g_strMetadata;
+static string const g_argMetadataDisable = g_strMetadataDisable;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -583,6 +585,7 @@ Allowed options)",
 			"and modify binaries in place."
 		)
 		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
+		(g_argMetadataDisable.c_str(), "Disable on-chain metadata inclusion in compiled objects.")
 		(
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
@@ -770,6 +773,8 @@ bool CommandLineInterface::processInput()
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
+		if (m_args.count(g_argMetadataDisable) > 0)
+			m_compiler->disableOnChainMetadata(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
