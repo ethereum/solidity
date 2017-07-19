@@ -7,6 +7,7 @@ Features:
  * Type Checker: Disallow value transfers to contracts without a payable fallback function.
  * Type Checker: Include types in explicit conversion error message.
  * Type Checker: Raise proper error for arrays too large for ABI encoding.
+ * Type checker: Warn if using ``this`` in a constructor.
 
 Bugfixes:
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.

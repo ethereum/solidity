@@ -38,12 +38,14 @@ bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 bool StaticAnalyzer::visit(ContractDefinition const& _contract)
 {
 	m_library = _contract.isLibrary();
+	m_currentContract = &_contract;
 	return true;
 }
 
 void StaticAnalyzer::endVisit(ContractDefinition const&)
 {
 	m_library = false;
+	m_currentContract = nullptr;
 }
 
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
@@ -54,6 +56,7 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 		solAssert(!m_currentFunction, "");
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
+	m_constructor = _function.isConstructor();
 	return true;
 }
 
@@ -61,6 +64,7 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
 	m_currentFunction = nullptr;
 	m_nonPayablePublic = false;
+	m_constructor = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
 			m_errorReporter.warning(var.first->location(), "Unused local variable");
@@ -130,6 +134,11 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					_memberAccess.location(),
 					"\"callcode\" has been deprecated in favour of \"delegatecall\"."
 				);
+
+	if (m_constructor && m_currentContract)
+		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type.get()))
+			if (type->contractDefinition() == *m_currentContract)
+				m_errorReporter.warning(_memberAccess.location(), "\"this\" used in constructor.");
 
 	return true;
 }
