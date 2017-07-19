@@ -216,6 +216,23 @@ Minor Details
   look like the number ``1`` as far as ``x`` is concerned, but ``msg.data`` will
   be different, so if you use ``keccak256(msg.data)`` for anything, you will get different results.
 
+
+*******************
+Formal Verification
+*******************
+
+Using formal verification, it is possible to perform an automated mathematical
+proof that your source code fulfills a certain formal specification.
+The specification is still formal (just as the source code), but usually much
+simpler. There is a prototype in Solidity that performs formal verification and
+it will be better documented soon.
+
+Note that formal verification itself can only help you understand the
+difference between what you did (the specification) and how you did it
+(the actual implementation). You still need to check whether the specification
+is what you wanted and that you did not miss any unintended effects of it.
+
+
 ***************
 Recommendations
 ***************
@@ -272,18 +289,3 @@ of "failsafe" mode, which, for example, disables most of the features, hands ove
 control to a fixed and trusted third party or just converts the contract into
 a simple "give me back my money" contract.
 
-
-*******************
-Formal Verification
-*******************
-
-Using formal verification, it is possible to perform an automated mathematical
-proof that your source code fulfills a certain formal specification.
-The specification is still formal (just as the source code), but usually much
-simpler. There is a prototype in Solidity that performs formal verification and
-it will be better documented soon.
-
-Note that formal verification itself can only help you understand the
-difference between what you did (the specification) and how you did it
-(the actual implementation). You still need to check whether the specification
-is what you wanted and that you did not miss any unintended effects of it.
