@@ -62,6 +62,8 @@ private:
 	/// arguments and that there is at most one constructor.
 	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
 	void checkContractIllegalOverrides(ContractDefinition const& _contract);
+	/// Reports a type error with an appropiate message if overriden function signature differs.
+	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void checkContractAbstractFunctions(ContractDefinition const& _contract);
 	void checkContractAbstractConstructors(ContractDefinition const& _contract);
 	/// Checks that different functions with external visibility end up having different
@@ -119,9 +121,6 @@ private:
 	void expectType(Expression const& _expression, Type const& _expectedType);
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
-
-	/// Reports a type error with an appropiate message when overriden function signature differs.
-	void overrideTypeError(FunctionDefinition const& function, FunctionDefinition const& super);
 
 	ContractDefinition const* m_scope = nullptr;
 

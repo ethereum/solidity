@@ -277,21 +277,10 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 			string const& name = function->name();
 			if (modifiers.count(name))
 				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-			FunctionType functionType(*function);
-			// function should not change the return type
+
 			for (FunctionDefinition const* overriding: functions[name])
-			{
-				FunctionType overridingType(*overriding);
-				if (!overridingType.hasEqualArgumentTypes(functionType))
-					continue;
-				if (
-					overriding->visibility() != function->visibility() ||
-					overriding->isDeclaredConst() != function->isDeclaredConst() ||
-					overriding->isPayable() != function->isPayable() ||
-					overridingType != functionType
-				)
-					overrideTypeError(*overriding, *function);
-			}
+				checkFunctionOverride(*overriding, *function);
+
 			functions[name].push_back(function);
 		}
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
@@ -306,6 +295,51 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
 		}
 	}
+}
+
+void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
+{
+	FunctionType functionType(function);
+	FunctionType superType(super);
+
+	if (!functionType.hasEqualArgumentTypes(superType))
+		return;
+
+	if (function.visibility() != super.visibility())
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function visibility differs from " + super.fullyQualifiedName() + "."
+		);
+
+	if (function.isDeclaredConst() && !super.isDeclaredConst())
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function should not be declared constant."
+		);
+
+	if (!function.isDeclaredConst() && super.isDeclaredConst())
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function should be declared constant."
+		);
+
+	if (function.isPayable() && !super.isPayable())
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function should not be declared payable."
+		);
+
+	if (!function.isPayable() && super.isPayable())
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function should be declared payable."
+		);
+
+	if (functionType != superType)
+		m_errorReporter.typeError(
+			function.location(),
+			"Overriding function return types differ from " + super.fullyQualifiedName() + "."
+		);
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
@@ -1948,34 +1982,4 @@ void TypeChecker::requireLValue(Expression const& _expression)
 		m_errorReporter.typeError(_expression.location(), "Cannot assign to a constant variable.");
 	else if (!_expression.annotation().isLValue)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
-}
-
-void TypeChecker::overrideTypeError(FunctionDefinition const& function, FunctionDefinition const& super)
-{
-	string message;
-
-	if (function.visibility() != super.visibility())
-		message = "Overriding function visibility differs from " + super.fullyQualifiedName() + ".";
-	else if (function.isDeclaredConst() && !super.isDeclaredConst())
-		message = "Overriding function should not be declared constant.";
-	else if (!function.isDeclaredConst() && super.isDeclaredConst())
-		message = "Overriding function should be declared constant.";
-	else if (function.isPayable() && !super.isPayable())
-		message = "Overriding function should not be declared payable.";
-	else if (!function.isPayable() && super.isPayable())
-		message = "Overriding function should be declared payable.";
-
-	if (message.empty())
-	{
-		FunctionType functionType(function);
-		FunctionType superType(super);
-
-		if (functionType != superType)
-			message = "Overriding function return types differ from " + super.fullyQualifiedName() + ".";
-	}
-
-	if (message.empty())
-		message = "Overriding function signature differs from " + super.fullyQualifiedName() + ".";
-
-	m_errorReporter.typeError(function.location(), message);
 }
