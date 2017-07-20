@@ -462,7 +462,15 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			/// The else branch.
 			int startDeposit = m_asm.deposit();
 			m_asm.append(code[2].m_asm, minDep);
-			auto end = m_asm.appendJump();
+
+			// We're about to insert a jump to the end of the IF expression.
+			// But if the last element of the else branch is a jump destination tag
+			// then we move it to the end and instead insert a jump to that.
+			// This avoids nested IFs generating a load of chained jumps.
+			auto lastAssembly = m_asm.back();
+			if (lastAssembly.type() == Tag)
+				m_asm.pop_back();
+			auto end = lastAssembly.type() == Tag ? m_asm.appendJump(lastAssembly) : m_asm.appendJump();
 			int deposit = m_asm.deposit();
 			m_asm.setDeposit(startDeposit);
 
