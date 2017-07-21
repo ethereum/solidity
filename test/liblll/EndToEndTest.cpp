@@ -165,6 +165,56 @@ BOOST_AUTO_TEST_CASE(conditional_seq)
 	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_nested_else)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'input (calldataload 0x04))
+				;; Calculates width in bytes of utf-8 characters.
+				(return
+					(if (< input 0x80) 1
+						(if (< input 0xE0) 2
+							(if (< input 0xF0) 3
+								(if (< input 0xF8) 4
+									(if (< input 0xFC) 5
+										6))))))))
+
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0x00) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("test()", 0x80) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("test()", 0xe0) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("test()", 0xf0) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("test()", 0xf8) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_nested_then)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'input (calldataload 0x04))
+				;; Calculates width in bytes of utf-8 characters.
+				(return
+					(if (>= input 0x80)
+						(if (>= input 0xE0)
+							(if (>= input 0xF0)
+								(if (>= input 0xF8)
+									(if (>= input 0xFC)
+										6 5) 4) 3) 2) 1))))
+
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0x00) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("test()", 0x80) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("test()", 0xe0) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("test()", 0xf0) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("test()", 0xf8) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
+}
+
 BOOST_AUTO_TEST_CASE(exp_operator_const)
 {
 	char const* sourceCode = R"(
