@@ -308,19 +308,19 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 	if (function.visibility() != super.visibility())
 		overrideError(function, super, "Overriding function visibility differs.");
 
-	if (function.isDeclaredConst() && !super.isDeclaredConst())
+	else if (function.isDeclaredConst() && !super.isDeclaredConst())
 		overrideError(function, super, "Overriding function should not be declared constant.");
 
-	if (!function.isDeclaredConst() && super.isDeclaredConst())
+	else if (!function.isDeclaredConst() && super.isDeclaredConst())
 		overrideError(function, super, "Overriding function should be declared constant.");
 
-	if (function.isPayable() && !super.isPayable())
+	else if (function.isPayable() && !super.isPayable())
 		overrideError(function, super, "Overriding function should not be declared payable.");
 
-	if (!function.isPayable() && super.isPayable())
+	else if (!function.isPayable() && super.isPayable())
 		overrideError(function, super, "Overriding function should be declared payable.");
 
-	if (functionType != superType)
+	else if (functionType != superType)
 		overrideError(function, super, "Overriding function return types differ.");
 }
 
