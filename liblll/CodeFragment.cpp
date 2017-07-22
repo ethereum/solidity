@@ -514,6 +514,44 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.appendJump(begin);
 			m_asm << end.tag();
 		}
+		else if (us == "SWITCH")
+		{
+			requireMinSize(1);
+
+			bool hasDefault = (code.size() % 2 == 1);
+			int startDeposit = m_asm.deposit();
+			int targetDeposit = hasDefault ? code[code.size() - 1].m_asm.deposit() : 0;
+
+			// The conditions
+			AssemblyItems jumpTags;
+			for (unsigned i = 0; i < code.size() - 1; i += 2)
+			{
+				requireDeposit(i, 1);
+				m_asm.append(code[i].m_asm);
+				jumpTags.push_back(m_asm.appendJumpI());
+			}
+
+			// The default, if present
+			if (hasDefault)
+				m_asm.append(code[code.size() - 1].m_asm);
+
+			// The targets - appending in reverse makes the top case the most efficient.
+			if (code.size() > 1)
+			{
+				auto end = m_asm.appendJump();
+				for (int i = 2 * (code.size() / 2 - 1); i >= 0; i -= 2)
+				{
+					m_asm << jumpTags[i / 2].tag();
+					requireDeposit(i + 1, targetDeposit);
+					m_asm.append(code[i + 1].m_asm);
+					if (i != 0)
+						m_asm.appendJump(end);
+				}
+				m_asm << end.tag();
+			}
+
+			m_asm.setDeposit(startDeposit + targetDeposit);
+		}
 		else if (us == "ALLOC")
 		{
 			requireSize(1);
