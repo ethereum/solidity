@@ -337,7 +337,8 @@ function type should not return anything, the whole ``returns (<return types>)``
 part has to be omitted.
 
 By default, function types are internal, so the ``internal`` keyword can be
-omitted.
+omitted. Note that this is not the case for functions defined on a contract,
+which default to being public.
 
 There are two ways to access a function in the current contract: Either directly
 by its name, ``f``, or using ``this.f``. The former will result in an internal
