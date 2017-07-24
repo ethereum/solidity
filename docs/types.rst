@@ -815,9 +815,10 @@ for each ``_KeyType``, recursively.
     }
 
     contract MappingUser {
-        address contractAddress = 0x42;
         function f() returns (uint) {
-            return MappingExample(contractAddress).balances(this);
+            MappingExample m = new MappingExample();
+            m.update(100);
+            return m.balances(this);
         }
     }
 
