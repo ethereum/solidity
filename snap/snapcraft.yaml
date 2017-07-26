@@ -13,7 +13,7 @@ description: |
   It is possible to create contracts for voting, crowdfunding, blind auctions,
   multi-signature wallets and more.
 
-grade: devel # must be 'stable' to release into candidate/stable channels
+grade: stable
 confinement: strict
 
 apps:
