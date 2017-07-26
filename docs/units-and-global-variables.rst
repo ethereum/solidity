@@ -35,7 +35,9 @@ These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
 
     function f(uint start, uint daysAfter) {
-        if (now >= start + daysAfter * 1 days) { ... }
+        if (now >= start + daysAfter * 1 days) {
+          // ...
+        }
     }
 
 Special Variables and Functions
@@ -103,10 +105,10 @@ Mathematical and Cryptographic Functions
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``keccak256(...) returns (bytes32)``:
     compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
-``sha3(...) returns (bytes32)``:
-    alias to ``keccak256()``
 ``sha256(...) returns (bytes32)``:
     compute the SHA-256 hash of the (tightly packed) arguments
+``sha3(...) returns (bytes32)``:
+    alias to ``keccak256``
 ``ripemd160(...) returns (bytes20)``:
     compute RIPEMD-160 hash of the (tightly packed) arguments
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
@@ -171,6 +173,9 @@ Contract Related
 
 ``selfdestruct(address recipient)``:
     destroy the current contract, sending its funds to the given :ref:`address`
+
+``suicide(address recipient``:
+    alias to ``selfdestruct``
 
 Furthermore, all functions of the current contract are callable directly including the current function.
 
