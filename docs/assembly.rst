@@ -96,6 +96,29 @@ you really know what you are doing.
                 }
             }
         }
+
+        // Same as above, but accomplish the entire code within inline assembly.
+        function sumPureAsm(uint[] _data) returns (uint o_sum) {
+            assembly {
+               // Load the length (first 32 bytes)
+               let len := mload(_data)
+
+               // Skip over the length field.
+               _data := add(_data, 0x20)
+
+               // Set up a bound.
+               let end := add(_data, len)
+
+               // Iterate until the bound is not met.
+               for {} lt(_data, end) {} {
+                   o_sum := add(o_sum, mload(_data))
+                   _data := add(_data, 0x20)
+               }
+
+               // NOTE: after this point it is not safe to use _data in Solidity code
+               //       because its offsets are in an invalid position
+            }
+        }
     }
 
 
