@@ -491,7 +491,7 @@ high or low invalid bids.
         }
 
         /// Withdraw a bid that was overbid.
-        function withdraw() returns (bool) {
+        function withdraw() {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
                 // It is important to set this to zero because the recipient
@@ -500,13 +500,8 @@ high or low invalid bids.
                 // conditions -> effects -> interaction).
                 pendingReturns[msg.sender] = 0;
 
-                if (!msg.sender.send(amount)){
-                    // No need to call throw here, just reset the amount owing
-                    pendingReturns[msg.sender] = amount;
-                    return false;
-                }
+                msg.sender.transfer(amount);
             }
-            return true;
         }
 
         /// End the auction and send the highest bid
