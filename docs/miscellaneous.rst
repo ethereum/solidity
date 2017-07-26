@@ -515,7 +515,7 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``, ``null``,
+``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``let``, ``match``, ``null``,
 ``of``, ``pure``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``, ``view``.
 
 Language Grammar
