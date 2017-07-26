@@ -70,6 +70,7 @@ Block and Transaction Properties
     ``msg.value`` can change for every **external** function call.
     This includes calls to library functions.
 
+.. note::
     If you want to implement access restrictions in library functions using
     ``msg.sender``, you have to manually supply the value of
     ``msg.sender`` as an argument.
@@ -156,6 +157,9 @@ For more information, see the section on :ref:`address`.
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     Use a pattern where the recipient withdraws the money.
+
+.. note::
+    The use of ``callcode`` is discouraged and will be removed in the future.
 
 .. index:: this, selfdestruct
 

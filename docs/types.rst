@@ -135,6 +135,9 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
     All contracts inherit the members of address, so it is possible to query the balance of the
     current contract using ``this.balance``.
 
+.. note::
+    The use of ``callcode`` is discouraged and will be removed in the future.
+
 .. warning::
     All these functions are low-level functions and should be used with care.
     Specifically, any unknown contract might be malicious and if you call it, you
@@ -436,7 +439,8 @@ Another example that uses external function types::
       }
     }
 
-Note that lambda or inline functions are planned but not yet supported.
+.. note::
+    Lambda or inline functions are planned but not yet supported.
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
