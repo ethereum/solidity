@@ -318,7 +318,7 @@ can be assigned from functions and function parameters of function type
 can be used to pass functions to and return functions from function calls.
 Function types come in two flavours - *internal* and *external* functions:
 
-Internal functions can only be used inside the current contract (more specifically,
+Internal functions can only be called inside the current contract (more specifically,
 inside the current code unit, which also includes internal library functions
 and inherited functions) because they cannot be executed outside of the
 context of the current contract. Calling an internal function is realized
@@ -337,7 +337,8 @@ function type should not return anything, the whole ``returns (<return types>)``
 part has to be omitted.
 
 By default, function types are internal, so the ``internal`` keyword can be
-omitted.
+omitted. In contrast, contract functions themselves are public by default,
+only when used as the name of a type, the default is internal.
 
 There are two ways to access a function in the current contract: Either directly
 by its name, ``f``, or using ``this.f``. The former will result in an internal
