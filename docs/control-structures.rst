@@ -381,13 +381,11 @@ Error handling: Assert, Require, Revert and Exceptions
 Solidity uses state-reverting exceptions to handle errors. Such an exception will undo all changes made to the
 state in the current call (and all its sub-calls) and also flag an error to the caller.
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
-if the condition is not met. The difference between the two is that ``assert`` should only be used for internal errors
-and ``require`` should be used to check external conditions (invalid inputs or errors in external components).
-The idea behind that is that analysis tools can check your contract and try to come up with situations and
-series of function calls that will reach a failing assertion. If this is possible, this means there is a bug
-in your contract you should fix.
+if the condition is not met. The ``assert`` function should only be used to test for internal errors, and to check invariants.
+The ``require`` function should be used to ensure valid conditions, such as inputs, or contract state variables are met, or to validate return values from calls to external contracts. 
+If used properly, analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``. Properly functioning code should never it is reach a failing assert statement, if this happens there is a bug in your contract which you should fix.
 
-There are two other ways to trigger execptions: The ``revert`` function can be used to flag an error and
+There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
 revert the current call. In the future it might be possible to also include details about the error
 in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
 
