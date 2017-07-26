@@ -41,29 +41,29 @@ public:
 
 	ErrorReporter& operator=(ErrorReporter const& _errorReporter);
 
-	void warning(std::string const& _description = std::string());
+	void warning(std::string const& _description);
+
+	void warning(SourceLocation const& _location, std::string const& _description);
 
 	void warning(
-		SourceLocation const& _location = SourceLocation(),
-		std::string const& _description = std::string()
+		SourceLocation const& _location,
+		std::string const& _description,
+		SecondarySourceLocation const& _secondaryLocation
 	);
 
 	void error(
 		Error::Type _type,
-		SourceLocation const& _location = SourceLocation(),
-		std::string const& _description = std::string()
+		SourceLocation const& _location,
+		std::string const& _description
 	);
 
 	void declarationError(
 		SourceLocation const& _location,
-		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation(),
-		std::string const& _description = std::string()
+		SecondarySourceLocation const& _secondaryLocation,
+		std::string const& _description
 	);
 
-	void declarationError(
-		SourceLocation const& _location,
-		std::string const& _description = std::string()
-	);
+	void declarationError(SourceLocation const& _location, std::string const& _description);
 
 	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
 

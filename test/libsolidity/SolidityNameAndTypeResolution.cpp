@@ -5498,22 +5498,6 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_library)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(does_not_warn_non_magic_msg_value)
-{
-	char const* text = R"(
-		contract C {
-			struct msg {
-				uint256 value;
-			}
-
-			function f() {
-				msg.value;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
 BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_modifier_following_non_payable_public_function)
 {
 	char const* text = R"(
@@ -6127,6 +6111,85 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_functions)
+{
+	char const* text = R"(
+		contract C {
+			function keccak256() {}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_variables)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint msg;
+				msg;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_parameters)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint require) {
+				require = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_return_parameters)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint require) {
+				require = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_events)
+{
+	char const* text = R"(
+		contract C {
+			event keccak256();
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct a {
+				uint msg;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(callable_crash)
 {
 	char const* text = R"(
@@ -6243,14 +6306,6 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 		contract c { function f() { uint create2; assembly { create2(0, 0, 0, 0) }}}
 	)";
 	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
-}
-
-BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
-{
-	char const* text = R"(
-		contract C {function f() {assembly {}}}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_unspecified_storage)

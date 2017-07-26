@@ -42,9 +42,21 @@ void ErrorReporter::warning(string const& _description)
 	error(Error::Type::Warning, SourceLocation(), _description);
 }
 
-void ErrorReporter::warning(SourceLocation const& _location, string const& _description)
+void ErrorReporter::warning(
+	SourceLocation const& _location,
+	string const& _description
+)
 {
 	error(Error::Type::Warning, _location, _description);
+}
+
+void ErrorReporter::warning(
+	SourceLocation const& _location,
+	string const& _description,
+	SecondarySourceLocation const& _secondaryLocation
+)
+{
+	error(Error::Type::Warning, _location, _secondaryLocation, _description);
 }
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, string const& _description)
