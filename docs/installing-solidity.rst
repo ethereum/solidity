@@ -82,6 +82,10 @@ If you want to use the cutting edge developer version:
     sudo add-apt-repository ppa:ethereum/ethereum-dev
     sudo apt-get update
     sudo apt-get install solc
+    
+We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To help testing the unstable solc with the most recent changes from the development branch:
+
+    sudo snap install solc --edge
 
 Arch Linux also has packages, albeit limited to the latest development version:
 
