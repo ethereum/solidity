@@ -101,7 +101,7 @@ of votes.
         /// Delegate your vote to the voter `to`.
         function delegate(address to) {
             // assigns reference
-            Voter sender = voters[msg.sender];
+            Voter storage sender = voters[msg.sender];
             require(!sender.voted);
 
             // Self-delegation is not allowed.
@@ -141,7 +141,7 @@ of votes.
         /// Give your vote (including votes delegated to you)
         /// to proposal `proposals[proposal].name`.
         function vote(uint proposal) {
-            Voter sender = voters[msg.sender];
+            Voter storage sender = voters[msg.sender];
             require(!sender.voted);
             sender.voted = true;
             sender.vote = proposal;

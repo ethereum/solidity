@@ -743,7 +743,7 @@ shown in the following example:
         }
 
         function contribute(uint campaignID) payable {
-            Campaign c = campaigns[campaignID];
+            Campaign storage c = campaigns[campaignID];
             // Creates a new temporary memory struct, initialised with the given values
             // and copies it over to storage.
             // Note that you can also use Funder(msg.sender, msg.value) to initialise.
@@ -752,7 +752,7 @@ shown in the following example:
         }
 
         function checkGoalReached(uint campaignID) returns (bool reached) {
-            Campaign c = campaigns[campaignID];
+            Campaign storage c = campaigns[campaignID];
             if (c.amount < c.fundingGoal)
                 return false;
             uint amount = c.amount;
