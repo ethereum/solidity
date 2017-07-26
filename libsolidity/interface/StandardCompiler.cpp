@@ -288,22 +288,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	/// This is only thrown in a very few locations.
 	catch (Error const& _error)
 	{
-		if (_error.type() == Error::Type::DocstringParsingError)
-			errors.append(formatError(
-				false,
-				"DocstringParsingError",
-				"general",
-				"Documentation parsing error: " + *boost::get_error_info<errinfo_comment>(_error)
-			));
-		else
-			errors.append(formatErrorWithException(
-				_error,
-				false,
-				_error.typeName(),
-				"general",
-				"Uncaught error: ",
-				scannerFromSourceName
-			));
+		errors.append(formatErrorWithException(
+			_error,
+			false,
+			_error.typeName(),
+			"general",
+			"Uncaught error: ",
+			scannerFromSourceName
+		));
 	}
 	/// This should not be leaked from compile().
 	catch (FatalError const& _exception)
