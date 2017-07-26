@@ -383,7 +383,7 @@ state in the current call (and all its sub-calls) and also flag an error to the 
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
 if the condition is not met. The ``assert`` function should only be used to test for internal errors, and to check invariants.
 The ``require`` function should be used to ensure valid conditions, such as inputs, or contract state variables are met, or to validate return values from calls to external contracts. 
-If used properly, analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``. Properly functioning code should never it is reach a failing assert statement, if this happens there is a bug in your contract which you should fix.
+If used properly, analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``. Properly functioning code should never reach a failing assert statement; if this happens there is a bug in your contract which you should fix.
 
 There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
 revert the current call. In the future it might be possible to also include details about the error
