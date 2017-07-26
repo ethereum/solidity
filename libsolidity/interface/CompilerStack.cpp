@@ -252,16 +252,6 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
-vector<string> CompilerStack::contractNames() const
-{
-	if (m_stackState < AnalysisSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-	vector<string> contractNames;
-	for (auto const& contract: m_contracts)
-		contractNames.push_back(contract.first);
-	return contractNames;
-}
-
 bool CompilerStack::compile()
 {
 	if (m_stackState < AnalysisSuccessful)
@@ -286,6 +276,16 @@ void CompilerStack::link()
 		contract.second.runtimeObject.link(m_libraries);
 		contract.second.cloneObject.link(m_libraries);
 	}
+}
+
+vector<string> CompilerStack::contractNames() const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+	vector<string> contractNames;
+	for (auto const& contract: m_contracts)
+		contractNames.push_back(contract.first);
+	return contractNames;
 }
 
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
