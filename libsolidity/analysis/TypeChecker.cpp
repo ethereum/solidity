@@ -1124,7 +1124,9 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		_assignment.annotation().type = make_shared<TupleType>();
 		expectType(_assignment.rightHandSide(), *tupleType);
 
-		checkDoubleStorageAssignment(_assignment);
+		// expectType does not cause fatal errors, so we have to check again here.
+		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
+			checkDoubleStorageAssignment(_assignment);
 	}
 	else if (t->category() == Type::Category::Mapping)
 	{
