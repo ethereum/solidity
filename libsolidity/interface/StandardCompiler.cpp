@@ -285,6 +285,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			));
 		}
 	}
+	/// This is only thrown in a very few locations.
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
@@ -300,9 +301,19 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				false,
 				_error.typeName(),
 				"general",
-				"",
+				"Uncaught error: ",
 				scannerFromSourceName
 			));
+	}
+	/// This should not be leaked from compile().
+	catch (FatalError const& _exception)
+	{
+		errors.append(formatError(
+			false,
+			"FatalError",
+			"general",
+			"Uncaught fatal error: " + boost::diagnostic_information(_exception)
+		));
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -322,7 +333,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			"InternalCompilerError",
 			"general",
-			"Internal compiler error (" + _exception.lineInfo() + ")", scannerFromSourceName
+			"Internal compiler error (" + _exception.lineInfo() + ")",
+			scannerFromSourceName
 		));
 	}
 	catch (UnimplementedFeatureError const& _exception)
@@ -333,7 +345,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			"UnimplementedFeatureError",
 			"general",
 			"Unimplemented feature (" + _exception.lineInfo() + ")",
-			scannerFromSourceName));
+			scannerFromSourceName
+		));
 	}
 	catch (Exception const& _exception)
 	{
