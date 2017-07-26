@@ -14,7 +14,7 @@ the source code is often available.
 
 Of course you always have to consider how much is at stake:
 You can compare a smart contract with a web service that is open to the
-public (and thus, also to malicous actors) and perhaps even open source.
+public (and thus, also to malicious actors) and perhaps even open source.
 If you only store your grocery list on that web service, you might not have
 to take too much care, but if you manage your bank account using that web service,
 you should be more careful.
