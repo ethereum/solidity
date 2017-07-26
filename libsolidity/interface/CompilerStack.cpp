@@ -87,6 +87,7 @@ void CompilerStack::reset(bool _keepSources)
 		m_stackState = Empty;
 		m_sources.clear();
 	}
+	m_libraries.clear();
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();
@@ -104,12 +105,6 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 	m_sources[_name].isLibrary = _isLibrary;
 	m_stackState = SourcesSet;
 	return existed;
-}
-
-void CompilerStack::setSource(string const& _sourceCode)
-{
-	reset();
-	addSource("", _sourceCode);
 }
 
 bool CompilerStack::parse()
@@ -252,21 +247,9 @@ bool CompilerStack::analyze()
 		return false;
 }
 
-bool CompilerStack::parse(string const& _sourceCode)
-{
-	setSource(_sourceCode);
-	return parse();
-}
-
 bool CompilerStack::parseAndAnalyze()
 {
 	return parse() && analyze();
-}
-
-bool CompilerStack::parseAndAnalyze(std::string const& _sourceCode)
-{
-	setSource(_sourceCode);
-	return parseAndAnalyze();
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -279,16 +262,11 @@ vector<string> CompilerStack::contractNames() const
 	return contractNames;
 }
 
-
-bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> const& _libraries)
+bool CompilerStack::compile()
 {
 	if (m_stackState < AnalysisSuccessful)
 		if (!parseAndAnalyze())
 			return false;
-
-	m_optimize = _optimize;
-	m_optimizeRuns = _runs;
-	m_libraries = _libraries;
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
@@ -298,11 +276,6 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs, map<string, h160> co
 	this->link();
 	m_stackState = CompilationSuccessful;
 	return true;
-}
-
-bool CompilerStack::compile(string const& _sourceCode, bool _optimize, unsigned _runs)
-{
-	return parseAndAnalyze(_sourceCode) && compile(_optimize, _runs);
 }
 
 void CompilerStack::link()

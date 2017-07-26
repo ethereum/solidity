@@ -249,6 +249,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
 	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
 	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
@@ -259,6 +260,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			// @TODO use libraries only for the given source
 			libraries[library] = h160(jsonSourceName[library].asString());
 	}
+	m_compilerStack.setLibraries(libraries);
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
@@ -267,7 +269,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	try
 	{
-		m_compilerStack.compile(optimize, optimizeRuns, libraries);
+		m_compilerStack.compile();
 
 		for (auto const& error: m_compilerStack.errors())
 		{

@@ -774,10 +774,14 @@ bool CommandLineInterface::processInput()
 			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
+		if (m_args.count(g_argLibraries))
+			m_compiler->setLibraries(m_libraries);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
-		bool successful = m_compiler->compile(optimize, runs, m_libraries);
+		m_compiler->setOptimiserSettings(optimize, runs);
+
+		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
 			SourceReferenceFormatter::printExceptionInformation(

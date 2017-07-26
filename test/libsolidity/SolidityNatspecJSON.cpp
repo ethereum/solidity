@@ -65,7 +65,9 @@ public:
 
 	void expectNatspecError(std::string const& _code)
 	{
-		BOOST_CHECK(!m_compilerStack.parseAndAnalyze(_code));
+		m_compilerStack.reset(false);
+		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
+		BOOST_CHECK(!m_compilerStack.parseAndAnalyze());
 		BOOST_REQUIRE(Error::containsErrorOfType(m_compilerStack.errors(), Error::Type::DocstringParsingError));
 	}
 
