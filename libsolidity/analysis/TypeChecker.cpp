@@ -93,7 +93,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	FunctionDefinition const* fallbackFunction = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
-		if (function->name().empty())
+		if (function->isFallback())
 		{
 			if (fallbackFunction)
 			{
@@ -482,7 +482,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (isLibraryFunction)
 			m_errorReporter.typeError(_function.location(), "Library functions cannot be payable.");
-		if (!_function.isConstructor() && !_function.name().empty() && !_function.isPartOfExternalInterface())
+		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 		if (_function.isDeclaredConst())
 			m_errorReporter.typeError(_function.location(), "Functions cannot be constant and payable at the same time.");

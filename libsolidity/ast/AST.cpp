@@ -162,7 +162,7 @@ FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		for (FunctionDefinition const* f: contract->definedFunctions())
-			if (f->name().empty())
+			if (f->isFallback())
 				return f;
 	return nullptr;
 }
