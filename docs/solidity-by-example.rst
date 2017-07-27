@@ -101,7 +101,7 @@ of votes.
         /// Delegate your vote to the voter `to`.
         function delegate(address to) {
             // assigns reference
-            Voter sender = voters[msg.sender];
+            Voter storage sender = voters[msg.sender];
             require(!sender.voted);
 
             // Self-delegation is not allowed.
@@ -141,7 +141,7 @@ of votes.
         /// Give your vote (including votes delegated to you)
         /// to proposal `proposals[proposal].name`.
         function vote(uint proposal) {
-            Voter sender = voters[msg.sender];
+            Voter storage sender = voters[msg.sender];
             require(!sender.voted);
             sender.voted = true;
             sender.vote = proposal;
@@ -289,7 +289,7 @@ activate themselves.
 
         /// Withdraw a bid that was overbid.
         function withdraw() returns (bool) {
-            var amount = pendingReturns[msg.sender];
+            uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
                 // It is important to set this to zero because the recipient
                 // can call this function again as part of the receiving call
@@ -491,8 +491,8 @@ high or low invalid bids.
         }
 
         /// Withdraw a bid that was overbid.
-        function withdraw() returns (bool) {
-            var amount = pendingReturns[msg.sender];
+        function withdraw() {
+            uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
                 // It is important to set this to zero because the recipient
                 // can call this function again as part of the receiving call
@@ -500,13 +500,8 @@ high or low invalid bids.
                 // conditions -> effects -> interaction).
                 pendingReturns[msg.sender] = 0;
 
-                if (!msg.sender.send(amount)){
-                    // No need to call throw here, just reset the amount owing
-                    pendingReturns[msg.sender] = amount;
-                    return false;
-                }
+                msg.sender.transfer(amount);
             }
-            return true;
         }
 
         /// End the auction and send the highest bid

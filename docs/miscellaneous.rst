@@ -469,7 +469,7 @@ Global Variables
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
 - ``revert()``: abort execution and revert state changes
 - ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
-- ``sha3(...) returns (bytes32)``: an alias to `keccak256()`
+- ``sha3(...) returns (bytes32)``: an alias to `keccak256`
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
 - ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the (tightly packed) arguments
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
@@ -478,6 +478,7 @@ Global Variables
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
+- ``suicide(address recipieint)``: an alias to `selfdestruct``
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
@@ -515,7 +516,7 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``interface``, ``let``, ``match``, ``null``,
+``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``let``, ``match``, ``null``,
 ``of``, ``pure``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``, ``view``.
 
 Language Grammar

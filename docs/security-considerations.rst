@@ -280,8 +280,7 @@ Formal Verification
 Using formal verification, it is possible to perform an automated mathematical
 proof that your source code fulfills a certain formal specification.
 The specification is still formal (just as the source code), but usually much
-simpler. There is a prototype in Solidity that performs formal verification and
-it will be better documented soon.
+simpler.
 
 Note that formal verification itself can only help you understand the
 difference between what you did (the specification) and how you did it
