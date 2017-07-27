@@ -44,7 +44,7 @@ The following elementary types exist:
 
 - `bool`: equivalent to `uint8` restricted to the values 0 and 1
 
-- `fixed<M>x<N>`: signed fixed-point decimal number of `M` bits, `0 < M <= 256`, `M % 8 ==0`, and `0 < N <= 80`, which denotes the value `v` as `v / (10 ** N)`.
+- `fixed<M>x<N>`: signed fixed-point decimal number of `M` bits, `8 <= M <= 256`, `M % 8 ==0`, and `0 < N <= 80`, which denotes the value `v` as `v / (10 ** N)`.
 
 - `ufixed<M>x<N>`: unsigned variant of `fixed<M>x<N>`.
 
