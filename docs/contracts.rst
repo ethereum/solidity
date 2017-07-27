@@ -84,7 +84,7 @@ This means that cyclic creation dependencies are impossible.
             // State variables are accessed via their name
             // and not via e.g. this.owner. This also applies
             // to functions and especially in the constructors,
-            // you can only call them like that ("internall"),
+            // you can only call them like that ("internally"),
             // because the contract itself does not exist yet.
             owner = msg.sender;
             // We do an explicit type conversion from `address`
