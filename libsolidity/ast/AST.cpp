@@ -84,13 +84,35 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
 }
 
-string Declaration::sourceUnitName() const
+set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
+{
+	set<SourceUnit const*> sourceUnits;
+	for (ImportDirective const* importDirective: filteredNodes<ImportDirective>(nodes()))
+	{
+		auto const& sourceUnit = importDirective->annotation().sourceUnit;
+		if (!_skipList.count(sourceUnit))
+		{
+			_skipList.insert(sourceUnit);
+			sourceUnits.insert(sourceUnit);
+			if (_recurse)
+				sourceUnits += sourceUnit->referencedSourceUnits(true, _skipList);
+		}
+	}
+	return sourceUnits;
+}
+
+SourceUnit const& Declaration::sourceUnit() const
 {
 	solAssert(!!m_scope, "");
 	ASTNode const* scope = m_scope;
 	while (dynamic_cast<Declaration const*>(scope) && dynamic_cast<Declaration const*>(scope)->m_scope)
 		scope = dynamic_cast<Declaration const*>(scope)->m_scope;
-	return dynamic_cast<SourceUnit const&>(*scope).annotation().path;
+	return dynamic_cast<SourceUnit const&>(*scope);
+}
+
+string Declaration::sourceUnitName() const
+{
+	return sourceUnit().annotation().path;
 }
 
 ImportAnnotation& ImportDirective::annotation() const

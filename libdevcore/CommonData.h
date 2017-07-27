@@ -166,6 +166,12 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U con
 		_a.push_back(i);
 	return _a;
 }
+/// Concatenate the contents of a container onto a set
+template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+{
+	_a.insert(_b.begin(), _b.end());
+	return _a;
+}
 /// Concatenate two vectors of elements.
 template <class T>
 inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)

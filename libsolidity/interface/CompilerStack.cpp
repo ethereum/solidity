@@ -753,9 +753,18 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	meta["language"] = "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
+	/// All the source files (including self), which should be included in the metadata.
+	set<string> referencedSources;
+	referencedSources.insert(_contract.contract->sourceUnit().annotation().path);
+	for (auto const sourceUnit: _contract.contract->sourceUnit().referencedSourceUnits(true))
+		referencedSources.insert(sourceUnit->annotation().path);
+
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
 	{
+		if (!referencedSources.count(s.first))
+			continue;
+
 		solAssert(s.second.scanner, "Scanner not available");
 		meta["sources"][s.first]["keccak256"] =
 			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());

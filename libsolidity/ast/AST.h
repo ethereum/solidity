@@ -136,6 +136,9 @@ public:
 
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
+	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
+	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
+
 private:
 	std::vector<ASTPointer<ASTNode>> m_nodes;
 };
@@ -167,6 +170,9 @@ public:
 	/// Available only after name and type resolution step.
 	ASTNode const* scope() const { return m_scope; }
 	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+
+	/// @returns the source unit this declaration is present in.
+	SourceUnit const& sourceUnit() const;
 
 	/// @returns the source name this declaration is present in.
 	/// Can be combined with annotation().canonicalName to form a globally unique name.
