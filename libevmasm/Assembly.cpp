@@ -24,6 +24,7 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/PeepholeOptimiser.h>
+#include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
@@ -349,6 +350,7 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
 	OptimiserSettings settings;
 	settings.isCreation = _isCreation;
+	settings.runJumpdestRemover = true;
 	settings.runPeephole = true;
 	if (_enable)
 	{
@@ -357,18 +359,21 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		settings.runConstantOptimiser = true;
 	}
 	settings.expectedExecutionsPerDeployment = _runs;
-	optimiseInternal(settings);
+	optimise(settings);
 	return *this;
 }
 
 
-Assembly& Assembly::optimise(OptimiserSettings _settings)
+Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
-	optimiseInternal(_settings);
+	optimiseInternal(_settings, {});
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
+map<u256, u256> Assembly::optimiseInternal(
+	OptimiserSettings const& _settings,
+	std::set<size_t> const& _tagsReferencedFromOutside
+)
 {
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
@@ -376,7 +381,10 @@ map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
 		OptimiserSettings settings = _settings;
 		// Disable creation mode for sub-assemblies.
 		settings.isCreation = false;
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(settings);
+		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(
+			settings,
+			JumpdestRemover::referencedTags(m_items, subId)
+		);
 		// Apply the replacements (can be empty).
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
@@ -386,6 +394,13 @@ map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
 	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
+
+		if (_settings.runJumpdestRemover)
+		{
+			JumpdestRemover jumpdestOpt(m_items);
+			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
+				count++;
+		}
 
 		if (_settings.runPeephole)
 		{
@@ -473,8 +488,9 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& sub: m_subs)
 	{
 		sub->assemble();
-		if (!sub->m_tagPositionsInBytecode.empty())
-			subTagSize = max(subTagSize, *max_element(sub->m_tagPositionsInBytecode.begin(), sub->m_tagPositionsInBytecode.end()));
+		for (size_t tagPos: sub->m_tagPositionsInBytecode)
+			if (tagPos != size_t(-1) && tagPos > subTagSize)
+				subTagSize = tagPos;
 	}
 
 	LinkerObject& ret = m_assembledObject;
