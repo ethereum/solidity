@@ -510,8 +510,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (dynamic_cast<ContractDefinition const*>(decl))
 				m_errorReporter.declarationError(modifier->location(), "Base constructor already provided.");
-			else
-				m_errorReporter.declarationError(modifier->location(), "Modifier already used for this function.");
 		}
 		else
 			modifiers.insert(decl);

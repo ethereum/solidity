@@ -2696,6 +2696,34 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(4 | 2));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_multiple_times)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a;
+			modifier mod(uint x) { a += x; _; }
+			function f(uint x) mod(2) mod(5) mod(x) returns(uint) { return a; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(2 + 5 + 3));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(2 + 5 + 3));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multiple_times_local_vars)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a;
+			modifier mod(uint x) { uint b = x; a += b; _; a -= b; assert(b == x); }
+			function f(uint x) mod(2) mod(5) mod(x) returns(uint) { return a; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(2 + 5 + 3));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 {
 	char const* sourceCode = R"(
