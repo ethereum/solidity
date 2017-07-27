@@ -63,12 +63,6 @@ class Natspec;
 class Error;
 class DeclarationContainer;
 
-enum class DocumentationType: uint8_t
-{
-	NatspecUser = 1,
-	NatspecDev
-};
-
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
  * It holds state and can be used to either step through the compilation stages (and abort e.g.
@@ -203,11 +197,13 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& contractABI(std::string const& _contractName = "") const;
 
-	/// @returns a JSON representing the contract's documentation.
+	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
-	/// @param type The type of the documentation to get.
-	/// Can be one of 4 types defined at @c DocumentationType
-	Json::Value const& natspec(std::string const& _contractName, DocumentationType _type) const;
+	Json::Value const& natspecUser(std::string const& _contractName) const;
+
+	/// @returns a JSON representing the contract's developer documentation.
+	/// Prerequisite: Successful call to parse or compile.
+	Json::Value const& natspecDev(std::string const& _contractName) const;
 
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
 	Json::Value methodIdentifiers(std::string const& _contractName) const;
@@ -274,7 +270,8 @@ private:
 	std::string createMetadata(Contract const& _contract) const;
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 	Json::Value const& contractABI(Contract const&) const;
-	Json::Value const& natspec(Contract const&, DocumentationType _type) const;
+	Json::Value const& natspecUser(Contract const&) const;
+	Json::Value const& natspecDev(Contract const&) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.

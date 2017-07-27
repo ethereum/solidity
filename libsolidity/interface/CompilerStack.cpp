@@ -406,39 +406,42 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 	return *_contract.abi;
 }
 
-Json::Value const& CompilerStack::natspec(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
 {
-	return natspec(contract(_contractName), _type);
+	return natspecUser(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::natspec(Contract const& _contract, DocumentationType _type) const
+Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	solAssert(_contract.contract, "");
-	std::unique_ptr<Json::Value const>* doc;
 
-	// checks wheather we already have the documentation
-	switch (_type)
-	{
-	case DocumentationType::NatspecUser:
-		doc = &_contract.userDocumentation;
-		// caches the result
-		if (!*doc)
-			doc->reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
-		break;
-	case DocumentationType::NatspecDev:
-		doc = &_contract.devDocumentation;
-		// caches the result
-		if (!*doc)
-			doc->reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
-		break;
-	default:
-		solAssert(false, "Illegal documentation type.");
-	}
+	// caches the result
+	if (!_contract.userDocumentation)
+		_contract.userDocumentation.reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
 
-	return *(*doc);
+	return *_contract.userDocumentation;
+}
+
+Json::Value const& CompilerStack::natspecDev(string const& _contractName) const
+{
+	return natspecDev(contract(_contractName));
+}
+
+Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.devDocumentation)
+		_contract.devDocumentation.reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
+
+	return *_contract.devDocumentation;
 }
 
 Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
@@ -819,8 +822,8 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = contractABI(_contract);
-	meta["output"]["userdoc"] = natspec(_contract, DocumentationType::NatspecUser);
-	meta["output"]["devdoc"] = natspec(_contract, DocumentationType::NatspecDev);
+	meta["output"]["userdoc"] = natspecUser(_contract);
+	meta["output"]["devdoc"] = natspecDev(_contract);
 
 	return jsonCompactPrint(meta);
 }
