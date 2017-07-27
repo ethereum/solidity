@@ -93,6 +93,17 @@ public:
 		m_errorList(),
 		m_errorReporter(m_errorList) {}
 
+	/// @returns the list of errors that occured during parsing and type checking.
+	ErrorList const& errors() { return m_errorReporter.errors(); }
+
+	/// @returns the current state.
+	State state() const { return m_stackState; }
+
+	/// Resets the compiler to a state where the sources are not parsed or even removed.
+	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
+	/// All settings, with the exception of remappings, are reset.
+	void reset(bool _keepSources = false);
+
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
 
@@ -111,24 +122,23 @@ public:
 		m_optimizeRuns = _runs;
 	}
 
-	/// Resets the compiler to a state where the sources are not parsed or even removed.
-	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
-	/// All settings, with the exception of remappings, are reset.
-	void reset(bool _keepSources = false);
-
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
+
 	/// Parses all source units that were added
 	/// @returns false on error.
 	bool parse();
+
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously set sources
 	/// @returns false on error.
 	bool analyze();
+
 	/// Parses and analyzes all source units that were added
 	/// @returns false on error.
 	bool parseAndAnalyze();
+
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 
@@ -136,28 +146,52 @@ public:
 	/// @returns false on error.
 	bool compile();
 
+	/// @returns the list of sources (paths) used
+	std::vector<std::string> sourceNames() const;
+
+	/// @returns a mapping assigning each source name its index inside the vector returned
+	/// by sourceNames().
+	std::map<std::string, unsigned> sourceIndices() const;
+
+	/// @returns the previously used scanner, useful for counting lines during error reporting.
+	Scanner const& scanner(std::string const& _sourceName = "") const;
+
+	/// @returns the parsed source unit with the supplied name.
+	SourceUnit const& ast(std::string const& _sourceName = "") const;
+
+	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
+	/// line and columns are numbered starting from 1 with following order:
+	/// start line, start column, end line, end column
+	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
+
+	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
+	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
+
 	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
+
 	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.
 	eth::LinkerObject const& cloneObject(std::string const& _contractName = "") const;
+
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
+
 	/// @returns runtime contract assembly items
 	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName = "") const;
+
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
 	std::string const* sourceMapping(std::string const& _contractName = "") const;
+
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
-
-	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
-	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -165,14 +199,10 @@ public:
 	/// Prerequisite: Successful compilation.
 	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
-	/// @returns the list of sources (paths) used
-	std::vector<std::string> sourceNames() const;
-	/// @returns a mapping assigning each source name its index inside the vector returned
-	/// by sourceNames().
-	std::map<std::string, unsigned> sourceIndices() const;
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& contractABI(std::string const& _contractName = "") const;
+
 	/// @returns a JSON representing the contract's documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
@@ -182,27 +212,12 @@ public:
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
 	Json::Value methodIdentifiers(std::string const& _contractName) const;
 
+	/// @returns the Contract Metadata
 	std::string const& metadata(std::string const& _contractName) const;
 	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
-
-	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	Scanner const& scanner(std::string const& _sourceName = "") const;
-	/// @returns the parsed source unit with the supplied name.
-	SourceUnit const& ast(std::string const& _sourceName = "") const;
-
-	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
-	/// line and columns are numbered starting from 1 with following order:
-	/// start line, start column, end line, end column
-	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
-
-	/// @returns the list of errors that occured during parsing and type checking.
-	ErrorList const& errors() { return m_errorReporter.errors(); }
-
-	/// @returns the current state.
-	State state() const { return m_stackState; }
 
 private:
 	/**
@@ -230,6 +245,7 @@ private:
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
+
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
