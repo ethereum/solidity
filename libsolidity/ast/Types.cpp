@@ -2524,6 +2524,7 @@ bool FunctionType::isBareCall() const
 string FunctionType::externalSignature() const
 {
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
+	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
 
 	bool _inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 
