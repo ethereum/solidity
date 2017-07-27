@@ -12,6 +12,7 @@ Features:
  * Type checker: Warn when existing symbols, including builtins, are overwritten.
 
 Bugfixes:
+ * Type Checker: Fix crash for some assignment to non-lvalue.
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
  * Type Checker: Mark modifiers as internal.
  * Type Checker: Re-allow multiple mentions of the same modifier per function.

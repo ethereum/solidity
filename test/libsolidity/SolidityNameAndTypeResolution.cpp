@@ -6437,6 +6437,20 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 	CHECK_WARNING(text, "\"this\" used in constructor");
 }
 
+BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
+{
+	// This checks for a bug that caused a crash because of continued analysis.
+	char const* text = R"(
+		contract C {
+			mapping (uint => uint) m;
+			function f() {
+				m(1) = 2;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
