@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 		}
 	)";
 	compilerStack.addSource("B", std::string(sourceCode));
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(dev::test::Options::get().optimize), "Compiling contract failed");
+	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
@@ -112,7 +113,8 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 		}
 	)";
 	compilerStack.addSource("C", std::string(sourceCode));
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(dev::test::Options::get().optimize), "Compiling contract failed");
+	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("C");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
