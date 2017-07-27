@@ -272,7 +272,10 @@ private:
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
-	std::map<Declaration const*, unsigned> m_localVariables;
+	/// This needs to be a stack because if a modifier contains a local variable and this
+	/// modifier is applied twice, the position of the variable needs to be restored
+	/// after the nested modifier is left.
+	std::map<Declaration const*, std::vector<unsigned>> m_localVariables;
 	/// List of current inheritance hierarchy from derived to base.
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	/// Stack of current visited AST nodes, used for location attachment
