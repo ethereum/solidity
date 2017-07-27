@@ -186,7 +186,9 @@ number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are mu
 Fixed Point Numbers
 -------------------
 
-**COMING SOON...**
+.. warning::
+    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
+    cannot be assigned to or from.
 
 .. index:: address, literal;address
 
