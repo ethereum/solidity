@@ -233,7 +233,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 {
 	Json::Value root;
 
-	Json::Value collection(Json::arrayValue);
+	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
 		switch (i.type())
@@ -289,11 +289,9 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		}
 	}
 
-	root[".code"] = collection;
-
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		Json::Value data;
+		Json::Value& data = root[".data"] = Json::objectValue;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
 				data[toStringInHex((u256)i.first)] = toHex(i.second);
@@ -304,7 +302,6 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			hexStr << hex << i;
 			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
 		}
-		root[".data"] = data;
 	}
 
 	if (m_auxiliaryData.size() > 0)

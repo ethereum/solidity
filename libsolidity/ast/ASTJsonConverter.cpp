@@ -15,8 +15,7 @@
     along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Lefteris <lefteris@ethdev.com>
- * @date 2015
+ * @date 2017
  * Converts the AST into json format
  */
 
@@ -81,28 +80,22 @@ void ASTJsonConverter::setJsonNode(
 			(_nodeType == "InlineAssembly") ||
 			(_nodeType == "Throw")
 		)
-		{
-			Json::Value children(Json::arrayValue);
-			m_currentValue["children"] = children;
-		}
+			m_currentValue["children"] = Json::arrayValue;
 
 		for (auto& e: _attributes)
 		{
-			if (
-				(!e.second.isNull()) &&
-					(
-					(e.second.isObject() && e.second.isMember("name")) ||
-					(e.second.isArray() && e.second[0].isObject() && e.second[0].isMember("name")) ||
-					(e.first == "declarations") // (in the case (_,x)= ... there's a nullpointer at [0]
-					)
-			)
+			if ((!e.second.isNull()) && (
+				(e.second.isObject() && e.second.isMember("name")) ||
+				(e.second.isArray() && e.second[0].isObject() && e.second[0].isMember("name")) ||
+				(e.first == "declarations") // (in the case (_,x)= ... there's a nullpointer at [0]
+			))
 			{
 				if (e.second.isObject())
-					m_currentValue["children"].append(std::move(e.second));
+					appendMove(m_currentValue["children"], std::move(e.second));
 				if (e.second.isArray())
 					for (auto& child: e.second)
 						if (!child.isNull())
-							m_currentValue["children"].append(std::move(child));
+							appendMove(m_currentValue["children"], std::move(child));
 			}
 			else
 			{
@@ -147,7 +140,7 @@ Json::Value ASTJsonConverter::typePointerToJson(std::shared_ptr<std::vector<Type
 	{
 		Json::Value arguments(Json::arrayValue);
 		for (auto const& tp: *_tps)
-			arguments.append(typePointerToJson(tp));
+			appendMove(arguments, typePointerToJson(tp));
 		return arguments;
 	}
 	else
@@ -186,7 +179,7 @@ void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 	_stream << toJson(_node);
 }
 
-Json::Value ASTJsonConverter::toJson(ASTNode const& _node)
+Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)
 {
 	_node.accept(*this);
 	return std::move(m_currentValue);
@@ -547,7 +540,7 @@ bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 {
 	Json::Value varDecs(Json::arrayValue);
 	for (auto const& v: _node.annotation().assignments)
-		varDecs.append(idOrNull(v));
+		appendMove(varDecs, idOrNull(v));
 	setJsonNode(_node, "VariableDeclarationStatement", {
 		make_pair("assignments", std::move(varDecs)),
 		make_pair("declarations", toJson(_node.declarations())),

@@ -49,13 +49,16 @@ public:
 	);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream, ASTNode const& _node);
-	Json::Value toJson(ASTNode const& _node);
+	Json::Value&& toJson(ASTNode const& _node);
 	template <class T>
 	Json::Value toJson(std::vector<ASTPointer<T>> const& _nodes)
 	{
 		Json::Value ret(Json::arrayValue);
 		for (auto const& n: _nodes)
-			ret.append(n ? toJson(*n) : Json::nullValue);
+			if (n)
+				appendMove(ret, toJson(*n));
+			else
+				ret.append(Json::nullValue);
 		return ret;
 	}
 	bool visit(SourceUnit const& _node) override;
@@ -155,6 +158,12 @@ private:
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,
 		ExpressionAnnotation const& _annotation
 	);
+	static void appendMove(Json::Value& _array, Json::Value&& _value)
+	{
+		solAssert(_array.isArray(), "");
+		_array.append(std::move(_value));
+	}
+
 	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;
