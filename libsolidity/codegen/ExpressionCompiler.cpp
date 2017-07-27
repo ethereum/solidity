@@ -174,7 +174,12 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
 	solAssert(retSizeOnStack == utils().sizeOnStack(returnTypes), "");
-	solAssert(retSizeOnStack <= 15, "Stack is too deep.");
+	if (retSizeOnStack > 15)
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_varDecl.location()) <<
+			errinfo_comment("Stack too deep.")
+		);
 	m_context << dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
