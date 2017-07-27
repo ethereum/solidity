@@ -211,9 +211,10 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	//no types found
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
+		solAssert(
+			false,
 			"Unable to convert elementary typename " + _type.toString() + " to type."
-		));
+		);
 	}
 }
 
@@ -1176,7 +1177,7 @@ u256 BoolType::literalValue(Literal const* _literal) const
 	else if (_literal->token() == Token::FalseLiteral)
 		return u256(0);
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
+		solAssert(false, "Bool type constructed from non-boolean literal.");
 }
 
 TypePointer BoolType::unaryOperatorResult(Token::Value _operator) const
@@ -1938,10 +1939,7 @@ string TupleType::toString(bool _short) const
 
 u256 TupleType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError() <<
-		errinfo_comment("Storage size of non-storable tuple type requested.")
-	);
+	solAssert(false, "Storage size of non-storable tuple type requested.");
 }
 
 unsigned TupleType::sizeOnStack() const
@@ -2323,9 +2321,7 @@ u256 FunctionType::storageSize() const
 	if (m_kind == Kind::External || m_kind == Kind::Internal)
 		return 1;
 	else
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError()
-				<< errinfo_comment("Storage size of non-storable function type requested."));
+		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
 unsigned FunctionType::storageBytes() const
@@ -2335,9 +2331,7 @@ unsigned FunctionType::storageBytes() const
 	else if (m_kind == Kind::Internal)
 		return 8; // it should really not be possible to create larger programs
 	else
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError()
-				<< errinfo_comment("Storage size of non-storable function type requested."));
+		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
 unsigned FunctionType::sizeOnStack() const
@@ -2695,9 +2689,7 @@ bool TypeType::operator==(Type const& _other) const
 
 u256 TypeType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable type type requested."));
+	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
 unsigned TypeType::sizeOnStack() const
@@ -2764,9 +2756,7 @@ ModifierType::ModifierType(const ModifierDefinition& _modifier)
 
 u256 ModifierType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable type type requested."));
+	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
 string ModifierType::identifier() const
@@ -2875,7 +2865,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+		solAssert(false, "Unknown kind of magic.");
 	}
 }
 
@@ -2890,6 +2880,6 @@ string MagicType::toString(bool) const
 	case Kind::Transaction:
 		return "tx";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+		solAssert(false, "Unknown kind of magic.");
 	}
 }

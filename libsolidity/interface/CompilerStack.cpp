@@ -435,7 +435,7 @@ Json::Value const& CompilerStack::natspec(Contract const& _contract, Documentati
 			doc->reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
+		solAssert(false, "Illegal documentation type.");
 	}
 
 	return *(*doc);
@@ -665,11 +665,11 @@ void CompilerStack::compileContract(
 	}
 	catch(eth::OptimizerException const&)
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for bytecode"));
+		solAssert(false, "Assembly optimizer exception for bytecode");
 	}
 	catch(eth::AssemblyException const&)
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for bytecode"));
+		solAssert(false, "Assembly exception for bytecode");
 	}
 
 	try
@@ -678,11 +678,11 @@ void CompilerStack::compileContract(
 	}
 	catch(eth::OptimizerException const&)
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly optimizer exception for deployed bytecode"));
+		solAssert(false, "Assembly optimizer exception for deployed bytecode");
 	}
 	catch(eth::AssemblyException const&)
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Assembly exception for deployed bytecode"));
+		solAssert(false, "Assembly exception for deployed bytecode");
 	}
 
 	compiledContract.metadata = metadata;

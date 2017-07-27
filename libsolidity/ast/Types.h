@@ -245,10 +245,7 @@ public:
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const { return toString(true); }
 	virtual u256 literalValue(Literal const*) const
 	{
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError() <<
-			errinfo_comment("Literal value requested for type without literals.")
-		);
+		solAssert(false, "Literal value requested for type without literals.");
 	}
 
 	/// @returns a (simpler) type that is encoded in the same way for external function calls.

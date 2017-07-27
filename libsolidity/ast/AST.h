@@ -797,11 +797,11 @@ public:
 		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
 	virtual void accept(ASTVisitor&) override
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 	virtual void accept(ASTConstVisitor&) const override
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
 	virtual TypePointer type() const override { return m_type; }
