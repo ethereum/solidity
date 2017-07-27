@@ -10,6 +10,7 @@ Features:
  * Type checker: Warn if using ``this`` in a constructor.
 
 Bugfixes:
+ * Type Checker: Fix crash for some assignment to non-lvalue.
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
  * Type Checker: Mark modifiers as internal.
 
