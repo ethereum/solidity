@@ -641,7 +641,7 @@ Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic 
 If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
 ===========================================================================================================================
 
-The automatic :ref:`getter function <_getter_functions>`  for a public state variable of array type only returns
+The automatic :ref:`getter-functions`  for a public state variable of array type only returns
 individual elements. If you want to return the complete array, you have to
 manually write a function to do that.
 
