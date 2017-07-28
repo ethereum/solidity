@@ -1622,7 +1622,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// zero bytes (which we cannot detect).
 		solAssert(0 < retSize && retSize <= 32, "");
 		utils().fetchFreeMemoryPointer();
-		m_context << Instruction::DUP1 << u256(0) << Instruction::MSTORE;
+		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(32) << Instruction::ADD;
 		utils().storeFreeMemoryPointer();
 	}

@@ -1,5 +1,12 @@
 [
     {
+        "name": "ECRecoverMalformedInput",
+	"summary": "The ecrecover() builtin can return garbage for malformed input.",
+        "description": "The ecrecover precompile does not properly signal failure for malformed input (especially in the 'v' argument) and thus the Solidity function can return data that was previously present in the return area in memory.",
+        "fixed": "0.4.14",
+        "severity": "medium"
+    },
+    {
         "name": "SkipEmptyStringLiteral",
 	"summary": "If \"\" is used in a function call, the following function arguments will not be correctly passed to the function.",
         "description": "If the empty string literal \"\" is used as an argument in a function call, it is skipped by the encoder. This has the effect that the encoding of all arguments following this is shifted left by 32 bytes and thus the function call data is corrupted.",

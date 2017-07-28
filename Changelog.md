@@ -13,6 +13,7 @@ Features:
  * Type checker: Warn when existing symbols, including builtins, are overwritten.
 
 Bugfixes:
+ * Code Generator: Properly clear return memory area for ecrecover.
  * Type Checker: Fix crash for some assignment to non-lvalue.
  * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
  * Type Checker: Mark modifiers as internal.
