@@ -935,7 +935,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		for (auto const& it: contract.definedFunctions())
 		{
 			/// Exclude externally visible functions, constructor and the fallback function
-			if (it->isPartOfExternalInterface() || it->isConstructor() || it->name().empty())
+			if (it->isPartOfExternalInterface() || it->isConstructor() || it->isFallback())
 				continue;
 
 			size_t entry = functionEntryPoint(_contractName, *it);
@@ -943,12 +943,14 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 			if (entry > 0)
 				gas = GasEstimator::functionalEstimation(*items, entry, *it);
 
+			/// TODO: This could move into a method shared with externalSignature()
 			FunctionType type(*it);
 			string sig = it->name() + "(";
 			auto paramTypes = type.parameterTypes();
 			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
 				sig += (*it)->toString() + (it + 1 == paramTypes.end() ? "" : ",");
 			sig += ")";
+
 			internalFunctions[sig] = gasToJson(gas);
 		}
 

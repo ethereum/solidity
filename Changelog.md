@@ -2,6 +2,7 @@
 
 Features:
  * C API (``jsonCompiler``): Export the ``license`` method.
+ * Code Generator: Optimise the fallback function, by removing a useless jump.
  * Inline Assembly: Show useful error message if trying to access calldata variables.
  * Inline Assembly: Support variable declaration without initial value (defaults to 0).
  * Metadata: Only include files which were used to compile the given contract.

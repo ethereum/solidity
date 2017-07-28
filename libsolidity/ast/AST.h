@@ -589,6 +589,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	bool isConstructor() const { return m_isConstructor; }
+	bool isFallback() const { return name().empty(); }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	bool isPayable() const { return m_isPayable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
@@ -596,9 +597,9 @@ public:
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	virtual bool isVisibleInContract() const override
 	{
-		return Declaration::isVisibleInContract() && !isConstructor() && !name().empty();
+		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
 	}
-	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstructor && !name().empty(); }
+	virtual bool isPartOfExternalInterface() const override { return isPublic() && !isConstructor() && !isFallback(); }
 
 	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
