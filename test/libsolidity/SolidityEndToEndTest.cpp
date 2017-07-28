@@ -8268,7 +8268,7 @@ BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input_proper)
 			function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s, uint blockExpired, bytes32 salt)
 				returns (address)
 			{
-				require(hash == sha3(blockExpired, salt));
+				require(hash == keccak256(blockExpired, salt));
 				return ecrecover(hash, v, r, s);
 			}
 		}
