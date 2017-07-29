@@ -545,6 +545,21 @@ The following example computes the sum of an area in memory.
         }
     }
 
+With the for loop header, it is also possible to declare it so it behaves
+like a while loop.  Simply leave the initialization and post-iteration
+parts empty.
+
+.. code::
+
+    {
+        let x := 0
+        let i := 0
+        for { } lt(i, 0x100) { } {     // while(i < 0x100)
+            x := add(x, mload(i))
+            i := add(i, 0x20)
+        }
+    } 
+
 Functions
 ---------
 
