@@ -33,6 +33,8 @@
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/GasMeter.h>
 
+#include <libdevcore/Whiskers.h>
+
 using namespace std;
 
 namespace dev
@@ -910,6 +912,106 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
+			break;
+		}
+		case FunctionType::Kind::ABIEncode:
+		case FunctionType::Kind::ABIEncodePacked:
+		case FunctionType::Kind::ABIEncodeWithSelector:
+		case FunctionType::Kind::ABIEncodeWithSignature:
+		{
+			bool const isPacked = function.kind() == FunctionType::Kind::ABIEncodePacked;
+			bool const hasSelectorOrSignature =
+				function.kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
+
+			TypePointers argumentTypes;
+			TypePointers targetTypes;
+			for (unsigned i = 0; i < arguments.size(); ++i)
+			{
+				arguments[i]->accept(*this);
+				// Do not keep the selector as part of the ABI encoded args
+				if (!hasSelectorOrSignature || i > 0)
+					argumentTypes.push_back(arguments[i]->annotation().type);
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack now: [<selector>] <arg1> .. <argN> <free_mem>
+
+			// adjust by 32(+4) bytes to accommodate the length(+selector)
+			m_context << u256(32 + (hasSelectorOrSignature ? 4 : 0)) << Instruction::ADD;
+			// stack now: [<selector>] <arg1> .. <argN> <data_encoding_area_start>
+
+			if (isPacked)
+			{
+				solAssert(!function.padArguments(), "");
+				utils().packedEncode(argumentTypes, TypePointers());
+			}
+			else
+			{
+				solAssert(function.padArguments(), "");
+				utils().abiEncode(argumentTypes, TypePointers());
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack: [<selector>] <data_encoding_area_end> <bytes_memory_ptr>
+
+			// size is end minus start minus length slot
+			m_context.appendInlineAssembly(R"({
+				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
+			})", {"mem_end", "mem_ptr"});
+			m_context << Instruction::SWAP1;
+			utils().storeFreeMemoryPointer();
+			// stack: [<selector>] <memory ptr>
+
+			if (hasSelectorOrSignature)
+			{
+				// stack: <selector> <memory pointer>
+				solAssert(arguments.size() >= 1, "");
+				TypePointer const& selectorType = arguments[0]->annotation().type;
+				utils().moveIntoStack(selectorType->sizeOnStack());
+				TypePointer dataOnStack = selectorType;
+				// stack: <memory pointer> <selector>
+				if (function.kind() == FunctionType::Kind::ABIEncodeWithSignature)
+				{
+					// hash the signature
+					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType.get()))
+					{
+						FixedHash<4> hash(dev::keccak256(stringType->value()));
+						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+						dataOnStack = make_shared<FixedBytesType>(4);
+					}
+					else
+					{
+						utils().fetchFreeMemoryPointer();
+						// stack: <memory pointer> <selector> <free mem ptr>
+						utils().packedEncode(TypePointers{selectorType}, TypePointers());
+						utils().toSizeAfterFreeMemoryPointer();
+						m_context << Instruction::KECCAK256;
+						// stack: <memory pointer> <hash>
+
+						dataOnStack = make_shared<FixedBytesType>(32);
+					}
+				}
+				else
+				{
+					solAssert(function.kind() == FunctionType::Kind::ABIEncodeWithSelector, "");
+				}
+
+				// Cleanup actually does not clean on shrinking the type.
+				utils().convertType(*dataOnStack, FixedBytesType(4), true);
+
+				// stack: <memory pointer> <selector>
+
+				// load current memory, mask and combine the selector
+				string mask = formatNumber((u256(-1) >> 32));
+				m_context.appendInlineAssembly(R"({
+					let data_start := add(mem_ptr, 0x20)
+					let data := mload(data_start)
+					let mask := )" + mask + R"(
+					mstore(data_start, or(and(data, mask), and(selector, not(mask))))
+				})", {"mem_ptr", "selector"});
+				m_context << Instruction::POP;
+			}
+
+			// stack now: <memory pointer>
 			break;
 		}
 		case FunctionType::Kind::GasLeft:

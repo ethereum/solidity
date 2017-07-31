@@ -3557,6 +3557,45 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 	ABI_CHECK(callContractFunction("f(uint256)", 9), encodeArgs(9));
 }
 
+BOOST_AUTO_TEST_CASE(sha256_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return sha256();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+}
+
+BOOST_AUTO_TEST_CASE(ripemd160_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes20) {
+				return ripemd160();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0x9c1185a5c5e9fc54612808977ee8f548b2258d31000000000000000000000000"));
+}
+
+BOOST_AUTO_TEST_CASE(keccak256_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return keccak256();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+}
+
 BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
 {
 	char const* sourceCode = R"(
@@ -11050,6 +11089,75 @@ BOOST_AUTO_TEST_CASE(snark)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("pair()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes) {
+				return abi.encode(1, 2);
+			}
+			function g() returns (bytes) {
+				return abi.encodePacked(uint256(1), uint256(2));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0x20), u256(0x40), u256(1), u256(2)));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(0x20), u256(0x40), u256(1), u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_complex_call)
+{
+	char const* sourceCode = R"T(
+		contract C {
+			function f(uint8 a, string b, string c) {
+				require(a == 42);
+				require(bytes(b).length == 2);
+				require(bytes(b)[0] == 72); // 'H'
+				require(bytes(b)[1] == 101); // 'e'
+				require(keccak256(b) == keccak256(c));
+			}
+			function g(uint8 a, string b) returns (bool) {
+				bytes request = abi.encode(
+					bytes4(keccak256(abi.encodePacked("f(uint8,string)"))),
+					a,
+					b,
+					"He"
+				);
+				return this.call(request);
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("g(uint8,string)", u256(42), u256(0x40), u256(2), string("He")), encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodewithselector_complex_call)
+{
+	char const* sourceCode = R"T(
+		contract C {
+			function f(uint8 a, string b, string c) {
+				require(a == 42);
+				require(bytes(b).length == 2);
+				require(bytes(b)[0] == 72); // 'H'
+				require(bytes(b)[1] == 101); // 'e'
+				require(keccak256(b) == keccak256(c));
+			}
+			function g(uint8 a, string b) returns (bool) {
+				bytes request = abi.encodeWithSignature(
+					"f(uint8,string)",
+					a,
+					b,
+					"He"
+				);
+				return this.call(request);
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("g(uint8,string)", u256(42), u256(0x40), u256(2), string("He")), encodeArgs(u256(1)));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)

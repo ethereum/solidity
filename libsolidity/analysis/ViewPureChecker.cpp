@@ -305,10 +305,15 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			mutability = StateMutability::View;
 		break;
 	case Type::Category::Magic:
+	{
 		// we can ignore the kind of magic and only look at the name of the member
-		if (member != "data" && member != "sig" && member != "blockhash")
+		set<string> static const pureMembers{
+			"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "data", "sig", "blockhash"
+		};
+		if (!pureMembers.count(member))
 			mutability = StateMutability::View;
 		break;
+	}
 	case Type::Category::Struct:
 	{
 		if (_memberAccess.expression().annotation().type->dataStoredIn(DataLocation::Storage))

@@ -7120,6 +7120,22 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 		}
 	)";
 	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	text = R"(
+		contract C {
+			function f() pure public returns (bytes) {
+				return abi.encode(1);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f() pure public returns (bytes) {
+				return abi.encodePacked(1);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
 }
 
 BOOST_AUTO_TEST_CASE(non_external_fallback)
