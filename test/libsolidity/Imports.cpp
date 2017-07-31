@@ -226,18 +226,19 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_imports)
 		}
 	)");
 	BOOST_CHECK(c.compile());
-	auto numErrors = c.errors().size();
-	// Sometimes we get the prerelease warning, sometimes not.
-	BOOST_CHECK(2 <= numErrors && numErrors <= 3);
+	size_t errorCount = 0;
 	for (auto const& e: c.errors())
 	{
 		string const* msg = e->comment();
 		BOOST_REQUIRE(msg);
+		if (msg->find("pre-release") != string::npos)
+			continue;
 		BOOST_CHECK(
-			msg->find("pre-release") != string::npos ||
 			msg->find("shadows a builtin symbol") != string::npos
 		);
+		errorCount++;
 	}
+	BOOST_CHECK_EQUAL(errorCount, 1);
 }
 
 BOOST_AUTO_TEST_CASE(shadowing_builtins_with_multiple_imports)
