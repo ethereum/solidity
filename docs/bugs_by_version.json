@@ -331,6 +331,10 @@
         ], 
         "released": "2017-07-06"
     }, 
+    "0.4.14": {
+        "bugs": [], 
+        "released": "2017-07-31"
+    }, 
     "0.4.2": {
         "bugs": [
             "ECRecoverMalformedInput", 
