@@ -196,9 +196,9 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::UInt:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
-		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Signed);
+		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
-		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Unsigned);
+		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned);
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
@@ -211,9 +211,10 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	//no types found
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
+		solAssert(
+			false,
 			"Unable to convert elementary typename " + _type.toString() + " to type."
-		));
+		);
 	}
 }
 
@@ -352,12 +353,11 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-		if (convertTo.integerBits() < m_bits || isAddress())
+
+		if (isAddress())
 			return false;
-		else if (isSigned())
-			return convertTo.isSigned();
 		else
-			return !convertTo.isSigned() || convertTo.integerBits() > m_bits;
+			return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
 	}
 	else
 		return false;
@@ -411,6 +411,22 @@ u256 IntegerType::literalValue(Literal const* _literal) const
 	solAssert(_literal, "");
 	solAssert(_literal->value().substr(0, 2) == "0x", "");
 	return u256(_literal->value());
+}
+
+bigint IntegerType::minValue() const
+{
+	if (isSigned())
+		return -(bigint(1) << (m_bits - 1));
+	else
+		return bigint(0);
+}
+
+bigint IntegerType::maxValue() const
+{
+	if (isSigned())
+		return (bigint(1) << (m_bits - 1)) - 1;
+	else
+		return (bigint(1) << m_bits) - 1;
 }
 
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
@@ -471,22 +487,20 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 		return MemberList::MemberMap();
 }
 
-FixedPointType::FixedPointType(int _integerBits, int _fractionalBits, FixedPointType::Modifier _modifier):
-	m_integerBits(_integerBits), m_fractionalBits(_fractionalBits), m_modifier(_modifier)
+FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPointType::Modifier _modifier):
+	m_totalBits(_totalBits), m_fractionalDigits(_fractionalDigits), m_modifier(_modifier)
 {
 	solAssert(
-		m_integerBits + m_fractionalBits > 0 && 
-		m_integerBits + m_fractionalBits <= 256 && 
-		m_integerBits % 8 == 0 && 
-		m_fractionalBits % 8 == 0,
+		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
+		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
 		"Invalid bit number(s) for fixed type: " + 
-		dev::toString(_integerBits) + "x" + dev::toString(_fractionalBits)
-				);
+		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
+	);
 }
 
 string FixedPointType::identifier() const
 {
-	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(integerBits()) + "x" + std::to_string(fractionalBits());
+	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(m_totalBits) + "x" + std::to_string(m_fractionalDigits);
 }
 
 bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -494,12 +508,10 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() == category())
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-		if (convertTo.m_integerBits < m_integerBits || convertTo.m_fractionalBits < m_fractionalBits)
+		if (convertTo.numBits() < m_totalBits || convertTo.fractionalDigits() < m_fractionalDigits)
 			return false;
-		else if (isSigned())
-			return convertTo.isSigned();
 		else
-			return !convertTo.isSigned() || (convertTo.m_integerBits > m_integerBits);
+			return convertTo.maxIntegerValue() >= maxIntegerValue() && convertTo.minIntegerValue() <= minIntegerValue();
 	}
 	return false;
 }
@@ -533,13 +545,30 @@ bool FixedPointType::operator==(Type const& _other) const
 	if (_other.category() != category())
 		return false;
 	FixedPointType const& other = dynamic_cast<FixedPointType const&>(_other);
-	return other.m_integerBits == m_integerBits && other.m_fractionalBits == m_fractionalBits && other.m_modifier == m_modifier;
+	return other.m_totalBits == m_totalBits && other.m_fractionalDigits == m_fractionalDigits && other.m_modifier == m_modifier;
 }
 
 string FixedPointType::toString(bool) const
 {
 	string prefix = isSigned() ? "fixed" : "ufixed";
-	return prefix + dev::toString(m_integerBits) + "x" + dev::toString(m_fractionalBits);
+	return prefix + dev::toString(m_totalBits) + "x" + dev::toString(m_fractionalDigits);
+}
+
+bigint FixedPointType::maxIntegerValue() const
+{
+	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
+	return maxValue / pow(bigint(10), m_fractionalDigits);
+}
+
+bigint FixedPointType::minIntegerValue() const
+{
+	if (isSigned())
+	{
+		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
+		return minValue / pow(bigint(10), m_fractionalDigits);
+	}
+	else
+		return bigint(0);
 }
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
@@ -727,13 +756,9 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		if (auto fixed = fixedPointType())
-		{
-			// We disallow implicit conversion if we would have to truncate (fixedPointType()
-			// can return a type that requires truncation).
-			rational value = m_value * (bigint(1) << fixed->fractionalBits());
-			return value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo);
-		}
-		return false;
+			return fixed->isImplicitlyConvertibleTo(_convertTo);
+		else
+			return false;
 	}
 	else if (_convertTo.category() == Category::FixedBytes)
 	{
@@ -937,10 +962,9 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	else
 	{
 		auto fixed = fixedPointType();
-		solAssert(!!fixed, "");
-		rational shifted = m_value * (bigint(1) << fixed->fractionalBits());
-		// truncate
-		shiftedValue = shifted.numerator() / shifted.denominator();
+		solAssert(fixed, "");
+		int fractionalDigits = fixed->fractionalDigits();
+		shiftedValue = (m_value.numerator() / m_value.denominator()) * pow(bigint(10), fractionalDigits);
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
@@ -981,22 +1005,21 @@ shared_ptr<IntegerType const> RationalNumberType::integerType() const
 shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	bool negative = (m_value < 0);
-	unsigned fractionalBits = 0;
+	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
 	rational maxValue = negative ? 
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
-	while (value * 0x100 <= maxValue && value.denominator() != 1 && fractionalBits < 256)
+	while (value * 10 <= maxValue && value.denominator() != 1 && fractionalDigits < 80)
 	{
-		value *= 0x100;
-		fractionalBits += 8;
+		value *= 10;
+		fractionalDigits++;
 	}
 	
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
-	// u256(v) is the actual value that will be put on the stack
-	// From here on, very similar to integerType()
+	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
 	if (negative)
 		// modify value to satisfy bit requirements for negative numbers:
@@ -1006,26 +1029,11 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	if (v > u256(-1))
 		return shared_ptr<FixedPointType const>();
 
-	unsigned totalBits = bytesRequired(v) * 8;
+	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
-	unsigned integerBits = totalBits >= fractionalBits ? totalBits - fractionalBits : 0;
-	// Special case: Numbers between -1 and 0 have their sign bit in the fractional part.
-	if (negative && abs(m_value) < 1 && totalBits > fractionalBits)
-	{
-		fractionalBits += 8;
-		integerBits = 0;
-	}
-
-	if (integerBits > 256 || fractionalBits > 256 || fractionalBits + integerBits > 256)
-		return shared_ptr<FixedPointType const>();
-	if (integerBits == 0 && fractionalBits == 0)
-	{
-		integerBits = 0;
-		fractionalBits = 8;
-	}
 
 	return make_shared<FixedPointType>(
-		integerBits, fractionalBits,
+		totalBits, fractionalDigits,
 		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 	);
 }
@@ -1169,7 +1177,7 @@ u256 BoolType::literalValue(Literal const* _literal) const
 	else if (_literal->token() == Token::FalseLiteral)
 		return u256(0);
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
+		solAssert(false, "Bool type constructed from non-boolean literal.");
 }
 
 TypePointer BoolType::unaryOperatorResult(Token::Value _operator) const
@@ -1212,6 +1220,12 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		isImplicitlyConvertibleTo(_convertTo) ||
 		_convertTo.category() == Category::Integer ||
 		_convertTo.category() == Category::Contract;
+}
+
+bool ContractType::isPayable() const
+{
+	auto fallbackFunction = m_contract.fallbackFunction();
+	return fallbackFunction && fallbackFunction->isPayable();
 }
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
@@ -1373,12 +1387,23 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || length() == other.length();
 }
 
-unsigned ArrayType::calldataEncodedSize(bool _padded) const
+bool ArrayType::validForCalldata() const
+{
+	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
+}
+
+bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
 		return 32;
 	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(_padded));
 	size = ((size + 31) / 32) * 32;
+	return size;
+}
+
+unsigned ArrayType::calldataEncodedSize(bool _padded) const
+{
+	bigint size = unlimitedCalldataEncodedSize(_padded);
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
 	return unsigned(size);
 }
@@ -1914,10 +1939,7 @@ string TupleType::toString(bool _short) const
 
 u256 TupleType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError() <<
-		errinfo_comment("Storage size of non-storable tuple type requested.")
-	);
+	solAssert(false, "Storage size of non-storable tuple type requested.");
 }
 
 unsigned TupleType::sizeOnStack() const
@@ -2299,9 +2321,7 @@ u256 FunctionType::storageSize() const
 	if (m_kind == Kind::External || m_kind == Kind::Internal)
 		return 1;
 	else
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError()
-				<< errinfo_comment("Storage size of non-storable function type requested."));
+		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
 unsigned FunctionType::storageBytes() const
@@ -2311,9 +2331,7 @@ unsigned FunctionType::storageBytes() const
 	else if (m_kind == Kind::Internal)
 		return 8; // it should really not be possible to create larger programs
 	else
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError()
-				<< errinfo_comment("Storage size of non-storable function type requested."));
+		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
 unsigned FunctionType::sizeOnStack() const
@@ -2506,6 +2524,7 @@ bool FunctionType::isBareCall() const
 string FunctionType::externalSignature() const
 {
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
+	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
 
 	bool _inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 
@@ -2671,9 +2690,7 @@ bool TypeType::operator==(Type const& _other) const
 
 u256 TypeType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable type type requested."));
+	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
 unsigned TypeType::sizeOnStack() const
@@ -2740,9 +2757,7 @@ ModifierType::ModifierType(const ModifierDefinition& _modifier)
 
 u256 ModifierType::storageSize() const
 {
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable type type requested."));
+	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
 string ModifierType::identifier() const
@@ -2851,7 +2866,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+		solAssert(false, "Unknown kind of magic.");
 	}
 }
 
@@ -2866,6 +2881,6 @@ string MagicType::toString(bool) const
 	case Kind::Transaction:
 		return "tx";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+		solAssert(false, "Unknown kind of magic.");
 	}
 }

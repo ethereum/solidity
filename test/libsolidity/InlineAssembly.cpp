@@ -195,6 +195,11 @@ BOOST_AUTO_TEST_CASE(vardecl_bool)
 	CHECK_PARSE_ERROR("{ let x := false }", ParserError, "True and false are not valid literals.");
 }
 
+BOOST_AUTO_TEST_CASE(vardecl_empty)
+{
+	BOOST_CHECK(successParse("{ let x }"));
+}
+
 BOOST_AUTO_TEST_CASE(assignment)
 {
 	BOOST_CHECK(successParse("{ let x := 2 7 8 add =: x }"));

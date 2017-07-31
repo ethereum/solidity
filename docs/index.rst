@@ -41,9 +41,6 @@ Available Solidity Integrations
 * `Remix <https://remix.ethereum.org/>`_
     Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
-* `Ethereum Studio <https://live.ether.camp/>`_
-    Specialized web IDE that also provides shell access to a complete Ethereum environment.
-
 * `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
     Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
 
@@ -82,6 +79,8 @@ Discontinued:
 * `Mix IDE <https://github.com/ethereum/mix/>`_
     Qt based IDE for designing, debugging and testing solidity smart contracts.
 
+* `Ethereum Studio <https://live.ether.camp/>`_		
+    Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
 Solidity Tools
 --------------

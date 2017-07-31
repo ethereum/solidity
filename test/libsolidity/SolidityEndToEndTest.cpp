@@ -2696,6 +2696,34 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(4 | 2));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_multiple_times)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a;
+			modifier mod(uint x) { a += x; _; }
+			function f(uint x) mod(2) mod(5) mod(x) returns(uint) { return a; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(2 + 5 + 3));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(2 + 5 + 3));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multiple_times_local_vars)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a;
+			modifier mod(uint x) { uint b = x; a += b; _; a -= b; assert(b == x); }
+			function f(uint x) mod(2) mod(5) mod(x) returns(uint) { return a; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(2 + 5 + 3));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 {
 	char const* sourceCode = R"(
@@ -8223,6 +8251,53 @@ BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input_proper)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (address) {
+				return recover(
+					0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca,
+					0, // invalid v value
+					0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4,
+					0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d,
+					0xca35b7d915458ef540ade6068dfe2f44e8fa733c,
+					0xca35b7d915458ef540ade6068dfe2f44e8fa733c
+				);
+			}
+			function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s, uint blockExpired, bytes32 salt)
+				returns (address)
+			{
+				require(hash == keccak256(blockExpired, salt));
+				return ecrecover(hash, v, r, s);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input_asm)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (address) {
+				assembly {
+					mstore(mload(0x40), 0xca35b7d915458ef540ade6068dfe2f44e8fa733c)
+				}
+				return ecrecover(
+					0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca,
+					0, // invalid v value
+					0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4,
+					0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d
+				);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
+
 BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 {
 	char const* sourceCode = R"(
@@ -9622,7 +9697,7 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK(callContractFunction("k()") == encodeArgs(u256(-25)));
 }
 
-BOOST_AUTO_TEST_CASE(interface)
+BOOST_AUTO_TEST_CASE(interface_contract)
 {
 	char const* sourceCode = R"(
 		interface I {
@@ -9721,6 +9796,24 @@ BOOST_AUTO_TEST_CASE(multi_modifiers)
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(8)));
 	BOOST_CHECK(callContractFunction("f2()") == bytes());
 	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(12)));
+}
+
+BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint a, uint b) {
+				assembly {
+					let x
+					let y, z
+					a := x
+					b := z
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0), u256(0)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -743,7 +743,7 @@ string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
 	case Declaration::Visibility::External:
 		return "external";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration visibility."));
+		solAssert(false, "Unknown declaration visibility.");
 	}
 }
 
@@ -758,7 +758,7 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 	case VariableDeclaration::Location::Memory:
 		return "memory";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown declaration location."));
+		solAssert(false, "Unknown declaration location.");
 	}
 }
 
@@ -773,7 +773,7 @@ string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
 	case ContractDefinition::ContractKind::Library:
 		return "library";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of contract."));
+		solAssert(false, "Unknown kind of contract.");
 	}
 }
 
@@ -788,7 +788,7 @@ string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
 	case FunctionCallKind::StructConstructorCall:
 		return "structConstructorCall";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of function call ."));
+		solAssert(false, "Unknown kind of function call.");
 	}
 }
 
@@ -804,7 +804,7 @@ string ASTJsonConverter::literalTokenKind(Token::Value _token)
 	case dev::solidity::Token::FalseLiteral:
 		return "bool";
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of literal token."));
+		solAssert(false, "Unknown kind of literal token.");
 	}
 }
 

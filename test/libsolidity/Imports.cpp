@@ -20,10 +20,14 @@
  * Tests for high level features like import.
  */
 
-#include <string>
-#include <boost/test/unit_test.hpp>
+#include <test/libsolidity/ErrorCheck.h>
+
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <string>
 
 using namespace std;
 
@@ -201,6 +205,68 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
 	d.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
 	BOOST_CHECK(d.compile());
 }
+
+BOOST_AUTO_TEST_CASE(shadowing_via_import)
+{
+	CompilerStack c;
+	c.addSource("a", "library A {} pragma solidity >=0.0;");
+	c.addSource("b", "library A {} pragma solidity >=0.0;");
+	c.addSource("c", "import {A} from \"./a\"; import {A} from \"./b\";");
+	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_imports)
+{
+	CompilerStack c;
+	c.addSource("B.sol", "contract X {} pragma solidity >=0.0;");
+	c.addSource("b", R"(
+		pragma solidity >=0.0;
+		import * as msg from "B.sol";
+		contract C {
+		}
+	)");
+	BOOST_CHECK(c.compile());
+	size_t errorCount = 0;
+	for (auto const& e: c.errors())
+	{
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		if (msg->find("pre-release") != string::npos)
+			continue;
+		BOOST_CHECK(
+			msg->find("shadows a builtin symbol") != string::npos
+		);
+		errorCount++;
+	}
+	BOOST_CHECK_EQUAL(errorCount, 1);
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_multiple_imports)
+{
+	CompilerStack c;
+	c.addSource("B.sol", "contract msg {} contract block{} pragma solidity >=0.0;");
+	c.addSource("b", R"(
+		pragma solidity >=0.0;
+		import {msg, block} from "B.sol";
+		contract C {
+		}
+	)");
+	BOOST_CHECK(c.compile());
+	auto numErrors = c.errors().size();
+	// Sometimes we get the prerelease warning, sometimes not.
+	BOOST_CHECK(4 <= numErrors && numErrors <= 5);
+	for (auto const& e: c.errors())
+	{
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		BOOST_CHECK(
+			msg->find("pre-release") != string::npos ||
+			msg->find("shadows a builtin symbol") != string::npos
+		);
+	}
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

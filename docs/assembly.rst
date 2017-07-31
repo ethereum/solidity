@@ -92,7 +92,7 @@ you really know what you are doing.
         function sumAsm(uint[] _data) returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
-                    o_sum := mload(add(add(_data, 0x20), mul(i, 0x20)))
+                    o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
                 }
             }
         }
@@ -110,7 +110,7 @@ these curly braces, the following can be used (see the later sections for more d
  - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
  - opcodes in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
- - variable declarations, e.g. ``let x := 7`` or ``let x := add(y, 3)``
+ - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
  - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
  - assignments (in "instruction style"), e.g. ``3 =: x``
  - assignments in functional style, e.g. ``x := add(y, 3)``
@@ -490,7 +490,7 @@ is performed by replacing the variable's value on the stack by the new value.
 
 .. code::
 
-    assembly {
+    {
         let v := 0 // functional-style assignment as part of variable declaration
         let g := add(v, 2)
         sload(10)
@@ -509,7 +509,7 @@ case called ``default``.
 
 .. code::
 
-    assembly {
+    {
         let x := 0
         switch calldataload(4)
         case 0 {
@@ -538,7 +538,7 @@ The following example computes the sum of an area in memory.
 
 .. code::
 
-    assembly {
+    {
         let x := 0
         for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
             x := add(x, mload(i))
@@ -565,7 +565,7 @@ The following example implements the power function by square-and-multiply.
 
 .. code::
 
-    assembly {
+    {
         function power(base, exponent) -> result {
             switch exponent
             case 0 { result := 1 }
@@ -678,6 +678,8 @@ Example:
 
 We will follow an example compilation from Solidity to desugared assembly.
 We consider the runtime bytecode of the following Solidity program::
+
+    pragma solidity ^0.4.0;
 
     contract C {
       function f(uint x) returns (uint y) {
@@ -965,7 +967,7 @@ adjustment. Every time a new
 local variable is introduced, it is registered together with the current
 stack height. If a variable is accessed (either for copying its value or for
 assignment), the appropriate DUP or SWAP instruction is selected depending
-on the difference bitween the current stack height and the
+on the difference between the current stack height and the
 stack height at the point the variable was introduced.
 
 Pseudocode::

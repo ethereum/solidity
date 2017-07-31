@@ -77,6 +77,12 @@ private:
 	std::map<VariableDeclaration const*, int> m_localVarUseCount;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
+
+	/// Flag that indicates a constructor.
+	bool m_constructor = false;
+
+	/// Current contract.
+	ContractDefinition const* m_currentContract = nullptr;
 };
 
 }

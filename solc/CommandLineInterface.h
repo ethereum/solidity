@@ -64,7 +64,7 @@ private:
 	void handleOpcode(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
 	void handleSignatureHashes(std::string const& _contract);
-	void handleOnChainMetadata(std::string const& _contract);
+	void handleMetadata(std::string const& _contract);
 	void handleABI(std::string const& _contract);
 	void handleNatspec(DocumentationType _type, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);

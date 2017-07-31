@@ -23,18 +23,23 @@
 #pragma once
 
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <boost/noncopyable.hpp>
-#include <libevmasm/SourceLocation.h>
-#include <libevmasm/Instruction.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+
+#include <libevmasm/SourceLocation.h>
+#include <libevmasm/Instruction.h>
+
+#include <libdevcore/FixedHash.h>
 #include <json/json.h>
+
+#include <boost/noncopyable.hpp>
+
+#include <string>
+#include <vector>
+#include <memory>
 
 namespace dev
 {
@@ -131,6 +136,9 @@ public:
 
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
+	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
+	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
+
 private:
 	std::vector<ASTPointer<ASTNode>> m_nodes;
 };
@@ -162,6 +170,9 @@ public:
 	/// Available only after name and type resolution step.
 	ASTNode const* scope() const { return m_scope; }
 	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+
+	/// @returns the source unit this declaration is present in.
+	SourceUnit const& sourceUnit() const;
 
 	/// @returns the source name this declaration is present in.
 	/// Can be combined with annotation().canonicalName to form a globally unique name.
@@ -578,6 +589,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	bool isConstructor() const { return m_isConstructor; }
+	bool isFallback() const { return name().empty(); }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	bool isPayable() const { return m_isPayable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
@@ -585,9 +597,9 @@ public:
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	virtual bool isVisibleInContract() const override
 	{
-		return Declaration::isVisibleInContract() && !isConstructor() && !name().empty();
+		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
 	}
-	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstructor && !name().empty(); }
+	virtual bool isPartOfExternalInterface() const override { return isPublic() && !isConstructor() && !isFallback(); }
 
 	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
@@ -650,6 +662,10 @@ public:
 	bool isLocalVariable() const { return !!dynamic_cast<CallableDeclaration const*>(scope()); }
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
+	/// @returns true if this variable is a return parameter of a function.
+	bool isReturnParameter() const;
+	/// @returns true if this variable is a local variable or return parameter.
+	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
 	bool isExternalCallableParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
@@ -695,7 +711,7 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Default, _parameters),
+		CallableDeclaration(_location, _name, Visibility::Internal, _parameters),
 		Documented(_documentation),
 		m_body(_body)
 	{
@@ -782,11 +798,11 @@ public:
 		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
 	virtual void accept(ASTVisitor&) override
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 	virtual void accept(ASTConstVisitor&) const override
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
 	virtual TypePointer type() const override { return m_type; }

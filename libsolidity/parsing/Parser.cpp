@@ -87,7 +87,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseContractDefinition(token));
 				break;
 			default:
-				fatalParserError(string("Expected import directive or contract definition."));
+				fatalParserError(string("Expected pragma, import directive or contract/interface/library definition."));
 			}
 		}
 		return nodeFactory.createNode<SourceUnit>(nodes);

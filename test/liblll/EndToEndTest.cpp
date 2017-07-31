@@ -165,6 +165,56 @@ BOOST_AUTO_TEST_CASE(conditional_seq)
 	BOOST_CHECK(callFallback() == toBigEndian(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_nested_else)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'input (calldataload 0x04))
+				;; Calculates width in bytes of utf-8 characters.
+				(return
+					(if (< input 0x80) 1
+						(if (< input 0xE0) 2
+							(if (< input 0xF0) 3
+								(if (< input 0xF8) 4
+									(if (< input 0xFC) 5
+										6))))))))
+
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0x00) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("test()", 0x80) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("test()", 0xe0) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("test()", 0xf0) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("test()", 0xf8) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_nested_then)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'input (calldataload 0x04))
+				;; Calculates width in bytes of utf-8 characters.
+				(return
+					(if (>= input 0x80)
+						(if (>= input 0xE0)
+							(if (>= input 0xF0)
+								(if (>= input 0xF8)
+									(if (>= input 0xFC)
+										6 5) 4) 3) 2) 1))))
+
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0x00) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("test()", 0x80) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("test()", 0xe0) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("test()", 0xf0) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("test()", 0xf8) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
+}
+
 BOOST_AUTO_TEST_CASE(exp_operator_const)
 {
 	char const* sourceCode = R"(
@@ -387,6 +437,37 @@ BOOST_AUTO_TEST_CASE(assembly_codecopy)
 	BOOST_CHECK(callFallback() == encodeArgs(string("abcdef")));
 }
 
+BOOST_AUTO_TEST_CASE(for_loop)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(for
+					{ (set 'i 1) (set 'j 1) } ; INIT
+					(<= @i 10)                ; PRED
+					[i]:(+ @i 1)              ; POST
+					[j]:(* @j @i))            ; BODY
+				(return j 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(3628800))); // 10!
+}
+
+BOOST_AUTO_TEST_CASE(while_loop)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				;; Euclid's GCD algorithm
+				(set 'a 1071)
+				(set 'b 462)
+				(while @b
+					[a]:(raw @b [b]:(mod @a @b)))
+				(return a 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(21))); // GCD(1071,462)
+}
 
 BOOST_AUTO_TEST_CASE(keccak256_32bytes)
 {
@@ -434,6 +515,61 @@ BOOST_AUTO_TEST_CASE(send_three_args)
 	compileAndRun(sourceCode);
 	callFallbackWithValue(42);
 	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+}
+
+// Regression test for edge case that previously failed
+BOOST_AUTO_TEST_CASE(alloc_zero)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 (~ 0))
+				(alloc 0)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(-1)));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_size)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x00 0) ; reserve space for the result of the alloc
+				(mstore 0x00 (alloc (calldataload 0x04)))
+				(return (- (msize) (mload 0x00)))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0)  == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("test()", 1)  == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 32) == encodeArgs(u256(32)));
+	BOOST_CHECK(callContractFunction("test()", 33) == encodeArgs(u256(64)));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_start)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(mstore 0x40 0)     ; Set initial MSIZE to 0x60
+				(return (alloc 1))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(96));
+}
+
+BOOST_AUTO_TEST_CASE(alloc_with_variable)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(set 'x (alloc 1))
+				(mstore8 @x 42)    ; ASCII '*'
+				(return @x 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs("*"));
 }
 
 BOOST_AUTO_TEST_CASE(msg_six_args)

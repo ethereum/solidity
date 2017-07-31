@@ -203,7 +203,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (us == "INCLUDE")
 		{
 			if (_t.size() != 2)
-				error<IncorrectParameterCount>();
+				error<IncorrectParameterCount>(us);
 			string fileName = firstAsString();
 			if (fileName.empty())
 				error<InvalidName>("Empty file name provided");
@@ -215,7 +215,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (us == "SET")
 		{
 			if (_t.size() != 3)
-				error<IncorrectParameterCount>();
+				error<IncorrectParameterCount>(us);
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++ == 2)
@@ -226,7 +226,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (us == "GET")
 		{
 			if (_t.size() != 2)
-				error<IncorrectParameterCount>();
+				error<IncorrectParameterCount>(us);
 			m_asm.append((u256)varAddress(firstAsString()));
 			m_asm.append(Instruction::MLOAD);
 		}
@@ -237,7 +237,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string n;
 			unsigned ii = 0;
 			if (_t.size() != 3 && _t.size() != 4)
-				error<IncorrectParameterCount>();
+				error<IncorrectParameterCount>(us);
 			vector<string> args;
 			for (auto const& i: _t)
 			{
@@ -288,7 +288,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (us == "LIT")
 		{
 			if (_t.size() < 3)
-				error<IncorrectParameterCount>();
+				error<IncorrectParameterCount>(us);
 			unsigned ii = 0;
 			CodeFragment pos;
 			bytes data;
@@ -303,7 +303,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				{
 					pos = CodeFragment(i, _s);
 					if (pos.m_asm.deposit() != 1)
-						error<InvalidDeposit>();
+						error<InvalidDeposit>(us);
 				}
 				else if (i.tag() != 0)
 				{
@@ -384,10 +384,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				else
 					code.push_back(CodeFragment(i, _s));
 			}
-		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(); };
-		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(); };
-		auto requireMaxSize = [&](unsigned s) { if (code.size() > s) error<IncorrectParameterCount>(); };
-		auto requireDeposit = [&](unsigned i, int s) { if (code[i].m_asm.deposit() != s) error<InvalidDeposit>(); };
+		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
+		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };
+		auto requireMaxSize = [&](unsigned s) { if (code.size() > s) error<IncorrectParameterCount>(us); };
+		auto requireDeposit = [&](unsigned i, int s) { if (code[i].m_asm.deposit() != s) error<InvalidDeposit>(us); };
 
 		if (_s.macros.count(make_pair(s, code.size())))
 		{
@@ -412,11 +412,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (c_instructions.count(us))
 		{
 			auto it = c_instructions.find(us);
-			int ea = instructionInfo(it->second).args;
-			if (ea >= 0)
-				requireSize(ea);
-			else
-				requireMinSize(-ea);
+			requireSize(instructionInfo(it->second).args);
 
 			for (unsigned i = code.size(); i; --i)
 				m_asm.append(code[i - 1].m_asm, 1);
@@ -475,7 +471,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.append(code[1].m_asm, minDep);
 			m_asm << end.tag();
 			if (m_asm.deposit() != deposit)
-				error<InvalidDeposit>();
+				error<InvalidDeposit>(us);
 		}
 		else if (us == "WHEN" || us == "UNLESS")
 		{
@@ -523,14 +519,30 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireSize(1);
 			requireDeposit(0, 1);
 
-			m_asm.append(Instruction::MSIZE);
-			m_asm.append(u256(0));
+			// (alloc N):
+			//  - Evaluates to (msize) before the allocation - the start of the allocated memory
+			//  - Does not allocate memory when N is zero
+			//  - Size of memory allocated is N bytes rounded up to a multiple of 32
+			//  - Uses MLOAD to expand MSIZE to avoid modifying memory.
+
+			auto end = m_asm.newTag();
+			m_asm.append(Instruction::MSIZE); // Result will be original top of memory
+			m_asm.append(code[0].m_asm, 1);	  // The alloc argument N
+			m_asm.append(Instruction::DUP1);
+			m_asm.append(Instruction::ISZERO);// (alloc 0) does not change MSIZE
+			m_asm.appendJumpI(end);
 			m_asm.append(u256(1));
-			m_asm.append(code[0].m_asm, 1);
-			m_asm.append(Instruction::MSIZE);
+			m_asm.append(Instruction::DUP2);  // Copy N
+			m_asm.append(Instruction::SUB);	  // N-1
+			m_asm.append(u256(0x1f));         // Bit mask
+			m_asm.append(Instruction::NOT);	  // Invert
+			m_asm.append(Instruction::AND);	  // Align N-1 on 32 byte boundary
+			m_asm.append(Instruction::MSIZE); // MSIZE is cheap
 			m_asm.append(Instruction::ADD);
-			m_asm.append(Instruction::SUB);
-			m_asm.append(Instruction::MSTORE8);
+			m_asm.append(Instruction::MLOAD); // Updates MSIZE
+			m_asm.append(Instruction::POP);	  // Discard the result of the MLOAD
+			m_asm.append(end);
+			m_asm.append(Instruction::POP);	  // Discard duplicate N
 
 			_s.usedAlloc = true;
 		}

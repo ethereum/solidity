@@ -1,3 +1,25 @@
+### 0.4.14 (2017-07-31)
+
+Features:
+ * C API (``jsonCompiler``): Export the ``license`` method.
+ * Code Generator: Optimise the fallback function, by removing a useless jump.
+ * Inline Assembly: Show useful error message if trying to access calldata variables.
+ * Inline Assembly: Support variable declaration without initial value (defaults to 0).
+ * Metadata: Only include files which were used to compile the given contract.
+ * Type Checker: Disallow value transfers to contracts without a payable fallback function.
+ * Type Checker: Include types in explicit conversion error message.
+ * Type Checker: Raise proper error for arrays too large for ABI encoding.
+ * Type checker: Warn if using ``this`` in a constructor.
+ * Type checker: Warn when existing symbols, including builtins, are overwritten.
+
+Bugfixes:
+ * Code Generator: Properly clear return memory area for ecrecover.
+ * Type Checker: Fix crash for some assignment to non-lvalue.
+ * Type Checker: Fix invalid "specify storage keyword" warning for reference members of structs.
+ * Type Checker: Mark modifiers as internal.
+ * Type Checker: Re-allow multiple mentions of the same modifier per function.
+
+
 ### 0.4.13 (2017-07-06)
 
 Features:

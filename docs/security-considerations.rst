@@ -14,7 +14,7 @@ the source code is often available.
 
 Of course you always have to consider how much is at stake:
 You can compare a smart contract with a web service that is open to the
-public (and thus, also to malicous actors) and perhaps even open source.
+public (and thus, also to malicious actors) and perhaps even open source.
 If you only store your grocery list on that web service, you might not have
 to take too much care, but if you manage your bank account using that web service,
 you should be more careful.
@@ -179,11 +179,13 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
     }
 
-Now someone tricks you into sending ether to the address of this attack wallet:
+Now someone tricks you into sending ether to the address of this attack wallet::
 
-::
+    pragma solidity ^0.4.11;
 
-    pragma solidity ^0.4.0;
+    interface TxUserWallet {
+        function transferTo(address dest, uint amount);
+    }
 
     contract TxAttackWallet {
         address owner;
@@ -278,8 +280,7 @@ Formal Verification
 Using formal verification, it is possible to perform an automated mathematical
 proof that your source code fulfills a certain formal specification.
 The specification is still formal (just as the source code), but usually much
-simpler. There is a prototype in Solidity that performs formal verification and
-it will be better documented soon.
+simpler.
 
 Note that formal verification itself can only help you understand the
 difference between what you did (the specification) and how you did it

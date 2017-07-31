@@ -28,11 +28,11 @@ using namespace std;
 
 bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _substr)
 {
-	if (string const* errorMessage = boost::get_error_info<dev::errinfo_comment>(_err))
+	if (string const* errorMessage = _err.comment())
 	{
 		if (errorMessage->find(_substr) == std::string::npos)
 		{
-			cout << "Expected message \"" << _substr << "\" but found" << *errorMessage << endl;
+			cout << "Expected message \"" << _substr << "\" but found \"" << *errorMessage << "\".\n";
 			return false;
 		}
 		return true;

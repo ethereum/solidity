@@ -26,27 +26,10 @@
 #include <libsolidity/interface/Natspec.h>
 #include <boost/range/irange.hpp>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/CompilerStack.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
-
-Json::Value Natspec::documentation(
-	ContractDefinition const& _contractDef,
-	DocumentationType _type
-)
-{
-	switch(_type)
-	{
-	case DocumentationType::NatspecUser:
-		return userDocumentation(_contractDef);
-	case DocumentationType::NatspecDev:
-		return devDocumentation(_contractDef);
-	}
-
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
-}
 
 Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {

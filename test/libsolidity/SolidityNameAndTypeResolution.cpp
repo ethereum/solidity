@@ -112,7 +112,14 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 			)
 			{
 				if (error && !_allowMultipleErrors)
-					BOOST_FAIL("Multiple errors found");
+				{
+					string message("Multiple errors found: ");
+					for (auto const& e: errorReporter.errors())
+						if (string const* description = boost::get_error_info<errinfo_comment>(*e))
+							message += *description + ", ";
+
+					BOOST_FAIL(message);
+				}
 				if (!error)
 					error = currentError;
 			}
@@ -1108,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Modifier already used for this function");
+	success(text);
 }
 
 BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
@@ -2283,6 +2290,9 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 30, 0)) == *make_shared<FixedBytesType>(30));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 31, 0)) == *make_shared<FixedBytesType>(31));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 32, 0)) == *make_shared<FixedBytesType>(32));
+
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned));
 }
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
@@ -4026,7 +4036,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_types_0x7_mxn)
 			fixed0x7 a = .3;
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_types_long_invalid_identifier)
@@ -4036,7 +4046,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_types_long_invalid_identifier)
 			fixed99999999999999999999999999999999999999x7 b = 9.5;
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_types_7x8_mxn)
@@ -4046,7 +4056,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_types_7x8_mxn)
 			fixed7x8 c = 3.12345678;
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found");
 }
 
 BOOST_AUTO_TEST_CASE(library_instances_cannot_be_used)
@@ -4060,7 +4070,7 @@ BOOST_AUTO_TEST_CASE(library_instances_cannot_be_used)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Member \"l\" not found or not visible after argument-dependent lookup in library L");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
@@ -4072,7 +4082,7 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
@@ -4080,8 +4090,8 @@ BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
 	char const* text = R"(
 		contract test {
 			function f() {
-				uint128 a = 3;
-				int128 b = 4;
+				uint64 a = 3;
+				int64 b = 4;
 				fixed c = b;
 				ufixed d = a;
 				c; d;
@@ -4130,7 +4140,7 @@ BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Type fixed128x19 is not implicitly convertible to expected type int256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_unary_operation)
@@ -4138,10 +4148,9 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x16 a = 3.25;
-				fixed8x16 b = -3.25;
-				a;
-				b;
+				ufixed16x2 a = 3.25;
+				fixed16x2 b = -3.25;
+				a; b;
 			}
 		}
 	)";
@@ -4149,13 +4158,13 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	text = R"(
 		contract test {
 			function f() {
-				ufixed8x16 a = +3.25;
-				fixed8x16 b = -3.25;
+				ufixed16x2 a = +3.25;
+				fixed16x2 b = -3.25;
 				a; b;
 			}
 		}
 	)";
-	CHECK_WARNING(text,"Use of unary + is deprecated");
+	CHECK_WARNING(text, "Use of unary + is deprecated");
 	text = R"(
 		contract test {
 			function f(uint x) {
@@ -4172,10 +4181,10 @@ BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
 	char const* text = R"(
 		contract A {
 			function f() {
-				ufixed0x8 a = 0.5;
-				ufixed0x56 b = 0.0000000000000006661338147750939242541790008544921875;
-				fixed0x8 c = -0.5;
-				fixed0x56 d = -0.0000000000000006661338147750939242541790008544921875;
+				ufixed16x2 a = 0.5;
+				ufixed256x52 b = 0.0000000000000006661338147750939242541790008544921875;
+				fixed16x2 c = -0.5;
+				fixed256x52 d = -0.0000000000000006661338147750939242541790008544921875;
 				a; b; c; d;
 			}
 		}
@@ -4188,13 +4197,26 @@ BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed248x8 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
-				ufixed0x256 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637829135688384325135165352082715782143655824815685807141335814463015972119819459298455224338812271036061391763384038070334798471324635050876128428143374549108557403087615966796875;
-				ufixed0x256 c = 0.0000000000015198847363997979984922685411315294875958273543939784943666052676464653042434787697605517039455161817147718251801220885263595179331845639229818863564267318422845592626219390573301877339317935702714669975697814319204326238832436501979827880859375;
-				fixed248x8 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
-				fixed0x256 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
-				fixed0x256 g = -0.00011788606643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+				ufixed256x1 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				ufixed256x77 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637;
+				ufixed224x78 c = 0.000000000001519884736399797998492268541131529487595827354393978494366605267646;
+				fixed256x1 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				fixed256x76 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123;
+				fixed256x79 g = -0.0001178860664374434257558003517679482519889396811442970209184641173410108012309;
 				a; b; c; d; e; g;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(zero_handling)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed16x2 a = 0; a;
+				ufixed32x1 b = 0; b;
 			}
 		}
 	)";
@@ -4207,11 +4229,11 @@ BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_size)
 		contract test {
 			function f() {
 				ufixed a = 11/4;
-				ufixed248x8 b = a;
+				ufixed248x8 b = a; b;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Type ufixed128x19 is not implicitly convertible to expected type ufixed248x8");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
@@ -4219,11 +4241,11 @@ BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed0x256 a = 1/3;
+				ufixed256x1 a = 1/3; a;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type ufixed256x1");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
@@ -4231,10 +4253,9 @@ BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed0x256 a = ufixed0x256(1/3);
-				ufixed0x248 b = ufixed0x248(1/3);
-				ufixed0x8 c = ufixed0x8(1/3);
-				a; b; c;
+				ufixed256x80 a = ufixed256x80(1/3); a;
+				ufixed248x80 b = ufixed248x80(1/3); b;
+				ufixed8x1 c = ufixed8x1(1/3); c;
 			}
 		}
 	)";
@@ -4246,23 +4267,35 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
 	char const* text = R"(
 		contract test {
 			function f() {
-				uint[3.5] a;
+				uint[3.5] a; a;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
 }
 
-BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_fixed_type)
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
-				uint[fixed(3.5)] a;
+				uint[fixed(3.5)] a; a;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[ufixed(3.5)] a; a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
@@ -4270,11 +4303,11 @@ BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
 	char const* text = R"(
 		contract test {
 			function f() {
-				bytes32 c = 3.2;
+				bytes32 c = 3.2; c;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type bytes32");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
@@ -4283,18 +4316,18 @@ BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
 		contract test {
 			function f() {
 				fixed a = 3.25;
-				bytes32 c = a;
+				bytes32 c = a; c;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "fixed128x19 is not implicitly convertible to expected type bytes32");
 }
 
 BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
 {
 	char const* text = R"(
 		contract test {
-			mapping(ufixed8x248 => string) fixedString;
+			mapping(ufixed8x1 => string) fixedString;
 			function f() {
 				fixedString[0.5] = "Half";
 			}
@@ -4334,7 +4367,7 @@ BOOST_AUTO_TEST_CASE(inline_array_rationals)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+				ufixed128x3[4] memory a = [ufixed128x3(3.5), 4.125, 2.5, 4.0];
 			}
 		}
 	)";
@@ -4351,7 +4384,7 @@ BOOST_AUTO_TEST_CASE(rational_index_access)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "rational_const 1/2 is not implicitly convertible to expected type uint256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
@@ -4359,12 +4392,12 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x8 a = 3.5 * 3;
-				ufixed8x8 b = 4 - 2.5;
-				ufixed8x8 c = 11 / 4;
-				ufixed16x240 d = 599 + 0.21875;
-				ufixed8x248 e = ufixed8x248(35.245 % 12.9);
-				ufixed8x248 f = ufixed8x248(1.2 % 2);
+				ufixed64x8 a = 3.5 * 3;
+				ufixed64x8 b = 4 - 2.5;
+				ufixed64x8 c = 11 / 4;
+				ufixed240x5 d = 599 + 0.21875;
+				ufixed256x80 e = ufixed256x80(35.245 % 12.9);
+				ufixed256x80 f = ufixed256x80(1.2 % 2);
 				fixed g = 2 ** -2;
 				a; b; c; d; e; f; g;
 			}
@@ -4373,7 +4406,7 @@ BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_decimal)
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_signed)
 {
 	char const* text = R"(
 		contract test {
@@ -4382,10 +4415,10 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_decimal)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
-BOOST_AUTO_TEST_CASE(rational_as_exponent_value_pos_decimal)
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value_unsigned)
 {
 	char const* text = R"(
 		contract test {
@@ -4394,7 +4427,7 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value_pos_decimal)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(rational_as_exponent_half)
@@ -4402,11 +4435,11 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_half)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed24x24 b = 2 ** (1/2);
+				2 ** (1/2);
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_quarter)
@@ -4414,11 +4447,11 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value_neg_quarter)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed40x40 c = 42 ** (-1/4);
+				42 ** (-1/4);
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_15)
@@ -4426,23 +4459,11 @@ BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_15)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed a = 3 ** ufixed(1.5);
+				var a = 3 ** ufixed(1.5);
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_half)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				ufixed b = 2 ** ufixed(1/2);
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_neg)
@@ -4450,23 +4471,11 @@ BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_neg)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed c = 42 ** fixed(-1/4);
+				var c = 42 ** fixed(-1/4);
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents_neg_decimal)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed d = 16 ** fixed(-0.5);
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
@@ -4506,7 +4515,7 @@ BOOST_AUTO_TEST_CASE(var_handle_divided_integers)
 			}
 		}
 	)";
-	CHECK_SUCCESS(text);	
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
@@ -4514,11 +4523,11 @@ BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = ~3.5;
+				~fixed(3.5);
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "cannot be applied");
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitor_binary_operation)
@@ -4526,11 +4535,11 @@ BOOST_AUTO_TEST_CASE(rational_bitor_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.5 | 3;
+				fixed(1.5) | 3;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitxor_binary_operation)
@@ -4538,11 +4547,11 @@ BOOST_AUTO_TEST_CASE(rational_bitxor_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.75 ^ 3;
+				fixed(1.75) ^ 3;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
@@ -4550,25 +4559,11 @@ BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 1.75 & 3;
+				fixed(1.75) & 3;
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(zero_handling)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed8x8 a = 0;
-				ufixed8x8 b = 0;
-				a; b;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
+	CHECK_ERROR(text, TypeError, "not compatible with types");
 }
 
 BOOST_AUTO_TEST_CASE(missing_bool_conversion)
@@ -4588,7 +4583,7 @@ BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed a = uint128(1) + ufixed(2);
+				ufixed a = uint64(1) + ufixed(2);
 			}
 		}
 	)";
@@ -4618,7 +4613,7 @@ BOOST_AUTO_TEST_CASE(one_divided_by_three_integer_conversion)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type uint256. Try converting to type ufixed256x77");
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value)
@@ -5428,6 +5423,20 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)
+{
+	char const* text = R"(
+		contract C {
+			function f(bytes bytesAsCalldata) external {
+				assembly {
+					let x := bytesAsCalldata
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Call data elements cannot be accessed directly.");
+}
+
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 {
 	char const* text = R"(
@@ -5481,22 +5490,6 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_library)
 {
 	char const* text = R"(
 		library C {
-			function f() {
-				msg.value;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(does_not_warn_non_magic_msg_value)
-{
-	char const* text = R"(
-		contract C {
-			struct msg {
-				uint256 value;
-			}
-
 			function f() {
 				msg.value;
 			}
@@ -6118,6 +6111,85 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_functions)
+{
+	char const* text = R"(
+		contract C {
+			function keccak256() {}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_variables)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint msg;
+				msg;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_parameters)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint require) {
+				require = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_return_parameters)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint require) {
+				require = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_events)
+{
+	char const* text = R"(
+		contract C {
+			event keccak256();
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct a {
+				uint msg;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(callable_crash)
 {
 	char const* text = R"(
@@ -6130,6 +6202,94 @@ BOOST_AUTO_TEST_CASE(callable_crash)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Type is not callable");
+}
+
+BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
+{
+	char const* text = R"(
+		contract A {}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				require(a.send(100));
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+}
+
+BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
+{
+	char const* text = R"(
+		contract A {
+			function() payable {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
+{
+	char const* text = R"(
+		contract A {
+			function transfer(uint) {}
+		}
+
+		contract B {
+			A a;
+
+			function() {
+				a.transfer(100);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
@@ -6148,19 +6308,11 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
 }
 
-BOOST_AUTO_TEST_CASE(shadowing_warning_can_be_removed)
-{
-	char const* text = R"(
-		contract C {function f() {assembly {}}}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
 BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 {
 	char const* text = R"(
 		contract C {
-			struct S { uint a; }
+			struct S { uint a; string b; }
 			S x;
 			function f() {
 				S storage y = x;
@@ -6182,6 +6334,122 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 	CHECK_WARNING(text, "is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
 }
 
+BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bytes4) {
+				uint32 tmp = 1;
+				return tmp;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Return argument type uint32 is not implicitly convertible to expected type (type of first return variable) bytes4.");
+}
+
+BOOST_AUTO_TEST_CASE(too_large_arrays_for_calldata)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint[85678901234] a) external {
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
+	text = R"(
+		contract C {
+			function f(uint[85678901234] a) internal {
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint[85678901234] a) {
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
+}
+
+BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				string memory x = "abc";
+				x;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f() {
+				string storage x = "abc";
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
+	text = R"(
+		contract C {
+			function f() {
+				string x = "abc";
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
+	text = R"(
+		contract C {
+			function f() {
+				string("abc");
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed from \"literal_string \"abc\"\" to \"string storage pointer\"");
+}
+
+BOOST_AUTO_TEST_CASE(modifiers_access_storage_pointer)
+{
+	char const* text = R"(
+		contract C {
+			struct S { }
+			modifier m(S storage x) {
+				x;
+				_;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(using_this_in_constructor)
+{
+	char const* text = R"(
+		contract C {
+			function C() {
+				this.f();
+			}
+			function f() {
+			}
+		}
+	)";
+	CHECK_WARNING(text, "\"this\" used in constructor");
+}
+
+BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
+{
+	// This checks for a bug that caused a crash because of continued analysis.
+	char const* text = R"(
+		contract C {
+			mapping (uint => uint) m;
+			function f() {
+				m(1) = 2;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

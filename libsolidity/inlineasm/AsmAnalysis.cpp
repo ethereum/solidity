@@ -174,14 +174,20 @@ bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 
 bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 {
-	int const expectedItems = _varDecl.variables.size();
-	int const stackHeight = m_stackHeight;
-	bool success = boost::apply_visitor(*this, *_varDecl.value);
-	if ((m_stackHeight - stackHeight) != expectedItems)
+	bool success = true;
+	int const numVariables = _varDecl.variables.size();
+	if (_varDecl.value)
 	{
-		m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
-		return false;
+		int const stackHeight = m_stackHeight;
+		success = boost::apply_visitor(*this, *_varDecl.value);
+		if ((m_stackHeight - stackHeight) != numVariables)
+		{
+			m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
+			return false;
+		}
 	}
+	else
+		m_stackHeight += numVariables;
 
 	for (auto const& variable: _varDecl.variables)
 	{

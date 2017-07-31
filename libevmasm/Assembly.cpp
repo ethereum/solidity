@@ -350,38 +350,65 @@ void Assembly::injectStart(AssemblyItem const& _i)
 
 Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
-	optimiseInternal(_enable, _isCreation, _runs);
+	OptimiserSettings settings;
+	settings.isCreation = _isCreation;
+	settings.runPeephole = true;
+	if (_enable)
+	{
+		settings.runDeduplicate = true;
+		settings.runCSE = true;
+		settings.runConstantOptimiser = true;
+	}
+	settings.expectedExecutionsPerDeployment = _runs;
+	optimiseInternal(settings);
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_t _runs)
+
+Assembly& Assembly::optimise(OptimiserSettings _settings)
 {
+	optimiseInternal(_settings);
+	return *this;
+}
+
+map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
+{
+	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(_enable, false, _runs);
+		OptimiserSettings settings = _settings;
+		// Disable creation mode for sub-assemblies.
+		settings.isCreation = false;
+		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(settings);
+		// Apply the replacements (can be empty).
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
 
 	map<u256, u256> tagReplacements;
+	// Iterate until no new optimisation possibilities are found.
 	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
 
-		PeepholeOptimiser peepOpt(m_items);
-		while (peepOpt.optimise())
-			count++;
-
-		if (!_enable)
-			continue;
-
-		// This only modifies PushTags, we have to run again to actually remove code.
-		BlockDeduplicator dedup(m_items);
-		if (dedup.deduplicate())
+		if (_settings.runPeephole)
 		{
-			tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
-			count++;
+			PeepholeOptimiser peepOpt(m_items);
+			while (peepOpt.optimise())
+				count++;
 		}
 
+		// This only modifies PushTags, we have to run again to actually remove code.
+		if (_settings.runDeduplicate)
+		{
+			BlockDeduplicator dedup(m_items);
+			if (dedup.deduplicate())
+			{
+				tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
+				count++;
+			}
+		}
+
+		if (_settings.runCSE)
 		{
 			// Control flow graph optimization has been here before but is disabled because it
 			// assumes we only jump to tags that are pushed. This is not the case anymore with
@@ -429,10 +456,10 @@ map<u256, u256> Assembly::optimiseInternal(bool _enable, bool _isCreation, size_
 		}
 	}
 
-	if (_enable)
+	if (_settings.runConstantOptimiser)
 		ConstantOptimisationMethod::optimiseConstants(
-			_isCreation,
-			_isCreation ? 1 : _runs,
+			_settings.isCreation,
+			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
 			*this,
 			m_items
 		);

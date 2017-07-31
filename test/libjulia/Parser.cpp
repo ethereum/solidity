@@ -131,6 +131,11 @@ BOOST_AUTO_TEST_CASE(vardecl_bool)
 	BOOST_CHECK(successParse("{ let x:bool := false:bool }"));
 }
 
+BOOST_AUTO_TEST_CASE(vardecl_empty)
+{
+	BOOST_CHECK(successParse("{ let x:u256 }"));
+}
+
 BOOST_AUTO_TEST_CASE(assignment)
 {
 	BOOST_CHECK(successParse("{ let x:u256 := 2:u256 let y:u256 := x }"));

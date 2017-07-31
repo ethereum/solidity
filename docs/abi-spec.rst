@@ -6,14 +6,14 @@
 Application Binary Interface Specification
 ******************************************
 
-Basic design
+Basic Design
 ============
 
 The Application Binary Interface is the standard way to interact with contracts in the Ethereum ecosystem, both
-from outside the blockchain and for contract-to-contract interaction. Data is encoded following its type,
-according to this specification.
+from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
+as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
-We assume the Application Binary Interface (ABI) is strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assert that all contracts will have the interface definitions of any contracts they call available at compile-time.
+We assume the interface functions of a contract are strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Should these cases become important they can be adequately handled as facilities built within the Ethereum ecosystem.
 
@@ -58,7 +58,7 @@ The following (fixed-size) array type exists:
 
 - `<type>[M]`: a fixed-length array of the given fixed-length type.
 
-The following non-fixed-size types exist: 
+The following non-fixed-size types exist:
 
 - `bytes`: dynamic sized byte sequence.
 
@@ -93,6 +93,7 @@ We distinguish static and dynamic types. Static types are encoded in-place and d
 * `string`
 * `T[]` for any `T`
 * `T[k]` for any dynamic `T` and any `k > 0`
+* `(T1,...,Tk)` if any `Ti` is dynamic for `1 <= i <= k`
 
 All other types are called "static".
 
@@ -180,6 +181,8 @@ Examples
 Given the contract:
 
 ::
+
+    pragma solidity ^0.4.0;
 
     contract Foo {
       function bar(bytes3[2] xy) {}
@@ -313,6 +316,8 @@ For example,
 
 ::
 
+  pragma solidity ^0.4.0;
+
   contract Test {
     function Test(){ b = 0x12345678901234567890123456789012; }
     event Event(uint indexed a, bytes32 b)
@@ -329,10 +334,6 @@ would result in the JSON:
   "type":"event",
   "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
   "name":"Event"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event2"
   }, {
   "type":"event",
   "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],

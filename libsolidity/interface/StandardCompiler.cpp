@@ -247,8 +247,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.setRemappings(remappings);
 
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
-	bool optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
-	unsigned optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
+	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
@@ -259,6 +260,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			// @TODO use libraries only for the given source
 			libraries[library] = h160(jsonSourceName[library].asString());
 	}
+	m_compilerStack.setLibraries(libraries);
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
@@ -267,7 +269,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	try
 	{
-		m_compilerStack.compile(optimize, optimizeRuns, libraries);
+		m_compilerStack.compile();
 
 		for (auto const& error: m_compilerStack.errors())
 		{
@@ -283,24 +285,27 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			));
 		}
 	}
+	/// This is only thrown in a very few locations.
 	catch (Error const& _error)
 	{
-		if (_error.type() == Error::Type::DocstringParsingError)
-			errors.append(formatError(
-				false,
-				"DocstringParsingError",
-				"general",
-				"Documentation parsing error: " + *boost::get_error_info<errinfo_comment>(_error)
-			));
-		else
-			errors.append(formatErrorWithException(
-				_error,
-				false,
-				_error.typeName(),
-				"general",
-				"",
-				scannerFromSourceName
-			));
+		errors.append(formatErrorWithException(
+			_error,
+			false,
+			_error.typeName(),
+			"general",
+			"Uncaught error: ",
+			scannerFromSourceName
+		));
+	}
+	/// This should not be leaked from compile().
+	catch (FatalError const& _exception)
+	{
+		errors.append(formatError(
+			false,
+			"FatalError",
+			"general",
+			"Uncaught fatal error: " + boost::diagnostic_information(_exception)
+		));
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -320,7 +325,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			"InternalCompilerError",
 			"general",
-			"Internal compiler error (" + _exception.lineInfo() + ")", scannerFromSourceName
+			"Internal compiler error (" + _exception.lineInfo() + ")",
+			scannerFromSourceName
 		));
 	}
 	catch (UnimplementedFeatureError const& _exception)
@@ -331,7 +337,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			"UnimplementedFeatureError",
 			"general",
 			"Unimplemented feature (" + _exception.lineInfo() + ")",
-			scannerFromSourceName));
+			scannerFromSourceName
+		));
 	}
 	catch (Exception const& _exception)
 	{
@@ -352,27 +359,27 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		));
 	}
 
-	Json::Value output = Json::objectValue;
-
-	if (errors.size() > 0)
-		output["errors"] = errors;
-
-	bool analysisSuccess = m_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
-	bool compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
+	bool const analysisSuccess = m_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
+	bool const compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
 	if (!compilationSuccess && (errors.size() == 0))
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
+	Json::Value output = Json::objectValue;
+
+	if (errors.size() > 0)
+		output["errors"] = errors;
+
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (auto const& source: analysisSuccess ? m_compilerStack.sourceNames() : vector<string>())
+	for (string const& sourceName: analysisSuccess ? m_compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
-		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(source));
-		output["sources"][source] = sourceResult;
+		sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
+		output["sources"][sourceName] = sourceResult;
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
@@ -386,7 +393,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
 		contractData["abi"] = m_compilerStack.contractABI(contractName);
-		contractData["metadata"] = m_compilerStack.onChainMetadata(contractName);
+		contractData["metadata"] = m_compilerStack.metadata(contractName);
 		contractData["userdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecUser);
 		contractData["devdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecDev);
 

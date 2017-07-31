@@ -135,6 +135,9 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
     All contracts inherit the members of address, so it is possible to query the balance of the
     current contract using ``this.balance``.
 
+.. note::
+    The use of ``callcode`` is discouraged and will be removed in the future.
+
 .. warning::
     All these functions are low-level functions and should be used with care.
     Specifically, any unknown contract might be malicious and if you call it, you
@@ -222,14 +225,6 @@ For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``
 although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
 in the integer ``4`` (although non-integers were used in between).
 
-If the result is not an integer,
-an appropriate ``ufixed`` or ``fixed`` type is used whose number of fractional bits is as large as
-required (approximating the rational number in the worst case).
-
-In ``var x = 1/4;``, ``x`` will receive the type ``ufixed0x8`` while in ``var x = 1/3`` it will receive
-the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary and will thus be
-approximated.
-
 Any operator that can be applied to integers can also be applied to number literal expressions as
 long as the operands are integers. If any of the two is fractional, bit operations are disallowed
 and exponentiation is disallowed if the exponent is fractional (because that might result in
@@ -243,20 +238,14 @@ a non-rational number).
     types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
     belong to the same number literal type for the rational number three.
 
-.. note::
-    Most finite decimal fractions like ``5.3743`` are not finitely representable in binary. The correct type
-    for ``5.3743`` is ``ufixed8x248`` because that allows to best approximate the number. If you want to
-    use the number together with types like ``ufixed`` (i.e. ``ufixed128x128``), you have to explicitly
-    specify the desired precision: ``x + ufixed(5.3743)``.
-
 .. warning::
     Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
     expressions. Even though we know that the value of the
-    expression assigned to ``b`` in the following example evaluates to an integer, it still
-    uses fixed point types (and not rational number literals) in between and so the code
+    expression assigned to ``b`` in the following example evaluates to
+    an integer, but the partial expression ``2.5 + a`` does not type check so the code
     does not compile
 
 ::
@@ -390,7 +379,7 @@ Example that shows how to use internal function types::
         function (uint, uint) returns (uint) f
       )
         internal
-        returns (uint)
+        returns (uint r)
       {
         r = self[0];
         for (uint i = 1; i < self.length; i++) {
@@ -450,7 +439,8 @@ Another example that uses external function types::
       }
     }
 
-Note that lambda or inline functions are planned but not yet supported.
+.. note::
+    Lambda or inline functions are planned but not yet supported.
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
@@ -557,7 +547,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
-It is possible to mark arrays ``public`` and have Solidity create a getter.
+It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
 
 .. index:: ! array;allocating, new
@@ -613,6 +603,8 @@ possible:
 
 ::
 
+    // This will not compile.
+
     pragma solidity ^0.4.0;
 
     contract C {
@@ -620,6 +612,7 @@ possible:
             // The next line creates a type error because uint[3] memory
             // cannot be converted to uint[] memory.
             uint[] x = [uint(1), 3, 4];
+        }
     }
 
 It is planned to remove this restriction in the future but currently creates
@@ -750,7 +743,7 @@ shown in the following example:
         }
 
         function contribute(uint campaignID) payable {
-            Campaign c = campaigns[campaignID];
+            Campaign storage c = campaigns[campaignID];
             // Creates a new temporary memory struct, initialised with the given values
             // and copies it over to storage.
             // Note that you can also use Funder(msg.sender, msg.value) to initialise.
@@ -759,7 +752,7 @@ shown in the following example:
         }
 
         function checkGoalReached(uint campaignID) returns (bool reached) {
-            Campaign c = campaigns[campaignID];
+            Campaign storage c = campaigns[campaignID];
             if (c.amount < c.fundingGoal)
                 return false;
             uint amount = c.amount;
@@ -806,7 +799,7 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
-It is possible to mark mappings ``public`` and have Solidity create a getter.
+It is possible to mark mappings ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The ``_KeyType`` will become a required parameter for the getter and it will
 return ``_ValueType``.
 
@@ -827,7 +820,9 @@ for each ``_KeyType``, recursively.
 
     contract MappingUser {
         function f() returns (uint) {
-            return MappingExample(<address>).balances(this);
+            MappingExample m = new MappingExample();
+            m.update(100);
+            return m.balances(this);
         }
     }
 

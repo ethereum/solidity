@@ -28,7 +28,6 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/UndefMacros.h>
 
 #include <boost/noncopyable.hpp>
 #include <boost/rational.hpp>
@@ -246,10 +245,7 @@ public:
 	virtual std::string canonicalName(bool /*_addDataLocation*/) const { return toString(true); }
 	virtual u256 literalValue(Literal const*) const
 	{
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError() <<
-			errinfo_comment("Literal value requested for type without literals.")
-		);
+		solAssert(false, "Literal value requested for type without literals.");
 	}
 
 	/// @returns a (simpler) type that is encoded in the same way for external function calls.
@@ -323,6 +319,9 @@ public:
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
+	bigint minValue() const;
+	bigint maxValue() const;
+
 private:
 	int m_bits;
 	Modifier m_modifier;
@@ -340,7 +339,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _integerBits, int _fractionalBits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string identifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -350,8 +349,8 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 
-	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_integerBits + m_fractionalBits) / 8; }
-	virtual unsigned storageBytes() const override { return (m_integerBits + m_fractionalBits) / 8; }
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_totalBits / 8; }
+	virtual unsigned storageBytes() const override { return m_totalBits / 8; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString(bool _short) const override;
@@ -359,14 +358,21 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_integerBits + m_fractionalBits; }
-	int integerBits() const { return m_integerBits; }
-	int fractionalBits() const { return m_fractionalBits; }
+	/// Number of bits used for this type in total.
+	int numBits() const { return m_totalBits; }
+	/// Number of decimal digits after the radix point.
+	int fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
+	/// @returns the largest integer value this type con hold. Note that this is not the
+	/// largest value in general.
+	bigint maxIntegerValue() const;
+	/// @returns the smallest integer value this type can hold. Note hat this is not the
+	/// smallest value in general.
+	bigint minIntegerValue() const;
 
 private:
-	int m_integerBits;
-	int m_fractionalBits;
+	int m_totalBits;
+	int m_fractionalDigits;
 	Modifier m_modifier;
 };
 
@@ -614,6 +620,9 @@ public:
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 	virtual bool canBeUsedExternally(bool _inLibrary) const override;
 
+	/// @returns true if this is valid to be stored in calldata
+	bool validForCalldata() const;
+
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
 	/// @returns true if this is a string
@@ -627,6 +636,8 @@ public:
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
+
+	bigint unlimitedCalldataEncodedSize(bool _padded) const;
 
 	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
 	ArrayKind m_arrayKind = ArrayKind::Ordinary;
@@ -673,6 +684,10 @@ public:
 	}
 
 	bool isSuper() const { return m_super; }
+
+	// @returns true if and only if the contract has a payable fallback function
+	bool isPayable() const;
+
 	ContractDefinition const& contractDefinition() const { return m_contract; }
 
 	/// Returns the function type of the constructor modified to return an object of the contract's type.

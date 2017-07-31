@@ -39,7 +39,6 @@ class ContractDefinition;
 class Type;
 using TypePointer = std::shared_ptr<Type const>;
 struct DocTag;
-enum class DocumentationType: uint8_t;
 
 enum class DocTagType: uint8_t
 {
@@ -61,15 +60,6 @@ enum class CommentOwner
 class Natspec
 {
 public:
-	/// Get the given type of documentation
-	/// @param _contractDef The contract definition
-	/// @param _type        The type of the documentation. Can be one of the
-	///                     types provided by @c DocumentationType
-	/// @return             A JSON representation of provided type
-	static Json::Value documentation(
-		ContractDefinition const& _contractDef,
-		DocumentationType _type
-	);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation of the contract's user documentation

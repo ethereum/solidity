@@ -19,7 +19,7 @@
  * @date 2015
  *
  * This header should be used to #undef some really evil macros defined by
- * windows.h which result in conflict with our libsolidity/Token.h
+ * windows.h which result in conflict with our Token.h
  */
 #pragma once
 

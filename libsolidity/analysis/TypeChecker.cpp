@@ -93,7 +93,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	FunctionDefinition const* fallbackFunction = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
-		if (function->name().empty())
+		if (function->isFallback())
 		{
 			if (fallbackFunction)
 			{
@@ -482,7 +482,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (isLibraryFunction)
 			m_errorReporter.typeError(_function.location(), "Library functions cannot be payable.");
-		if (!_function.isConstructor() && !_function.name().empty() && !_function.isPartOfExternalInterface())
+		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 		if (_function.isDeclaredConst())
 			m_errorReporter.typeError(_function.location(), "Functions cannot be constant and payable at the same time.");
@@ -510,8 +510,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (dynamic_cast<ContractDefinition const*>(decl))
 				m_errorReporter.declarationError(modifier->location(), "Base constructor already provided.");
-			else
-				m_errorReporter.declarationError(modifier->location(), "Modifier already used for this function.");
 		}
 		else
 			modifiers.insert(decl);
@@ -583,6 +581,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		!FunctionType(_variable).interfaceFunctionType()
 	)
 		m_errorReporter.typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+
+	if (varType->category() == Type::Category::Array)
+		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
+			if (
+				((arrayType->location() == DataLocation::Memory) ||
+				(arrayType->location() == DataLocation::CallData)) &&
+				!arrayType->validForCalldata()
+			)
+				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded as calldata.");
+
 	return false;
 }
 
@@ -723,7 +731,10 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (var->type()->sizeOnStack() != 1)
 			{
-				m_errorReporter.typeError(_identifier.location, "Only types that use one stack slot are supported.");
+				if (var->type()->dataStoredIn(DataLocation::CallData))
+					m_errorReporter.typeError(_identifier.location, "Call data elements cannot be accessed directly. Copy to a local variable first or use \"calldataload\" or \"calldatacopy\" with manually determined offsets and sizes.");
+				else
+					m_errorReporter.typeError(_identifier.location, "Only types that use one stack slot are supported.");
 				return size_t(-1);
 			}
 		}
@@ -1111,7 +1122,9 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		_assignment.annotation().type = make_shared<TupleType>();
 		expectType(_assignment.rightHandSide(), *tupleType);
 
-		checkDoubleStorageAssignment(_assignment);
+		// expectType does not cause fatal errors, so we have to check again here.
+		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
+			checkDoubleStorageAssignment(_assignment);
 	}
 	else if (t->category() == Type::Category::Mapping)
 	{
@@ -1351,7 +1364,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				// (data location cannot yet be specified for type conversions)
 				resultType = ReferenceType::copyForLocationIfReference(argRefType->location(), resultType);
 			if (!argType->isExplicitlyConvertibleTo(*resultType))
-				m_errorReporter.typeError(_functionCall.location(), "Explicit type conversion not allowed.");
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Explicit type conversion not allowed from \"" +
+					argType->toString() +
+					"\" to \"" +
+					resultType->toString() +
+					"\"."
+				);
 		}
 		_functionCall.annotation().type = resultType;
 		_functionCall.annotation().isPure = isPure;
@@ -1626,6 +1646,25 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	{
 		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType().get()))
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
+	}
+
+	if (exprType->category() == Type::Category::Contract)
+	{
+		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
+		{
+			auto kind = callType->kind();
+			auto contractType = dynamic_cast<ContractType const*>(exprType.get());
+			solAssert(!!contractType, "Should be contract type.");
+
+			if (
+				(kind == FunctionType::Kind::Send || kind == FunctionType::Kind::Transfer) &&
+				!contractType->isPayable()
+			)
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"Value transfer to a contract without a payable fallback function."
+				);
+		}
 	}
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
