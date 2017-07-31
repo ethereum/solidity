@@ -545,9 +545,8 @@ The following example computes the sum of an area in memory.
         }
     }
 
-With the for loop header, it is also possible to declare it so it behaves
-like a while loop.  Simply leave the initialization and post-iteration
-parts empty.
+For loops can also be written so that they behave like while loops:
+Simply leave the initialization and post-iteration parts empty.
 
 .. code::
 
