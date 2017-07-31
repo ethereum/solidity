@@ -1,4 +1,4 @@
-### 0.4.14 (unreleased)
+### 0.4.14 (2017-07-31)
 
 Features:
  * C API (``jsonCompiler``): Export the ``license`` method.
