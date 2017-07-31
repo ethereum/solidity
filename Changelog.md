@@ -4,6 +4,7 @@ Features:
 
 Bugfixes:
  * Code Generator: Provide "new account gas" for low-level ``callcode`` and ``delegatecall``.
+ * Type Checker: Disallow the ``.gas()`` modifier on ``ecrecover``, ``sha256`` and ``ripemd160``.
 
 ### 0.4.14 (2017-07-31)
 

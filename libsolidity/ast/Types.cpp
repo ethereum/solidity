@@ -2402,9 +2402,6 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 	case Kind::External:
 	case Kind::Creation:
-	case Kind::ECRecover:
-	case Kind::SHA256:
-	case Kind::RIPEMD160:
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:

@@ -2399,21 +2399,6 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
 }
 
-BOOST_AUTO_TEST_CASE(gas_for_builtin)
-{
-	char const* sourceCode = R"(
-		contract Contract {
-			function test(uint g) returns (bytes32 data, bool flag) {
-				data = ripemd160.gas(g)("abc");
-				flag = true;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("test(uint256)", 500) == bytes());
-	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc000000000000000000000000"), true));
-}
-
 BOOST_AUTO_TEST_CASE(value_complex)
 {
 	char const* sourceCode = R"(
