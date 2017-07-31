@@ -246,7 +246,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
     }
 
 .. index:: ! getter;function, ! function;getter
-.. _getter_functions:
+.. _getter-functions:
 
 Getter Functions
 ================
