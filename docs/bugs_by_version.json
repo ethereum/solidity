@@ -182,6 +182,7 @@
     }, 
     "0.3.0": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -198,6 +199,7 @@
     }, 
     "0.3.1": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -213,6 +215,7 @@
     }, 
     "0.3.2": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -228,6 +231,7 @@
     }, 
     "0.3.3": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -242,6 +246,7 @@
     }, 
     "0.3.4": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -256,6 +261,7 @@
     }, 
     "0.3.5": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -270,6 +276,7 @@
     }, 
     "0.3.6": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -282,6 +289,7 @@
     }, 
     "0.4.0": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -294,6 +302,7 @@
     }, 
     "0.4.1": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -306,6 +315,7 @@
     }, 
     "0.4.10": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
@@ -314,6 +324,7 @@
     }, 
     "0.4.11": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral"
         ], 
@@ -321,22 +332,27 @@
     }, 
     "0.4.12": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
         ], 
         "released": "2017-07-03"
     }, 
     "0.4.13": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
         ], 
         "released": "2017-07-06"
     }, 
     "0.4.14": {
-        "bugs": [], 
+        "bugs": [
+            "DelegateCallReturnValue"
+        ], 
         "released": "2017-07-31"
     }, 
     "0.4.2": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -348,6 +364,7 @@
     }, 
     "0.4.3": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -358,6 +375,7 @@
     }, 
     "0.4.4": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -367,6 +385,7 @@
     }, 
     "0.4.5": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -377,6 +396,7 @@
     }, 
     "0.4.6": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -386,6 +406,7 @@
     }, 
     "0.4.7": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
@@ -394,6 +415,7 @@
     }, 
     "0.4.8": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
@@ -402,6 +424,7 @@
     }, 
     "0.4.9": {
         "bugs": [
+            "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction"
