@@ -9897,6 +9897,42 @@ BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0), u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(delegatecall_return_value)
+{
+	char const* sourceCode = R"DELIMITER(
+		contract C {
+			uint value;
+			function set(uint _value) external {
+				value = _value;
+			}
+			function get() external constant returns (uint) {
+				return value;
+			}
+			function get_delegated() external constant returns (bool) {
+				return this.delegatecall(bytes4(sha3("get()")));
+			}
+			function assert0() external constant {
+				assert(value == 0);
+			}
+			function assert0_delegated() external constant returns (bool) {
+				return this.delegatecall(bytes4(sha3("assert0()")));
+			}
+		}
+	)DELIMITER";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("set(uint256)", u256(1)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("set(uint256)", u256(42)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(42)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
