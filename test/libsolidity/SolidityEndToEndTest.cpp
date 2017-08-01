@@ -9897,6 +9897,28 @@ BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0), u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// Calling into non-existant account is successful (creates the account)
+			function f() external constant returns (bool) {
+				return address(0x4242).call();
+			}
+			function g() external constant returns (bool) {
+				return address(0x4242).callcode();
+			}
+			function h() external constant returns (bool) {
+				return address(0x4242).delegatecall();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 {
 	char const* sourceCode = R"DELIMITER(
