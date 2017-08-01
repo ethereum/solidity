@@ -1050,7 +1050,7 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 		{
 			auto kind = callType->kind();
 			if (
-				kind == FunctionType::Kind::Bare ||
+				kind == FunctionType::Kind::BareCall ||
 				kind == FunctionType::Kind::BareCallCode ||
 				kind == FunctionType::Kind::BareDelegateCall
 			)
