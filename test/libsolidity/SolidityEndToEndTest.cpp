@@ -1950,6 +1950,87 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
+BOOST_AUTO_TEST_CASE(packed_keccak256)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return keccak256(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> u256
+	{
+		return dev::keccak256(
+			toCompactBigEndian(unsigned(8)) +
+			toBigEndian(_x) +
+			toCompactBigEndian(unsigned(65536)) +
+			toBigEndian(_x) +
+			toBigEndian(u256(256))
+		);
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_sha256)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return sha256(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> bytes
+	{
+		if (_x == u256(4))
+			return fromHex("804e0d7003cfd70fc925dc103174d9f898ebb142ecc2a286da1abd22ac2ce3ac");
+		if (_x == u256(5))
+			return fromHex("e94921945f9068726c529a290a954f412bcac53184bb41224208a31edbf63cf0");
+		if (_x == u256(-1))
+			return fromHex("f14def4d07cd185ddd8b10a81b2238326196a38867e6e6adbcc956dc913488c7");
+		return fromHex("");
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_ripemd160)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return ripemd160(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> bytes
+	{
+		if (_x == u256(4))
+			return fromHex("f93175303eba2a7b372174fc9330237f5ad202fc000000000000000000000000");
+		if (_x == u256(5))
+			return fromHex("04f4fc112e2bfbe0d38f896a46629e08e2fcfad5000000000000000000000000");
+		if (_x == u256(-1))
+			return fromHex("c0a2e4b1f3ff766a9a0089e7a410391730872495000000000000000000000000");
+		return fromHex("");
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
 BOOST_AUTO_TEST_CASE(ecrecover)
 {
 	char const* sourceCode = R"(

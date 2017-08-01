@@ -6437,7 +6437,7 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 	CHECK_WARNING(text, "\"this\" used in constructor");
 }
 
-BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
+BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lvalue)
 {
 	// This checks for a bug that caused a crash because of continued analysis.
 	char const* text = R"(
@@ -6449,6 +6449,54 @@ BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
 		}
 	)";
 	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+}
+
+BOOST_AUTO_TEST_CASE(builtin_reject_gas)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				keccak256.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+}
+
+BOOST_AUTO_TEST_CASE(builtin_reject_value)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				keccak256.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				sha256.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ripemd160.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ecrecover.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
