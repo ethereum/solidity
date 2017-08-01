@@ -1712,7 +1712,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		u256 gasNeededByCaller = eth::GasCosts::callGas + 10;
 		if (_functionType.valueSet())
 			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
-		if (!isCallCode && !isDelegateCall && !existenceChecked)
+		if (!existenceChecked)
 			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
