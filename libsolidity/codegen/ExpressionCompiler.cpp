@@ -546,7 +546,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::External:
 		case FunctionType::Kind::CallCode:
 		case FunctionType::Kind::DelegateCall:
-		case FunctionType::Kind::Bare:
+		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareCallCode:
 		case FunctionType::Kind::BareDelegateCall:
 			_functionCall.expression().accept(*this);
@@ -642,7 +642,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					strings(),
 					strings(),
-					FunctionType::Kind::Bare,
+					FunctionType::Kind::BareCall,
 					false,
 					nullptr,
 					false,
@@ -973,7 +973,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Kind::DelegateCall:
 				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::Send:
-				case FunctionType::Kind::Bare:
+				case FunctionType::Kind::BareCall:
 				case FunctionType::Kind::BareCallCode:
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::Transfer:
@@ -1560,7 +1560,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
-	bool returnSuccessCondition = funKind == FunctionType::Kind::Bare || funKind == FunctionType::Kind::BareCallCode;
+	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 
@@ -1579,7 +1579,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId = false;
 	if (
-		(funKind == FunctionType::Kind::Bare || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
+		(funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
 		!_arguments.empty()
 	)
 	{
