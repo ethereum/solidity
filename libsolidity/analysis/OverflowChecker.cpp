@@ -36,11 +36,17 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace boost::multiprecision;
 
-void OverflowChecker::checkOverflow(ASTNode const& _contract)
+void OverflowChecker::checkOverflow(SourceUnit const& _source)
 {
 	try
 	{
-		_contract.accept(*this);
+		bool pragmaFound = false;
+		for (auto const& node: _source.nodes())
+			if (auto const* pragma = dynamic_cast<PragmaDirective const*>(node.get()))
+				if (pragma->literals()[0] == "analyzeIntegerOverflow")
+					pragmaFound = true;
+		if (pragmaFound)
+			_source.accept(*this);
 	}
 	catch (FatalError const&)
 	{

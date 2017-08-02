@@ -210,8 +210,6 @@ bool CompilerStack::analyze()
 				{
 					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
 					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
-					OverflowChecker overflowChecker(m_errorReporter);
-					overflowChecker.checkOverflow(*contract);
 				}
 				else
 					noErrors = false;
@@ -239,6 +237,13 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
+	}
+	if (noErrors)
+	{
+		OverflowChecker overflowChecker(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			overflowChecker.checkOverflow(*source->ast);
+		// Note -- this doesn't impact noErrors since it only issues warnings
 	}
 
 	if (noErrors)

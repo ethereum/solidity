@@ -46,8 +46,8 @@ public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
 	OverflowChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
-	/// Performs overflow checking on the given contract and all of its sub-nodes.
-	void checkOverflow(ASTNode const& _contract);
+	/// Performs overflow checking on the given source unit
+	void checkOverflow(SourceUnit const& _source);
 
 private:
 
