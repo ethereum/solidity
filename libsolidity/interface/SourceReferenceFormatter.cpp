@@ -110,9 +110,8 @@ void SourceReferenceFormatter::printExceptionInformation(
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			_stream << info.first << " ";
 			printSourceName(_stream, &info.second, _scannerFromSourceName);
-			_stream << endl;
+			_stream << info.first << endl;
 			printSourceLocation(_stream, &info.second, _scannerFromSourceName);
 		}
 		_stream << endl;
