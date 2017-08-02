@@ -101,6 +101,8 @@ void SourceReferenceFormatter::printExceptionInformation(
 	_stream << _name;
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		_stream << ": " << *description << endl;
+	else
+		_stream << endl;
 
 	printSourceLocation(_stream, location, _scannerFromSourceName);
 
@@ -108,9 +110,8 @@ void SourceReferenceFormatter::printExceptionInformation(
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			_stream << info.first << " ";
 			printSourceName(_stream, &info.second, _scannerFromSourceName);
-			_stream << endl;
+			_stream << info.first << endl;
 			printSourceLocation(_stream, &info.second, _scannerFromSourceName);
 		}
 		_stream << endl;
