@@ -69,6 +69,9 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		m_errorReporter.syntaxError(_pragma.location(), "Invalid pragma \"" + _pragma.literals()[0] + "\"");
 	else if (_pragma.literals()[0] == "experimental")
 	{
+		/// TODO: fill this out
+		static const set<string> validFeatures = set<string>{};
+
 		solAssert(m_sourceUnit, "");
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		if (literals.size() == 0)
@@ -82,6 +85,8 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			{
 				if (literal.empty())
 					m_errorReporter.syntaxError(_pragma.location(), "Empty experimental feature name is invalid.");
+				else if (!validFeatures.count(literal))
+					m_errorReporter.syntaxError(_pragma.location(), "Unsupported experimental feature name.");
 				else if (m_sourceUnit->annotation().experimentalFeatures.count(literal))
 					m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
 				else
