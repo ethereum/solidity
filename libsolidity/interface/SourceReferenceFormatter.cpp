@@ -101,6 +101,8 @@ void SourceReferenceFormatter::printExceptionInformation(
 	_stream << _name;
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		_stream << ": " << *description << endl;
+	else
+		_stream << endl;
 
 	printSourceLocation(_stream, location, _scannerFromSourceName);
 
