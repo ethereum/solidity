@@ -54,8 +54,10 @@ namespace
 pair<ASTPointer<SourceUnit>, std::shared_ptr<Error const>>
 parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true, bool _allowMultipleErrors = false)
 {
+	// Turn on integer overflow checking
+        string source = "pragma analyzeIntegerOverflow;\n" + _source;
 	// Silence compiler version warning
-	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
+	source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	Parser parser(errorReporter);
