@@ -73,6 +73,12 @@ public:
 
 	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
+	void typeError(
+		SourceLocation const& _location,
+		SecondarySourceLocation const& _secondaryLocation,
+		std::string const& _description
+	);
+
 	void typeError(SourceLocation const& _location, std::string const& _description);
 
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);

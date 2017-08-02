@@ -1523,7 +1523,14 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (!contract->annotation().unimplementedFunctions.empty())
-			m_errorReporter.typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
+			m_errorReporter.typeError(
+				_newExpression.location(),
+				SecondarySourceLocation().append(
+					"Missing implementation:",
+					contract->annotation().unimplementedFunctions.front()->location()
+				),
+				"Trying to create an instance of an abstract contract."
+			);
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
