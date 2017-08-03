@@ -6190,6 +6190,17 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(function_overload_is_not_shadowing)
+{
+	char const* text = R"(
+		contract C {
+			function f() {}
+			function f(uint) {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(callable_crash)
 {
 	char const* text = R"(

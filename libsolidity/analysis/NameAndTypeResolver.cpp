@@ -439,6 +439,23 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	solAssert(m_currentScope == _currentScope, "Scopes not correctly closed.");
 }
 
+bool DeclarationRegistrationHelper::isOverloadedFunction(
+	Declaration const& _declaration1,
+	Declaration const& _declaration2
+)
+{
+	auto const* function1 = dynamic_cast<FunctionDefinition const*>(&_declaration1);
+	auto const* function2 = dynamic_cast<FunctionDefinition const*>(&_declaration2);
+
+	if (!function1 || !function2)
+		return false;
+
+	if (function1->parameters() != function2->parameters())
+		return true;
+
+	return false;
+}
+
 bool DeclarationRegistrationHelper::registerDeclaration(
 	DeclarationContainer& _container,
 	Declaration const& _declaration,
@@ -454,7 +471,7 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	Declaration const* shadowedDeclaration = nullptr;
 	if (_warnOnShadow && !_declaration.name().empty())
 		for (auto const* decl: _container.resolveName(_declaration.name(), true))
-			if (decl != &_declaration)
+			if (decl != &_declaration && !isOverloadedFunction(*decl, _declaration))
 			{
 				shadowedDeclaration = decl;
 				break;
