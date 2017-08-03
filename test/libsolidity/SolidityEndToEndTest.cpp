@@ -3128,7 +3128,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 4) + FixedHash<4>(dev::keccak256("deposit()")).asBytes());
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 4, asString(FixedHash<4>(dev::keccak256("deposit()")).asBytes())));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -4436,6 +4436,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 			uint8[] x;
 			uint16[] y;
 			uint24[] z;
+			uint24[][] w;
 			function test1() returns (uint8[]) {
 				for (uint i = 0; i < 101; ++i)
 					x.push(uint8(i));
@@ -4451,6 +4452,13 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 					z.push(uint24(i));
 				return z;
 			}
+			function test4() returns (uint24[][]) {
+				w.length = 5;
+				for (uint i = 0; i < 5; ++i)
+					for (uint j = 0; j < 101; ++j)
+						w[i].push(uint24(j));
+				return w;
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -4460,6 +4468,14 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 	BOOST_CHECK(callContractFunction("test1()") == encodeArgs(0x20, 101) + valueSequence);
 	BOOST_CHECK(callContractFunction("test2()") == encodeArgs(0x20, 101) + valueSequence);
 	BOOST_CHECK(callContractFunction("test3()") == encodeArgs(0x20, 101) + valueSequence);
+	BOOST_CHECK(callContractFunction("test4()") ==
+		encodeArgs(0x20, 5, 0xa0, 0xa0 + 102 * 32 * 1, 0xa0 + 102 * 32 * 2, 0xa0 + 102 * 32 * 3, 0xa0 + 102 * 32 * 4) +
+		encodeArgs(101) + valueSequence +
+		encodeArgs(101) + valueSequence +
+		encodeArgs(101) + valueSequence +
+		encodeArgs(101) + valueSequence +
+		encodeArgs(101) + valueSequence
+	);
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_storage_abi_signed)
@@ -9663,50 +9679,6 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	)";
 	compileAndRun(sourceCode, 0, "C1");
 	compileAndRun(sourceCode, 0, "C2");
-}
-
-BOOST_AUTO_TEST_CASE(return_structs)
-{
-	char const* sourceCode = R"(
-		contract C {
-			struct S { uint a; T[] sub; }
-			struct T { uint[2] x; }
-			function f() returns (uint x, S s) {
-				x = 7;
-				s.a = 8;
-				s.sub = new T[](3);
-				s.sub[0].x[0] = 9;
-				s.sub[1].x[0] = 10;
-				s.sub[2].x[1] = 11;
-			}
-		}
-	)";
-	// This will throw "unimplemented" until it is implemented.
-	BOOST_CHECK_THROW(
-		compileAndRun(sourceCode, 0, "C"),
-		Exception);
-
-//	Will calculate the exact encoding later.
-//	BOOST_CHECK(callContractFunction("f()") == encodeArgs(
-//		u256(7), u256(0x40),
-//		u256(8), u256(0x40),
-//		u256(3),
-//		// s.sub[0]
-//		u256(9), u256(0xc0),
-//		// s.sub[1]
-//		u256(10), u256(0xe0),
-//		// s.sub[2]
-//		u256(11), u256(0x100),
-//		// s.sub[0].sub
-//		u256(2)
-//		// s.sub[0].sub[0].a
-//		u256(8),
-//		u256()
-//		// s.sub[1].sub
-//		u256(0)
-//		// s.sub[2].sub
-//		u256(2)
-//					));
 }
 
 BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)

@@ -126,6 +126,73 @@ BOOST_AUTO_TEST_CASE(conversion)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(memory_array_one_dim)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event E(uint a, int16[] b, uint c);
+			function f() {
+				int16[] memory x = new int16[](3);
+				assembly {
+					for { let i := 0 } lt(i, 3) { i := add(i, 1) } {
+						mstore(add(x, mul(add(i, 1), 0x20)), add(0xfffffffe, i))
+					}
+				}
+				E(10, x, 11);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("f()");
+	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(memory_array_two_dim)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event E(uint a, int16[][2] b, uint c);
+			function f() {
+				int16[][2] memory x;
+				x[0] = new int16[](3);
+				x[1] = new int16[](2);
+				x[0][0] = 7;
+				x[0][1] = int16(0x010203040506);
+				x[0][2] = -1;
+				x[1][0] = 4;
+				x[1][1] = 5;
+				E(10, x, 11);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("f()");
+	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 0x40, 0xc0, 3, 7, 0x0506, u256(-1), 2, 4, 5));
+}
+
+BOOST_AUTO_TEST_CASE(memory_byte_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event E(uint a, bytes[] b, uint c);
+			function f() {
+				bytes[] memory x = new bytes[](2);
+				x[0] = "abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw";
+				x[1] = "abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw";
+				E(10, x, 11);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("f()");
+	REQUIRE_LOG_DATA(encodeArgs(
+		10, 0x60, 11,
+		2, 0x40, 0xc0,
+		66, string("abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw"),
+		63, string("abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw")
+	));
+}
+
 BOOST_AUTO_TEST_CASE(storage_byte_array)
 {
 	char const* sourceCode = R"(
@@ -247,6 +314,104 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 	callContractFunction("f(uint256)");
 	REQUIRE_LOG_DATA(encodeArgs(string(24, 0xff), string(24, 0xff)));
 }
+
+BOOST_AUTO_TEST_CASE(calldata)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event E(bytes);
+			function f(bytes a) external {
+				E(a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	string s("abcdef");
+	string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
+	callContractFunction("f(bytes)", 0x20, s.size(), s);
+	REQUIRE_LOG_DATA(encodeArgs(0x20, s.size(), s));
+	callContractFunction("f(bytes)", 0x20, t.size(), t);
+	REQUIRE_LOG_DATA(encodeArgs(0x20, t.size(), t));
+}
+
+BOOST_AUTO_TEST_CASE(structs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; T[] sub; }
+			struct T { uint[2] x; }
+			function f() returns (uint x, S s) {
+				x = 7;
+				s.a = 8;
+				s.sub = new T[](3);
+				s.sub[0].x[0] = 9;
+				s.sub[1].x[0] = 10;
+				s.sub[2].x[1] = 11;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(
+		7, 0x40,
+		8, 0x40,
+		3, 9, 0, 10, 0, 0, 11
+	));
+}
+
+BOOST_AUTO_TEST_CASE(struct_from_storage)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint120 a; uint120 b; T[] sub; uint8 c; }
+			struct T { uint24[2] x; }
+			S s;
+			event E(S);
+			function f() {
+				s.a = 0xf1f2f3f4f5f6f7f8f9fafb;
+				s.b = ~s.a;
+				s.c = 0xfa;
+				s.sub.length = 3;
+				s.sub[0].x[0] = 8;
+				s.sub[0].x[1] = 9;
+				s.sub[1].x[0] = 10;
+				s.sub[2].x[1] = 11;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	REQUIRE_LOG_DATA(encodeArgs(
+		0x20,
+		u256("0xf1f2f3f4f5f6f7f8f9fafb"), u256(0), 0x80, 0xfa,
+		3,
+		8, 9, 10, 0, 0, 11
+	));
+}
+
+BOOST_AUTO_TEST_CASE(struct_with_mapping)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint8 a; uint8 b; mapping(uint => uint) m; uint8 d; }
+			S s;
+			event E(S);
+			function f() {
+				s.a = 7;
+				s.b = 9;
+				s.d = 10;
+				E(s);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(
+		7, 0x40,
+		8, 0x40,
+		3, 9, 0, 10, 0, 0, 11
+	));
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
