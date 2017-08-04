@@ -277,9 +277,9 @@ activate themselves.
             if (highestBidder != 0) {
                 // Sending back the money by simply using
                 // highestBidder.send(highestBid) is a security risk
-                // because it can be prevented by the caller by e.g.
-                // raising the call stack to 1023. It is always safer
-                // to let the recipients withdraw their money themselves.
+                // because it could execute an untrusted contract.
+                // It is always safer to let the recipients
+                // withdraw their money themselves.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
