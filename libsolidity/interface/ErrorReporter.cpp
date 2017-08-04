@@ -151,6 +151,16 @@ void ErrorReporter::syntaxError(SourceLocation const& _location, string const& _
 	);
 }
 
+void ErrorReporter::typeError(SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
+{
+	error(
+		Error::Type::TypeError,
+		_location,
+		_secondaryLocation,
+		_description
+	);
+}
+
 void ErrorReporter::typeError(SourceLocation const& _location, string const& _description)
 {
 	error(

@@ -79,8 +79,9 @@ struct TypeDeclarationAnnotation: ASTAnnotation
 
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnotation
 {
-	/// Whether all functions are implemented.
-	bool isFullyImplemented = true;
+	/// List of functions without a body. Can also contain functions from base classes,
+	/// especially constructors.
+	std::vector<FunctionDefinition const*> unimplementedFunctions;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;

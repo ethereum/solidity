@@ -112,8 +112,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 					m_errorReporter.typeError(fallbackFunction->returnParameterList()->location(), "Fallback function cannot return values.");
 			}
 		}
-		if (!function->isImplemented())
-			_contract.annotation().isFullyImplemented = false;
 	}
 
 	for (auto const& n: _contract.subNodes())
@@ -188,7 +186,6 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
 	map<string, vector<FunTypeAndFlag>> functions;
 
-	bool allBaseConstructorsImplemented = true;
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (FunctionDefinition const* function: contract->definedFunctions())
@@ -199,7 +196,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 				if (!function->isImplemented())
 					// Base contract's constructor is not fully implemented, no way to get
 					// out of this.
-					allBaseConstructorsImplemented = false;
+					_contract.annotation().unimplementedFunctions.push_back(function);
 				continue;
 			}
 			auto& overloads = functions[function->name()];
@@ -219,16 +216,15 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 				it->second = true;
 		}
 
-	if (!allBaseConstructorsImplemented)
-		_contract.annotation().isFullyImplemented = false;
-
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
 		for (auto const& funAndFlag: it.second)
 			if (!funAndFlag.second)
 			{
-				_contract.annotation().isFullyImplemented = false;
-				return;
+				FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&funAndFlag.first->declaration());
+				solAssert(function, "");
+				_contract.annotation().unimplementedFunctions.push_back(function);
+				break;
 			}
 }
 
@@ -266,7 +262,8 @@ void TypeChecker::checkContractAbstractConstructors(ContractDefinition const& _c
 		}
 	}
 	if (!argumentsNeeded.empty())
-		_contract.annotation().isFullyImplemented = false;
+		for (ContractDefinition const* contract: argumentsNeeded)
+			_contract.annotation().unimplementedFunctions.push_back(contract->constructor());
 }
 
 void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)
@@ -1523,8 +1520,15 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
-		if (!contract->annotation().isFullyImplemented)
-			m_errorReporter.typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
+		if (!contract->annotation().unimplementedFunctions.empty())
+			m_errorReporter.typeError(
+				_newExpression.location(),
+				SecondarySourceLocation().append(
+					"Missing implementation:",
+					contract->annotation().unimplementedFunctions.front()->location()
+				),
+				"Trying to create an instance of an abstract contract."
+			);
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
