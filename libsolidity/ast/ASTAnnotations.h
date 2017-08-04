@@ -79,8 +79,7 @@ struct TypeDeclarationAnnotation: ASTAnnotation
 
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnotation
 {
-	/// List of functions without a body. Can also contain functions from base classes,
-	/// especially constructors.
+	/// List of functions without a body. Can also contain functions from base classes.
 	std::vector<FunctionDefinition const*> unimplementedFunctions;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
