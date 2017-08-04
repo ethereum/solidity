@@ -77,23 +77,26 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		if (literals.size() == 0)
 			m_errorReporter.syntaxError(
 				_pragma.location(),
-				"At least one experimental feature or the wildcard symbol \"*\" is required."
+				"Experimental feature name is missing."
+			);
+		else if (literals.size() > 1)
+			m_errorReporter.syntaxError(
+				_pragma.location(),
+				"Stray arguments."
 			);
 		else
 		{
-			for (string const literal: literals)
+			string const literal = literals[0];
+			if (literal.empty())
+				m_errorReporter.syntaxError(_pragma.location(), "Empty experimental feature name is invalid.");
+			else if (!validFeatures.count(literal))
+				m_errorReporter.syntaxError(_pragma.location(), "Unsupported experimental feature name.");
+			else if (m_sourceUnit->annotation().experimentalFeatures.count(literal))
+				m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
+			else
 			{
-				if (literal.empty())
-					m_errorReporter.syntaxError(_pragma.location(), "Empty experimental feature name is invalid.");
-				else if (!validFeatures.count(literal))
-					m_errorReporter.syntaxError(_pragma.location(), "Unsupported experimental feature name.");
-				else if (m_sourceUnit->annotation().experimentalFeatures.count(literal))
-					m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
-				else
-				{
-					m_sourceUnit->annotation().experimentalFeatures.insert(literal);
-					m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
-				}
+				m_sourceUnit->annotation().experimentalFeatures.insert(literal);
+				m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
 			}
 		}
 	}
