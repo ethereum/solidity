@@ -6134,6 +6134,25 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_variables)
 	CHECK_WARNING(text, "shadows a builtin symbol");
 }
 
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_storage_variables)
+{
+	char const* text = R"(
+		contract C {
+			uint msg;
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtin_at_global_scope)
+{
+	char const* text = R"(
+		contract msg {
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
 BOOST_AUTO_TEST_CASE(shadowing_builtins_with_parameters)
 {
 	char const* text = R"(
@@ -6195,6 +6214,17 @@ BOOST_AUTO_TEST_CASE(function_overload_is_not_shadowing)
 	char const* text = R"(
 		contract C {
 			function f() {}
+			function f(uint) {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(function_override_is_not_shadowing)
+{
+	char const* text = R"(
+		contract D { function f() {} }
+		contract C is D {
 			function f(uint) {}
 		}
 	)";
