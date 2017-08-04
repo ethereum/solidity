@@ -83,7 +83,15 @@ If you want to use the cutting edge developer version:
     sudo apt-get update
     sudo apt-get install solc
     
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To help testing the unstable solc with the most recent changes from the development branch:
+We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
+
+.. code:: bash
+
+    sudo snap install solc
+
+Or if you want to help testing the unstable solc with the most recent changes from the development branch:
+
+.. code:: bash
 
     sudo snap install solc --edge
 
