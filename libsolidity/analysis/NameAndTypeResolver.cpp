@@ -452,13 +452,9 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		_errorLocation = &_declaration.location();
 
 	Declaration const* shadowedDeclaration = nullptr;
-	if (_warnOnShadow && !_declaration.name().empty())
-		for (auto const* decl: _container.resolveName(_declaration.name(), true))
-			if (decl != &_declaration)
-			{
-				shadowedDeclaration = decl;
-				break;
-			}
+	if (_warnOnShadow && !_declaration.name().empty() && _container.enclosingContainer())
+		for (auto const* decl: _container.enclosingContainer()->resolveName(_declaration.name(), true))
+			shadowedDeclaration = decl;
 
 	if (!_container.registerDeclaration(_declaration, _name, !_declaration.isVisibleInContract()))
 	{
