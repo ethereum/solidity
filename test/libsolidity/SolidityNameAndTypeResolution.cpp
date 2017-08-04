@@ -6461,6 +6461,30 @@ BOOST_AUTO_TEST_CASE(builtin_reject_gas)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				sha256.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ripemd160.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ecrecover.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
 }
 
 BOOST_AUTO_TEST_CASE(builtin_reject_value)
