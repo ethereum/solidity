@@ -112,8 +112,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 					m_errorReporter.typeError(fallbackFunction->returnParameterList()->location(), "Fallback function cannot return values.");
 			}
 		}
-		if (!function->isImplemented())
-			_contract.annotation().unimplementedFunctions.push_back(function);
 	}
 
 	for (auto const& n: _contract.subNodes())
