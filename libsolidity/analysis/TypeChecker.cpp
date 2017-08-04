@@ -1403,6 +1403,21 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
+	// Internal library functions must be implemented, because of inlining rules.
+	if (
+		functionType->kind() == FunctionType::Kind::Internal &&
+		functionType->hasDeclaration() &&
+		dynamic_cast<FunctionDefinition const*>(&functionType->declaration())
+	)
+	{
+		FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&functionType->declaration());
+		bool isLibraryFunction =
+			dynamic_cast<ContractDefinition const*>(function->scope()) &&
+			dynamic_cast<ContractDefinition const*>(function->scope())->isLibrary();
+		if (!function->isImplemented() && isLibraryFunction)
+			m_errorReporter.typeError(_functionCall.location(), "Inlined library function is lacking implementation.");
+	}
+
 	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{

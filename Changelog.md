@@ -9,6 +9,7 @@ Bugfixes:
  * Type Checker: Constructors must be implemented if declared.
  * Type Checker: Do not mark overloaded functions as shadowing other functions.
  * Type Checker: Disallow the ``.gas()`` modifier on ``ecrecover``, ``sha256`` and ``ripemd160``.
+ * Type Checker: Raise error when using unimplemented internal library functions.
 
 ### 0.4.14 (2017-07-31)
 
