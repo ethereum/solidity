@@ -103,6 +103,14 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
+	/// Special case of @a encodeToMemory which assumes that everything is padded to words
+	/// and dynamic data is not copied in place (i.e. a proper ABI encoding).
+	void abiEncode(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _encodeAsLibraryTypes = false
+	);
+
 	/// Zero-initialises (the data part of) an already allocated memory array.
 	/// Length has to be nonzero!
 	/// Stack pre: <length> <memptr>
