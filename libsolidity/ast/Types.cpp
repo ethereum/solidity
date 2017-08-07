@@ -1529,8 +1529,6 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 	TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
 	if (!baseExt)
 		return TypePointer();
-	if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
-		return TypePointer();
 
 	if (isDynamicallySized())
 		return make_shared<ArrayType>(DataLocation::Memory, baseExt);
