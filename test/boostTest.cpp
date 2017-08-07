@@ -46,6 +46,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	if (dev::test::Options::get().disableIPC)
 	{
 		for (auto suite: {
+			"ABIEncoderTest",
 			"SolidityAuctionRegistrar",
 			"SolidityFixedFeeRegistrar",
 			"SolidityWallet",
