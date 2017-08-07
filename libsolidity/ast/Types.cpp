@@ -1408,6 +1408,11 @@ unsigned ArrayType::calldataEncodedSize(bool _padded) const
 	return unsigned(size);
 }
 
+bool ArrayType::isDynamicallyEncoded() const
+{
+	return isDynamicallySized() || baseType()->isDynamicallyEncoded();
+}
+
 u256 ArrayType::storageSize() const
 {
 	if (isDynamicallySized())
@@ -1522,8 +1527,6 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 		return this->copyForLocation(DataLocation::Memory, true);
 	TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
 	if (!baseExt)
-		return TypePointer();
-	if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
@@ -1708,6 +1711,11 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 			size += memberSize;
 		}
 	return size;
+}
+
+bool StructType::isDynamicallyEncoded() const
+{
+	solAssert(false, "Structs are not yet supported in the ABI.");
 }
 
 u256 StructType::memorySize() const

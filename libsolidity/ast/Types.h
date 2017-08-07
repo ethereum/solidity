@@ -187,6 +187,7 @@ public:
 	/// @returns number of bytes used by this type when encoded for CALL. If it is a dynamic type,
 	/// returns the size of the pointer (usually 32). Returns 0 if the type cannot be encoded
 	/// in calldata.
+	/// @note: This should actually not be called on types, where isDynamicallyEncoded returns true.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
@@ -194,8 +195,10 @@ public:
 	virtual unsigned memoryHeadSize() const { return calldataEncodedSize(); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
-	/// @returns true if the type is dynamically encoded in calldata
+	/// @returns true if the type is a dynamic array
 	virtual bool isDynamicallySized() const { return false; }
+	/// @returns true if the type is dynamically encoded in the ABI
+	virtual bool isDynamicallyEncoded() const { return false; }
 	/// @returns the number of storage slots required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 storageSize() const { return 1; }
@@ -609,6 +612,7 @@ public:
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
+	virtual bool isDynamicallyEncoded() const override;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned sizeOnStack() const override;
@@ -723,6 +727,7 @@ public:
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
+	virtual bool isDynamicallyEncoded() const override;
 	u256 memorySize() const;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
