@@ -28,6 +28,7 @@
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
@@ -327,12 +328,27 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(*assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
+	if (!parserResult)
+	{
+		cout << "--------------------" << endl;
+		cout << *assembly << endl;
+	}
+	else if (false)
+	{
+		cout << "------ appending inline assembly:" <<endl;
+		cout << assembly::AsmPrinter()(*parserResult) << endl;
+	}
 	solAssert(parserResult, "Failed to parse inline assembly block.");
 	solAssert(errorReporter.errors().empty(), "Failed to parse inline assembly block.");
 
 	assembly::AsmAnalysisInfo analysisInfo;
 	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
-	solAssert(analyzer.analyze(*parserResult), "Failed to analyze inline assembly block.");
+	if (!analyzer.analyze(*parserResult))
+	{
+		cout << "--------------------" << endl;
+		cout << assembly::AsmPrinter()(*parserResult) << endl;
+		solAssert(false, "Failed to analyze inline assembly block.");
+	}
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess);
 }
