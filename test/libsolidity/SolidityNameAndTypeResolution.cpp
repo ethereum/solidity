@@ -6536,6 +6536,57 @@ BOOST_AUTO_TEST_CASE(constructor_without_implementation)
 	CHECK_ERROR(text, TypeError, "Constructor must be implemented if declared.");
 }
 
+BOOST_AUTO_TEST_CASE(large_storage_array_fine)
+{
+	char const* text = R"(
+		contract C {
+			uint[2**64 - 1] x;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(large_storage_array_simple)
+{
+	char const* text = R"(
+		contract C {
+			uint[2**64] x;
+		}
+	)";
+	CHECK_WARNING(text, "covers a large part of storage and thus makes collisions likely");
+}
+
+BOOST_AUTO_TEST_CASE(large_storage_arrays_combined)
+{
+	char const* text = R"(
+		contract C {
+			uint[200][200][2**30][][2**30] x;
+		}
+	)";
+	CHECK_WARNING(text, "covers a large part of storage and thus makes collisions likely");
+}
+
+BOOST_AUTO_TEST_CASE(large_storage_arrays_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint[2**30] x; uint[2**50] y; }
+			S[2**20] x;
+		}
+	)";
+	CHECK_WARNING(text, "covers a large part of storage and thus makes collisions likely");
+}
+
+BOOST_AUTO_TEST_CASE(large_storage_array_mapping)
+{
+	char const* text = R"(
+		contract C {
+			mapping(uint => uint[2**100]) x;
+		}
+	)";
+	CHECK_WARNING(text, "covers a large part of storage and thus makes collisions likely");
+}
+
 BOOST_AUTO_TEST_CASE(library_function_without_implementation)
 {
 	char const* text = R"(

@@ -65,6 +65,9 @@ private:
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
 
+	/// @returns the size of this type in storage, including all sub-types.
+	static bigint structureSizeEstimate(Type const& _type, std::set<StructDefinition const*>& _structsSeen);
+
 	ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether the current contract definition is a library.
