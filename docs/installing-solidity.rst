@@ -56,7 +56,7 @@ repository contains potentially unstable changes in the develop branch.
 
     docker run ethereum/solc:stable solc --version
 
-Currenty, the docker image only contains the compiler executable,
+Currently, the docker image only contains the compiler executable,
 so you have to do some additional work to link in the source and
 output directories.
 
