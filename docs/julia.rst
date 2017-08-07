@@ -207,7 +207,7 @@ We will use a destructuring notation for the AST nodes.
         G1, L2, mode
     E(G, L, St1, ..., Stn: Statement) =
         if n is zero:
-            G, L
+            G, L, regular
         else:
             let G1, L1, mode = E(G, L, St1)
             if mode is regular then
@@ -232,7 +232,7 @@ We will use a destructuring notation for the AST nodes.
             let G2, L2, mode = E(G1, L1, for {} condition post body)
             // mode has to be regular due to the syntactic restrictions
             let L3 be the restriction of L2 to only variables of L
-            G2, L3
+            G2, L3, regular
         else:
             let G1, L1, v = E(G, L, condition)
             if v is false:
@@ -250,7 +250,7 @@ We will use a destructuring notation for the AST nodes.
         G, L, continue
 
     E(G, L, <name>: Identifier) =
-        G, L, regular, L[$name]
+        G, L, L[$name]
     E(G, L, <fname(arg1, ..., argn)>: FunctionCall) =
         G1, L1, vn = E(G, L, argn)
         ...
@@ -260,8 +260,8 @@ We will use a destructuring notation for the AST nodes.
         be the function of name $fname visible at the point of the call.
         Let L' be a new local state such that
         L'[$parami] = vi and L'[$reti] = 0 for all i.
-        Let G'', L'', rv1, ..., rvm = E(Gn, L', block)
-        G'', Ln, rv1, ..., rvm
+        Let G'', L'', mode = E(Gn, L', block)
+        G'', Ln, L''[$ret1], ..., L''[$retm]
     E(G, L, l: HexLiteral) = G, L, hexString(l),
         where hexString decodes l from hex and left-aligns it into 32 bytes
     E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
