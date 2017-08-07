@@ -192,13 +192,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 		{
 			// Take constructors out of overload hierarchy
 			if (function->isConstructor())
-			{
-				if (!function->isImplemented())
-					// Base contract's constructor is not fully implemented, no way to get
-					// out of this.
-					_contract.annotation().unimplementedFunctions.push_back(function);
 				continue;
-			}
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
@@ -522,6 +516,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	}
 	if (_function.isImplemented())
 		_function.body().accept(*this);
+	else if (_function.isConstructor())
+		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
 	return false;
 }
 

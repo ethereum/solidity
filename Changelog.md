@@ -6,6 +6,7 @@ Features:
 Bugfixes:
  * Code Generator: ``.delegatecall()`` should always return execution outcome.
  * Code Generator: Provide "new account gas" for low-level ``callcode`` and ``delegatecall``.
+ * Type Checker: Constructors must be implemented if declared.
  * Type Checker: Do not mark overloaded functions as shadowing other functions.
  * Type Checker: Disallow the ``.gas()`` modifier on ``ecrecover``, ``sha256`` and ``ripemd160``.
 

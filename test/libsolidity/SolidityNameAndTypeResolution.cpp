@@ -677,44 +677,6 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 	CHECK_ERROR(text, TypeError, "");
 }
 
-BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
-{
-	ASTPointer<SourceUnit> sourceUnit;
-	char const* text = R"(
-		contract BaseBase { function BaseBase(uint j); }
-		contract base is BaseBase { function foo(); }
-		contract derived is base {
-			function derived(uint i) BaseBase(i){}
-			function foo() {}
-		}
-	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
-	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 4);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[3].get());
-	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().unimplementedFunctions.empty());
-}
-
-BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
-{
-	ASTPointer<SourceUnit> sourceUnit;
-	char const* text = R"(
-		contract BaseBase { function BaseBase(uint); }
-		contract base is BaseBase { function foo(); }
-		contract derived is base {
-			function derived(uint) {}
-			function foo() {}
-		}
-	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
-	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 4);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[3].get());
-	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().unimplementedFunctions.empty());
-}
-
 BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 {
 	ASTPointer<SourceUnit> sourceUnit;
@@ -5714,7 +5676,7 @@ BOOST_AUTO_TEST_CASE(interface_constructor)
 			function I();
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constructor cannot be defined in interfaces");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in interfaces");
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)
@@ -6562,6 +6524,16 @@ BOOST_AUTO_TEST_CASE(builtin_reject_value)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+}
+
+BOOST_AUTO_TEST_CASE(constructor_without_implementation)
+{
+	char const* text = R"(
+		contract C {
+			function C();
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constructor must be implemented if declared.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
