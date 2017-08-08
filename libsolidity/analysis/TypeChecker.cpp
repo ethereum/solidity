@@ -518,6 +518,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
+	else if (isLibraryFunction && _function.visibility() <= FunctionDefinition::Visibility::Internal)
+		m_errorReporter.typeError(_function.location(), "Internal library function must be implemented if declared.");
 	return false;
 }
 
@@ -1402,21 +1404,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		_functionCall.annotation().type = functionType->returnParameterTypes().front();
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
-
-	// Internal library functions must be implemented, because of inlining rules.
-	if (
-		functionType->kind() == FunctionType::Kind::Internal &&
-		functionType->hasDeclaration() &&
-		dynamic_cast<FunctionDefinition const*>(&functionType->declaration())
-	)
-	{
-		FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&functionType->declaration());
-		bool isLibraryFunction =
-			dynamic_cast<ContractDefinition const*>(function->scope()) &&
-			dynamic_cast<ContractDefinition const*>(function->scope())->isLibrary();
-		if (!function->isImplemented() && isLibraryFunction)
-			m_errorReporter.typeError(_functionCall.location(), "Inlined library function is lacking implementation.");
-	}
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
