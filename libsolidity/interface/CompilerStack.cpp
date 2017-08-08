@@ -653,6 +653,12 @@ void CompilerStack::compileContract(
 		// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
 		bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
 		dev::swarmHash(metadata).asBytes();
+	if (!_contract.sourceUnit().annotation().experimentalFeatures.empty())
+		cborEncodedMetadata =
+		// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
+		bytes{0xa2, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
+		dev::swarmHash(metadata).asBytes() +
+		bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
