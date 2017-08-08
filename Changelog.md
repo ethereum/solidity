@@ -6,6 +6,7 @@ Features:
  * Metadata: Store experimental flag in metadata CBOR.
 
 Bugfixes:
+ * Parser: Enforce commas between array and tuple elements.
 
 ### 0.4.15 (2017-08-08)
 
