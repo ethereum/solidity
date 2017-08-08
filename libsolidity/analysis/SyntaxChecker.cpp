@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <memory>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
@@ -69,9 +70,6 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		m_errorReporter.syntaxError(_pragma.location(), "Invalid pragma \"" + _pragma.literals()[0] + "\"");
 	else if (_pragma.literals()[0] == "experimental")
 	{
-		/// TODO: fill this out
-		static const set<string> validFeatures = set<string>{};
-
 		solAssert(m_sourceUnit, "");
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		if (literals.size() == 0)
@@ -89,13 +87,13 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			string const literal = literals[0];
 			if (literal.empty())
 				m_errorReporter.syntaxError(_pragma.location(), "Empty experimental feature name is invalid.");
-			else if (!validFeatures.count(literal))
+			else if (!ExperimentalFeatureNames.count(literal))
 				m_errorReporter.syntaxError(_pragma.location(), "Unsupported experimental feature name.");
-			else if (m_sourceUnit->annotation().experimentalFeatures.count(literal))
+			else if (m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeatureNames.at(literal)))
 				m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
 			else
 			{
-				m_sourceUnit->annotation().experimentalFeatures.insert(literal);
+				m_sourceUnit->annotation().experimentalFeatures.insert(ExperimentalFeatureNames.at(literal));
 				m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
 			}
 		}
