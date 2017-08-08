@@ -6558,6 +6558,43 @@ BOOST_AUTO_TEST_CASE(library_function_without_implementation)
 	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
 }
 
+BOOST_AUTO_TEST_CASE(experimental_pragma)
+{
+	char const* text = R"(
+		pragma experimental;
+	)";
+	CHECK_ERROR(text, SyntaxError, "Experimental feature name is missing.");
+	text = R"(
+		pragma experimental 123;
+	)";
+	CHECK_ERROR(text, SyntaxError, "Unsupported experimental feature name.");
+	text = R"(
+		pragma experimental unsupportedName;
+	)";
+	CHECK_ERROR(text, SyntaxError, "Unsupported experimental feature name.");
+	text = R"(
+		pragma experimental "unsupportedName";
+	)";
+	CHECK_ERROR(text, SyntaxError, "Unsupported experimental feature name.");
+	text = R"(
+		pragma experimental "";
+	)";
+	CHECK_ERROR(text, SyntaxError, "Empty experimental feature name is invalid.");
+	text = R"(
+		pragma experimental unsupportedName unsupportedName;
+	)";
+	CHECK_ERROR(text, SyntaxError, "Stray arguments.");
+//	text = R"(
+//		pragma experimental supportedName;
+//	)";
+//	CHECK_WARNING(text, "Experimental features are turned on. Do not use experimental features on live deployments.");
+//	text = R"(
+//		pragma experimental supportedName;
+//		pragma experimental supportedName;
+//	)";
+//	CHECK_ERROR(text, SyntaxError, "Duplicate experimental feature name.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
