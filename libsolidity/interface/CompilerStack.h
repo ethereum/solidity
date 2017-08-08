@@ -23,20 +23,26 @@
 
 #pragma once
 
+#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/interface/Callgraph.h>
+#include <libsolidity/interface/ReadFile.h>
+
+#include <libevmasm/SourceLocation.h>
+#include <libevmasm/LinkerObject.h>
+
+#include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
+
+#include <json/json.h>
+
+#include <boost/noncopyable.hpp>
+#include <boost/filesystem.hpp>
+
 #include <ostream>
 #include <string>
 #include <memory>
 #include <vector>
 #include <functional>
-#include <boost/noncopyable.hpp>
-#include <boost/filesystem.hpp>
-#include <json/json.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
-#include <libevmasm/SourceLocation.h>
-#include <libevmasm/LinkerObject.h>
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/ReadFile.h>
 
 namespace dev
 {
@@ -160,6 +166,9 @@ public:
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
+	/// @returns the call graph.
+	std::map<ASTNode const*, CallgraphNode> callGraph() const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
@@ -296,6 +305,7 @@ private:
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
 	std::map<std::string const, Source> m_sources;
+	std::map<ASTNode const*, CallgraphNode> m_callgraph;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::vector<Source const*> m_sourceOrder;
