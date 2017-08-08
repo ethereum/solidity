@@ -838,7 +838,7 @@ public:
 		External, ///< external call using CALL
 		CallCode, ///< external call using CALLCODE, i.e. not exchanging the storage
 		DelegateCall, ///< external call using DELEGATECALL, i.e. not exchanging the storage
-		Bare, ///< CALL without function hash
+		BareCall, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
 		BareDelegateCall, ///< DELEGATECALL without function hash
 		Creation, ///< external call using CREATE

@@ -1950,6 +1950,87 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
+BOOST_AUTO_TEST_CASE(packed_keccak256)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return keccak256(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> u256
+	{
+		return dev::keccak256(
+			toCompactBigEndian(unsigned(8)) +
+			toBigEndian(_x) +
+			toCompactBigEndian(unsigned(65536)) +
+			toBigEndian(_x) +
+			toBigEndian(u256(256))
+		);
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_sha256)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return sha256(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> bytes
+	{
+		if (_x == u256(4))
+			return fromHex("804e0d7003cfd70fc925dc103174d9f898ebb142ecc2a286da1abd22ac2ce3ac");
+		if (_x == u256(5))
+			return fromHex("e94921945f9068726c529a290a954f412bcac53184bb41224208a31edbf63cf0");
+		if (_x == u256(-1))
+			return fromHex("f14def4d07cd185ddd8b10a81b2238326196a38867e6e6adbcc956dc913488c7");
+		return fromHex("");
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_ripemd160)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function a(bytes32 input) returns (bytes32 hash) {
+				var b = 65536;
+				uint c = 256;
+				return ripemd160(8, input, b, input, c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> bytes
+	{
+		if (_x == u256(4))
+			return fromHex("f93175303eba2a7b372174fc9330237f5ad202fc000000000000000000000000");
+		if (_x == u256(5))
+			return fromHex("04f4fc112e2bfbe0d38f896a46629e08e2fcfad5000000000000000000000000");
+		if (_x == u256(-1))
+			return fromHex("c0a2e4b1f3ff766a9a0089e7a410391730872495000000000000000000000000");
+		return fromHex("");
+	};
+	testContractAgainstCpp("a(bytes32)", f, u256(4));
+	testContractAgainstCpp("a(bytes32)", f, u256(5));
+	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+}
+
 BOOST_AUTO_TEST_CASE(ecrecover)
 {
 	char const* sourceCode = R"(
@@ -2316,21 +2397,6 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	// call to helper should not succeed but amount should be transferred anyway
 	BOOST_REQUIRE(callContractFunction("outOfGas()") == bytes());
 	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
-}
-
-BOOST_AUTO_TEST_CASE(gas_for_builtin)
-{
-	char const* sourceCode = R"(
-		contract Contract {
-			function test(uint g) returns (bytes32 data, bool flag) {
-				data = ripemd160.gas(g)("abc");
-				flag = true;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("test(uint256)", 500) == bytes());
-	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc000000000000000000000000"), true));
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
@@ -9814,6 +9880,64 @@ BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0), u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// Calling into non-existant account is successful (creates the account)
+			function f() external constant returns (bool) {
+				return address(0x4242).call();
+			}
+			function g() external constant returns (bool) {
+				return address(0x4242).callcode();
+			}
+			function h() external constant returns (bool) {
+				return address(0x4242).delegatecall();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(delegatecall_return_value)
+{
+	char const* sourceCode = R"DELIMITER(
+		contract C {
+			uint value;
+			function set(uint _value) external {
+				value = _value;
+			}
+			function get() external constant returns (uint) {
+				return value;
+			}
+			function get_delegated() external constant returns (bool) {
+				return this.delegatecall(bytes4(sha3("get()")));
+			}
+			function assert0() external constant {
+				assert(value == 0);
+			}
+			function assert0_delegated() external constant returns (bool) {
+				return this.delegatecall(bytes4(sha3("assert0()")));
+			}
+		}
+	)DELIMITER";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("set(uint256)", u256(1)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("set(uint256)", u256(42)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(42)));
+	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

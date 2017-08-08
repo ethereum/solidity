@@ -169,6 +169,8 @@ private:
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
+	static bool isOverloadedFunction(Declaration const& _declaration1, Declaration const& _declaration2);
+
 	/// @returns the canonical name of the current scope.
 	std::string currentCanonicalName() const;
 

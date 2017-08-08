@@ -53,6 +53,7 @@ public:
 	bool registerDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr, bool _invisible = false, bool _update = false);
 	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
 	ASTNode const* enclosingNode() const { return m_enclosingNode; }
+	DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
 	std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr) const;

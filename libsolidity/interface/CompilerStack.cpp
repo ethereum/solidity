@@ -639,7 +639,7 @@ void CompilerStack::compileContract(
 {
 	if (
 		_compiledContracts.count(&_contract) ||
-		!_contract.annotation().isFullyImplemented ||
+		!_contract.annotation().unimplementedFunctions.empty() ||
 		!_contract.constructorIsPublic()
 	)
 		return;

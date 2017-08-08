@@ -1,3 +1,16 @@
+### 0.4.15 (2017-08-08)
+
+Features:
+ * Type Checker: Show unimplemented function if trying to instantiate an abstract class.
+
+Bugfixes:
+ * Code Generator: ``.delegatecall()`` should always return execution outcome.
+ * Code Generator: Provide "new account gas" for low-level ``callcode`` and ``delegatecall``.
+ * Type Checker: Constructors must be implemented if declared.
+ * Type Checker: Disallow the ``.gas()`` modifier on ``ecrecover``, ``sha256`` and ``ripemd160``.
+ * Type Checker: Do not mark overloaded functions as shadowing other functions.
+ * Type Checker: Internal library functions must be implemented if declared.
+
 ### 0.4.14 (2017-07-31)
 
 Features:

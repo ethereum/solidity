@@ -477,7 +477,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::Bare, true, false, true)},
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, false, true)},
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, false, true)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
@@ -2178,7 +2178,7 @@ string FunctionType::identifier() const
 	case Kind::External: id += "external"; break;
 	case Kind::CallCode: id += "callcode"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
-	case Kind::Bare: id += "bare"; break;
+	case Kind::BareCall: id += "barecall"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
 	case Kind::Creation: id += "creation"; break;
@@ -2346,7 +2346,7 @@ unsigned FunctionType::sizeOnStack() const
 	unsigned size = 0;
 	if (kind == Kind::External || kind == Kind::CallCode || kind == Kind::DelegateCall)
 		size = 2;
-	else if (kind == Kind::Bare || kind == Kind::BareCallCode || kind == Kind::BareDelegateCall)
+	else if (kind == Kind::BareCall || kind == Kind::BareCallCode || kind == Kind::BareDelegateCall)
 		size = 1;
 	else if (kind == Kind::Internal)
 		size = 1;
@@ -2402,10 +2402,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 	case Kind::External:
 	case Kind::Creation:
-	case Kind::ECRecover:
-	case Kind::SHA256:
-	case Kind::RIPEMD160:
-	case Kind::Bare:
+	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	{
@@ -2509,7 +2506,7 @@ bool FunctionType::isBareCall() const
 {
 	switch (m_kind)
 	{
-	case Kind::Bare:
+	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::ECRecover:

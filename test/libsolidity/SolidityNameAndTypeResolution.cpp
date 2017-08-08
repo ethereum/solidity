@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	BOOST_REQUIRE(contract);
-	BOOST_CHECK(!contract->annotation().isFullyImplemented);
+	BOOST_CHECK(!contract->annotation().unimplementedFunctions.empty());
 	BOOST_CHECK(!contract->definedFunctions()[0]->isImplemented());
 }
 
@@ -640,10 +640,10 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(base);
-	BOOST_CHECK(!base->annotation().isFullyImplemented);
+	BOOST_CHECK(!base->annotation().unimplementedFunctions.empty());
 	BOOST_CHECK(!base->definedFunctions()[0]->isImplemented());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(derived->annotation().isFullyImplemented);
+	BOOST_CHECK(derived->annotation().unimplementedFunctions.empty());
 	BOOST_CHECK(derived->definedFunctions()[0]->isImplemented());
 }
 
@@ -659,9 +659,9 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(base);
-	BOOST_CHECK(!base->annotation().isFullyImplemented);
+	BOOST_CHECK(!base->annotation().unimplementedFunctions.empty());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().isFullyImplemented);
+	BOOST_CHECK(!derived->annotation().unimplementedFunctions.empty());
 }
 
 BOOST_AUTO_TEST_CASE(create_abstract_contract)
@@ -675,44 +675,6 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "");
-}
-
-BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
-{
-	ASTPointer<SourceUnit> sourceUnit;
-	char const* text = R"(
-		contract BaseBase { function BaseBase(uint j); }
-		contract base is BaseBase { function foo(); }
-		contract derived is base {
-			function derived(uint i) BaseBase(i){}
-			function foo() {}
-		}
-	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
-	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 4);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[3].get());
-	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().isFullyImplemented);
-}
-
-BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
-{
-	ASTPointer<SourceUnit> sourceUnit;
-	char const* text = R"(
-		contract BaseBase { function BaseBase(uint); }
-		contract base is BaseBase { function foo(); }
-		contract derived is base {
-			function derived(uint) {}
-			function foo() {}
-		}
-	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
-	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
-	BOOST_CHECK_EQUAL(nodes.size(), 4);
-	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[3].get());
-	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().isFullyImplemented);
 }
 
 BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
@@ -738,7 +700,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 	BOOST_CHECK_EQUAL(nodes.size(), 3);
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().isFullyImplemented);
+	BOOST_CHECK(!derived->annotation().unimplementedFunctions.empty());
 }
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
@@ -5714,7 +5676,7 @@ BOOST_AUTO_TEST_CASE(interface_constructor)
 			function I();
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constructor cannot be defined in interfaces");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in interfaces");
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)
@@ -6134,6 +6096,25 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_variables)
 	CHECK_WARNING(text, "shadows a builtin symbol");
 }
 
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_storage_variables)
+{
+	char const* text = R"(
+		contract C {
+			uint msg;
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
+BOOST_AUTO_TEST_CASE(shadowing_builtin_at_global_scope)
+{
+	char const* text = R"(
+		contract msg {
+		}
+	)";
+	CHECK_WARNING(text, "shadows a builtin symbol");
+}
+
 BOOST_AUTO_TEST_CASE(shadowing_builtins_with_parameters)
 {
 	char const* text = R"(
@@ -6185,6 +6166,28 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
 	char const* text = R"(
 		contract C {
 			function C() {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(function_overload_is_not_shadowing)
+{
+	char const* text = R"(
+		contract C {
+			function f() {}
+			function f(uint) {}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(function_override_is_not_shadowing)
+{
+	char const* text = R"(
+		contract D { function f() {} }
+		contract C is D {
+			function f(uint) {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -6437,7 +6440,7 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 	CHECK_WARNING(text, "\"this\" used in constructor");
 }
 
-BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
+BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lvalue)
 {
 	// This checks for a bug that caused a crash because of continued analysis.
 	char const* text = R"(
@@ -6449,6 +6452,110 @@ BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lalue)
 		}
 	)";
 	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+}
+
+BOOST_AUTO_TEST_CASE(builtin_reject_gas)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				keccak256.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				sha256.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ripemd160.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ecrecover.gas();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+}
+
+BOOST_AUTO_TEST_CASE(builtin_reject_value)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				keccak256.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				sha256.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ripemd160.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	text = R"(
+		contract C {
+			function f() {
+				ecrecover.value();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+}
+
+BOOST_AUTO_TEST_CASE(constructor_without_implementation)
+{
+	char const* text = R"(
+		contract C {
+			function C();
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constructor must be implemented if declared.");
+}
+
+BOOST_AUTO_TEST_CASE(library_function_without_implementation)
+{
+	char const* text = R"(
+		library L {
+			function f();
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		library L {
+			function f() internal;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
+	text = R"(
+		library L {
+			function f() private;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
