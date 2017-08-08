@@ -1,4 +1,4 @@
-### 0.4.15 (unreleased)
+### 0.4.15 (2017-08-08)
 
 Features:
  * Type Checker: Show unimplemented function if trying to instantiate an abstract class.
