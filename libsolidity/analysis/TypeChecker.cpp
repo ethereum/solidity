@@ -518,6 +518,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
+	else if (isLibraryFunction && _function.visibility() <= FunctionDefinition::Visibility::Internal)
+		m_errorReporter.typeError(_function.location(), "Internal library function must be implemented if declared.");
 	return false;
 }
 

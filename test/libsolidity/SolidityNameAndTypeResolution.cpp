@@ -6536,6 +6536,28 @@ BOOST_AUTO_TEST_CASE(constructor_without_implementation)
 	CHECK_ERROR(text, TypeError, "Constructor must be implemented if declared.");
 }
 
+BOOST_AUTO_TEST_CASE(library_function_without_implementation)
+{
+	char const* text = R"(
+		library L {
+			function f();
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		library L {
+			function f() internal;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
+	text = R"(
+		library L {
+			function f() private;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
