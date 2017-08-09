@@ -354,7 +354,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
-				parserError(string("Multiple visibility specifiers."));
+				parserError(string("Visibility already specified."));
 				m_scanner->next();
 			}
 			else
