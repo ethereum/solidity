@@ -890,8 +890,7 @@ public:
 		strings const& _returnParameterTypes,
 		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
-		bool _constant = false,
-		bool _payable = false
+		StateMutability _stateMutability = StateMutability::NonPayable
 	): FunctionType(
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
@@ -900,8 +899,7 @@ public:
 		_kind,
 		_arbitraryParameters,
 		nullptr,
-		_constant,
-		_payable
+		_stateMutability
 	)
 	{
 	}
@@ -918,8 +916,7 @@ public:
 		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
 		Declaration const* _declaration = nullptr,
-		bool _isConstant = false,
-		bool _isPayable = false,
+		StateMutability _stateMutability = StateMutability::NonPayable,
 		bool _gasSet = false,
 		bool _valueSet = false,
 		bool _bound = false
@@ -929,19 +926,13 @@ public:
 		m_parameterNames(_parameterNames),
 		m_returnParameterNames(_returnParameterNames),
 		m_kind(_kind),
+		m_stateMutability(_stateMutability),
 		m_arbitraryParameters(_arbitraryParameters),
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
 		m_bound(_bound),
 		m_declaration(_declaration)
 	{
-		solAssert(!(_isConstant && _isPayable), "");
-		if (_isPayable)
-			m_stateMutability = StateMutability::Payable;
-		else if (_isConstant)
-			m_stateMutability = StateMutability::View;
-		else
-			m_stateMutability = StateMutability::NonPayable;
 		solAssert(
 			!m_bound || !m_parameterTypes.empty(),
 			"Attempted construction of bound function without self type"
