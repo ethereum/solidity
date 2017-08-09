@@ -525,19 +525,20 @@ bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 {
-	// "delete" is ok for all fixed types
-	if (_operator == Token::Delete)
+	switch(_operator)
+	{
+	case Token::Delete:
+		// "delete" is ok for all fixed types
 		return make_shared<TupleType>();
-	// for fixed, we allow +, -, ++ and --
-	else if (
-		_operator == Token::Add || 
-		_operator == Token::Sub ||
-		_operator == Token::Inc || 
-		_operator == Token::Dec
-	)
+	case Token::Add:
+	case Token::Sub:
+	case Token::Inc:
+	case Token::Dec:
+		// for fixed, we allow +, -, ++ and --
 		return shared_from_this();
-	else
+	default:
 		return TypePointer();
+	}
 }
 
 bool FixedPointType::operator==(Type const& _other) const
@@ -2354,14 +2355,26 @@ unsigned FunctionType::sizeOnStack() const
 	}
 
 	unsigned size = 0;
-	if (kind == Kind::External || kind == Kind::CallCode || kind == Kind::DelegateCall)
+
+	switch(kind)
+	{
+	case Kind::External:
+	case Kind::CallCode:
+	case Kind::DelegateCall:
 		size = 2;
-	else if (kind == Kind::BareCall || kind == Kind::BareCallCode || kind == Kind::BareDelegateCall)
+		break;
+	case Kind::BareCall:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
+	case Kind::Internal:
+	case Kind::ArrayPush:
+	case Kind::ByteArrayPush:
 		size = 1;
-	else if (kind == Kind::Internal)
-		size = 1;
-	else if (kind == Kind::ArrayPush || kind == Kind::ByteArrayPush)
-		size = 1;
+		break;
+	default:
+		break;
+	}
+
 	if (m_gasSet)
 		size++;
 	if (m_valueSet)
