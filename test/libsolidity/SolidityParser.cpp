@@ -898,7 +898,12 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 		contract c {
 			uint private internal a;
 		})";
-	CHECK_PARSE_ERROR(text, "Visibility already specified");
+	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
+	text = R"(
+		contract c {
+			function f() private external {}
+		})";
+	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_payable_specifiers)

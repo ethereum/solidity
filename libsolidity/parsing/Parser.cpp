@@ -354,7 +354,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
-				parserError(string("Multiple visibility specifiers."));
+				parserError(string(
+					"Visibility already specified as \"" +
+					Declaration::visibilityToString(result.visibility) +
+					"\"."
+				));
 				m_scanner->next();
 			}
 			else
@@ -512,7 +516,11 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		{
 			if (visibility != Declaration::Visibility::Default)
 			{
-				parserError(string("Visibility already specified."));
+				parserError(string(
+					"Visibility already specified as \"" +
+					Declaration::visibilityToString(visibility) +
+					"\"."
+				));
 				m_scanner->next();
 			}
 			else

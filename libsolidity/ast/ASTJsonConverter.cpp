@@ -285,7 +285,7 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
 	setJsonNode(_node, "StructDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("canonicalName", _node.annotation().canonicalName),
 		make_pair("members", toJson(_node.members())),
 		make_pair("scope", idOrNull(_node.scope()))
@@ -325,7 +325,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		make_pair("name", _node.name()),
 		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("isConstructor", _node.isConstructor()),
 		make_pair("returnParameters", toJson(*_node.returnParameterList())),
@@ -346,7 +346,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("constant", _node.isConstant()),
 		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("value", _node.value() ? toJson(*_node.value()) : Json::nullValue),
 		make_pair("scope", idOrNull(_node.scope())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type))
@@ -361,7 +361,7 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 {
 	setJsonNode(_node, "ModifierDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("body", toJson(_node.body()))
 	});
@@ -418,7 +418,7 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 {
 	setJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
 		make_pair("parameterTypes", toJson(*_node.parameterTypeList())),
 		make_pair("returnParameterTypes", toJson(*_node.returnParameterTypeList())),
@@ -728,23 +728,6 @@ bool ASTJsonConverter::visit(Literal const& _node)
 void ASTJsonConverter::endVisit(EventDefinition const&)
 {
 	m_inEvent = false;
-}
-
-string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
-{
-	switch (_visibility)
-	{
-	case Declaration::Visibility::Private:
-		return "private";
-	case Declaration::Visibility::Internal:
-		return "internal";
-	case Declaration::Visibility::Public:
-		return "public";
-	case Declaration::Visibility::External:
-		return "external";
-	default:
-		solAssert(false, "Unknown declaration visibility.");
-	}
 }
 
 string ASTJsonConverter::location(VariableDeclaration::Location _location)
