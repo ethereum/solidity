@@ -50,6 +50,10 @@ private:
 		std::vector<TypePointer> const& _types,
 		bool _forLibrary
 	);
+	/// @returns a Json object with "name", "type" and potentially "subtype" keys, according
+	/// to the ABI specification.
+	/// If it is possible to express the type as a single string, it is allowed to return a single string.
+	static Json::Value formatType(std::string const& _name, Type const& _type, bool _forLibrary);
 };
 
 }

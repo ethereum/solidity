@@ -187,6 +187,7 @@ public:
 	/// @returns number of bytes used by this type when encoded for CALL. If it is a dynamic type,
 	/// returns the size of the pointer (usually 32). Returns 0 if the type cannot be encoded
 	/// in calldata.
+	/// @note: This should actually not be called on types, where isDynamicallyEncoded returns true.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
@@ -194,8 +195,10 @@ public:
 	virtual unsigned memoryHeadSize() const { return calldataEncodedSize(); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
-	/// @returns true if the type is dynamically encoded in calldata
+	/// @returns true if the type is a dynamic array
 	virtual bool isDynamicallySized() const { return false; }
+	/// @returns true if the type is dynamically encoded in the ABI
+	virtual bool isDynamicallyEncoded() const { return false; }
 	/// @returns the number of storage slots required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 storageSize() const { return 1; }
@@ -240,9 +243,15 @@ public:
 
 	virtual std::string toString(bool _short) const = 0;
 	std::string toString() const { return toString(false); }
-	/// @returns the canonical name of this type for use in function signatures.
-	/// @param _addDataLocation if true, includes data location for reference types if it is "storage".
-	virtual std::string canonicalName(bool /*_addDataLocation*/) const { return toString(true); }
+	/// @returns the canonical name of this type for use in library function signatures.
+	virtual std::string canonicalName() const { return toString(true); }
+	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
+	/// or `(uint256, bytes8)[2]` for an array of structs. If @a _structsByName,
+	/// structs are given by canonical name like `ContractName.StructName[2]`.
+	virtual std::string signatureInExternalFunction(bool /*_structsByName*/) const
+	{
+		return canonicalName();
+	}
 	virtual u256 literalValue(Literal const*) const
 	{
 		solAssert(false, "Literal value requested for type without literals.");
@@ -609,11 +618,13 @@ public:
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
+	virtual bool isDynamicallyEncoded() const override;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
-	virtual std::string canonicalName(bool _addDataLocation) const override;
+	virtual std::string canonicalName() const override;
+	virtual std::string signatureInExternalFunction(bool _structsByName) const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
@@ -671,7 +682,7 @@ public:
 	virtual unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString(bool _short) const override;
-	virtual std::string canonicalName(bool _addDataLocation) const override;
+	virtual std::string canonicalName() const override;
 
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
@@ -723,6 +734,7 @@ public:
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
+	virtual bool isDynamicallyEncoded() const override;
 	u256 memorySize() const;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
@@ -731,13 +743,14 @@ public:
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
-		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : TypePointer();
+		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
-	virtual std::string canonicalName(bool _addDataLocation) const override;
+	virtual std::string canonicalName() const override;
+	virtual std::string signatureInExternalFunction(bool _structsByName) const override;
 
 	/// @returns a function that peforms the type conversion between a list of struct members
 	/// and a memory struct of this type.
@@ -748,8 +761,14 @@ public:
 
 	StructDefinition const& structDefinition() const { return m_struct; }
 
+	/// @returns the vector of types of members available in memory.
+	TypePointers memoryMemberTypes() const;
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
+
+	/// @returns true if the same struct is used recursively in one of its members. Only
+	/// analyziz the "memory" representation, i.e. mappings are ignored in all structs.
+	bool recursive() const;
 
 private:
 	StructDefinition const& m_struct;
@@ -773,7 +792,7 @@ public:
 	virtual unsigned storageBytes() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
-	virtual std::string canonicalName(bool _addDataLocation) const override;
+	virtual std::string canonicalName() const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -949,7 +968,7 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override;
-	virtual std::string canonicalName(bool /*_addDataLocation*/) const override;
+	virtual std::string canonicalName() const override;
 	virtual std::string toString(bool _short) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
@@ -1052,7 +1071,7 @@ public:
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
-	virtual std::string canonicalName(bool _addDataLocation) const override;
+	virtual std::string canonicalName() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual TypePointer encodingType() const override

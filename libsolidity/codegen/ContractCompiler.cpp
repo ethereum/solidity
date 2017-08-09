@@ -325,7 +325,7 @@ void ContractCompiler::appendCalldataUnpacker(TypePointers const& _typeParameter
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
 		TypePointer type = parameterType->decodingType();
-		solAssert(type, "No decoding type found.");
+		solUnimplementedAssert(type, "No decoding type found.");
 		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
