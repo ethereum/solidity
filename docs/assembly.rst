@@ -125,7 +125,7 @@ following list can be used as a reference of its opcodes.
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
-special and all others push exactly one item onte the stack.
+special and all others push exactly one item onto the stack.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 (excluding) position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
