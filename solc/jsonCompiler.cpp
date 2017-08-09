@@ -38,6 +38,9 @@ extern "C" {
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 }
 
+namespace
+{
+
 ReadFile::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
 {
 	ReadFile::Callback readCallback;
@@ -258,6 +261,8 @@ string compileStandardInternal(string const& _input, CStyleReadFileCallback _rea
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
 	return compiler.compile(_input);
+}
+
 }
 
 static string s_outputBuffer;
