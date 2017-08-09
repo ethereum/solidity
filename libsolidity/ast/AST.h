@@ -152,6 +152,24 @@ public:
 	/// Visibility ordered from restricted to unrestricted.
 	enum class Visibility { Default, Private, Internal, Public, External };
 
+	static std::string visibilityToString(Declaration::Visibility _visibility)
+	{
+		switch(_visibility)
+		{
+		case Declaration::Visibility::Public:
+			return "public";
+		case Declaration::Visibility::Internal:
+			return "internal";
+		case Declaration::Visibility::Private:
+			return "private";
+		case Declaration::Visibility::External:
+			return "external";
+		default:
+			solAssert(false, "Invalid visibility specifier.");
+		}
+		return std::string();
+	}
+
 	Declaration(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,

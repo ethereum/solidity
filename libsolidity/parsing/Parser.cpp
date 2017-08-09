@@ -307,24 +307,6 @@ Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 	return visibility;
 }
 
-string Parser::visibilitySpecifierName(Declaration::Visibility _visibility)
-{
-	switch(_visibility)
-	{
-	case Declaration::Visibility::Public:
-		return "public";
-	case Declaration::Visibility::Internal:
-		return "internal";
-	case Declaration::Visibility::Private:
-		return "private";
-	case Declaration::Visibility::External:
-		return "external";
-	default:
-		solAssert(false, "Invalid visibility specifier.");
-	}
-	return string();
-}
-
 Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
 {
 	FunctionHeaderParserResult result;
@@ -374,7 +356,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 			{
 				parserError(string(
 					"Visibility already specified as \"" +
-					visibilitySpecifierName(result.visibility) +
+					Declaration::visibilityToString(result.visibility) +
 					"\"."
 				));
 				m_scanner->next();
@@ -536,7 +518,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			{
 				parserError(string(
 					"Visibility already specified as \"" +
-					visibilitySpecifierName(visibility) +
+					Declaration::visibilityToString(visibility) +
 					"\"."
 				));
 				m_scanner->next();
