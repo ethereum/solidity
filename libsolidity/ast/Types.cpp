@@ -429,6 +429,13 @@ bigint IntegerType::maxValue() const
 		return (bigint(1) << m_bits) - 1;
 }
 
+s256 IntegerType::signedValue(Literal const* _literal) const
+{
+	solAssert(this->isSigned(), "This value is unsigned, should have used literalValue()");
+	return s2u(literalValue(_literal));
+}
+
+
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (
@@ -492,8 +499,8 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 {
 	solAssert(
 		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
-		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
-		"Invalid bit number(s) for fixed type: " + 
+		0 <= m_fractionalDigits && m_fractionalDigits <= 80,
+		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 }
@@ -530,9 +537,9 @@ TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 		return make_shared<TupleType>();
 	// for fixed, we allow +, -, ++ and --
 	else if (
-		_operator == Token::Add || 
+		_operator == Token::Add ||
 		_operator == Token::Sub ||
-		_operator == Token::Inc || 
+		_operator == Token::Inc ||
 		_operator == Token::Dec
 	)
 		return shared_from_this();
@@ -876,7 +883,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
 			using boost::multiprecision::pow;
@@ -955,7 +962,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -1007,7 +1014,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1016,7 +1023,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.

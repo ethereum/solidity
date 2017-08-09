@@ -35,6 +35,7 @@
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
+#include <libsolidity/analysis/OverflowChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/ABI.h>
@@ -236,6 +237,13 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
+	}
+	if (noErrors)
+	{
+		OverflowChecker overflowChecker(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			overflowChecker.checkOverflow(*source->ast);
+		// Note -- this doesn't impact noErrors since it only issues warnings
 	}
 
 	if (noErrors)

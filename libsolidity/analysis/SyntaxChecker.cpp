@@ -63,9 +63,8 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 {
 	solAssert(!_pragma.tokens().empty(), "");
 	solAssert(_pragma.tokens().size() == _pragma.literals().size(), "");
-	if (_pragma.tokens()[0] != Token::Identifier || _pragma.literals()[0] != "solidity")
-		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
-	else
+	string literal = _pragma.literals()[0];
+	if (literal == "solidity")
 	{
 		vector<Token::Value> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
@@ -81,6 +80,14 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			);
 		m_versionPragmaFound = true;
 	}
+	else if (literal == "checkAssertions")
+	{
+	}
+	else if (literal == "analyzeIntegerOverflow")
+	{
+	}
+	else
+		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
 	return true;
 }
 
