@@ -321,7 +321,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	while (true)
 	{
 		Token::Value token = m_scanner->currentToken();
-		if (token == Token::Const)
+		if (token == Token::Constant)
 		{
 			if (result.isDeclaredConst)
 				parserError(string("Multiple \"constant\" specifiers."));
@@ -522,7 +522,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		{
 			if (_options.allowIndexed && token == Token::Indexed)
 				isIndexed = true;
-			else if (token == Token::Const)
+			else if (token == Token::Constant)
 				isDeclaredConst = true;
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
