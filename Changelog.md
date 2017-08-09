@@ -1,6 +1,7 @@
 ### 0.4.16 (unreleased)
 
 Features:
+ * Parser: Display previous visibility specifier in error if multiple are found.
 
 Bugfixes:
 
