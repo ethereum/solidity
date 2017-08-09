@@ -2228,7 +2228,11 @@ bool FunctionType::operator==(Type const& _other) const
 
 	if (m_kind != other.m_kind)
 		return false;
+
 	if (m_isConstant != other.isConstant())
+		return false;
+
+	if (m_isPayable != other.isPayable())
 		return false;
 
 	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
@@ -2389,10 +2393,15 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		return FunctionTypePointer();
 
 	return make_shared<FunctionType>(
-		paramTypes, retParamTypes,
-		m_parameterNames, m_returnParameterNames,
-		m_kind, m_arbitraryParameters,
-		m_declaration, m_isConstant, m_isPayable
+		paramTypes,
+		retParamTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_kind,
+		m_arbitraryParameters,
+		m_declaration,
+		m_isConstant,
+		m_isPayable
 	);
 }
 
