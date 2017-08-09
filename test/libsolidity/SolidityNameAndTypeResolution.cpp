@@ -4771,15 +4771,6 @@ BOOST_AUTO_TEST_CASE(function_variable_mixin)
        CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
 }
 
-
-BOOST_AUTO_TEST_CASE(payable_constant_conflict)
-{
-	char const* text = R"(
-		contract C { function f() payable constant {} }
-	)";
-	CHECK_ERROR(text, TypeError, "Functions cannot be constant and payable at the same time.");
-}
-
 BOOST_AUTO_TEST_CASE(calling_payable)
 {
 	char const* text = R"(
