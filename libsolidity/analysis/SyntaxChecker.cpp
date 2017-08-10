@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <memory>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
@@ -33,9 +34,10 @@ bool SyntaxChecker::checkSyntax(ASTNode const& _astRoot)
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
-bool SyntaxChecker::visit(SourceUnit const&)
+bool SyntaxChecker::visit(SourceUnit const& _sourceUnit)
 {
 	m_versionPragmaFound = false;
+	m_sourceUnit = &_sourceUnit;
 	return true;
 }
 
@@ -57,15 +59,46 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 
 		m_errorReporter.warning(_sourceUnit.location(), errorString);
 	}
+	m_sourceUnit = nullptr;
 }
 
 bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 {
 	solAssert(!_pragma.tokens().empty(), "");
 	solAssert(_pragma.tokens().size() == _pragma.literals().size(), "");
-	if (_pragma.tokens()[0] != Token::Identifier || _pragma.literals()[0] != "solidity")
-		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
-	else
+	if (_pragma.tokens()[0] != Token::Identifier)
+		m_errorReporter.syntaxError(_pragma.location(), "Invalid pragma \"" + _pragma.literals()[0] + "\"");
+	else if (_pragma.literals()[0] == "experimental")
+	{
+		solAssert(m_sourceUnit, "");
+		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
+		if (literals.size() == 0)
+			m_errorReporter.syntaxError(
+				_pragma.location(),
+				"Experimental feature name is missing."
+			);
+		else if (literals.size() > 1)
+			m_errorReporter.syntaxError(
+				_pragma.location(),
+				"Stray arguments."
+			);
+		else
+		{
+			string const literal = literals[0];
+			if (literal.empty())
+				m_errorReporter.syntaxError(_pragma.location(), "Empty experimental feature name is invalid.");
+			else if (!ExperimentalFeatureNames.count(literal))
+				m_errorReporter.syntaxError(_pragma.location(), "Unsupported experimental feature name.");
+			else if (m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeatureNames.at(literal)))
+				m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
+			else
+			{
+				m_sourceUnit->annotation().experimentalFeatures.insert(ExperimentalFeatureNames.at(literal));
+				m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
+			}
+		}
+	}
+	else if (_pragma.literals()[0] == "solidity")
 	{
 		vector<Token::Value> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
@@ -81,6 +114,8 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			);
 		m_versionPragmaFound = true;
 	}
+	else
+		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
 	return true;
 }
 
