@@ -1391,11 +1391,11 @@ string ArrayType::richIdentifier() const
 	else
 	{
 		id = "t_array";
-		id += identifierList(baseType());
+		id += "_" + identifierList(baseType());
 		if (isDynamicallySized())
-			id += "dyn";
+			id += "_dyn";
 		else
-			id += length().str();
+			id += "_" + length().str();
 	}
 	id += identifierLocationSuffix();
 
@@ -1617,7 +1617,7 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 
 string ContractType::richIdentifier() const
 {
-	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
+	return (m_super ? "t_super_" : "t_contract_") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -1769,7 +1769,7 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 
 string StructType::richIdentifier() const
 {
-	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
+	return "t_struct_" + parenthesizeUserIdentifier(m_struct.name()) + "_" + std::to_string(m_struct.id()) + identifierLocationSuffix();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -2001,7 +2001,7 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 
 string EnumType::richIdentifier() const
 {
-	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
+	return "t_enum_" + parenthesizeUserIdentifier(m_enum.name()) + "_" + std::to_string(m_enum.id());
 }
 
 bool EnumType::operator==(Type const& _other) const
@@ -2087,7 +2087,7 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 
 string TupleType::richIdentifier() const
 {
-	return "t_tuple" + identifierList(components());
+	return "t_tuple_" + identifierList(components());
 }
 
 bool TupleType::operator==(Type const& _other) const
@@ -2360,13 +2360,13 @@ string FunctionType::richIdentifier() const
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
-	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
+	id += "_" + identifierList(m_parameterTypes) + "_returns_" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
-		id += "gas";
+		id += "_gas";
 	if (m_valueSet)
-		id += "value";
+		id += "_value";
 	if (bound())
-		id += "bound_to" + identifierList(selfType());
+		id += "_bound_to_" + identifierList(selfType());
 	return id;
 }
 
@@ -2815,7 +2815,7 @@ ASTPointer<ASTString> FunctionType::documentation() const
 
 string MappingType::richIdentifier() const
 {
-	return "t_mapping" + identifierList(m_keyType, m_valueType);
+	return "t_mapping_" + identifierList(m_keyType, m_valueType);
 }
 
 bool MappingType::operator==(Type const& _other) const
@@ -2838,7 +2838,7 @@ string MappingType::canonicalName() const
 
 string TypeType::richIdentifier() const
 {
-	return "t_type" + identifierList(actualType());
+	return "t_type_" + identifierList(actualType());
 }
 
 bool TypeType::operator==(Type const& _other) const
@@ -2923,7 +2923,7 @@ u256 ModifierType::storageSize() const
 
 string ModifierType::richIdentifier() const
 {
-	return "t_modifier" + identifierList(m_parameterTypes);
+	return "t_modifier_" + identifierList(m_parameterTypes);
 }
 
 bool ModifierType::operator==(Type const& _other) const
