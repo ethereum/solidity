@@ -56,6 +56,8 @@ public:
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
 	}
 
+	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
+	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
@@ -264,6 +266,8 @@ private:
 	} m_functionCompilationQueue;
 
 	eth::AssemblyPointer m_asm;
+	/// Activated experimental features.
+	std::set<ExperimentalFeature> m_experimentalFeatures;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
 	/// Storage offsets of state variables

@@ -29,15 +29,19 @@ namespace solidity
 
 enum class ExperimentalFeature
 {
+	ABIEncoderV2, // new ABI encoder that makes use of JULIA
 	Test,
 	TestOnlyAnalysis
 };
 
-static const std::map<ExperimentalFeature, bool> ExperimentalFeatureOnlyAnalysis = {
+static const std::map<ExperimentalFeature, bool> ExperimentalFeatureOnlyAnalysis =
+{
 	{ ExperimentalFeature::TestOnlyAnalysis, true },
 };
 
-static const std::map<std::string, ExperimentalFeature> ExperimentalFeatureNames = {
+static const std::map<std::string, ExperimentalFeature> ExperimentalFeatureNames =
+{
+	{ "ABIEncoderV2", ExperimentalFeature::ABIEncoderV2 },
 	{ "__test", ExperimentalFeature::Test },
 	{ "__testOnlyAnalysis", ExperimentalFeature::TestOnlyAnalysis },
 };

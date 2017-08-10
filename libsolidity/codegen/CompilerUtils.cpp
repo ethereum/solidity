@@ -181,10 +181,13 @@ void CompilerUtils::encodeToMemory(
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 	}
 
-	bool activateNewEncoder = false;
 	if (_givenTypes.empty())
 		return;
-	else if (activateNewEncoder && _padToWordBoundaries && !_copyDynamicDataInPlace)
+	else if (
+		_padToWordBoundaries &&
+		!_copyDynamicDataInPlace &&
+		m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+	)
 	{
 		// Use the new JULIA-based encoding function
 		auto stackHeightBefore = m_context.stackHeight();

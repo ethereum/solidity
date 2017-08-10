@@ -100,6 +100,7 @@ void ContractCompiler::initializeContext(
 	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
 )
 {
+	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
 	m_context.setCompiledContracts(_compiledContracts);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
