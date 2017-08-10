@@ -104,19 +104,21 @@ you really know what you are doing.
                let len := mload(_data)
 
                // Skip over the length field.
-               _data := add(_data, 0x20)
+               //
+               // Keep temporary variable so it can be incremented in place.
+               //
+               // NOTE: incrementing _data would result in an unusable
+               //       _data variable after this assembly block
+               let data := add(_data, 0x20)
 
                // Iterate until the bound is not met.
                for
-                   { let end := add(_data, len) }
-                   lt(_data, end)
-                   { _data := add(_data, 0x20) }
+                   { let end := add(data, len) }
+                   lt(data, end)
+                   { data := add(data, 0x20) }
                {
-                   o_sum := add(o_sum, mload(_data))
+                   o_sum := add(o_sum, mload(data))
                }
-
-               // NOTE: after this point it is not safe to use _data in Solidity code
-               //       because its offsets are in an invalid position
             }
         }
     }
