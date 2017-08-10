@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	// Check that the metadata stamp is at the end of the runtime bytecode.
 	char const* sourceCode = R"(
 		pragma solidity >=0.0;
+		pragma experimental __testOnlyAnalysis;
 		contract test {
 			function g(function(uint) external returns (uint) x) {}
 		}
