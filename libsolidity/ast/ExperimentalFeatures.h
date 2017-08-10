@@ -27,9 +27,13 @@ namespace dev
 namespace solidity
 {
 
-enum class ExperimentalFeature {};
+enum class ExperimentalFeature {
+	Test
+};
 
-static const std::map<std::string, ExperimentalFeature> ExperimentalFeatureNames = {};
+static const std::map<std::string, ExperimentalFeature> ExperimentalFeatureNames = {
+	{ "__test", ExperimentalFeature::Test },
+};
 
 }
 }
