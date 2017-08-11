@@ -2220,6 +2220,8 @@ string FunctionType::identifier() const
 	}
 	if (isConstant())
 		id += "_constant";
+	if (isPayable())
+		id += "_payable";
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
 		id += "gas";
@@ -2234,23 +2236,22 @@ bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
+
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
+	if (
+		m_kind != other.m_kind ||
+		m_isConstant != other.isConstant() ||
+		m_isPayable != other.isPayable() ||
+		m_parameterTypes.size() != other.m_parameterTypes.size() ||
+		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
+	)
+		return false;
 
-	if (m_kind != other.m_kind)
-		return false;
-	if (m_isConstant != other.isConstant())
-		return false;
-
-	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
-			m_returnParameterTypes.size() != other.m_returnParameterTypes.size())
-		return false;
 	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
-
-	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
-			   other.m_parameterTypes.cbegin(), typeCompare))
-		return false;
-	if (!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(),
-			   other.m_returnParameterTypes.cbegin(), typeCompare))
+	if (
+		!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(), other.m_parameterTypes.cbegin(), typeCompare) ||
+		!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(), other.m_returnParameterTypes.cbegin(), typeCompare)
+	)
 		return false;
 	//@todo this is ugly, but cannot be prevented right now
 	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
@@ -2399,10 +2400,15 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		return FunctionTypePointer();
 
 	return make_shared<FunctionType>(
-		paramTypes, retParamTypes,
-		m_parameterNames, m_returnParameterNames,
-		m_kind, m_arbitraryParameters,
-		m_declaration, m_isConstant, m_isPayable
+		paramTypes,
+		retParamTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_kind,
+		m_arbitraryParameters,
+		m_declaration,
+		m_isConstant,
+		m_isPayable
 	);
 }
 
