@@ -44,12 +44,7 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback con
 
 void SMTChecker::analyze(SourceUnit const& _source)
 {
-	bool pragmaFound = false;
-	for (auto const& node: _source.nodes())
-		if (auto const* pragma = dynamic_cast<PragmaDirective const*>(node.get()))
-			if (pragma->literals()[0] == "checkAssertions")
-				pragmaFound = true;
-	if (pragmaFound)
+	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 	{
 		m_interface->reset();
 		m_currentSequenceCounter.clear();
