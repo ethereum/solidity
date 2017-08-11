@@ -2,6 +2,7 @@
 
 Features:
  * ABI JSON: Include new field ``statemutability`` with values ``view``, ``nonpayable`` and ``payable``.
+ * Analyzer: Experimental partial support for Z3 SMT checker.
  * Parser: Display previous visibility specifier in error if multiple are found.
  * Parser: Introduce ``view`` keyword on functions (``constant`` remains an alias for ``view``).
  * Syntax Checker: Support ``pragma experimental <feature>;`` to turn on experimental features.
