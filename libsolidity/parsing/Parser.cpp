@@ -1300,10 +1300,11 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 					parserError("Expected expression (inline array elements cannot be omitted).");
 				else
 					components.push_back(ASTPointer<Expression>());
+
 				if (m_scanner->currentToken() == oppositeToken)
 					break;
-				else if (m_scanner->currentToken() == Token::Comma)
-					m_scanner->next();
+
+				expectToken(Token::Comma);
 			}
 		nodeFactory.markEndPosition();
 		expectToken(oppositeToken);

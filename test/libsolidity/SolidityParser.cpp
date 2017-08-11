@@ -1187,6 +1187,18 @@ BOOST_AUTO_TEST_CASE(tuples)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(tuples_without_commas)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var a = (2 2);
+			}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token Comma");
+}
+
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 {
 	char const* text = R"(
