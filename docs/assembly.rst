@@ -96,6 +96,31 @@ you really know what you are doing.
                 }
             }
         }
+
+        // Same as above, but accomplish the entire code within inline assembly.
+        function sumPureAsm(uint[] _data) returns (uint o_sum) {
+            assembly {
+               // Load the length (first 32 bytes)
+               let len := mload(_data)
+
+               // Skip over the length field.
+               //
+               // Keep temporary variable so it can be incremented in place.
+               //
+               // NOTE: incrementing _data would result in an unusable
+               //       _data variable after this assembly block
+               let data := add(_data, 0x20)
+
+               // Iterate until the bound is not met.
+               for
+                   { let end := add(data, len) }
+                   lt(data, end)
+                   { data := add(data, 0x20) }
+               {
+                   o_sum := add(o_sum, mload(data))
+               }
+            }
+        }
     }
 
 
