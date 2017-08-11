@@ -277,21 +277,10 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 			string const& name = function->name();
 			if (modifiers.count(name))
 				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-			FunctionType functionType(*function);
-			// function should not change the return type
+
 			for (FunctionDefinition const* overriding: functions[name])
-			{
-				FunctionType overridingType(*overriding);
-				if (!overridingType.hasEqualArgumentTypes(functionType))
-					continue;
-				if (
-					overriding->visibility() != function->visibility() ||
-					overriding->isDeclaredConst() != function->isDeclaredConst() ||
-					overriding->isPayable() != function->isPayable() ||
-					overridingType != functionType
-				)
-					m_errorReporter.typeError(overriding->location(), "Override changes extended function signature.");
-			}
+				checkFunctionOverride(*overriding, *function);
+
 			functions[name].push_back(function);
 		}
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
@@ -306,6 +295,42 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
 		}
 	}
+}
+
+void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
+{
+	FunctionType functionType(function);
+	FunctionType superType(super);
+
+	if (!functionType.hasEqualArgumentTypes(superType))
+		return;
+
+	if (function.visibility() != super.visibility())
+		overrideError(function, super, "Overriding function visibility differs.");
+
+	else if (function.isDeclaredConst() && !super.isDeclaredConst())
+		overrideError(function, super, "Overriding function should not be declared constant.");
+
+	else if (!function.isDeclaredConst() && super.isDeclaredConst())
+		overrideError(function, super, "Overriding function should be declared constant.");
+
+	else if (function.isPayable() && !super.isPayable())
+		overrideError(function, super, "Overriding function should not be declared payable.");
+
+	else if (!function.isPayable() && super.isPayable())
+		overrideError(function, super, "Overriding function should be declared payable.");
+
+	else if (functionType != superType)
+		overrideError(function, super, "Overriding function return types differ.");
+}
+
+void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
+{
+	m_errorReporter.typeError(
+		function.location(),
+		SecondarySourceLocation().append("Overriden function is here:", super.location()),
+		message
+	);
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
@@ -1949,4 +1974,3 @@ void TypeChecker::requireLValue(Expression const& _expression)
 	else if (!_expression.annotation().isLValue)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
 }
-

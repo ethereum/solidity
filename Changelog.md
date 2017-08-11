@@ -4,6 +4,7 @@ Features:
  * Parser: Display previous visibility specifier in error if multiple are found.
  * Syntax Checker: Support ``pragma experimental <feature>;`` to turn on experimental features.
  * Metadata: Store experimental flag in metadata CBOR.
+ * Type Checker: More detailed error message for invalid overrides.
 
 Bugfixes:
  * Parser: Enforce commas between array and tuple elements.

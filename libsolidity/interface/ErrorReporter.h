@@ -75,8 +75,8 @@ public:
 
 	void typeError(
 		SourceLocation const& _location,
-		SecondarySourceLocation const& _secondaryLocation,
-		std::string const& _description
+		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation(),
+		std::string const& _description = std::string()
 	);
 
 	void typeError(SourceLocation const& _location, std::string const& _description);
