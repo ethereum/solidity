@@ -632,6 +632,17 @@ string CompilerStack::absolutePath(string const& _path, string const& _reference
 	return result.generic_string();
 }
 
+namespace
+{
+bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& features)
+{
+	for (auto const feature: features)
+		if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+			return false;
+	return true;
+}
+}
+
 void CompilerStack::compileContract(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
@@ -649,10 +660,23 @@ void CompilerStack::compileContract(
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
-	bytes cborEncodedMetadata =
-		// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
-		bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
-		dev::swarmHash(metadata).asBytes();
+	bytes cborEncodedHash =
+		// CBOR-encoding of the key "bzzr0"
+		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
+		// CBOR-encoding of the hash
+		bytes{0x58, 0x20} + dev::swarmHash(metadata).asBytes();
+	bytes cborEncodedMetadata;
+	if (onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures))
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
+			bytes{0xa1} +
+			cborEncodedHash;
+	else
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
+			bytes{0xa2} +
+			cborEncodedHash +
+			bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);

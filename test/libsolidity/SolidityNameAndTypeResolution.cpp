@@ -6584,15 +6584,15 @@ BOOST_AUTO_TEST_CASE(experimental_pragma)
 		pragma experimental unsupportedName unsupportedName;
 	)";
 	CHECK_ERROR(text, SyntaxError, "Stray arguments.");
+	text = R"(
+		pragma experimental __test;
+	)";
+	CHECK_WARNING(text, "Experimental features are turned on. Do not use experimental features on live deployments.");
 //	text = R"(
-//		pragma experimental supportedName;
+//		pragma experimental __test;
+//		pragma experimental __test;
 //	)";
-//	CHECK_WARNING(text, "Experimental features are turned on. Do not use experimental features on live deployments.");
-//	text = R"(
-//		pragma experimental supportedName;
-//		pragma experimental supportedName;
-//	)";
-//	CHECK_ERROR(text, SyntaxError, "Duplicate experimental feature name.");
+//	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, "Duplicate experimental feature name.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
