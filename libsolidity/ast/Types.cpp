@@ -477,8 +477,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, false, true)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, false, true)},
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
+			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
@@ -2000,14 +2000,16 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_kind(_isInternal ? Kind::Internal : Kind::External),
-	m_isConstant(_function.isDeclaredConst()),
-	m_isPayable(_isInternal ? false : _function.isPayable()),
+	m_stateMutability(_function.stateMutability()),
 	m_declaration(&_function)
 {
 	TypePointers params;
 	vector<string> paramNames;
 	TypePointers retParams;
 	vector<string> retParamNames;
+
+	if (_isInternal && m_stateMutability == StateMutability::Payable)
+		m_stateMutability = StateMutability::NonPayable;
 
 	params.reserve(_function.parameters().size());
 	paramNames.reserve(_function.parameters().size());
@@ -2030,7 +2032,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_kind(Kind::External), m_isConstant(true), m_declaration(&_varDecl)
+	m_kind(Kind::External), m_stateMutability(StateMutability::View), m_declaration(&_varDecl)
 {
 	TypePointers paramTypes;
 	vector<string> paramNames;
@@ -2090,7 +2092,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
-	m_kind(Kind::Event), m_isConstant(true), m_declaration(&_event)
+	m_kind(Kind::Event), m_stateMutability(StateMutability::View), m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -2107,14 +2109,10 @@ FunctionType::FunctionType(EventDefinition const& _event):
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
-	m_isConstant(_typeName.isDeclaredConst()),
-	m_isPayable(_typeName.isPayable())
+	m_stateMutability(_typeName.stateMutability())
 {
 	if (_typeName.isPayable())
-	{
 		solAssert(m_kind == Kind::External, "Internal payable function type used.");
-		solAssert(!m_isConstant, "Payable constant function");
-	}
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
@@ -2142,7 +2140,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 	FunctionDefinition const* constructor = _contract.constructor();
 	TypePointers parameters;
 	strings parameterNames;
-	bool payable = false;
+	StateMutability stateMutability = StateMutability::NonPayable;
 
 	if (constructor)
 	{
@@ -2151,7 +2149,8 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 			parameterNames.push_back(var->name());
 			parameters.push_back(var->annotation().type);
 		}
-		payable = constructor->isPayable();
+		if (constructor->isPayable())
+			stateMutability = StateMutability::Payable;
 	}
 	return make_shared<FunctionType>(
 		parameters,
@@ -2161,8 +2160,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		Kind::Creation,
 		false,
 		nullptr,
-		false,
-		payable
+		stateMutability
 	);
 }
 
@@ -2241,8 +2239,8 @@ bool FunctionType::operator==(Type const& _other) const
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
 	if (
 		m_kind != other.m_kind ||
-		m_isConstant != other.isConstant() ||
-		m_isPayable != other.isPayable() ||
+		isConstant() != other.isConstant() ||
+		isPayable() != other.isPayable() ||
 		m_parameterTypes.size() != other.m_parameterTypes.size() ||
 		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
 	)
@@ -2304,9 +2302,9 @@ string FunctionType::toString(bool _short) const
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
-	if (m_isConstant)
+	if (isConstant())
 		name += " constant";
-	if (m_isPayable)
+	if (isPayable())
 		name += " payable";
 	if (m_kind == Kind::External)
 		name += " external";
@@ -2420,8 +2418,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		m_kind,
 		m_arbitraryParameters,
 		m_declaration,
-		m_isConstant,
-		m_isPayable
+		m_stateMutability
 	);
 }
 
@@ -2438,7 +2435,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 		MemberList::MemberMap members;
 		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
 		{
-			if (m_isPayable)
+			if (isPayable())
 				members.push_back(MemberList::Member(
 					"value",
 					make_shared<FunctionType>(
@@ -2449,8 +2446,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						Kind::SetValue,
 						false,
 						nullptr,
-						false,
-						false,
+						StateMutability::NonPayable,
 						m_gasSet,
 						m_valueSet
 					)
@@ -2467,8 +2463,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					Kind::SetGas,
 					false,
 					nullptr,
-					false,
-					false,
+					StateMutability::NonPayable,
 					m_gasSet,
 					m_valueSet
 				)
@@ -2604,8 +2599,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_kind,
 		m_arbitraryParameters,
 		m_declaration,
-		m_isConstant,
-		m_isPayable,
+		m_stateMutability,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
 		m_bound
@@ -2654,8 +2648,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		kind,
 		m_arbitraryParameters,
 		m_declaration,
-		m_isConstant,
-		m_isPayable,
+		m_stateMutability,
 		m_gasSet,
 		m_valueSet,
 		_bound

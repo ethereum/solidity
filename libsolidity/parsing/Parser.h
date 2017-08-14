@@ -60,8 +60,7 @@ private:
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
 		Declaration::Visibility visibility = Declaration::Visibility::Default;
-		bool isDeclaredConst = false;
-		bool isPayable = false;
+		StateMutability stateMutability = StateMutability::NonPayable;
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	};
 
@@ -73,7 +72,7 @@ private:
 	ASTPointer<ContractDefinition> parseContractDefinition(Token::Value _expectedKind);
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
-	std::string visibilitySpecifierName(Declaration::Visibility _visibility);
+	StateMutability parseStateMutability(Token::Value _token);
 	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
 	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable(ASTString const* _contractName);
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);

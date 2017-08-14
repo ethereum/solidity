@@ -95,6 +95,5 @@ using ASTPointer = std::shared_ptr<T>;
 
 using ASTString = std::string;
 
-
 }
 }

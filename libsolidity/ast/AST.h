@@ -28,6 +28,7 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <libsolidity/ast/ASTEnums.h>
 
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
@@ -584,21 +585,19 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		Declaration::Visibility _visibility,
+		StateMutability _stateMutability,
 		bool _isConstructor,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
-		bool _isDeclaredConst,
 		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
-		bool _isPayable,
 		ASTPointer<Block> const& _body
 	):
 		CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
+		m_stateMutability(_stateMutability),
 		m_isConstructor(_isConstructor),
-		m_isDeclaredConst(_isDeclaredConst),
-		m_isPayable(_isPayable),
 		m_functionModifiers(_modifiers),
 		m_body(_body)
 	{}
@@ -606,10 +605,11 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
+	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
 	bool isFallback() const { return name().empty(); }
-	bool isDeclaredConst() const { return m_isDeclaredConst; }
-	bool isPayable() const { return m_isPayable; }
+	bool isDeclaredConst() const { return m_stateMutability == StateMutability::View; }
+	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
@@ -634,9 +634,8 @@ public:
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
 private:
+	StateMutability m_stateMutability;
 	bool m_isConstructor;
-	bool m_isDeclaredConst;
-	bool m_isPayable;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };
@@ -896,11 +895,10 @@ public:
 		ASTPointer<ParameterList> const& _parameterTypes,
 		ASTPointer<ParameterList> const& _returnTypes,
 		Declaration::Visibility _visibility,
-		bool _isDeclaredConst,
-		bool _isPayable
+		StateMutability _stateMutability
 	):
 		TypeName(_location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
-		m_visibility(_visibility), m_isDeclaredConst(_isDeclaredConst), m_isPayable(_isPayable)
+		m_visibility(_visibility), m_stateMutability(_stateMutability)
 	{}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -914,15 +912,15 @@ public:
 	{
 		return m_visibility == Declaration::Visibility::Default ? Declaration::Visibility::Internal : m_visibility;
 	}
-	bool isDeclaredConst() const { return m_isDeclaredConst; }
-	bool isPayable() const { return m_isPayable; }
+	StateMutability stateMutability() const { return m_stateMutability; }
+	bool isDeclaredConst() const { return m_stateMutability == StateMutability::View; }
+	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 
 private:
 	ASTPointer<ParameterList> m_parameterTypes;
 	ASTPointer<ParameterList> m_returnTypes;
 	Declaration::Visibility m_visibility;
-	bool m_isDeclaredConst;
-	bool m_isPayable;
+	StateMutability m_stateMutability;
 };
 
 /**
