@@ -1387,6 +1387,18 @@ BOOST_AUTO_TEST_CASE(recursion_depth3)
 	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
 }
 
+BOOST_AUTO_TEST_CASE(recursion_depth4)
+{
+	string text("contract C { function f() { uint a;");
+	for (size_t i = 0; i < 30000; i++)
+		text += "(";
+	text += "a";
+	for (size_t i = 0; i < 30000; i++)
+		text += "++)";
+	text += "}}";
+	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
+}
+
 BOOST_AUTO_TEST_CASE(declaring_fixed_and_ufixed_variables)
 {
 	char const* text = R"(
