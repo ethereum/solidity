@@ -48,7 +48,7 @@ namespace solidity {
 class CompilerContext
 {
 public:
-	CompilerContext(CompilerContext* _runtimeContext = nullptr):
+	explicit CompilerContext(CompilerContext* _runtimeContext = nullptr):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_runtimeContext(_runtimeContext)
 	{
@@ -56,7 +56,9 @@ public:
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
 	}
 
-	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
+	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
+	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
+
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
@@ -68,7 +70,6 @@ public:
 	void adjustStackOffset(int _adjustment) { m_asm->adjustDeposit(_adjustment); }
 	unsigned stackHeight() const { solAssert(m_asm->deposit() >= 0, ""); return unsigned(m_asm->deposit()); }
 
-	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
@@ -265,8 +266,8 @@ private:
 	} m_functionCompilationQueue;
 
 	eth::AssemblyPointer m_asm;
-	/// Magic global variables like msg, tx or this, distinguished by type.
-	std::set<Declaration const*> m_magicGlobals;
+	/// Activated experimental features.
+	std::set<ExperimentalFeature> m_experimentalFeatures;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
 	/// Storage offsets of state variables
