@@ -1363,7 +1363,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_constant_modifier)
 			function() constant { x = 2; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Fallback function cannot be declared constant.");
+	CHECK_ERROR(text, TypeError, "Fallback function must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
@@ -4873,7 +4873,7 @@ BOOST_AUTO_TEST_CASE(constant_constructor)
 			function test() constant {}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constructor cannot be defined as constant.");
+	CHECK_ERROR(text, TypeError, "Constructor must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(external_constructor)
