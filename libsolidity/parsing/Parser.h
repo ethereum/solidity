@@ -41,6 +41,7 @@ public:
 
 private:
 	class ASTNodeFactory;
+	class RecursionGuard;
 
 	struct VarDeclParserOptions
 	{
@@ -164,8 +165,14 @@ private:
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
+	/// Increases the recursion depth and throws an exception if it is too deep.
+	void increaseRecursionDepth();
+	void decreaseRecursionDepth();
+
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
+	/// Current recursion depth during parsing.
+	size_t m_recursionDepth = 0;
 };
 
 }

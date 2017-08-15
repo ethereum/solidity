@@ -64,10 +64,30 @@ private:
 	SourceLocation m_location;
 };
 
+/// Utility class that creates an error and throws an exception if the
+/// recursion depth is too deep.
+class Parser::RecursionGuard
+{
+public:
+	RecursionGuard(Parser& _parser):
+		m_parser(_parser)
+	{
+		m_parser.increaseRecursionDepth();
+	}
+	~RecursionGuard()
+	{
+		m_parser.decreaseRecursionDepth();
+	}
+
+private:
+	Parser& m_parser;
+};
+
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 {
 	try
 	{
+		m_recursionDepth = 0;
 		m_scanner = _scanner;
 		ASTNodeFactory nodeFactory(*this);
 		vector<ASTPointer<ASTNode>> nodes;
@@ -90,6 +110,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				fatalParserError(string("Expected pragma, import directive or contract/interface/library definition."));
 			}
 		}
+		solAssert(m_recursionDepth == 0, "");
 		return nodeFactory.createNode<SourceUnit>(nodes);
 	}
 	catch (FatalError const&)
@@ -102,6 +123,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 
 ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 {
+	RecursionGuard recursionGuard(*this);
 	// pragma anything* ;
 	// Currently supported:
 	// pragma solidity ^0.4.0 || ^0.3.0;
@@ -132,6 +154,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 
 ASTPointer<ImportDirective> Parser::parseImportDirective()
 {
+	RecursionGuard recursionGuard(*this);
 	// import "abc" [as x];
 	// import * as x from "abc";
 	// import {a as b, c} from "abc";
@@ -212,6 +235,7 @@ ContractDefinition::ContractKind Parser::tokenToContractKind(Token::Value _token
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _expectedKind)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docString;
 	if (m_scanner->currentCommentLiteral() != "")
@@ -275,6 +299,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<UserDefinedTypeName> name(parseUserDefinedTypeName());
 	vector<ASTPointer<Expression>> arguments;
@@ -322,6 +347,7 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 
 Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
 {
+	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 	expectToken(Token::Function);
 	if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
@@ -391,6 +417,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 
 ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(ASTString const* _contractName)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
 	if (m_scanner->currentCommentLiteral() != "")
@@ -449,6 +476,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Struct);
 	ASTPointer<ASTString> name = expectIdentifierToken();
@@ -466,6 +494,7 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 
 ASTPointer<EnumValue> Parser::parseEnumValue()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<EnumValue>(expectIdentifierToken());
@@ -473,6 +502,7 @@ ASTPointer<EnumValue> Parser::parseEnumValue()
 
 ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Enum);
 	ASTPointer<ASTString> name = expectIdentifierToken();
@@ -501,6 +531,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	ASTPointer<TypeName> const& _lookAheadArrayType
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
 	ASTPointer<TypeName> type;
@@ -593,6 +624,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 {
+	RecursionGuard recursionGuard(*this);
 	ScopeGuard resetModifierFlag([this]() { m_insideModifier = false; });
 	m_insideModifier = true;
 
@@ -620,6 +652,7 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 
 ASTPointer<EventDefinition> Parser::parseEventDefinition()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
 	if (m_scanner->currentCommentLiteral() != "")
@@ -649,6 +682,7 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 
 ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::Using);
@@ -666,6 +700,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<Identifier> name(parseIdentifier());
 	vector<ASTPointer<Expression>> arguments;
@@ -683,6 +718,7 @@ ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 
 ASTPointer<Identifier> Parser::parseIdentifier()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<Identifier>(expectIdentifierToken());
@@ -690,6 +726,7 @@ ASTPointer<Identifier> Parser::parseIdentifier()
 
 ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.markEndPosition();
 	vector<ASTString> identifierPath{*expectIdentifierToken()};
@@ -704,6 +741,7 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 
 ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory)
 {
+	RecursionGuard recursionGuard(*this);
 	while (m_scanner->currentToken() == Token::LBrack)
 	{
 		m_scanner->next();
@@ -719,6 +757,7 @@ ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTN
 
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
@@ -754,6 +793,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 
 ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	FunctionHeaderParserResult header = parseFunctionHeader(true, false);
 	return nodeFactory.createNode<FunctionTypeName>(
@@ -766,6 +806,7 @@ ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 
 ASTPointer<Mapping> Parser::parseMapping()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
@@ -792,6 +833,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	bool _allowEmpty
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	vector<ASTPointer<VariableDeclaration>> parameters;
 	VarDeclParserOptions options(_options);
@@ -813,6 +855,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 
 ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::LBrace);
 	vector<ASTPointer<Statement>> statements;
@@ -825,6 +868,7 @@ ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 
 ASTPointer<Statement> Parser::parseStatement()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTPointer<ASTString> docString;
 	if (m_scanner->currentCommentLiteral() != "")
 		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
@@ -887,6 +931,7 @@ ASTPointer<Statement> Parser::parseStatement()
 
 ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Assembly);
 	if (m_scanner->currentToken() == Token::StringLiteral)
@@ -904,6 +949,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::If);
 	expectToken(Token::LParen);
@@ -924,6 +970,7 @@ ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _d
 
 ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::While);
 	expectToken(Token::LParen);
@@ -936,6 +983,7 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> con
 
 ASTPointer<WhileStatement> Parser::parseDoWhileStatement(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Do);
 	ASTPointer<Statement> body = parseStatement();
@@ -951,6 +999,7 @@ ASTPointer<WhileStatement> Parser::parseDoWhileStatement(ASTPointer<ASTString> c
 
 ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<Statement> initExpression;
 	ASTPointer<Expression> conditionExpression;
@@ -984,6 +1033,7 @@ ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& 
 
 ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)
 {
+	RecursionGuard recursionGuard(*this);
 	// These two cases are very hard to distinguish:
 	// x[7 * 20 + 3] a;  -  x[7 * 20 + 3] = 9;
 	// In the first case, x is a type name, in the second it is the name of a variable.
@@ -1046,6 +1096,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	ASTPointer<TypeName> const& _lookAheadArrayType
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	if (_lookAheadArrayType)
 		nodeFactory.setLocation(_lookAheadArrayType->location());
@@ -1109,6 +1160,7 @@ ASTPointer<ExpressionStatement> Parser::parseExpressionStatement(
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTPointer<Expression> expression = parseExpression(_lookAheadIndexAccessStructure);
 	return ASTNodeFactory(*this, expression).createNode<ExpressionStatement>(_docString, expression);
 }
@@ -1117,6 +1169,7 @@ ASTPointer<Expression> Parser::parseExpression(
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
 	if (Token::isAssignmentOp(m_scanner->currentToken()))
 	{
@@ -1145,6 +1198,7 @@ ASTPointer<Expression> Parser::parseBinaryExpression(
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTPointer<Expression> expression = parseUnaryExpression(_lookAheadIndexAccessStructure);
 	ASTNodeFactory nodeFactory(*this, expression);
 	int precedence = Token::precedence(m_scanner->currentToken());
@@ -1164,6 +1218,7 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
 		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
@@ -1192,6 +1247,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
 		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
 
@@ -1249,6 +1305,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 
 ASTPointer<Expression> Parser::parsePrimaryExpression()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
@@ -1339,6 +1396,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 
 vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 {
+	RecursionGuard recursionGuard(*this);
 	vector<ASTPointer<Expression>> arguments;
 	if (m_scanner->currentToken() != Token::RParen)
 	{
@@ -1354,6 +1412,7 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 
 pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseFunctionCallArguments()
 {
+	RecursionGuard recursionGuard(*this);
 	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
 	Token::Value token = m_scanner->currentToken();
 	if (token == Token::LBrace)
@@ -1420,6 +1479,7 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 )
 {
 	solAssert(!_path.empty(), "");
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	SourceLocation location = _path.front()->location();
 	location.end = _path.back()->location().end;
@@ -1452,6 +1512,7 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 )
 {
 	solAssert(!_path.empty(), "");
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this, _path.front());
 	ASTPointer<Expression> expression(_path.front());
 	for (size_t i = 1; i < _path.size(); ++i)
@@ -1475,9 +1536,23 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 
 ASTPointer<ParameterList> Parser::createEmptyParameterList()
 {
+	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.setLocationEmpty();
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
+}
+
+void Parser::increaseRecursionDepth()
+{
+	m_recursionDepth++;
+	if (m_recursionDepth >= 4096)
+		fatalParserError("Maximum recursion depth reached during parsing.");
+}
+
+void Parser::decreaseRecursionDepth()
+{
+	solAssert(m_recursionDepth > 0, "");
+	m_recursionDepth--;
 }
 
 string Parser::currentTokenName()
