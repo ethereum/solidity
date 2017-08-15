@@ -10,7 +10,7 @@ variables. Calling a function on a different contract (instance) will perform
 an EVM function call and thus switch the context such that state variables are
 inaccessible.
 
-.. index:: ! contract;creation
+.. index:: ! contract;creation, constructor
 
 ******************
 Creating Contracts
