@@ -928,6 +928,16 @@ BOOST_AUTO_TEST_CASE(multiple_statemutability_specifiers)
 			function f() payable constant {}
 		})";
 	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");
+	text = R"(
+		contract c {
+			function f() pure payable {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
+	text = R"(
+		contract c {
+			function f() pure constant {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
 }
 
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)

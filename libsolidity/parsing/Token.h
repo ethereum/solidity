@@ -169,6 +169,7 @@ namespace solidity
 	K(Public, "public", 0)                                             \
 	K(Pragma, "pragma", 0)                                             \
 	K(Private, "private", 0)                                           \
+	K(Pure, "pure", 0)                                                 \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \
@@ -230,7 +231,6 @@ namespace solidity
 	K(Match, "match", 0)                                               \
 	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
-	K(Pure, "pure", 0)                                                 \
 	K(Relocatable, "relocatable", 0)                                   \
 	K(Static, "static", 0)                                             \
 	K(Switch, "switch", 0)                                             \
@@ -290,7 +290,7 @@ public:
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
-	static bool isStateMutabilitySpecifier(Value op) { return op == Constant || op == View || op == Payable; }
+	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }

@@ -57,6 +57,8 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	m_constructor = _function.isConstructor();
+	if (_function.stateMutability() == StateMutability::Pure)
+		m_errorReporter.warning(_function.location(), "Function is marked pure. Be careful, pureness is not enforced yet.");
 	return true;
 }
 

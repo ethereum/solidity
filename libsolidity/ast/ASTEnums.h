@@ -31,12 +31,14 @@ namespace solidity
 {
 
 // How a function can mutate the EVM state.
-enum class StateMutability { View, NonPayable, Payable };
+enum class StateMutability { Pure, View, NonPayable, Payable };
 
 inline std::string stateMutabilityToString(StateMutability const& _stateMutability)
 {
 	switch(_stateMutability)
 	{
+	case StateMutability::Pure:
+		return "pure";
 	case StateMutability::View:
 		return "view";
 	case StateMutability::NonPayable:
