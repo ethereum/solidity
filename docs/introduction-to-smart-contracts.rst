@@ -95,7 +95,7 @@ registering with username and password - all you need is an Ethereum keypair.
             balances[receiver] += amount;
         }
 
-        function send(address receiver, uint amount) {
+        function sendCoins(address receiver, uint amount) {
             if (balances[msg.sender] < amount) return;
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
