@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 	Json::Value retval = fun["children"][1]["children"][0];
 	BOOST_CHECK_EQUAL(retval["name"], "VariableDeclaration");
 	BOOST_CHECK_EQUAL(retval["attributes"]["name"], "");
-	BOOST_CHECK_EQUAL(retval["attributes"]["type"], "function () constant external returns (uint256)");
+	BOOST_CHECK_EQUAL(retval["attributes"]["type"], "function () view external returns (uint256)");
 	funType = retval["children"][0];
 	BOOST_CHECK_EQUAL(funType["attributes"]["constant"], true);
 	BOOST_CHECK_EQUAL(funType["attributes"]["payable"], false);
