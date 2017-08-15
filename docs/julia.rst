@@ -248,6 +248,19 @@ We will use a destructuring notation for the AST nodes.
         G, L, break
     E(G, L, continue: BreakContinue) =
         G, L, continue
+    E(G, L, <switch condition case l1:t1 st1 ... case ln:tn stn>: Switch) =
+        E(G, L, switch condition case l1:t1 st1 ... case ln:tn stn default {}) =
+    E(G, L, <switch condition case l1:t1 st1 ... case ln:tn stn default st'>: Switch) =
+        let G0, L0, v = E(G, L, condition)
+        // i = 1 .. n
+        // Evaluate literals, context doesn't matter
+        let G0, L0, v1 = E(G0, L0, l1)
+        ...
+        let G0, L0, vn = E(G0, L0, ln)
+        if there exists smallest i such that vi = v:
+            E(G0, L0, sti)
+        else:
+            E(G0, L0, st')
 
     E(G, L, <name>: Identifier) =
         G, L, L[$name]
