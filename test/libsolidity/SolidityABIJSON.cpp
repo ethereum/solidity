@@ -568,6 +568,37 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(payable_constructor_abi)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(uint param1, test param2, bool param3) payable {}
+		}
+	)";
+
+	char const* interface = R"([
+	{
+		"inputs": [
+			{
+				"name": "param1",
+				"type": "uint256"
+			},
+			{
+				"name": "param2",
+				"type": "address"
+			},
+			{
+				"name": "param3",
+				"type": "bool"
+			}
+		],
+		"payable": true,
+		"statemutability": "payable",
+		"type": "constructor"
+	}
+	])";
+	checkInterface(sourceCode, interface);
+}
 
 BOOST_AUTO_TEST_CASE(return_param_in_abi)
 {
