@@ -120,18 +120,18 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["bytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00"
+		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
 	);
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"60606040525b600080fd00"
+		"6060604052600080fd00"
 	);
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[62,10800],\"external\":{},\"internal\":{}}"
+		"{\"creation\":[61,10600],\"external\":{},\"internal\":{}}"
 	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
@@ -162,18 +162,18 @@ BOOST_AUTO_TEST_CASE(single_compilation)
 	BOOST_CHECK(contract["bytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00"
+		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
 	);
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"60606040525b600080fd00"
+		"6060604052600080fd00"
 	);
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[62,10800],\"external\":{},\"internal\":{}}"
+		"{\"creation\":[61,10600],\"external\":{},\"internal\":{}}"
 	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
