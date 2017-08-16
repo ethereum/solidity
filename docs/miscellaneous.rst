@@ -500,12 +500,13 @@ Function Visibility Specifiers
 - ``internal``: only visible internally
 
 
-.. index:: modifiers, constant, anonymous, indexed
+.. index:: modifiers, pure, view, payable, constant, anonymous, indexed
 
 Modifiers
 =========
 
-- ``view`` for functions: Disallow modification of state - this is not enforced yet.
+- ``pure`` for functions: Disallows modification or access of state - this is not enforced yet.
+- ``view`` for functions: Disallows modification of state - this is not enforced yet.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
 - ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
 - ``constant`` for functions: Same as ``view``.
