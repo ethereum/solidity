@@ -323,7 +323,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
-		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
+		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() == StateMutability::View),
 		make_pair("payable", _node.isPayable()),
 		make_pair("statemutability", stateMutabilityToString(_node.stateMutability())),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
@@ -421,7 +421,7 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("statemutability", stateMutabilityToString(_node.stateMutability())),
-		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
+		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() == StateMutability::View),
 		make_pair("parameterTypes", toJson(*_node.parameterTypeList())),
 		make_pair("returnParameterTypes", toJson(*_node.returnParameterTypeList())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type))
