@@ -254,9 +254,9 @@ We will use a destructuring notation for the AST nodes.
         let G0, L0, v = E(G, L, condition)
         // i = 1 .. n
         // Evaluate literals, context doesn't matter
-        let G0, L0, v1 = E(G0, L0, l1)
+        let _, _, v1 = E(G0, L0, l1)
         ...
-        let G0, L0, vn = E(G0, L0, ln)
+        let _, _, vn = E(G0, L0, ln)
         if there exists smallest i such that vi = v:
             E(G0, L0, sti)
         else:
