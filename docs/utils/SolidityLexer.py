@@ -57,7 +57,7 @@ class SolidityLexer(RegexLexer):
             (r'(anonymous|as|assembly|break|constant|continue|do|delete|else|external|for|hex|if|'
              r'indexed|internal|import|is|mapping|memory|new|payable|public|pragma|'
              r'private|return|returns|storage|super|this|throw|using|while)\b', Keyword, 'slashstartsregex'),
-            (r'(var|function|event|modifier|struct|enum|contract|library)\b', Keyword.Declaration, 'slashstartsregex'),
+            (r'(var|function|event|modifier|struct|enum|contract|library|interface)\b', Keyword.Declaration, 'slashstartsregex'),
             (r'(bytes|string|address|uint|int|bool|byte|' +
              '|'.join(
                  ['uint%d' % (i + 8) for i in range(0, 256, 8)] +
@@ -71,7 +71,7 @@ class SolidityLexer(RegexLexer):
              r'null|of|pure|relocatable|static|switch|try|type|typeof|view)\b', Keyword.Reserved),
             (r'(true|false)\b', Keyword.Constant),
             (r'(block|msg|tx|now|suicide|selfdestruct|addmod|mulmod|sha3|keccak256|log[0-4]|'
-             r'sha256|ecrecover|ripemd160|assert|revert)', Name.Builtin),
+             r'sha256|ecrecover|ripemd160|assert|revert|require)', Name.Builtin),
             (r'[$a-zA-Z_][a-zA-Z0-9_]*', Name.Other),
             (r'[0-9][0-9]*\.[0-9]+([eE][0-9]+)?[fd]?', Number.Float),
             (r'0x[0-9a-fA-F]+', Number.Hex),
