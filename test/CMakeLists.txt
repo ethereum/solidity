@@ -23,4 +23,4 @@ include_directories(BEFORE ..)
 target_link_libraries(${EXECUTABLE} soljson devcore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 
 add_executable(solfuzzer fuzzer.cpp)
-target_link_libraries(solfuzzer soljson ${Boost_PROGRAM_OPTIONS_LIBRARIES})
+target_link_libraries(solfuzzer soljson evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES})
