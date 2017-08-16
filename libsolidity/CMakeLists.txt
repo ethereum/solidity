@@ -1,21 +1,7 @@
-aux_source_directory(analysis SRC_LIST)
-aux_source_directory(ast SRC_LIST)
-aux_source_directory(codegen SRC_LIST)
-aux_source_directory(formal SRC_LIST)
-aux_source_directory(interface SRC_LIST)
-aux_source_directory(parsing SRC_LIST)
-aux_source_directory(inlineasm SRC_LIST)
 # Until we have a clear separation, libjulia has to be included here
-aux_source_directory(../libjulia SRC_LIST)
+file(GLOB_RECURSE sources "*.cpp" "../libjulia/*.cpp")
+file(GLOB_RECURSE headers "*.h" "../libjulia/*.h")
 
-set(EXECUTABLE solidity)
-
-file(GLOB HEADERS "*/*.h" "../libjulia/backends/evm/*")
-
-include_directories(BEFORE ..)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-
-eth_use(${EXECUTABLE} REQUIRED Dev::soldevcore Solidity::solevmasm)
-
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-
+add_library(solidity ${sources} ${headers})
+target_link_libraries(solidity PUBLIC evmasm PRIVATE ${Boost_REGEX_LIBRARIES})
+target_include_directories(solidity PUBLIC ..)
