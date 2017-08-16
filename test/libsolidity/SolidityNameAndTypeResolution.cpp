@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_remove_constness)
 		contract B { function f() constant {} }
 		contract C is B { function f() {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Overriding function should be declared constant.");
+	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"view\" to \"nonpayable\".");
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_add_constness)
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_add_constness)
 		contract B { function f() {} }
 		contract C is B { function f() constant {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Overriding function should not be declared constant.");
+	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"nonpayable\" to \"view\".");
 }
 
 BOOST_AUTO_TEST_CASE(complex_inheritance)
@@ -1363,7 +1363,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_constant_modifier)
 			function() constant { x = 2; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Fallback function cannot be declared constant.");
+	CHECK_ERROR(text, TypeError, "Fallback function must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
@@ -4779,7 +4779,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable)
 		contract B { function f() payable {} }
 		contract C is B { function f() {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Overriding function should be declared payable.");
+	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"payable\" to \"nonpayable\".");
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
@@ -4788,7 +4788,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 		contract B { function f() {} }
 		contract C is B { function f() payable {} }
 	)";
-	CHECK_ERROR(text, TypeError, "Overriding function should not be declared payable.");
+	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"nonpayable\" to \"payable\".");
 }
 
 BOOST_AUTO_TEST_CASE(function_variable_mixin)
@@ -4873,7 +4873,7 @@ BOOST_AUTO_TEST_CASE(constant_constructor)
 			function test() constant {}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constructor cannot be defined as constant.");
+	CHECK_ERROR(text, TypeError, "Constructor must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(external_constructor)

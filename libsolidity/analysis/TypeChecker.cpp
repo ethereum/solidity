@@ -84,8 +84,13 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	{
 		if (!function->returnParameters().empty())
 			m_errorReporter.typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-		if (function->isDeclaredConst())
-			m_errorReporter.typeError(function->location(), "Constructor cannot be defined as constant.");
+		if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
+			m_errorReporter.typeError(
+				function->location(),
+				"Constructor must be payable or non-payable, but is \"" +
+				stateMutabilityToString(function->stateMutability()) +
+				"\"."
+			);
 		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
 			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
 	}
@@ -104,8 +109,13 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				fallbackFunction = function;
 				if (_contract.isLibrary())
 					m_errorReporter.typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
-				if (fallbackFunction->isDeclaredConst())
-					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function cannot be declared constant.");
+				if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
+					m_errorReporter.typeError(
+						function->location(),
+						"Fallback function must be payable or non-payable, but is \"" +
+						stateMutabilityToString(function->stateMutability()) +
+						"\"."
+				);
 				if (!fallbackFunction->parameters().empty())
 					m_errorReporter.typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
@@ -308,17 +318,16 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 	if (function.visibility() != super.visibility())
 		overrideError(function, super, "Overriding function visibility differs.");
 
-	else if (function.isDeclaredConst() && !super.isDeclaredConst())
-		overrideError(function, super, "Overriding function should not be declared constant.");
-
-	else if (!function.isDeclaredConst() && super.isDeclaredConst())
-		overrideError(function, super, "Overriding function should be declared constant.");
-
-	else if (function.isPayable() && !super.isPayable())
-		overrideError(function, super, "Overriding function should not be declared payable.");
-
-	else if (!function.isPayable() && super.isPayable())
-		overrideError(function, super, "Overriding function should be declared payable.");
+	else if (function.stateMutability() != super.stateMutability())
+		overrideError(
+			function,
+			super,
+			"Overriding function changes state mutability from \"" +
+			stateMutabilityToString(super.stateMutability()) +
+			"\" to \"" +
+			stateMutabilityToString(function.stateMutability()) +
+			"\"."
+		);
 
 	else if (functionType != superType)
 		overrideError(function, super, "Overriding function return types differ.");

@@ -2215,10 +2215,7 @@ string FunctionType::identifier() const
 	case Kind::Require: id += "require";break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
-	if (isConstant())
-		id += "_constant";
-	if (isPayable())
-		id += "_payable";
+	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
 		id += "gas";
@@ -2237,8 +2234,7 @@ bool FunctionType::operator==(Type const& _other) const
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
 	if (
 		m_kind != other.m_kind ||
-		isConstant() != other.isConstant() ||
-		isPayable() != other.isPayable() ||
+		m_stateMutability != other.stateMutability() ||
 		m_parameterTypes.size() != other.m_parameterTypes.size() ||
 		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
 	)
@@ -2300,10 +2296,8 @@ string FunctionType::toString(bool _short) const
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
-	if (isConstant())
-		name += " constant";
-	if (isPayable())
-		name += " payable";
+	if (m_stateMutability != StateMutability::NonPayable)
+		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
 		name += " external";
 	if (!m_returnParameterTypes.empty())
