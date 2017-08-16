@@ -7,6 +7,7 @@ Features:
  * Static Analyzer: Warn about large storage structures.
  * Metadata: Store experimental flag in metadata CBOR.
  * Type Checker: More detailed error message for invalid overrides.
+ * Type Checker: Warn about shifting a literal.
 
 Bugfixes:
  * Parser: Enforce commas between array and tuple elements.
