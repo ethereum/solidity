@@ -1305,8 +1305,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		_operation.leftExpression().annotation().isPure &&
 		_operation.rightExpression().annotation().isPure;
 
-	if (_operation.getOperator() == Token::Exp)
+	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
+		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
 		if (
 			leftType->category() == Type::Category::RationalNumber &&
 			rightType->category() != Type::Category::RationalNumber
@@ -1320,7 +1321,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			))
 				m_errorReporter.warning(
 					_operation.location(),
-					"Result of exponentiation has type " + commonType->toString() + " and thus "
+					"Result of " + operation + " has type " + commonType->toString() + " and thus "
 					"might overflow. Silence this warning by converting the literal to the "
 					"expected type."
 				);
