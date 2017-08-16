@@ -546,6 +546,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
 	}
+	else if (m_scope->contractKind() == ContractDefinition::ContractKind::Library)
+		if (_function.isConstructor())
+			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in libraries.");
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	else if (_function.isConstructor())

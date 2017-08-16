@@ -12,6 +12,7 @@ Features:
 Bugfixes:
  * Parser: Enforce commas between array and tuple elements.
  * Parser: Limit maximum recursion depth.
+ * Type Checker: Disallow constructors in libraries.
 
 ### 0.4.15 (2017-08-08)
 
