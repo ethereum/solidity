@@ -84,8 +84,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	{
 		if (!function->returnParameters().empty())
 			m_errorReporter.typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-		if (function->isDeclaredConst())
-			m_errorReporter.typeError(function->location(), "Constructor cannot be defined as constant.");
+		if (function->isView())
+			m_errorReporter.typeError(function->location(), "Constructor cannot be defined as view/constant.");
+		if (function->isPure())
+			m_errorReporter.typeError(function->location(), "Constructor cannot be defined as pure.");
 		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
 			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
 	}
@@ -104,8 +106,10 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				fallbackFunction = function;
 				if (_contract.isLibrary())
 					m_errorReporter.typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
-				if (fallbackFunction->isDeclaredConst())
-					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function cannot be declared constant.");
+				if (fallbackFunction->isView())
+					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function cannot be declared view/constant.");
+				if (fallbackFunction->isPure())
+					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function cannot be declared pure.");
 				if (!fallbackFunction->parameters().empty())
 					m_errorReporter.typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
@@ -501,6 +505,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 	}
+	if (_function.isView() && _function.isPure())
+			m_errorReporter.typeError(_function.location(), "Functions cannot be pure and view/constant at the same time.");
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
 		if (!type(*var)->canLiveOutsideStorage())

@@ -25,7 +25,7 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | 'constant' | 'view' | 'pure' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
@@ -50,7 +50,7 @@ UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
-FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
+FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'view' | 'pure' | 'payable' )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
 
