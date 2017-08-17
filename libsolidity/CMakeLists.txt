@@ -3,5 +3,5 @@ file(GLOB_RECURSE sources "*.cpp" "../libjulia/*.cpp")
 file(GLOB_RECURSE headers "*.h" "../libjulia/*.h")
 
 add_library(solidity ${sources} ${headers})
-target_link_libraries(solidity PUBLIC evmasm PRIVATE ${Boost_REGEX_LIBRARIES})
+target_link_libraries(solidity PUBLIC evmasm devcore PRIVATE ${Boost_REGEX_LIBRARIES})
 target_include_directories(solidity PUBLIC ..)
