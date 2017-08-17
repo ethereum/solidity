@@ -162,7 +162,7 @@ private:
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
 	/// @returns the size of the static part of the encoding of the given types.
-	size_t headSize(TypePointers const& _targetTypes);
+	size_t headSize(TypePointers const& _targetTypes) const;
 
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;

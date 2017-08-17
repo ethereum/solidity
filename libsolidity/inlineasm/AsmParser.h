@@ -45,7 +45,7 @@ public:
 
 protected:
 	/// Creates an inline assembly node with the given source location.
-	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation())
+	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation()) const
 	{
 		T r;
 		r.location = _loc;

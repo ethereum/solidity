@@ -208,8 +208,8 @@ public:
 		return m_asm->stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	eth::LinkerObject const& assembledObject() { return m_asm->assemble(); }
-	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) { return m_asm->sub(_subIndex).assemble(); }
+	eth::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
+	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
