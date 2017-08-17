@@ -91,11 +91,19 @@ void ASTJsonConverter::setJsonNode(
 			))
 			{
 				if (e.second.isObject())
+				{
+					if (!m_currentValue["children"].isArray())
+						m_currentValue["children"] = Json::arrayValue;
 					appendMove(m_currentValue["children"], std::move(e.second));
+				}
 				if (e.second.isArray())
 					for (auto& child: e.second)
 						if (!child.isNull())
+						{
+							if (!m_currentValue["children"].isArray())
+								m_currentValue["children"] = Json::arrayValue;
 							appendMove(m_currentValue["children"], std::move(child));
+						}
 			}
 			else
 			{
