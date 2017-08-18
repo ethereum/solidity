@@ -94,8 +94,6 @@ if (STATIC_LINKING)
 	else()
 		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 	endif()
-
-	set(ETH_STATIC ON)
 endif()
 
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
