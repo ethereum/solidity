@@ -50,7 +50,7 @@ sed -i 's|using gcc ;|using gcc : : /usr/local/bin/em++ ;|g' ./project-config.ja
 sed -i 's|$(archiver\[1\])|/usr/local/bin/emar|g' ./tools/build/src/tools/gcc.jam
 sed -i 's|$(ranlib\[1\])|/usr/local/bin/emranlib|g' ./tools/build/src/tools/gcc.jam
 ./b2 link=static variant=release threading=single runtime-link=static \
-       thread system regex date_time chrono filesystem unit_test_framework program_options random
+       system regex filesystem unit_test_framework program_options
 find . -name 'libboost*.a' -exec cp {} . \;
 rm -rf b2 libs doc tools more bin.v2 status
 )
@@ -68,29 +68,19 @@ emcmake cmake \
   -DBoost_USE_STATIC_LIBS=1 \
   -DBoost_USE_STATIC_RUNTIME=1 \
   -DBoost_INCLUDE_DIR="$WORKSPACE"/boost_1_57_0/ \
-  -DBoost_CHRONO_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_chrono.a \
-  -DBoost_CHRONO_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_chrono.a \
-  -DBoost_DATE_TIME_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_date_time.a \
-  -DBoost_DATE_TIME_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_date_time.a \
   -DBoost_FILESYSTEM_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_filesystem.a \
   -DBoost_FILESYSTEM_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_filesystem.a \
   -DBoost_PROGRAM_OPTIONS_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_program_options.a \
   -DBoost_PROGRAM_OPTIONS_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_program_options.a \
-  -DBoost_RANDOM_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_random.a \
-  -DBoost_RANDOM_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_random.a \
   -DBoost_REGEX_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_regex.a \
   -DBoost_REGEX_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_regex.a \
   -DBoost_SYSTEM_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_system.a \
   -DBoost_SYSTEM_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_system.a \
-  -DBoost_THREAD_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_thread.a \
-  -DBoost_THREAD_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_thread.a \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
-  -DDev_DEVCORE_LIBRARY="$WORKSPACE"/solidity/build/libdevcore/libsoldevcore.a \
-  -DEth_EVMASM_LIBRARY="$WORKSPACE"/solidity/build/libevmasm/libsolevmasm.a \
-  -DETH_STATIC=1 -DTESTS=0 \
+  -DTESTS=0 \
   ..
-emmake make -j 4
+make -j 4
 
 cd ..
 cp build/solc/soljson.js ./
