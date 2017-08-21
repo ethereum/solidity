@@ -1056,7 +1056,7 @@ string ABIFunctions::createFunction(string const& _name, function<string ()> con
 	return _name;
 }
 
-size_t ABIFunctions::headSize(TypePointers const& _targetTypes) const
+size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 {
 	size_t headSize = 0;
 	for (auto const& t: _targetTypes)

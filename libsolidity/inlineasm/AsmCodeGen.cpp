@@ -127,7 +127,7 @@ public:
 	}
 
 private:
-	LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag) const
+	static LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
 	{
 		u256 id = _tag.data();
 		solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");

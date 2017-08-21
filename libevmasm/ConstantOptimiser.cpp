@@ -159,7 +159,7 @@ AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 	return actualCopyRoutine;
 }
 
-AssemblyItems const& CodeCopyMethod::copyRoutine() const
+AssemblyItems const& CodeCopyMethod::copyRoutine()
 {
 	AssemblyItems static copyRoutine{
 		u256(0),
@@ -234,7 +234,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	}
 }
 
-bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const
+bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine)
 {
 	// This is a tiny EVM that can only evaluate some instructions.
 	vector<u256> stack;

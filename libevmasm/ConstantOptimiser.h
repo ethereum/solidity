@@ -121,7 +121,7 @@ public:
 	virtual AssemblyItems execute(Assembly& _assembly) const override;
 
 protected:
-	AssemblyItems const& copyRoutine() const;
+	static AssemblyItems const& copyRoutine();
 };
 
 /**
@@ -151,7 +151,7 @@ protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
-	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const;
+	static bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine);
 	bigint gasNeeded(AssemblyItems const& _routine) const;
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
