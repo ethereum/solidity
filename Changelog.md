@@ -10,9 +10,10 @@ Features:
  * Type Checker: Warn about shifting a literal.
 
 Bugfixes:
+ * Assembly Parser: Be more strict about number literals.
  * Parser: Enforce commas between array and tuple elements.
  * Parser: Limit maximum recursion depth.
- * Assembly Parser: Be more strict about number literals.
+ * Type Checker: Disallow constructors in libraries.
 
 ### 0.4.15 (2017-08-08)
 

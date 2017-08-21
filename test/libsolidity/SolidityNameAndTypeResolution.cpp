@@ -3055,6 +3055,16 @@ BOOST_AUTO_TEST_CASE(library_having_variables)
 	CHECK_ERROR(text, TypeError, "Library cannot have non-constant state variables");
 }
 
+BOOST_AUTO_TEST_CASE(library_constructor)
+{
+	char const* text = R"(
+		library Lib {
+			function Lib();
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in libraries.");
+}
+
 BOOST_AUTO_TEST_CASE(valid_library)
 {
 	char const* text = R"(
