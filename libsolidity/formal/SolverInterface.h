@@ -39,7 +39,7 @@ namespace smt
 
 enum class CheckResult
 {
-	SAT, UNSAT, UNKNOWN, ERROR
+	SATISFIABLE, UNSATISFIABLE, UNKNOWN, ERROR
 };
 
 enum class Sort

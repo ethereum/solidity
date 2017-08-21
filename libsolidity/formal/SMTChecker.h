@@ -71,8 +71,8 @@ private:
 
 	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
 
-	std::string uniqueSymbol(Declaration const& _decl);
-	std::string uniqueSymbol(Expression const& _expr);
+	static std::string uniqueSymbol(Declaration const& _decl);
+	static std::string uniqueSymbol(Expression const& _expr);
 
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
 	/// has a valid sequence number
@@ -90,8 +90,8 @@ private:
 	/// Sets the value of the declaration either to zero or to its intrinsic range.
 	void setValue(Declaration const& _decl, bool _setToZero);
 
-	smt::Expression minValue(IntegerType const& _t);
-	smt::Expression maxValue(IntegerType const& _t);
+	static smt::Expression minValue(IntegerType const& _t);
+	static smt::Expression maxValue(IntegerType const& _t);
 
 	/// Returns the expression corresponding to the AST node. Creates a new expression
 	/// if it does not exist yet.
@@ -103,8 +103,8 @@ private:
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
-	std::map<Expression const*, smt::Expression> m_z3Expressions;
-	std::map<Declaration const*, smt::Expression> m_z3Variables;
+	std::map<Expression const*, smt::Expression> m_Expressions;
+	std::map<Declaration const*, smt::Expression> m_Variables;
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;

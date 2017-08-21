@@ -78,11 +78,11 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 	switch (m_solver.check())
 	{
 	case z3::check_result::sat:
-		result = CheckResult::SAT;
+		result = CheckResult::SATISFIABLE;
 		cout << "sat" << endl;
 		break;
 	case z3::check_result::unsat:
-		result = CheckResult::UNSAT;
+		result = CheckResult::UNSATISFIABLE;
 		cout << "unsat" << endl;
 		break;
 	case z3::check_result::unknown:
@@ -96,7 +96,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 
 
 	vector<string> values;
-	if (result != CheckResult::UNSAT)
+	if (result != CheckResult::UNSATISFIABLE)
 	{
 		z3::model m = m_solver.get_model();
 		for (Expression const& e: _expressionsToEvaluate)

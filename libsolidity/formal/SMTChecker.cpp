@@ -438,7 +438,7 @@ void SMTChecker::checkCondition(
 
 	switch (result)
 	{
-	case smt::CheckResult::SAT:
+	case smt::CheckResult::SATISFIABLE:
 	{
 		std::ostringstream message;
 		message << _description << " happens here";
@@ -464,7 +464,7 @@ void SMTChecker::checkCondition(
 		m_errorReporter.warning(_location, message.str());
 		break;
 	}
-	case smt::CheckResult::UNSAT:
+	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
 		m_errorReporter.warning(_location, _description + " might happen here.");
@@ -484,10 +484,10 @@ void SMTChecker::createVariable(VariableDeclaration const& _varDecl, bool _setTo
 	{
 		solAssert(m_currentSequenceCounter.count(&_varDecl) == 0, "");
 		solAssert(m_nextFreeSequenceCounter.count(&_varDecl) == 0, "");
-		solAssert(m_z3Variables.count(&_varDecl) == 0, "");
+		solAssert(m_Variables.count(&_varDecl) == 0, "");
 		m_currentSequenceCounter[&_varDecl] = 0;
 		m_nextFreeSequenceCounter[&_varDecl] = 1;
-		m_z3Variables.emplace(&_varDecl, m_interface->newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
+		m_Variables.emplace(&_varDecl, m_interface->newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
 		setValue(_varDecl, _setToZero);
 	}
 	else
@@ -556,7 +556,7 @@ smt::Expression SMTChecker::maxValue(IntegerType const& _t)
 
 smt::Expression SMTChecker::expr(Expression const& _e)
 {
-	if (!m_z3Expressions.count(&_e))
+	if (!m_Expressions.count(&_e))
 	{
 		solAssert(_e.annotation().type, "");
 		switch (_e.annotation().type->category())
@@ -565,24 +565,24 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 		{
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
 				solAssert(!rational->isFractional(), "");
-			m_z3Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			m_Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;
 		}
 		case Type::Category::Integer:
-			m_z3Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			m_Expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;
 		case Type::Category::Bool:
-			m_z3Expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
+			m_Expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
 			break;
 		default:
 			solAssert(false, "Type not implemented.");
 		}
 	}
-	return m_z3Expressions.at(&_e);
+	return m_Expressions.at(&_e);
 }
 
 smt::Expression SMTChecker::var(Declaration const& _decl)
 {
-	solAssert(m_z3Variables.count(&_decl), "");
-	return m_z3Variables.at(&_decl);
+	solAssert(m_Variables.count(&_decl), "");
+	return m_Variables.at(&_decl);
 }

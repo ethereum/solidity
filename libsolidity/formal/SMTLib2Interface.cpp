@@ -103,16 +103,16 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	CheckResult result;
 	// TODO proper parsing
 	if (boost::starts_with(response, "sat\n"))
-		result = CheckResult::SAT;
+		result = CheckResult::SATISFIABLE;
 	else if (boost::starts_with(response, "unsat\n"))
-		result = CheckResult::UNSAT;
+		result = CheckResult::UNSATISFIABLE;
 	else if (boost::starts_with(response, "unknown\n"))
 		result = CheckResult::UNKNOWN;
 	else
 		result = CheckResult::ERROR;
 
 	vector<string> values;
-	if (result != CheckResult::UNSAT && result != CheckResult::ERROR)
+	if (result != CheckResult::UNSATISFIABLE && result != CheckResult::ERROR)
 		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
 	return make_pair(result, values);
 }

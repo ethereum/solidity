@@ -212,7 +212,7 @@ case $(uname -s) in
                     git \
                     libboost-all-dev \
                     unzip \
-		    "$install_z3"
+                    "$install_z3"
 
 
                 ;;
@@ -317,7 +317,8 @@ case $(uname -s) in
                     build-essential \
                     cmake \
                     git \
-                    libboost-all-dev "$install_z3"
+                    libboost-all-dev \
+                    "$install_z3"
                 if [ "$CI" = true ]; then
                     # Install 'eth', for use in the Solidity Tests-over-IPC.
                     # We will not use this 'eth', but its dependencies
