@@ -155,10 +155,10 @@ public:
 	std::map<std::string, unsigned> sourceIndices() const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	Scanner const& scanner(std::string const& _sourceName = "") const;
+	Scanner const& scanner(std::string const& _sourceName) const;
 
 	/// @returns the parsed source unit with the supplied name.
-	SourceUnit const& ast(std::string const& _sourceName = "") const;
+	SourceUnit const& ast(std::string const& _sourceName) const;
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
@@ -172,44 +172,44 @@ public:
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
-	eth::LinkerObject const& object(std::string const& _contractName = "") const;
+	eth::LinkerObject const& object(std::string const& _contractName) const;
 
 	/// @returns the runtime object for the contract.
-	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
+	eth::LinkerObject const& runtimeObject(std::string const& _contractName) const;
 
 	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.
-	eth::LinkerObject const& cloneObject(std::string const& _contractName = "") const;
+	eth::LinkerObject const& cloneObject(std::string const& _contractName) const;
 
 	/// @returns normal contract assembly items
-	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
 
 	/// @returns runtime contract assembly items
-	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName) const;
 
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
-	std::string const* sourceMapping(std::string const& _contractName = "") const;
+	std::string const* sourceMapping(std::string const& _contractName) const;
 
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
-	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
+	std::string const* runtimeSourceMapping(std::string const& _contractName) const;
 
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+	std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	Json::Value assemblyJSON(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+	Json::Value assemblyJSON(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& contractABI(std::string const& _contractName = "") const;
+	Json::Value const& contractABI(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
@@ -276,8 +276,8 @@ private:
 	);
 	void link();
 
-	Contract const& contract(std::string const& _contractName = "") const;
-	Source const& source(std::string const& _sourceName = "") const;
+	Contract const& contract(std::string const& _contractName) const;
+	Source const& source(std::string const& _sourceName) const;
 
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.

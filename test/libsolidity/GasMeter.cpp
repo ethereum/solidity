@@ -52,7 +52,7 @@ public:
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
 
 		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
-		ASTNode const& sourceUnit = m_compiler.ast();
+		ASTNode const& sourceUnit = m_compiler.ast("");
 		BOOST_REQUIRE(items != nullptr);
 		m_gasCosts = GasEstimator::breakToStatementLevel(
 			GasEstimator::structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
@@ -64,13 +64,13 @@ public:
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
-		PathGasMeter meter(*m_compiler.assemblyItems());
+		PathGasMeter meter(*m_compiler.assemblyItems(""));
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
-		u256 bytecodeSize(m_compiler.runtimeObject().bytecode.size());
+		u256 bytecodeSize(m_compiler.runtimeObject("").bytecode.size());
 		// costs for deployment
 		gas += bytecodeSize * GasCosts::createDataGas;
 		// costs for transaction
-		gas += gasForTransaction(m_compiler.object().bytecode, true);
+		gas += gasForTransaction(m_compiler.object("").bytecode, true);
 
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
@@ -91,7 +91,7 @@ public:
 		}
 
 		gas += GasEstimator::functionalEstimation(
-			*m_compiler.runtimeAssemblyItems(),
+			*m_compiler.runtimeAssemblyItems(""),
 			_sig
 		);
 		BOOST_REQUIRE(!gas.isInfinite);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 			if (first->first->location().intersects(second->first->location()))
 			{
 				BOOST_CHECK_MESSAGE(false, "Source locations should not overlap!");
-				auto scannerFromSource = [&](string const&) -> Scanner const& { return m_compiler.scanner(); };
+				auto scannerFromSource = [&](string const& _sourceName) -> Scanner const& { return m_compiler.scanner(_sourceName); };
 				SourceReferenceFormatter::printSourceLocation(cout, &first->first->location(), scannerFromSource);
 				SourceReferenceFormatter::printSourceLocation(cout, &second->first->location(), scannerFromSource);
 			}

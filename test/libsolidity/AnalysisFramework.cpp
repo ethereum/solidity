@@ -81,7 +81,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 		}
 	}
 
-	return make_pair(&m_compiler.ast(), firstError);
+	return make_pair(&m_compiler.ast(""), firstError);
 }
 
 SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
