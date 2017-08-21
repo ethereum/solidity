@@ -12,6 +12,7 @@ Features:
 Bugfixes:
  * Parser: Enforce commas between array and tuple elements.
  * Parser: Limit maximum recursion depth.
+ * Assembly Parser: Be more strict about number literals.
 
 ### 0.4.15 (2017-08-08)
 

@@ -75,6 +75,8 @@ protected:
 	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
+	static bool isValidNumberLiteral(std::string const& _literal);
+
 private:
 	bool m_julia = false;
 };

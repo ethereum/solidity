@@ -23,6 +23,9 @@
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/ErrorReporter.h>
+
+#include <boost/algorithm/string.hpp>
+
 #include <ctype.h>
 #include <algorithm>
 
@@ -297,6 +300,8 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			kind = LiteralKind::String;
 			break;
 		case Token::Number:
+			if (!isValidNumberLiteral(currentLiteral()))
+				fatalParserError("Invalid number literal.");
 			kind = LiteralKind::Number;
 			break;
 		case Token::TrueLiteral:
@@ -500,4 +505,20 @@ string Parser::expectAsmIdentifier()
 		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	return name;
+}
+
+bool Parser::isValidNumberLiteral(string const& _literal)
+{
+	try
+	{
+		u256(_literal);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	if (boost::starts_with(_literal, "0x"))
+		return true;
+	else
+		return _literal.find_first_not_of("0123456789") == string::npos;
 }
