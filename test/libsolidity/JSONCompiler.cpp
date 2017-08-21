@@ -20,8 +20,6 @@
  */
 
 #include <string>
-#include <iostream>
-#include <regex>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/Version.h>
