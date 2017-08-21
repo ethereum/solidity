@@ -316,31 +316,32 @@ void CommandLineInterface::handleABI(string const& _contract)
 		cout << "Contract JSON ABI " << endl << data << endl;
 }
 
-void CommandLineInterface::handleNatspec(DocumentationType _type, string const& _contract)
+void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
 	std::string title;
-	switch(_type)
+
+	if (_natspecDev)
 	{
-	case DocumentationType::NatspecUser:
-		argName = g_argNatspecUser;
-		suffix = ".docuser";
-		title = "User Documentation";
-		break;
-	case DocumentationType::NatspecDev:
 		argName = g_argNatspecDev;
 		suffix = ".docdev";
 		title = "Developer Documentation";
-		break;
-	default:
-		// should never happen
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation _type"));
+	}
+	else
+	{
+		argName = g_argNatspecUser;
+		suffix = ".docuser";
+		title = "User Documentation";
 	}
 
 	if (m_args.count(argName))
 	{
-		std::string output = dev::jsonPrettyPrint(m_compiler->natspec(_contract, _type));
+		std::string output = dev::jsonPrettyPrint(
+			_natspecDev ?
+			m_compiler->natspecDev(_contract) :
+			m_compiler->natspecUser(_contract)
+		);
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -881,9 +882,9 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
+			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspecDev(contractName));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecUser));
+			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspecUser(contractName));
 		output[g_strContracts][contractName] = contractData;
 	}
 
@@ -1170,8 +1171,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
-		handleNatspec(DocumentationType::NatspecDev, contract);
-		handleNatspec(DocumentationType::NatspecUser, contract);
+		handleNatspec(true, contract);
+		handleNatspec(false, contract);
 	} // end of contracts iteration
 
 	if (m_args.count(g_argFormal))

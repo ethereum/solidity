@@ -394,8 +394,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		Json::Value contractData(Json::objectValue);
 		contractData["abi"] = m_compilerStack.contractABI(contractName);
 		contractData["metadata"] = m_compilerStack.metadata(contractName);
-		contractData["userdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecUser);
-		contractData["devdoc"] = m_compilerStack.natspec(contractName, DocumentationType::NatspecDev);
+		contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
+		contractData["devdoc"] = m_compilerStack.natspecDev(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);

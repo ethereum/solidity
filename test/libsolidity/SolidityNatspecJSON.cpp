@@ -51,9 +51,9 @@ public:
 
 		Json::Value generatedDocumentation;
 		if (_userDocumentation)
-			generatedDocumentation = m_compilerStack.natspec("", DocumentationType::NatspecUser);
+			generatedDocumentation = m_compilerStack.natspecUser("");
 		else
-			generatedDocumentation = m_compilerStack.natspec("", DocumentationType::NatspecDev);
+			generatedDocumentation = m_compilerStack.natspecDev("");
 		Json::Value expectedDocumentation;
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
