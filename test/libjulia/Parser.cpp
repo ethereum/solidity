@@ -237,6 +237,18 @@ BOOST_AUTO_TEST_CASE(builtin_types)
 	BOOST_CHECK(successParse("{ let x:s256 := 1:s256 }"));
 }
 
+BOOST_AUTO_TEST_CASE(recursion_depth)
+{
+	string input;
+	for (size_t i = 0; i < 20000; i++)
+		input += "{";
+	input += "let x:u256 := 0:u256";
+	for (size_t i = 0; i < 20000; i++)
+		input += "}";
+
+	CHECK_ERROR(input, ParserError, "recursio");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
