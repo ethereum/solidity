@@ -40,7 +40,7 @@ public:
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	StandardCompiler(ReadFile::Callback const& _readFile = ReadFile::Callback())
+	explicit StandardCompiler(ReadFile::Callback const& _readFile = ReadFile::Callback())
 		: m_compilerStack(_readFile), m_readFile(_readFile)
 	{
 	}

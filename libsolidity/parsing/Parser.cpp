@@ -40,7 +40,7 @@ namespace solidity
 class Parser::ASTNodeFactory
 {
 public:
-	ASTNodeFactory(Parser const& _parser):
+	explicit ASTNodeFactory(Parser const& _parser):
 		m_parser(_parser), m_location(_parser.position(), -1, _parser.sourceName()) {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location(_childNode->location()) {}
@@ -69,7 +69,7 @@ private:
 class Parser::RecursionGuard
 {
 public:
-	RecursionGuard(Parser& _parser):
+	explicit RecursionGuard(Parser& _parser):
 		m_parser(_parser)
 	{
 		m_parser.increaseRecursionDepth();

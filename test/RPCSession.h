@@ -124,7 +124,7 @@ public:
 	std::string const& accountCreateIfNotExists(size_t _id);
 
 private:
-	RPCSession(std::string const& _path);
+	explicit RPCSession(std::string const& _path);
 
 	inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
 	/// Parse std::string replacing keywords to values

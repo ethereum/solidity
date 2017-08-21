@@ -52,7 +52,7 @@ using namespace dev::solidity::assembly;
 class EthAssemblyAdapter: public julia::AbstractAssembly
 {
 public:
-	EthAssemblyAdapter(eth::Assembly& _assembly):
+	explicit EthAssemblyAdapter(eth::Assembly& _assembly):
 		m_assembly(_assembly)
 	{
 	}
