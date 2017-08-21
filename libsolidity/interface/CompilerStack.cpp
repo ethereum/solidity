@@ -49,8 +49,6 @@
 #include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-
 
 using namespace std;
 using namespace dev;

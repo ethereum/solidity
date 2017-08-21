@@ -19,7 +19,6 @@
  */
 
 #include <libsolidity/interface/ABI.h>
-#include <boost/range/irange.hpp>
 #include <libsolidity/ast/AST.h>
 
 using namespace std;

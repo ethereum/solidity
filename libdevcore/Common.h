@@ -44,7 +44,6 @@
 #include <unordered_set>
 #include <functional>
 #include <string>
-#include <chrono>
 
 #if defined(__GNUC__)
 #pragma warning(push)
