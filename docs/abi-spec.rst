@@ -293,7 +293,7 @@ The JSON format for a contract's interface is given by an array of function and/
   * `name`: the name of the parameter;
   * `type`: the canonical type of the parameter.
 - `outputs`: an array of objects similar to `inputs`, can be omitted if function doesn't return anything;
-- `constant`: `true` if function is :ref:`specified to not modify blockchain state <constant-functions>`);
+- `constant`: `true` if function is :ref:`specified to not modify blockchain state <view-functions>`);
 - `payable`: `true` if function accepts ether, defaults to `false`;
 - `statemutability`: a string with one of the following values: `view` (same as `constant` above), `nonpayable` and `payable` (same as `payable` above).
 
