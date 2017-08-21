@@ -6735,6 +6735,15 @@ BOOST_AUTO_TEST_CASE(accept_library_creation)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(reject_interface_constructors)
+{
+	char const* text = R"(
+		interface I {}
+		contract C is I(2) {}
+	)";
+	CHECK_ERROR(text, TypeError, "Wrong argument count for constructor call: 1 arguments given but expected 0.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

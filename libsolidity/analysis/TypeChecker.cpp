@@ -429,12 +429,12 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	if (base->isLibrary())
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
-	// Interface can have no constructors - no need to validate
-	if (base->contractKind() == ContractDefinition::ContractKind::Interface)
-		return;
-
 	auto const& arguments = _inheritance.arguments();
-	TypePointers parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+	TypePointers parameterTypes;
+	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
+		// Interfaces do not have constructors, so there are zero parameters.
+		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
 	{
 		m_errorReporter.typeError(
