@@ -747,22 +747,28 @@ void CompilerStack::compileContract(
 	}
 }
 
+string const CompilerStack::lastContractName() const
+{
+	if (m_contracts.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	// try to find some user-supplied contract
+	string contractName;
+	for (auto const& it: m_sources)
+		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contractName = contract->fullyQualifiedName();
+	return contractName;
+}
+
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
 {
 	if (m_contracts.empty())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
-	string contractName = _contractName;
-	if (_contractName.empty())
-		// try to find some user-supplied contract
-		for (auto const& it: m_sources)
-			for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
-				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-					contractName = contract->fullyQualifiedName();
-	auto it = m_contracts.find(contractName);
+	auto it = m_contracts.find(_contractName);
 	// To provide a measure of backward-compatibility, if a contract is not located by its
 	// fully-qualified name, a lookup will be attempted purely on the contract's name to see
 	// if anything will satisfy.
-	if (it == m_contracts.end() && contractName.find(":") == string::npos)
+	if (it == m_contracts.end() && _contractName.find(":") == string::npos)
 	{
 		for (auto const& contractEntry: m_contracts)
 		{
@@ -773,7 +779,7 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 			string foundName;
 			getline(ss, source, ':');
 			getline(ss, foundName, ':');
-			if (foundName == contractName) return contractEntry.second;
+			if (foundName == _contractName) return contractEntry.second;
 		}
 		// If we get here, both lookup methods failed.
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));

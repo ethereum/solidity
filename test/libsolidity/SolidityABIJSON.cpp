@@ -46,7 +46,7 @@ public:
 		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
-		Json::Value generatedInterface = m_compilerStack.contractABI("");
+		Json::Value generatedInterface = m_compilerStack.contractABI(m_compilerStack.lastContractName());
 		Json::Value expectedInterface;
 		BOOST_REQUIRE(m_reader.parse(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(

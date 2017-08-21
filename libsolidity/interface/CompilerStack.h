@@ -168,6 +168,9 @@ public:
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 
+	/// @returns the name of the last contract.
+	std::string const lastContractName() const;
+
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
