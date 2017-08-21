@@ -214,6 +214,14 @@ BOOST_AUTO_TEST_CASE(invalid_types)
 	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
 }
 
+BOOST_AUTO_TEST_CASE(number_literals)
+{
+	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
+	CHECK_ERROR("{ let x:u256 := .1:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 1e5:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 67.235:u256 }", ParserError, "Invalid number literal.");
+}
+
 BOOST_AUTO_TEST_CASE(builtin_types)
 {
 	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));

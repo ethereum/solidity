@@ -16,7 +16,7 @@ ContractPart = StateVariableDeclaration | UsingForDeclaration
 
 InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
@@ -25,7 +25,7 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
@@ -50,9 +50,10 @@ UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
-FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
+FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | StateMutability )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
+StateMutability = 'constant' | 'payable'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |

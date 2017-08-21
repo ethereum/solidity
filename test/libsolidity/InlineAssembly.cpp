@@ -339,6 +339,14 @@ BOOST_AUTO_TEST_CASE(blocks)
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
 }
 
+BOOST_AUTO_TEST_CASE(number_literals)
+{
+	BOOST_CHECK(successParse("{ let x := 1 }"));
+	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
+	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
+	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
+}
+
 BOOST_AUTO_TEST_CASE(function_definitions)
 {
 	BOOST_CHECK(successParse("{ function f() { } function g(a) -> x { } }"));
