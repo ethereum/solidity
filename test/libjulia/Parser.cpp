@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 	for (size_t i = 0; i < 20000; i++)
 		input += "}";
 
-	CHECK_ERROR(input, ParserError, "recursio");
+	CHECK_ERROR(input, ParserError, "recursion");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

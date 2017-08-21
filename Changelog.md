@@ -11,6 +11,7 @@ Features:
 
 Bugfixes:
  * Assembly Parser: Be more strict about number literals.
+ * Assembly Parser: Limit maximum recursion depth.
  * Parser: Enforce commas between array and tuple elements.
  * Parser: Limit maximum recursion depth.
  * Type Checker: Crash fix related to ``using``.

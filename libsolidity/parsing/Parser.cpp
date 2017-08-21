@@ -64,25 +64,6 @@ private:
 	SourceLocation m_location;
 };
 
-/// Utility class that creates an error and throws an exception if the
-/// recursion depth is too deep.
-class Parser::RecursionGuard
-{
-public:
-	explicit RecursionGuard(Parser& _parser):
-		m_parser(_parser)
-	{
-		m_parser.increaseRecursionDepth();
-	}
-	~RecursionGuard()
-	{
-		m_parser.decreaseRecursionDepth();
-	}
-
-private:
-	Parser& m_parser;
-};
-
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 {
 	try
@@ -1540,19 +1521,6 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.setLocationEmpty();
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
-}
-
-void Parser::increaseRecursionDepth()
-{
-	m_recursionDepth++;
-	if (m_recursionDepth >= 4096)
-		fatalParserError("Maximum recursion depth reached during parsing.");
-}
-
-void Parser::decreaseRecursionDepth()
-{
-	solAssert(m_recursionDepth > 0, "");
-	m_recursionDepth--;
 }
 
 string Parser::currentTokenName()
