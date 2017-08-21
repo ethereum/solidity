@@ -13,6 +13,7 @@ Bugfixes:
  * Assembly Parser: Be more strict about number literals.
  * Parser: Enforce commas between array and tuple elements.
  * Parser: Limit maximum recursion depth.
+ * Type Checker: Crash fix related to ``using``.
  * Type Checker: Disallow constructors in libraries.
 
 ### 0.4.15 (2017-08-08)

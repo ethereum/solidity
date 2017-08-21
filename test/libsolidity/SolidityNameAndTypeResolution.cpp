@@ -6657,6 +6657,21 @@ BOOST_AUTO_TEST_CASE(library_function_without_implementation)
 	CHECK_ERROR(text, TypeError, "Internal library function must be implemented if declared.");
 }
 
+BOOST_AUTO_TEST_CASE(using_for_with_non_library)
+{
+	// This tests a crash that was resolved by making the first error fatal.
+	char const* text = R"(
+		library L {
+			struct S { uint d; }
+			using S for S;
+			function f(S _s) internal {
+				_s.d = 1;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Library name expected.");
+}
+
 BOOST_AUTO_TEST_CASE(experimental_pragma)
 {
 	char const* text = R"(

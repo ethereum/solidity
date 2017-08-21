@@ -463,7 +463,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		_usingFor.libraryName().annotation().referencedDeclaration
 	);
 	if (!library || !library->isLibrary())
-		m_errorReporter.typeError(_usingFor.libraryName().location(), "Library name expected.");
+		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
 bool TypeChecker::visit(StructDefinition const& _struct)
