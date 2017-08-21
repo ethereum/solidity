@@ -61,7 +61,8 @@ echo -en 'travis_fold:start:compiling_solidity\\r'
 cd $WORKSPACE
 mkdir -p build
 cd build
-emcmake cmake \
+cmake \
+  -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DEMSCRIPTEN=1 \
   -DBoost_FOUND=1 \
@@ -83,9 +84,8 @@ emcmake cmake \
 make -j 4
 
 cd ..
-cp build/solc/soljson.js ./
 mkdir -p upload
-cp soljson.js upload/
+cp build/solc/soljson.js upload/
 
 OUTPUT_SIZE=`ls -la build/solc/soljson.js`
 
