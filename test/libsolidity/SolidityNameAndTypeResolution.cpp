@@ -6709,6 +6709,41 @@ BOOST_AUTO_TEST_CASE(experimental_pragma)
 //	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, "Duplicate experimental feature name.");
 }
 
+BOOST_AUTO_TEST_CASE(reject_interface_creation)
+{
+	char const* text = R"(
+		interface I {}
+		contract C {
+			function f() {
+				new I();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cannot instantiate an interface.");
+}
+
+BOOST_AUTO_TEST_CASE(accept_library_creation)
+{
+	char const* text = R"(
+		library L {}
+		contract C {
+			function f() {
+				new L();
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(reject_interface_constructors)
+{
+	char const* text = R"(
+		interface I {}
+		contract C is I(2) {}
+	)";
+	CHECK_ERROR(text, TypeError, "Wrong argument count for constructor call: 1 arguments given but expected 0.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -2140,6 +2140,8 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 	strings parameterNames;
 	StateMutability stateMutability = StateMutability::NonPayable;
 
+	solAssert(_contract.contractKind() != ContractDefinition::ContractKind::Interface, "");
+
 	if (constructor)
 	{
 		for (ASTPointer<VariableDeclaration> const& var: constructor->parameters())
@@ -2150,6 +2152,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		if (constructor->isPayable())
 			stateMutability = StateMutability::Payable;
 	}
+
 	return make_shared<FunctionType>(
 		parameters,
 		TypePointers{make_shared<ContractType>(_contract)},

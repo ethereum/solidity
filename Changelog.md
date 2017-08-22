@@ -15,6 +15,7 @@ Bugfixes:
  * Parser: Limit maximum recursion depth.
  * Type Checker: Crash fix related to ``using``.
  * Type Checker: Disallow constructors in libraries.
+ * Type Checker: Reject the creation of interface contracts using the ``new`` statement.
 
 ### 0.4.15 (2017-08-08)
 

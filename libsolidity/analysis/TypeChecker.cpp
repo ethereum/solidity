@@ -430,7 +430,11 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
 	auto const& arguments = _inheritance.arguments();
-	TypePointers parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+	TypePointers parameterTypes;
+	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
+		// Interfaces do not have constructors, so there are zero parameters.
+		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
 	{
 		m_errorReporter.typeError(
@@ -1554,6 +1558,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
+		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
+				m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
 			m_errorReporter.typeError(
 				_newExpression.location(),
