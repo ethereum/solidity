@@ -15,6 +15,8 @@ project(solidity VERSION ${PROJECT_VERSION})
 include(EthDependencies)
 include(deps/jsoncpp.cmake)
 
+find_package(Threads)
+
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
