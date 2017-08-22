@@ -262,7 +262,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
 	size_t currentTimestamp();
-	size_t blockTimestamp(u256 number);
+	size_t blockTimestamp(u256 _number);
 
 	/// @returns the (potentially newly created) _ith address.
 	Address account(size_t _i);

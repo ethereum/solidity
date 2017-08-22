@@ -189,9 +189,9 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	return gas;
 }
 
-GasMeter::GasConsumption GasMeter::wordGas(u256 const& _multiplier, ExpressionClasses::Id _position)
+GasMeter::GasConsumption GasMeter::wordGas(u256 const& _multiplier, ExpressionClasses::Id _value)
 {
-	u256 const* value = m_state->expressionClasses().knownConstant(_position);
+	u256 const* value = m_state->expressionClasses().knownConstant(_value);
 	if (!value)
 		return GasConsumption::infinite();
 	return GasConsumption(_multiplier * ((*value + 31) / 32));

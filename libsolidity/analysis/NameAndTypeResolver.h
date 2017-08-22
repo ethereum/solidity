@@ -148,7 +148,7 @@ public:
 private:
 	bool visit(SourceUnit& _sourceUnit) override;
 	void endVisit(SourceUnit& _sourceUnit) override;
-	bool visit(ImportDirective& _declaration) override;
+	bool visit(ImportDirective& _import) override;
 	bool visit(ContractDefinition& _contract) override;
 	void endVisit(ContractDefinition& _contract) override;
 	bool visit(StructDefinition& _struct) override;
