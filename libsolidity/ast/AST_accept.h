@@ -291,18 +291,6 @@ void EventDefinition::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void TypeName::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void TypeName::accept(ASTConstVisitor& _visitor) const
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
 void ElementaryTypeName::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);

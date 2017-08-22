@@ -378,12 +378,6 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 	return false;
 }
 
-bool ASTJsonConverter::visit(TypeName const&)
-{
-	solAssert(false, "AST node of abstract type used.");
-	return false;
-}
-
 bool ASTJsonConverter::visit(EventDefinition const& _node)
 {
 	m_inEvent = true;
