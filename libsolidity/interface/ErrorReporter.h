@@ -36,7 +36,7 @@ class ErrorReporter
 {
 public:
 
-	ErrorReporter(ErrorList& _errors):
+	explicit ErrorReporter(ErrorList& _errors):
 		m_errorList(_errors) { }
 
 	ErrorReporter& operator=(ErrorReporter const& _errorReporter);

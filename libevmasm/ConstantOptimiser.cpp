@@ -124,7 +124,7 @@ void ConstantOptimisationMethod::replaceConstants(
 	_items = std::move(replaced);
 }
 
-bigint LiteralMethod::gasNeeded()
+bigint LiteralMethod::gasNeeded() const
 {
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
@@ -139,7 +139,7 @@ CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
 {
 }
 
-bigint CodeCopyMethod::gasNeeded()
+bigint CodeCopyMethod::gasNeeded() const
 {
 	return combineGas(
 		// Run gas: we ignore memory increase costs
@@ -151,7 +151,7 @@ bigint CodeCopyMethod::gasNeeded()
 	);
 }
 
-AssemblyItems CodeCopyMethod::execute(Assembly& _assembly)
+AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
 	bytes data = toBigEndian(m_value);
 	AssemblyItems actualCopyRoutine = copyRoutine();
@@ -159,7 +159,7 @@ AssemblyItems CodeCopyMethod::execute(Assembly& _assembly)
 	return actualCopyRoutine;
 }
 
-AssemblyItems const& CodeCopyMethod::copyRoutine() const
+AssemblyItems const& CodeCopyMethod::copyRoutine()
 {
 	AssemblyItems static copyRoutine{
 		u256(0),
@@ -282,7 +282,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 	return stack.size() == 1 && stack.front() == _value;
 }
 
-bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine)
+bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
 	size_t numExps = count(_routine.begin(), _routine.end(), Instruction::EXP);
 	return combineGas(

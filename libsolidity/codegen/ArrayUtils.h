@@ -40,7 +40,7 @@ using TypePointer = std::shared_ptr<Type const>;
 class ArrayUtils
 {
 public:
-	ArrayUtils(CompilerContext& _context): m_context(_context) {}
+	explicit ArrayUtils(CompilerContext& _context): m_context(_context) {}
 
 	/// Copies an array to an array in storage. The arrays can be of different types only if
 	/// their storage representation is the same.

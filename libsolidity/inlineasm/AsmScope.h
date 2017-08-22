@@ -107,7 +107,7 @@ struct Scope
 	}
 	/// @returns true if the name exists in this scope or in super scopes (also searches
 	/// across function and assembly boundaries).
-	bool exists(std::string const& _name);
+	bool exists(std::string const& _name) const;
 
 	/// @returns the number of variables directly registered inside the scope.
 	size_t numberOfVariables() const;

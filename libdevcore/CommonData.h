@@ -184,7 +184,8 @@ template <class T>
 inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)
 {
 	std::vector<T> ret(_a);
-	return ret += _b;
+	ret += _b;
+	return ret;
 }
 
 template <class T, class V>

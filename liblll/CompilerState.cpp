@@ -30,7 +30,7 @@ CompilerState::CompilerState()
 {
 }
 
-CodeFragment const& CompilerState::getDef(std::string const& _s)
+CodeFragment const& CompilerState::getDef(std::string const& _s) const
 {
 	if (defs.count(_s))
 		return defs.at(_s);

@@ -157,7 +157,7 @@ template <> inline u256 exp10<0>()
 class ScopeGuard
 {
 public:
-	ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
+	explicit ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
 	~ScopeGuard() { m_f(); }
 
 private:

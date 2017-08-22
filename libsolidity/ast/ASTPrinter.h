@@ -146,7 +146,7 @@ private:
 	std::string m_source;
 	ASTNode const* m_ast;
 	GasEstimator::ASTGasConsumption m_gasCosts;
-	std::ostream* m_ostream;
+	std::ostream* m_ostream = nullptr;
 };
 
 }

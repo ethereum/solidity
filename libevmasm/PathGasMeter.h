@@ -50,7 +50,7 @@ struct GasPath
 class PathGasMeter
 {
 public:
-	PathGasMeter(AssemblyItems const& _items);
+	explicit PathGasMeter(AssemblyItems const& _items);
 
 	GasMeter::GasConsumption estimateMax(size_t _startIndex, std::shared_ptr<KnownState> const& _state);
 

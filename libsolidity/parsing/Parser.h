@@ -35,7 +35,7 @@ class Scanner;
 class Parser: public ParserBase
 {
 public:
-	Parser(ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
+	explicit Parser(ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 

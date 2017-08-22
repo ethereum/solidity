@@ -36,7 +36,7 @@ class Scanner;
 class ParserBase
 {
 public:
-	ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
+	explicit ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
 
 	std::shared_ptr<std::string const> const& sourceName() const;
 

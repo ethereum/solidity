@@ -119,7 +119,7 @@ private:
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
 	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
-	Json::Value idOrNull(ASTNode const* _pt)
+	static Json::Value idOrNull(ASTNode const* _pt)
 	{
 		return _pt ? Json::Value(nodeId(*_pt)) : Json::nullValue;
 	}
@@ -134,12 +134,12 @@ private:
 	std::string literalTokenKind(Token::Value _token);
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
-	int nodeId(ASTNode const& _node)
+	static int nodeId(ASTNode const& _node)
 	{
 		return _node.id();
 	}
 	template<class Container>
-	Json::Value getContainerIds(Container const& container)
+	static Json::Value getContainerIds(Container const& container)
 	{
 		Json::Value tmp(Json::arrayValue);
 		for (auto const& element: container)

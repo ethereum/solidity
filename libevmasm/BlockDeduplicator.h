@@ -45,7 +45,7 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class BlockDeduplicator
 {
 public:
-	BlockDeduplicator(AssemblyItems& _items): m_items(_items) {}
+	explicit BlockDeduplicator(AssemblyItems& _items): m_items(_items) {}
 	/// @returns true if something was changed
 	bool deduplicate();
 	/// @returns the tags that were replaced.

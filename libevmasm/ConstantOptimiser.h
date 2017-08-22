@@ -63,11 +63,11 @@ public:
 
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
 		m_params(_params), m_value(_value) {}
-	virtual bigint gasNeeded() = 0;
+	virtual bigint gasNeeded() const = 0;
 	/// Executes the method, potentially appending to the assembly and returns a vector of
 	/// assembly items the constant should be relpaced with in one sweep.
 	/// If the vector is empty, the constants will not be deleted.
-	virtual AssemblyItems execute(Assembly& _assembly) = 0;
+	virtual AssemblyItems execute(Assembly& _assembly) const = 0;
 
 protected:
 	size_t dataSize() const { return std::max<size_t>(1, dev::bytesRequired(m_value)); }
@@ -84,7 +84,7 @@ protected:
 		bigint const& _runGas,
 		bigint const& _repeatedDataGas,
 		bigint const& _uniqueDataGas
-	)
+	) const
 	{
 		// _runGas is not multiplied by _multiplicity because the runs are "per opcode"
 		return m_params.runs * _runGas + m_params.multiplicity * _repeatedDataGas + _uniqueDataGas;
@@ -106,8 +106,8 @@ class LiteralMethod: public ConstantOptimisationMethod
 public:
 	explicit LiteralMethod(Params const& _params, u256 const& _value):
 		ConstantOptimisationMethod(_params, _value) {}
-	virtual bigint gasNeeded() override;
-	virtual AssemblyItems execute(Assembly&) override { return AssemblyItems{}; }
+	virtual bigint gasNeeded() const override;
+	virtual AssemblyItems execute(Assembly&) const override { return AssemblyItems{}; }
 };
 
 /**
@@ -117,11 +117,11 @@ class CodeCopyMethod: public ConstantOptimisationMethod
 {
 public:
 	explicit CodeCopyMethod(Params const& _params, u256 const& _value);
-	virtual bigint gasNeeded() override;
-	virtual AssemblyItems execute(Assembly& _assembly) override;
+	virtual bigint gasNeeded() const override;
+	virtual AssemblyItems execute(Assembly& _assembly) const override;
 
 protected:
-	AssemblyItems const& copyRoutine() const;
+	static AssemblyItems const& copyRoutine();
 };
 
 /**
@@ -141,8 +141,8 @@ public:
 		);
 	}
 
-	virtual bigint gasNeeded() override { return gasNeeded(m_routine); }
-	virtual AssemblyItems execute(Assembly&) override
+	virtual bigint gasNeeded() const override { return gasNeeded(m_routine); }
+	virtual AssemblyItems execute(Assembly&) const override
 	{
 		return m_routine;
 	}
@@ -151,8 +151,8 @@ protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
-	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine);
-	bigint gasNeeded(AssemblyItems const& _routine);
+	static bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine);
+	bigint gasNeeded(AssemblyItems const& _routine) const;
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
