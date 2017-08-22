@@ -836,11 +836,10 @@ private:
  */
 class TypeName: public ASTNode
 {
-public:
+protected:
 	explicit TypeName(SourceLocation const& _location): ASTNode(_location) {}
-	virtual void accept(ASTVisitor& _visitor) override;
-	virtual void accept(ASTConstVisitor& _visitor) const override;
 
+public:
 	virtual TypeNameAnnotation& annotation() const override;
 };
 
