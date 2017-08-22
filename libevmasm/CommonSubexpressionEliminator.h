@@ -147,7 +147,7 @@ private:
 
 	AssemblyItems m_generatedItems;
 	/// Current height of the stack relative to the start.
-	int m_stackHeight;
+	int m_stackHeight = 0;
 	/// If (b, a) is in m_requests then b is needed to compute a.
 	std::multimap<Id, Id> m_neededBy;
 	/// Current content of the stack.
