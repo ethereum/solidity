@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <boost/functional/hash.hpp>
+#include <boost/io/ios_state.hpp>
 #include "CommonData.h"
 
 namespace dev
@@ -224,6 +225,7 @@ template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& va
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
+	boost::io::ios_all_saver guard(_out);
 	_out << std::noshowbase << std::hex << std::setfill('0');
 	for (unsigned i = 0; i < N; ++i)
 		_out << std::setw(2) << (int)_h[i];

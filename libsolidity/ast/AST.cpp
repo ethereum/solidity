@@ -188,7 +188,6 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 {
 	if (!m_interfaceFunctionList)
 	{
-		set<string> functionsSeen;
 		set<string> signaturesSeen;
 		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionTypePointer>>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
