@@ -250,7 +250,63 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(const_function)
+BOOST_AUTO_TEST_CASE(view_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function foo(uint a, uint b) returns(uint d) { return a + b; }
+			function boo(uint32 a) view returns(uint b) { return a * 4; }
+		}
+	)";
+
+	char const* interface = R"([
+	{
+		"name": "foo",
+		"constant": false,
+		"payable" : false,
+		"statemutability": "nonpayable",
+		"type": "function",
+		"inputs": [
+		{
+			"name": "a",
+			"type": "uint256"
+		},
+		{
+			"name": "b",
+			"type": "uint256"
+		}
+		],
+		"outputs": [
+		{
+			"name": "d",
+			"type": "uint256"
+		}
+		]
+	},
+	{
+		"name": "boo",
+		"constant": true,
+		"payable" : false,
+		"statemutability": "view",
+		"type": "function",
+		"inputs": [{
+			"name": "a",
+			"type": "uint32"
+		}],
+		"outputs": [
+		{
+			"name": "b",
+			"type": "uint256"
+		}
+		]
+	}
+	])";
+
+	checkInterface(sourceCode, interface);
+}
+
+// constant is an alias to view above
+BOOST_AUTO_TEST_CASE(constant_function)
 {
 	char const* sourceCode = R"(
 		contract test {

@@ -176,6 +176,7 @@ namespace solidity
 	K(Throw, "throw", 0)                                               \
 	K(Using, "using", 0)                                               \
 	K(Var, "var", 0)                                                   \
+	K(View, "view", 0)                                                 \
 	K(While, "while", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
@@ -236,7 +237,6 @@ namespace solidity
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
-	K(View, "view", 0)                                                 \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -290,7 +290,7 @@ public:
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
-	static bool isStateMutabilitySpecifier(Value op) { return op == Constant || op == Payable; }
+	static bool isStateMutabilitySpecifier(Value op) { return op == Constant || op == View || op == Payable; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }

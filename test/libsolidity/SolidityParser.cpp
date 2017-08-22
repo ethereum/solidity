@@ -920,6 +920,11 @@ BOOST_AUTO_TEST_CASE(multiple_statemutability_specifiers)
 	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
 	text = R"(
 		contract c {
+			function f() constant view {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
+	text = R"(
+		contract c {
 			function f() payable constant {}
 		})";
 	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");

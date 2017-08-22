@@ -461,29 +461,32 @@ value types and strings.
     }
 
 
-.. _constant-functions:
+.. _view-functions:
 
-******************
-Constant Functions
-******************
+**************
+View Functions
+**************
 
-Functions can be declared constant in which case they promise not to modify the state.
+Functions can be declared ``view`` in which case they promise not to modify the state.
 
 ::
 
     pragma solidity ^0.4.0;
 
     contract C {
-        function f(uint a, uint b) constant returns (uint) {
+        function f(uint a, uint b) view returns (uint) {
             return a * (b + 42);
         }
     }
 
 .. note::
-  Getter methods are marked constant.
+  ``constant`` is an alias to ``view``.
+
+.. note::
+  Getter methods are marked ``view``.
 
 .. warning::
-  The compiler does not enforce yet that a constant method is not modifying state.
+  The compiler does not enforce yet that a ``view`` method is not modifying state.
 
 .. index:: ! fallback function, function;fallback
 

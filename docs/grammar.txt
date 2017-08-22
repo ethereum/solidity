@@ -53,7 +53,7 @@ ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | StateMutability )*
                    ( 'returns' TypeNameList )?
 StorageLocation = 'memory' | 'storage'
-StateMutability = 'constant' | 'payable'
+StateMutability = 'constant' | 'view' | 'payable'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
