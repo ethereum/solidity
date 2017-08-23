@@ -22,6 +22,18 @@ if(CCACHE_FOUND)
 	message("Using ccache")
 endif(CCACHE_FOUND)
 
+include(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag(-fstack-protector-strong have_stack_protector_strong)
+if (have_stack_protector_strong)
+	add_compile_options(-fstack-protector-strong)
+else()
+	check_cxx_compiler_flag(-fstack-protector have_stack_protector)
+	if(have_stack_protector)
+		add_compile_options(-fstack-protector)
+	endif()
+endif()
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
 	# Use ISO C++11 standard language.
@@ -79,14 +91,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
 		endif ()
 
-		# Strong stack protection was only added in GCC 4.9.
-		# Use it if we have the option to do so.
-		# See https://lwn.net/Articles/584225/
-		if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
-			add_compile_options(-fstack-protector-strong)
-			add_compile_options(-fstack-protector)
-		endif()
-
 		# Until https://github.com/ethereum/solidity/issues/2479 is handled
 		# disable all implicit fallthrough warnings in the codebase for GCC > 7.0
 		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
@@ -95,31 +99,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
-		add_compile_options(-fstack-protector)
-
-		# Enable strong stack protection only on Mac and only for OS X Yosemite
-		# or newer (AppleClang 7.0+).  We should be able to re-enable this setting
-		# on non-Apple Clang as well, if we can work out what expression to use for
-		# the version detection.
-		
-		# The fact that the version-reporting for AppleClang loses the original
-		# Clang versioning is rather annoying.  Ideally we could just have
-		# a single cross-platform "if version >= 3.4.1" check.
-		#
-		# There is debug text in the else clause below, to help us work out what
-		# such an expression should be, if we can get this running on a Trusty box
-		# with Clang.  Greg Colvin previously replicated the issue there too.
-		#
-		# See https://github.com/ethereum/webthree-umbrella/issues/594
-
-		if (APPLE)
-			if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-				add_compile_options(-fstack-protector-strong)
-			endif()
-		else()
-			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-		endif()
 
 		# A couple of extra warnings suppressions which we seemingly
 		# need when building with Clang.
