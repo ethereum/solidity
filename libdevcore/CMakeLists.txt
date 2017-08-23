@@ -1,14 +1,8 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
+file(GLOB sources "*.cpp")
+file(GLOB headers "*.h")
 
-aux_source_directory(. SRC_LIST)
-
-set(EXECUTABLE soldevcore)
-
-file(GLOB HEADERS "*.h")
-
-include_directories(..)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-
-eth_use(${EXECUTABLE} REQUIRED Dev::base)
-
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+add_library(devcore ${sources} ${headers})
+target_link_libraries(devcore PRIVATE ${Boost_FILESYSTEM_LIBRARIES} ${Boost_REGEX_LIBRARIES} ${Boost_SYSTEM_LIBRARIES} Threads::Threads)
+target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(devcore PUBLIC "${CMAKE_SOURCE_DIR}")
+add_dependencies(devcore solidity_BuildInfo.h)

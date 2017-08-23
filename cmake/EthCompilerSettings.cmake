@@ -63,13 +63,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Applying -fpermissive to a C command-line (ie. secp256k1) gives a build error.
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
-	# Build everything as shared libraries (.so files)
-	add_definitions(-DSHAREDLIB)
-
-	# If supported for the target machine, emit position-independent code, suitable for dynamic
-	# linking and avoiding any limit on the size of the global offset table.
-	add_compile_options(-fPIC)
-
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
@@ -198,7 +191,6 @@ elseif (DEFINED MSVC)
 	add_compile_options(/wd4800)					# disable forcing value to bool 'true' or 'false' (performance warning) (4800)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
-	add_compile_options(-DMINIUPNP_STATICLIB)		# define miniupnp static library
 
 	# Always use Release variant of C++ runtime.
 	# We don't want to provide Debug variants of all dependencies. Some default
@@ -218,12 +210,6 @@ elseif (DEFINED MSVC)
 	# stack size 16MB
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099,4075 /STACK:16777216")
 
-	# windows likes static
-	if (NOT ETH_STATIC)
-		message("Forcing static linkage for MSVC.")
-		set(ETH_STATIC 1)
-	endif ()
-	
 # If you don't have GCC, Clang or VC++ then you are on your own.  Good luck!
 else ()
 	message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")
@@ -262,9 +248,3 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		endif ()
 	endif ()
 endif ()
-
-if(ETH_STATIC)
-	set(BUILD_SHARED_LIBS OFF)
-else()
-	set(BUILD_SHARED_LIBS ON)
-endif(ETH_STATIC)

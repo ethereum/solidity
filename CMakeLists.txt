@@ -11,9 +11,13 @@ eth_policy()
 set(PROJECT_VERSION "0.4.16")
 project(solidity VERSION ${PROJECT_VERSION})
 
+option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
+
 # Let's find our dependencies
 include(EthDependencies)
 include(deps/jsoncpp.cmake)
+
+find_package(Threads)
 
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
