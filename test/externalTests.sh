@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script to execute the Solidity tests.
+# Bash script to run external Solidity tests.
 #
-# The documentation for solidity is hosted at:
+# Argument: Path to soljson.js to test.
 #
-#     https://solidity.readthedocs.org
+# Requires npm, networking access and git to download the tests.
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -23,34 +23,27 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2017 solidity contributors.
+# (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
 set -e
 
-REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+if [ ! -f "$1" ]
+then
+  echo "Usage: $0 <path to soljson.js>"
+  exit 1
+fi
 
-cd $REPO_ROOT/build
+SOLJSON="$1"
 
-echo "Preparing solc-js..."
-rm -rf solc-js
-git clone https://github.com/ethereum/solc-js
-cd solc-js
-npm install
-
-# Replace soljson with current build
-echo "Replacing soljson.js"
-rm -f soljson.js
-# Make a copy because paths might not be absolute
-cp ../solc/soljson.js soljson.js
-
-# Update version (needed for some tests)
-VERSION=$(../../scripts/get_version.sh)
-echo "Updating package.json to version $VERSION"
-npm version $VERSION
-
-echo "Running solc-js tests..."
-npm run test
-
-echo "Running external tests...."
-"$REPO_ROOT"/test/externalTests.sh "$REPO_ROOT"/build/solc/soljson.js
+DIR=$(mktemp -d)
+(
+    cd "$DIR"
+    echo "Running Zeppelin tests..."
+    git clone https://github.com/OpenZeppelin/zeppelin-solidity.git
+    cd zeppelin-solidity
+    npm install
+    cp "$SOLJSON" ./node_modules/solc/soljson.js
+    npm run test
+)
+rm -rf "$DIR"
