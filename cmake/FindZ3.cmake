@@ -1,0 +1,9 @@
+find_path(Z3_INCLUDE_DIR z3++.h)
+find_library(Z3_LIBRARY NAMES z3 )
+include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Z3 DEFAULT_MSG Z3_LIBRARY Z3_INCLUDE_DIR)
+
+if(Z3_FOUND)
+  set(Z3_LIBRARIES ${Z3_LIBRARY})
+endif()
+

@@ -37,6 +37,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
@@ -234,6 +235,13 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		SMTChecker smtChecker(m_errorReporter, m_smtQuery);
+		for (Source const* source: m_sourceOrder)
+			smtChecker.analyze(*source->ast);
 	}
 
 	if (noErrors)
@@ -527,17 +535,17 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 			if (m_sources.count(importPath) || newSources.count(importPath))
 				continue;
 
-			ReadFile::Result result{false, string("File not supplied initially.")};
+			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
 				result = m_readFile(importPath);
 
 			if (result.success)
-				newSources[importPath] = result.contentsOrErrorMessage;
+				newSources[importPath] = result.responseOrErrorMessage;
 			else
 			{
 				m_errorReporter.parserError(
 					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage)
+					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
 				);
 				continue;
 			}
