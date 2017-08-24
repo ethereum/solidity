@@ -24,6 +24,7 @@
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/parsing/Token.h>
 
 #include <libdevcore/Common.h>
@@ -187,6 +188,7 @@ public:
 	/// @returns number of bytes used by this type when encoded for CALL. If it is a dynamic type,
 	/// returns the size of the pointer (usually 32). Returns 0 if the type cannot be encoded
 	/// in calldata.
+	/// @note: This should actually not be called on types, where isDynamicallyEncoded returns true.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
@@ -194,8 +196,10 @@ public:
 	virtual unsigned memoryHeadSize() const { return calldataEncodedSize(); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
-	/// @returns true if the type is dynamically encoded in calldata
+	/// @returns true if the type is a dynamic array
 	virtual bool isDynamicallySized() const { return false; }
+	/// @returns true if the type is dynamically encoded in the ABI
+	virtual bool isDynamicallyEncoded() const { return false; }
 	/// @returns the number of storage slots required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 storageSize() const { return 1; }
@@ -609,6 +613,7 @@ public:
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
+	virtual bool isDynamicallyEncoded() const override;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned sizeOnStack() const override;
@@ -723,6 +728,7 @@ public:
 	virtual std::string identifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override;
+	virtual bool isDynamicallyEncoded() const override;
 	u256 memorySize() const;
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
@@ -884,8 +890,7 @@ public:
 		strings const& _returnParameterTypes,
 		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
-		bool _constant = false,
-		bool _payable = false
+		StateMutability _stateMutability = StateMutability::NonPayable
 	): FunctionType(
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
@@ -894,8 +899,7 @@ public:
 		_kind,
 		_arbitraryParameters,
 		nullptr,
-		_constant,
-		_payable
+		_stateMutability
 	)
 	{
 	}
@@ -912,8 +916,7 @@ public:
 		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
 		Declaration const* _declaration = nullptr,
-		bool _isConstant = false,
-		bool _isPayable = false,
+		StateMutability _stateMutability = StateMutability::NonPayable,
 		bool _gasSet = false,
 		bool _valueSet = false,
 		bool _bound = false
@@ -923,12 +926,11 @@ public:
 		m_parameterNames(_parameterNames),
 		m_returnParameterNames(_returnParameterNames),
 		m_kind(_kind),
+		m_stateMutability(_stateMutability),
 		m_arbitraryParameters(_arbitraryParameters),
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
 		m_bound(_bound),
-		m_isConstant(_isConstant),
-		m_isPayable(_isPayable),
 		m_declaration(_declaration)
 	{
 		solAssert(
@@ -980,6 +982,7 @@ public:
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)
 	bool isBareCall() const;
 	Kind const& kind() const { return m_kind; }
+	StateMutability stateMutability() const { return m_stateMutability; }
 	/// @returns the external signature of this function type given the function name
 	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
@@ -990,12 +993,11 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	bool isConstant() const { return m_isConstant; }
 	/// @returns true if the the result of this function only depends on its arguments
 	/// and it does not modify the state.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
-	bool isPayable() const { return m_isPayable; }
+	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> documentation() const;
@@ -1028,13 +1030,12 @@ private:
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
 	Kind const m_kind;
+	StateMutability m_stateMutability = StateMutability::NonPayable;
 	/// true if the function takes an arbitrary number of arguments of arbitrary types
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
-	bool m_isConstant = false;
-	bool m_isPayable = false;
 	Declaration const* m_declaration = nullptr;
 };
 

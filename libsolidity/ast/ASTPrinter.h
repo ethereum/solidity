@@ -60,7 +60,6 @@ public:
 	bool visit(ModifierDefinition const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	bool visit(EventDefinition const& _node) override;
-	bool visit(TypeName const& _node) override;
 	bool visit(ElementaryTypeName const& _node) override;
 	bool visit(UserDefinedTypeName const& _node) override;
 	bool visit(FunctionTypeName const& _node) override;
@@ -104,7 +103,6 @@ public:
 	void endVisit(ModifierDefinition const&) override;
 	void endVisit(ModifierInvocation const&) override;
 	void endVisit(EventDefinition const&) override;
-	void endVisit(TypeName const&) override;
 	void endVisit(ElementaryTypeName const&) override;
 	void endVisit(UserDefinedTypeName const&) override;
 	void endVisit(FunctionTypeName const&) override;
@@ -146,7 +144,7 @@ private:
 	std::string m_source;
 	ASTNode const* m_ast;
 	GasEstimator::ASTGasConsumption m_gasCosts;
-	std::ostream* m_ostream;
+	std::ostream* m_ostream = nullptr;
 };
 
 }

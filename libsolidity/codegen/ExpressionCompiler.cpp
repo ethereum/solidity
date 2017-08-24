@@ -645,8 +645,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					FunctionType::Kind::BareCall,
 					false,
 					nullptr,
-					false,
-					false,
+					StateMutability::NonPayable,
 					true,
 					true
 				),
@@ -1812,7 +1811,7 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
 }
 
-bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op)
+bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op) const
 {
 	if (Token::isCompareOp(_op) || Token::isShiftOp(_op))
 		return true;

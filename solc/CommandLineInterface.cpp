@@ -316,31 +316,32 @@ void CommandLineInterface::handleABI(string const& _contract)
 		cout << "Contract JSON ABI " << endl << data << endl;
 }
 
-void CommandLineInterface::handleNatspec(DocumentationType _type, string const& _contract)
+void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
 	std::string title;
-	switch(_type)
+
+	if (_natspecDev)
 	{
-	case DocumentationType::NatspecUser:
-		argName = g_argNatspecUser;
-		suffix = ".docuser";
-		title = "User Documentation";
-		break;
-	case DocumentationType::NatspecDev:
 		argName = g_argNatspecDev;
 		suffix = ".docdev";
 		title = "Developer Documentation";
-		break;
-	default:
-		// should never happen
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation _type"));
+	}
+	else
+	{
+		argName = g_argNatspecUser;
+		suffix = ".docuser";
+		title = "User Documentation";
 	}
 
 	if (m_args.count(argName))
 	{
-		std::string output = dev::jsonPrettyPrint(m_compiler->natspec(_contract, _type));
+		std::string output = dev::jsonPrettyPrint(
+			_natspecDev ?
+			m_compiler->natspecDev(_contract) :
+			m_compiler->natspecUser(_contract)
+		);
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -662,7 +663,7 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadFile::Callback fileReader = [this](string const& _path)
+	ReadCallback::Callback fileReader = [this](string const& _path)
 	{
 		try
 		{
@@ -682,25 +683,25 @@ bool CommandLineInterface::processInput()
 				}
 			}
 			if (!isAllowed)
-				return ReadFile::Result{false, "File outside of allowed directories."};
+				return ReadCallback::Result{false, "File outside of allowed directories."};
 			else if (!boost::filesystem::exists(path))
-				return ReadFile::Result{false, "File not found."};
+				return ReadCallback::Result{false, "File not found."};
 			else if (!boost::filesystem::is_regular_file(canonicalPath))
-				return ReadFile::Result{false, "Not a valid file."};
+				return ReadCallback::Result{false, "Not a valid file."};
 			else
 			{
 				auto contents = dev::contentsString(canonicalPath.string());
 				m_sourceCodes[path.string()] = contents;
-				return ReadFile::Result{true, contents};
+				return ReadCallback::Result{true, contents};
 			}
 		}
 		catch (Exception const& _exception)
 		{
-			return ReadFile::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+			return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
 		}
 		catch (...)
 		{
-			return ReadFile::Result{false, "Unknown exception in read callback."};
+			return ReadCallback::Result{false, "Unknown exception in read callback."};
 		}
 	};
 
@@ -850,7 +851,7 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strContracts] = Json::Value(Json::objectValue);
 	for (string const& contractName: contracts)
 	{
-		Json::Value contractData(Json::objectValue);
+		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
 		if (requests.count(g_strAbi))
 			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
@@ -881,10 +882,9 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecDev));
+			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspecDev(contractName));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspec(contractName, DocumentationType::NatspecUser));
-		output[g_strContracts][contractName] = contractData;
+			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspecUser(contractName));
 	}
 
 	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
@@ -1170,8 +1170,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
-		handleNatspec(DocumentationType::NatspecDev, contract);
-		handleNatspec(DocumentationType::NatspecUser, contract);
+		handleNatspec(true, contract);
+		handleNatspec(false, contract);
 	} // end of contracts iteration
 
 	if (m_args.count(g_argFormal))

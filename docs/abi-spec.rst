@@ -44,7 +44,7 @@ The following elementary types exist:
 
 - `bool`: equivalent to `uint8` restricted to the values 0 and 1
 
-- `fixed<M>x<N>`: signed fixed-point decimal number of `M` bits, `0 < M <= 256`, `M % 8 ==0`, and `0 < N <= 80`, which denotes the value `v` as `v / (10 ** N)`.
+- `fixed<M>x<N>`: signed fixed-point decimal number of `M` bits, `8 <= M <= 256`, `M % 8 ==0`, and `0 < N <= 80`, which denotes the value `v` as `v / (10 ** N)`.
 
 - `ufixed<M>x<N>`: unsigned variant of `fixed<M>x<N>`.
 
@@ -293,8 +293,9 @@ The JSON format for a contract's interface is given by an array of function and/
   * `name`: the name of the parameter;
   * `type`: the canonical type of the parameter.
 - `outputs`: an array of objects similar to `inputs`, can be omitted if function doesn't return anything;
-- `constant`: `true` if function is :ref:`specified to not modify blockchain state <constant-functions>`);
-- `payable`: `true` if function accepts ether, defaults to `false`.
+- `constant`: `true` if function is :ref:`specified to not modify blockchain state <view-functions>`);
+- `payable`: `true` if function accepts ether, defaults to `false`;
+- `stateMutability`: a string with one of the following values: `pure` (:ref:`specified to not read blockchain state <pure-functions>`), `view` (same as `constant` above), `nonpayable` and `payable` (same as `payable` above).
 
 `type` can be omitted, defaulting to `"function"`.
 

@@ -61,7 +61,7 @@ public:
 	using Id = ExpressionClasses::Id;
 	using StoreOperation = KnownState::StoreOperation;
 
-	CommonSubexpressionEliminator(KnownState const& _state): m_initialState(_state), m_state(_state) {}
+	explicit CommonSubexpressionEliminator(KnownState const& _state): m_initialState(_state), m_state(_state) {}
 
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
@@ -147,7 +147,7 @@ private:
 
 	AssemblyItems m_generatedItems;
 	/// Current height of the stack relative to the start.
-	int m_stackHeight;
+	int m_stackHeight = 0;
 	/// If (b, a) is in m_requests then b is needed to compute a.
 	std::multimap<Id, Id> m_neededBy;
 	/// Current content of the stack.

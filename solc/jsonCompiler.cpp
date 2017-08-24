@@ -38,9 +38,12 @@ extern "C" {
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 }
 
-ReadFile::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
+namespace
 {
-	ReadFile::Callback readCallback;
+
+ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
+{
+	ReadCallback::Callback readCallback;
 	if (_readCallback)
 	{
 		readCallback = [=](string const& _path)
@@ -48,23 +51,23 @@ ReadFile::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullp
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
 			_readCallback(_path.c_str(), &contents_c, &error_c);
-			ReadFile::Result result;
+			ReadCallback::Result result;
 			result.success = true;
 			if (!contents_c && !error_c)
 			{
 				result.success = false;
-				result.contentsOrErrorMessage = "File not found.";
+				result.responseOrErrorMessage = "File not found.";
 			}
 			if (contents_c)
 			{
 				result.success = true;
-				result.contentsOrErrorMessage = string(contents_c);
+				result.responseOrErrorMessage = string(contents_c);
 				free(contents_c);
 			}
 			if (error_c)
 			{
 				result.success = false;
-				result.contentsOrErrorMessage = string(error_c);
+				result.responseOrErrorMessage = string(error_c);
 				free(error_c);
 			}
 			return result;
@@ -258,6 +261,8 @@ string compileStandardInternal(string const& _input, CStyleReadFileCallback _rea
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
 	return compiler.compile(_input);
+}
+
 }
 
 static string s_outputBuffer;

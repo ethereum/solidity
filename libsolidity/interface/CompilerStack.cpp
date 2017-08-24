@@ -37,6 +37,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
@@ -49,8 +50,6 @@
 #include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-
 
 using namespace std;
 using namespace dev;
@@ -240,6 +239,13 @@ bool CompilerStack::analyze()
 
 	if (noErrors)
 	{
+		SMTChecker smtChecker(m_errorReporter, m_smtQuery);
+		for (Source const* source: m_sourceOrder)
+			smtChecker.analyze(*source->ast);
+	}
+
+	if (noErrors)
+	{
 		m_stackState = AnalysisSuccessful;
 		return true;
 	}
@@ -406,39 +412,42 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 	return *_contract.abi;
 }
 
-Json::Value const& CompilerStack::natspec(string const& _contractName, DocumentationType _type) const
+Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
 {
-	return natspec(contract(_contractName), _type);
+	return natspecUser(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::natspec(Contract const& _contract, DocumentationType _type) const
+Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	solAssert(_contract.contract, "");
-	std::unique_ptr<Json::Value const>* doc;
 
-	// checks wheather we already have the documentation
-	switch (_type)
-	{
-	case DocumentationType::NatspecUser:
-		doc = &_contract.userDocumentation;
-		// caches the result
-		if (!*doc)
-			doc->reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
-		break;
-	case DocumentationType::NatspecDev:
-		doc = &_contract.devDocumentation;
-		// caches the result
-		if (!*doc)
-			doc->reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
-		break;
-	default:
-		solAssert(false, "Illegal documentation type.");
-	}
+	// caches the result
+	if (!_contract.userDocumentation)
+		_contract.userDocumentation.reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
 
-	return *(*doc);
+	return *_contract.userDocumentation;
+}
+
+Json::Value const& CompilerStack::natspecDev(string const& _contractName) const
+{
+	return natspecDev(contract(_contractName));
+}
+
+Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.devDocumentation)
+		_contract.devDocumentation.reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
+
+	return *_contract.devDocumentation;
 }
 
 Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
@@ -526,17 +535,17 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 			if (m_sources.count(importPath) || newSources.count(importPath))
 				continue;
 
-			ReadFile::Result result{false, string("File not supplied initially.")};
+			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
 				result = m_readFile(importPath);
 
 			if (result.success)
-				newSources[importPath] = result.contentsOrErrorMessage;
+				newSources[importPath] = result.responseOrErrorMessage;
 			else
 			{
 				m_errorReporter.parserError(
 					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMessage)
+					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
 				);
 				continue;
 			}
@@ -632,6 +641,17 @@ string CompilerStack::absolutePath(string const& _path, string const& _reference
 	return result.generic_string();
 }
 
+namespace
+{
+bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& features)
+{
+	for (auto const feature: features)
+		if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+			return false;
+	return true;
+}
+}
+
 void CompilerStack::compileContract(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
@@ -649,10 +669,23 @@ void CompilerStack::compileContract(
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
-	bytes cborEncodedMetadata =
-		// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
-		bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
-		dev::swarmHash(metadata).asBytes();
+	bytes cborEncodedHash =
+		// CBOR-encoding of the key "bzzr0"
+		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
+		// CBOR-encoding of the hash
+		bytes{0x58, 0x20} + dev::swarmHash(metadata).asBytes();
+	bytes cborEncodedMetadata;
+	if (onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures))
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
+			bytes{0xa1} +
+			cborEncodedHash;
+	else
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
+			bytes{0xa2} +
+			cborEncodedHash +
+			bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
@@ -795,8 +828,8 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = contractABI(_contract);
-	meta["output"]["userdoc"] = natspec(_contract, DocumentationType::NatspecUser);
-	meta["output"]["devdoc"] = natspec(_contract, DocumentationType::NatspecDev);
+	meta["output"]["userdoc"] = natspecUser(_contract);
+	meta["output"]["devdoc"] = natspecDev(_contract);
 
 	return jsonCompactPrint(meta);
 }

@@ -339,6 +339,14 @@ BOOST_AUTO_TEST_CASE(blocks)
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
 }
 
+BOOST_AUTO_TEST_CASE(number_literals)
+{
+	BOOST_CHECK(successParse("{ let x := 1 }"));
+	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
+	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
+	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
+}
+
 BOOST_AUTO_TEST_CASE(function_definitions)
 {
 	BOOST_CHECK(successParse("{ function f() { } function g(a) -> x { } }"));
@@ -391,6 +399,20 @@ BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 {
 	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (\"mul\" expects 2 arguments)");
 }
+
+BOOST_AUTO_TEST_CASE(recursion_depth)
+{
+	string input;
+	for (size_t i = 0; i < 20000; i++)
+		input += "{";
+	input += "let x := 0";
+	for (size_t i = 0; i < 20000; i++)
+		input += "}";
+
+	CHECK_PARSE_ERROR(input, ParserError, "recursion");
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

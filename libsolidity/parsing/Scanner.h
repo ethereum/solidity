@@ -75,7 +75,7 @@ public:
 	int position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
-	char advanceAndGet(size_t _chars=1);
+	char advanceAndGet(size_t _chars = 1);
 	char rollback(size_t _amount);
 
 	void reset() { m_position = 0; }
@@ -118,11 +118,11 @@ public:
 	///@name Information about the current token
 
 	/// @returns the current token
-	Token::Value currentToken()
+	Token::Value currentToken() const
 	{
 		return m_currentToken.token;
 	}
-	ElementaryTypeNameToken currentElementaryTypeNameToken()
+	ElementaryTypeNameToken currentElementaryTypeNameToken() const
 	{
 		unsigned firstSize;
 		unsigned secondSize;
@@ -219,8 +219,8 @@ private:
 	bool scanEscape();
 
 	/// Return the current source position.
-	int sourcePos() { return m_source.position(); }
-	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
+	int sourcePos() const { return m_source.position(); }
+	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment
 	TokenDesc m_nextSkippedComment; // desc for next skiped comment

@@ -1,3 +1,33 @@
+### 0.4.16 (2017-08-24)
+
+Features:
+ * ABI JSON: Include new field ``stateMutability`` with values ``pure``, ``view``,
+   ``nonpayable`` and ``payable``.
+ * Analyzer: Experimental partial support for Z3 SMT checker ("SMTChecker").
+ * Build System: Shared libraries (``libdevcore``, ``libevmasm``, ``libsolidity``
+   and ``liblll``) are no longer produced during the build process.
+ * Code generator: Experimental new implementation of ABI encoder that can
+   encode arbitrarily nested arrays ("ABIEncoderV2")
+ * Metadata: Store experimental flag in metadata CBOR.
+ * Parser: Display previous visibility specifier in error if multiple are found.
+ * Parser: Introduce ``pure`` and ``view`` keyword for functions,
+   ``constant`` remains an alias for ``view`` and pureness is not enforced yet,
+   so use with care.
+ * Static Analyzer: Warn about large storage structures.
+ * Syntax Checker: Support ``pragma experimental <feature>;`` to turn on
+   experimental features.
+ * Type Checker: More detailed error message for invalid overrides.
+ * Type Checker: Warn about shifting a literal.
+
+Bugfixes:
+ * Assembly Parser: Be more strict about number literals.
+ * Assembly Parser: Limit maximum recursion depth.
+ * Parser: Enforce commas between array and tuple elements.
+ * Parser: Limit maximum recursion depth.
+ * Type Checker: Crash fix related to ``using``.
+ * Type Checker: Disallow constructors in libraries.
+ * Type Checker: Reject the creation of interface contracts using the ``new`` statement.
+
 ### 0.4.15 (2017-08-08)
 
 Features:

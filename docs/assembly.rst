@@ -96,6 +96,31 @@ you really know what you are doing.
                 }
             }
         }
+
+        // Same as above, but accomplish the entire code within inline assembly.
+        function sumPureAsm(uint[] _data) returns (uint o_sum) {
+            assembly {
+               // Load the length (first 32 bytes)
+               let len := mload(_data)
+
+               // Skip over the length field.
+               //
+               // Keep temporary variable so it can be incremented in place.
+               //
+               // NOTE: incrementing _data would result in an unusable
+               //       _data variable after this assembly block
+               let data := add(_data, 0x20)
+
+               // Iterate until the bound is not met.
+               for
+                   { let end := add(data, len) }
+                   lt(data, end)
+                   { data := add(data, 0x20) }
+               {
+                   o_sum := add(o_sum, mload(data))
+               }
+            }
+        }
     }
 
 
@@ -125,7 +150,7 @@ following list can be used as a reference of its opcodes.
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
-special and all others push exactly one item onte the stack.
+special and all others push exactly one item onto the stack.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 (excluding) position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
@@ -544,6 +569,20 @@ The following example computes the sum of an area in memory.
             x := add(x, mload(i))
         }
     }
+
+For loops can also be written so that they behave like while loops:
+Simply leave the initialization and post-iteration parts empty.
+
+.. code::
+
+    {
+        let x := 0
+        let i := 0
+        for { } lt(i, 0x100) { } {     // while(i < 0x100)
+            x := add(x, mload(i))
+            i := add(i, 0x20)
+        }
+    } 
 
 Functions
 ---------

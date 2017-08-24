@@ -898,25 +898,46 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 		contract c {
 			uint private internal a;
 		})";
-	CHECK_PARSE_ERROR(text, "Visibility already specified");
+	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
+	text = R"(
+		contract c {
+			function f() private external {}
+		})";
+	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
 }
 
-BOOST_AUTO_TEST_CASE(multiple_payable_specifiers)
+BOOST_AUTO_TEST_CASE(multiple_statemutability_specifiers)
 {
 	char const* text = R"(
 		contract c {
 			function f() payable payable {}
 		})";
-	CHECK_PARSE_ERROR(text, "Multiple \"payable\" specifiers.");
-}
-
-BOOST_AUTO_TEST_CASE(multiple_constant_specifiers)
-{
-	char const* text = R"(
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");
+	text = R"(
 		contract c {
 			function f() constant constant {}
 		})";
-	CHECK_PARSE_ERROR(text, "Multiple \"constant\" specifiers.");
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
+	text = R"(
+		contract c {
+			function f() constant view {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
+	text = R"(
+		contract c {
+			function f() payable constant {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");
+	text = R"(
+		contract c {
+			function f() pure payable {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
+	text = R"(
+		contract c {
+			function f() pure constant {}
+		})";
+	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
 }
 
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
@@ -1182,6 +1203,18 @@ BOOST_AUTO_TEST_CASE(tuples)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(tuples_without_commas)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				var a = (2 2);
+			}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token Comma");
+}
+
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 {
 	char const* text = R"(
@@ -1343,6 +1376,42 @@ BOOST_AUTO_TEST_CASE(conditional_with_assignment)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(recursion_depth1)
+{
+	string text("contract C { bytes");
+	for (size_t i = 0; i < 30000; i++)
+		text += "[";
+	CHECK_PARSE_ERROR(text.c_str(), "Maximum recursion depth reached during parsing");
+}
+
+BOOST_AUTO_TEST_CASE(recursion_depth2)
+{
+	string text("contract C { function f() {");
+	for (size_t i = 0; i < 30000; i++)
+		text += "{";
+	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
+}
+
+BOOST_AUTO_TEST_CASE(recursion_depth3)
+{
+	string text("contract C { function f() { uint x = f(");
+	for (size_t i = 0; i < 30000; i++)
+		text += "(";
+	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
+}
+
+BOOST_AUTO_TEST_CASE(recursion_depth4)
+{
+	string text("contract C { function f() { uint a;");
+	for (size_t i = 0; i < 30000; i++)
+		text += "(";
+	text += "a";
+	for (size_t i = 0; i < 30000; i++)
+		text += "++)";
+	text += "}}";
+	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
 }
 
 BOOST_AUTO_TEST_CASE(declaring_fixed_and_ufixed_variables)

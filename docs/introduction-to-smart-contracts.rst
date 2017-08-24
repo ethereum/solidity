@@ -35,7 +35,7 @@ Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.5.0). This is to ensure that the
 contract does not suddenly behave differently with a new compiler version. The keyword ``pragma`` is called that way because, in general,
 pragmas are instructions for the compiler about how to treat the
-source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).  .
+source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
 
 A contract in the sense of Solidity is a collection of code (its *functions*) and
 data (its *state*) that resides at a specific address on the Ethereum
@@ -133,7 +133,7 @@ too far, though, as it is neither possible to obtain a list of all keys of
 a mapping, nor a list of all values. So either keep in mind (or
 better, keep a list or use a more advanced data type) what you
 added to the mapping or use it in a context where this is not needed,
-like this one. The getter function created by the ``public`` keyword
+like this one. The :ref:`getter function<getter-functions>` created by the ``public`` keyword
 is a bit more complex in this case. It roughly looks like the
 following::
 

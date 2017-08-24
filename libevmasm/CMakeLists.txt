@@ -1,14 +1,5 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
+file(GLOB sources "*.cpp")
+file(GLOB headers "*.h")
 
-aux_source_directory(. SRC_LIST)
-
-set(EXECUTABLE solevmasm)
-
-file(GLOB HEADERS "*.h")
-
-include_directories(BEFORE ..)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-eth_use(${EXECUTABLE} REQUIRED Dev::soldevcore)
-target_link_libraries(${EXECUTABLE} jsoncpp)
-
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+add_library(evmasm ${sources} ${headers})
+target_link_libraries(evmasm PUBLIC devcore jsoncpp)

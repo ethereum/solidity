@@ -70,7 +70,7 @@ Scope::Identifier* Scope::lookup(string const& _name)
 	return nullptr;
 }
 
-bool Scope::exists(string const& _name)
+bool Scope::exists(string const& _name) const
 {
 	if (identifiers.count(_name))
 		return true;

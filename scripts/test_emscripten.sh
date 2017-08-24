@@ -28,7 +28,7 @@
 
 set -e
 
-REPO_ROOT="$(dirname "$0")"/..
+REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 
 cd $REPO_ROOT/build
 
@@ -51,3 +51,6 @@ npm version $VERSION
 
 echo "Running solc-js tests..."
 npm run test
+
+echo "Running external tests...."
+"$REPO_ROOT"/test/externalTests.sh "$REPO_ROOT"/build/solc/soljson.js

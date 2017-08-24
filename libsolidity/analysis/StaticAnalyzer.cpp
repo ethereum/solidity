@@ -57,6 +57,8 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	m_constructor = _function.isConstructor();
+	if (_function.stateMutability() == StateMutability::Pure)
+		m_errorReporter.warning(_function.location(), "Function is marked pure. Be careful, pureness is not enforced yet.");
 	return true;
 }
 
@@ -91,6 +93,17 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 		if (_variable.name() != "")
 			// This is not a no-op, the entry might pre-exist.
 			m_localVarUseCount[&_variable] += 0;
+	}
+	else if (_variable.isStateVariable())
+	{
+		set<StructDefinition const*> structsSeen;
+		if (structureSizeEstimate(*_variable.type(), structsSeen) >= bigint(1) << 64)
+			m_errorReporter.warning(
+				_variable.location(),
+				"Variable covers a large part of storage and thus makes collisions likely. "
+				"Either use mappings or dynamic arrays and allow their size to be increased only "
+				"in small quantities per transaction."
+			);
 	}
 	return true;
 }
@@ -159,4 +172,35 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 	}
 
 	return true;
+}
+
+bigint StaticAnalyzer::structureSizeEstimate(Type const& _type, set<StructDefinition const*>& _structsSeen)
+{
+	switch (_type.category())
+	{
+	case Type::Category::Array:
+	{
+		auto const& t = dynamic_cast<ArrayType const&>(_type);
+		return structureSizeEstimate(*t.baseType(), _structsSeen) * (t.isDynamicallySized() ? 1 : t.length());
+	}
+	case Type::Category::Struct:
+	{
+		auto const& t = dynamic_cast<StructType const&>(_type);
+		bigint size = 1;
+		if (!_structsSeen.count(&t.structDefinition()))
+		{
+			_structsSeen.insert(&t.structDefinition());
+			for (auto const& m: t.members(nullptr))
+				size += structureSizeEstimate(*m.type, _structsSeen);
+		}
+		return size;
+	}
+	case Type::Category::Mapping:
+	{
+		return structureSizeEstimate(*dynamic_cast<MappingType const&>(_type).valueType(), _structsSeen);
+	}
+	default:
+		break;
+	}
+	return bigint(1);
 }

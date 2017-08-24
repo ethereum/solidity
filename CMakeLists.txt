@@ -8,18 +8,19 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.4.15")
+set(PROJECT_VERSION "0.4.16")
 project(solidity VERSION ${PROJECT_VERSION})
+
+option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 
 # Let's find our dependencies
 include(EthDependencies)
 include(deps/jsoncpp.cmake)
 
+find_package(Threads)
+
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
-
-# Include helper macros
-include(EthExecutableHelper)
 
 # Include utils
 include(EthUtils)

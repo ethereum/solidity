@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <boost/functional/hash.hpp>
+#include <boost/io/ios_state.hpp>
 #include "CommonData.h"
 
 namespace dev
@@ -59,7 +60,7 @@ public:
 	enum ConstructFromHashType { AlignLeft, AlignRight, FailIfDifferent };
 
 	/// Construct an empty hash.
-	FixedHash() { m_data.fill(0); }
+	explicit FixedHash() { m_data.fill(0); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
 	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
@@ -224,6 +225,7 @@ template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& va
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
+	boost::io::ios_all_saver guard(_out);
 	_out << std::noshowbase << std::hex << std::setfill('0');
 	for (unsigned i = 0; i < N; ++i)
 		_out << std::setw(2) << (int)_h[i];

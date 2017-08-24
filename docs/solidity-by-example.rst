@@ -126,7 +126,7 @@ of votes.
             // modifies `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
-            Voter delegate = voters[to];
+            Voter storage delegate = voters[to];
             if (delegate.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
@@ -467,7 +467,7 @@ high or low invalid bids.
                 }
                 // Make it impossible for the sender to re-claim
                 // the same deposit.
-                bid.blindedBid = 0;
+                bid.blindedBid = bytes32(0);
             }
             msg.sender.transfer(refund);
         }

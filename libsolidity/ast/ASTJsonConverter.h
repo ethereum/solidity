@@ -49,13 +49,16 @@ public:
 	);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream, ASTNode const& _node);
-	Json::Value toJson(ASTNode const& _node);
+	Json::Value&& toJson(ASTNode const& _node);
 	template <class T>
 	Json::Value toJson(std::vector<ASTPointer<T>> const& _nodes)
 	{
 		Json::Value ret(Json::arrayValue);
 		for (auto const& n: _nodes)
-			ret.append(n ? toJson(*n) : Json::nullValue);
+			if (n)
+				appendMove(ret, toJson(*n));
+			else
+				ret.append(Json::nullValue);
 		return ret;
 	}
 	bool visit(SourceUnit const& _node) override;
@@ -73,7 +76,6 @@ public:
 	bool visit(ModifierDefinition const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	bool visit(EventDefinition const& _node) override;
-	bool visit(TypeName const& _node) override;
 	bool visit(ElementaryTypeName const& _node) override;
 	bool visit(UserDefinedTypeName const& _node) override;
 	bool visit(FunctionTypeName const& _node) override;
@@ -119,7 +121,7 @@ private:
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
 	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
-	Json::Value idOrNull(ASTNode const* _pt)
+	static Json::Value idOrNull(ASTNode const* _pt)
 	{
 		return _pt ? Json::Value(nodeId(*_pt)) : Json::nullValue;
 	}
@@ -128,19 +130,18 @@ private:
 		return _node ? toJson(*_node) : Json::nullValue;
 	}
 	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info);
-	std::string visibility(Declaration::Visibility const& _visibility);
 	std::string location(VariableDeclaration::Location _location);
 	std::string contractKind(ContractDefinition::ContractKind _kind);
 	std::string functionCallKind(FunctionCallKind _kind);
 	std::string literalTokenKind(Token::Value _token);
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
-	int nodeId(ASTNode const& _node)
+	static int nodeId(ASTNode const& _node)
 	{
 		return _node.id();
 	}
 	template<class Container>
-	Json::Value getContainerIds(Container const& container)
+	static Json::Value getContainerIds(Container const& container)
 	{
 		Json::Value tmp(Json::arrayValue);
 		for (auto const& element: container)
@@ -156,6 +157,12 @@ private:
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,
 		ExpressionAnnotation const& _annotation
 	);
+	static void appendMove(Json::Value& _array, Json::Value&& _value)
+	{
+		solAssert(_array.isArray(), "");
+		_array.append(std::move(_value));
+	}
+
 	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;

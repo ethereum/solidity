@@ -1,0 +1,10 @@
+version: 2
+jobs:
+  build:
+    branches:
+      ignore:
+        - /.*/
+    docker:
+      - image: trzeci/emscripten:sdk-tag-1.37.18-64bit
+    steps:
+      - checkout

@@ -477,8 +477,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, false, true)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, false, true)},
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
+			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
@@ -525,19 +525,20 @@ bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 {
-	// "delete" is ok for all fixed types
-	if (_operator == Token::Delete)
+	switch(_operator)
+	{
+	case Token::Delete:
+		// "delete" is ok for all fixed types
 		return make_shared<TupleType>();
-	// for fixed, we allow +, -, ++ and --
-	else if (
-		_operator == Token::Add || 
-		_operator == Token::Sub ||
-		_operator == Token::Inc || 
-		_operator == Token::Dec
-	)
+	case Token::Add:
+	case Token::Sub:
+	case Token::Inc:
+	case Token::Dec:
+		// for fixed, we allow +, -, ++ and --
 		return shared_from_this();
-	else
+	default:
 		return TypePointer();
+	}
 }
 
 bool FixedPointType::operator==(Type const& _other) const
@@ -738,18 +739,18 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() == Category::Integer)
 	{
-		auto targetType = dynamic_cast<IntegerType const*>(&_convertTo);
 		if (m_value == rational(0))
 			return true;
 		if (isFractional())
 			return false;
-		int forSignBit = (targetType->isSigned() ? 1 : 0);
+		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
+		int forSignBit = (targetType.isSigned() ? 1 : 0);
 		if (m_value > rational(0))
 		{
-			if (m_value.numerator() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
+			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
 				return true;
 		}
-		else if (targetType->isSigned() && -m_value.numerator() <= (u256(1) << (targetType->numBits() - forSignBit)))
+		else if (targetType.isSigned() && -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
 			return true;
 		return false;
 	}
@@ -1408,6 +1409,11 @@ unsigned ArrayType::calldataEncodedSize(bool _padded) const
 	return unsigned(size);
 }
 
+bool ArrayType::isDynamicallyEncoded() const
+{
+	return isDynamicallySized() || baseType()->isDynamicallyEncoded();
+}
+
 u256 ArrayType::storageSize() const
 {
 	if (isDynamicallySized())
@@ -1522,8 +1528,6 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 		return this->copyForLocation(DataLocation::Memory, true);
 	TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
 	if (!baseExt)
-		return TypePointer();
-	if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
@@ -1708,6 +1712,11 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 			size += memberSize;
 		}
 	return size;
+}
+
+bool StructType::isDynamicallyEncoded() const
+{
+	solAssert(false, "Structs are not yet supported in the ABI.");
 }
 
 u256 StructType::memorySize() const
@@ -1989,14 +1998,16 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_kind(_isInternal ? Kind::Internal : Kind::External),
-	m_isConstant(_function.isDeclaredConst()),
-	m_isPayable(_isInternal ? false : _function.isPayable()),
+	m_stateMutability(_function.stateMutability()),
 	m_declaration(&_function)
 {
 	TypePointers params;
 	vector<string> paramNames;
 	TypePointers retParams;
 	vector<string> retParamNames;
+
+	if (_isInternal && m_stateMutability == StateMutability::Payable)
+		m_stateMutability = StateMutability::NonPayable;
 
 	params.reserve(_function.parameters().size());
 	paramNames.reserve(_function.parameters().size());
@@ -2019,7 +2030,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_kind(Kind::External), m_isConstant(true), m_declaration(&_varDecl)
+	m_kind(Kind::External), m_stateMutability(StateMutability::View), m_declaration(&_varDecl)
 {
 	TypePointers paramTypes;
 	vector<string> paramNames;
@@ -2079,7 +2090,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
-	m_kind(Kind::Event), m_isConstant(true), m_declaration(&_event)
+	m_kind(Kind::Event), m_stateMutability(StateMutability::View), m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -2096,14 +2107,10 @@ FunctionType::FunctionType(EventDefinition const& _event):
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
-	m_isConstant(_typeName.isDeclaredConst()),
-	m_isPayable(_typeName.isPayable())
+	m_stateMutability(_typeName.stateMutability())
 {
 	if (_typeName.isPayable())
-	{
 		solAssert(m_kind == Kind::External, "Internal payable function type used.");
-		solAssert(!m_isConstant, "Payable constant function");
-	}
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
@@ -2131,7 +2138,9 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 	FunctionDefinition const* constructor = _contract.constructor();
 	TypePointers parameters;
 	strings parameterNames;
-	bool payable = false;
+	StateMutability stateMutability = StateMutability::NonPayable;
+
+	solAssert(_contract.contractKind() != ContractDefinition::ContractKind::Interface, "");
 
 	if (constructor)
 	{
@@ -2140,8 +2149,10 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 			parameterNames.push_back(var->name());
 			parameters.push_back(var->annotation().type);
 		}
-		payable = constructor->isPayable();
+		if (constructor->isPayable())
+			stateMutability = StateMutability::Payable;
 	}
+
 	return make_shared<FunctionType>(
 		parameters,
 		TypePointers{make_shared<ContractType>(_contract)},
@@ -2150,8 +2161,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		Kind::Creation,
 		false,
 		nullptr,
-		false,
-		payable
+		stateMutability
 	);
 }
 
@@ -2208,8 +2218,7 @@ string FunctionType::identifier() const
 	case Kind::Require: id += "require";break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
-	if (isConstant())
-		id += "_constant";
+	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
 	if (m_gasSet)
 		id += "gas";
@@ -2224,23 +2233,21 @@ bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
+
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
+	if (
+		m_kind != other.m_kind ||
+		m_stateMutability != other.stateMutability() ||
+		m_parameterTypes.size() != other.m_parameterTypes.size() ||
+		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
+	)
+		return false;
 
-	if (m_kind != other.m_kind)
-		return false;
-	if (m_isConstant != other.isConstant())
-		return false;
-
-	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
-			m_returnParameterTypes.size() != other.m_returnParameterTypes.size())
-		return false;
 	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
-
-	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
-			   other.m_parameterTypes.cbegin(), typeCompare))
-		return false;
-	if (!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(),
-			   other.m_returnParameterTypes.cbegin(), typeCompare))
+	if (
+		!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(), other.m_parameterTypes.cbegin(), typeCompare) ||
+		!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(), other.m_returnParameterTypes.cbegin(), typeCompare)
+	)
 		return false;
 	//@todo this is ugly, but cannot be prevented right now
 	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
@@ -2292,10 +2299,8 @@ string FunctionType::toString(bool _short) const
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
-	if (m_isConstant)
-		name += " constant";
-	if (m_isPayable)
-		name += " payable";
+	if (m_stateMutability != StateMutability::NonPayable)
+		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
 		name += " external";
 	if (!m_returnParameterTypes.empty())
@@ -2344,14 +2349,26 @@ unsigned FunctionType::sizeOnStack() const
 	}
 
 	unsigned size = 0;
-	if (kind == Kind::External || kind == Kind::CallCode || kind == Kind::DelegateCall)
+
+	switch(kind)
+	{
+	case Kind::External:
+	case Kind::CallCode:
+	case Kind::DelegateCall:
 		size = 2;
-	else if (kind == Kind::BareCall || kind == Kind::BareCallCode || kind == Kind::BareDelegateCall)
+		break;
+	case Kind::BareCall:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
+	case Kind::Internal:
+	case Kind::ArrayPush:
+	case Kind::ByteArrayPush:
 		size = 1;
-	else if (kind == Kind::Internal)
-		size = 1;
-	else if (kind == Kind::ArrayPush || kind == Kind::ByteArrayPush)
-		size = 1;
+		break;
+	default:
+		break;
+	}
+
 	if (m_gasSet)
 		size++;
 	if (m_valueSet)
@@ -2389,10 +2406,14 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		return FunctionTypePointer();
 
 	return make_shared<FunctionType>(
-		paramTypes, retParamTypes,
-		m_parameterNames, m_returnParameterNames,
-		m_kind, m_arbitraryParameters,
-		m_declaration, m_isConstant, m_isPayable
+		paramTypes,
+		retParamTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_kind,
+		m_arbitraryParameters,
+		m_declaration,
+		m_stateMutability
 	);
 }
 
@@ -2409,7 +2430,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 		MemberList::MemberMap members;
 		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
 		{
-			if (m_isPayable)
+			if (isPayable())
 				members.push_back(MemberList::Member(
 					"value",
 					make_shared<FunctionType>(
@@ -2420,8 +2441,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						Kind::SetValue,
 						false,
 						nullptr,
-						false,
-						false,
+						StateMutability::NonPayable,
 						m_gasSet,
 						m_valueSet
 					)
@@ -2438,8 +2458,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					Kind::SetGas,
 					false,
 					nullptr,
-					false,
-					false,
+					StateMutability::NonPayable,
 					m_gasSet,
 					m_valueSet
 				)
@@ -2575,8 +2594,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_kind,
 		m_arbitraryParameters,
 		m_declaration,
-		m_isConstant,
-		m_isPayable,
+		m_stateMutability,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
 		m_bound
@@ -2625,8 +2643,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		kind,
 		m_arbitraryParameters,
 		m_declaration,
-		m_isConstant,
-		m_isPayable,
+		m_stateMutability,
 		m_gasSet,
 		m_valueSet,
 		_bound

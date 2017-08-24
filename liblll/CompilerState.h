@@ -40,7 +40,7 @@ struct CompilerState
 {
 	CompilerState();
 
-	CodeFragment const& getDef(std::string const& _s);
+	CodeFragment const& getDef(std::string const& _s) const;
 	void populateStandard();
 
 	unsigned stackSize = 128;

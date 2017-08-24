@@ -25,6 +25,7 @@
 #include <libevmasm/Instruction.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libsolidity/codegen/ABIFunctions.h>
 
 using namespace std;
 
@@ -182,6 +183,18 @@ void CompilerUtils::encodeToMemory(
 
 	if (_givenTypes.empty())
 		return;
+	else if (
+		_padToWordBoundaries &&
+		!_copyDynamicDataInPlace &&
+		m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+	)
+	{
+		// Use the new JULIA-based encoding function
+		auto stackHeightBefore = m_context.stackHeight();
+		abiEncode(_givenTypes, targetTypes, _encodeAsLibraryTypes);
+		solAssert(stackHeightBefore - m_context.stackHeight() == sizeOnStack(_givenTypes), "");
+		return;
+	}
 
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>
@@ -287,6 +300,28 @@ void CompilerUtils::encodeToMemory(
 	// remove unneeded stack elements (and retain memory pointer)
 	m_context << swapInstruction(argSize + dynPointers + 1);
 	popStackSlots(argSize + dynPointers + 1);
+}
+
+void CompilerUtils::abiEncode(
+	TypePointers const& _givenTypes,
+	TypePointers const& _targetTypes,
+	bool _encodeAsLibraryTypes
+)
+{
+	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
+
+	vector<string> variables;
+	size_t numValues = sizeOnStack(_givenTypes);
+	for (size_t i = 0; i < numValues; ++i)
+			variables.push_back("$value" + to_string(i));
+	variables.push_back("$headStart");
+
+	ABIFunctions funs;
+	string routine = funs.tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
+	routine += funs.requestedFunctions();
+	m_context.appendInlineAssembly("{" + routine + "}", variables);
+	// Remove everyhing except for "value0" / the final memory pointer.
+	popStackSlots(numValues);
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)

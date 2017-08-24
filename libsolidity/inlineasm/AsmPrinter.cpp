@@ -209,7 +209,7 @@ string AsmPrinter::operator()(Block const& _block)
 	return "{\n    " + body + "\n}";
 }
 
-string AsmPrinter::appendTypeName(std::string const& _type)
+string AsmPrinter::appendTypeName(std::string const& _type) const
 {
 	if (m_julia)
 		return ":" + _type;

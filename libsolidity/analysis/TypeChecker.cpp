@@ -84,8 +84,13 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	{
 		if (!function->returnParameters().empty())
 			m_errorReporter.typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-		if (function->isDeclaredConst())
-			m_errorReporter.typeError(function->location(), "Constructor cannot be defined as constant.");
+		if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
+			m_errorReporter.typeError(
+				function->location(),
+				"Constructor must be payable or non-payable, but is \"" +
+				stateMutabilityToString(function->stateMutability()) +
+				"\"."
+			);
 		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
 			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
 	}
@@ -104,8 +109,13 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				fallbackFunction = function;
 				if (_contract.isLibrary())
 					m_errorReporter.typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
-				if (fallbackFunction->isDeclaredConst())
-					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function cannot be declared constant.");
+				if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
+					m_errorReporter.typeError(
+						function->location(),
+						"Fallback function must be payable or non-payable, but is \"" +
+						stateMutabilityToString(function->stateMutability()) +
+						"\"."
+				);
 				if (!fallbackFunction->parameters().empty())
 					m_errorReporter.typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
@@ -277,21 +287,10 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 			string const& name = function->name();
 			if (modifiers.count(name))
 				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-			FunctionType functionType(*function);
-			// function should not change the return type
+
 			for (FunctionDefinition const* overriding: functions[name])
-			{
-				FunctionType overridingType(*overriding);
-				if (!overridingType.hasEqualArgumentTypes(functionType))
-					continue;
-				if (
-					overriding->visibility() != function->visibility() ||
-					overriding->isDeclaredConst() != function->isDeclaredConst() ||
-					overriding->isPayable() != function->isPayable() ||
-					overridingType != functionType
-				)
-					m_errorReporter.typeError(overriding->location(), "Override changes extended function signature.");
-			}
+				checkFunctionOverride(*overriding, *function);
+
 			functions[name].push_back(function);
 		}
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
@@ -306,6 +305,41 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
 		}
 	}
+}
+
+void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
+{
+	FunctionType functionType(function);
+	FunctionType superType(super);
+
+	if (!functionType.hasEqualArgumentTypes(superType))
+		return;
+
+	if (function.visibility() != super.visibility())
+		overrideError(function, super, "Overriding function visibility differs.");
+
+	else if (function.stateMutability() != super.stateMutability())
+		overrideError(
+			function,
+			super,
+			"Overriding function changes state mutability from \"" +
+			stateMutabilityToString(super.stateMutability()) +
+			"\" to \"" +
+			stateMutabilityToString(function.stateMutability()) +
+			"\"."
+		);
+
+	else if (functionType != superType)
+		overrideError(function, super, "Overriding function return types differ.");
+}
+
+void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
+{
+	m_errorReporter.typeError(
+		function.location(),
+		SecondarySourceLocation().append("Overriden function is here:", super.location()),
+		message
+	);
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
@@ -396,7 +430,11 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
 	auto const& arguments = _inheritance.arguments();
-	TypePointers parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+	TypePointers parameterTypes;
+	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
+		// Interfaces do not have constructors, so there are zero parameters.
+		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
+
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
 	{
 		m_errorReporter.typeError(
@@ -429,7 +467,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		_usingFor.libraryName().annotation().referencedDeclaration
 	);
 	if (!library || !library->isLibrary())
-		m_errorReporter.typeError(_usingFor.libraryName().location(), "Library name expected.");
+		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
 bool TypeChecker::visit(StructDefinition const& _struct)
@@ -475,8 +513,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.typeError(_function.location(), "Library functions cannot be payable.");
 		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
-		if (_function.isDeclaredConst())
-			m_errorReporter.typeError(_function.location(), "Functions cannot be constant and payable at the same time.");
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
@@ -514,6 +550,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
 	}
+	else if (m_scope->contractKind() == ContractDefinition::ContractKind::Library)
+		if (_function.isConstructor())
+			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in libraries.");
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
@@ -1282,8 +1321,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		_operation.leftExpression().annotation().isPure &&
 		_operation.rightExpression().annotation().isPure;
 
-	if (_operation.getOperator() == Token::Exp)
+	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
+		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
 		if (
 			leftType->category() == Type::Category::RationalNumber &&
 			rightType->category() != Type::Category::RationalNumber
@@ -1297,7 +1337,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			))
 				m_errorReporter.warning(
 					_operation.location(),
-					"Result of exponentiation has type " + commonType->toString() + " and thus "
+					"Result of " + operation + " has type " + commonType->toString() + " and thus "
 					"might overflow. Silence this warning by converting the literal to the "
 					"expected type."
 				);
@@ -1518,6 +1558,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
+		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
+				m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
 			m_errorReporter.typeError(
 				_newExpression.location(),
@@ -1949,4 +1991,3 @@ void TypeChecker::requireLValue(Expression const& _expression)
 	else if (!_expression.annotation().isLValue)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
 }
-

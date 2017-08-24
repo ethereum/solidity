@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/ExperimentalFeatures.h>
 
 #include <map>
 #include <memory>
@@ -61,6 +62,8 @@ struct SourceUnitAnnotation: ASTAnnotation
 	std::string path;
 	/// The exported symbols (all global symbols).
 	std::map<ASTString, std::vector<Declaration const*>> exportedSymbols;
+	/// Experimental features.
+	std::set<ExperimentalFeature> experimentalFeatures;
 };
 
 struct ImportAnnotation: ASTAnnotation

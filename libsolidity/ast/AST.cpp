@@ -22,6 +22,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>
@@ -188,7 +189,6 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 {
 	if (!m_interfaceFunctionList)
 	{
-		set<string> functionsSeen;
 		set<string> signaturesSeen;
 		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionTypePointer>>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
@@ -369,6 +369,15 @@ TypePointer FunctionDefinition::type() const
 string FunctionDefinition::externalSignature() const
 {
 	return FunctionType(*this).externalSignature();
+}
+
+string FunctionDefinition::fullyQualifiedName() const
+{
+	auto const* contract = dynamic_cast<ContractDefinition const*>(scope());
+	solAssert(contract, "Enclosing scope of function definition was not set.");
+
+	auto fname = name().empty() ? "<fallback>" : name();
+	return sourceUnitName() + ":" + contract->name() + "." + fname;
 }
 
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const

@@ -21,7 +21,6 @@
 
 #include <string>
 #include <iostream>
-#include <regex>
 #include <libdevcore/JSON.h>
 
 using namespace std;

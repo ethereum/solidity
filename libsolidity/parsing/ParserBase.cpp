@@ -101,6 +101,19 @@ void ParserBase::expectToken(Token::Value _value)
 	m_scanner->next();
 }
 
+void ParserBase::increaseRecursionDepth()
+{
+	m_recursionDepth++;
+	if (m_recursionDepth >= 3000)
+		fatalParserError("Maximum recursion depth reached during parsing.");
+}
+
+void ParserBase::decreaseRecursionDepth()
+{
+	solAssert(m_recursionDepth > 0, "");
+	m_recursionDepth--;
+}
+
 void ParserBase::parserError(string const& _description)
 {
 	m_errorReporter.parserError(SourceLocation(position(), position(), sourceName()), _description);

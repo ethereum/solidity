@@ -214,6 +214,14 @@ BOOST_AUTO_TEST_CASE(invalid_types)
 	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
 }
 
+BOOST_AUTO_TEST_CASE(number_literals)
+{
+	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
+	CHECK_ERROR("{ let x:u256 := .1:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 1e5:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 67.235:u256 }", ParserError, "Invalid number literal.");
+}
+
 BOOST_AUTO_TEST_CASE(builtin_types)
 {
 	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));
@@ -227,6 +235,18 @@ BOOST_AUTO_TEST_CASE(builtin_types)
 	BOOST_CHECK(successParse("{ let x:s128 := 1:s128 }"));
 	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
 	BOOST_CHECK(successParse("{ let x:s256 := 1:s256 }"));
+}
+
+BOOST_AUTO_TEST_CASE(recursion_depth)
+{
+	string input;
+	for (size_t i = 0; i < 20000; i++)
+		input += "{";
+	input += "let x:u256 := 0:u256";
+	for (size_t i = 0; i < 20000; i++)
+		input += "}";
+
+	CHECK_ERROR(input, ParserError, "recursion");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

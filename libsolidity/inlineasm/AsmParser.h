@@ -45,7 +45,7 @@ public:
 
 protected:
 	/// Creates an inline assembly node with the given source location.
-	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation())
+	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation()) const
 	{
 		T r;
 		r.location = _loc;
@@ -74,6 +74,8 @@ protected:
 	Statement parseCall(Statement&& _instruction);
 	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
+
+	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
 	bool m_julia = false;

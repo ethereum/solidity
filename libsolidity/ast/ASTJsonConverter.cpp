@@ -15,8 +15,7 @@
     along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Lefteris <lefteris@ethdev.com>
- * @date 2015
+ * @date 2017
  * Converts the AST into json format
  */
 
@@ -81,28 +80,30 @@ void ASTJsonConverter::setJsonNode(
 			(_nodeType == "InlineAssembly") ||
 			(_nodeType == "Throw")
 		)
-		{
-			Json::Value children(Json::arrayValue);
-			m_currentValue["children"] = children;
-		}
+			m_currentValue["children"] = Json::arrayValue;
 
 		for (auto& e: _attributes)
 		{
-			if (
-				(!e.second.isNull()) &&
-					(
-					(e.second.isObject() && e.second.isMember("name")) ||
-					(e.second.isArray() && e.second[0].isObject() && e.second[0].isMember("name")) ||
-					(e.first == "declarations") // (in the case (_,x)= ... there's a nullpointer at [0]
-					)
-			)
+			if ((!e.second.isNull()) && (
+				(e.second.isObject() && e.second.isMember("name")) ||
+				(e.second.isArray() && e.second[0].isObject() && e.second[0].isMember("name")) ||
+				(e.first == "declarations") // (in the case (_,x)= ... there's a nullpointer at [0]
+			))
 			{
 				if (e.second.isObject())
-					m_currentValue["children"].append(std::move(e.second));
+				{
+					if (!m_currentValue["children"].isArray())
+						m_currentValue["children"] = Json::arrayValue;
+					appendMove(m_currentValue["children"], std::move(e.second));
+				}
 				if (e.second.isArray())
 					for (auto& child: e.second)
 						if (!child.isNull())
-							m_currentValue["children"].append(std::move(child));
+						{
+							if (!m_currentValue["children"].isArray())
+								m_currentValue["children"] = Json::arrayValue;
+							appendMove(m_currentValue["children"], std::move(child));
+						}
 			}
 			else
 			{
@@ -147,7 +148,7 @@ Json::Value ASTJsonConverter::typePointerToJson(std::shared_ptr<std::vector<Type
 	{
 		Json::Value arguments(Json::arrayValue);
 		for (auto const& tp: *_tps)
-			arguments.append(typePointerToJson(tp));
+			appendMove(arguments, typePointerToJson(tp));
 		return arguments;
 	}
 	else
@@ -186,7 +187,7 @@ void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 	_stream << toJson(_node);
 }
 
-Json::Value ASTJsonConverter::toJson(ASTNode const& _node)
+Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)
 {
 	_node.accept(*this);
 	return std::move(m_currentValue);
@@ -285,7 +286,7 @@ bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
 	setJsonNode(_node, "StructDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("canonicalName", _node.annotation().canonicalName),
 		make_pair("members", toJson(_node.members())),
 		make_pair("scope", idOrNull(_node.scope()))
@@ -323,9 +324,11 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
-		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
+		// FIXME: remove with next breaking release
+		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() <= StateMutability::View),
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("isConstructor", _node.isConstructor()),
 		make_pair("returnParameters", toJson(*_node.returnParameterList())),
@@ -346,7 +349,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("constant", _node.isConstant()),
 		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("value", _node.value() ? toJson(*_node.value()) : Json::nullValue),
 		make_pair("scope", idOrNull(_node.scope())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type))
@@ -361,7 +364,7 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 {
 	setJsonNode(_node, "ModifierDefinition", {
 		make_pair("name", _node.name()),
-		make_pair("visibility", visibility(_node.visibility())),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("body", toJson(_node.body()))
 	});
@@ -374,12 +377,6 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 		make_pair("modifierName", toJson(*_node.name())),
 		make_pair("arguments", toJson(_node.arguments()))
 	});
-	return false;
-}
-
-bool ASTJsonConverter::visit(TypeName const&)
-{
-	solAssert(false, "AST node of abstract type used.");
 	return false;
 }
 
@@ -418,8 +415,10 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 {
 	setJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
-		make_pair("visibility", visibility(_node.visibility())),
-		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.isDeclaredConst()),
+		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
+		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
+		// FIXME: remove with next breaking release
+		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() <= StateMutability::View),
 		make_pair("parameterTypes", toJson(*_node.parameterTypeList())),
 		make_pair("returnParameterTypes", toJson(*_node.returnParameterTypeList())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type))
@@ -545,7 +544,7 @@ bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 {
 	Json::Value varDecs(Json::arrayValue);
 	for (auto const& v: _node.annotation().assignments)
-		varDecs.append(idOrNull(v));
+		appendMove(varDecs, idOrNull(v));
 	setJsonNode(_node, "VariableDeclarationStatement", {
 		make_pair("assignments", std::move(varDecs)),
 		make_pair("declarations", toJson(_node.declarations())),
@@ -728,23 +727,6 @@ bool ASTJsonConverter::visit(Literal const& _node)
 void ASTJsonConverter::endVisit(EventDefinition const&)
 {
 	m_inEvent = false;
-}
-
-string ASTJsonConverter::visibility(Declaration::Visibility const& _visibility)
-{
-	switch (_visibility)
-	{
-	case Declaration::Visibility::Private:
-		return "private";
-	case Declaration::Visibility::Internal:
-		return "internal";
-	case Declaration::Visibility::Public:
-		return "public";
-	case Declaration::Visibility::External:
-		return "external";
-	default:
-		solAssert(false, "Unknown declaration visibility.");
-	}
 }
 
 string ASTJsonConverter::location(VariableDeclaration::Location _location)

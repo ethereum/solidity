@@ -43,62 +43,9 @@ find_program(CTEST_COMMAND ctest)
 
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
+option(Boost_USE_STATIC_LIBS "Link Boost statically" ON)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-
-# use static boost libraries *.lib
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (APPLE)
-
-# use static boost libraries *.a
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (UNIX)
-# use dynamic boost libraries *.dll
-	set(Boost_USE_STATIC_LIBS OFF)
-
-endif()
-
-set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
-
-if (STATIC_LINKING)
-
-	set(Boost_USE_STATIC_LIBS ON)
-	set(Boost_USE_STATIC_RUNTIME ON)
-
-	set(OpenSSL_USE_STATIC_LIBS ON)
-
-	if (MSVC)
-		# TODO - Why would we need .a on Windows?  Maybe some Cygwin-ism.
-		# When I work through Windows static linkage, I will remove this,
-		# if that is possible.
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-	elseif (APPLE)
-		# At the time of writing, we are still only PARTIALLY statically linked
-		# on OS X, with a mixture of statically linked external libraries where
-		# those are available, and dynamically linked where that is the only
-		# option we have.    Ultimately, the aim would be for everything except
-		# the runtime libraries to be statically linked.
-		#
-		# Still TODO:
-		# - jsoncpp
-		# - json-rpc-cpp
-		# - leveldb (which pulls in snappy, for the dylib at ;east)
-		# - miniupnp
-		# - gmp
-		#
-		# Two further libraries (curl and zlib) ship as dylibs with the platform
-		# but again we could build from source and statically link these too.
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib)
-	else()
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-	endif()
-
-	set(ETH_STATIC ON)
-endif()
-
-find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
+find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS regex filesystem unit_test_framework program_options system)
 
 eth_show_dependency(Boost boost)
 
@@ -108,29 +55,3 @@ if (APPLE)
 endif()
 
 include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
-
-function(eth_use TARGET REQUIRED)
-	if (NOT TARGET ${TARGET})
-		message(FATAL_ERROR "eth_use called for non existing target ${TARGET}")
-	endif()
-
-	if (TARGET ${PROJECT_NAME}_BuildInfo.h)
-		add_dependencies(${TARGET} ${PROJECT_NAME}_BuildInfo.h)
-	endif()
-
-	foreach(MODULE ${ARGN})
-		string(REPLACE "::" ";" MODULE_PARTS "${MODULE}")
-		list(GET MODULE_PARTS 0 MODULE_MAIN)
-		list(LENGTH MODULE_PARTS MODULE_LENGTH)
-		if (MODULE_LENGTH GREATER 1)
-			list(GET MODULE_PARTS 1 MODULE_SUB)
-		endif()
-		# TODO: check if file exists if not, throws FATAL_ERROR with detailed description
-		get_target_property(TARGET_APPLIED ${TARGET} TARGET_APPLIED_${MODULE_MAIN}_${MODULE_SUB})
-		if (NOT TARGET_APPLIED)
-			include(Use${MODULE_MAIN})
-			set_target_properties(${TARGET} PROPERTIES TARGET_APPLIED_${MODULE_MAIN}_${MODULE_SUB} TRUE)
-			eth_apply(${TARGET} ${REQUIRED} ${MODULE_SUB})
-		endif()
-	endforeach()
-endfunction()

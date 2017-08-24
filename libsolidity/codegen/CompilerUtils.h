@@ -33,7 +33,7 @@ class Type; // forward
 class CompilerUtils
 {
 public:
-	CompilerUtils(CompilerContext& _context): m_context(_context) {}
+	explicit CompilerUtils(CompilerContext& _context): m_context(_context) {}
 
 	/// Stores the initial value of the free-memory-pointer at its position;
 	void initialiseFreeMemoryPointer();
@@ -100,6 +100,14 @@ public:
 		TypePointers const& _targetTypes = {},
 		bool _padToWords = true,
 		bool _copyDynamicDataInPlace = false,
+		bool _encodeAsLibraryTypes = false
+	);
+
+	/// Special case of @a encodeToMemory which assumes that everything is padded to words
+	/// and dynamic data is not copied in place (i.e. a proper ABI encoding).
+	void abiEncode(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false
 	);
 

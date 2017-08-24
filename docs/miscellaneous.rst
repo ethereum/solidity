@@ -494,22 +494,24 @@ Function Visibility Specifiers
         return true;
     }
 
-- ``public``: visible externally and internally (creates getter function for storage/state variables)
+- ``public``: visible externally and internally (creates a :ref:`getter function<getter-functions>` for storage/state variables)
 - ``private``: only visible in the current contract
 - ``external``: only visible externally (only for functions) - i.e. can only be message-called (via ``this.func``)
 - ``internal``: only visible internally
 
 
-.. index:: modifiers, constant, anonymous, indexed
+.. index:: modifiers, pure, view, payable, constant, anonymous, indexed
 
 Modifiers
 =========
 
+- ``pure`` for functions: Disallows modification or access of state - this is not enforced yet.
+- ``view`` for functions: Disallows modification of state - this is not enforced yet.
+- ``payable`` for functions: Allows them to receive Ether together with a call.
 - ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``constant`` for functions: Disallows modification of state - this is not enforced yet.
+- ``constant`` for functions: Same as ``view``.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
-- ``payable`` for functions: Allows them to receive Ether together with a call.
 
 Reserved Keywords
 =================

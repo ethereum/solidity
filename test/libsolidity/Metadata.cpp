@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	// Check that the metadata stamp is at the end of the runtime bytecode.
 	char const* sourceCode = R"(
 		pragma solidity >=0.0;
+		pragma experimental __testOnlyAnalysis;
 		contract test {
 			function g(function(uint) external returns (uint) x) {}
 		}
@@ -55,6 +56,35 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
 	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
 	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
+	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
+}
+
+BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
+{
+	// Check that the metadata stamp is at the end of the runtime bytecode.
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		pragma experimental __test;
+		contract test {
+			function g(function(uint) external returns (uint) x) {}
+		}
+	)";
+	CompilerStack compilerStack;
+	compilerStack.addSource("", std::string(sourceCode));
+	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
+	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
+	std::string const& metadata = compilerStack.metadata("test");
+	BOOST_CHECK(dev::test::isValidMetadata(metadata));
+	bytes hash = dev::swarmHash(metadata).asBytes();
+	BOOST_REQUIRE(hash.size() == 32);
+	BOOST_REQUIRE(bytecode.size() >= 2);
+	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
+	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
+	bytes expectation =
+		bytes{0xa2, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
+		hash +
+		bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
 	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
 }
 

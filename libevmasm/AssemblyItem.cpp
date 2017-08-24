@@ -219,10 +219,10 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 			_out << "\t" << _item.getJumpTypeAsString();
 		break;
 	case Push:
-		_out << " PUSH " << hex << _item.data();
+		_out << " PUSH " << hex << _item.data() << dec;
 		break;
 	case PushString:
-		_out << " PushString"  << hex << (unsigned)_item.data();
+		_out << " PushString"  << hex << (unsigned)_item.data() << dec;
 		break;
 	case PushTag:
 	{
@@ -237,19 +237,19 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " Tag " << _item.data();
 		break;
 	case PushData:
-		_out << " PushData " << hex << (unsigned)_item.data();
+		_out << " PushData " << hex << (unsigned)_item.data() << dec;
 		break;
 	case PushSub:
-		_out << " PushSub " << hex << size_t(_item.data());
+		_out << " PushSub " << hex << size_t(_item.data()) << dec;
 		break;
 	case PushSubSize:
-		_out << " PushSubSize " << hex << size_t(_item.data());
+		_out << " PushSubSize " << hex << size_t(_item.data()) << dec;
 		break;
 	case PushProgramSize:
 		_out << " PushProgramSize";
 		break;
 	case PushLibraryAddress:
-		_out << " PushLibraryAddress " << hex << h256(_item.data()).abridgedMiddle();
+		_out << " PushLibraryAddress " << hex << h256(_item.data()).abridgedMiddle() << dec;
 		break;
 	case UndefinedItem:
 		_out << " ???";
