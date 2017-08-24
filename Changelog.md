@@ -1,14 +1,19 @@
-### 0.4.16 (unreleased)
+### 0.4.16 (2017-08-24)
 
 Features:
- * Introduce ``pure`` functions. The pureness is not enforced yet, use with care.
- * ABI JSON: Include new field ``stateMutability`` with values ``pure``, ``view``, ``nonpayable`` and ``payable``.
+ * ABI JSON: Include new field ``stateMutability`` with values ``pure``, ``view``,
+   ``nonpayable`` and ``payable``.
  * Analyzer: Experimental partial support for Z3 SMT checker.
- * Parser: Display previous visibility specifier in error if multiple are found.
- * Parser: Introduce ``view`` keyword on functions (``constant`` remains an alias for ``view``).
- * Syntax Checker: Support ``pragma experimental <feature>;`` to turn on experimental features.
- * Static Analyzer: Warn about large storage structures.
+ * Build System: Shared libraries (``libdevcore``, ``libevmasm``, ``libsolidity``
+   and ``liblll``) are no longer produced during the build process.
  * Metadata: Store experimental flag in metadata CBOR.
+ * Parser: Display previous visibility specifier in error if multiple are found.
+ * Parser: Introduce ``pure`` and ``view`` keyword for functions,
+   ``constant`` remains an alias for ``view`` and pureness is not enforced yet,
+   so use with care.
+ * Static Analyzer: Warn about large storage structures.
+ * Syntax Checker: Support ``pragma experimental <feature>;`` to turn on
+   experimental features.
  * Type Checker: More detailed error message for invalid overrides.
  * Type Checker: Warn about shifting a literal.
 
