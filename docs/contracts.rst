@@ -471,7 +471,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         function f(uint a, uint b) view returns (uint) {
@@ -498,7 +498,7 @@ Functions can be declared ``pure`` in which case they promise not to read from o
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         function f(uint a, uint b) pure returns (uint) {
