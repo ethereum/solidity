@@ -41,6 +41,20 @@ public:
 	std::shared_ptr<std::string const> const& sourceName() const;
 
 protected:
+	/// Utility class that creates an error and throws an exception if the
+	/// recursion depth is too deep.
+	class RecursionGuard
+	{
+	public:
+		explicit RecursionGuard(ParserBase& _parser): m_parser(_parser)
+		{
+			m_parser.increaseRecursionDepth();
+		}
+		~RecursionGuard() { m_parser.decreaseRecursionDepth(); }
+	private:
+		ParserBase& m_parser;
+	};
+
 	/// Start position of the current token
 	int position() const;
 	/// End position of the current token
@@ -56,6 +70,10 @@ protected:
 	Token::Value advance();
 	///@}
 
+	/// Increases the recursion depth and throws an exception if it is too deep.
+	void increaseRecursionDepth();
+	void decreaseRecursionDepth();
+
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description.
 	void parserError(std::string const& _description);
@@ -67,6 +85,8 @@ protected:
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing
 	ErrorReporter& m_errorReporter;
+	/// Current recursion depth during parsing.
+	size_t m_recursionDepth = 0;
 };
 
 }

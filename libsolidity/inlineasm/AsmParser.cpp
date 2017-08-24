@@ -36,6 +36,7 @@ using namespace dev::solidity::assembly;
 
 shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
 {
+	m_recursionDepth = 0;
 	try
 	{
 		m_scanner = _scanner;
@@ -51,6 +52,7 @@ shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scann
 
 assembly::Block Parser::parseBlock()
 {
+	RecursionGuard recursionGuard(*this);
 	assembly::Block block = createWithLocation<Block>();
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
@@ -62,6 +64,7 @@ assembly::Block Parser::parseBlock()
 
 assembly::Statement Parser::parseStatement()
 {
+	RecursionGuard recursionGuard(*this);
 	switch (currentToken())
 	{
 	case Token::Let:
@@ -158,6 +161,7 @@ assembly::Statement Parser::parseStatement()
 
 assembly::Case Parser::parseCase()
 {
+	RecursionGuard recursionGuard(*this);
 	assembly::Case _case = createWithLocation<assembly::Case>();
 	if (m_scanner->currentToken() == Token::Default)
 		m_scanner->next();
@@ -178,6 +182,7 @@ assembly::Case Parser::parseCase()
 
 assembly::ForLoop Parser::parseForLoop()
 {
+	RecursionGuard recursionGuard(*this);
 	ForLoop forLoop = createWithLocation<ForLoop>();
 	expectToken(Token::For);
 	forLoop.pre = parseBlock();
@@ -192,6 +197,7 @@ assembly::ForLoop Parser::parseForLoop()
 
 assembly::Statement Parser::parseExpression()
 {
+	RecursionGuard recursionGuard(*this);
 	Statement operation = parseElementaryOperation(true);
 	if (operation.type() == typeid(Instruction))
 	{
@@ -254,6 +260,7 @@ std::map<dev::solidity::Instruction, string> const& Parser::instructionNames()
 
 assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 {
+	RecursionGuard recursionGuard(*this);
 	Statement ret;
 	switch (currentToken())
 	{
@@ -342,6 +349,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 
 assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
+	RecursionGuard recursionGuard(*this);
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
 	while (true)
@@ -366,6 +374,7 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 
 assembly::FunctionDefinition Parser::parseFunctionDefinition()
 {
+	RecursionGuard recursionGuard(*this);
 	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
 	expectToken(Token::Function);
 	funDef.name = expectAsmIdentifier();
@@ -397,6 +406,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 
 assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 {
+	RecursionGuard recursionGuard(*this);
 	if (_instruction.type() == typeid(Instruction))
 	{
 		solAssert(!m_julia, "Instructions are invalid in JULIA");
@@ -479,6 +489,7 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 
 TypedName Parser::parseTypedName()
 {
+	RecursionGuard recursionGuard(*this);
 	TypedName typedName = createWithLocation<TypedName>();
 	typedName.name = expectAsmIdentifier();
 	if (m_julia)

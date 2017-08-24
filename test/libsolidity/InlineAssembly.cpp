@@ -400,6 +400,20 @@ BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (\"mul\" expects 2 arguments)");
 }
 
+BOOST_AUTO_TEST_CASE(recursion_depth)
+{
+	string input;
+	for (size_t i = 0; i < 20000; i++)
+		input += "{";
+	input += "let x := 0";
+	for (size_t i = 0; i < 20000; i++)
+		input += "}";
+
+	CHECK_PARSE_ERROR(input, ParserError, "recursion");
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Printing)
