@@ -9685,6 +9685,7 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 BOOST_AUTO_TEST_CASE(return_structs)
 {
 	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[2] x; }

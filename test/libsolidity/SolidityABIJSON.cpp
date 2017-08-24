@@ -981,6 +981,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 			}
 		],
 		"payable" : false,
+		"stateMutability" : "nonpayable",
 		"type" : "function"
 	}]
 	)";
@@ -1022,6 +1023,7 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 			}
 		],
 		"payable": false,
+		"stateMutability" : "nonpayable",
 		"type": "function"
 	}]
 	)";
@@ -1127,6 +1129,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 		"name": "g",
 		"outputs": [],
 		"payable": false,
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -1140,6 +1143,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 		"name": "f",
 		"outputs": [],
 		"payable": false,
+		"stateMutability": "nonpayable",
 		"type": "function"
 	}]
 	)";

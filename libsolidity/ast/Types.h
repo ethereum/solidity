@@ -248,7 +248,7 @@ public:
 	/// @returns the canonical name of this type for use in library function signatures.
 	virtual std::string canonicalName() const { return toString(true); }
 	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
-	/// or `(uint256, bytes8)[2]` for an array of structs. If @a _structsByName,
+	/// or `(uint256,bytes8)[2]` for an array of structs. If @a _structsByName,
 	/// structs are given by canonical name like `ContractName.StructName[2]`.
 	virtual std::string signatureInExternalFunction(bool /*_structsByName*/) const
 	{
