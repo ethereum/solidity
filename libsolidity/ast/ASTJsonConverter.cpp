@@ -327,7 +327,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		// FIXME: remove with next breaking release
 		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() <= StateMutability::View),
 		make_pair("payable", _node.isPayable()),
-		make_pair("statemutability", stateMutabilityToString(_node.stateMutability())),
+		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("isConstructor", _node.isConstructor()),
@@ -416,7 +416,7 @@ bool ASTJsonConverter::visit(FunctionTypeName const& _node)
 	setJsonNode(_node, "FunctionTypeName", {
 		make_pair("payable", _node.isPayable()),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
-		make_pair("statemutability", stateMutabilityToString(_node.stateMutability())),
+		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
 		// FIXME: remove with next breaking release
 		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() <= StateMutability::View),
 		make_pair("parameterTypes", toJson(*_node.parameterTypeList())),
