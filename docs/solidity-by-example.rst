@@ -126,7 +126,7 @@ of votes.
             // modifies `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
-            Voter delegate = voters[to];
+            Voter storage delegate = voters[to];
             if (delegate.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
