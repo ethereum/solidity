@@ -3,9 +3,11 @@
 Features:
  * ABI JSON: Include new field ``stateMutability`` with values ``pure``, ``view``,
    ``nonpayable`` and ``payable``.
- * Analyzer: Experimental partial support for Z3 SMT checker.
+ * Analyzer: Experimental partial support for Z3 SMT checker ("SMTChecker").
  * Build System: Shared libraries (``libdevcore``, ``libevmasm``, ``libsolidity``
    and ``liblll``) are no longer produced during the build process.
+ * Code generator: Experimental new implementation of ABI encoder that can
+   encode arbitrarily nested arrays ("ABIEncoderV2")
  * Metadata: Store experimental flag in metadata CBOR.
  * Parser: Display previous visibility specifier in error if multiple are found.
  * Parser: Introduce ``pure`` and ``view`` keyword for functions,
