@@ -177,14 +177,14 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 	return copyRoutine;
 }
 
-AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
+AssemblyItems ComputeMethod::findRepresentation(u256 const& _value, unsigned _remainingDepth)
 {
-	if (_value < 0x10000)
-		// Very small value, not worth computing
+	if (_remainingDepth == 0 || _value < 0x10000)
+		// Too much recursion or very small value, not worth computing
 		return AssemblyItems{_value};
 	else if (dev::bytesRequired(~_value) < dev::bytesRequired(_value))
 		// Negated is shorter to represent
-		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
+		return findRepresentation(~_value, _remainingDepth - 1) + AssemblyItems{Instruction::NOT};
 	else
 	{
 		// Decompose value into a * 2**k + b where abs(b) << 2**k
@@ -212,10 +212,10 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 
 			AssemblyItems newRoutine;
 			if (lowerPart != 0)
-				newRoutine += findRepresentation(u256(abs(lowerPart)));
+				newRoutine += findRepresentation(u256(abs(lowerPart)), _remainingDepth - 1);
 			newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
 			if (upperPart != 1)
-				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
+				newRoutine += findRepresentation(upperPart, _remainingDepth - 1) + AssemblyItems{Instruction::MUL};
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
 			else if (lowerPart < 0)
