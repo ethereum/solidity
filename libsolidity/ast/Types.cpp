@@ -1735,7 +1735,15 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 
 bool StructType::isDynamicallyEncoded() const
 {
-	solAssert(false, "Structs are not yet supported in the ABI.");
+	solAssert(!recursive(), "");
+	for (auto t: memoryMemberTypes())
+	{
+		solAssert(t, "Parameter should have external type.");
+		t = t->interfaceType(false);
+		if (t->isDynamicallyEncoded())
+			return true;
+	}
+	return false;
 }
 
 u256 StructType::memorySize() const

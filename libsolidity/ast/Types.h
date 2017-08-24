@@ -745,7 +745,7 @@ public:
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
-		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : TypePointer();
+		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 

@@ -424,7 +424,43 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 	)
 }
 
+BOOST_AUTO_TEST_CASE(structs)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S { uint16 a; uint16 b; T[] sub; uint16 c; }
+			struct T { uint64[2] x; }
+			S s;
+			event e(uint16, S);
+			function f() returns (uint, S) {
+				uint16 x = 7;
+				s.a = 8;
+				s.b = 9;
+				s.c = 10;
+				s.sub.length = 3;
+				s.sub[0].x[0] = 11;
+				s.sub[1].x[0] = 12;
+				s.sub[2].x[1] = 13;
+				e(x, s);
+				return (x, s);
+			}
+		}
+	)";
 
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(
+			u256(7), 0x40,
+			8, 9, 0x80, 10,
+			3,
+			11, 0,
+			12, 0,
+			0, 13
+		);
+		BOOST_CHECK(callContractFunction("f()") == encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
