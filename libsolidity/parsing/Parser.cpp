@@ -1309,18 +1309,21 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
 			m_scanner->next();
 			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
-			break;
 		}
-		if (Token::isTimeSubdenomination(m_scanner->peekNextToken()))
+		else if (Token::isTimeSubdenomination(m_scanner->peekNextToken()))
 		{
 			ASTPointer<ASTString> literal = getLiteralAndAdvance();
 			nodeFactory.markEndPosition();
 			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
 			m_scanner->next();
 			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
-			break;
 		}
-		// fall-through
+		else
+		{
+			nodeFactory.markEndPosition();
+			expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
+		}
+		break;
 	case Token::StringLiteral:
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
@@ -1357,9 +1360,9 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			}
 		nodeFactory.markEndPosition();
 		expectToken(oppositeToken);
-		return nodeFactory.createNode<TupleExpression>(components, isArray);
+		expression = nodeFactory.createNode<TupleExpression>(components, isArray);
+		break;
 	}
-
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
