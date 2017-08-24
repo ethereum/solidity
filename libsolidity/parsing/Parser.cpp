@@ -321,6 +321,8 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	// FIXME: constant should be removed at the next breaking release
 	else if (_token == Token::View || _token == Token::Constant)
 		stateMutability = StateMutability::View;
+	else if (_token == Token::Pure)
+		stateMutability = StateMutability::Pure;
 	else
 		solAssert(false, "Invalid state mutability specifier.");
 	m_scanner->next();

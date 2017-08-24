@@ -36,7 +36,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		// TODO: deprecate constant in a future release
-		method["constant"] = it.second->stateMutability() == StateMutability::View;
+		method["constant"] = it.second->stateMutability() == StateMutability::Pure || it.second->stateMutability() == StateMutability::View;
 		method["payable"] = it.second->isPayable();
 		method["statemutability"] = stateMutabilityToString(it.second->stateMutability());
 		method["inputs"] = formatTypeList(
