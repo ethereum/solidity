@@ -23,7 +23,6 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/ABI.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
