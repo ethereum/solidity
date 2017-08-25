@@ -180,10 +180,11 @@ public:
 	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
 	/// prior to parsing the inline assembly.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
+	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
 	void appendInlineAssembly(
 		std::string const& _assembly,
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
-		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
+		bool _system = false
 	);
 
 	/// Appends arbitrary data to the end of the bytecode.
