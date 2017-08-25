@@ -1446,6 +1446,28 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
 	TypePointers parameterTypes = functionType->parameterTypes();
+
+	if (!functionType->padArguments())
+	{
+		for (size_t i = 0; i < arguments.size(); ++i)
+		{
+			auto const& argType = type(*arguments[i]);
+			if (auto literal = dynamic_cast<RationalNumberType const*>(argType.get()))
+			{
+				/* If no mobile type is available an error will be raised elsewhere. */
+				if (literal->mobileType())
+					m_errorReporter.warning(
+						_functionCall.location(),
+						"The type of \"" +
+						argType->toString() +
+						"\" was inferred as " +
+						literal->mobileType()->toString() +
+						". This is probably not desired. Use an explicit type to silence this warning."
+					);
+			}
+		}
+	}
+
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		string msg =
