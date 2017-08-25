@@ -423,6 +423,8 @@ BOOST_AUTO_TEST_CASE(events)
 			function f(uint a) returns(uint d) { return a * 7; }
 			event e1(uint b, address indexed c);
 			event e2();
+			event e2(uint a);
+			event e3() anonymous;
 		}
 	)";
 	char const* interface = R"([
@@ -466,6 +468,24 @@ BOOST_AUTO_TEST_CASE(events)
 		"name": "e2",
 		"type": "event",
 		"anonymous": false,
+		"inputs": []
+	},
+	{
+		"name": "e2",
+		"type": "event",
+		"anonymous": false,
+		"inputs": [
+		{
+			"indexed": false,
+			"name": "a",
+			"type": "uint256"
+		}
+		]
+	},
+	{
+		"name": "e3",
+		"type": "event",
+		"anonymous": true,
 		"inputs": []
 	}
 
