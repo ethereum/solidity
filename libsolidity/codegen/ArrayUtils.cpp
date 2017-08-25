@@ -913,10 +913,10 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 	switch (location)
 	{
 	case DataLocation::Memory:
-		if (_arrayType.isDynamicallySized())
-			m_context << u256(32) << Instruction::ADD;
-		// fall-through
 	case DataLocation::CallData:
+		if (location == DataLocation::Memory && _arrayType.isDynamicallySized())
+			m_context << u256(32) << Instruction::ADD;
+
 		if (!_arrayType.isByteArray())
 		{
 			m_context << Instruction::SWAP1;
