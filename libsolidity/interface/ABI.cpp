@@ -32,13 +32,14 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 	for (auto it: _contractDef.interfaceFunctions())
 	{
 		auto externalFunctionType = it.second->interfaceFunctionType();
+		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		// TODO: deprecate constant in a future release
-		method["constant"] = it.second->stateMutability() == StateMutability::Pure || it.second->stateMutability() == StateMutability::View;
-		method["payable"] = it.second->isPayable();
-		method["stateMutability"] = stateMutabilityToString(it.second->stateMutability());
+		method["constant"] = externalFunctionType->stateMutability() == StateMutability::Pure || it.second->stateMutability() == StateMutability::View;
+		method["payable"] = externalFunctionType->isPayable();
+		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypes(),
@@ -53,15 +54,15 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 	}
 	if (_contractDef.constructor())
 	{
+		auto externalFunctionType = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
+		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "constructor";
-		auto externalFunction = FunctionType(*_contractDef.constructor(), false).interfaceFunctionType();
-		solAssert(!!externalFunction, "");
-		method["payable"] = externalFunction->isPayable();
-		method["stateMutability"] = stateMutabilityToString(externalFunction->stateMutability());
+		method["payable"] = externalFunctionType->isPayable();
+		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
-			externalFunction->parameterNames(),
-			externalFunction->parameterTypes(),
+			externalFunctionType->parameterNames(),
+			externalFunctionType->parameterTypes(),
 			_contractDef.isLibrary()
 		);
 		abi.append(method);
