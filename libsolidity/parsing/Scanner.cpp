@@ -435,7 +435,7 @@ void Scanner::scanToken()
 		m_nextToken.location.start = sourcePos();
 		switch (m_char)
 		{
-		case '\n': // fall-through
+		case '\n':
 		case ' ':
 		case '\t':
 			token = selectToken(Token::Whitespace);
