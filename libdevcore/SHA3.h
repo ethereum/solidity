@@ -23,8 +23,9 @@
 
 #pragma once
 
+#include <libdevcore/FixedHash.h>
+
 #include <string>
-#include "FixedHash.h"
 
 namespace dev
 {
@@ -46,11 +47,5 @@ inline h256 keccak256(std::string const& _input) { return keccak256(bytesConstRe
 
 /// Calculate Keccak-256 hash of the given input (presented as a FixedHash), returns a 256-bit hash.
 template<unsigned N> inline h256 keccak256(FixedHash<N> const& _input) { return keccak256(_input.ref()); }
-
-/// Calculate Keccak-256 hash of the given input, possibly interpreting it as nibbles, and return the hash as a string filled with binary data.
-inline std::string keccak256(std::string const& _input, bool _isNibbles) { return asString((_isNibbles ? keccak256(fromHex(_input)) : keccak256(bytesConstRef(&_input))).asBytes()); }
-
-/// Calculate Keccak-256 MAC
-inline void keccak256mac(bytesConstRef _secret, bytesConstRef _plain, bytesRef _output) { keccak256(_secret.toBytes() + _plain.toBytes()).ref().populate(_output); }
 
 }
