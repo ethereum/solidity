@@ -201,8 +201,6 @@ bool CompilerStack::analyze()
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
-				m_globalContext->setCurrentContract(*contract);
-				resolver.updateDeclaration(*m_globalContext->currentThis());
 				TypeChecker typeChecker(m_errorReporter);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
@@ -211,14 +209,6 @@ bool CompilerStack::analyze()
 				}
 				else
 					noErrors = false;
-
-				// Note that we now reference contracts by their fully qualified names, and
-				// thus contracts can only conflict if declared in the same source file.  This
-				// already causes a double-declaration error elsewhere, so we do not report
-				// an error here and instead silently drop any additional contracts we find.
-
-				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
-					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
 	if (noErrors)
