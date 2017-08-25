@@ -87,16 +87,15 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, 
 					success = false;
 			}
 		if (success)
+		{
+			TypeChecker typeChecker(errorReporter);
 			for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
-					globalContext->setCurrentContract(*contract);
-					resolver.updateDeclaration(*globalContext->currentThis());
-
-					TypeChecker typeChecker(errorReporter);
 					bool success = typeChecker.checkTypeRequirements(*contract);
 					BOOST_CHECK(success || !errorReporter.errors().empty());
 				}
+		}
 		if (success)
 			if (!PostTypeChecker(errorReporter).check(*sourceUnit))
 				success = false;
