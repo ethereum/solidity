@@ -903,11 +903,13 @@ ASTPointer<Statement> Parser::parseStatement()
 		{
 			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
 			m_scanner->next();
-			break;
 		}
-	// fall-through
+		else
+			statement = parseSimpleStatement(docString);
+		break;
 	default:
 		statement = parseSimpleStatement(docString);
+		break;
 	}
 	expectToken(Token::Semicolon);
 	return statement;
