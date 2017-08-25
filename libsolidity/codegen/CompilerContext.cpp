@@ -266,19 +266,9 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 void CompilerContext::appendInlineAssembly(
 	string const& _assembly,
 	vector<string> const& _localVariables,
-	map<string, string> const& _replacements
+	bool _system
 )
 {
-	string replacedAssembly;
-	string const* assembly = &_assembly;
-	if (!_replacements.empty())
-	{
-		replacedAssembly = _assembly;
-		for (auto const& replacement: _replacements)
-			replacedAssembly = boost::algorithm::replace_all_copy(replacedAssembly, replacement.first, replacement.second);
-		assembly = &replacedAssembly;
-	}
-
 	int startStackHeight = stackHeight();
 
 	julia::ExternalIdentifierAccess identifierAccess;
@@ -320,7 +310,7 @@ void CompilerContext::appendInlineAssembly(
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(CharStream(*assembly), "--CODEGEN--");
+	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
 	solAssert(parserResult, "Failed to parse inline assembly block.");
 	solAssert(errorReporter.errors().empty(), "Failed to parse inline assembly block.");
@@ -329,7 +319,7 @@ void CompilerContext::appendInlineAssembly(
 	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
 	solAssert(analyzer.analyze(*parserResult), "Failed to analyze inline assembly block.");
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
-	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess);
+	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
