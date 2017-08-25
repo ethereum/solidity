@@ -21,8 +21,11 @@
  */
 
 #include <libsolidity/ast/ASTPrinter.h>
-#include <boost/algorithm/string/join.hpp>
 #include <libsolidity/ast/AST.h>
+
+#include <libdevcore/JSON.h>
+
+#include <boost/algorithm/string/join.hpp>
 
 using namespace std;
 
@@ -579,8 +582,13 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 	if (!m_source.empty())
 	{
 		SourceLocation const& location(_node.location());
-		*m_ostream << indentation() << "   Source: "
-				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
+		*m_ostream <<
+			indentation() <<
+			"   Source: " <<
+			/// Note: this "abuses" the JSON library to print a string (as it is not a valid root node).
+			///       It also makes a copy of the string.
+			jsonCompactPrint(m_source.substr(location.start, location.end - location.start)) <<
+			endl;
 	}
 }
 
