@@ -249,8 +249,11 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PushProgramSize";
 		break;
 	case PushLibraryAddress:
-		_out << " PushLibraryAddress " << hex << h256(_item.data()).abridgedMiddle() << dec;
+	{
+		string hash(h256((_item.data())).hex());
+		_out << " PushLibraryAddress " << hash.substr(0, 8) + "..." + hash.substr(hash.length() - 8);
 		break;
+	}
 	case UndefinedItem:
 		_out << " ???";
 		break;
