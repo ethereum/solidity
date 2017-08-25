@@ -1263,15 +1263,15 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RBrack);
 			expression = nodeFactory.createNode<IndexAccess>(expression, index);
+			break;
 		}
-		break;
 		case Token::Period:
 		{
 			m_scanner->next();
 			nodeFactory.markEndPosition();
 			expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierToken());
+			break;
 		}
-		break;
 		case Token::LParen:
 		{
 			m_scanner->next();
@@ -1281,8 +1281,8 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RParen);
 			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
+			break;
 		}
-		break;
 		default:
 			return expression;
 		}
