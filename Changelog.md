@@ -3,6 +3,7 @@
 Features:
  * Support ``pragma experimental v0.5.0;`` to turn on upcoming breaking changes.
  * Code Generator: Added ``.selector`` member on external function types to retrieve their signature.
+ * Code Generator: Keep a single copy of encoding functions when using the experimental "ABIEncoderV2".
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
  * Syntax Checker: Warn if no visibility is specified on contract functions.
  * Type Checker: Display helpful warning for unused function arguments/return parameters.

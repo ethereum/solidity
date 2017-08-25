@@ -122,6 +122,7 @@ void ContractCompiler::appendCallValueCheck()
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 	// Determine the arguments that are used for the base constructors.
 	std::vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 	for (ContractDefinition const* contract: bases)
@@ -174,6 +175,7 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	appendMissingFunctions();
 	m_runtimeCompiler->appendMissingFunctions();
 
+	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 	m_context << deployRoutine;
 
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
@@ -892,6 +894,9 @@ void ContractCompiler::appendMissingFunctions()
 		solAssert(m_context.nextFunctionToCompile() != function, "Compiled the wrong function?");
 	}
 	m_context.appendMissingLowLevelFunctions();
+	string abiFunctions = m_context.abiFunctions().requestedFunctions();
+	if (!abiFunctions.empty())
+		m_context.appendInlineAssembly("{" + move(abiFunctions) + "}", {}, true);
 }
 
 void ContractCompiler::appendModifierOrFunctionCode()

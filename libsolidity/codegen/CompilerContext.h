@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libsolidity/codegen/ABIFunctions.h>
+
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
@@ -121,6 +123,7 @@ public:
 	);
 	/// Generates the code for missing low-level functions, i.e. calls the generators passed above.
 	void appendMissingLowLevelFunctions();
+	ABIFunctions& abiFunctions() { return m_abiFunctions; }
 
 	ModifierDefinition const& functionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
@@ -302,6 +305,8 @@ private:
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
 	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
+	/// Container for ABI functions to be generated.
+	ABIFunctions m_abiFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 };
