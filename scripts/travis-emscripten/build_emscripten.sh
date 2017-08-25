@@ -86,8 +86,9 @@ make -j 4
 cd ..
 mkdir -p upload
 cp build/solc/soljson.js upload/
+cp build/solc/soljson.js ./
 
-OUTPUT_SIZE=`ls -la build/solc/soljson.js`
+OUTPUT_SIZE=`ls -la soljson.js`
 
 echo "Emscripten output size: $OUTPUT_SIZE"
 
