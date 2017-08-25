@@ -188,6 +188,9 @@ bool CompilerStack::analyze()
 				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
 				if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
+				contract->setDevDocumentation(Natspec::devDocumentation(*contract));
+				contract->setUserDocumentation(Natspec::userDocumentation(*contract));
+
 				// Note that we now reference contracts by their fully qualified names, and
 				// thus contracts can only conflict if declared in the same source file.  This
 				// already causes a double-declaration error elsewhere, so we do not report
@@ -202,12 +205,7 @@ bool CompilerStack::analyze()
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
 				TypeChecker typeChecker(m_errorReporter);
-				if (typeChecker.checkTypeRequirements(*contract))
-				{
-					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
-					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
-				}
-				else
+				if (!typeChecker.checkTypeRequirements(*contract))
 					noErrors = false;
 			}
 
