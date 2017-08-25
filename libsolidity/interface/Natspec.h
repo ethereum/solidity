@@ -36,26 +36,7 @@ namespace solidity
 
 // Forward declarations
 class ContractDefinition;
-class Type;
-using TypePointer = std::shared_ptr<Type const>;
 struct DocTag;
-
-enum class DocTagType: uint8_t
-{
-	None = 0,
-	Dev,
-	Notice,
-	Param,
-	Return,
-	Author,
-	Title
-};
-
-enum class CommentOwner
-{
-	Contract,
-	Function
-};
 
 class Natspec
 {
@@ -71,14 +52,6 @@ public:
 	static Json::Value devDocumentation(ContractDefinition const& _contractDef);
 
 private:
-	/// @returns a json value suitable for a list of types in function input or output
-	/// parameters or other places. If @a _forLibrary is true, complex types are referenced
-	/// by name, otherwise they are anonymously expanded.
-	static Json::Value formatTypeList(
-		std::vector<std::string> const& _names,
-		std::vector<TypePointer> const& _types,
-		bool _forLibrary
-	);
 	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 };
