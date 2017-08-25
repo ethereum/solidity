@@ -1,6 +1,7 @@
 ### 0.4.17 (unreleased)
 
 Features:
+ * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
 
 Bugfixes:
 

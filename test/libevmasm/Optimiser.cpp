@@ -22,6 +22,7 @@
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
+#include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/Assembly.h>
@@ -837,6 +838,89 @@ BOOST_AUTO_TEST_CASE(peephole_double_push)
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(jumpdest_removal)
+{
+	AssemblyItems items{
+		AssemblyItem(Tag, 2),
+		AssemblyItem(PushTag, 1),
+		u256(5),
+		AssemblyItem(Tag, 10),
+		AssemblyItem(Tag, 3),
+		u256(6),
+		AssemblyItem(Tag, 1),
+		Instruction::JUMP,
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		u256(5),
+		u256(6),
+		AssemblyItem(Tag, 1),
+		Instruction::JUMP
+	};
+	JumpdestRemover jdr(items);
+	BOOST_REQUIRE(jdr.optimise({}));
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
+{
+	// This tests that tags from subassemblies are not removed
+	// if they are referenced by a super-assembly. Furthermore,
+	// tag unifications (due to block deduplication) is also
+	// visible at the super-assembly.
+
+	Assembly main;
+	AssemblyPointer sub = make_shared<Assembly>();
+
+	sub->append(u256(1));
+	auto t1 = sub->newTag();
+	sub->append(t1);
+	sub->append(u256(2));
+	sub->append(Instruction::JUMP);
+	auto t2 = sub->newTag();
+	sub->append(t2); // Identical to T1, will be unified
+	sub->append(u256(2));
+	sub->append(Instruction::JUMP);
+	auto t3 = sub->newTag();
+	sub->append(t3);
+	auto t4 = sub->newTag();
+	sub->append(t4);
+	auto t5 = sub->newTag();
+	sub->append(t5); // This will be removed
+	sub->append(u256(7));
+	sub->append(t4.pushTag());
+	sub->append(Instruction::JUMP);
+
+	size_t subId = size_t(main.appendSubroutine(sub).data());
+	main.append(t1.toSubAssemblyTag(subId));
+	main.append(t1.toSubAssemblyTag(subId));
+	main.append(u256(8));
+
+	main.optimise(true);
+
+	AssemblyItems expectationMain{
+		AssemblyItem(PushSubSize, 0),
+		t1.toSubAssemblyTag(subId).pushTag(),
+		t1.toSubAssemblyTag(subId).pushTag(),
+		u256(8)
+	};
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		main.items().begin(), main.items().end(),
+		expectationMain.begin(), expectationMain.end()
+	);
+
+	AssemblyItems expectationSub{
+		u256(1), t1.tag(), u256(2), Instruction::JUMP, t4.tag(), u256(7), t4.pushTag(), Instruction::JUMP
+	};
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		sub->items().begin(), sub->items().end(),
+		expectationSub.begin(), expectationSub.end()
 	);
 }
 

@@ -100,6 +100,7 @@ public:
 	struct OptimiserSettings
 	{
 		bool isCreation = false;
+		bool runJumpdestRemover = false;
 		bool runPeephole = false;
 		bool runDeduplicate = false;
 		bool runCSE = false;
@@ -110,7 +111,7 @@ public:
 	};
 
 	/// Execute optimisation passes as defined by @a _settings and return the optimised assembly.
-	Assembly& optimise(OptimiserSettings _settings);
+	Assembly& optimise(OptimiserSettings const& _settings);
 
 	/// Modify (if @a _enable is set) and return the current assembly such that creation and
 	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
@@ -128,8 +129,9 @@ public:
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
-	/// returns the replaced tags.
-	std::map<u256, u256> optimiseInternal(OptimiserSettings _settings);
+	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
+	/// that are referenced in a super-assembly.
+	std::map<u256, u256> optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> const& _tagsReferencedFromOutside);
 
 	unsigned bytesRequired(unsigned subTagSize) const;
 
