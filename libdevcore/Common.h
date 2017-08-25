@@ -37,13 +37,7 @@
 #pragma warning(disable:3682) //call through incomplete class
 #endif
 
-#include <map>
-#include <unordered_map>
-#include <vector>
-#include <set>
-#include <unordered_set>
-#include <functional>
-#include <string>
+#include <libdevcore/vector_ref.h>
 
 #if defined(__GNUC__)
 #pragma warning(push)
@@ -67,13 +61,12 @@
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
-#include "vector_ref.h"
+#include <map>
+#include <vector>
+#include <functional>
+#include <string>
 
 using byte = uint8_t;
-
-// Quote a given token stream to turn it into a string.
-#define DEV_QUOTED_HELPER(s) #s
-#define DEV_QUOTED(s) DEV_QUOTED_HELPER(s)
 
 namespace dev
 {
@@ -85,32 +78,15 @@ using bytesConstRef = vector_ref<byte const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
-using u64 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<64, 64, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using u128 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<128, 128, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using u256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using s256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
-using u160 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using s160 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
-using u512 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 512, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using s512 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 512, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
-using u256s = std::vector<u256>;
-using u160s = std::vector<u160>;
-using u256Set = std::set<u256>;
-using u160Set = std::set<u160>;
+using u256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+using s256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
+using u160 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 // Map types.
 using StringMap = std::map<std::string, std::string>;
 
-// Hash types.
-using StringHashMap = std::unordered_map<std::string, std::string>;
-
 // String types.
 using strings = std::vector<std::string>;
-// Fixed-length string types.
-using string32 = std::array<char, 32>;
-
-// Null/Invalid values for convenience.
-static const bytes NullBytes;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
@@ -143,16 +119,6 @@ inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 	return os;
 }
 
-template <size_t n> inline u256 exp10()
-{
-	return exp10<n - 1>() * u256(10);
-}
-
-template <> inline u256 exp10<0>()
-{
-	return u256(1);
-}
-
 /// RAII utility class whose destructor calls a given function.
 class ScopeGuard
 {
@@ -162,14 +128,6 @@ public:
 
 private:
 	std::function<void(void)> m_f;
-};
-
-enum class WithExisting: int
-{
-	Trust = 0,
-	Verify,
-	Rescue,
-	Kill
 };
 
 }

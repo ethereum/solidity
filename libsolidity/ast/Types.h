@@ -36,6 +36,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <set>
 
 namespace dev
 {

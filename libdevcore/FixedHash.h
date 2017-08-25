@@ -23,12 +23,16 @@
 
 #pragma once
 
+#include <libdevcore/CommonData.h>
+
+#include <boost/functional/hash.hpp>
+#include <boost/io/ios_state.hpp>
+
 #include <array>
 #include <cstdint>
 #include <algorithm>
-#include <boost/functional/hash.hpp>
-#include <boost/io/ios_state.hpp>
-#include "CommonData.h"
+#include <set>
+#include <unordered_set>
 
 namespace dev
 {
