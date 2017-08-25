@@ -26,11 +26,10 @@
 #include <libdevcore/Common.h>
 
 #include <vector>
-#include <algorithm>
-#include <unordered_set>
 #include <type_traits>
 #include <cstring>
 #include <string>
+#include <set>
 
 namespace dev
 {
@@ -165,9 +164,6 @@ inline std::string toCompactHexWithPrefix(u256 val)
 
 // Algorithms for string and string-like collections.
 
-/// Escapes a string into the C-string representation.
-/// @p _all if true will escape all characters, not just the unprintable ones.
-std::string escaped(std::string const& _s, bool _all = true);
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
 inline unsigned bytesRequired(T _i)
