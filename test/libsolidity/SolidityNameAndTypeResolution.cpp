@@ -6744,6 +6744,50 @@ BOOST_AUTO_TEST_CASE(reject_interface_constructors)
 	CHECK_ERROR(text, TypeError, "Wrong argument count for constructor call: 1 arguments given but expected 0.");
 }
 
+BOOST_AUTO_TEST_CASE(tight_packing_literals)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return keccak256(1);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	text = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return keccak256(uint8(1));
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return sha3(1);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	text = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return sha256(1);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	text = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return ripemd160(1);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
