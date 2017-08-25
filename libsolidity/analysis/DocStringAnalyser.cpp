@@ -72,7 +72,7 @@ void DocStringAnalyser::handleCallable(
 	DocumentedAnnotation& _annotation
 )
 {
-	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param", "why3"};
+	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
 
 	set<string> validParams;
