@@ -23,11 +23,13 @@
 
 #pragma once
 
+#include <libdevcore/Common.h>
+#include <libevmasm/AssemblyItem.h>
+
 #include <vector>
 #include <map>
 #include <memory>
-#include <libdevcore/Common.h>
-#include <libevmasm/AssemblyItem.h>
+#include <set>
 
 namespace dev
 {
