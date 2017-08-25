@@ -1047,6 +1047,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (!alsoSearchInteger)
 			break;
 	}
+	// fall-through
 	case Type::Category::Integer:
 		if (member == "balance")
 		{
