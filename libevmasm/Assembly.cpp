@@ -210,7 +210,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 	return _out;
 }
 
-Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType) const
+Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
 {
 	Json::Value value;
 	value["name"] = _name;
@@ -223,7 +223,7 @@ Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string
 	return value;
 }
 
-string toStringInHex(u256 _value)
+string Assembly::toStringInHex(u256 _value)
 {
 	std::stringstream hexStr;
 	hexStr << hex << _value;

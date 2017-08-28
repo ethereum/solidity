@@ -138,7 +138,8 @@ protected:
 private:
 	Json::Value streamAsmJson(std::ostream& _out, StringMap const& _sourceCodes) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
-	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
+	static Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string());
+	static std::string toStringInHex(u256 _value);
 
 protected:
 	/// 0 is reserved for exception
