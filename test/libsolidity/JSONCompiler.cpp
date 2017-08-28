@@ -23,21 +23,12 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/Version.h>
+#include <solc/jsonCompiler.h>
 
 #include "../Metadata.h"
 #include "../TestHelper.h"
 
 using namespace std;
-
-extern "C"
-{
-extern char const* version();
-extern char const* license();
-extern char const* compileJSON(char const* _input, bool _optimize);
-extern char const* compileJSONMulti(char const* _input, bool _optimize);
-extern char const* compileJSONCallback(char const* _input, bool _optimize, void* _readCallback);
-extern char const* compileStandard(char const* _input, void* _readCallback);
-}
 
 namespace dev
 {
