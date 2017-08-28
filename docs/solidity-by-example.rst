@@ -535,6 +535,9 @@ Safe Remote Purchase
         enum State { Created, Locked, Inactive }
         State public state;
 
+        /// Solidity only allows integer arithmetic with even payments.
+        /// An odd number divided by 2 truncates the decimal such that when 
+        /// subsequent re-multiplication by 2 does not equal the same number
         function Purchase() payable {
             seller = msg.sender;
             value = msg.value / 2;
@@ -599,8 +602,8 @@ Safe Remote Purchase
         {
             ItemReceived();
             // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // otherwise, the contracts called using `transfer` below
+            // can call in here again.
             state = State.Inactive;
 
             // NOTE: This actually allows both the buyer and the seller to
