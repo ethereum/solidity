@@ -535,6 +535,9 @@ Safe Remote Purchase
         enum State { Created, Locked, Inactive }
         State public state;
 
+        // Ensure that `msg.value` is an even number.
+        // Division will truncate if it is an odd number.
+        // Check via multiplication that it wasn't an odd number.
         function Purchase() payable {
             seller = msg.sender;
             value = msg.value / 2;
