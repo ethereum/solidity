@@ -1628,7 +1628,6 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			strings(),
 			FunctionType::Kind::ObjectCreation,
 			false,
-			nullptr,
 			StateMutability::Pure
 		);
 		_newExpression.annotation().isPure = true;

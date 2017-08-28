@@ -2164,7 +2164,6 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		strings{""},
 		Kind::Creation,
 		false,
-		nullptr,
 		stateMutability
 	);
 }
@@ -2416,8 +2415,8 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		m_returnParameterNames,
 		m_kind,
 		m_arbitraryParameters,
-		m_declaration,
-		m_stateMutability
+		m_stateMutability,
+		m_declaration
 	);
 }
 
@@ -2444,8 +2443,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						strings(),
 						Kind::SetValue,
 						false,
-						nullptr,
 						StateMutability::NonPayable,
+						nullptr,
 						m_gasSet,
 						m_valueSet
 					)
@@ -2461,8 +2460,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					strings(),
 					Kind::SetGas,
 					false,
-					nullptr,
 					StateMutability::NonPayable,
+					nullptr,
 					m_gasSet,
 					m_valueSet
 				)
@@ -2599,8 +2598,8 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_returnParameterNames,
 		m_kind,
 		m_arbitraryParameters,
-		m_declaration,
 		m_stateMutability,
+		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
 		m_bound
@@ -2648,8 +2647,8 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		m_returnParameterNames,
 		kind,
 		m_arbitraryParameters,
-		m_declaration,
 		m_stateMutability,
+		m_declaration,
 		m_gasSet,
 		m_valueSet,
 		_bound
