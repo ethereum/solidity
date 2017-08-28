@@ -508,6 +508,7 @@ Pure Functions
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
+
 #. Reading from state variables.
 #. Accessing ``this.balance`` or ``<address>.balance``.
 #. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
