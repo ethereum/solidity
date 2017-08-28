@@ -218,26 +218,6 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 	return *m_interfaceFunctionList;
 }
 
-Json::Value const& ContractDefinition::devDocumentation() const
-{
-	return m_devDocumentation;
-}
-
-Json::Value const& ContractDefinition::userDocumentation() const
-{
-	return m_userDocumentation;
-}
-
-void ContractDefinition::setDevDocumentation(Json::Value const& _devDocumentation)
-{
-	m_devDocumentation = _devDocumentation;
-}
-
-void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentation)
-{
-	m_userDocumentation = _userDocumentation;
-}
-
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {
 	if (!m_inheritableMembers)
