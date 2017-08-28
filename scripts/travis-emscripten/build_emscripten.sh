@@ -79,9 +79,8 @@ cd $WORKSPACE
 mkdir -p build
 cd build
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
+  -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/emscripten.cmake \
   -DCMAKE_BUILD_TYPE=Release \
-  -DEMSCRIPTEN=1 \
   -DBoost_FOUND=1 \
   -DBoost_USE_STATIC_LIBS=1 \
   -DBoost_USE_STATIC_RUNTIME=1 \
