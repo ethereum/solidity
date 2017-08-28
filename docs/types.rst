@@ -54,7 +54,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-Division always truncates (it is just compiled to the DIV opcode of the EVM), but it does not truncate if both
+Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws a runtime exception.
@@ -467,10 +467,10 @@ context, there is always a default, but it can be overridden by appending
 either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
 to ``storage`` for state variables (obviously).
 
-There is also a third data location, "calldata", which is a non-modifiable,
+There is also a third data location, ``calldata``, which is a non-modifiable,
 non-persistent area where function arguments are stored. Function parameters
-(not return parameters) of external functions are forced to "calldata" and
-behave mostly like memory.
+(not return parameters) of external functions are forced to ``calldata`` and
+behave mostly like ``memory``.
 
 Data locations are important because they change how assignments behave:
 assignments between storage and memory and also to a state variable (even from other state variables)
