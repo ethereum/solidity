@@ -176,11 +176,19 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 		m_interfaceEvents.reset(new vector<EventDefinition const*>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 			for (EventDefinition const* e: contract->events())
-				if (eventsSeen.count(e->name()) == 0)
+			{
+				/// NOTE: this requires the "internal" version of an Event,
+				///       though here internal strictly refers to visibility,
+				///       and not to function encoding (jump vs. call)
+				auto const& function = e->functionType(true);
+				solAssert(function, "");
+				string eventSignature = function->externalSignature();
+				if (eventsSeen.count(eventSignature) == 0)
 				{
-					eventsSeen.insert(e->name());
+					eventsSeen.insert(eventSignature);
 					m_interfaceEvents->push_back(e);
 				}
+			}
 	}
 	return *m_interfaceEvents;
 }
