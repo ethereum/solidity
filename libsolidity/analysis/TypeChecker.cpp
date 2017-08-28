@@ -698,15 +698,15 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	{
 		if (var->isIndexed())
 			numIndexed++;
-		if (_eventDef.isAnonymous() && numIndexed > 4)
-			m_errorReporter.typeError(_eventDef.location(), "More than 4 indexed arguments for anonymous event.");
-		else if (!_eventDef.isAnonymous() && numIndexed > 3)
-			m_errorReporter.typeError(_eventDef.location(), "More than 3 indexed arguments for event.");
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(var->location(), "Internal type is not allowed as event parameter type.");
 	}
+	if (_eventDef.isAnonymous() && numIndexed > 4)
+		m_errorReporter.typeError(_eventDef.location(), "More than 4 indexed arguments for anonymous event.");
+	else if (!_eventDef.isAnonymous() && numIndexed > 3)
+		m_errorReporter.typeError(_eventDef.location(), "More than 3 indexed arguments for event.");
 	return false;
 }
 
