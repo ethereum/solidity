@@ -2030,7 +2030,9 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_kind(Kind::External), m_stateMutability(StateMutability::View), m_declaration(&_varDecl)
+	m_kind(Kind::External),
+	m_stateMutability(StateMutability::View),
+	m_declaration(&_varDecl)
 {
 	TypePointers paramTypes;
 	vector<string> paramNames;
@@ -2090,7 +2092,9 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
-	m_kind(Kind::Event), m_stateMutability(StateMutability::View), m_declaration(&_event)
+	m_kind(Kind::Event),
+	m_stateMutability(StateMutability::NonPayable),
+	m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
