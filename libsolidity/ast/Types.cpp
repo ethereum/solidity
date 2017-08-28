@@ -2569,6 +2569,8 @@ u256 FunctionType::externalIdentifier() const
 
 bool FunctionType::isPure() const
 {
+	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
+	//        the callgraph analyzer is in place
 	return
 		m_kind == Kind::SHA3 ||
 		m_kind == Kind::ECRecover ||
@@ -2865,7 +2867,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		return MemberList::MemberMap({
 			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
-			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash)},
+			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
 			{"number", make_shared<IntegerType>(256)},
 			{"gaslimit", make_shared<IntegerType>(256)}
