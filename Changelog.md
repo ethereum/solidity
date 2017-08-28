@@ -5,6 +5,8 @@ Features:
  * Type Checker: Warn on using literals as tight packing parameters in ``keccak256``, ``sha3``, ``sha256`` and ``ripemd160``.
 
 Bugfixes:
+ * Parser: Crash fix related to parseTypeName.
+
 
 ### 0.4.16 (2017-08-24)
 
