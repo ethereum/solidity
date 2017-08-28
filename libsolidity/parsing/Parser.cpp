@@ -1244,7 +1244,10 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	{
 		expectToken(Token::New);
 		ASTPointer<TypeName> typeName(parseTypeName(false));
-		nodeFactory.setEndPositionFromNode(typeName);
+		if (typeName)
+			nodeFactory.setEndPositionFromNode(typeName);
+		else
+			nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<NewExpression>(typeName);
 	}
 	else

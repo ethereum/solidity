@@ -1602,6 +1602,18 @@ BOOST_AUTO_TEST_CASE(interface)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(newInvalidTypeName)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				new var;
+			}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected explicit type name");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
