@@ -77,7 +77,7 @@ you really know what you are doing.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.12;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
