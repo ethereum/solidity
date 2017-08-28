@@ -389,6 +389,9 @@ There are two other ways to trigger exceptions: The ``revert`` function can be u
 revert the current call. In the future it might be possible to also include details about the error
 in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
 
+.. note::
+    From version 0.4.13 the ``throw`` keyword is deprecated and will be phased out in the future.
+
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send`` 
 and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those return ``false`` in case
 of an exception instead of "bubbling up".
