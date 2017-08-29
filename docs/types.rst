@@ -127,6 +127,18 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 
 ``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
+It is possible to adjust the supplied gas with the ``.gas()`` modifier::
+
+    namReg.call.gas(1000000)("register", "MyName");
+
+Similarly, the supplied Ether value can be controlled too::
+
+    nameReg.call.value(1 ether)("register", "MyName");
+
+Lastly, these modifiers can be combined. Their order does not matter::
+
+    nameReg.call.gas(1000000).value(1 ether)("register", "MyName");
+
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.

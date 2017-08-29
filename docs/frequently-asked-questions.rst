@@ -503,23 +503,6 @@ Note2: Optimizing storage access can pull the gas costs down considerably, becau
 currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
 
-What does ``p.recipient.call.value(p.amount)(p.data)`` do?
-==========================================================
-
-Every external function call in Solidity can be modified in two ways:
-
-1. You can add Ether together with the call
-2. You can limit the amount of gas available to the call
-
-This is done by "calling a function on the function":
-
-``f.gas(2).value(20)()`` calls the modified function ``f`` and thereby sending 20
-Wei and limiting the gas to 2 (so this function call will most likely go out of
-gas and return your 20 Wei).
-
-In the above example, the low-level function ``call`` is used to invoke another
-contract with ``p.data`` as payload and ``p.amount`` Wei is sent with that call.
-
 What happens to a ``struct``'s mapping when copying over a ``struct``?
 ======================================================================
 
