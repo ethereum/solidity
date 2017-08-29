@@ -2169,7 +2169,6 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 		strings{""},
 		Kind::Creation,
 		false,
-		nullptr,
 		stateMutability
 	);
 }
@@ -2421,8 +2420,8 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		m_returnParameterNames,
 		m_kind,
 		m_arbitraryParameters,
-		m_declaration,
-		m_stateMutability
+		m_stateMutability,
+		m_declaration
 	);
 }
 
@@ -2449,8 +2448,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						strings(),
 						Kind::SetValue,
 						false,
-						nullptr,
 						StateMutability::NonPayable,
+						nullptr,
 						m_gasSet,
 						m_valueSet
 					)
@@ -2466,8 +2465,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					strings(),
 					Kind::SetGas,
 					false,
-					nullptr,
 					StateMutability::NonPayable,
+					nullptr,
 					m_gasSet,
 					m_valueSet
 				)
@@ -2574,6 +2573,8 @@ u256 FunctionType::externalIdentifier() const
 
 bool FunctionType::isPure() const
 {
+	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
+	//        the callgraph analyzer is in place
 	return
 		m_kind == Kind::SHA3 ||
 		m_kind == Kind::ECRecover ||
@@ -2602,8 +2603,8 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_returnParameterNames,
 		m_kind,
 		m_arbitraryParameters,
-		m_declaration,
 		m_stateMutability,
+		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
 		m_bound
@@ -2651,8 +2652,8 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		m_returnParameterNames,
 		kind,
 		m_arbitraryParameters,
-		m_declaration,
 		m_stateMutability,
+		m_declaration,
 		m_gasSet,
 		m_valueSet,
 		_bound
@@ -2870,7 +2871,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		return MemberList::MemberMap({
 			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
-			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash)},
+			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
 			{"number", make_shared<IntegerType>(256)},
 			{"gaslimit", make_shared<IntegerType>(256)}

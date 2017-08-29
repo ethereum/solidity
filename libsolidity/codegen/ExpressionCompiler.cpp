@@ -644,8 +644,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					FunctionType::Kind::BareCall,
 					false,
-					nullptr,
 					StateMutability::NonPayable,
+					nullptr,
 					true,
 					true
 				),

@@ -899,7 +899,6 @@ public:
 		strings(),
 		_kind,
 		_arbitraryParameters,
-		nullptr,
 		_stateMutability
 	)
 	{
@@ -916,8 +915,8 @@ public:
 		strings _returnParameterNames = strings(),
 		Kind _kind = Kind::Internal,
 		bool _arbitraryParameters = false,
-		Declaration const* _declaration = nullptr,
 		StateMutability _stateMutability = StateMutability::NonPayable,
+		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false,
 		bool _bound = false

@@ -1626,7 +1626,9 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			TypePointers{type},
 			strings(),
 			strings(),
-			FunctionType::Kind::ObjectCreation
+			FunctionType::Kind::ObjectCreation,
+			false,
+			StateMutability::Pure
 		);
 		_newExpression.annotation().isPure = true;
 	}
