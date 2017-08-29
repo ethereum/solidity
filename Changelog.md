@@ -2,6 +2,7 @@
 
 Features:
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
+ * Type Checker: Display helpful warning for unused function arguments/return parameters.
  * Type Checker: Do not show the same error multiple times for events.
  * Type Checker: Warn on using literals as tight packing parameters in ``keccak256``, ``sha3``, ``sha256`` and ``ripemd160``.
 
