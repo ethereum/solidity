@@ -24,6 +24,8 @@
 using namespace std;
 using namespace dev;
 
+namespace
+{
 
 bytes toLittleEndian(size_t _size)
 {
@@ -57,6 +59,8 @@ h256 swarmHashIntermediate(string const& _input, size_t _offset, size_t _length)
 		ref = bytesConstRef(&innerNodes);
 	}
 	return swarmHashSimple(ref, _length);
+}
+
 }
 
 h256 dev::swarmHash(string const& _input)
