@@ -1546,7 +1546,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return 10**x;
 			}
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_WARNING(sourceCode, "might overflow");
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return uint8(10)**x;
 			}
@@ -1564,7 +1564,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				return 2**80;
 			}
 		}
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return 10 << x;
 			}
@@ -1585,7 +1585,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_WARNING(sourceCode, "might overflow");
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return uint8(10) << x;
 			}
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				return 2 << 80;
 			}
 		}
@@ -1602,7 +1602,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				 uint8 x = 100;
 				 return 10 >> x;
 			}
@@ -1624,7 +1624,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
 	sourceCode = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				var i = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 				i;
 			}
