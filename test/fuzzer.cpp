@@ -20,6 +20,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
+#include <solc/jsonCompiler.h>
 
 #include <json/json.h>
 
@@ -32,13 +33,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace po = boost::program_options;
-
-extern "C"
-{
-extern char const* compileJSON(char const* _input, bool _optimize);
-typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
-extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback);
-}
 
 namespace
 {

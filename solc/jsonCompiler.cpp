@@ -20,23 +20,19 @@
  * JSON interface for the solidity compiler to be used from Javascript.
  */
 
-#include <string>
+#include <solc/jsonCompiler.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
+
+#include <string>
 
 #include "license.h"
 
 using namespace std;
 using namespace dev;
 using namespace solidity;
-
-extern "C" {
-/// Callback used to retrieve additional source files. "Returns" two pointers that should be
-/// heap-allocated and are free'd by the caller.
-typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
-}
 
 namespace
 {
