@@ -39,7 +39,7 @@ static string const VersionString =
         (string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
         (string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
-void help()
+static void help()
 {
 	cout
 		<< "Usage lllc [OPTIONS] <file>" << endl
@@ -54,7 +54,7 @@ void help()
         exit(0);
 }
 
-void version()
+static void version()
 {
 	cout << "LLLC, the Lovely Little Language Compiler " << endl;
 	cout << "Version: " << VersionString << endl;
@@ -74,7 +74,7 @@ specified default locale if it is valid, and if not then it will modify the
 environment the process is running in to use a sensible default. This also means
 that users do not need to install language packs for their OS.
 */
-void setDefaultOrCLocale()
+static void setDefaultOrCLocale()
 {
 #if __unix__
 	if (!std::setlocale(LC_ALL, ""))

@@ -39,6 +39,9 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace
+{
+
 /**
  * Simple helper class to ensure that the stack height is the same at certain places in the code.
  */
@@ -52,6 +55,8 @@ private:
 	CompilerContext const& m_context;
 	unsigned stackHeight;
 };
+
+}
 
 void ContractCompiler::compileContract(
 	ContractDefinition const& _contract,

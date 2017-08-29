@@ -40,6 +40,9 @@ typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, cha
 extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback);
 }
 
+namespace
+{
+
 bool quiet = false;
 
 string contains(string const& _haystack, vector<string> const& _needles)
@@ -167,6 +170,8 @@ void testCompiler()
 		cout << "Output JSON has neither \"errors\" nor \"contracts\"." << endl;
 		abort();
 	}
+}
+
 }
 
 int main(int argc, char** argv)

@@ -35,6 +35,9 @@
 using namespace std;
 using namespace dev;
 
+namespace
+{
+
 template <typename _T>
 inline _T contentsGeneric(std::string const& _file)
 {
@@ -54,6 +57,8 @@ inline _T contentsGeneric(std::string const& _file)
 	ret.resize((length + c_elementSize - 1) / c_elementSize);
 	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), length);
 	return ret;
+}
+
 }
 
 string dev::contentsString(string const& _file)

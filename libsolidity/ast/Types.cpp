@@ -304,6 +304,9 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+namespace
+{
+
 bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountType)
 {
 	// Disable >>> here.
@@ -315,6 +318,8 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 		return otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else
 		return false;
+}
+
 }
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
