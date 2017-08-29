@@ -57,6 +57,10 @@ and overwrite your number, but the number will still be stored in the history
 of the blockchain. Later, we will see how you can impose access restrictions
 so that only you can alter the number.
 
+.. note::
+    All identifiers (contract names, function names and variable names) are restricted to
+    the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
+
 .. index:: ! subcurrency
 
 Subcurrency Example

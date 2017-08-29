@@ -212,13 +212,6 @@ Better use ``for (uint i = 0; i < a.length...``
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
-What character set does Solidity use?
-=====================================
-
-Solidity is character set agnostic concerning strings in the source code, although
-UTF-8 is recommended. Identifiers (variables, functions, ...) can only use
-ASCII.
-
 What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
 ==================================================================================================
 
