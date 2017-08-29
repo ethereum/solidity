@@ -83,6 +83,10 @@ public:
 	{
 		return assemblyTagToIdentifier(m_assembly.newTag());
 	}
+	virtual size_t namedLabel(std::string const& _name) override
+	{
+		return assemblyTagToIdentifier(m_assembly.namedTag(_name));
+	}
 	virtual void appendLinkerSymbol(std::string const& _linkerSymbol) override
 	{
 		m_assembly.appendLibraryAddress(_linkerSymbol);
@@ -141,9 +145,17 @@ void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	julia::ExternalIdentifierAccess const& _identifierAccess
+	julia::ExternalIdentifierAccess const& _identifierAccess,
+	bool _useNamedLabelsForFunctions
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	julia::CodeTransform(assemblyAdapter, _analysisInfo, false, false, _identifierAccess)(_parsedData);
+	julia::CodeTransform(
+		assemblyAdapter,
+		_analysisInfo,
+		false,
+		false,
+		_identifierAccess,
+		_useNamedLabelsForFunctions
+	)(_parsedData);
 }

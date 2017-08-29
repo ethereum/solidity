@@ -50,13 +50,15 @@ public:
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _julia = false,
 		bool _evm15 = false,
-		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess()
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
+		bool _useNamedLabelsForFunctions = false
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
 		_julia,
 		_evm15,
 		_identifierAccess,
+		_useNamedLabelsForFunctions,
 		_assembly.stackHeight(),
 		std::make_shared<Context>()
 	)
@@ -78,6 +80,7 @@ protected:
 		bool _julia,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
+		bool _useNamedLabelsForFunctions,
 		int _stackAdjustment,
 		std::shared_ptr<Context> _context
 	):
@@ -85,6 +88,7 @@ protected:
 		m_info(_analysisInfo),
 		m_julia(_julia),
 		m_evm15(_evm15),
+		m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
 		m_identifierAccess(_identifierAccess),
 		m_stackAdjustment(_stackAdjustment),
 		m_context(_context)
@@ -110,7 +114,7 @@ private:
 	/// @returns the label ID corresponding to the given label, allocating a new one if
 	/// necessary.
 	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
-	AbstractAssembly::LabelID functionEntryID(solidity::assembly::Scope::Function const& _function);
+	AbstractAssembly::LabelID functionEntryID(std::string const& _name, solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(solidity::assembly::Statement const& _expression);
 
@@ -136,6 +140,7 @@ private:
 	solidity::assembly::Scope* m_scope = nullptr;
 	bool m_julia = false;
 	bool m_evm15 = false;
+	bool m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;
 	/// Adjustment between the stack height as determined during the analysis phase
 	/// and the stack height in the assembly. This is caused by an initial stack being present

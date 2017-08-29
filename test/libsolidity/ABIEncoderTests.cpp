@@ -398,6 +398,34 @@ BOOST_AUTO_TEST_CASE(calldata)
 	)
 }
 
+BOOST_AUTO_TEST_CASE(function_name_collision)
+{
+	// This tests a collision between a function name used by inline assembly
+	// and by the ABI encoder
+	string sourceCode = R"(
+		contract C {
+			function f(uint x) returns (uint) {
+				assembly {
+					function abi_encode_t_uint256_to_t_uint256() {
+						mstore(0, 7)
+						return(0, 0x20)
+					}
+					switch x
+					case 0 { abi_encode_t_uint256_to_t_uint256() }
+				}
+				return 1;
+			}
+		}
+	)";
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(1)) == encodeArgs(1));
+	)
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
