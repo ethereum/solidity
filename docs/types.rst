@@ -79,6 +79,15 @@ Fixed Point Numbers
     Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
     cannot be assigned to or from.
 
+``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represent the number of bits taken by 
+the type and ``N`` represent how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
+
+Operators:
+
+* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder)
+
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
