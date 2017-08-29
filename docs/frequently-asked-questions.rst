@@ -125,24 +125,6 @@ Example::
         }
     }
 
-Are timestamps (``now,`` ``block.timestamp``) reliable?
-=======================================================
-
-This depends on what you mean by "reliable".
-In general, they are supplied by miners and are therefore vulnerable.
-
-Unless someone really messes up the blockchain or the clock on
-your computer, you can make the following assumptions:
-
-You publish a transaction at a time X, this transaction contains same
-code that calls ``now`` and is included in a block whose timestamp is Y
-and this block is included into the canonical chain (published) at a time Z.
-
-The value of ``now`` will be identical to Y and X <= Y <= Z.
-
-Never use ``now`` or ``block.hash`` as a source of randomness, unless you know
-what you are doing!
-
 Can a contract function return a ``struct``?
 ============================================
 
