@@ -38,14 +38,20 @@ public:
 	/// Stores the initial value of the free-memory-pointer at its position;
 	void initialiseFreeMemoryPointer();
 	/// Copies the free memory pointer to the stack.
+	/// Stack pre:
+	/// Stack post: <mem_start>
 	void fetchFreeMemoryPointer();
 	/// Stores the free memory pointer from the stack.
+	/// Stack pre: <mem_end>
+	/// Stack post:
 	void storeFreeMemoryPointer();
 	/// Allocates a number of bytes in memory as given on the stack.
 	/// Stack pre: <size>
 	/// Stack post: <mem_start>
 	void allocateMemory();
 	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
+	/// Stack pre: <mem_end>
+	/// Stack post: <size> <mem_start>
 	void toSizeAfterFreeMemoryPointer();
 
 	/// Loads data from memory to the stack.
@@ -105,6 +111,8 @@ public:
 
 	/// Special case of @a encodeToMemory which assumes that everything is padded to words
 	/// and dynamic data is not copied in place (i.e. a proper ABI encoding).
+	/// Stack pre: <value0> <value1> ... <valueN-1> <head_start>
+	/// Stack post: <mem_ptr>
 	void abiEncode(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
@@ -185,9 +193,13 @@ public:
 	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
 	/// Helper function to shift top value on the stack to the left.
+	/// Stack pre: <value> <shift_by_bits>
+	/// Stack post: <shifted_value>
 	void leftShiftNumberOnStack(unsigned _bits);
 
 	/// Helper function to shift top value on the stack to the right.
+	/// Stack pre: <value> <shift_by_bits>
+	/// Stack post: <shifted_value>
 	void rightShiftNumberOnStack(unsigned _bits, bool _isSigned = false);
 
 	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
