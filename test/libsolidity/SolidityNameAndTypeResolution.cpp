@@ -20,21 +20,13 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-#include <test/libsolidity/ErrorCheck.h>
+#include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/TestHelper.h>
-
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/parsing/Parser.h>
-#include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/analysis/StaticAnalyzer.h>
-#include <libsolidity/analysis/PostTypeChecker.h>
-#include <libsolidity/analysis/SyntaxChecker.h>
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/analysis/GlobalContext.h>
-#include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/ast/AST.h>
 
 #include <libdevcore/SHA3.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <string>
 
@@ -47,187 +39,7 @@ namespace solidity
 namespace test
 {
 
-namespace
-{
-
-pair<ASTPointer<SourceUnit>, std::shared_ptr<Error const>>
-parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false, bool _insertVersionPragma = true, bool _allowMultipleErrors = false)
-{
-	// Silence compiler version warning
-	string source = _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source;
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	Parser parser(errorReporter);
-	ASTPointer<SourceUnit> sourceUnit;
-	// catch exceptions for a transition period
-	try
-	{
-		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(source)));
-		if(!sourceUnit)
-			BOOST_FAIL("Parsing failed in type checker test.");
-
-		SyntaxChecker syntaxChecker(errorReporter);
-		if (!syntaxChecker.checkSyntax(*sourceUnit))
-			return make_pair(sourceUnit, errorReporter.errors().at(0));
-
-		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
-		map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-		NameAndTypeResolver resolver(globalContext->declarations(), scopes, errorReporter);
-		solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
-		resolver.registerDeclarations(*sourceUnit);
-
-		bool success = true;
-		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			{
-				globalContext->setCurrentContract(*contract);
-				resolver.updateDeclaration(*globalContext->currentThis());
-				resolver.updateDeclaration(*globalContext->currentSuper());
-				if (!resolver.resolveNamesAndTypes(*contract))
-					success = false;
-			}
-		if (success)
-		{
-			TypeChecker typeChecker(errorReporter);
-			for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-				{
-					bool success = typeChecker.checkTypeRequirements(*contract);
-					BOOST_CHECK(success || !errorReporter.errors().empty());
-				}
-		}
-		if (success)
-			if (!PostTypeChecker(errorReporter).check(*sourceUnit))
-				success = false;
-		if (success)
-			if (!StaticAnalyzer(errorReporter).analyze(*sourceUnit))
-				success = false;
-		std::shared_ptr<Error const> error;
-		for (auto const& currentError: errorReporter.errors())
-		{
-			if (
-				(_reportWarnings && currentError->type() == Error::Type::Warning) ||
-				(!_reportWarnings && currentError->type() != Error::Type::Warning)
-			)
-			{
-				if (error && !_allowMultipleErrors)
-				{
-					string message("Multiple errors found: ");
-					for (auto const& e: errorReporter.errors())
-						if (string const* description = boost::get_error_info<errinfo_comment>(*e))
-							message += *description + ", ";
-
-					BOOST_FAIL(message);
-				}
-				if (!error)
-					error = currentError;
-			}
-		}
-		if (error)
-			return make_pair(sourceUnit, error);
-	}
-	catch (InternalCompilerError const& _e)
-	{
-		string message("Internal compiler error");
-		if (string const* description = boost::get_error_info<errinfo_comment>(_e))
-			message += ": " + *description;
-		BOOST_FAIL(message);
-	}
-	catch (Error const& _e)
-	{
-		return make_pair(sourceUnit, std::make_shared<Error const>(_e));
-	}
-	catch (...)
-	{
-		BOOST_FAIL("Unexpected exception.");
-	}
-	return make_pair(sourceUnit, nullptr);
-}
-
-ASTPointer<SourceUnit> parseAndAnalyse(string const& _source)
-{
-	auto sourceAndError = parseAnalyseAndReturnError(_source);
-	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_REQUIRE(!sourceAndError.second);
-	return sourceAndError.first;
-}
-
-bool success(string const& _source)
-{
-	return !parseAnalyseAndReturnError(_source).second;
-}
-
-Error expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false)
-{
-	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
-	BOOST_REQUIRE(!!sourceAndError.second);
-	BOOST_REQUIRE(!!sourceAndError.first);
-	return *sourceAndError.second;
-}
-
-static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source, unsigned index)
-{
-	ContractDefinition* contract;
-	unsigned counter = 0;
-	for (ASTPointer<ASTNode> const& node: _source->nodes())
-		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && counter == index)
-			return contract;
-
-	return nullptr;
-}
-
-static FunctionTypePointer retrieveFunctionBySignature(
-	ContractDefinition const& _contract,
-	std::string const& _signature
-)
-{
-	FixedHash<4> hash(dev::keccak256(_signature));
-	return _contract.interfaceFunctions()[hash];
-}
-
-}
-
-#define CHECK_ERROR_OR_WARNING(text, typ, substring, warning, allowMulti) \
-do \
-{ \
-	Error err = expectError((text), (warning), (allowMulti)); \
-	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(searchErrorMessage(err, (substring))); \
-} while(0)
-
-// [checkError(text, type, substring)] asserts that the compilation down to typechecking
-// emits an error of type [type] and with a message containing [substring].
-#define CHECK_ERROR(text, type, substring) \
-CHECK_ERROR_OR_WARNING(text, type, substring, false, false)
-
-// [checkError(text, type, substring)] asserts that the compilation down to typechecking
-// emits an error of type [type] and with a message containing [substring].
-#define CHECK_ERROR_ALLOW_MULTI(text, type, substring) \
-CHECK_ERROR_OR_WARNING(text, type, substring, false, true)
-
-// [checkWarning(text, substring)] asserts that the compilation down to typechecking
-// emits a warning and with a message containing [substring].
-#define CHECK_WARNING(text, substring) \
-CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
-
-// [checkWarningAllowMulti(text, substring)] aserts that the compilation down to typechecking
-// emits a warning and with a message containing [substring].
-#define CHECK_WARNING_ALLOW_MULTI(text, substring) \
-CHECK_ERROR_OR_WARNING(text, Warning, substring, true, true)
-
-// [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
-#define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
-
-#define CHECK_SUCCESS_NO_WARNINGS(text) \
-do \
-{ \
-	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
-	BOOST_CHECK(sourceAndError.second == nullptr); \
-} \
-while(0)
-
-
-BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
+BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -613,13 +425,13 @@ BOOST_AUTO_TEST_CASE(comparison_of_mapping_types)
 
 BOOST_AUTO_TEST_CASE(function_no_implementation)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract test {
 			function functionName(bytes32 input) returns (bytes32 out);
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	BOOST_REQUIRE(contract);
@@ -629,12 +441,12 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 
 BOOST_AUTO_TEST_CASE(abstract_contract)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract base { function foo(); }
 		contract derived is base { function foo() {} }
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
@@ -648,12 +460,12 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 
 BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract base { function foo(bool); }
 		contract derived is base { function foo(uint) {} }
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
@@ -665,7 +477,6 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 
 BOOST_AUTO_TEST_CASE(create_abstract_contract)
 {
-	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
 		contract base { function foo(); }
 		contract derived {
@@ -678,7 +489,6 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 
 BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 {
-	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
 		contract base { function foo(); }
 		contract derived is base { function foo() {} }
@@ -689,12 +499,12 @@ BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 
 BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract base { function foo(); }
 		contract foo is base { function foo() {} }
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	BOOST_CHECK_EQUAL(nodes.size(), 3);
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
@@ -704,7 +514,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract Test {
 			function foo(uint256 arg1, uint64 arg2, bool arg3) returns (uint256 ret) {
@@ -712,7 +522,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 			}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -723,7 +533,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract Test {
 			function boo(uint, bytes32, address) returns (uint ret) {
@@ -731,7 +541,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 			}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -744,7 +554,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 
 BOOST_AUTO_TEST_CASE(function_external_types)
 {
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract C {
 			uint a;
@@ -755,7 +565,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -769,7 +579,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 BOOST_AUTO_TEST_CASE(enum_external_type)
 {
 	// bug #1801
-	ASTPointer<SourceUnit> sourceUnit;
+	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
@@ -778,7 +588,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 			}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	sourceUnit = parseAndAnalyse(text);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -1163,10 +973,10 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 		}
 	)";
 
-	ASTPointer<SourceUnit> source;
+	SourceUnit const* source;
 	ContractDefinition const* contract;
-	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
-	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
+	source = parseAndAnalyse(text);
+	BOOST_REQUIRE((contract = retrieveContract(*source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->returnParameterTypes();
@@ -1217,10 +1027,9 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 		}
 	)";
 
-	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
-	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
+	SourceUnit const* source = parseAndAnalyse(text);
+	BOOST_CHECK((contract = retrieveContract(*source, 0)) != nullptr);
 	FunctionTypePointer function;
 	function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
@@ -1711,8 +1520,7 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			uint256 a;
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(sourceCodeFine),
-		"Parsing and Resolving names failed");
+	CHECK_SUCCESS(sourceCodeFine);
 	char const* sourceCode = R"(
 		contract c {
 			function c () {
@@ -2091,7 +1899,7 @@ BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
 			function f(bytes) external returns (uint256 r) {r = 42;}
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(sourceCode), "Parsing and Name Resolving failed");
+	CHECK_SUCCESS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
@@ -2311,7 +2119,7 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 			function f() { byte a = arr[0];}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(text), "Type resolving failed");
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warns_assigning_decimal_to_bytesxx)
@@ -2498,7 +2306,7 @@ BOOST_AUTO_TEST_CASE(assignment_of_nonoverloaded_function)
 			function g() returns(uint) { var x = f; return x(7); }
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(sourceCode), "Type resolving failed");
+	CHECK_SUCCESS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_of_overloaded_function)
@@ -4872,7 +4680,11 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version)
 	char const* text = R"(
 		pragma solidity ^99.99.0;
 	)";
-	BOOST_CHECK(expectError(text, true).type() == Error::Type::SyntaxError);
+	auto sourceAndError = parseAnalyseAndReturnError(text, false, false, false);
+	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!!sourceAndError.first);
+	BOOST_CHECK(sourceAndError.second->type() == Error::Type::SyntaxError);
+	BOOST_CHECK(searchErrorMessage(*sourceAndError.second, "Source file requires different compiler version"));
 }
 
 BOOST_AUTO_TEST_CASE(constant_constructor)
