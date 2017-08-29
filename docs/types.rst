@@ -181,6 +181,10 @@ Members:
 
 * ``.length`` yields the fixed length of the byte array (read-only).
 
+.. note::
+    It is possible to use an array of bytes as ``byte[]``, but it is wasting a lot of space, 31 bytes every element,
+    to be exact, when passing in calls. It is better to use ``bytes``.
+
 Dynamically-sized byte array
 ----------------------------
 

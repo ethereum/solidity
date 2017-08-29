@@ -441,13 +441,6 @@ The correct way to do this is the following::
         }
     }
 
-What is the difference between ``bytes`` and ``byte[]``?
-========================================================
-
-``bytes`` is usually more efficient: When used as arguments to functions (i.e. in
-CALLDATA) or in memory, every single element of a ``byte[]`` is padded to 32
-bytes which wastes 31 bytes per element.
-
 Is it possible to send a value while calling an overloaded function?
 ====================================================================
 
