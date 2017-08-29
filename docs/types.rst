@@ -88,6 +88,12 @@ Operators:
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder)
 
+.. note::
+    The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
+    that the number of bits used for the integer and the fractional part (the part after the decimal dot) is flexible in the former, while it is strictly
+    defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
+    where the decimal point is.
+
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:

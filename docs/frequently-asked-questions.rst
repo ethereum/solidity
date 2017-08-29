@@ -103,11 +103,6 @@ This is a limitation of the EVM and will be solved with the next protocol update
 
 Returning variably-sized data as part of an external transaction or call is fine.
 
-How do you represent ``double``/``float`` in Solidity?
-======================================================
-
-This is not yet possible.
-
 Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
 =========================================================================================
 
