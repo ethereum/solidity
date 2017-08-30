@@ -209,9 +209,9 @@ public:
 	eth::Assembly& nonConstAssembly() { return *m_asm; }
 
 	/// @arg _sourceCodes is the map of input files to source code strings
-	std::ostream& assemblyStream(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const
+	void assemblyStream(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const
 	{
-		return m_asm->assemblyStream(_stream, "", _sourceCodes);
+		m_asm->assemblyStream(_stream, "", _sourceCodes);
 	}
 
 	/// @arg _sourceCodes is the map of input files to source code strings

@@ -347,15 +347,14 @@ eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName)
 	return contract(_contractName).cloneObject;
 }
 
-ostream& CompilerStack::assemblyStream(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
+void CompilerStack::assemblyStream(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
 {
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.compiler)
-		return currentContract.compiler->assemblyStream(_outStream, _sourceCodes);
+		currentContract.compiler->assemblyStream(_outStream, _sourceCodes);
 	else
 	{
 		_outStream << "Contract not fully implemented" << endl;
-		return _outStream;
 	}
 }
 

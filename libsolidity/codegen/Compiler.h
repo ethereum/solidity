@@ -60,9 +60,9 @@ public:
 	/// @returns Only the runtime object (without constructor).
 	eth::LinkerObject runtimeObject() const { return m_context.assembledRuntimeObject(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
-	std::ostream& assemblyStream(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const
+	void assemblyStream(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const
 	{
-		return m_context.assemblyStream(_stream, _sourceCodes);
+		m_context.assemblyStream(_stream, _sourceCodes);
 	}
 	/// @arg _sourceCodes is the map of input files to source code strings
 	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const

@@ -181,7 +181,7 @@ private:
 
 }
 
-ostream& Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	Functionalizer f(_out, _prefix, _sourceCodes);
 
@@ -206,8 +206,6 @@ ostream& Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMa
 
 	if (m_auxiliaryData.size() > 0)
 		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
-
-	return _out;
 }
 
 Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
