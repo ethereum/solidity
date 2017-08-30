@@ -137,37 +137,6 @@ Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
-What is the deal with ``function () { ... }`` inside Solidity contracts? How can a function not have a name?
-============================================================================================================
-
-This function is called "fallback function" and it
-is called when someone just sent Ether to the contract without
-providing any data or if someone messed up the types so that they tried to
-call a function that does not exist.
-
-The default behaviour (if no fallback function is explicitly given) in
-these situations is to throw an exception.
-
-If the contract is meant to receive Ether with simple transfers, you
-should implement the fallback function as
-
-``function() payable { }``
-
-Another use of the fallback function is to e.g. register that your
-contract received ether by using an event.
-
-*Attention*: If you implement the fallback function take care that it uses as
-little gas as possible, because ``send()`` will only supply a limited amount.
-
-Is it possible to pass arguments to the fallback function?
-==========================================================
-
-The fallback function cannot take parameters.
-
-Under special circumstances, you can send data. If you take care
-that none of the other functions is invoked, you can access the data
-by ``msg.data``.
-
 Can state variables be initialized in-line?
 ===========================================
 

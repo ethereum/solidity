@@ -543,9 +543,12 @@ functions match the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
-Ether (without data).  In such a context, there is usually very little gas available to
-the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as
-possible.
+Ether (without data). Additionally, in order to receive Ether, the fallback function
+must be marked ``payable``. If no such function exists, the contract cannot receive
+Ether through regular transactions.
+
+In such a context, there is usually very little gas available to the function call (to be precise, 2300 gas),
+so it is important to make fallback functions as cheap as possible.
 
 In particular, the following operations will consume more gas than the stipend provided to a fallback function:
 
@@ -556,12 +559,24 @@ In particular, the following operations will consume more gas than the stipend p
 
 Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
 
+.. note::
+    Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
+    any payload supplied with the call.
+
 .. warning::
     Contracts that receive Ether directly (without a function call, i.e. using ``send`` or ``transfer``)
     but do not define a fallback function
     throw an exception, sending back the Ether (this was different
     before Solidity v0.4.0). So if you want your contract to receive Ether,
     you have to implement a fallback function.
+
+.. warning::
+    A contract without a payable fallback function can receive Ether as a recipient of a `coinbase transaction` (aka `miner block reward`)
+    or as a destination of a ``selfdestruct``.
+
+    A contract cannot react to such Ether transfers and thus also cannot reject them. This is a design choice of the EVM and Solidity cannot work around it.
+
+    It also means that ``this.balance`` can be higher than the sum of some manual accounting implemented in a contract (i.e. having a counter updated in the fallback function).
 
 ::
 
