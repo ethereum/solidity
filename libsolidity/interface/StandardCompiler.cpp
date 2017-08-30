@@ -400,9 +400,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
-		ostringstream tmp;
-		m_compilerStack.assemblyStream(tmp, contractName, createSourceList(_input));
-		evmData["assembly"] = tmp.str();
+		evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
 		evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
 		evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
 		evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);

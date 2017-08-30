@@ -1156,9 +1156,8 @@ void CommandLineInterface::outputCompilationResults()
 				}
 				else
 				{
-					stringstream data;
-					m_compiler->assemblyStream(data, contract, m_sourceCodes);
-					createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", data.str());
+					string ret = m_compiler->assemblyString(contract, m_sourceCodes);
+					createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", ret));
 				}
 			}
 			else
@@ -1167,7 +1166,7 @@ void CommandLineInterface::outputCompilationResults()
 				if (m_args.count(g_argAsmJson)
 					cout << m_compiler->assemblyJSON(contract, m_sourceCodes);
 				else
-					m_compiler->assemblyStream(cout, contract, m_sourceCodes);
+					cout << m_compiler->assemblyString(contract, m_sourceCodes);
 			}
 		}
 

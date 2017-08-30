@@ -208,6 +208,13 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
 }
 
+string Assembly::assemblyString(StringMap const& _sourceCodes) const
+{
+	ostringstream tmp;
+	assemblyStream(tmp, "", _sourceCodes);
+	return tmp.str();
+}
+
 Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
 {
 	Json::Value value;

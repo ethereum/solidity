@@ -121,6 +121,9 @@ public:
 	Assembly& optimise(bool _enable, bool _isCreation = true, size_t _runs = 200);
 
 	/// Create a text representation of the assembly.
+	std::string assemblyString(
+		StringMap const& _sourceCodes = StringMap()
+	) const;
 	void assemblyStream(
 		std::ostream& _out,
 		std::string const& _prefix = "",

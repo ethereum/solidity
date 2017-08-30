@@ -72,14 +72,13 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		stringstream ret;
 		auto assembly = CodeFragment::compile(_src, cs).assembly(cs);
 		if (_opt)
 			assembly = assembly.optimise(true);
-		assembly.assemblyStream(ret);
+		string ret = assembly.assemblyString();
 		for (auto i: cs.treesToKill)
 			killBigints(i);
-		return ret.str();
+		return ret;
 	}
 	catch (Exception const& _e)
 	{
