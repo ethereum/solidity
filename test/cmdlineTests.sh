@@ -147,6 +147,13 @@ TMPDIR=$(mktemp -d)
             cat "$f"
             exit 1
         fi
+
+        "$REPO_ROOT"/build/test/solfuzzer --without-optimizer --quiet < "$f"
+        if [ $? -ne 0 ]; then
+            echo "Fuzzer (without optimizer) failed on:"
+            cat "$f"
+            exit 1
+        fi
         set -e
     done
 )
