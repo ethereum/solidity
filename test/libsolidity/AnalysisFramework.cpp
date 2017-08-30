@@ -59,7 +59,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 		if (currentError->comment()->find("This is a pre-release compiler version") == 0)
 			continue;
 
-		if (_reportWarnings == (currentError->type() == Error::Type::Warning))
+		if (_reportWarnings || (currentError->type() != Error::Type::Warning))
 		{
 			if (firstError && !_allowMultipleErrors)
 			{
