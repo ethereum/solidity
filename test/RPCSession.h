@@ -40,7 +40,7 @@
 class IPCSocket : public boost::noncopyable
 {
 public:
-	IPCSocket(std::string const& _path);
+	explicit IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
 	~IPCSocket() { CloseHandle(m_socket); }
 
@@ -55,7 +55,7 @@ private:
 class IPCSocket: public boost::noncopyable
 {
 public:
-	IPCSocket(std::string const& _path);
+	explicit IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
 	~IPCSocket() { close(m_socket); }
 
