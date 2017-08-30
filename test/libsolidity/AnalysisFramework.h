@@ -59,8 +59,8 @@ protected:
 
 	void printErrors();
 
-	ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
-	FunctionTypePointer retrieveFunctionBySignature(
+	static ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
+	static FunctionTypePointer retrieveFunctionBySignature(
 		ContractDefinition const& _contract,
 		std::string const& _signature
 	);

@@ -119,7 +119,7 @@ private:
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
-	bool cleanupNeededForOp(Type::Category _type, Token::Value _op) const;
+	static bool cleanupNeededForOp(Type::Category _type, Token::Value _op);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
