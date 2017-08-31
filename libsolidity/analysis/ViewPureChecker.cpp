@@ -17,9 +17,85 @@
 
 #include <libsolidity/analysis/ViewPureChecker.h>
 
+#include <libevmasm/SemanticInformation.h>
+
+#include <libsolidity/inlineasm/AsmData.h>
+
+#include <functional>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+
+
+class AssemblyViewPureChecker: public boost::static_visitor<void>
+{
+public:
+	explicit AssemblyViewPureChecker(std::function<void(StateMutability, SourceLocation const&)> _reportMutability):
+		m_reportMutability(_reportMutability) {}
+
+	void operator()(assembly::Label const&) { }
+	void operator()(assembly::Instruction const& _instruction)
+	{
+		if (eth::SemanticInformation::invalidInViewFunctions(_instruction.instruction))
+			m_reportMutability(StateMutability::NonPayable, _instruction.location);
+		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction.instruction))
+			m_reportMutability(StateMutability::View, _instruction.location);
+	}
+	void operator()(assembly::Literal const&) {}
+	void operator()(assembly::Identifier const&) {}
+	void operator()(assembly::FunctionalInstruction const& _instr)
+	{
+		(*this)(_instr.instruction);
+		for (auto const& arg: _instr.arguments)
+			boost::apply_visitor(*this, arg);
+	}
+	void operator()(assembly::StackAssignment const&) {}
+	void operator()(assembly::Assignment const& _assignment)
+	{
+		boost::apply_visitor(*this, *_assignment.value);
+	}
+	void operator()(assembly::VariableDeclaration const& _varDecl)
+	{
+		if (_varDecl.value)
+			boost::apply_visitor(*this, *_varDecl.value);
+	}
+	void operator()(assembly::FunctionDefinition const& _funDef)
+	{
+		(*this)(_funDef.body);
+	}
+	void operator()(assembly::FunctionCall const& _funCall)
+	{
+		for (auto const& arg: _funCall.arguments)
+			boost::apply_visitor(*this, arg);
+	}
+	void operator()(assembly::Switch const& _switch)
+	{
+		boost::apply_visitor(*this, *_switch.expression);
+		for (auto const& _case: _switch.cases)
+		{
+			if (_case.value)
+				(*this)(*_case.value);
+			(*this)(_case.body);
+		}
+	}
+	void operator()(assembly::ForLoop const& _for)
+	{
+		(*this)(_for.pre);
+		boost::apply_visitor(*this, *_for.condition);
+		(*this)(_for.body);
+		(*this)(_for.post);
+	}
+	void operator()(assembly::Block const& _block)
+	{
+		for (auto const& s: _block.statements)
+			boost::apply_visitor(*this, s);
+	}
+
+private:
+	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
+};
+
 
 bool ViewPureChecker::check()
 {
@@ -122,16 +198,17 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 		}
 	}
 
-	reportMutability(mutability, _identifier);
+	reportMutability(mutability, _identifier.location());
 }
 
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
-	// @TOOD we can and should analyze it further.
-	reportMutability(StateMutability::NonPayable, _inlineAssembly);
+	AssemblyViewPureChecker{
+		[=](StateMutability _mut, SourceLocation const& _loc) { reportMutability(_mut, _loc); }
+	}(_inlineAssembly.operations());
 }
 
-void ViewPureChecker::reportMutability(StateMutability _mutability, ASTNode const& _node)
+void ViewPureChecker::reportMutability(StateMutability _mutability, SourceLocation const& _location)
 {
 	if (m_currentFunction && m_currentFunction->stateMutability() < _mutability)
 	{
@@ -151,11 +228,11 @@ void ViewPureChecker::reportMutability(StateMutability _mutability, ASTNode cons
 
 		if (m_currentFunction->stateMutability() == StateMutability::View)
 			// Change this to error with 0.5.0
-			m_errorReporter.warning(_node.location(), text);
+			m_errorReporter.warning(_location, text);
 		else if (m_currentFunction->stateMutability() == StateMutability::Pure)
 		{
 			m_errors = true;
-			m_errorReporter.typeError(_node.location(), text);
+			m_errorReporter.typeError(_location, text);
 		}
 		else
 			solAssert(false, "");
@@ -173,7 +250,7 @@ void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 	// We only require "nonpayable" to call a payble function.
 	if (mut == StateMutability::Payable)
 		mut = StateMutability::NonPayable;
-	reportMutability(mut, _functionCall);
+	reportMutability(mut, _functionCall.location());
 }
 
 void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
@@ -210,7 +287,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	default:
 		break;
 	}
-	reportMutability(mutability, _memberAccess);
+	reportMutability(mutability, _memberAccess.location());
 }
 
 void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
@@ -219,7 +296,7 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 
 	bool writes = _indexAccess.annotation().lValueRequested;
 	if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
-		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess);
+		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
 }
 
 void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
@@ -229,6 +306,6 @@ void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 	solAssert(mod, "");
 	solAssert(m_inferredMutability.count(mod), "");
 
-	reportMutability(m_inferredMutability.at(mod), _modifier);
+	reportMutability(m_inferredMutability.at(mod), _modifier.location());
 }
 

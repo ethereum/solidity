@@ -64,7 +64,7 @@ private:
 
 	/// Called when an element of mutability @a _mutability is encountered.
 	/// Creates appropriate warnings and errors and sets @a m_currentBestMutability.
-	void reportMutability(StateMutability _mutability, ASTNode const& _node);
+	void reportMutability(StateMutability _mutability, SourceLocation const& _location);
 
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
 	ErrorReporter& m_errorReporter;

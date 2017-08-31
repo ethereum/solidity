@@ -316,6 +316,68 @@ BOOST_AUTO_TEST_CASE(function_types)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(creation)
+{
+	string text = R"(
+		contract D {}
+		contract C {
+			function f() { new D(); }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assembly)
+{
+	string text = R"(
+		contract C {
+			struct S { uint x; }
+			S s;
+			function e() pure {
+				assembly { mstore(keccak256(0, 20), mul(s_slot, 2)) }
+			}
+			function f() pure {
+				uint x;
+				assembly { x := 7 }
+			}
+			function g() view {
+				assembly { for {} 1 { pop(sload(0)) } { } }
+			}
+			function h() view {
+				assembly { function g() { pop(blockhash(20)) } }
+			}
+			function j()  {
+				assembly { pop(call(0, 1, 2, 3, 4, 5, 6)) }
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(assembly_staticcall)
+{
+	string text = R"(
+		contract C {
+			function i() view {
+				assembly { pop(staticcall(0, 1, 2, 3, 4, 5)) }
+			}
+		}
+	)";
+	CHECK_WARNING(text, "only available after the Metropolis");
+}
+
+BOOST_AUTO_TEST_CASE(assembly_jump)
+{
+	string text = R"(
+		contract C {
+			function k()  {
+				assembly { jump(2) }
+			}
+		}
+	)";
+	CHECK_WARNING(text, "low-level EVM features");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

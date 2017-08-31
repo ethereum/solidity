@@ -5234,7 +5234,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	char const* text = R"(
 		contract test {
 			uint a;
-			function f() {
+			function f() pure {
 				assembly {
 					function g() -> x { x := a_slot }
 				}
@@ -5921,7 +5921,7 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				uint a;
 				assembly {
 					a := 1
