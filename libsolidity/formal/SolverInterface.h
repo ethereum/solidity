@@ -56,10 +56,10 @@ public:
 	Expression(u256 const& _number): name(_number.str()) {}
 	Expression(bigint const& _number): name(_number.str()) {}
 
-	Expression(Expression const& _other) = default;
-	Expression(Expression&& _other) = default;
-	Expression& operator=(Expression const& _other) = default;
-	Expression& operator=(Expression&& _other) = default;
+	Expression(Expression const&) = default;
+	Expression(Expression&&) = default;
+	Expression& operator=(Expression const&) = default;
+	Expression& operator=(Expression&&) = default;
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
