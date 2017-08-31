@@ -121,13 +121,12 @@ void testStandardCompiler()
 		}
 }
 
-void testCompiler()
+void testCompiler(bool optimize)
 {
 	if (!quiet)
-		cout << "Testing compiler." << endl;
+		cout << "Testing compiler " << (optimize ? "with" : "without") << " optimizer." << endl;
 	string input = readInput();
 
-	bool optimize = true;
 	string outputString(compileJSON(input.c_str(), optimize));
 	Json::Value outputJson;
 	if (!Json::Reader().parse(outputString, outputJson))
@@ -191,6 +190,10 @@ Allowed options)",
 			"const-opt",
 			"Run the constant optimizer instead of compiling. "
 			"Expects a binary string of up to 32 bytes on stdin."
+		)
+		(
+			"without-optimizer",
+			"Run without optimizations. Cannot be used together with standard-json."
 		);
 
 	po::variables_map arguments;
@@ -216,7 +219,7 @@ Allowed options)",
 	else if (arguments.count("standard-json"))
 		testStandardCompiler();
 	else
-		testCompiler();
+		testCompiler(!arguments.count("without-optimizer"));
 
 	return 0;
 }
