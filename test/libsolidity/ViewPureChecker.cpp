@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(call_internal_functions_fail)
 	CHECK_ERROR(
 		"contract C{ function f() pure { g(); } function g() view {} }",
 		TypeError,
-		"Function declared as pure, but this expression reads from the environment or state and thus requires \"view\""
+		"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
 	);
 }
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(write_storage_fail)
 {
 	CHECK_WARNING(
 		"contract C{ uint x; function f() view { x = 2; } }",
-		"Function declared as view, but this expression modifies the state and thus requires non-payable (the default) or payable."
+		"Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable."
 	);
 }
 
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		CHECK_ERROR(
 			"contract C { function f() pure { var x = " + x + "; x; } }",
 			TypeError,
-			"Function declared as pure, but this expression reads from the environment or state and thus requires \"view\""
+			"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
 		);
 	}
 	for (string const& x: pure)

@@ -215,13 +215,13 @@ void ViewPureChecker::reportMutability(StateMutability _mutability, SourceLocati
 		string text;
 		if (_mutability == StateMutability::View)
 			text =
-				"Function declared as pure, but this expression reads from the "
+				"Function declared as pure, but this expression (potentially) reads from the "
 				"environment or state and thus requires \"view\".";
 		else if (_mutability == StateMutability::NonPayable)
 			text =
 				"Function declared as " +
 				stateMutabilityToString(m_currentFunction->stateMutability()) +
-				", but this expression modifies the state and thus "
+				", but this expression (potentially) modifies the state and thus "
 				"requires non-payable (the default) or payable.";
 		else
 			solAssert(false, "");
