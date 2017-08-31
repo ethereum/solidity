@@ -156,6 +156,8 @@ public:
 	eth::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
 	eth::AssemblyItem newTag() { return m_asm->newTag(); }
+	/// @returns a new tag identified by name.
+	eth::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
 	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
@@ -185,10 +187,11 @@ public:
 	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
 	/// prior to parsing the inline assembly.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
+	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
 	void appendInlineAssembly(
 		std::string const& _assembly,
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
-		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
+		bool _system = false
 	);
 
 	/// Appends arbitrary data to the end of the bytecode.

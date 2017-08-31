@@ -319,7 +319,7 @@ void CompilerUtils::abiEncode(
 	ABIFunctions funs;
 	string routine = funs.tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
 	routine += funs.requestedFunctions();
-	m_context.appendInlineAssembly("{" + routine + "}", variables);
+	m_context.appendInlineAssembly("{" + routine + "}", variables, true);
 	// Remove everyhing except for "value0" / the final memory pointer.
 	popStackSlots(numValues);
 }
