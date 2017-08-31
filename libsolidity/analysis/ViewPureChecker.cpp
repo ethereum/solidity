@@ -302,10 +302,12 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 {
 	solAssert(_modifier.name(), "");
-	ModifierDefinition const* mod = dynamic_cast<decltype(mod)>(_modifier.name()->annotation().referencedDeclaration);
-	solAssert(mod, "");
-	solAssert(m_inferredMutability.count(mod), "");
-
-	reportMutability(m_inferredMutability.at(mod), _modifier.location());
+	if (ModifierDefinition const* mod = dynamic_cast<decltype(mod)>(_modifier.name()->annotation().referencedDeclaration))
+	{
+		solAssert(m_inferredMutability.count(mod), "");
+		reportMutability(m_inferredMutability.at(mod), _modifier.location());
+	}
+	else
+		solAssert(dynamic_cast<ContractDefinition const*>(_modifier.name()->annotation().referencedDeclaration), "");
 }
 
