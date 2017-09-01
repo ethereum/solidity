@@ -147,7 +147,7 @@ Json::Value ABI::formatType(string const& _name, Type const& _type, bool _forLib
 	}
 	else if (StructType const* structType = dynamic_cast<StructType const*>(&_type))
 	{
-		ret["type"] = string();
+		ret["type"] = "tuple";
 		ret["components"] = Json::arrayValue;
 		for (auto const& member: structType->members(nullptr))
 		{

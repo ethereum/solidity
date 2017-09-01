@@ -973,11 +973,11 @@ BOOST_AUTO_TEST_CASE(return_structs)
 						}
 					],
 					"name" : "sub",
-					"type" : "[]"
+					"type" : "tuple[]"
 				}
 			],
 			"name" : "s",
-			"type" : ""
+			"type" : "tuple"
 			}
 		],
 		"payable" : false,
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 					}
 				],
 				"name": "s",
-				"type": ""
+				"type": "tuple"
 			},
 			{
 				"name": "c",
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(event_structs)
 				],
 				"indexed": false,
 				"name": "t",
-				"type": ""
+				"type": "tuple"
 			},
 			{
 				"components": [
@@ -1068,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(event_structs)
 							}
 						],
 						"name": "sub",
-						"type": "[]"
+						"type": "tuple[]"
 					},
 					{
 						"name": "b",
@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(event_structs)
 				],
 				"indexed": false,
 				"name": "s",
-				"type": ""
+				"type": "tuple"
 			}
 		],
 		"name": "E",
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 							}
 						],
 						"name": "sub",
-						"type": "[]"
+						"type": "tuple[]"
 					},
 					{
 						"name": "b",
@@ -1123,7 +1123,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 					}
 				],
 				"name": "s",
-				"type": ""
+				"type": "tuple"
 			}
 		],
 		"name": "g",

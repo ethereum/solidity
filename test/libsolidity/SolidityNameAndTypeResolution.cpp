@@ -601,7 +601,6 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 
 BOOST_AUTO_TEST_CASE(external_structs)
 {
-	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
@@ -614,7 +613,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 			function i(Nested[]) external {}
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -627,7 +626,33 @@ BOOST_AUTO_TEST_CASE(external_structs)
 		}
 }
 
-// TODO: Add a test that checks the signature of library functions taking structs
+BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
+{
+	char const* text = R"(
+		library Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			struct Empty {}
+			struct Nested { X[2][] a; mapping(uint => uint) m; uint y; }
+			struct X { bytes32 x; Test t; Empty[] e; }
+			function f(ActionChoices, uint, Empty) external {}
+			function g(Test, Nested) external {}
+			function h(function(Nested) external returns (uint)[]) external {}
+			function i(Nested[]) external {}
+		}
+	)";
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			BOOST_CHECK_EQUAL("f(Test.ActionChoices,uint256,Test.Empty)", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("g(Test,Test.Nested)", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
+			BOOST_CHECK_EQUAL("i(Test.Nested[])", functions[3]->externalSignature());
+		}
+}
+
 
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
