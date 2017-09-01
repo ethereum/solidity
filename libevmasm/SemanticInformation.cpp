@@ -189,7 +189,7 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	}
 }
 
-bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
+bool SemanticInformation::readsFromState(Instruction _instruction)
 {
 	switch (_instruction)
 	{

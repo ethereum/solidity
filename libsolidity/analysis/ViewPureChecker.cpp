@@ -27,6 +27,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace
+{
 
 class AssemblyViewPureChecker: public boost::static_visitor<void>
 {
@@ -39,7 +41,7 @@ public:
 	{
 		if (eth::SemanticInformation::invalidInViewFunctions(_instruction.instruction))
 			m_reportMutability(StateMutability::NonPayable, _instruction.location);
-		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction.instruction))
+		else if (eth::SemanticInformation::readsFromState(_instruction.instruction))
 			m_reportMutability(StateMutability::View, _instruction.location);
 	}
 	void operator()(assembly::Literal const&) {}
@@ -96,6 +98,7 @@ private:
 	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
 };
 
+}
 
 bool ViewPureChecker::check()
 {

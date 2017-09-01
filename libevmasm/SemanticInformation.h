@@ -53,7 +53,7 @@ struct SemanticInformation
 	static bool invalidatesMemory(solidity::Instruction _instruction);
 	/// @returns true if the given instruction modifies storage (even indirectly).
 	static bool invalidatesStorage(solidity::Instruction _instruction);
-	static bool invalidInPureFunctions(solidity::Instruction _instruction);
+	static bool readsFromState(solidity::Instruction _instruction);
 	static bool invalidInViewFunctions(solidity::Instruction _instruction);
 };
 
