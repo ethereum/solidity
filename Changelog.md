@@ -2,6 +2,8 @@
 
 Features:
  * Allow constant variables to be used as array length
+ * Code Generator: New ABI decoder which supports structs and arbitrarily nested
+   arrays and checks input size (activate using ``pragma experimental ABIEncoderV2;``.
  * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
  * Type Checker: Improve address checksum warning.
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).

@@ -322,6 +322,15 @@ void ContractCompiler::appendCalldataUnpacker(TypePointers const& _typeParameter
 {
 	// We do not check the calldata size, everything is zero-padded
 
+	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+	{
+		// Use the new JULIA-based decoding function
+		auto stackHeightBefore = m_context.stackHeight();
+		CompilerUtils(m_context).abiDecodeV2(_typeParameters, _fromMemory);
+		solAssert(m_context.stackHeight() - stackHeightBefore == CompilerUtils(m_context).sizeOnStack(_typeParameters) - 1, "");
+		return;
+	}
+
 	//@todo this does not yet support nested dynamic arrays
 
 	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
@@ -892,6 +901,7 @@ void ContractCompiler::appendMissingFunctions()
 	}
 	m_context.appendMissingLowLevelFunctions();
 	string abiFunctions = m_context.abiFunctions().requestedFunctions();
+//	cout << abiFunctions << endl;
 	if (!abiFunctions.empty())
 		m_context.appendInlineAssembly("{" + move(abiFunctions) + "}", {}, true);
 }
