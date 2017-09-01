@@ -6820,7 +6820,7 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 {
 	char const* sourceCode = R"(
 		library Lib {
-			function find(uint16[] storage _haystack, uint16 _needle) pure returns (uint)
+			function find(uint16[] storage _haystack, uint16 _needle) view returns (uint)
 			{
 				for (uint i = 0; i < _haystack.length; ++i)
 					if (_haystack[i] == _needle)

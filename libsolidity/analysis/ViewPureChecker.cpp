@@ -292,11 +292,14 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 
 void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 {
-	solAssert(_indexAccess.indexExpression(), "");
-
-	bool writes = _indexAccess.annotation().lValueRequested;
-	if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
-		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
+	if (!_indexAccess.indexExpression())
+		solAssert(_indexAccess.annotation().type->category() == Type::Category::TypeType, "");
+	else
+	{
+		bool writes = _indexAccess.annotation().lValueRequested;
+		if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
+			reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
+	}
 }
 
 void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
