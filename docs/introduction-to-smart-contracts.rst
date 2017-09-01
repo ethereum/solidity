@@ -61,6 +61,10 @@ so that only you can alter the number.
     All identifiers (contract names, function names and variable names) are restricted to
     the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
 
+.. warning::
+    Be careful with using Unicode text as similarly looking (or even identical) can have different
+    code points and as such will be encoded as a different byte array.
+
 .. index:: ! subcurrency
 
 Subcurrency Example
