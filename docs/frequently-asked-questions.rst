@@ -125,24 +125,6 @@ Example::
         }
     }
 
-Are timestamps (``now,`` ``block.timestamp``) reliable?
-=======================================================
-
-This depends on what you mean by "reliable".
-In general, they are supplied by miners and are therefore vulnerable.
-
-Unless someone really messes up the blockchain or the clock on
-your computer, you can make the following assumptions:
-
-You publish a transaction at a time X, this transaction contains same
-code that calls ``now`` and is included in a block whose timestamp is Y
-and this block is included into the canonical chain (published) at a time Z.
-
-The value of ``now`` will be identical to Y and X <= Y <= Z.
-
-Never use ``now`` or ``block.hash`` as a source of randomness, unless you know
-what you are doing!
-
 Can a contract function return a ``struct``?
 ============================================
 
@@ -154,37 +136,6 @@ If I return an ``enum``, I only get integer values in web3.js. How to get the na
 Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
-
-What is the deal with ``function () { ... }`` inside Solidity contracts? How can a function not have a name?
-============================================================================================================
-
-This function is called "fallback function" and it
-is called when someone just sent Ether to the contract without
-providing any data or if someone messed up the types so that they tried to
-call a function that does not exist.
-
-The default behaviour (if no fallback function is explicitly given) in
-these situations is to throw an exception.
-
-If the contract is meant to receive Ether with simple transfers, you
-should implement the fallback function as
-
-``function() payable { }``
-
-Another use of the fallback function is to e.g. register that your
-contract received ether by using an event.
-
-*Attention*: If you implement the fallback function take care that it uses as
-little gas as possible, because ``send()`` will only supply a limited amount.
-
-Is it possible to pass arguments to the fallback function?
-==========================================================
-
-The fallback function cannot take parameters.
-
-Under special circumstances, you can send data. If you take care
-that none of the other functions is invoked, you can access the data
-by ``msg.data``.
 
 Can state variables be initialized in-line?
 ===========================================
@@ -229,13 +180,6 @@ not terminate because ``i`` can only hold values up to ``255``.
 Better use ``for (uint i = 0; i < a.length...``
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
-
-What character set does Solidity use?
-=====================================
-
-Solidity is character set agnostic concerning strings in the source code, although
-UTF-8 is recommended. Identifiers (variables, functions, ...) can only use
-ASCII.
 
 What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
 ==================================================================================================
@@ -441,23 +385,6 @@ The correct way to do this is the following::
         }
     }
 
-What is the difference between ``bytes`` and ``byte[]``?
-========================================================
-
-``bytes`` is usually more efficient: When used as arguments to functions (i.e. in
-CALLDATA) or in memory, every single element of a ``byte[]`` is padded to 32
-bytes which wastes 31 bytes per element.
-
-Is it possible to send a value while calling an overloaded function?
-====================================================================
-
-It's a known missing feature. https://www.pivotaltracker.com/story/show/92020468
-as part of https://www.pivotaltracker.com/n/projects/1189488
-
-Best solution currently see is to introduce a special case for gas and value and
-just re-check whether they are present at the point of overload resolution.
-
-
 ******************
 Advanced Questions
 ******************
@@ -502,23 +429,6 @@ Note2: Optimizing storage access can pull the gas costs down considerably, becau
 32 ``uint8`` values can be stored in a single slot. The problem is that these optimizations
 currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
-
-What does ``p.recipient.call.value(p.amount)(p.data)`` do?
-==========================================================
-
-Every external function call in Solidity can be modified in two ways:
-
-1. You can add Ether together with the call
-2. You can limit the amount of gas available to the call
-
-This is done by "calling a function on the function":
-
-``f.gas(2).value(20)()`` calls the modified function ``f`` and thereby sending 20
-Wei and limiting the gas to 2 (so this function call will most likely go out of
-gas and return your 20 Wei).
-
-In the above example, the low-level function ``call`` is used to invoke another
-contract with ``p.data`` as payload and ``p.amount`` Wei is sent with that call.
 
 What happens to a ``struct``'s mapping when copying over a ``struct``?
 ======================================================================
