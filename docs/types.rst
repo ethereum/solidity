@@ -70,6 +70,30 @@ sign extends. Shifting by a negative amount throws a runtime exception.
     are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
     works like division with rounding down (towards negative infinity).
 
+.. index:: ! ufixed, ! fixed, ! fixed point number
+
+Fixed Point Numbers
+-------------------
+
+.. warning::
+    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
+    cannot be assigned to or from.
+
+``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represent the number of bits taken by 
+the type and ``N`` represent how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
+
+Operators:
+
+* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder)
+
+.. note::
+    The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
+    that the number of bits used for the integer and the fractional part (the part after the decimal dot) is flexible in the former, while it is strictly
+    defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
+    where the decimal point is.
+
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
 .. _address:
@@ -202,15 +226,6 @@ Dynamically-sized byte array
 As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
 for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
 number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
-
-.. index:: ! ufixed, ! fixed, ! fixed point number
-
-Fixed Point Numbers
--------------------
-
-.. warning::
-    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
-    cannot be assigned to or from.
 
 .. index:: address, literal;address
 
