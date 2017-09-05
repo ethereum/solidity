@@ -179,7 +179,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 	bool writes = _identifier.annotation().lValueRequested;
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		if (varDecl->isStateVariable())
+		if (varDecl->isStateVariable() && !varDecl->isConstant())
 			mutability = writes ? StateMutability::NonPayable : StateMutability::View;
 	}
 	else if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
