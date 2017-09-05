@@ -34,42 +34,42 @@ Types
 
 The following elementary types exist:
 
-- `uint<M>`: unsigned integer type of `M` bits, `0 < M <= 256`, `M % 8 == 0`. e.g. `uint32`, `uint8`, `uint256`.
+- ``uint<M>``: unsigned integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``. e.g. ``uint32``, ``uint8``, ``uint256``.
 
-- `int<M>`: two's complement signed integer type of `M` bits, `0 < M <= 256`, `M % 8 == 0`.
+- ``int<M>``: two's complement signed integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``.
 
-- `address`: equivalent to `uint160`, except for the assumed interpretation and language typing.
+- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing.
 
-- `uint`, `int`: synonyms for `uint256`, `int256` respectively (not to be used for computing the function selector).
+- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively (not to be used for computing the function selector).
 
-- `bool`: equivalent to `uint8` restricted to the values 0 and 1
+- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1
 
-- `fixed<M>x<N>`: signed fixed-point decimal number of `M` bits, `8 <= M <= 256`, `M % 8 ==0`, and `0 < N <= 80`, which denotes the value `v` as `v / (10 ** N)`.
+- ``fixed<M>x<N>``: signed fixed-point decimal number of ``M`` bits, ``8 <= M <= 256``, ``M % 8 ==0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
 
-- `ufixed<M>x<N>`: unsigned variant of `fixed<M>x<N>`.
+- ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
-- `fixed`, `ufixed`: synonyms for `fixed128x19`, `ufixed128x19` respectively (not to be used for computing the function selector).
+- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively (not to be used for computing the function selector).
 
-- `bytes<M>`: binary type of `M` bytes, `0 < M <= 32`.
+- ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
-- `function`: equivalent to `bytes24`: an address, followed by a function selector
+- ``function``: equivalent to ``bytes24``: an address, followed by a function selector
 
 The following (fixed-size) array type exists:
 
-- `<type>[M]`: a fixed-length array of the given fixed-length type.
+- ``<type>[M]``: a fixed-length array of the given fixed-length type.
 
 The following non-fixed-size types exist:
 
-- `bytes`: dynamic sized byte sequence.
+- ``bytes``: dynamic sized byte sequence.
 
-- `string`: dynamic sized unicode string assumed to be UTF-8 encoded.
+- ``string``: dynamic sized unicode string assumed to be UTF-8 encoded.
 
-- `<type>[]`: a variable-length array of the given fixed-length type.
+- ``<type>[]``: a variable-length array of the given fixed-length type.
 
 Types can be combined to anonymous structs by enclosing a finite non-negative number
 of them inside parentheses, separated by commas:
 
-- `(T1,T2,...,Tn)`: anonymous struct (ordered tuple) consisting of the types `T1`, ..., `Tn`, `n >= 0`
+- ``(T1,T2,...,Tn)``: anonymous struct (ordered tuple) consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
 
 It is possible to form structs of structs, arrays of structs and so on.
 
@@ -82,96 +82,96 @@ properties, which are especially useful if some arguments are nested arrays:
 
 Properties:
 
-  1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve `a_i[k][l][r]`. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
+  1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
 
   2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses"
 
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
 **Definition:** The following types are called "dynamic":
-* `bytes`
-* `string`
-* `T[]` for any `T`
-* `T[k]` for any dynamic `T` and any `k > 0`
-* `(T1,...,Tk)` if any `Ti` is dynamic for `1 <= i <= k`
+* ``bytes``
+* ``string``
+* ``T[]`` for any ``T``
+* ``T[k]`` for any dynamic ``T`` and any ``k > 0``
+* ``(T1,...,Tk)`` if any ``Ti`` is dynamic for ``1 <= i <= k``
 
 All other types are called "static".
 
-**Definition:** `len(a)` is the number of bytes in a binary string `a`.
-The type of `len(a)` is assumed to be `uint256`.
+**Definition:** ``len(a)`` is the number of bytes in a binary string ``a``.
+The type of ``len(a)`` is assumed to be ``uint256``.
 
-We define `enc`, the actual encoding, as a mapping of values of the ABI types to binary strings such
-that `len(enc(X))` depends on the value of `X` if and only if the type of `X` is dynamic.
+We define ``enc``, the actual encoding, as a mapping of values of the ABI types to binary strings such
+that ``len(enc(X))`` depends on the value of ``X`` if and only if the type of ``X`` is dynamic.
 
-**Definition:** For any ABI value `X`, we recursively define `enc(X)`, depending
-on the type of `X` being
+**Definition:** For any ABI value ``X``, we recursively define ``enc(X)``, depending
+on the type of ``X`` being
 
-- `(T1,...,Tk)` for `k >= 0` and any types `T1`, ..., `Tk`
+- ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
 
-  `enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))`
+  ``enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))``
 
-  where `X(i)` is the `ith` component of the value, and
-  `head` and `tail` are defined for `Ti` being a static type as
+  where ``X(i)`` is the ``ith`` component of the value, and
+  ``head`` and ``tail`` are defined for ``Ti`` being a static type as
 
-    `head(X(i)) = enc(X(i))` and `tail(X(i)) = ""` (the empty string)
+    ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
 
   and as
 
-    `head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))`
-    `tail(X(i)) = enc(X(i))`
+    ``head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))``
+    ``tail(X(i)) = enc(X(i))``
 
-  otherwise, i.e. if `Ti` is a dynamic type.
+  otherwise, i.e. if ``Ti`` is a dynamic type.
 
-  Note that in the dynamic case, `head(X(i))` is well-defined since the lengths of
+  Note that in the dynamic case, ``head(X(i))`` is well-defined since the lengths of
   the head parts only depend on the types and not the values. Its value is the offset
-  of the beginning of `tail(X(i))` relative to the start of `enc(X)`.
+  of the beginning of ``tail(X(i))`` relative to the start of ``enc(X)``.
   
-- `T[k]` for any `T` and `k`:
+- ``T[k]`` for any ``T`` and ``k``:
 
-  `enc(X) = enc((X[0], ..., X[k-1]))`
+  ``enc(X) = enc((X[0], ..., X[k-1]))``
   
-  i.e. it is encoded as if it were an anonymous struct with `k` elements
+  i.e. it is encoded as if it were an anonymous struct with ``k`` elements
   of the same type.
   
-- `T[]` where `X` has `k` elements (`k` is assumed to be of type `uint256`):
+- ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
-  `enc(X) = enc(k) enc([X[1], ..., X[k]])`
+  ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
 
-  i.e. it is encoded as if it were an array of static size `k`, prefixed with
+  i.e. it is encoded as if it were an array of static size ``k``, prefixed with
   the number of elements.
 
-- `bytes`, of length `k` (which is assumed to be of type `uint256`):
+- ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
 
-  `enc(X) = enc(k) pad_right(X)`, i.e. the number of bytes is encoded as a
-    `uint256` followed by the actual value of `X` as a byte sequence, followed by
-    the minimum number of zero-bytes such that `len(enc(X))` is a multiple of 32.
+  ``enc(X) = enc(k) pad_right(X)``, i.e. the number of bytes is encoded as a
+    ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
+    the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
 
-- `string`:
+- ``string``:
 
-  `enc(X) = enc(enc_utf8(X))`, i.e. `X` is utf-8 encoded and this value is interpreted as of `bytes` type and encoded further. Note that the length used in this subsequent encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
+  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is utf-8 encoded and this value is interpreted as of ``bytes`` type and encoded further. Note that the length used in this subsequent encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
 
-- `uint<M>`: `enc(X)` is the big-endian encoding of `X`, padded on the higher-order (left) side with zero-bytes such that the length is a multiple of 32 bytes.
-- `address`: as in the `uint160` case
-- `int<M>`: `enc(X)` is the big-endian two's complement encoding of `X`, padded on the higher-oder (left) side with `0xff` for negative `X` and with zero bytes for positive `X` such that the length is a multiple of 32 bytes.
-- `bool`: as in the `uint8` case, where `1` is used for `true` and `0` for `false`
-- `fixed<M>x<N>`: `enc(X)` is `enc(X * 10**N)` where `X * 10**N` is interpreted as a `int256`.
-- `fixed`: as in the `fixed128x19` case
-- `ufixed<M>x<N>`: `enc(X)` is `enc(X * 10**N)` where `X * 10**N` is interpreted as a `uint256`.
-- `ufixed`: as in the `ufixed128x19` case
-- `bytes<M>`: `enc(X)` is the sequence of bytes in `X` padded with zero-bytes to a length of 32.
+- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order (left) side with zero-bytes such that the length is a multiple of 32 bytes.
+- ``address``: as in the ``uint160`` case
+- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-oder (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is a multiple of 32 bytes.
+- ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
+- ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
+- ``fixed``: as in the ``fixed128x19`` case
+- ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
+- ``ufixed``: as in the ``ufixed128x19`` case
+- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with zero-bytes to a length of 32.
 
-Note that for any `X`, `len(enc(X))` is a multiple of 32.
+Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
 
 Function Selector and Argument Encoding
 =======================================
 
-All in all, a call to the function `f` with parameters `a_1, ..., a_n` is encoded as
+All in all, a call to the function ``f`` with parameters ``a_1, ..., a_n`` is encoded as
 
-  `function_selector(f) enc((a_1, ..., a_n))`
+  ``function_selector(f) enc((a_1, ..., a_n))``
 
-and the return values `v_1, ..., v_k` of `f` are encoded as
+and the return values ``v_1, ..., v_k`` of ``f`` are encoded as
 
-  `enc((v_1, ..., v_k))`
+  ``enc((v_1, ..., v_k))``
 
 i.e. the values are combined into an anonymous struct and encoded.
 
@@ -191,40 +191,40 @@ Given the contract:
     }
 
 
-Thus for our `Foo` example if we wanted to call `baz` with the parameters `69` and `true`, we would pass 68 bytes total, which can be broken down into:
+Thus for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``69`` and ``true``, we would pass 68 bytes total, which can be broken down into:
 
-- `0xcdcd77c0`: the Method ID. This is derived as the first 4 bytes of the Keccak hash of the ASCII form of the signature `baz(uint32,bool)`.
-- `0x0000000000000000000000000000000000000000000000000000000000000045`: the first parameter, a uint32 value `69` padded to 32 bytes
-- `0x0000000000000000000000000000000000000000000000000000000000000001`: the second parameter - boolean `true`, padded to 32 bytes
+- ``0xcdcd77c0``: the Method ID. This is derived as the first 4 bytes of the Keccak hash of the ASCII form of the signature ``baz(uint32,bool)``.
+- ``0x0000000000000000000000000000000000000000000000000000000000000045``: the first parameter, a uint32 value ``69`` padded to 32 bytes
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter - boolean ``true``, padded to 32 bytes
 
 In total::
 
     0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
 
-It returns a single `bool`. If, for example, it were to return `false`, its output would be the single byte array `0x0000000000000000000000000000000000000000000000000000000000000000`, a single bool.
+It returns a single ``bool``. If, for example, it were to return ``false``, its output would be the single byte array ``0x0000000000000000000000000000000000000000000000000000000000000000``, a single bool.
 
-If we wanted to call `bar` with the argument `["abc", "def"]`, we would pass 68 bytes total, broken down into:
+If we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass 68 bytes total, broken down into:
 
-- `0xfce353f6`: the Method ID. This is derived from the signature `bar(bytes3[2])`.
-- `0x6162630000000000000000000000000000000000000000000000000000000000`: the first part of the first parameter, a `bytes3` value `"abc"` (left-aligned).
-- `0x6465660000000000000000000000000000000000000000000000000000000000`: the second part of the first parameter, a `bytes3` value `"def"` (left-aligned).
+- ``0xfce353f6``: the Method ID. This is derived from the signature ``bar(bytes3[2])``.
+- ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
+- ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first parameter, a ``bytes3`` value ``"def"`` (left-aligned).
 
 In total::
 
     0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
-If we wanted to call `sam` with the arguments `"dave"`, `true` and `[1,2,3]`, we would pass 292 bytes total, broken down into:
+If we wanted to call ``sam`` with the arguments ``"dave"``, ``true`` and ``[1,2,3]``, we would pass 292 bytes total, broken down into:
 
-- `0xa5643bf2`: the Method ID. This is derived from the signature `sam(bytes,bool,uint256[])`. Note that `uint` is replaced with its canonical representation `uint256`.
-- `0x0000000000000000000000000000000000000000000000000000000000000060`: the location of the data part of the first parameter (dynamic type), measured in bytes from the start of the arguments block. In this case, `0x60`.
-- `0x0000000000000000000000000000000000000000000000000000000000000001`: the second parameter: boolean true.
-- `0x00000000000000000000000000000000000000000000000000000000000000a0`: the location of the data part of the third parameter (dynamic type), measured in bytes. In this case, `0xa0`.
-- `0x0000000000000000000000000000000000000000000000000000000000000004`: the data part of the first argument, it starts with the length of the byte array in elements, in this case, 4.
-- `0x6461766500000000000000000000000000000000000000000000000000000000`: the contents of the first argument: the UTF-8 (equal to ASCII in this case) encoding of `"dave"`, padded on the right to 32 bytes.
-- `0x0000000000000000000000000000000000000000000000000000000000000003`: the data part of the third argument, it starts with the length of the array in elements, in this case, 3.
-- `0x0000000000000000000000000000000000000000000000000000000000000001`: the first entry of the third parameter.
-- `0x0000000000000000000000000000000000000000000000000000000000000002`: the second entry of the third parameter.
-- `0x0000000000000000000000000000000000000000000000000000000000000003`: the third entry of the third parameter.
+- ``0xa5643bf2``: the Method ID. This is derived from the signature ``sam(bytes,bool,uint256[])``. Note that ``uint`` is replaced with its canonical representation ``uint256``.
+- ``0x0000000000000000000000000000000000000000000000000000000000000060``: the location of the data part of the first parameter (dynamic type), measured in bytes from the start of the arguments block. In this case, ``0x60``.
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter: boolean true.
+- ``0x00000000000000000000000000000000000000000000000000000000000000a0``: the location of the data part of the third parameter (dynamic type), measured in bytes. In this case, ``0xa0``.
+- ``0x0000000000000000000000000000000000000000000000000000000000000004``: the data part of the first argument, it starts with the length of the byte array in elements, in this case, 4.
+- ``0x6461766500000000000000000000000000000000000000000000000000000000``: the contents of the first argument: the UTF-8 (equal to ASCII in this case) encoding of ``"dave"``, padded on the right to 32 bytes.
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``: the data part of the third argument, it starts with the length of the array in elements, in this case, 3.
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the first entry of the third parameter.
+- ``0x0000000000000000000000000000000000000000000000000000000000000002``: the second entry of the third parameter.
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``: the third entry of the third parameter.
 
 In total::
 
@@ -233,26 +233,26 @@ In total::
 Use of Dynamic Types
 ====================
 
-A call to a function with the signature `f(uint,uint32[],bytes10,bytes)` with values `(0x123, [0x456, 0x789], "1234567890", "Hello, world!")` is encoded in the following way:
+A call to a function with the signature ``f(uint,uint32[],bytes10,bytes)`` with values ``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` is encoded in the following way:
 
-We take the first four bytes of `sha3("f(uint256,uint32[],bytes10,bytes)")`, i.e. `0x8be65246`.
-Then we encode the head parts of all four arguments. For the static types `uint256` and `bytes10`, these are directly the values we want to pass, whereas for the dynamic types `uint32[]` and `bytes`, we use the offset in bytes to the start of their data area, measured from the start of the value encoding (i.e. not counting the first four bytes containing the hash of the function signature). These are:
+We take the first four bytes of ``sha3("f(uint256,uint32[],bytes10,bytes)")``, i.e. ``0x8be65246``.
+Then we encode the head parts of all four arguments. For the static types ``uint256`` and ``bytes10``, these are directly the values we want to pass, whereas for the dynamic types ``uint32[]`` and ``bytes``, we use the offset in bytes to the start of their data area, measured from the start of the value encoding (i.e. not counting the first four bytes containing the hash of the function signature). These are:
 
- - `0x0000000000000000000000000000000000000000000000000000000000000123` (`0x123` padded to 32 bytes)
- - `0x0000000000000000000000000000000000000000000000000000000000000080` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
- - `0x3132333435363738393000000000000000000000000000000000000000000000` (`"1234567890"` padded to 32 bytes on the right)
- - `0x00000000000000000000000000000000000000000000000000000000000000e0` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
+ - ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
+ - ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
+ - ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
 
-After this, the data part of the first dynamic argument, `[0x456, 0x789]` follows:
+After this, the data part of the first dynamic argument, ``[0x456, 0x789]`` follows:
 
- - `0x0000000000000000000000000000000000000000000000000000000000000002` (number of elements of the array, 2)
- - `0x0000000000000000000000000000000000000000000000000000000000000456` (first element)
- - `0x0000000000000000000000000000000000000000000000000000000000000789` (second element)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
 
-Finally, we encode the data part of the second dynamic argument, `"Hello, world!"`:
+Finally, we encode the data part of the second dynamic argument, ``"Hello, world!"``:
 
- - `0x000000000000000000000000000000000000000000000000000000000000000d` (number of elements (bytes in this case): 13)
- - `0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000` (`"Hello, world!"` padded to 32 bytes on the right)
+ - ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
+ - ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
@@ -278,41 +278,41 @@ Given an event name and series of event parameters, we split them into two sub-s
 
 In effect, a log entry using this ABI is described as:
 
-- `address`: the address of the contract (intrinsically provided by Ethereum);
-- `topics[0]`: `keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")` (`canonical_type_of` is a function that simply returns the canonical type of a given argument, e.g. for `uint indexed foo`, it would return `uint256`). If the event is declared as `anonymous` the `topics[0]` is not generated;
-- `topics[n]`: `EVENT_INDEXED_ARGS[n - 1]` (`EVENT_INDEXED_ARGS` is the series of `EVENT_ARGS` that are indexed);
-- `data`: `abi_serialise(EVENT_NON_INDEXED_ARGS)` (`EVENT_NON_INDEXED_ARGS` is the series of `EVENT_ARGS` that are not indexed, `abi_serialise` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
+- ``address``: the address of the contract (intrinsically provided by Ethereum);
+- ``topics[0]``: ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")`` (``canonical_type_of`` is a function that simply returns the canonical type of a given argument, e.g. for ``uint indexed foo``, it would return ``uint256``). If the event is declared as ``anonymous`` the ``topics[0]`` is not generated;
+- ``topics[n]``: ``EVENT_INDEXED_ARGS[n - 1]`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are indexed);
+- ``data``: ``abi_serialise(EVENT_NON_INDEXED_ARGS)`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_serialise`` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
 
 JSON
 ====
 
 The JSON format for a contract's interface is given by an array of function and/or event descriptions. A function description is a JSON object with the fields:
 
-- `type`: `"function"`, `"constructor"`, or `"fallback"` (the :ref:`unnamed "default" function <fallback-function>`);
-- `name`: the name of the function;
-- `inputs`: an array of objects, each of which contains:
-  * `name`: the name of the parameter;
-  * `type`: the canonical type of the parameter.
-- `outputs`: an array of objects similar to `inputs`, can be omitted if function doesn't return anything;
-- `payable`: `true` if function accepts ether, defaults to `false`;
-- `stateMutability`: a string with one of the following values: `pure` (:ref:`specified to not read blockchain state <pure-functions>`), `view` (:ref:`specified to not modify the blockchain state <view-functions>`), `nonpayable` and `payable` (same as `payable` above).
-- `constant`: `true` if function is either `pure` or `view`
+- ``type``: ``"function"``, ``"constructor"``, or ``"fallback"`` (the :ref:`unnamed "default" function <fallback-function>`);
+- ``name``: the name of the function;
+- ``inputs``: an array of objects, each of which contains:
+  * ``name``: the name of the parameter;
+  * ``type``: the canonical type of the parameter.
+- ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
+- ``payable``: ``true`` if function accepts ether, defaults to ``false``;
+- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` and ``payable`` (same as ``payable`` above).
+- ``constant``: ``true`` if function is either ``pure`` or ``view``
 
-`type` can be omitted, defaulting to `"function"`.
+``type`` can be omitted, defaulting to ``"function"``.
 
-Constructor and fallback function never have `name` or `outputs`. Fallback function doesn't have `inputs` either.
+Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
 Sending non-zero ether to non-payable function will throw. Don't do it.
 
 An event description is a JSON object with fairly similar fields:
 
-- `type`: always `"event"`
-- `name`: the name of the event;
-- `inputs`: an array of objects, each of which contains:
-  * `name`: the name of the parameter;
-  * `type`: the canonical type of the parameter.
-  * `indexed`: `true` if the field is part of the log's topics, `false` if it one of the log's data segment.
-- `anonymous`: `true` if the event was declared as `anonymous`.
+- ``type``: always ``"event"``
+- ``name``: the name of the event;
+- ``inputs``: an array of objects, each of which contains:
+  * ``name``: the name of the parameter;
+  * ``type``: the canonical type of the parameter.
+  * ``indexed``: ``true`` if the field is part of the log's topics, ``false`` if it one of the log's data segment.
+- ``anonymous``: ``true`` if the event was declared as ``anonymous``.
 
 For example, 
 
