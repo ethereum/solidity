@@ -6217,21 +6217,21 @@ BOOST_AUTO_TEST_CASE(too_large_arrays_for_calldata)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded.");
 	text = R"(
 		contract C {
 			function f(uint[85678901234] a) internal {
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded.");
 	text = R"(
 		contract C {
 			function f(uint[85678901234] a) {
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Array is too large to be encoded as calldata.");
+	CHECK_ERROR(text, TypeError, "Array is too large to be encoded.");
 }
 
 BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
