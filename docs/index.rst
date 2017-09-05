@@ -144,6 +144,7 @@ Contents
    solidity-in-depth.rst
    security-considerations.rst
    using-the-compiler.rst
+   metadata.rst
    abi-spec.rst
    style-guide.rst
    common-patterns.rst
