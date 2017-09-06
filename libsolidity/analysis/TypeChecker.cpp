@@ -623,7 +623,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				(arrayType->location() == DataLocation::CallData)) &&
 				!arrayType->validForCalldata()
 			)
-				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded as calldata.");
+				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
 
 	return false;
 }
