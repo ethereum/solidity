@@ -4528,12 +4528,12 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 	CHECK_WARNING(text, "\"callcode\" has been deprecated in favour");
 }
 
-BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_local)
+BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
 {
 	char const* text = R"(
 		contract test {
 			function callcode() {
-				var x = this.callcode;
+				test.callcode();
 			}
 		}
 	)";
@@ -6140,14 +6140,14 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
 {
 	char const* text = R"(
 		contract A {
-			function transfer(uint) {}
+			function transfer() {}
 		}
 
 		contract B {
 			A a;
 
 			function() {
-				a.transfer(100);
+				a.transfer();
 			}
 		}
 	)";
