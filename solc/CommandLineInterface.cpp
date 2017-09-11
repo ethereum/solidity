@@ -1147,26 +1147,19 @@ void CommandLineInterface::outputCompilationResults()
 		// do we need EVM assembly?
 		if (m_args.count(g_argAsm) || m_args.count(g_argAsmJson))
 		{
+			string ret;
+			if (m_args.count(g_argAsmJson))
+				ret = dev::jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
+			else
+				ret = m_compiler->assemblyString(contract, m_sourceCodes);
+
 			if (m_args.count(g_argOutputDir))
 			{
-				if (m_args.count(g_argAsmJson)
-				{
-					Json::Value ret = m_compiler->assemblyJSON(contract, m_sourceCodes);
-					createFile(m_compiler->filesystemFriendlyName(contract) + "_evm.json", dev::jsonPrettyPrint(ret));
-				}
-				else
-				{
-					string ret = m_compiler->assemblyString(contract, m_sourceCodes);
-					createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", ret));
-				}
+				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), ret);
 			}
 			else
 			{
-				cout << "EVM assembly:" << endl;
-				if (m_args.count(g_argAsmJson)
-					cout << m_compiler->assemblyJSON(contract, m_sourceCodes);
-				else
-					cout << m_compiler->assemblyString(contract, m_sourceCodes);
+				cout << "EVM assembly:" << endl << ret << endl;
 			}
 		}
 
