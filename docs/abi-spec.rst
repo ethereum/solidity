@@ -75,6 +75,9 @@ of them inside parentheses, separated by commas:
 
 It is possible to form tuples of tuples, arrays of tuples and so on.
 
+.. note::
+    Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
+
 Formal Specification of the Encoding
 ====================================
 
@@ -359,8 +362,8 @@ would result in the JSON:
 Handling tuple types
 --------------------
 
-If tuples are part of the type, we still want to know the name of the components. Because of that,
-the json structure gets arbitrarily nested in the following way:
+Despite that names are intentionally not part of the ABI encoding they do make a lot of sense to be included
+in the JSON to enable displaying it to the end user. The structure is nested in the following way:
 
 An object with members ``name``, ``type`` and potentially ``components`` describes a typed variable.
 The canonical type is determined until a tuple type is reached and the string description up
