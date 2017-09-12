@@ -5816,7 +5816,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_local)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Unused");
+	CHECK_WARNING(text, "Unused local variable.");
 }
 
 BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
@@ -5828,10 +5828,10 @@ BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Unused");
+	CHECK_WARNING(text, "Unused local variable.");
 }
 
-BOOST_AUTO_TEST_CASE(warn_unused_param)
+BOOST_AUTO_TEST_CASE(warn_unused_function_parameter)
 {
 	char const* text = R"(
 		contract C {
@@ -5839,7 +5839,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_param)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Unused");
+	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
 			function f(uint a) {
@@ -5849,7 +5849,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_param)
 	success(text);
 }
 
-BOOST_AUTO_TEST_CASE(warn_unused_return_param)
+BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 {
 	char const* text = R"(
 		contract C {
@@ -5857,7 +5857,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Unused");
+	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
 			function f() returns (uint a) {
@@ -5865,7 +5865,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_param)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Unused");
+	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
 			function f() returns (uint) {
