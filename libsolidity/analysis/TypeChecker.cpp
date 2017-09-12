@@ -174,18 +174,20 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 	{
 		vector<FunctionDefinition const*> const& overloads = it.second;
 		for (size_t i = 0; i < overloads.size(); ++i)
+		{
+			SecondarySourceLocation ssl;
+
 			for (size_t j = i + 1; j < overloads.size(); ++j)
 				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
-				{
-					m_errorReporter.declarationError(
-						overloads[j]->location(),
-						SecondarySourceLocation().append(
-							"Other declaration is here:",
-							overloads[i]->location()
-						),
-						"Function with same name and arguments defined twice."
-					);
-				}
+					ssl.append("Other declaration is here:", overloads[j]->location());
+
+			if (ssl.infos.size() > 0)
+				m_errorReporter.declarationError(
+					overloads[i]->location(),
+					ssl,
+					"Function with same name and arguments defined twice."
+				);
+		}
 	}
 }
 
