@@ -164,10 +164,18 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 		for (; it != functions[_contract.name()].end(); ++it)
 			ssl.append("Another declaration is here:", (*it)->location());
 
+		string msg = "More than one constructor defined.";
+		size_t occurrences = ssl.infos.size();
+		if (occurrences > 32)
+		{
+			ssl.infos.resize(32);
+			msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+		}
+
 		m_errorReporter.declarationError(
 			functions[_contract.name()].front()->location(),
 			ssl,
-			"More than one constructor defined."
+			msg
 		);
 	}
 	for (auto const& it: functions)
@@ -186,11 +194,21 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 				}
 
 			if (ssl.infos.size() > 0)
+			{
+				string msg = "Function with same name and arguments defined twice.";
+				size_t occurrences = ssl.infos.size();
+				if (occurrences > 32)
+				{
+					ssl.infos.resize(32);
+					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+				}
+
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
 					ssl,
-					"Function with same name and arguments defined twice."
+					msg
 				);
+			}
 		}
 	}
 }
