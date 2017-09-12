@@ -458,7 +458,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				" to " +
 				parameterTypes[i]->toString() +
 				" requested."
-						);
+			);
 }
 
 void TypeChecker::endVisit(UsingForDirective const& _usingFor)
@@ -1583,14 +1583,16 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
 				m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
+		{
+			SecondarySourceLocation ssl;
+			for (auto function: contract->annotation().unimplementedFunctions)
+				ssl.append("Missing implementation:", function->location());
 			m_errorReporter.typeError(
 				_newExpression.location(),
-				SecondarySourceLocation().append(
-					"Missing implementation:",
-					contract->annotation().unimplementedFunctions.front()->location()
-				),
+				ssl,
 				"Trying to create an instance of an abstract contract."
 			);
+		}
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
