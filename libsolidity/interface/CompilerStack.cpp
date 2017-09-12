@@ -347,16 +347,24 @@ eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName)
 	return contract(_contractName).cloneObject;
 }
 
-Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
+/// FIXME: cache this string
+string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
 {
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.compiler)
-		return currentContract.compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
+		return currentContract.compiler->assemblyString(_sourceCodes);
 	else
-	{
-		_outStream << "Contract not fully implemented" << endl;
+		return string();
+}
+
+/// FIXME: cache the JSON
+Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap _sourceCodes) const
+{
+	Contract const& currentContract = contract(_contractName);
+	if (currentContract.compiler)
+		return currentContract.compiler->assemblyJSON(_sourceCodes);
+	else
 		return Json::Value();
-	}
 }
 
 vector<string> CompilerStack::sourceNames() const

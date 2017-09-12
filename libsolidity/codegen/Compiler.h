@@ -60,10 +60,14 @@ public:
 	/// @returns Only the runtime object (without constructor).
 	eth::LinkerObject runtimeObject() const { return m_context.assembledRuntimeObject(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFromat shows whether the out should be in Json format
-	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
+	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
 	{
-		return m_context.streamAssembly(_stream, _sourceCodes, _inJsonFormat);
+		return m_context.assemblyString(_sourceCodes);
+	}
+	/// @arg _sourceCodes is the map of input files to source code strings
+	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	{
+		return m_context.assemblyJSON(_sourceCodes);
 	}
 	/// @returns Assembly items of the normal compiler context
 	eth::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }

@@ -865,10 +865,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strOpcodes))
 			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
-		{
-			ostringstream unused;
-			contractData[g_strAsm] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
-		}
+			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
 		if (requests.count(g_strSrcMap))
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1150,16 +1147,19 @@ void CommandLineInterface::outputCompilationResults()
 		// do we need EVM assembly?
 		if (m_args.count(g_argAsm) || m_args.count(g_argAsmJson))
 		{
+			string ret;
+			if (m_args.count(g_argAsmJson))
+				ret = dev::jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
+			else
+				ret = m_compiler->assemblyString(contract, m_sourceCodes);
+
 			if (m_args.count(g_argOutputDir))
 			{
-				stringstream data;
-				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJson));
-				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), data.str());
+				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), ret);
 			}
 			else
 			{
-				cout << "EVM assembly:" << endl;
-				m_compiler->streamAssembly(cout, contract, m_sourceCodes, m_args.count(g_argAsmJson));
+				cout << "EVM assembly:" << endl << ret << endl;
 			}
 		}
 

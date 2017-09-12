@@ -120,11 +120,19 @@ public:
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
 	Assembly& optimise(bool _enable, bool _isCreation = true, size_t _runs = 200);
 
-	Json::Value stream(
+	/// Create a text representation of the assembly.
+	std::string assemblyString(
+		StringMap const& _sourceCodes = StringMap()
+	) const;
+	void assemblyStream(
 		std::ostream& _out,
 		std::string const& _prefix = "",
-		const StringMap &_sourceCodes = StringMap(),
-		bool _inJsonFormat = false
+		StringMap const& _sourceCodes = StringMap()
+	) const;
+
+	/// Create a JSON representation of the assembly.
+	Json::Value assemblyJSON(
+		StringMap const& _sourceCodes = StringMap()
 	) const;
 
 protected:
@@ -136,9 +144,8 @@ protected:
 	unsigned bytesRequired(unsigned subTagSize) const;
 
 private:
-	Json::Value streamAsmJson(std::ostream& _out, StringMap const& _sourceCodes) const;
-	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
-	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
+	static Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string());
+	static std::string toStringInHex(u256 _value);
 
 protected:
 	/// 0 is reserved for exception
@@ -161,7 +168,7 @@ protected:
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
-	_a.stream(_out);
+	_a.assemblyStream(_out);
 	return _out;
 }
 

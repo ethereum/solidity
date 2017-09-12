@@ -190,11 +190,15 @@ public:
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
 
-	/// Streams a verbose version of the assembly to @a _outStream.
+	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFromat shows whether the out should be in Json format
 	/// Prerequisite: Successful compilation.
-	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
+	std::string assemblyString(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+
+	/// @returns a JSON representation of the assembly.
+	/// @arg _sourceCodes is the map of input files to source code strings
+	/// Prerequisite: Successful compilation.
+	Json::Value assemblyJSON(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.

@@ -181,7 +181,7 @@ private:
 
 }
 
-ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	Functionalizer f(_out, _prefix, _sourceCodes);
 
@@ -199,18 +199,23 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
-			m_subs[i]->streamAsm(_out, _prefix + "    ", _sourceCodes);
+			m_subs[i]->assemblyStream(_out, _prefix + "    ", _sourceCodes);
 			_out << _prefix << "}" << endl;
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
 		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
-
-	return _out;
 }
 
-Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType) const
+string Assembly::assemblyString(StringMap const& _sourceCodes) const
+{
+	ostringstream tmp;
+	assemblyStream(tmp, "", _sourceCodes);
+	return tmp.str();
+}
+
+Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
 {
 	Json::Value value;
 	value["name"] = _name;
@@ -223,14 +228,14 @@ Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string
 	return value;
 }
 
-string toStringInHex(u256 _value)
+string Assembly::toStringInHex(u256 _value)
 {
 	std::stringstream hexStr;
 	hexStr << hex << _value;
 	return hexStr.str();
 }
 
-Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes) const
+Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 {
 	Json::Value root;
 
@@ -301,27 +306,14 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceCodes);
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
 		root[".auxdata"] = toHex(m_auxiliaryData);
 
-	_out << root;
-
 	return root;
-}
-
-Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
-{
-	if (_inJsonFormat)
-		return streamAsmJson(_out, _sourceCodes);
-	else
-	{
-		streamAsm(_out, _prefix, _sourceCodes);
-		return Json::Value();
-	}
 }
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)

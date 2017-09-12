@@ -209,10 +209,15 @@ public:
 	eth::Assembly& nonConstAssembly() { return *m_asm; }
 
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFormat shows whether the out should be in Json format
-	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
+	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
 	{
-		return m_asm->stream(_stream, "", _sourceCodes, _inJsonFormat);
+		return m_asm->assemblyString(_sourceCodes);
+	}
+
+	/// @arg _sourceCodes is the map of input files to source code strings
+	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	{
+		return m_asm->assemblyJSON(_sourceCodes);
 	}
 
 	eth::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
