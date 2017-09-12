@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	SourceUnit const* source;
 	ContractDefinition const* contract;
 	source = parseAndAnalyse(text);
-	BOOST_REQUIRE((contract = retrieveContract(*source, 0)) != nullptr);
+	BOOST_REQUIRE((contract = retrieveContractByName(*source, "test")) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->returnParameterTypes();
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 
 	ContractDefinition const* contract;
 	SourceUnit const* source = parseAndAnalyse(text);
-	BOOST_CHECK((contract = retrieveContract(*source, 0)) != nullptr);
+	BOOST_CHECK((contract = retrieveContractByName(*source, "test")) != nullptr);
 	FunctionTypePointer function;
 	function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");

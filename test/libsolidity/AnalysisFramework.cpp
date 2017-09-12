@@ -106,12 +106,12 @@ void AnalysisFramework::printErrors()
 		);
 }
 
-ContractDefinition const* AnalysisFramework::retrieveContract(SourceUnit const& _source, unsigned index)
+ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)
 {
 	ContractDefinition* contract = nullptr;
-	unsigned counter = 0;
+
 	for (shared_ptr<ASTNode> const& node: _source.nodes())
-		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && counter == index)
+		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && contract->name() == _name)
 			return contract;
 
 	return nullptr;
