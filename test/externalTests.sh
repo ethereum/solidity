@@ -38,10 +38,9 @@ SOLJSON="$1"
 
 DIR=$(mktemp -d)
 (
-    cd "$DIR"
     echo "Running Zeppelin tests..."
-    git clone https://github.com/OpenZeppelin/zeppelin-solidity.git
-    cd zeppelin-solidity
+    git clone --depth 1 https://github.com/OpenZeppelin/zeppelin-solidity.git "$DIR"
+    cd "$DIR"
     npm install
     cp "$SOLJSON" ./node_modules/solc/soljson.js
     npm run test
