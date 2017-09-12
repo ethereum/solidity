@@ -173,13 +173,17 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 	for (auto const& it: functions)
 	{
 		vector<FunctionDefinition const*> const& overloads = it.second;
-		for (size_t i = 0; i < overloads.size(); ++i)
+		set<size_t> reported;
+		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
 		{
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
 				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
+				{
 					ssl.append("Other declaration is here:", overloads[j]->location());
+					reported.insert(j);
+				}
 
 			if (ssl.infos.size() > 0)
 				m_errorReporter.declarationError(
