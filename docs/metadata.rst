@@ -1,0 +1,144 @@
+#################
+Contract Metadata
+#################
+
+.. index:: metadata, contract verification
+
+The Solidity compiler automatically generates a JSON file, the
+contract metadata, that contains information about the current contract.
+It can be used to query the compiler version, the sources used, the ABI
+and NatSpec documentation in order to more safely interact with the contract
+and to verify its source code.
+
+The compiler appends a Swarm hash of the metadata file to the end of the
+bytecode (for details, see below) of each contract, so that you can retrieve
+the file in an authenticated way without having to resort to a centralized
+data provider.
+
+Of course, you have to publish the metadata file to Swarm (or some other service)
+so that others can access it. The file can be output by using ``solc --metadata``
+and the file will be called ``ContractName_meta.json``.
+It will contain Swarm references to the source code, so you have to upload
+all source files and the metadata file.
+
+The metadata file has the following format. The example below is presented in a
+human-readable way. Properly formatted metadata should use quotes correctly,
+reduce whitespace to a minimum and sort the keys of all objects to arrive at a
+unique formatting.
+Comments are of course also not permitted and used here only for explanatory purposes.
+
+.. code-block:: none
+
+    {
+      // Required: The version of the metadata format
+      version: "1",
+      // Required: Source code language, basically selects a "sub-version"
+      // of the specification
+      language: "Solidity",
+      // Required: Details about the compiler, contents are specific
+      // to the language.
+      compiler: {
+        // Required for Solidity: Version of the compiler
+        version: "0.4.6+commit.2dabbdf0.Emscripten.clang",
+        // Optional: Hash of the compiler binary which produced this output
+        keccak256: "0x123..."
+      },
+      // Required: Compilation source files/source units, keys are file names
+      sources:
+      {
+        "myFile.sol": {
+          // Required: keccak256 hash of the source file
+          "keccak256": "0x123...",
+          // Required (unless "content" is used, see below): Sorted URL(s)
+          // to the source file, protocol is more or less arbitrary, but a
+          // Swarm URL is recommended
+          "urls": [ "bzzr://56ab..." ]
+        },
+        "mortal": {
+          // Required: keccak256 hash of the source file
+          "keccak256": "0x234...",
+          // Required (unless "url" is used): literal contents of the source file
+          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+        }
+      },
+      // Required: Compiler settings
+      settings:
+      {
+        // Required for Solidity: Sorted list of remappings
+        remappings: [ ":g/dir" ],
+        // Optional: Optimizer settings (enabled defaults to false)
+        optimizer: {
+          enabled: true,
+          runs: 500
+        },
+        // Required for Solidity: File and name of the contract or library this
+        // metadata is created for.
+        compilationTarget: {
+          "myFile.sol": "MyContract"
+        },
+        // Required for Solidity: Addresses for libraries used
+        libraries: {
+          "MyLib": "0x123123..."
+        }
+      },
+      // Required: Generated information about the contract.
+      output:
+      {
+        // Required: ABI definition of the contract
+        abi: [ ... ],
+        // Required: NatSpec user documentation of the contract
+        userdoc: [ ... ],
+        // Required: NatSpec developer documentation of the contract
+        devdoc: [ ... ],
+      }
+    }
+
+.. note::
+    Note the ABI definition above has no fixed order. It can change with compiler versions.
+
+.. note::
+    Since the bytecode of the resulting contract contains the metadata hash, any change to
+    the metadata will result in a change of the bytecode. Furthermore, since the metadata
+    includes a hash of all the sources used, a single whitespace change in any of the source
+    codes will result in a different metadata, and subsequently a different bytecode.
+
+Encoding of the Metadata Hash in the Bytecode
+=============================================
+
+Because we might support other ways to retrieve the metadata file in the future,
+the mapping ``{"bzzr0": <Swarm hash>}`` is stored
+`CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the beginning of that
+encoding is not easy to find, its length is added in a two-byte big-endian
+encoding. The current version of the Solidity compiler thus adds the following
+to the end of the deployed bytecode::
+
+    0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
+
+So in order to retrieve the data, the end of the deployed bytecode can be checked
+to match that pattern and use the Swarm hash to retrieve the file.
+
+Usage for Automatic Interface Generation and NatSpec
+====================================================
+
+The metadata is used in the following way: A component that wants to interact
+with a contract (e.g. Mist) retrieves the code of the contract, from that
+the Swarm hash of a file which is then retrieved.
+That file is JSON-decoded into a structure like above.
+
+The component can then use the ABI to automatically generate a rudimentary
+user interface for the contract.
+
+Furthermore, Mist can use the userdoc to display a confirmation message to the user
+whenever they interact with the contract.
+
+Usage for Source Code Verification
+==================================
+
+In order to verify the compilation, sources can be retrieved from Swarm
+via the link in the metadata file.
+The compiler of the correct version (which is checked to be part of the "official" compilers)
+is invoked on that input with the specified settings. The resulting
+bytecode is compared to the data of the creation transaction or ``CREATE`` opcode data.
+This automatically verifies the metadata since its hash is part of the bytecode.
+Excess data corresponds to the constructor input data, which should be decoded
+according to the interface and presented to the user.
