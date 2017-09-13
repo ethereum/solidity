@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/CallgraphBuilder.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -46,6 +47,7 @@
 
 #include <libdevcore/SwarmHash.h>
 #include <libdevcore/JSON.h>
+#include <libdevcore/CommonData.h>
 
 #include <json/json.h>
 
@@ -218,6 +220,15 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		vector<ASTPointer<ASTNode>> ast;
+		for (Source const* source: m_sourceOrder)
+			ast.push_back(source->ast);
+
+		m_callgraph = CallgraphBuilder(ast).build();
 	}
 
 	if (noErrors)

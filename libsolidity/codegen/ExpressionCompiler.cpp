@@ -1296,12 +1296,12 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		switch (magicVar->type()->category())
 		{
 		case Type::Category::Contract:
-			// "this" or "super"
+			solAssert(_identifier.name() == "this" || _identifier.name() == "super", "");
 			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
 				m_context << Instruction::ADDRESS;
 			break;
 		case Type::Category::Integer:
-			// "now"
+			solAssert(_identifier.name() == "now", "");
 			m_context << Instruction::TIMESTAMP;
 			break;
 		default:
