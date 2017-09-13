@@ -400,6 +400,17 @@ Note that public functions of the current contract can be used both as an
 internal and as an external function. To use ``f`` as an internal function,
 just use ``f``, if you want to use its external form, use ``this.f``.
 
+Additionally, public (or external) functions also have a special member called ``selector``,
+which returns the :ref:`ABI function selector <abi_function_selector>`::
+
+    pragma solidity ^0.4.0;
+
+    contract Selector {
+      function f() returns (bytes4) {
+        return this.f.selector;
+      }
+    }
+
 Example that shows how to use internal function types::
 
     pragma solidity ^0.4.5;

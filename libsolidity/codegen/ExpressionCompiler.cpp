@@ -1068,7 +1068,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Invalid member access to integer");
 		break;
 	case Type::Category::Function:
-		solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
+		if (member == "selector")
+		{
+			m_context << Instruction::SWAP1 << Instruction::POP;
+			/// need to store store it as bytes4
+			utils().leftShiftNumberOnStack(224);
+		}
+		else
+			solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
 				 "Invalid member access to function.");
 		break;
 	case Type::Category::Magic:

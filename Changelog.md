@@ -1,6 +1,7 @@
 ### 0.4.17 (unreleased)
 
 Features:
+ * Code Generator: Added ``.selector`` member on external function types to retrieve their signature.
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
  * Type Checker: Display helpful warning for unused function arguments/return parameters.
  * Type Checker: Do not show the same error multiple times for events.
