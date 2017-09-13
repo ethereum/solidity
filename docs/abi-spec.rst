@@ -91,6 +91,7 @@ Properties:
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
 **Definition:** The following types are called "dynamic":
+
 * ``bytes``
 * ``string``
 * ``T[]`` for any ``T``
@@ -293,8 +294,10 @@ The JSON format for a contract's interface is given by an array of function and/
 - ``type``: ``"function"``, ``"constructor"``, or ``"fallback"`` (the :ref:`unnamed "default" function <fallback-function>`);
 - ``name``: the name of the function;
 - ``inputs``: an array of objects, each of which contains:
+
   * ``name``: the name of the parameter;
   * ``type``: the canonical type of the parameter.
+
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
 - ``payable``: ``true`` if function accepts ether, defaults to ``false``;
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` and ``payable`` (same as ``payable`` above).
@@ -311,9 +314,11 @@ An event description is a JSON object with fairly similar fields:
 - ``type``: always ``"event"``
 - ``name``: the name of the event;
 - ``inputs``: an array of objects, each of which contains:
+
   * ``name``: the name of the parameter;
   * ``type``: the canonical type of the parameter.
   * ``indexed``: ``true`` if the field is part of the log's topics, ``false`` if it one of the log's data segment.
+
 - ``anonymous``: ``true`` if the event was declared as ``anonymous``.
 
 For example, 
