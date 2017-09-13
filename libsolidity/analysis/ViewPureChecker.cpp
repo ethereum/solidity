@@ -108,12 +108,7 @@ bool ViewPureChecker::check()
 	{
 		SourceUnit const* source = dynamic_cast<SourceUnit const*>(node.get());
 		solAssert(source, "");
-		for (auto const& topLevelNode: source->nodes())
-		{
-			ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(topLevelNode.get());
-			if (contract)
-				contracts.push_back(contract);
-		}
+		contracts += source->filteredNodes<ContractDefinition>(source->nodes());
 	}
 
 	// Check modifiers first to infer their state mutability.
@@ -146,7 +141,6 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		_funDef.isImplemented() &&
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
-		!_funDef.isConstructor() &&
 		!_funDef.annotation().superFunction
 	)
 		m_errorReporter.warning(
@@ -207,7 +201,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
-		[=](StateMutability _mut, SourceLocation const& _loc) { reportMutability(_mut, _loc); }
+		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }
 
@@ -230,7 +224,7 @@ void ViewPureChecker::reportMutability(StateMutability _mutability, SourceLocati
 			solAssert(false, "");
 
 		if (m_currentFunction->stateMutability() == StateMutability::View)
-			// Change this to error with 0.5.0
+			// TODO Change this to error with 0.5.0
 			m_errorReporter.warning(_location, text);
 		else if (m_currentFunction->stateMutability() == StateMutability::Pure)
 		{
