@@ -6289,7 +6289,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 {
 	char const* text = R"(
 		contract C {
-			function f() returns (bytes4) {
+			function f() view returns (bytes4) {
 				return f.selector;
 			}
 		}
@@ -6297,9 +6297,9 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_ERROR(text, TypeError, "Member \"selector\" not found");
 	text = R"(
 		contract C {
-			function g() internal {
+			function g() pure internal {
 			}
-			function f() returns (bytes4) {
+			function f() view returns (bytes4) {
 				return g.selector;
 			}
 		}
@@ -6307,7 +6307,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_ERROR(text, TypeError, "Member \"selector\" not found");
 	text = R"(
 		contract C {
-			function f() returns (bytes4) {
+			function f() view returns (bytes4) {
 				function () g;
 				return g.selector;
 			}
@@ -6316,7 +6316,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_ERROR(text, TypeError, "Member \"selector\" not found");
 	text = R"(
 		contract C {
-			function f() returns (bytes4) {
+			function f() view returns (bytes4) {
 				return this.f.selector;
 			}
 		}
@@ -6324,7 +6324,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function f() external returns (bytes4) {
+			function f() view external returns (bytes4) {
 				return this.f.selector;
 			}
 		}
@@ -6332,9 +6332,9 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function h() external {
+			function h() pure external {
 			}
-			function f() external returns (bytes4) {
+			function f() view external returns (bytes4) {
 				var g = this.h;
 				return g.selector;
 			}
@@ -6343,10 +6343,10 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function h() external {
+			function h() pure external {
 			}
-			function f() external returns (bytes4) {
-				function () external g = this.h;
+			function f() view external returns (bytes4) {
+				function () pure external g = this.h;
 				return g.selector;
 			}
 		}
@@ -6354,10 +6354,10 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function h() external {
+			function h() pure external {
 			}
-			function f() external returns (bytes4) {
-				function () external g = this.h;
+			function f() view external returns (bytes4) {
+				function () pure external g = this.h;
 				var i = g;
 				return i.selector;
 			}
