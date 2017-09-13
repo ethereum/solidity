@@ -339,6 +339,9 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 	if (!functionType.hasEqualArgumentTypes(superType))
 		return;
 
+	if (!function.annotation().superFunction)
+		function.annotation().superFunction = &super;
+
 	if (function.visibility() != super.visibility())
 		overrideError(function, super, "Overriding function visibility differs.");
 

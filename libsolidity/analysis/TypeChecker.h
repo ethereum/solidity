@@ -63,6 +63,7 @@ private:
 	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
 	void checkContractIllegalOverrides(ContractDefinition const& _contract);
 	/// Reports a type error with an appropiate message if overriden function signature differs.
+	/// Also stores the direct super function in the AST annotations.
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 	void checkContractAbstractFunctions(ContractDefinition const& _contract);

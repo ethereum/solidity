@@ -1546,7 +1546,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return 10**x;
 			}
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_WARNING(sourceCode, "might overflow");
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return uint8(10)**x;
 			}
@@ -1564,7 +1564,7 @@ BOOST_AUTO_TEST_CASE(exp_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				return 2**80;
 			}
 		}
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return 10 << x;
 			}
@@ -1585,7 +1585,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_WARNING(sourceCode, "might overflow");
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				uint8 x = 100;
 				return uint8(10) << x;
 			}
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				return 2 << 80;
 			}
 		}
@@ -1602,7 +1602,7 @@ BOOST_AUTO_TEST_CASE(shift_warn_literal_base)
 	CHECK_SUCCESS(sourceCode);
 	sourceCode = R"(
 		contract test {
-			function f() returns(uint) {
+			function f() pure returns(uint) {
 				 uint8 x = 100;
 				 return 10 >> x;
 			}
@@ -1615,7 +1615,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns (uint) {
+			function f() pure returns (uint) {
 				var i = 1;
 				return i;
 			}
@@ -1624,7 +1624,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
 	sourceCode = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				var i = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 				i;
 			}
@@ -1633,7 +1633,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
 	sourceCode = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				var i = -2;
 				i;
 			}
@@ -1642,7 +1642,7 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
 	sourceCode = R"(
 		 contract test {
-			 function f() {
+			 function f() pure {
 				 for (var i = 0; i < msg.data.length; i++) { }
 			 }
 		 }
@@ -2642,7 +2642,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				mapping(uint => uint)[] storage x;
 				x;
 			}
@@ -3973,7 +3973,7 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 {
 	char const* text = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				ufixed16x2 a = 3.25;
 				fixed16x2 b = -3.25;
 				a; b;
@@ -3983,7 +3983,7 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				ufixed16x2 a = +3.25;
 				fixed16x2 b = -3.25;
 				a; b;
@@ -3993,7 +3993,7 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 	CHECK_WARNING(text, "Use of unary + is deprecated");
 	text = R"(
 		contract test {
-			function f(uint x) {
+			function f(uint x) pure {
 				uint y = +x;
 				y;
 			}
@@ -4006,7 +4006,7 @@ BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
 {
 	char const* text = R"(
 		contract A {
-			function f() {
+			function f() pure {
 				ufixed16x2 a = 0.5;
 				ufixed256x52 b = 0.0000000000000006661338147750939242541790008544921875;
 				fixed16x2 c = -0.5;
@@ -4519,7 +4519,7 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 {
 	char const* text = R"(
 		contract test {
-			function f() {
+			function f() pure {
 				var x = address(0x12).callcode;
 				x;
 			}
@@ -4532,7 +4532,7 @@ BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
 {
 	char const* text = R"(
 		contract test {
-			function callcode() {
+			function callcode() pure {
 				test.callcode();
 			}
 		}
@@ -5234,7 +5234,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	char const* text = R"(
 		contract test {
 			uint a;
-			function f() {
+			function f() pure {
 				assembly {
 					function g() -> x { x := a_slot }
 				}
@@ -5275,7 +5275,7 @@ BOOST_AUTO_TEST_CASE(warns_msg_value_in_non_payable_public_function)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() view {
 				msg.value;
 			}
 		}
@@ -5299,7 +5299,7 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_internal_function)
 {
 	char const* text = R"(
 		contract C {
-			function f() internal {
+			function f() view internal {
 				msg.value;
 			}
 		}
@@ -5311,7 +5311,7 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_library)
 {
 	char const* text = R"(
 		library C {
-			function f() {
+			function f() view {
 				msg.value;
 			}
 		}
@@ -5323,7 +5323,7 @@ BOOST_AUTO_TEST_CASE(does_not_warn_msg_value_in_modifier_following_non_payable_p
 {
 	char const* text = R"(
 		contract c {
-			function f() { }
+			function f() pure { }
 			modifier m() { msg.value; _; }
 		}
 	)";
@@ -5402,7 +5402,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				address x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
@@ -5415,7 +5415,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				address x = 0xfa0bfc97e48458494ccd857e1a85dc91f7f0046e;
 				x;
 			}
@@ -5428,7 +5428,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				address x = 0xA0bFc97E48458494Ccd857e1A85DC91F7F0046E;
 				x;
 			}
@@ -5678,7 +5678,7 @@ BOOST_AUTO_TEST_CASE(warn_about_throw)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				throw;
 			}
 		}
@@ -5690,7 +5690,7 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 {
 	char const* text = R"(
 		contract C {
-			function f(uint x) {
+			function f(uint x) pure {
 				if (x > 7)
 					revert;
 			}
@@ -5701,17 +5701,17 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 
 BOOST_AUTO_TEST_CASE(bare_others)
 {
-	CHECK_WARNING("contract C { function f() { selfdestruct; } }", "Statement has no effect.");
-	CHECK_WARNING("contract C { function f() { assert; } }", "Statement has no effect.");
-	CHECK_WARNING("contract C { function f() { require; } }", "Statement has no effect.");
-	CHECK_WARNING("contract C { function f() { suicide; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure { selfdestruct; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure { assert; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure { require; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure { suicide; } }", "Statement has no effect.");
 }
 
 BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				for (uint x = 0; x < 10; true)
 					x++;
 			}
@@ -5724,7 +5724,7 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				for (uint x = 0; true; x++)
 				{}
 			}
@@ -5780,7 +5780,7 @@ BOOST_AUTO_TEST_CASE(nowarn_swap_memory)
 	char const* text = R"(
 		contract C {
 			struct S { uint a; uint b; }
-			function f() {
+			function f() pure {
 				S memory x;
 				S memory y;
 				(x, y) = (y, x);
@@ -5811,7 +5811,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_local)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure  {
 				uint a;
 			}
 		}
@@ -5823,7 +5823,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_local_assigned)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				uint a = 1;
 			}
 		}
@@ -5835,14 +5835,14 @@ BOOST_AUTO_TEST_CASE(warn_unused_function_parameter)
 {
 	char const* text = R"(
 		contract C {
-			function f(uint a) {
+			function f(uint a) pure {
 			}
 		}
 	)";
 	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
-			function f(uint a) {
+			function f(uint a) pure {
 			}
 		}
 	)";
@@ -5853,14 +5853,14 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 {
 	char const* text = R"(
 		contract C {
-			function f() returns (uint a) {
+			function f() pure returns (uint a) {
 			}
 		}
 	)";
 	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
-			function f() returns (uint a) {
+			function f() pure returns (uint a) {
 				return;
 			}
 		}
@@ -5868,14 +5868,14 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 	CHECK_WARNING(text, "Unused function parameter. Remove or comment out the variable name to silence this warning.");
 	text = R"(
 		contract C {
-			function f() returns (uint) {
+			function f() pure returns (uint) {
 			}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function f() returns (uint a) {
+			function f() pure returns (uint a) {
 				a = 1;
 			}
 		}
@@ -5883,7 +5883,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function f() returns (uint a) {
+			function f() pure returns (uint a) {
 				return 1;
 			}
 		}
@@ -5895,7 +5895,7 @@ BOOST_AUTO_TEST_CASE(no_unused_warnings)
 {
 	char const* text = R"(
 		contract C {
-			function f(uint a) returns (uint b) {
+			function f(uint a) pure returns (uint b) {
 				uint c = 1;
 				b = a + c;
 			}
@@ -5908,7 +5908,7 @@ BOOST_AUTO_TEST_CASE(no_unused_dec_after_use)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				a = 7;
 				uint a;
 			}
@@ -5921,7 +5921,7 @@ BOOST_AUTO_TEST_CASE(no_unused_inline_asm)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				uint a;
 				assembly {
 					a := 1
@@ -5936,7 +5936,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_functions)
 {
 	char const* text = R"(
 		contract C {
-			function keccak256() {}
+			function keccak256() pure {}
 		}
 	)";
 	CHECK_WARNING(text, "shadows a builtin symbol");
@@ -5946,7 +5946,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_variables)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				uint msg;
 				msg;
 			}
@@ -5978,7 +5978,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_parameters)
 {
 	char const* text = R"(
 		contract C {
-			function f(uint require) {
+			function f(uint require) pure {
 				require = 2;
 			}
 		}
@@ -5990,7 +5990,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_return_parameters)
 {
 	char const* text = R"(
 		contract C {
-			function f() returns (uint require) {
+			function f() pure returns (uint require) {
 				require = 2;
 			}
 		}
@@ -6034,8 +6034,8 @@ BOOST_AUTO_TEST_CASE(function_overload_is_not_shadowing)
 {
 	char const* text = R"(
 		contract C {
-			function f() {}
-			function f(uint) {}
+			function f() pure {}
+			function f(uint) pure {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -6044,9 +6044,9 @@ BOOST_AUTO_TEST_CASE(function_overload_is_not_shadowing)
 BOOST_AUTO_TEST_CASE(function_override_is_not_shadowing)
 {
 	char const* text = R"(
-		contract D { function f() {} }
+		contract D { function f() pure {} }
 		contract C is D {
-			function f(uint) {}
+			function f(uint) pure {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -6140,7 +6140,7 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
 {
 	char const* text = R"(
 		contract A {
-			function transfer() {}
+			function transfer() pure {}
 		}
 
 		contract B {
@@ -6176,7 +6176,7 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 		contract C {
 			struct S { uint a; string b; }
 			S x;
-			function f() {
+			function f() view {
 				S storage y = x;
 				y;
 			}
@@ -6187,7 +6187,7 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 		contract C {
 			struct S { uint a; }
 			S x;
-			function f() {
+			function f() view {
 				S y = x;
 				y;
 			}
@@ -6213,21 +6213,21 @@ BOOST_AUTO_TEST_CASE(too_large_arrays_for_calldata)
 {
 	char const* text = R"(
 		contract C {
-			function f(uint[85678901234] a) external {
+			function f(uint[85678901234] a) pure external {
 			}
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Array is too large to be encoded.");
 	text = R"(
 		contract C {
-			function f(uint[85678901234] a) internal {
+			function f(uint[85678901234] a) pure internal {
 			}
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Array is too large to be encoded.");
 	text = R"(
 		contract C {
-			function f(uint[85678901234] a) {
+			function f(uint[85678901234] a) pure {
 			}
 		}
 	)";
@@ -6238,7 +6238,7 @@ BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
 {
 	char const* text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				string memory x = "abc";
 				x;
 			}
@@ -6247,7 +6247,7 @@ BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				string storage x = "abc";
 			}
 		}
@@ -6255,7 +6255,7 @@ BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
 	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
 	text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				string x = "abc";
 			}
 		}
@@ -6263,7 +6263,7 @@ BOOST_AUTO_TEST_CASE(explicit_literal_to_storage_string)
 	CHECK_ERROR(text, TypeError, "Type literal_string \"abc\" is not implicitly convertible to expected type string storage pointer.");
 	text = R"(
 		contract C {
-			function f() {
+			function f() pure {
 				string("abc");
 			}
 		}
@@ -6292,7 +6292,7 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 			function C() {
 				this.f();
 			}
-			function f() {
+			function f() pure {
 			}
 		}
 	)";
@@ -6559,7 +6559,7 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 {
 	char const* text = R"(
 		contract C {
-			function f() returns (bytes32) {
+			function f() pure returns (bytes32) {
 				return keccak256(1);
 			}
 		}
@@ -6567,7 +6567,7 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
 	text = R"(
 		contract C {
-			function f() returns (bytes32) {
+			function f() pure returns (bytes32) {
 				return keccak256(uint8(1));
 			}
 		}
@@ -6575,7 +6575,7 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		contract C {
-			function f() returns (bytes32) {
+			function f() pure returns (bytes32) {
 				return sha3(1);
 			}
 		}
@@ -6583,7 +6583,7 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
 	text = R"(
 		contract C {
-			function f() returns (bytes32) {
+			function f() pure returns (bytes32) {
 				return sha256(1);
 			}
 		}
@@ -6591,7 +6591,7 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
 	text = R"(
 		contract C {
-			function f() returns (bytes32) {
+			function f() pure returns (bytes32) {
 				return ripemd160(1);
 			}
 		}

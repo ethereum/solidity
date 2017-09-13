@@ -94,6 +94,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 
 struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
 {
+	/// The function this function overrides, if any. This is always the closest
+	/// in the linearized inheritance hierarchy.
+	FunctionDefinition const* superFunction = nullptr;
 };
 
 struct EventDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation

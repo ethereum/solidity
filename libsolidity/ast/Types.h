@@ -1064,6 +1064,7 @@ public:
 	{
 		return _inLibrary ? shared_from_this() : TypePointer();
 	}
+	virtual bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 
 	TypePointer const& keyType() const { return m_keyType; }
 	TypePointer const& valueType() const { return m_valueType; }
