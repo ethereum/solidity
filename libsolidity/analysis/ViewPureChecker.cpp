@@ -41,7 +41,7 @@ public:
 	{
 		if (eth::SemanticInformation::invalidInViewFunctions(_instruction.instruction))
 			m_reportMutability(StateMutability::NonPayable, _instruction.location);
-		else if (eth::SemanticInformation::readsFromState(_instruction.instruction))
+		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction.instruction))
 			m_reportMutability(StateMutability::View, _instruction.location);
 	}
 	void operator()(assembly::Literal const&) {}
