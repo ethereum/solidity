@@ -1788,14 +1788,33 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 
 TypePointer StructType::interfaceType(bool _inLibrary) const
 {
+	if (!canBeUsedExternally(_inLibrary))
+		return TypePointer();
+
+	// Has to fulfill canBeUsedExternally(_inLibrary) == !!interfaceType(_inLibrary)
 	if (_inLibrary && location() == DataLocation::Storage)
 		return shared_from_this();
-	else if (!recursive())
-		// TODO this might not be enough, we have to convert all members to
-		// their interfaceType
-		return copyForLocation(DataLocation::Memory, true);
 	else
-		return TypePointer();
+		return copyForLocation(DataLocation::Memory, true);
+}
+
+bool StructType::canBeUsedExternally(bool _inLibrary) const
+{
+	if (_inLibrary && location() == DataLocation::Storage)
+		return true;
+	else if (recursive())
+		return false;
+	else
+	{
+		// Check that all members have interface types.
+		// We pass "false" to canBeUsedExternally (_inLibrary), because this struct will be
+		// passed by value and thus the encoding does not differ, but it will disallow
+		// mappings.
+		for (auto const& var: m_struct.members())
+			if (!var->annotation().type->canBeUsedExternally(false))
+				return false;
+	}
+	return true;
 }
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -1887,25 +1906,29 @@ set<string> StructType::membersMissingInMemory() const
 
 bool StructType::recursive() const
 {
-	set<StructDefinition const*> structsSeen;
-	function<bool(StructType const*)> check = [&](StructType const* t) -> bool
+	if (!m_recursive.is_initialized())
 	{
-		StructDefinition const* str = &t->structDefinition();
-		if (structsSeen.count(str))
-			return true;
-		structsSeen.insert(str);
-		for (ASTPointer<VariableDeclaration> const& variable: str->members())
+		set<StructDefinition const*> structsSeen;
+		function<bool(StructType const*)> check = [&](StructType const* t) -> bool
 		{
-			Type const* memberType = variable->annotation().type.get();
-			while (dynamic_cast<ArrayType const*>(memberType))
-				memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
-			if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-				if (check(innerStruct))
-					return true;
-		}
-		return false;
-	};
-	return check(this);
+			StructDefinition const* str = &t->structDefinition();
+			if (structsSeen.count(str))
+				return true;
+			structsSeen.insert(str);
+			for (ASTPointer<VariableDeclaration> const& variable: str->members())
+			{
+				Type const* memberType = variable->annotation().type.get();
+				while (dynamic_cast<ArrayType const*>(memberType))
+					memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
+				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+					if (check(innerStruct))
+						return true;
+			}
+			return false;
+		};
+		m_recursive = check(this);
+	}
+	return *m_recursive;
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const

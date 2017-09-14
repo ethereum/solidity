@@ -32,6 +32,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/rational.hpp>
+#include <boost/optional.hpp>
 
 #include <memory>
 #include <string>
@@ -748,6 +749,7 @@ public:
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
+	virtual bool canBeUsedExternally(bool _inLibrary) const override;
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -774,6 +776,8 @@ public:
 
 private:
 	StructDefinition const& m_struct;
+	/// Cache for the recursive() function.
+	mutable boost::optional<bool> m_recursive;
 };
 
 /**
