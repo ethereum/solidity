@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
-			struct Nested { X[2][] a; mapping(uint => uint) m; uint y; }
+			struct Nested { X[2][] a; uint y; }
 			struct X { bytes32 x; Test t; Empty[] e; }
 			function f(ActionChoices, uint, Empty) external {}
 			function g(Test, Nested) external {}
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
-			struct Nested { X[2][] a; mapping(uint => uint) m; uint y; }
+			struct Nested { X[2][] a; uint y; }
 			struct X { bytes32 x; Test t; Empty[] e; }
 			function f(ActionChoices, uint, Empty) external {}
 			function g(Test, Nested) external {}
@@ -653,6 +653,94 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 		}
 }
 
+BOOST_AUTO_TEST_CASE(struct_with_mapping_in_library)
+{
+	char const* text = R"(
+		library Test {
+			struct Nested { mapping(uint => uint)[2][] a; uint y; }
+			struct X { Nested n; }
+			function f(X storage x) external {}
+		}
+	)";
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			BOOST_CHECK_EQUAL("f(Test.X storage)", functions[0]->externalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_identical_structs_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S1 { }
+			struct S2 { }
+			function f(S1) pure {}
+			function f(S2) pure {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Function overload clash during conversion to external types for arguments");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_different_structs_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S1 { function() external a; }
+			struct S2 { bytes24 a; }
+			function f(S1) pure {}
+			function f(S2) pure {}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { function() internal a; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_2)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { mapping(uint => uint) a; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_nested)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct T { mapping(uint => uint) a; }
+			struct S { T[][2] b; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
 
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
