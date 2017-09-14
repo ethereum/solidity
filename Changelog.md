@@ -9,6 +9,7 @@ Features:
  * Type Checker: Greatly reduce the number of duplicate errors shown for duplicate constructors and functions.
  * Type Checker: Warn on using literals as tight packing parameters in ``keccak256``, ``sha3``, ``sha256`` and ``ripemd160``.
  * Type Checker: Enforce ``view`` and ``pure``.
+ * Type Checker: Enforce ``view`` / ``constant`` with error as experimental 0.5.0 feature.
 
 Bugfixes:
  * ABI JSON: Include all overloaded events.

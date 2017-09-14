@@ -20,6 +20,7 @@
 #include <libevmasm/SemanticInformation.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
+#include <libsolidity/ast/ExperimentalFeatures.h>
 
 #include <functional>
 
@@ -102,22 +103,31 @@ private:
 
 bool ViewPureChecker::check()
 {
-	vector<ContractDefinition const*> contracts;
+	// The bool means "enforce view with errors".
+	map<ContractDefinition const*, bool> contracts;
 
 	for (auto const& node: m_ast)
 	{
 		SourceUnit const* source = dynamic_cast<SourceUnit const*>(node.get());
 		solAssert(source, "");
-		contracts += source->filteredNodes<ContractDefinition>(source->nodes());
+		bool enforceView = source->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+		for (ContractDefinition const* c: source->filteredNodes<ContractDefinition>(source->nodes()))
+			contracts[c] = enforceView;
 	}
 
 	// Check modifiers first to infer their state mutability.
-	for (auto const* contract: contracts)
-		for (ModifierDefinition const* mod: contract->functionModifiers())
+	for (auto const& contract: contracts)
+	{
+		m_enforceViewWithError = contract.second;
+		for (ModifierDefinition const* mod: contract.first->functionModifiers())
 			mod->accept(*this);
+	}
 
-	for (auto const* contract: contracts)
-		contract->accept(*this);
+	for (auto const& contract: contracts)
+	{
+		m_enforceViewWithError = contract.second;
+		contract.first->accept(*this);
+	}
 
 	return !m_errors;
 }
@@ -223,16 +233,18 @@ void ViewPureChecker::reportMutability(StateMutability _mutability, SourceLocati
 		else
 			solAssert(false, "");
 
-		if (m_currentFunction->stateMutability() == StateMutability::View)
-			// TODO Change this to error with 0.5.0
+		solAssert(
+			m_currentFunction->stateMutability() == StateMutability::View ||
+			m_currentFunction->stateMutability() == StateMutability::Pure,
+			""
+		);
+		if (!m_enforceViewWithError && m_currentFunction->stateMutability() == StateMutability::View)
 			m_errorReporter.warning(_location, text);
-		else if (m_currentFunction->stateMutability() == StateMutability::Pure)
+		else
 		{
 			m_errors = true;
 			m_errorReporter.typeError(_location, text);
 		}
-		else
-			solAssert(false, "");
 	}
 	if (_mutability > m_currentBestMutability)
 		m_currentBestMutability = _mutability;
