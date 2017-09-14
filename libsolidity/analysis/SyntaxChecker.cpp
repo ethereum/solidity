@@ -138,7 +138,7 @@ bool SyntaxChecker::visit(WhileStatement const&)
 	return true;
 }
 
-void SyntaxChecker::endVisit(WhileStatement const&	)
+void SyntaxChecker::endVisit(WhileStatement const&)
 {
 	m_inLoopDepth--;
 }
@@ -190,6 +190,18 @@ bool SyntaxChecker::visit(UnaryOperation const& _operation)
 bool SyntaxChecker::visit(PlaceholderStatement const&)
 {
 	m_placeholderFound = true;
+	return true;
+}
+
+bool SyntaxChecker::visit(FunctionDefinition const& _function)
+{
+	if (_function.noVisibilitySpecified())
+		m_errorReporter.warning(
+			_function.location(),
+			"No visibility specified. Defaulting to \"" +
+			Declaration::visibilityToString(_function.visibility()) +
+			"\"."
+		);
 	return true;
 }
 

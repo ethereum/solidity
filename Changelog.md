@@ -4,6 +4,7 @@ Features:
  * Support ``pragma experimental v0.5.0;`` to turn on upcoming breaking changes.
  * Code Generator: Added ``.selector`` member on external function types to retrieve their signature.
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
+ * Syntax Checker: Warn if no visibility is specified on contract functions.
  * Type Checker: Display helpful warning for unused function arguments/return parameters.
  * Type Checker: Do not show the same error multiple times for events.
  * Type Checker: Greatly reduce the number of duplicate errors shown for duplicate constructors and functions.
