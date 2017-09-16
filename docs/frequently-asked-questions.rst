@@ -305,7 +305,7 @@ of variable it concerns:
 
 * state variables are always in storage
 * function arguments are always in memory
-* local variables always reference storage
+* local variables are always in stack
 
 Example::
 
