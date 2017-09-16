@@ -1,7 +1,7 @@
 ### 0.4.17 (unreleased)
 
 Features:
- * Support ``pragma experimental v0.5.0;`` to turn on upcoming breaking changes.
+ * Support ``pragma experimental "v0.5.0";`` to turn on upcoming breaking changes.
  * Code Generator: Added ``.selector`` member on external function types to retrieve their signature.
  * Code Generator: Keep a single copy of encoding functions when using the experimental "ABIEncoderV2".
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
@@ -12,6 +12,7 @@ Features:
  * Type Checker: Warn on using literals as tight packing parameters in ``keccak256``, ``sha3``, ``sha256`` and ``ripemd160``.
  * Type Checker: Enforce ``view`` and ``pure``.
  * Type Checker: Enforce ``view`` / ``constant`` with error as experimental 0.5.0 feature.
+ * Type Checker: Enforce fallback functions to be ``external`` as experimental 0.5.0 feature.
 
 Bugfixes:
  * ABI JSON: Include all overloaded events.

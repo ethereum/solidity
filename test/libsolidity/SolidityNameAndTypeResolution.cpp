@@ -6691,6 +6691,38 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
 }
 
+BOOST_AUTO_TEST_CASE(non_external_fallback)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function () external { }
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features are turned on.");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function () internal { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Fallback function must be defined as \"external\".");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function () private { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Fallback function must be defined as \"external\".");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function () public { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Fallback function must be defined as \"external\".");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
