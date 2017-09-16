@@ -44,15 +44,18 @@ using TypePointers = std::vector<TypePointer>;
 /// multiple times.
 ///
 /// Make sure to include the result of ``requestedFunctions()`` to a block that
-/// is visible from the code that was generated here.
+/// is visible from the code that was generated here, or use named labels.
 class ABIFunctions
 {
 public:
-	~ABIFunctions();
-
-	/// @returns assembly code block to ABI-encode values of @a _givenTypes residing on the stack
+	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
-	/// Assumed variables to be present: <$value0> <$value1> ... <$value(n-1)> <$headStart>
+	/// Parameters are: <headStart> <value_n> ... <value_1>, i.e.
+	/// the layout on the stack is <value_1> ... <value_n> <headStart> with
+	/// the top of the stack on the right.
+	/// The values represent stack slots. If a type occupies more or less than one
+	/// stack slot, it takes exactly that number of values.
+	/// Returns a pointer to the end of the area written in memory.
 	/// Does not allocate memory (does not change the memory head pointer), but writes
 	/// to memory starting at $headStart and an unrestricted amount after that.
 	/// Assigns the end of encoded memory either to $value0 or (if that is not present)
@@ -63,7 +66,7 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
-	/// @returns auxiliary functions referenced from the block generated in @a tupleEncoder
+	/// @returns concatenation of all generated functions.
 	std::string requestedFunctions();
 
 private:

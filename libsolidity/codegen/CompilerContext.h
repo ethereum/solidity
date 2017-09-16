@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libsolidity/codegen/ABIFunctions.h>
+
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
@@ -121,6 +123,7 @@ public:
 	);
 	/// Generates the code for missing low-level functions, i.e. calls the generators passed above.
 	void appendMissingLowLevelFunctions();
+	ABIFunctions& abiFunctions() { return m_abiFunctions; }
 
 	ModifierDefinition const& functionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
@@ -156,6 +159,8 @@ public:
 	eth::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
 	eth::AssemblyItem newTag() { return m_asm->newTag(); }
+	/// @returns a new tag identified by name.
+	eth::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
 	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
@@ -185,10 +190,11 @@ public:
 	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
 	/// prior to parsing the inline assembly.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
+	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
 	void appendInlineAssembly(
 		std::string const& _assembly,
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
-		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
+		bool _system = false
 	);
 
 	/// Appends arbitrary data to the end of the bytecode.
@@ -299,6 +305,8 @@ private:
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
 	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
+	/// Container for ABI functions to be generated.
+	ABIFunctions m_abiFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 };

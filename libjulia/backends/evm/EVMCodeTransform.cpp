@@ -108,10 +108,10 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		visitExpression(arg);
 	m_assembly.setSourceLocation(_call.location);
 	if (m_evm15)
-		m_assembly.appendJumpsub(functionEntryID(*function), function->arguments.size(), function->returns.size());
+		m_assembly.appendJumpsub(functionEntryID(_call.functionName.name, *function), function->arguments.size(), function->returns.size());
 	else
 	{
-		m_assembly.appendJumpTo(functionEntryID(*function), function->returns.size() - function->arguments.size() - 1);
+		m_assembly.appendJumpTo(functionEntryID(_call.functionName.name, *function), function->returns.size() - function->arguments.size() - 1);
 		m_assembly.appendLabel(returnLabel);
 		m_stackAdjustment--;
 	}
@@ -286,12 +286,12 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (m_evm15)
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
-		m_assembly.appendBeginsub(functionEntryID(function), _function.arguments.size());
+		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.arguments.size());
 	}
 	else
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
-		m_assembly.appendLabel(functionEntryID(function));
+		m_assembly.appendLabel(functionEntryID(_function.name, function));
 	}
 	m_stackAdjustment += localStackAdjustment;
 
@@ -303,8 +303,16 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(m_assembly, m_info, m_julia, m_evm15, m_identifierAccess, localStackAdjustment, m_context)
-		(_function.body);
+	CodeTransform(
+		m_assembly,
+		m_info,
+		m_julia,
+		m_evm15,
+		m_identifierAccess,
+		m_useNamedLabelsForFunctions,
+		localStackAdjustment,
+		m_context
+	)(_function.body);
 
 	{
 		// The stack layout here is:
@@ -421,10 +429,16 @@ AbstractAssembly::LabelID CodeTransform::labelID(Scope::Label const& _label)
 	return m_context->labelIDs[&_label];
 }
 
-AbstractAssembly::LabelID CodeTransform::functionEntryID(Scope::Function const& _function)
+AbstractAssembly::LabelID CodeTransform::functionEntryID(string const& _name, Scope::Function const& _function)
 {
 	if (!m_context->functionEntryIDs.count(&_function))
-		m_context->functionEntryIDs[&_function] = m_assembly.newLabelId();
+	{
+		AbstractAssembly::LabelID id =
+			m_useNamedLabelsForFunctions ?
+			m_assembly.namedLabel(_name) :
+			m_assembly.newLabelId();
+		m_context->functionEntryIDs[&_function] = id;
+	}
 	return m_context->functionEntryIDs[&_function];
 }
 

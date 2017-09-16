@@ -30,65 +30,73 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-ABIFunctions::~ABIFunctions()
-{
-	// This throws an exception and thus might cause immediate termination, but hey,
-	// it's a failed assertion anyway :-)
-	solAssert(m_requestedFunctions.empty(), "Forgot to call ``requestedFunctions()``.");
-}
-
 string ABIFunctions::tupleEncoder(
 	TypePointers const& _givenTypes,
 	TypePointers const& _targetTypes,
 	bool _encodeAsLibraryTypes
 )
 {
-	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
+	string functionName = string("abi_encode_tuple_");
+	for (auto const& t: _givenTypes)
+		functionName += t->identifier() + "_";
+	functionName += "_to_";
+	for (auto const& t: _targetTypes)
+		functionName += t->identifier() + "_";
+	if (_encodeAsLibraryTypes)
+		functionName += "_library";
 
-	solAssert(!_givenTypes.empty(), "");
-	size_t const headSize_ = headSize(_targetTypes);
+	return createFunction(functionName, [&]() {
+		solAssert(!_givenTypes.empty(), "");
 
-	Whiskers encoder(R"(
+		// Note that the values are in reverse due to the difference in calling semantics.
+		Whiskers templ(R"(
+			function <functionName>(headStart <valueParams>) -> tail {
+				tail := add(headStart, <headSize>)
+				<encodeElements>
+			}
+		)");
+		templ("functionName", functionName);
+		size_t const headSize_ = headSize(_targetTypes);
+		templ("headSize", to_string(headSize_));
+		string valueParams;
+		string encodeElements;
+		size_t headPos = 0;
+		size_t stackPos = 0;
+		for (size_t i = 0; i < _givenTypes.size(); ++i)
 		{
-			let tail := add($headStart, <headSize>)
-			<encodeElements>
-			<deepestStackElement> := tail
+			solAssert(_givenTypes[i], "");
+			solAssert(_targetTypes[i], "");
+			size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
+			string valueNames = "";
+			for (size_t j = 0; j < sizeOnStack; j++)
+			{
+				valueNames += "value" + to_string(stackPos) + ", ";
+				valueParams = ", value" + to_string(stackPos) + valueParams;
+				stackPos++;
+			}
+			bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
+			Whiskers elementTempl(
+				dynamic ?
+				string(R"(
+					mstore(add(headStart, <pos>), sub(tail, headStart))
+					tail := <abiEncode>(<values> tail)
+				)") :
+				string(R"(
+					<abiEncode>(<values> add(headStart, <pos>))
+				)")
+			);
+			elementTempl("values", valueNames);
+			elementTempl("pos", to_string(headPos));
+			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], _encodeAsLibraryTypes, false));
+			encodeElements += elementTempl.render();
+			headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
 		}
-	)");
-	encoder("headSize", to_string(headSize_));
-	string encodeElements;
-	size_t headPos = 0;
-	size_t stackPos = 0;
-	for (size_t i = 0; i < _givenTypes.size(); ++i)
-	{
-		solAssert(_givenTypes[i], "");
-		solAssert(_targetTypes[i], "");
-		size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
-		string valueNames = "";
-		for (size_t j = 0; j < sizeOnStack; j++)
-			valueNames += "$value" + to_string(stackPos++) + ", ";
-		bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
-		Whiskers elementTempl(
-			dynamic ?
-			string(R"(
-				mstore(add($headStart, <pos>), sub(tail, $headStart))
-				tail := <abiEncode>(<values> tail)
-			)") :
-			string(R"(
-				<abiEncode>(<values> add($headStart, <pos>))
-			)")
-		);
-		elementTempl("values", valueNames);
-		elementTempl("pos", to_string(headPos));
-		elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], _encodeAsLibraryTypes, false));
-		encodeElements += elementTempl.render();
-		headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
-	}
-	solAssert(headPos == headSize_, "");
-	encoder("encodeElements", encodeElements);
-	encoder("deepestStackElement", stackPos > 0 ? "$value0" : "$headStart");
+		solAssert(headPos == headSize_, "");
+		templ("valueParams", valueParams);
+		templ("encodeElements", encodeElements);
 
-	return encoder.render();
+		return templ.render();
+	});
 }
 
 string ABIFunctions::requestedFunctions()

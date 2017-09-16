@@ -47,6 +47,8 @@ public:
 
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
+	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
+	AssemblyItem namedTag(std::string const& _name);
 	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
@@ -150,6 +152,7 @@ private:
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
+	std::map<std::string, size_t> m_namedTags;
 	AssemblyItems m_items;
 	std::map<h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
