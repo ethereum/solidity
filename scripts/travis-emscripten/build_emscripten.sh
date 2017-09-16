@@ -87,8 +87,8 @@ make -j 4
 
 cd ..
 mkdir -p upload
-cp build/solc/soljson.js upload/
-cp build/solc/soljson.js ./
+cp build/libsolc/soljson.js upload/
+cp build/libsolc/soljson.js ./
 
 OUTPUT_SIZE=`ls -la soljson.js`
 

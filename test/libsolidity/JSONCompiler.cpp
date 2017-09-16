@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/Version.h>
-#include <solc/jsonCompiler.h>
+#include <libsolc/libsolc.h>
 
 #include "../Metadata.h"
 #include "../TestHelper.h"
