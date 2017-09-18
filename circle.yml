@@ -1,6 +1,27 @@
 version: 2
 jobs:
-  build:
+  build-clang-ninja:
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init
+      - run:
+          name: Install dependencies
+          command: |
+            scripts/install_deps.sh
+      - run:
+          name: Build
+          command: |
+            mkdir build && cd build
+            cmake -G Ninja ..
+            ninja -j8
+
+
+  build-emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
@@ -48,3 +69,10 @@ jobs:
       - store_artifacts:
           path: build/solc/soljson.js
           destination: soljson.js
+
+workflows:
+  version: 2
+  solidity:
+    jobs:
+      - build-clang-ninja
+      - build-emscripten
