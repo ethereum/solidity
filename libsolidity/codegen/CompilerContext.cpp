@@ -26,6 +26,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
@@ -312,8 +313,23 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
-	solAssert(parserResult, "Failed to parse inline assembly block.");
-	solAssert(errorReporter.errors().empty(), "Failed to parse inline assembly block.");
+	if (!parserResult || !errorReporter.errors().empty())
+	{
+		string message =
+			"Error parsing inline assembly block:\n"
+			"------------------ Input: -----------------\n" +
+			_assembly + "\n"
+			"------------------ Errors: ----------------\n";
+		for (auto const& error: errorReporter.errors())
+			message += SourceReferenceFormatter::formatExceptionInformation(
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				[&](string const&) -> Scanner const& { return *scanner; }
+			);
+		message += "-------------------------------------------\n";
+
+		solAssert(false, message);
+	}
 
 	assembly::AsmAnalysisInfo analysisInfo;
 	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
