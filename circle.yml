@@ -1,8 +1,11 @@
 version: 2
 jobs:
-  build-clang-ninja:
+  clang5-ninja-asan:
     docker:
       - image: ethereum/cpp-build-env
+        environment:
+          CXX: clang++-5.0
+          CC:  clang-5.0
     steps:
       - checkout
       - run:
@@ -17,11 +20,35 @@ jobs:
           name: Build
           command: |
             mkdir build && cd build
-            cmake -G Ninja ..
+            cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address
             ninja -j8
 
 
-  build-emscripten:
+  gcc6-make:
+    docker:
+      - image: ethereum/cpp-build-env
+        environment:
+          CXX: g++-6
+          CC:  gcc-6
+    steps:
+      - checkout
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init
+      - run:
+          name: Install dependencies
+          command: |
+            scripts/install_deps.sh
+      - run:
+          name: Build
+          command: |
+            mkdir build && cd build
+            cmake .. -DCMAKE_BUILD_TYPE=Release
+            make -j8
+
+
+  emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
@@ -74,5 +101,6 @@ workflows:
   version: 2
   solidity:
     jobs:
-      - build-clang-ninja
-      - build-emscripten
+      - clang5-ninja-asan
+      - gcc6-make
+      - emscripten
