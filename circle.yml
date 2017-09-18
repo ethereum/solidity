@@ -1,10 +1,50 @@
 version: 2
 jobs:
   build:
-    branches:
-      ignore:
-        - /.*/
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.18-64bit
+      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
       - checkout
+      - run:
+          name: Install external tests deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install netcat curl
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
+      - run:
+          name: Test external tests deps
+          command: |
+            export NVM_DIR="/usr/local/nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            nvm --version
+            nvm install 6
+            node --version
+            npm --version
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init
+      - restore_cache:
+          name: Restore Boost build
+          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
+      - run:
+          name: Bootstrap Boost
+          command: |
+            scripts/travis-emscripten/install_deps.sh
+      - run:
+          name: Build
+          command: |
+            scripts/travis-emscripten/build_emscripten.sh
+      - save_cache:
+          name: Save Boost build
+          key: *boost-cache-key
+          paths:
+            - boost_1_57_0
+      - run:
+          name: Test
+          command: |
+            . /usr/local/nvm/nvm.sh
+            scripts/test_emscripten.sh
+      - store_artifacts:
+          path: build/solc/soljson.js
+          destination: soljson.js
