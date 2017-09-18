@@ -320,7 +320,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
-	assertThrow(m_deposit >= 0, AssemblyException, "");
+	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
@@ -330,7 +330,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 
 AssemblyItem Assembly::namedTag(string const& _name)
 {
-	assertThrow(!_name.empty(), AssemblyException, "");
+	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (!m_namedTags.count(_name))
 		m_namedTags[_name] = size_t(newTag().data());
 	return AssemblyItem(Tag, m_namedTags.at(_name));
@@ -588,7 +588,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
-			assertThrow(i.data() != 0, AssemblyException, "");
+			assertThrow(i.data() != 0, AssemblyException, "Invalid tag position.");
 			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
