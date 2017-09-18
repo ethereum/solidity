@@ -18,6 +18,7 @@ Features:
 Bugfixes:
  * ABI JSON: Include all overloaded events.
  * Parser: Crash fix related to parseTypeName.
+ * Type Checker: Allow constant byte arrays.
 
 ### 0.4.16 (2017-08-24)
 
