@@ -59,18 +59,18 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
 	case PushString:
-		return 33;
+		return 1 + 32;
 	case Push:
 		return 1 + max<unsigned>(1, dev::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
-		return 4;		// worst case: a 16MB program
+		return 1 + 4;		// worst case: a 16MB program
 	case PushTag:
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
 	case PushLibraryAddress:
-		return 21;
+		return 1 + 20;
 	default:
 		break;
 	}
