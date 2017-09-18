@@ -599,6 +599,149 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 		}
 }
 
+BOOST_AUTO_TEST_CASE(external_structs)
+{
+	char const* text = R"(
+		contract Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			struct Empty {}
+			struct Nested { X[2][] a; uint y; }
+			struct X { bytes32 x; Test t; Empty[] e; }
+			function f(ActionChoices, uint, Empty) external {}
+			function g(Test, Nested) external {}
+			function h(function(Nested) external returns (uint)[]) external {}
+			function i(Nested[]) external {}
+		}
+	)";
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			BOOST_CHECK_EQUAL("f(uint8,uint256,())", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("g(address,((bytes32,address,()[])[2][],uint256))", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
+			BOOST_CHECK_EQUAL("i(((bytes32,address,()[])[2][],uint256)[])", functions[3]->externalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
+{
+	char const* text = R"(
+		library Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			struct Empty {}
+			struct Nested { X[2][] a; uint y; }
+			struct X { bytes32 x; Test t; Empty[] e; }
+			function f(ActionChoices, uint, Empty) external {}
+			function g(Test, Nested) external {}
+			function h(function(Nested) external returns (uint)[]) external {}
+			function i(Nested[]) external {}
+		}
+	)";
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			BOOST_CHECK_EQUAL("f(Test.ActionChoices,uint256,Test.Empty)", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("g(Test,Test.Nested)", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
+			BOOST_CHECK_EQUAL("i(Test.Nested[])", functions[3]->externalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(struct_with_mapping_in_library)
+{
+	char const* text = R"(
+		library Test {
+			struct Nested { mapping(uint => uint)[2][] a; uint y; }
+			struct X { Nested n; }
+			function f(X storage x) external {}
+		}
+	)";
+	SourceUnit const* sourceUnit = parseAndAnalyse(text);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->definedFunctions();
+			BOOST_REQUIRE(!functions.empty());
+			BOOST_CHECK_EQUAL("f(Test.X storage)", functions[0]->externalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_identical_structs_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S1 { }
+			struct S2 { }
+			function f(S1) pure {}
+			function f(S2) pure {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Function overload clash during conversion to external types for arguments");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_different_structs_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S1 { function() external a; }
+			struct S2 { bytes24 a; }
+			function f(S1) pure {}
+			function f(S2) pure {}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { function() internal a; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_2)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { mapping(uint => uint) a; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_nested)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct T { mapping(uint => uint) a; }
+			struct S { T[][2] b; }
+			function f(S) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
 	char const* text = R"(
@@ -980,24 +1123,24 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	FunctionTypePointer function = retrieveFunctionBySignature(*contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "uint256");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 
 	function = retrieveFunctionBySignature(*contract, "map(uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto params = function->parameterTypes();
-	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(), "uint256");
 	returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "bytes4");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 
 	function = retrieveFunctionBySignature(*contract, "multiple_map(uint256,uint256)");
 	BOOST_REQUIRE(function && function->hasDeclaration());
 	params = function->parameterTypes();
-	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(false), "uint256");
-	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(false), "uint256");
+	BOOST_CHECK_EQUAL(params.at(0)->canonicalName(), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1)->canonicalName(), "uint256");
 	returnParams = function->returnParameterTypes();
-	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(false), "bytes4");
+	BOOST_CHECK_EQUAL(returnParams.at(0)->canonicalName(), "bytes4");
 	BOOST_CHECK(function->stateMutability() == StateMutability::View);
 }
 
@@ -1072,7 +1215,7 @@ BOOST_AUTO_TEST_CASE(struct_accessor_one_array_only)
 			Data public data;
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Internal type is not allowed for public state variables.");
+	CHECK_ERROR(sourceCode, TypeError, "Internal or recursive type is not allowed for public state variables.");
 }
 
 BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
@@ -3283,7 +3426,7 @@ BOOST_AUTO_TEST_CASE(library_memory_struct)
 			function f() public returns (S ) {}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal type is not allowed for public or external functions.");
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
@@ -4874,7 +5017,7 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal type is not allowed for public or external functions.");
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(internal_function_returned_from_public_function)
@@ -4886,7 +5029,7 @@ BOOST_AUTO_TEST_CASE(internal_function_returned_from_public_function)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal type is not allowed for public or external functions.");
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal)
@@ -4908,7 +5051,7 @@ BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal type is not allowed for public or external functions.");
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(function_type_arrays)
@@ -5394,6 +5537,56 @@ BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 		}
 	)";
 	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(return_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; T[] sub; }
+			struct T { uint[] x; }
+			function f() returns (uint, S) {
+			}
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(return_recursive_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; S[] sub; }
+			function f() returns (uint, S) {
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(return_recursive_structs2)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; S[2][] sub; }
+			function f() returns (uint, S) {
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+}
+
+BOOST_AUTO_TEST_CASE(return_recursive_structs3)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; S[][][] sub; }
+			struct T { S s; }
+			function f() returns (uint x, T t) {
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
 BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)

@@ -48,7 +48,7 @@ public:
 
 		Json::Value generatedInterface = m_compilerStack.contractABI("");
 		Json::Value expectedInterface;
-		m_reader.parse(_expectedInterfaceString, expectedInterface);
+		BOOST_REQUIRE(m_reader.parse(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
 			"Expected:\n" << expectedInterface.toStyledString() <<
@@ -937,6 +937,217 @@ BOOST_AUTO_TEST_CASE(function_type)
 	]
 	)";
 	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(return_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; T[] sub; }
+			struct T { uint[2] x; }
+			function f() returns (uint x, S s) {
+			}
+		}
+	)";
+	char const* interface = R"(
+	[{
+		"constant" : false,
+		"inputs" : [],
+		"name" : "f",
+		"outputs" : [
+			{
+			"name" : "x",
+			"type" : "uint256"
+			},
+			{
+			"components" : [
+				{
+					"name" : "a",
+					"type" : "uint256"
+				},
+				{
+					"components" : [
+						{
+						"name" : "x",
+						"type" : "uint256[2]"
+						}
+					],
+					"name" : "sub",
+					"type" : "tuple[]"
+				}
+			],
+			"name" : "s",
+			"type" : "tuple"
+			}
+		],
+		"payable" : false,
+		"stateMutability" : "nonpayable",
+		"type" : "function"
+	}]
+	)";
+	checkInterface(text, interface);
+}
+
+BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
+{
+	char const* text = R"(
+		contract C {
+			struct S { C[] x; C y; }
+			function f() returns (S s, C c) {
+			}
+		}
+	)";
+	char const* interface = R"(
+	[{
+		"constant": false,
+		"inputs": [],
+		"name": "f",
+		"outputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "address[]"
+					},
+					{
+						"name": "y",
+						"type": "address"
+					}
+				],
+				"name": "s",
+				"type": "tuple"
+			},
+			{
+				"name": "c",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability" : "nonpayable",
+		"type": "function"
+	}]
+	)";
+	checkInterface(text, interface);
+}
+
+BOOST_AUTO_TEST_CASE(event_structs)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; T[] sub; bytes b; }
+			struct T { uint[2] x; }
+			event E(T t, S s);
+		}
+	)";
+	char const *interface = R"(
+		[{
+		"anonymous": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "uint256[2]"
+					}
+				],
+				"indexed": false,
+				"name": "t",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"name": "a",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"name": "x",
+								"type": "uint256[2]"
+							}
+						],
+						"name": "sub",
+						"type": "tuple[]"
+					},
+					{
+						"name": "b",
+						"type": "bytes"
+					}
+				],
+				"indexed": false,
+				"name": "s",
+				"type": "tuple"
+			}
+		],
+		"name": "E",
+		"type": "event"
+	}]
+	)";
+	checkInterface(text, interface);
+}
+
+BOOST_AUTO_TEST_CASE(structs_in_libraries)
+{
+	char const* text = R"(
+		library L {
+			struct S { uint a; T[] sub; bytes b; }
+			struct T { uint[2] x; }
+			function f(L.S storage s) {}
+			function g(L.S s) {}
+		}
+	)";
+	char const* interface = R"(
+	[{
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "a",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"name": "x",
+								"type": "uint256[2]"
+							}
+						],
+						"name": "sub",
+						"type": "tuple[]"
+					},
+					{
+						"name": "b",
+						"type": "bytes"
+					}
+				],
+				"name": "s",
+				"type": "tuple"
+			}
+		],
+		"name": "g",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "s",
+				"type": "L.S storage"
+			}
+		],
+		"name": "f",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}]
+	)";
+	checkInterface(text, interface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

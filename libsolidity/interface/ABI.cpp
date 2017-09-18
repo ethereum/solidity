@@ -86,12 +86,12 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		Json::Value params(Json::arrayValue);
 		for (auto const& p: it->parameters())
 		{
-			solAssert(!!p->annotation().type->interfaceType(false), "");
+			auto type = p->annotation().type->interfaceType(false);
+			solAssert(type, "");
 			Json::Value input;
-			input["name"] = p->name();
-			input["type"] = p->annotation().type->interfaceType(false)->canonicalName(false);
-			input["indexed"] = p->isIndexed();
-			params.append(input);
+			auto param = formatType(p->name(), *type, false);
+			param["indexed"] = p->isIndexed();
+			params.append(param);
 		}
 		event["inputs"] = params;
 		abi.append(event);
@@ -111,10 +111,53 @@ Json::Value ABI::formatTypeList(
 	for (unsigned i = 0; i < _names.size(); ++i)
 	{
 		solAssert(_types[i], "");
-		Json::Value param;
-		param["name"] = _names[i];
-		param["type"] = _types[i]->canonicalName(_forLibrary);
-		params.append(param);
+		params.append(formatType(_names[i], *_types[i], _forLibrary));
 	}
 	return params;
+}
+
+Json::Value ABI::formatType(string const& _name, Type const& _type, bool _forLibrary)
+{
+	Json::Value ret;
+	ret["name"] = _name;
+	string suffix = (_forLibrary && _type.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
+	if (_type.isValueType() || (_forLibrary && _type.dataStoredIn(DataLocation::Storage)))
+		ret["type"] = _type.canonicalName() + suffix;
+	else if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+	{
+		if (arrayType->isByteArray())
+			ret["type"] = _type.canonicalName() + suffix;
+		else
+		{
+			string suffix;
+			if (arrayType->isDynamicallySized())
+				suffix = "[]";
+			else
+				suffix = string("[") + arrayType->length().str() + "]";
+			solAssert(arrayType->baseType(), "");
+			Json::Value subtype = formatType("", *arrayType->baseType(), _forLibrary);
+			if (subtype.isMember("components"))
+			{
+				ret["type"] = subtype["type"].asString() + suffix;
+				ret["components"] = subtype["components"];
+			}
+			else
+				ret["type"] = subtype["type"].asString() + suffix;
+		}
+	}
+	else if (StructType const* structType = dynamic_cast<StructType const*>(&_type))
+	{
+		ret["type"] = "tuple";
+		ret["components"] = Json::arrayValue;
+		for (auto const& member: structType->members(nullptr))
+		{
+			solAssert(member.type, "");
+			auto t = member.type->interfaceType(_forLibrary);
+			solAssert(t, "");
+			ret["components"].append(formatType(member.name, *t, _forLibrary));
+		}
+	}
+	else
+		solAssert(false, "Invalid type.");
+	return ret;
 }

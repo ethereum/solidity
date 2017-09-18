@@ -9682,6 +9682,7 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	compileAndRun(sourceCode, 0, "C2");
 }
 
+
 BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 {
 	char const* sourceCode = R"(

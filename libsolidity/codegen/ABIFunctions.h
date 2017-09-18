@@ -123,6 +123,13 @@ private:
 		bool _encodeAsLibraryTypes
 	);
 
+	/// Part of @a abiEncodingFunction for struct types.
+	std::string abiEncodingFunctionStruct(
+		StructType const& _givenType,
+		StructType const& _targetType,
+		bool _encodeAsLibraryTypes
+	);
+
 	// @returns the name of the ABI encoding function with the given type
 	// and queues the generation of the function to the requested functions.
 	// Case for _givenType being a string literal
