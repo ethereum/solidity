@@ -54,6 +54,10 @@ function test_truffle
         sed -i -e 's/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0)/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address)/' test/crowdsale/CappedCrowdsale.test.js
         sed -i -e 's/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, { from: owner })/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address, { from: owner })/' test/crowdsale/RefundableCrowdsale.test.js
       fi
+      if [ "$name" == "Gnosis" ]; then
+        # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
+        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
+      fi
       npm run test
     )
     rm -rf "$DIR"
