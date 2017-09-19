@@ -22,6 +22,10 @@ jobs:
             mkdir build && cd build
             cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address
             ninja -j8
+      - run:
+          name: Test
+          command: |
+            build/test/soltest -- --no-ipc
 
 
   gcc6-make:
@@ -46,6 +50,10 @@ jobs:
             mkdir build && cd build
             cmake .. -DCMAKE_BUILD_TYPE=Release
             make -j8
+      - run:
+          name: Test
+          command: |
+            build/test/soltest -- --no-ipc
 
 
   emscripten:
