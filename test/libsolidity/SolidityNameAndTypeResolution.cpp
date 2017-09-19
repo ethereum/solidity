@@ -2385,6 +2385,18 @@ BOOST_AUTO_TEST_CASE(assignment_to_const_array_vars)
 	CHECK_ERROR(text, TypeError, "implemented");
 }
 
+BOOST_AUTO_TEST_CASE(assignment_to_const_string_bytes)
+{
+	char const* text = R"(
+		contract C {
+			bytes constant a = "\x00\x01\x02";
+			bytes constant b = hex"000102";
+			string constant c = "hello";
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(constant_struct)
 {
 	char const* text = R"(

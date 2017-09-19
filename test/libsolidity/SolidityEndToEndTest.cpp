@@ -10076,6 +10076,30 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	BOOST_CHECK(callContractFunction("h()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 }
 
+BOOST_AUTO_TEST_CASE(constant_string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes constant a = "\x03\x01\x02";
+			bytes constant b = hex"030102";
+			string constant c = "hello";
+			function f() returns (bytes) {
+				return a;
+			}
+			function g() returns (bytes) {
+				return b;
+			}
+			function h() returns (bytes) {
+				return bytes(c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(string("\x03\x01\x02")));
+	BOOST_CHECK(callContractFunction("g()") == encodeDyn(string("\x03\x01\x02")));
+	BOOST_CHECK(callContractFunction("h()") == encodeDyn(string("hello")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
