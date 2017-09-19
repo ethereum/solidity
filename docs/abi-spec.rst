@@ -42,7 +42,7 @@ The following elementary types exist:
 
 - ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing.
 
-- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively (not to be used for computing the function selector).
+- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively (this shorthand not to be used for computing the function selector).
 
 - ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1
 
@@ -50,7 +50,7 @@ The following elementary types exist:
 
 - ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
-- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively (not to be used for computing the function selector).
+- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively (this shorthand not to be used for computing the function selector).
 
 - ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
@@ -58,7 +58,7 @@ The following elementary types exist:
 
 The following (fixed-size) array type exists:
 
-- ``<type>[M]``: a fixed-length array of the given fixed-length type.
+- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M > 0``, of the given type.
 
 The following non-fixed-size types exist:
 
@@ -66,7 +66,7 @@ The following non-fixed-size types exist:
 
 - ``string``: dynamic sized unicode string assumed to be UTF-8 encoded.
 
-- ``<type>[]``: a variable-length array of the given fixed-length type.
+- ``<type>[]``: a variable-length array of elements of the given type.
 
 Types can be combined to a tuple by enclosing a finite non-negative number
 of them inside parentheses, separated by commas:
