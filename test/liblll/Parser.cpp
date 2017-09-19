@@ -150,6 +150,10 @@ BOOST_AUTO_TEST_CASE(sstore)
 	BOOST_CHECK(successParse("[[0x0]]:0x0"));
 	BOOST_CHECK(successParse("[[symbol]]:symbol"));
 	BOOST_CHECK(!successParse("[[]]"));
+}
+
+BOOST_AUTO_TEST_CASE(sstore_memory_leak)
+{
 	BOOST_CHECK(!successParse("[[0x0]]"));
 }
 
