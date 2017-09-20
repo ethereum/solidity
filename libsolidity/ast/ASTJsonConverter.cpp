@@ -129,7 +129,7 @@ string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location)
 	return std::to_string(_location.start) + ":" + std::to_string(length) + ":" + std::to_string(sourceIndex);
 }
 
-string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath) const
+string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath)
 {
 	return boost::algorithm::join(_namePath, ".");
 }
@@ -171,7 +171,7 @@ void ASTJsonConverter::appendExpressionAttributes(
 	_attributes += exprAttributes;
 }
 
-Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<assembly::Identifier const* ,InlineAssemblyAnnotation::ExternalIdentifierInfo> _info)
+Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<assembly::Identifier const* ,InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const
 {
 	Json::Value tuple(Json::objectValue);
 	tuple["src"] = sourceLocationToString(_info.first->location);

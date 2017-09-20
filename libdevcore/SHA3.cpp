@@ -97,10 +97,9 @@ static const uint64_t RC[24] = \
 static inline void keccakf(void* state) {
   uint64_t* a = (uint64_t*)state;
   uint64_t b[5] = {0};
-  uint64_t t = 0;
-  uint8_t x, y;
 
   for (int i = 0; i < 24; i++) {
+	uint8_t x, y;
 	// Theta
 	FOR5(x, 1,
 		 b[x] = 0;
@@ -110,7 +109,7 @@ static inline void keccakf(void* state) {
 		 FOR5(y, 5,
 			  a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
 	// Rho and pi
-	t = a[1];
+	uint64_t t = a[1];
 	x = 0;
 	REPEAT24(b[0] = a[pi[x]];
 			 a[pi[x]] = rol(t, rho[x]);

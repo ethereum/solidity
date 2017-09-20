@@ -120,7 +120,7 @@ private:
 		std::vector<std::pair<std::string, Json::Value>>&& _attributes
 	);
 	std::string sourceLocationToString(SourceLocation const& _location) const;
-	std::string namePathToString(std::vector<ASTString> const& _namePath) const;
+	static std::string namePathToString(std::vector<ASTString> const& _namePath);
 	static Json::Value idOrNull(ASTNode const* _pt)
 	{
 		return _pt ? Json::Value(nodeId(*_pt)) : Json::nullValue;
@@ -129,13 +129,13 @@ private:
 	{
 		return _node ? toJson(*_node) : Json::nullValue;
 	}
-	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info);
-	std::string location(VariableDeclaration::Location _location);
-	std::string contractKind(ContractDefinition::ContractKind _kind);
-	std::string functionCallKind(FunctionCallKind _kind);
-	std::string literalTokenKind(Token::Value _token);
-	std::string type(Expression const& _expression);
-	std::string type(VariableDeclaration const& _varDecl);
+	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const;
+	static std::string location(VariableDeclaration::Location _location);
+	static std::string contractKind(ContractDefinition::ContractKind _kind);
+	static std::string functionCallKind(FunctionCallKind _kind);
+	static std::string literalTokenKind(Token::Value _token);
+	static std::string type(Expression const& _expression);
+	static std::string type(VariableDeclaration const& _varDecl);
 	static int nodeId(ASTNode const& _node)
 	{
 		return _node.id();
@@ -151,8 +151,8 @@ private:
 		}
 		return tmp;
 	}
-	Json::Value typePointerToJson(TypePointer _tp);
-	Json::Value typePointerToJson(std::shared_ptr<std::vector<TypePointer>> _tps);
+	static Json::Value typePointerToJson(TypePointer _tp);
+	static Json::Value typePointerToJson(std::shared_ptr<std::vector<TypePointer>> _tps);
 	void appendExpressionAttributes(
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,
 		ExpressionAnnotation const& _annotation
