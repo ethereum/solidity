@@ -65,14 +65,14 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	expectDeposit(_assignment.variableNames.size(), height);
 
 	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableNames);
+	generateMultiAssignment(_assignment.variableNames);
 	checkStackHeight(&_assignment);
 }
 
 void CodeTransform::operator()(StackAssignment const& _assignment)
 {
 	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment({_assignment.variableName});
+	generateAssignment(_assignment.variableName);
 	checkStackHeight(&_assignment);
 }
 
@@ -472,27 +472,31 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 	checkStackHeight(&_block);
 }
 
-void CodeTransform::generateAssignment(vector<Identifier> const& _variableNames)
+void CodeTransform::generateMultiAssignment(vector<Identifier> const& _variableNames)
 {
 	solAssert(m_scope, "");
 	for (auto const& variableName: _variableNames | boost::adaptors::reversed)
+		generateAssignment(variableName);
+}
+
+void CodeTransform::generateAssignment(Identifier const& _variableName)
+{
+	solAssert(m_scope, "");
+	auto var = m_scope->lookup(_variableName.name);
+	if (var)
 	{
-		auto var = m_scope->lookup(variableName.name);
-		if (var)
-		{
-			Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
-			if (int heightDiff = variableHeightDiff(_var, true))
-				m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
-			m_assembly.appendInstruction(solidity::Instruction::POP);
-		}
-		else
-		{
-			solAssert(
-				m_identifierAccess.generateCode,
-				"Identifier not found and no external access available."
-			);
-			m_identifierAccess.generateCode(variableName, IdentifierContext::LValue, m_assembly);
-		}
+		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
+		if (int heightDiff = variableHeightDiff(_var, true))
+			m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
+		m_assembly.appendInstruction(solidity::Instruction::POP);
+	}
+	else
+	{
+		solAssert(
+			m_identifierAccess.generateCode,
+			"Identifier not found and no external access available."
+		);
+		m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_assembly);
 	}
 }
 
