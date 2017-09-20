@@ -149,7 +149,9 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		if (!length->annotation().type)
 			ConstantEvaluator e(*length);
 		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
-		if (!lengthType || lengthType->isFractional())
+		if (!lengthType)
+			fatalTypeError(length->location(), "Invalid array length, division by 0 is not a valid integer.");
+		else if (lengthType->isFractional())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
 		else if (lengthType->isNegative())
 			fatalTypeError(length->location(), "Array with negative length specified.");
@@ -347,4 +349,3 @@ void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, 
 	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(_location, _description);
 }
-
