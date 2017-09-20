@@ -4135,6 +4135,8 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+
+	// Test deprecation warning under < 0.5.0
 	text = R"(
 		contract test {
 			function f() pure public {
@@ -4154,6 +4156,29 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 		}
 	)";
 	CHECK_WARNING(text,"Use of unary + is deprecated");
+
+	// Test syntax error under 0.5.0
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				ufixed16x2 a = +3.25;
+				fixed16x2 b = -3.25;
+				a; b;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "Use of unary + is deprecated");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f(uint x) pure public {
+				uint y = +x;
+				y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "Use of unary + is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
