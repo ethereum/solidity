@@ -7011,6 +7011,8 @@ BOOST_AUTO_TEST_CASE(callable_crash)
 
 BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 {
+	// This used to be a test for a.transfer to generate a warning
+	// because A's fallback function is not payable.
 	char const* text = R"(
 		contract A {
 			function() public {}
@@ -7024,12 +7026,17 @@ BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 {
-	char const* text = R"(
+	// This used to be a test for a.transfer to generate a warning
+	// because A does not have a payable fallback function.
+	std::string text = R"(
 		contract A {}
 
 		contract B {
@@ -7040,12 +7047,17 @@ BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 {
-	char const* text = R"(
+	// This used to be a test for a.send to generate a warning
+	// because A does not have a payable fallback function.
+	std::string text = R"(
 		contract A {
 			function() public {}
 		}
@@ -7058,11 +7070,16 @@ BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 {
+	// This used to be a test for a.transfer to generate a warning
+	// because A does not have a payable fallback function.
 	char const* text = R"(
 		contract A {
 			function() payable public {}
@@ -7076,7 +7093,7 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Using contract member \"transfer\" inherited from the address type is deprecated.");
 }
 
 BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
@@ -7992,6 +8009,134 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
 	CHECK_ERROR(text, TypeError, "Operator / not compatible with types int_const 3 and int_const 0");
 }
 
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
+{
+	std::string text = R"(
+		contract C {
+			function f() view public {
+				this.balance;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated.");
+	text = R"(
+		contract C {
+			function f() view public {
+				this.transfer;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.send;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.call;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated.");
+	text = R"(
+		contract C {
+			function f() view public {
+				this.callcode;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"callcode\" inherited from the address type is deprecated"},
+		{Error::Type::Warning, "\"callcode\" has been deprecated in favour of \"delegatecall\""}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.delegatecall;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
+{
+	std::string text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.balance;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated");
+	text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.transfer;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.send;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.call;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated");
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.callcode;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"Using contract member \"callcode\" inherited from the address type is deprecated",
+		"\"callcode\" has been deprecated in favour of \"delegatecall\""
+	}));
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.delegatecall;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated");
+}
+
 BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 {
 	char const* text = R"(
@@ -8048,6 +8193,20 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"delegatecall\" not found or not visible after argument-dependent lookup in contract");
+}
+
+BOOST_AUTO_TEST_CASE(no_warning_for_using_members_that_look_like_address_members)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function transfer(uint) public;
+			function f() public {
+				this.transfer(10);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
 }
 
 BOOST_AUTO_TEST_CASE(emit_events)
