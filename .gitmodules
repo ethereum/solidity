@@ -1,3 +1,0 @@
-[submodule "deps"]
-	path = deps
-	url = https://github.com/ethereum/cpp-dependencies

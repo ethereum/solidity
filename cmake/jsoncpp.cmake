@@ -24,6 +24,7 @@ endif()
 
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
     DOWNLOAD_NAME jsoncpp-1.7.7.tar.gz
     URL https://github.com/open-source-parsers/jsoncpp/archive/1.7.7.tar.gz
     URL_HASH SHA256=087640ebcf7fbcfe8e2717a0b9528fff89c52fcf69fa2a18cc2b538008098f97
