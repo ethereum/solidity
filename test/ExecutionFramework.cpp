@@ -25,6 +25,8 @@
 #include <libdevcore/CommonIO.h>
 #include <test/ExecutionFramework.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::test;
@@ -52,6 +54,32 @@ ExecutionFramework::ExecutionFramework() :
 	m_sender(m_rpc.account(0))
 {
 	m_rpc.test_rewindToBlock(0);
+}
+
+std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
+	bytes const& _result,
+	bytes const& _expectation
+)
+{
+	if (_result == _expectation)
+		return std::make_pair(true, std::string{});
+	std::string message =
+			"Invalid encoded data\n"
+			"   Result                                                           Expectation\n";
+	auto resultHex = boost::replace_all_copy(toHex(_result), "0", ".");
+	auto expectedHex = boost::replace_all_copy(toHex(_expectation), "0", ".");
+	for (size_t i = 0; i < std::max(resultHex.size(), expectedHex.size()); i += 0x40)
+	{
+		std::string result{i >= resultHex.size() ? string{} : resultHex.substr(i, 0x40)};
+		std::string expected{i > expectedHex.size() ? string{} : expectedHex.substr(i, 0x40)};
+		message +=
+			(result == expected ? "   " : " X ") +
+			result +
+			std::string(0x41 - result.size(), ' ') +
+			expected +
+			"\n";
+	}
+	return make_pair(false, message);
 }
 
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)

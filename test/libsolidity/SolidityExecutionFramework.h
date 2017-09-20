@@ -24,7 +24,7 @@
 
 #include <functional>
 
-#include "../ExecutionFramework.h"
+#include <test/ExecutionFramework.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
