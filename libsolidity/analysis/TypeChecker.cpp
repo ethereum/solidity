@@ -1477,6 +1477,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
+	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	{
+		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
+			m_errorReporter.warning(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
+		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
+			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+	}
+
 	TypePointers parameterTypes = functionType->parameterTypes();
 
 	if (!functionType->padArguments())
