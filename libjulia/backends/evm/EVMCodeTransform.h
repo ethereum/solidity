@@ -124,6 +124,7 @@ private:
 	/// to @a _blackStartStackHeight.
 	void finalizeBlock(solidity::assembly::Block const& _block, int _blockStartStackHeight);
 
+	void generateMultiAssignment(std::vector<solidity::assembly::Identifier> const& _variableNames);
 	void generateAssignment(solidity::assembly::Identifier const& _variableName);
 
 	/// Determines the stack height difference to the given variables. Throws

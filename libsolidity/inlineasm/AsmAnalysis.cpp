@@ -163,11 +163,25 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
+	int const expectedItems = _assignment.variableNames.size();
+	solAssert(expectedItems >= 1, "");
 	int const stackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, *_assignment.value);
-	solAssert(m_stackHeight >= stackHeight, "Negative value size.");
-	if (!checkAssignment(_assignment.variableName, m_stackHeight - stackHeight))
-		success = false;
+	if ((m_stackHeight - stackHeight) != expectedItems)
+	{
+		m_errorReporter.declarationError(
+			_assignment.location,
+			"Variable count does not match number of values (" +
+			to_string(expectedItems) +
+			" vs. " +
+			to_string(m_stackHeight - stackHeight) +
+			")"
+		);
+		return false;
+	}
+	for (auto const& variableName: _assignment.variableNames)
+		if (!checkAssignment(variableName, 1))
+			success = false;
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }

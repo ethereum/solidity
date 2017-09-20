@@ -2,6 +2,7 @@
 
 Features:
  * Support ``pragma experimental "v0.5.0";`` to turn on upcoming breaking changes.
+ * Assembly Parser: Support multiple assignment (``x, y := f()``).
  * Code Generator: Added ``.selector`` member on external function types to retrieve their signature.
  * Code Generator: Keep a single copy of encoding functions when using the experimental "ABIEncoderV2".
  * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.

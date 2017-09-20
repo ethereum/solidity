@@ -60,9 +60,12 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 
 void CodeTransform::operator()(Assignment const& _assignment)
 {
-	visitExpression(*_assignment.value);
+	int height = m_assembly.stackHeight();
+	boost::apply_visitor(*this, *_assignment.value);
+	expectDeposit(_assignment.variableNames.size(), height);
+
 	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName);
+	generateMultiAssignment(_assignment.variableNames);
 	checkStackHeight(&_assignment);
 }
 
@@ -467,6 +470,13 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
 	solAssert(deposit == 0, "Invalid stack height at end of block.");
 	checkStackHeight(&_block);
+}
+
+void CodeTransform::generateMultiAssignment(vector<Identifier> const& _variableNames)
+{
+	solAssert(m_scope, "");
+	for (auto const& variableName: _variableNames | boost::adaptors::reversed)
+		generateAssignment(variableName);
 }
 
 void CodeTransform::generateAssignment(Identifier const& _variableName)

@@ -116,7 +116,11 @@ string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
 
 string AsmPrinter::operator()(assembly::Assignment const& _assignment)
 {
-	return (*this)(_assignment.variableName) + " := " + boost::apply_visitor(*this, *_assignment.value);
+	solAssert(_assignment.variableNames.size() >= 1, "");
+	string variables = (*this)(_assignment.variableNames.front());
+	for (size_t i = 1; i < _assignment.variableNames.size(); ++i)
+		variables += ", " + (*this)(_assignment.variableNames[i]);
+	return variables + " := " + boost::apply_visitor(*this, *_assignment.value);
 }
 
 string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDeclaration)
