@@ -13,6 +13,9 @@ project(solidity VERSION ${PROJECT_VERSION})
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 
+# Setup cccache.
+include(EthCcache)
+
 # Let's find our dependencies
 include(EthDependencies)
 include(jsoncpp)
