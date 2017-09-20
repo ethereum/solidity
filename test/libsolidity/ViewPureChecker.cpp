@@ -280,11 +280,11 @@ BOOST_AUTO_TEST_CASE(builtin_functions)
 	string text = R"(
 		contract C {
 			function f() public {
-				this.transfer(1);
-				require(this.send(2));
-				selfdestruct(this);
-				require(this.delegatecall());
-				require(this.call());
+				address(this).transfer(1);
+				require(address(this).send(2));
+				selfdestruct(address(this));
+				require(address(this).delegatecall());
+				require(address(this).call());
 			}
 			function g() pure public {
 				bytes32 x = keccak256("abc");
