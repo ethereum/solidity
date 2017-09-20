@@ -5,6 +5,8 @@ Features:
 
 Bugfixes:
  * Parser: Fix source location of VariableDeclarationStatement.
+ * Type Checker: Properly support overwriting members inherited from ``address`` in a contract
+   (such as ``balance``, ``transfer``, etc.)
 
 ### 0.4.17 (2017-09-21)
 

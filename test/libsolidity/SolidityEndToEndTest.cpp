@@ -10151,6 +10151,31 @@ BOOST_AUTO_TEST_CASE(constant_string)
 	ABI_CHECK(callContractFunction("h()"), encodeDyn(string("hello")));
 }
 
+BOOST_AUTO_TEST_CASE(address_overload_resolution)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function balance() returns (uint) {
+				return 1;
+			}
+			function transfer(uint amount) returns (uint) {
+				return amount;
+			}
+		}
+		contract D {
+			function f() returns (uint) {
+				return (new C()).balance();
+			}
+			function g() returns (uint) {
+				return (new C()).transfer(5);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(5)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
