@@ -57,8 +57,6 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	m_constructor = _function.isConstructor();
-	if (_function.stateMutability() == StateMutability::Pure)
-		m_errorReporter.warning(_function.location(), "Function is marked pure. Be careful, pureness is not enforced yet.");
 	return true;
 }
 
@@ -69,7 +67,16 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_constructor = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
-			m_errorReporter.warning(var.first->location(), "Unused local variable");
+		{
+			if (var.first->isCallableParameter())
+				m_errorReporter.warning(
+					var.first->location(),
+					"Unused function parameter. Remove or comment out the variable name to silence this warning."
+				);
+			else
+				m_errorReporter.warning(var.first->location(), "Unused local variable.");
+		}
+
 	m_localVarUseCount.clear();
 }
 

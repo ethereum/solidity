@@ -116,6 +116,9 @@ public:
 		m_optimizeRuns = _runs;
 	}
 
+	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
+	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
+
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
@@ -125,16 +128,13 @@ public:
 	bool parse();
 
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
-	///  typechecking, staticAnalysis) on previously set sources
+	///  typechecking, staticAnalysis) on previously parsed sources.
 	/// @returns false on error.
 	bool analyze();
 
 	/// Parses and analyzes all source units that were added
 	/// @returns false on error.
 	bool parseAndAnalyze();
-
-	/// @returns a list of the contract names in the sources.
-	std::vector<std::string> contractNames() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	/// @returns false on error.
@@ -157,6 +157,9 @@ public:
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
+
+	/// @returns a list of the contract names in the sources.
+	std::vector<std::string> contractNames() const;
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
@@ -187,11 +190,15 @@ public:
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
 
-	/// Streams a verbose version of the assembly to @a _outStream.
+	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFromat shows whether the out should be in Json format
 	/// Prerequisite: Successful compilation.
-	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
+	std::string assemblyString(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+
+	/// @returns a JSON representation of the assembly.
+	/// @arg _sourceCodes is the map of input files to source code strings
+	/// Prerequisite: Successful compilation.
+	Json::Value assemblyJSON(std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
@@ -210,7 +217,6 @@ public:
 
 	/// @returns the Contract Metadata
 	std::string const& metadata(std::string const& _contractName) const;
-	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;

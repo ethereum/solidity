@@ -180,6 +180,7 @@ public:
 
 	/// @returns the declared name.
 	ASTString const& name() const { return *m_name; }
+	bool noVisibilitySpecified() const { return m_visibility == Visibility::Default; }
 	Visibility visibility() const { return m_visibility == Visibility::Default ? defaultVisibility() : m_visibility; }
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
@@ -392,12 +393,6 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 
-	Json::Value const& userDocumentation() const;
-	void setUserDocumentation(Json::Value const& _userDocumentation);
-
-	Json::Value const& devDocumentation() const;
-	void setDevDocumentation(Json::Value const& _devDocumentation);
-
 	virtual TypePointer type() const override;
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
@@ -408,10 +403,6 @@ private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	ContractKind m_contractKind;
-
-	// parsed Natspec documentation of the contract.
-	Json::Value m_userDocumentation;
-	Json::Value m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;

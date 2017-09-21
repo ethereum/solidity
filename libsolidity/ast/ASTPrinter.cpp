@@ -21,8 +21,11 @@
  */
 
 #include <libsolidity/ast/ASTPrinter.h>
-#include <boost/algorithm/string/join.hpp>
 #include <libsolidity/ast/AST.h>
+
+#include <json/json.h>
+
+#include <boost/algorithm/string/join.hpp>
 
 using namespace std;
 
@@ -579,8 +582,11 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 	if (!m_source.empty())
 	{
 		SourceLocation const& location(_node.location());
-		*m_ostream << indentation() << "   Source: "
-				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
+		*m_ostream <<
+			indentation() <<
+			"   Source: " <<
+			Json::valueToQuotedString(m_source.substr(location.start, location.end - location.start).c_str()) <<
+			endl;
 	}
 }
 

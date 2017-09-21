@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -197,29 +198,12 @@ bool CompilerStack::analyze()
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
+	TypeChecker typeChecker(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			{
-				m_globalContext->setCurrentContract(*contract);
-				resolver.updateDeclaration(*m_globalContext->currentThis());
-				TypeChecker typeChecker(m_errorReporter);
-				if (typeChecker.checkTypeRequirements(*contract))
-				{
-					contract->setDevDocumentation(Natspec::devDocumentation(*contract));
-					contract->setUserDocumentation(Natspec::userDocumentation(*contract));
-				}
-				else
+				if (!typeChecker.checkTypeRequirements(*contract))
 					noErrors = false;
-
-				// Note that we now reference contracts by their fully qualified names, and
-				// thus contracts can only conflict if declared in the same source file.  This
-				// already causes a double-declaration error elsewhere, so we do not report
-				// an error here and instead silently drop any additional contracts we find.
-
-				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
-					m_contracts[contract->fullyQualifiedName()].contract = contract;
-			}
 
 	if (noErrors)
 	{
@@ -235,6 +219,16 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (!staticAnalyzer.analyze(*source->ast))
 				noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		vector<ASTPointer<ASTNode>> ast;
+		for (Source const* source: m_sourceOrder)
+			ast.push_back(source->ast);
+
+		if (!ViewPureChecker(ast, m_errorReporter).check())
+			noErrors = false;
 	}
 
 	if (noErrors)
@@ -364,16 +358,24 @@ eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName)
 	return contract(_contractName).cloneObject;
 }
 
-Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
+/// FIXME: cache this string
+string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
 {
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.compiler)
-		return currentContract.compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
+		return currentContract.compiler->assemblyString(_sourceCodes);
 	else
-	{
-		_outStream << "Contract not fully implemented" << endl;
+		return string();
+}
+
+/// FIXME: cache the JSON
+Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap _sourceCodes) const
+{
+	Contract const& currentContract = contract(_contractName);
+	if (currentContract.compiler)
+		return currentContract.compiler->assemblyJSON(_sourceCodes);
+	else
 		return Json::Value();
-	}
 }
 
 vector<string> CompilerStack::sourceNames() const

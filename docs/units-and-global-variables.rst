@@ -73,6 +73,18 @@ Block and Transaction Properties
     This includes calls to library functions.
 
 .. note::
+    Do not rely on ``block.timestamp``, ``now`` and ``block.blockhash`` as a source of randomness,
+    unless you know what you are doing.
+
+    Both the timestamp and the block hash can be influenced by miners to some degree.
+    Bad actors in the mining community can for example run a casino payout function on a chosen hash
+    and just retry a different hash if they did not receive any money.
+
+    The current block timestamp must be strictly larger than the timestamp of the last block,
+    but the only guarantee is that it will be somewhere between the timestamps of two
+    consecutive blocks in the canonical chain.
+
+.. note::
     If you want to implement access restrictions in library functions using
     ``msg.sender``, you have to manually supply the value of
     ``msg.sender`` as an argument.

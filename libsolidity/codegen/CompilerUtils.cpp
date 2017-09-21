@@ -121,7 +121,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 {
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
 	{
-		solAssert(ref->location() == DataLocation::Memory, "");
+		solUnimplementedAssert(ref->location() == DataLocation::Memory, "");
 		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
@@ -310,18 +310,13 @@ void CompilerUtils::abiEncode(
 {
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
 
-	vector<string> variables;
-	size_t numValues = sizeOnStack(_givenTypes);
-	for (size_t i = 0; i < numValues; ++i)
-			variables.push_back("$value" + to_string(i));
-	variables.push_back("$headStart");
+	auto ret = m_context.pushNewTag();
+	moveIntoStack(sizeOnStack(_givenTypes) + 1);
 
-	ABIFunctions funs;
-	string routine = funs.tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
-	routine += funs.requestedFunctions();
-	m_context.appendInlineAssembly("{" + routine + "}", variables);
-	// Remove everyhing except for "value0" / the final memory pointer.
-	popStackSlots(numValues);
+	string encoderName = m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
+	m_context.appendJumpTo(m_context.namedTag(encoderName));
+	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
+	m_context << ret.tag();
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
@@ -829,6 +824,7 @@ void CompilerUtils::convertType(
 			break;
 		}
 	}
+	// fall-through
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");

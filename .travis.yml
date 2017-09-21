@@ -174,7 +174,6 @@ cache:
     ccache: true
     directories:
         - boost_1_57_0
-        - build
         - $HOME/.local
 
 install:
@@ -221,7 +220,7 @@ deploy:
           branch:
             - develop
             - release
-            - /^v[0-9]/
+            - /^v\d/
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit and the source tarball.
     #

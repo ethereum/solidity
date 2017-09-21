@@ -38,30 +38,30 @@ bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 	return !m_errorOccured;
 }
 
-bool DocStringAnalyser::visit(ContractDefinition const& _node)
+bool DocStringAnalyser::visit(ContractDefinition const& _contract)
 {
 	static const set<string> validTags = set<string>{"author", "title", "dev", "notice"};
-	parseDocStrings(_node, _node.annotation(), validTags, "contracts");
+	parseDocStrings(_contract, _contract.annotation(), validTags, "contracts");
 
 	return true;
 }
 
-bool DocStringAnalyser::visit(FunctionDefinition const& _node)
+bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 {
-	handleCallable(_node, _node, _node.annotation());
+	handleCallable(_function, _function, _function.annotation());
 	return true;
 }
 
-bool DocStringAnalyser::visit(ModifierDefinition const& _node)
+bool DocStringAnalyser::visit(ModifierDefinition const& _modifier)
 {
-	handleCallable(_node, _node, _node.annotation());
+	handleCallable(_modifier, _modifier, _modifier.annotation());
 
 	return true;
 }
 
-bool DocStringAnalyser::visit(EventDefinition const& _node)
+bool DocStringAnalyser::visit(EventDefinition const& _event)
 {
-	handleCallable(_node, _node, _node.annotation());
+	handleCallable(_event, _event, _event.annotation());
 
 	return true;
 }
@@ -72,7 +72,7 @@ void DocStringAnalyser::handleCallable(
 	DocumentedAnnotation& _annotation
 )
 {
-	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param", "why3"};
+	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
 
 	set<string> validParams;

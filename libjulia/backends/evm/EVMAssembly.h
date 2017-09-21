@@ -52,6 +52,8 @@ public:
 	virtual void appendLabelReference(LabelID _labelId) override;
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() override;
+	/// Returns a label identified by the given name. Creates it if it does not yet exist.
+	virtual LabelID namedLabel(std::string const& _name) override;
 	/// Append a reference to a to-be-linked symobl.
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) override;
@@ -85,6 +87,7 @@ private:
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
 	bytes m_bytecode;
+	std::map<std::string, LabelID> m_namedLabels;
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;
 	std::vector<size_t> m_assemblySizePositions;

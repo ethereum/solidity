@@ -120,6 +120,11 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 					m_errorReporter.typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 				if (!fallbackFunction->returnParameters().empty())
 					m_errorReporter.typeError(fallbackFunction->returnParameterList()->location(), "Fallback function cannot return values.");
+				if (
+					_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) &&
+					fallbackFunction->visibility() != FunctionDefinition::Visibility::External
+				)
+					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function must be defined as \"external\".");
 			}
 		}
 	}
@@ -164,28 +169,52 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 		for (; it != functions[_contract.name()].end(); ++it)
 			ssl.append("Another declaration is here:", (*it)->location());
 
+		string msg = "More than one constructor defined.";
+		size_t occurrences = ssl.infos.size();
+		if (occurrences > 32)
+		{
+			ssl.infos.resize(32);
+			msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+		}
+
 		m_errorReporter.declarationError(
 			functions[_contract.name()].front()->location(),
 			ssl,
-			"More than one constructor defined."
+			msg
 		);
 	}
 	for (auto const& it: functions)
 	{
 		vector<FunctionDefinition const*> const& overloads = it.second;
-		for (size_t i = 0; i < overloads.size(); ++i)
+		set<size_t> reported;
+		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
+		{
+			SecondarySourceLocation ssl;
+
 			for (size_t j = i + 1; j < overloads.size(); ++j)
 				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
 				{
-					m_errorReporter.declarationError(
-						overloads[j]->location(),
-						SecondarySourceLocation().append(
-							"Other declaration is here:",
-							overloads[i]->location()
-						),
-						"Function with same name and arguments defined twice."
-					);
+					ssl.append("Other declaration is here:", overloads[j]->location());
+					reported.insert(j);
 				}
+
+			if (ssl.infos.size() > 0)
+			{
+				string msg = "Function with same name and arguments defined twice.";
+				size_t occurrences = ssl.infos.size();
+				if (occurrences > 32)
+				{
+					ssl.infos.resize(32);
+					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+				}
+
+				m_errorReporter.declarationError(
+					overloads[i]->location(),
+					ssl,
+					msg
+				);
+			}
+		}
 	}
 }
 
@@ -314,6 +343,9 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 
 	if (!functionType.hasEqualArgumentTypes(superType))
 		return;
+
+	if (!function.annotation().superFunction)
+		function.annotation().superFunction = &super;
 
 	if (function.visibility() != super.visibility())
 		overrideError(function, super, "Overriding function visibility differs.");
@@ -458,7 +490,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				" to " +
 				parameterTypes[i]->toString() +
 				" requested."
-						);
+			);
 }
 
 void TypeChecker::endVisit(UsingForDirective const& _usingFor)
@@ -519,7 +551,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
-			m_errorReporter.fatalTypeError(var->location(), "Internal type is not allowed for public or external functions.");
+			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
 
 		var->accept(*this);
 	}
@@ -591,7 +623,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		{
 			bool allowed = false;
 			if (auto arrayType = dynamic_cast<ArrayType const*>(_variable.type().get()))
-				allowed = arrayType->isString();
+				allowed = arrayType->isByteArray();
 			if (!allowed)
 				m_errorReporter.typeError(_variable.location(), "Constants of non-value type not yet implemented.");
 		}
@@ -614,7 +646,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
 		!FunctionType(_variable).interfaceFunctionType()
 	)
-		m_errorReporter.typeError(_variable.location(), "Internal type is not allowed for public state variables.");
+		m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 
 	if (varType->category() == Type::Category::Array)
 		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
@@ -623,7 +655,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				(arrayType->location() == DataLocation::CallData)) &&
 				!arrayType->validForCalldata()
 			)
-				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded as calldata.");
+				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
 
 	return false;
 }
@@ -698,15 +730,15 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	{
 		if (var->isIndexed())
 			numIndexed++;
-		if (_eventDef.isAnonymous() && numIndexed > 4)
-			m_errorReporter.typeError(_eventDef.location(), "More than 4 indexed arguments for anonymous event.");
-		else if (!_eventDef.isAnonymous() && numIndexed > 3)
-			m_errorReporter.typeError(_eventDef.location(), "More than 3 indexed arguments for event.");
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
-			m_errorReporter.typeError(var->location(), "Internal type is not allowed as event parameter type.");
+			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
 	}
+	if (_eventDef.isAnonymous() && numIndexed > 4)
+		m_errorReporter.typeError(_eventDef.location(), "More than 4 indexed arguments for anonymous event.");
+	else if (!_eventDef.isAnonymous() && numIndexed > 3)
+		m_errorReporter.typeError(_eventDef.location(), "More than 3 indexed arguments for event.");
 	return false;
 }
 
@@ -1445,7 +1477,37 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
+	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	{
+		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
+			m_errorReporter.warning(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
+		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
+			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+	}
+
 	TypePointers parameterTypes = functionType->parameterTypes();
+
+	if (!functionType->padArguments())
+	{
+		for (size_t i = 0; i < arguments.size(); ++i)
+		{
+			auto const& argType = type(*arguments[i]);
+			if (auto literal = dynamic_cast<RationalNumberType const*>(argType.get()))
+			{
+				/* If no mobile type is available an error will be raised elsewhere. */
+				if (literal->mobileType())
+					m_errorReporter.warning(
+						_functionCall.location(),
+						"The type of \"" +
+						argType->toString() +
+						"\" was inferred as " +
+						literal->mobileType()->toString() +
+						". This is probably not desired. Use an explicit type to silence this warning."
+					);
+			}
+		}
+	}
+
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		string msg =
@@ -1561,14 +1623,16 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
 				m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
+		{
+			SecondarySourceLocation ssl;
+			for (auto function: contract->annotation().unimplementedFunctions)
+				ssl.append("Missing implementation:", function->location());
 			m_errorReporter.typeError(
 				_newExpression.location(),
-				SecondarySourceLocation().append(
-					"Missing implementation:",
-					contract->annotation().unimplementedFunctions.front()->location()
-				),
+				ssl,
 				"Trying to create an instance of an abstract contract."
 			);
+		}
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
 
@@ -1604,7 +1668,9 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			TypePointers{type},
 			strings(),
 			strings(),
-			FunctionType::Kind::ObjectCreation
+			FunctionType::Kind::ObjectCreation,
+			false,
+			StateMutability::Pure
 		);
 		_newExpression.annotation().isPure = true;
 	}

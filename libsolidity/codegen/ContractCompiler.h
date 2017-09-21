@@ -96,8 +96,8 @@ private:
 	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(Continue const& _continue) override;
-	virtual bool visit(Break const& _break) override;
+	virtual bool visit(Continue const& _continueStatement) override;
+	virtual bool visit(Break const& _breakStatement) override;
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(Throw const& _throw) override;
 	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;

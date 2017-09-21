@@ -99,7 +99,7 @@ Arch Linux also has packages, albeit limited to the latest development version:
 
 .. code:: bash
 
-    pacman -S solidity-git
+    pacman -S solidity
 
 Homebrew is missing pre-built bottles at the time of writing,
 following a Jenkins to TravisCI migration, but Homebrew

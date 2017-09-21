@@ -59,18 +59,18 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
 	case PushString:
-		return 33;
+		return 1 + 32;
 	case Push:
 		return 1 + max<unsigned>(1, dev::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
-		return 4;		// worst case: a 16MB program
+		return 1 + 4;		// worst case: a 16MB program
 	case PushTag:
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
 	case PushLibraryAddress:
-		return 21;
+		return 1 + 20;
 	default:
 		break;
 	}
@@ -249,8 +249,11 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PushProgramSize";
 		break;
 	case PushLibraryAddress:
-		_out << " PushLibraryAddress " << hex << h256(_item.data()).abridgedMiddle() << dec;
+	{
+		string hash(h256((_item.data())).hex());
+		_out << " PushLibraryAddress " << hash.substr(0, 8) + "..." + hash.substr(hash.length() - 8);
 		break;
+	}
 	case UndefinedItem:
 		_out << " ???";
 		break;

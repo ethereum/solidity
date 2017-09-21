@@ -26,7 +26,7 @@
 namespace dev
 {
 
-/// Compute the "swarm hash" of @a _data
-h256 swarmHash(std::string const& _data);
+/// Compute the "swarm hash" of @a _input
+h256 swarmHash(std::string const& _input);
 
 }

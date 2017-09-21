@@ -24,6 +24,7 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/PeepholeOptimiser.h>
+#include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
@@ -48,6 +49,8 @@ void Assembly::append(Assembly const& _a)
 	}
 	m_deposit = newDeposit;
 	m_usedTags += _a.m_usedTags;
+	// This does not transfer the names of named tags on purpose. The tags themselves are
+	// transferred, but their names are only available inside the assembly.
 	for (auto const& i: _a.m_data)
 		m_data.insert(i);
 	for (auto const& i: _a.m_strings)
@@ -180,7 +183,7 @@ private:
 
 }
 
-ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	Functionalizer f(_out, _prefix, _sourceCodes);
 
@@ -198,18 +201,23 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
-			m_subs[i]->streamAsm(_out, _prefix + "    ", _sourceCodes);
+			m_subs[i]->assemblyStream(_out, _prefix + "    ", _sourceCodes);
 			_out << _prefix << "}" << endl;
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
 		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
-
-	return _out;
 }
 
-Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType) const
+string Assembly::assemblyString(StringMap const& _sourceCodes) const
+{
+	ostringstream tmp;
+	assemblyStream(tmp, "", _sourceCodes);
+	return tmp.str();
+}
+
+Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
 {
 	Json::Value value;
 	value["name"] = _name;
@@ -222,14 +230,14 @@ Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string
 	return value;
 }
 
-string toStringInHex(u256 _value)
+string Assembly::toStringInHex(u256 _value)
 {
 	std::stringstream hexStr;
 	hexStr << hex << _value;
 	return hexStr.str();
 }
 
-Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes) const
+Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 {
 	Json::Value root;
 
@@ -300,37 +308,32 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->stream(_out, "", _sourceCodes, true);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceCodes);
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
 		root[".auxdata"] = toHex(m_auxiliaryData);
 
-	_out << root;
-
 	return root;
-}
-
-Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
-{
-	if (_inJsonFormat)
-		return streamAsmJson(_out, _sourceCodes);
-	else
-	{
-		streamAsm(_out, _prefix, _sourceCodes);
-		return Json::Value();
-	}
 }
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
-	assertThrow(m_deposit >= 0, AssemblyException, "");
+	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
 	return back();
+}
+
+AssemblyItem Assembly::namedTag(string const& _name)
+{
+	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
+	if (!m_namedTags.count(_name))
+		m_namedTags[_name] = size_t(newTag().data());
+	return AssemblyItem(Tag, m_namedTags.at(_name));
 }
 
 AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
@@ -349,6 +352,7 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
 	OptimiserSettings settings;
 	settings.isCreation = _isCreation;
+	settings.runJumpdestRemover = true;
 	settings.runPeephole = true;
 	if (_enable)
 	{
@@ -357,18 +361,21 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		settings.runConstantOptimiser = true;
 	}
 	settings.expectedExecutionsPerDeployment = _runs;
-	optimiseInternal(settings);
+	optimise(settings);
 	return *this;
 }
 
 
-Assembly& Assembly::optimise(OptimiserSettings _settings)
+Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
-	optimiseInternal(_settings);
+	optimiseInternal(_settings, {});
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
+map<u256, u256> Assembly::optimiseInternal(
+	OptimiserSettings const& _settings,
+	std::set<size_t> const& _tagsReferencedFromOutside
+)
 {
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
@@ -376,7 +383,10 @@ map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
 		OptimiserSettings settings = _settings;
 		// Disable creation mode for sub-assemblies.
 		settings.isCreation = false;
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(settings);
+		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(
+			settings,
+			JumpdestRemover::referencedTags(m_items, subId)
+		);
 		// Apply the replacements (can be empty).
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
@@ -386,6 +396,13 @@ map<u256, u256> Assembly::optimiseInternal(OptimiserSettings _settings)
 	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
+
+		if (_settings.runJumpdestRemover)
+		{
+			JumpdestRemover jumpdestOpt(m_items);
+			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
+				count++;
+		}
 
 		if (_settings.runPeephole)
 		{
@@ -473,8 +490,9 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& sub: m_subs)
 	{
 		sub->assemble();
-		if (!sub->m_tagPositionsInBytecode.empty())
-			subTagSize = max(subTagSize, *max_element(sub->m_tagPositionsInBytecode.begin(), sub->m_tagPositionsInBytecode.end()));
+		for (size_t tagPos: sub->m_tagPositionsInBytecode)
+			if (tagPos != size_t(-1) && tagPos > subTagSize)
+				subTagSize = tagPos;
 	}
 
 	LinkerObject& ret = m_assembledObject;
@@ -570,9 +588,10 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
-			assertThrow(i.data() != 0, AssemblyException, "");
+			assertThrow(i.data() != 0, AssemblyException, "Invalid tag position.");
 			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
+			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
 			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
 			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
 			break;

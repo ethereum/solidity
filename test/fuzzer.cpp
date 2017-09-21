@@ -20,6 +20,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
+#include <solc/jsonCompiler.h>
 
 #include <json/json.h>
 
@@ -33,12 +34,8 @@ using namespace dev;
 using namespace dev::eth;
 namespace po = boost::program_options;
 
-extern "C"
+namespace
 {
-extern char const* compileJSON(char const* _input, bool _optimize);
-typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
-extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback);
-}
 
 bool quiet = false;
 
@@ -124,13 +121,12 @@ void testStandardCompiler()
 		}
 }
 
-void testCompiler()
+void testCompiler(bool optimize)
 {
 	if (!quiet)
-		cout << "Testing compiler." << endl;
+		cout << "Testing compiler " << (optimize ? "with" : "without") << " optimizer." << endl;
 	string input = readInput();
 
-	bool optimize = true;
 	string outputString(compileJSON(input.c_str(), optimize));
 	Json::Value outputJson;
 	if (!Json::Reader().parse(outputString, outputJson))
@@ -169,6 +165,8 @@ void testCompiler()
 	}
 }
 
+}
+
 int main(int argc, char** argv)
 {
 	po::options_description options(
@@ -192,6 +190,10 @@ Allowed options)",
 			"const-opt",
 			"Run the constant optimizer instead of compiling. "
 			"Expects a binary string of up to 32 bytes on stdin."
+		)
+		(
+			"without-optimizer",
+			"Run without optimizations. Cannot be used together with standard-json."
 		);
 
 	po::variables_map arguments;
@@ -217,7 +219,7 @@ Allowed options)",
 	else if (arguments.count("standard-json"))
 		testStandardCompiler();
 	else
-		testCompiler();
+		testCompiler(!arguments.count("without-optimizer"));
 
 	return 0;
 }

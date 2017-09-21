@@ -50,8 +50,8 @@ private:
 	virtual bool visit(ContractDefinition const& _contract) override;
 	virtual void endVisit(ContractDefinition const& _contract) override;
 
-	virtual bool visit(VariableDeclaration const& _declaration) override;
-	virtual void endVisit(VariableDeclaration const& _declaration) override;
+	virtual bool visit(VariableDeclaration const& _variable) override;
+	virtual void endVisit(VariableDeclaration const& _variable) override;
 
 	virtual bool visit(Identifier const& _identifier) override;
 

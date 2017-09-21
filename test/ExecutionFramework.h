@@ -22,13 +22,13 @@
 
 #pragma once
 
-#include <functional>
+#include <test/TestHelper.h>
+#include <test/RPCSession.h>
 
-#include "TestHelper.h"
-#include "RPCSession.h"
-
-#include <libdevcore/ABI.h>
 #include <libdevcore/FixedHash.h>
+#include <libdevcore/SHA3.h>
+
+#include <functional>
 
 namespace dev
 {
@@ -40,11 +40,11 @@ namespace test
 	using Address = h160;
 
 	// The various denominations; here for ease of use where needed within code.
-	static const u256 ether = exp10<18>();
-	static const u256 finney = exp10<15>();
-	static const u256 szabo = exp10<12>();
-	static const u256 shannon = exp10<9>();
-	static const u256 wei = exp10<0>();
+	static const u256 wei = 1;
+	static const u256 shannon = u256("1000000000");
+	static const u256 szabo = shannon * 1000;
+	static const u256 finney = szabo * 1000;
+	static const u256 ether = finney * 1000;
 
 class ExecutionFramework
 {
@@ -217,25 +217,25 @@ public:
 			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
 			BOOST_REQUIRE(ret.size() == 0x20);
 			BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
-			return eth::abiOut<u160>(ret);
+			return u160(u256(h256(ret)));
 		}
 
 		std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
 		{
-			bytesConstRef ret = ref(call(_name + "(address)", _arg));
-			BOOST_REQUIRE(ret.size() >= 0x20);
-			u256 offset = eth::abiOut<u256>(ret);
+			bytesConstRef const ret(&call(_name + "(address)", _arg));
+			BOOST_REQUIRE(ret.size() >= 0x40);
+			u256 offset(h256(ret.cropped(0, 0x20)));
 			BOOST_REQUIRE_EQUAL(offset, 0x20);
-			u256 len = eth::abiOut<u256>(ret);
-			BOOST_REQUIRE_EQUAL(ret.size(), ((len + 0x1f) / 0x20) * 0x20);
-			return ret.cropped(0, size_t(len)).toString();
+			u256 len(h256(ret.cropped(0x20, 0x20)));
+			BOOST_REQUIRE_EQUAL(ret.size(), 0x40 + ((len + 0x1f) / 0x20) * 0x20);
+			return ret.cropped(0x40, size_t(len)).toString();
 		}
 
 		h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
 		{
 			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
 			BOOST_REQUIRE(ret.size() == 0x20);
-			return eth::abiOut<h256>(ret);
+			return h256(ret);
 		}
 
 	private:
@@ -262,7 +262,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
 	size_t currentTimestamp();
-	size_t blockTimestamp(u256 number);
+	size_t blockTimestamp(u256 _number);
 
 	/// @returns the (potentially newly created) _ith address.
 	Address account(size_t _i);

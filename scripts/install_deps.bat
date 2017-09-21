@@ -58,4 +58,4 @@ REM
 REM Copyright (c) 2016 solidity contributors.
 REM ---------------------------------------------------------------------------
 
-cmake -P deps\install_deps.cmake
+cmake -P scripts\install_deps.cmake

@@ -39,6 +39,9 @@ public:
 	explicit ErrorReporter(ErrorList& _errors):
 		m_errorList(_errors) { }
 
+	ErrorReporter(ErrorReporter const& _errorReporter) noexcept:
+		m_errorList(_errorReporter.m_errorList) { }
+
 	ErrorReporter& operator=(ErrorReporter const& _errorReporter);
 
 	void warning(std::string const& _description);
@@ -83,7 +86,7 @@ public:
 
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
-	void docstringParsingError(std::string const& _location);
+	void docstringParsingError(std::string const& _description);
 
 	ErrorList const& errors() const;
 

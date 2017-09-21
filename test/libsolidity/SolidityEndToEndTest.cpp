@@ -6525,7 +6525,7 @@ BOOST_AUTO_TEST_CASE(state_variable_under_contract_name)
 		contract Scope {
 			uint stateVar = 42;
 
-			function getStateVar() constant returns (uint stateVar) {
+			function getStateVar() view returns (uint stateVar) {
 				stateVar = Scope.stateVar;
 			}
 		}
@@ -6791,7 +6791,7 @@ BOOST_AUTO_TEST_CASE(fixed_arrays_as_return_type)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function f(uint16 input) constant returns (uint16[5] arr)
+			function f(uint16 input) pure returns (uint16[5] arr)
 			{
 				arr[0] = input;
 				arr[1] = ++input;
@@ -6820,7 +6820,7 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 {
 	char const* sourceCode = R"(
 		library Lib {
-			function find(uint16[] storage _haystack, uint16 _needle) constant returns (uint)
+			function find(uint16[] storage _haystack, uint16 _needle) view returns (uint)
 			{
 				for (uint i = 0; i < _haystack.length; ++i)
 					if (_haystack[i] == _needle)
@@ -7855,6 +7855,31 @@ BOOST_AUTO_TEST_CASE(inline_assembly_function_call)
 						z := 7
 					}
 					let a1, b1, c1 := asmfun(1, 2, 3)
+					mstore(0x00, a1)
+					mstore(0x20, b1)
+					mstore(0x40, c1)
+					return(0, 0x60)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1), u256(2), u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_function_call_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					let a1, b1, c1
+					function asmfun(a, b, c) -> x, y, z {
+						x := a
+						y := b
+						z := 7
+					}
+					a1, b1, c1 := asmfun(1, 2, 3)
 					mstore(0x00, a1)
 					mstore(0x20, b1)
 					mstore(0x40, c1)
@@ -9682,6 +9707,7 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 	compileAndRun(sourceCode, 0, "C2");
 }
 
+
 BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 {
 	char const* sourceCode = R"(
@@ -9913,12 +9939,12 @@ BOOST_AUTO_TEST_CASE(keccak256_assembly)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (bytes32 ret) {
+			function f() pure returns (bytes32 ret) {
 				assembly {
 					ret := keccak256(0, 0)
 				}
 			}
-			function g() returns (bytes32 ret) {
+			function g() pure returns (bytes32 ret) {
 				assembly {
 					0
 					0
@@ -9926,12 +9952,12 @@ BOOST_AUTO_TEST_CASE(keccak256_assembly)
 					=: ret
 				}
 			}
-			function h() returns (bytes32 ret) {
+			function h() pure returns (bytes32 ret) {
 				assembly {
 					ret := sha3(0, 0)
 				}
 			}
-			function i() returns (bytes32 ret) {
+			function i() pure returns (bytes32 ret) {
 				assembly {
 					0
 					0
@@ -9979,7 +10005,7 @@ BOOST_AUTO_TEST_CASE(inlineasm_empty_let)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (uint a, uint b) {
+			function f() pure returns (uint a, uint b) {
 				assembly {
 					let x
 					let y, z
@@ -9998,13 +10024,13 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	char const* sourceCode = R"(
 		contract C {
 			/// Calling into non-existant account is successful (creates the account)
-			function f() external constant returns (bool) {
+			function f() external view returns (bool) {
 				return address(0x4242).call();
 			}
-			function g() external constant returns (bool) {
+			function g() external view returns (bool) {
 				return address(0x4242).callcode();
 			}
-			function h() external constant returns (bool) {
+			function h() external view returns (bool) {
 				return address(0x4242).delegatecall();
 			}
 		}
@@ -10023,16 +10049,16 @@ BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 			function set(uint _value) external {
 				value = _value;
 			}
-			function get() external constant returns (uint) {
+			function get() external view returns (uint) {
 				return value;
 			}
-			function get_delegated() external constant returns (bool) {
+			function get_delegated() external view returns (bool) {
 				return this.delegatecall(bytes4(sha3("get()")));
 			}
-			function assert0() external constant {
+			function assert0() external view {
 				assert(value == 0);
 			}
-			function assert0_delegated() external constant returns (bool) {
+			function assert0_delegated() external view returns (bool) {
 				return this.delegatecall(bytes4(sha3("assert0()")));
 			}
 		}
@@ -10049,6 +10075,54 @@ BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(42)));
 	BOOST_CHECK(callContractFunction("assert0_delegated()") == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("get_delegated()") == encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(function_types_sig)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes4) {
+				return this.f.selector;
+			}
+			function g() returns (bytes4) {
+				function () external returns (bytes4) fun = this.f;
+				return fun.selector;
+			}
+			function h() returns (bytes4) {
+				function () external returns (bytes4) fun = this.f;
+				var funvar = fun;
+				return funvar.selector;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+}
+
+BOOST_AUTO_TEST_CASE(constant_string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes constant a = "\x03\x01\x02";
+			bytes constant b = hex"030102";
+			string constant c = "hello";
+			function f() returns (bytes) {
+				return a;
+			}
+			function g() returns (bytes) {
+				return b;
+			}
+			function h() returns (bytes) {
+				return bytes(c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(string("\x03\x01\x02")));
+	BOOST_CHECK(callContractFunction("g()") == encodeDyn(string("\x03\x01\x02")));
+	BOOST_CHECK(callContractFunction("h()") == encodeDyn(string("hello")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

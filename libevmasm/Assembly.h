@@ -47,6 +47,8 @@ public:
 
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
+	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
+	AssemblyItem namedTag(std::string const& _name);
 	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
@@ -100,6 +102,7 @@ public:
 	struct OptimiserSettings
 	{
 		bool isCreation = false;
+		bool runJumpdestRemover = false;
 		bool runPeephole = false;
 		bool runDeduplicate = false;
 		bool runCSE = false;
@@ -110,7 +113,7 @@ public:
 	};
 
 	/// Execute optimisation passes as defined by @a _settings and return the optimised assembly.
-	Assembly& optimise(OptimiserSettings _settings);
+	Assembly& optimise(OptimiserSettings const& _settings);
 
 	/// Modify (if @a _enable is set) and return the current assembly such that creation and
 	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
@@ -119,28 +122,37 @@ public:
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
 	Assembly& optimise(bool _enable, bool _isCreation = true, size_t _runs = 200);
 
-	Json::Value stream(
+	/// Create a text representation of the assembly.
+	std::string assemblyString(
+		StringMap const& _sourceCodes = StringMap()
+	) const;
+	void assemblyStream(
 		std::ostream& _out,
 		std::string const& _prefix = "",
-		const StringMap &_sourceCodes = StringMap(),
-		bool _inJsonFormat = false
+		StringMap const& _sourceCodes = StringMap()
+	) const;
+
+	/// Create a JSON representation of the assembly.
+	Json::Value assemblyJSON(
+		StringMap const& _sourceCodes = StringMap()
 	) const;
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
-	/// returns the replaced tags.
-	std::map<u256, u256> optimiseInternal(OptimiserSettings _settings);
+	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
+	/// that are referenced in a super-assembly.
+	std::map<u256, u256> optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> const& _tagsReferencedFromOutside);
 
 	unsigned bytesRequired(unsigned subTagSize) const;
 
 private:
-	Json::Value streamAsmJson(std::ostream& _out, StringMap const& _sourceCodes) const;
-	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
-	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
+	static Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string());
+	static std::string toStringInHex(u256 _value);
 
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
+	std::map<std::string, size_t> m_namedTags;
 	AssemblyItems m_items;
 	std::map<h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
@@ -159,7 +171,7 @@ protected:
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
-	_a.stream(_out);
+	_a.assemblyStream(_out);
 	return _out;
 }
 

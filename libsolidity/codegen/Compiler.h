@@ -40,6 +40,8 @@ public:
 		m_context(&m_runtimeContext)
 	{ }
 
+	/// Compiles a contract.
+	/// @arg _metadata contains the to be injected metadata CBOR
 	void compileContract(
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts,
@@ -51,14 +53,21 @@ public:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
+	/// @returns Entire assembly.
 	eth::Assembly const& assembly() const { return m_context.assembly(); }
+	/// @returns The entire assembled object (with constructor).
 	eth::LinkerObject assembledObject() const { return m_context.assembledObject(); }
+	/// @returns Only the runtime object (without constructor).
 	eth::LinkerObject runtimeObject() const { return m_context.assembledRuntimeObject(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFromat shows whether the out should be in Json format
-	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
+	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
 	{
-		return m_context.streamAssembly(_stream, _sourceCodes, _inJsonFormat);
+		return m_context.assemblyString(_sourceCodes);
+	}
+	/// @arg _sourceCodes is the map of input files to source code strings
+	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	{
+		return m_context.assemblyJSON(_sourceCodes);
 	}
 	/// @returns Assembly items of the normal compiler context
 	eth::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }

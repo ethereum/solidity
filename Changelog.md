@@ -1,3 +1,28 @@
+### 0.4.17 (2017-09-21)
+
+Features:
+ * Assembly Parser: Support multiple assignment (``x, y := f()``).
+ * Code Generator: Keep a single copy of encoding functions when using the experimental "ABIEncoderV2".
+ * Code Generator: Partial support for passing ``structs`` as arguments and return parameters (requires ``pragma experimental ABIEncoderV2;`` for now).
+ * General: Support ``pragma experimental "v0.5.0";`` to activate upcoming breaking changes.
+ * General: Added ``.selector`` member on external function types to retrieve their signature.
+ * Optimizer: Add new optimization step to remove unused ``JUMPDEST``s.
+ * Static Analyzer: Warn when using deprecated builtins ``sha3`` and ``suicide``
+   (replaced by ``keccak256`` and ``selfdestruct``, introduced in 0.4.2 and 0.2.0, respectively).
+ * Syntax Checker: Warn if no visibility is specified on contract functions.
+ * Type Checker: Display helpful warning for unused function arguments/return parameters.
+ * Type Checker: Do not show the same error multiple times for events.
+ * Type Checker: Greatly reduce the number of duplicate errors shown for duplicate constructors and functions.
+ * Type Checker: Warn on using literals as tight packing parameters in ``keccak256``, ``sha3``, ``sha256`` and ``ripemd160``.
+ * Type Checker: Enforce ``view`` and ``pure``.
+ * Type Checker: Enforce ``view`` / ``constant`` with error as experimental 0.5.0 feature.
+ * Type Checker: Enforce fallback functions to be ``external`` as experimental 0.5.0 feature.
+
+Bugfixes:
+ * ABI JSON: Include all overloaded events.
+ * Parser: Crash fix related to parseTypeName.
+ * Type Checker: Allow constant byte arrays.
+
 ### 0.4.16 (2017-08-24)
 
 Features:

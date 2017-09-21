@@ -176,11 +176,19 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 		m_interfaceEvents.reset(new vector<EventDefinition const*>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 			for (EventDefinition const* e: contract->events())
-				if (eventsSeen.count(e->name()) == 0)
+			{
+				/// NOTE: this requires the "internal" version of an Event,
+				///       though here internal strictly refers to visibility,
+				///       and not to function encoding (jump vs. call)
+				auto const& function = e->functionType(true);
+				solAssert(function, "");
+				string eventSignature = function->externalSignature();
+				if (eventsSeen.count(eventSignature) == 0)
 				{
-					eventsSeen.insert(e->name());
+					eventsSeen.insert(eventSignature);
 					m_interfaceEvents->push_back(e);
 				}
+			}
 	}
 	return *m_interfaceEvents;
 }
@@ -216,26 +224,6 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 		}
 	}
 	return *m_interfaceFunctionList;
-}
-
-Json::Value const& ContractDefinition::devDocumentation() const
-{
-	return m_devDocumentation;
-}
-
-Json::Value const& ContractDefinition::userDocumentation() const
-{
-	return m_userDocumentation;
-}
-
-void ContractDefinition::setDevDocumentation(Json::Value const& _devDocumentation)
-{
-	m_devDocumentation = _devDocumentation;
-}
-
-void ContractDefinition::setUserDocumentation(Json::Value const& _userDocumentation)
-{
-	m_userDocumentation = _userDocumentation;
 }
 
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const

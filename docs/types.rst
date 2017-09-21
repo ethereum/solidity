@@ -54,7 +54,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-Division always truncates (it is just compiled to the DIV opcode of the EVM), but it does not truncate if both
+Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 Division by zero and modulus with zero throws a runtime exception.
@@ -69,6 +69,30 @@ sign extends. Shifting by a negative amount throws a runtime exception.
     by other programming languages. In Solidity, shift right maps to division so the shifted negative values
     are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
     works like division with rounding down (towards negative infinity).
+
+.. index:: ! ufixed, ! fixed, ! fixed point number
+
+Fixed Point Numbers
+-------------------
+
+.. warning::
+    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
+    cannot be assigned to or from.
+
+``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represent the number of bits taken by 
+the type and ``N`` represent how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
+
+Operators:
+
+* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder)
+
+.. note::
+    The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
+    that the number of bits used for the integer and the fractional part (the part after the decimal dot) is flexible in the former, while it is strictly
+    defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
+    where the decimal point is.
 
 .. index:: address, balance, send, call, callcode, delegatecall, transfer
 
@@ -127,6 +151,24 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
 
 ``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
+It is possible to adjust the supplied gas with the ``.gas()`` modifier::
+
+    namReg.call.gas(1000000)("register", "MyName");
+
+Similarly, the supplied Ether value can be controlled too::
+
+    nameReg.call.value(1 ether)("register", "MyName");
+
+Lastly, these modifiers can be combined. Their order does not matter::
+
+    nameReg.call.gas(1000000).value(1 ether)("register", "MyName");
+
+.. note::
+    It is not yet possible to use the gas or value modifiers on overloaded functions.
+
+    A workaround is to introduce a special case for gas and value and just re-check
+    whether they are present at the point of overload resolution.
+
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
 All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
@@ -169,6 +211,10 @@ Members:
 
 * ``.length`` yields the fixed length of the byte array (read-only).
 
+.. note::
+    It is possible to use an array of bytes as ``byte[]``, but it is wasting a lot of space, 31 bytes every element,
+    to be exact, when passing in calls. It is better to use ``bytes``.
+
 Dynamically-sized byte array
 ----------------------------
 
@@ -180,15 +226,6 @@ Dynamically-sized byte array
 As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
 for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
 number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
-
-.. index:: ! ufixed, ! fixed, ! fixed point number
-
-Fixed Point Numbers
--------------------
-
-.. warning::
-    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
-    cannot be assigned to or from.
 
 .. index:: address, literal;address
 
@@ -363,6 +400,17 @@ Note that public functions of the current contract can be used both as an
 internal and as an external function. To use ``f`` as an internal function,
 just use ``f``, if you want to use its external form, use ``this.f``.
 
+Additionally, public (or external) functions also have a special member called ``selector``,
+which returns the :ref:`ABI function selector <abi_function_selector>`::
+
+    pragma solidity ^0.4.0;
+
+    contract Selector {
+      function f() returns (bytes4) {
+        return this.f.selector;
+      }
+    }
+
 Example that shows how to use internal function types::
 
     pragma solidity ^0.4.5;
@@ -467,10 +515,10 @@ context, there is always a default, but it can be overridden by appending
 either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
 to ``storage`` for state variables (obviously).
 
-There is also a third data location, "calldata", which is a non-modifiable,
+There is also a third data location, ``calldata``, which is a non-modifiable,
 non-persistent area where function arguments are stored. Function parameters
-(not return parameters) of external functions are forced to "calldata" and
-behave mostly like memory.
+(not return parameters) of external functions are forced to ``calldata`` and
+behave mostly like ``memory``.
 
 Data locations are important because they change how assignments behave:
 assignments between storage and memory and also to a state variable (even from other state variables)

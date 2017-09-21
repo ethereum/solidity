@@ -41,7 +41,7 @@ namespace smt
 class SMTLib2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	SMTLib2Interface(ReadCallback::Callback const& _queryCallback);
+	explicit SMTLib2Interface(ReadCallback::Callback const& _queryCallback);
 
 	void reset() override;
 

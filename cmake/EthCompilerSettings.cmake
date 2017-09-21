@@ -14,14 +14,6 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
-# Use ccache if available
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-	message("Using ccache")
-endif(CCACHE_FOUND)
-
 include(CheckCXXCompilerFlag)
 
 check_cxx_compiler_flag(-fstack-protector-strong have_stack_protector_strong)

@@ -644,8 +644,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					FunctionType::Kind::BareCall,
 					false,
-					nullptr,
 					StateMutability::NonPayable,
+					nullptr,
 					true,
 					true
 				),
@@ -1047,6 +1047,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (!alsoSearchInteger)
 			break;
 	}
+	// fall-through
 	case Type::Category::Integer:
 		if (member == "balance")
 		{
@@ -1067,7 +1068,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Invalid member access to integer");
 		break;
 	case Type::Category::Function:
-		solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
+		if (member == "selector")
+		{
+			m_context << Instruction::SWAP1 << Instruction::POP;
+			/// need to store store it as bytes4
+			utils().leftShiftNumberOnStack(224);
+		}
+		else
+			solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
 				 "Invalid member access to function.");
 		break;
 	case Type::Category::Magic:
@@ -1811,7 +1819,7 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
 }
 
-bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op) const
+bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op)
 {
 	if (Token::isCompareOp(_op) || Token::isShiftOp(_op))
 		return true;

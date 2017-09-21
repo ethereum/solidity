@@ -30,6 +30,9 @@ using namespace dev;
 
 // TODO: Extend this to use the tools from ExpressionClasses.cpp
 
+namespace
+{
+
 struct OptimiserState
 {
 	AssemblyItems const& items;
@@ -244,6 +247,8 @@ void applyMethods(OptimiserState& _state, Method, OtherMethods... _other)
 {
 	if (!Method::apply(_state))
 		applyMethods(_state, _other...);
+}
+
 }
 
 bool PeepholeOptimiser::optimise()

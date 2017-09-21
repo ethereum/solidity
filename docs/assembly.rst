@@ -9,9 +9,10 @@ This assembly language can also be used as "inline assembly" inside Solidity
 source code. We start with describing how to use inline assembly and how it
 differs from standalone assembly and then specify assembly itself.
 
-TODO: Write about how scoping rules of inline assembly are a bit different
-and the complications that arise when for example using internal functions
-of libraries. Furthermore, write about the symbols defined by the compiler.
+.. note::
+    TODO: Write about how scoping rules of inline assembly are a bit different
+    and the complications that arise when for example using internal functions
+    of libraries. Furthermore, write about the symbols defined by the compiler.
 
 .. _inline-assembly:
 
@@ -76,7 +77,7 @@ you really know what you are doing.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.12;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
@@ -1005,7 +1006,7 @@ that modifies the stack and with every label that is annotated with a stack
 adjustment. Every time a new
 local variable is introduced, it is registered together with the current
 stack height. If a variable is accessed (either for copying its value or for
-assignment), the appropriate DUP or SWAP instruction is selected depending
+assignment), the appropriate ``DUP`` or ``SWAP`` instruction is selected depending
 on the difference between the current stack height and the
 stack height at the point the variable was introduced.
 
