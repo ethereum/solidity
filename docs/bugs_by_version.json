@@ -358,6 +358,10 @@
         "bugs": [], 
         "released": "2017-08-24"
     }, 
+    "0.4.17": {
+        "bugs": [], 
+        "released": "2017-09-21"
+    }, 
     "0.4.2": {
         "bugs": [
             "DelegateCallReturnValue", 
