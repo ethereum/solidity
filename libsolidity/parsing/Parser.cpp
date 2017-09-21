@@ -823,6 +823,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	VarDeclParserOptions options(_options);
 	options.allowEmptyName = true;
 	expectToken(Token::LParen);
+
 	if (!_allowEmpty || m_scanner->currentToken() != Token::RParen)
 	{
 		parameters.push_back(parseVariableDeclaration(options));
@@ -830,6 +831,10 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 		{
 			expectToken(Token::Comma);
 			parameters.push_back(parseVariableDeclaration(options));
+
+			if(m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen){
+				fatalParserError("Unexpected trailing comma in arguments");
+			}
 		}
 	}
 	nodeFactory.markEndPosition();
