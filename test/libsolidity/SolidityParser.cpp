@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	FunctionDefinition const* function = nullptr;
 	auto functions = contract->definedFunctions();
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function");
 }
 
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
 						"Should not have gotten a Natspecc comment for this function");
 }
@@ -294,17 +294,17 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 1");
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(1), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(1), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 2");
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(2), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(2), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
 						"Should not have gotten natspec comment for functionName3()");
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(3), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(3), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 4");
 }
 
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 	ErrorList errors;
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function\n"
 						 " and it has 2 lines");
 }
@@ -351,10 +351,10 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "fun1 description");
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(1), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(1), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function\n"
 						 " and it has 2 lines");
 }
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(!function->documentation(),
 						"Shouldn't get natspec docstring for this function");
 }
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 
-	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
+	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(!function->documentation(),
 						"Shouldn't get natspec docstring for this function");
 }
