@@ -1494,7 +1494,7 @@ BOOST_AUTO_TEST_CASE(now)
 	size_t endTime = blockTimestamp(endBlock);
 	BOOST_CHECK(startBlock != endBlock);
 	BOOST_CHECK(startTime != endTime);
-	BOOST_CHECK(ret == encodeArgs(true, endTime));
+	ABI_CHECK(ret, encodeArgs(true, endTime));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
@@ -5185,7 +5185,7 @@ BOOST_AUTO_TEST_CASE(packed_storage_signed)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK( callContractFunction("test()") == encodeArgs(u256(-2), u256(4), u256(-112), u256(0)));
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(u256(-2), u256(4), u256(-112), u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(external_types_in_calls)
@@ -5540,7 +5540,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			}
 		}
 	)";
-	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A").empty());
+	ABI_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A"), encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
@@ -6505,31 +6505,32 @@ BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 		"1"
 	};
 	for (unsigned i = 0; i < strings.size(); i++)
-		BOOST_CHECK(callContractFunction(
+		ABI_CHECK(callContractFunction(
 			"set(string,uint256)",
 			u256(0x40),
 			u256(7 + i),
 			u256(strings[i].size()),
 			strings[i]
-		) == encodeArgs());
+		), encodeArgs());
 	for (unsigned i = 0; i < strings.size(); i++)
-		BOOST_CHECK(callContractFunction(
+		ABI_CHECK(callContractFunction(
 			"get(string)",
 			u256(0x20),
 			u256(strings[i].size()),
 			strings[i]
-		) == encodeArgs(u256(7 + i)));
+		), encodeArgs(u256(7 + i)));
 }
 
 BOOST_AUTO_TEST_CASE(accessor_for_state_variable)
 {
 	char const* sourceCode = R"(
-		contract Lotto{
+		contract Lotto {
 			uint public ticketPrice = 500;
-		})";
+		}
+	)";
 
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(500)));
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(500)));
 }
 
 BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
@@ -6537,10 +6538,11 @@ BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
 	char const* sourceCode = R"(
 		contract Lotto{
 			uint constant public ticketPrice = 555;
-		})";
+		}
+	)";
 
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(555)));
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(555)));
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_under_contract_name)
@@ -7913,7 +7915,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_function_call_assignment)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(1), u256(2), u256(7)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(2), u256(7)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_function_call2)
@@ -8776,8 +8778,8 @@ BOOST_AUTO_TEST_CASE(return_external_function_type)
 	)";
 
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(
-		callContractFunction("f()") ==
+	ABI_CHECK(
+		callContractFunction("f()"),
 		m_contractAddress.asBytes() + FixedHash<4>(dev::keccak256("g()")).asBytes() + bytes(32 - 4 - 20, 0)
 	);
 }
@@ -10120,9 +10122,9 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
-	BOOST_CHECK(callContractFunction("g()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
-	BOOST_CHECK(callContractFunction("h()") == encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(constant_string)
@@ -10144,9 +10146,9 @@ BOOST_AUTO_TEST_CASE(constant_string)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeDyn(string("\x03\x01\x02")));
-	BOOST_CHECK(callContractFunction("g()") == encodeDyn(string("\x03\x01\x02")));
-	BOOST_CHECK(callContractFunction("h()") == encodeDyn(string("hello")));
+	ABI_CHECK(callContractFunction("f()"), encodeDyn(string("\x03\x01\x02")));
+	ABI_CHECK(callContractFunction("g()"), encodeDyn(string("\x03\x01\x02")));
+	ABI_CHECK(callContractFunction("h()"), encodeDyn(string("hello")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
