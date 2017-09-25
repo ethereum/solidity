@@ -38,6 +38,13 @@
 #include <utility>
 #include <numeric>
 
+// Change to "define" to output all intermediate code
+#undef SOL_OUTPUT_ASM
+#ifdef SOL_OUTPUT_ASM
+#include <libsolidity/inlineasm/AsmPrinter.h>
+#endif
+
+
 using namespace std;
 
 namespace dev
@@ -313,10 +320,17 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
-	if (!parserResult || !errorReporter.errors().empty())
+#ifdef SOL_OUTPUT_ASM
+	cout << assembly::AsmPrinter()(*parserResult) << endl;
+#endif
+	assembly::AsmAnalysisInfo analysisInfo;
+	bool analyzerResult = false;
+	if (parserResult)
+		analyzerResult = assembly::AsmAnalyzer(analysisInfo, errorReporter, false, identifierAccess.resolve).analyze(*parserResult);
+	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
 	{
 		string message =
-			"Error parsing inline assembly block:\n"
+			"Error parsing/analyzing inline assembly block:\n"
 			"------------------ Input: -----------------\n" +
 			_assembly + "\n"
 			"------------------ Errors: ----------------\n";
@@ -331,9 +345,6 @@ void CompilerContext::appendInlineAssembly(
 		solAssert(false, message);
 	}
 
-	assembly::AsmAnalysisInfo analysisInfo;
-	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
-	solAssert(analyzer.analyze(*parserResult), "Failed to analyze inline assembly block.");
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
 }
