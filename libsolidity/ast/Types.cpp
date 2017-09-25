@@ -1618,8 +1618,7 @@ string ContractType::canonicalName() const
 
 MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) const
 {
-	// All address members and all interface functions
-	MemberList::MemberMap members(IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr));
+	MemberList::MemberMap members;
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
@@ -1659,6 +1658,38 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 				it.second->declaration().name(),
 				it.second->asMemberFunction(m_contract.isLibrary()),
 				&it.second->declaration()
+			));
+	}
+	// Add overloads from address only if there is no conflict
+	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
+	for (auto const& addressMember: addressMembers)
+	{
+		bool clash = false;
+		for (auto const& member: members)
+		{
+			if (
+				member.name == addressMember.name &&
+				(
+					// Members with different types are not allowed
+					member.type->category() != addressMember.type->category() ||
+					// Members must overload functions without clash
+					(
+						member.type->category() == Type::Category::Function &&
+						dynamic_cast<FunctionType const&>(*member.type).hasEqualArgumentTypes(dynamic_cast<FunctionType const&>(*addressMember.type))
+					)
+				)
+			)
+			{
+				clash = true;
+				break;
+			}
+		}
+
+		if (!clash)
+			members.push_back(MemberList::Member(
+				addressMember.name,
+				addressMember.type,
+				addressMember.declaration
 			));
 	}
 	return members;

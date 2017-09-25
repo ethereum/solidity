@@ -1720,34 +1720,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		);
 	}
 	else if (possibleMembers.size() > 1)
-	{
-		// Remove builtins (i.e. not having a declaration) first
-		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
-			if (
-				(
-					// Overloaded functions without declaration (e.g. transfer(), send(), call(), etc.)
-					it->type->category() == Type::Category::Function &&
-					!dynamic_cast<FunctionType const&>(*it->type).hasDeclaration()
-				)
-				||
-				(
-					// Overloaded members (e.g. balance)
-					it->type->category() == Type::Category::Integer &&
-					memberName == "balance"
-				)
-			)
-				it = possibleMembers.erase(it);
-			else
-				++it;
-
-		if (possibleMembers.size() > 1)
-			m_errorReporter.fatalTypeError(
-				_memberAccess.location(),
-				"Member \"" + memberName + "\" not unique "
-				"after argument-dependent lookup in " + exprType->toString() +
-				(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
-			);
-	}
+		m_errorReporter.fatalTypeError(
+			_memberAccess.location(),
+			"Member \"" + memberName + "\" not unique "
+			"after argument-dependent lookup in " + exprType->toString() +
+			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
+		);
 
 	auto& annotation = _memberAccess.annotation();
 	annotation.referencedDeclaration = possibleMembers.front().declaration;
