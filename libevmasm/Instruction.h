@@ -61,6 +61,9 @@ enum class Instruction: uint8_t
 	XOR,				///< bitwise XOR operation
 	NOT,				///< bitwise NOT opertation
 	BYTE,				///< retrieve single byte from word
+	SHL,                ///< shift left
+	SHR,                ///< shift right
+	SAR,                ///< shift arithmetic right
 
 	KECCAK256 = 0x20,		///< compute KECCAK-256 hash
 
