@@ -1051,26 +1051,26 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else
 			alsoSearchInteger = true;
 
-		if (!alsoSearchInteger)
-			break;
-
-		if (member == "balance")
+		if (alsoSearchInteger)
 		{
-			utils().convertType(
-				*_memberAccess.expression().annotation().type,
-				IntegerType(0, IntegerType::Modifier::Address),
-				true
-			);
-			m_context << Instruction::BALANCE;
+			if (member == "balance")
+			{
+				utils().convertType(
+					*_memberAccess.expression().annotation().type,
+					IntegerType(0, IntegerType::Modifier::Address),
+					true
+				);
+				m_context << Instruction::BALANCE;
+			}
+			else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
+				utils().convertType(
+					*_memberAccess.expression().annotation().type,
+					IntegerType(0, IntegerType::Modifier::Address),
+					true
+				);
+			else
+				solAssert(false, "Invalid member access to integer");
 		}
-		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
-			utils().convertType(
-				*_memberAccess.expression().annotation().type,
-				IntegerType(0, IntegerType::Modifier::Address),
-				true
-			);
-		else
-			solAssert(false, "Invalid member access to integer");
 		break;
 	}
 	case Type::Category::Function:

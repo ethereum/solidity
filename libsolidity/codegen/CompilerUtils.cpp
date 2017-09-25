@@ -596,7 +596,6 @@ void CompilerUtils::convertType(
 			storeInMemoryDynamic(IntegerType(256));
 			// stack: mempos datapos
 			storeStringData(data);
-			break;
 		}
 		else
 			solAssert(
@@ -820,15 +819,16 @@ void CompilerUtils::convertType(
 
 			// stack: <address> <function_id>
 			m_context << Instruction::POP;
-			break;
 		}
-
-		// All other types should not be convertible to non-equal types.
-		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
-		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+		else
+		{
+			// All other types should not be convertible to non-equal types.
+			solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+			if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
 				m_context
 					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
 					<< Instruction::AND;
+		}
 		break;
 	}
 
