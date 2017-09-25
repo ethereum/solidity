@@ -1,6 +1,7 @@
 ### 0.4.18 (unreleased)
 
 Features:
+ * Parser: Better error message for unexpected trailing comma in parameter lists.
 
 Bugfixes:
 

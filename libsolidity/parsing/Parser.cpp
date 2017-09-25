@@ -828,6 +828,8 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 		parameters.push_back(parseVariableDeclaration(options));
 		while (m_scanner->currentToken() != Token::RParen)
 		{
+			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
+				fatalParserError("Unexpected trailing comma in parameter list.");
 			expectToken(Token::Comma);
 			parameters.push_back(parseVariableDeclaration(options));
 		}
