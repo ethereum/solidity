@@ -1457,7 +1457,7 @@ BOOST_AUTO_TEST_CASE(msg_sig)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("foo(uint256)"), encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
+	ABI_CHECK(callContractFunction("foo(uint256)", 0), encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
@@ -1473,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("foo(uint256)"), encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
+	ABI_CHECK(callContractFunction("foo(uint256)", 0), encodeArgs(asString(FixedHash<4>(dev::keccak256("foo(uint256)")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(now)
@@ -3090,7 +3090,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 	char const* sourceCode = R"(
 		contract ClientReceipt {
 			event Deposit(address indexed _from, bytes32 indexed _id, uint indexed _value, uint indexed _value2, bytes32 data) anonymous;
-			function deposit(bytes32 _id, bool _manually) payable {
+			function deposit(bytes32 _id) payable {
 				Deposit(msg.sender, _id, msg.value, 2, "abc");
 			}
 		}
@@ -3098,7 +3098,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 	compileAndRun(sourceCode);
 	u256 value(18);
 	u256 id(0x1234);
-	callContractFunctionWithValue("deposit(bytes32,bool)", value, id);
+	callContractFunctionWithValue("deposit(bytes32)", value, id);
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs("abc"));
@@ -3757,11 +3757,11 @@ BOOST_AUTO_TEST_CASE(struct_containing_bytes_copy_and_delete)
 	compileAndRun(sourceCode);
 	string data = "123456789012345678901234567890123";
 	BOOST_CHECK(storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, u256(data.length()), 13, data), encodeArgs(true));
+	ABI_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, 0x60, 13, u256(data.length()), data), encodeArgs(true));
 	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	ABI_CHECK(callContractFunction("copy()"), encodeArgs(true));
 	BOOST_CHECK(storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, u256(data.length()), 13, data), encodeArgs(true));
+	ABI_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, 0x60, 13, u256(data.length()), data), encodeArgs(true));
 	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	ABI_CHECK(callContractFunction("del()"), encodeArgs(true));
 	BOOST_CHECK(storageEmpty(m_contractAddress));
@@ -7402,7 +7402,7 @@ BOOST_AUTO_TEST_CASE(string_allocation_bug)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("p(uint256)"), encodeArgs(
+	ABI_CHECK(callContractFunction("p(uint256)", 0), encodeArgs(
 		u256(0xbbbb),
 		u256(0xcccc),
 		u256(0x80),
