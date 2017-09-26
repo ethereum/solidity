@@ -35,27 +35,27 @@ namespace solidity
 
 GlobalContext::GlobalContext():
 m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
-	make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block)),
-	make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::Message)),
-	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction)),
-	make_shared<MagicVariableDeclaration>("now", make_shared<IntegerType>(256)),
-	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
-	make_shared<MagicVariableDeclaration>("selfdestruct", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
 	make_shared<MagicVariableDeclaration>("addmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("mulmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("assert", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block)),
+	make_shared<MagicVariableDeclaration>("ecrecover", make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("keccak256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("log0", make_shared<FunctionType>(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
 	make_shared<MagicVariableDeclaration>("log1", make_shared<FunctionType>(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
 	make_shared<MagicVariableDeclaration>("log2", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
 	make_shared<MagicVariableDeclaration>("log3", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
 	make_shared<MagicVariableDeclaration>("log4", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
-	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA256, true, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("ecrecover", make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("ripemd160", make_shared<FunctionType>(strings(), strings{"bytes20"}, FunctionType::Kind::RIPEMD160, true, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("assert", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::Message)),
+	make_shared<MagicVariableDeclaration>("mulmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("now", make_shared<IntegerType>(256)),
 	make_shared<MagicVariableDeclaration>("require", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure))
+	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("ripemd160", make_shared<FunctionType>(strings(), strings{"bytes20"}, FunctionType::Kind::RIPEMD160, true, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("selfdestruct", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
+	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA256, true, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
+	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction))
 })
 {
 }
