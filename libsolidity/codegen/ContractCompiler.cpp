@@ -421,7 +421,7 @@ void ContractCompiler::appendReturnValuePacker(TypePointers const& _typeParamete
 		utils.fetchFreeMemoryPointer();
 		//@todo optimization: if we return a single memory array, there should be enough space before
 		// its data to add the needed parts and we avoid a memory copy.
-		utils.encodeToMemory(_typeParameters, _typeParameters, true, false, _isLibrary);
+		utils.abiEncode(_typeParameters, _typeParameters, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
 		m_context << Instruction::RETURN;
 	}
