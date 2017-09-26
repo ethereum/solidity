@@ -102,10 +102,10 @@ public:
 	/// @note the locations of target reference types are ignored, because it will always be
 	/// memory.
 	void encodeToMemory(
-		TypePointers const& _givenTypes = {},
-		TypePointers const& _targetTypes = {},
-		bool _padToWords = true,
-		bool _copyDynamicDataInPlace = false,
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _padToWords,
+		bool _copyDynamicDataInPlace,
 		bool _encodeAsLibraryTypes = false
 	);
 

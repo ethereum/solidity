@@ -581,7 +581,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					_context << Instruction::ADD;
 				}
 			);
-			utils().encodeToMemory(argumentTypes, function.parameterTypes());
+			utils().encodeToMemory(argumentTypes, function.parameterTypes(), true, false);
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
 			utils().toSizeAfterFreeMemoryPointer();
@@ -751,7 +751,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					nonIndexedParamTypes.push_back(function.parameterTypes()[arg]);
 				}
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().encodeToMemory(nonIndexedArgTypes, nonIndexedParamTypes, true, false);
 			// need: topic1 ... topicn memsize memstart
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(numIndexed);
