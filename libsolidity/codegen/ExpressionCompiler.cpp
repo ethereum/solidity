@@ -1663,15 +1663,21 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeInMemoryDynamic(IntegerType(8 * CompilerUtils::dataStartOffset), false);
 	}
 	// If the function takes arbitrary parameters, copy dynamic length data in place.
+	solAssert(_functionType.takesArbitraryParameters() != _functionType.padArguments(), "");
 	// Move arguments to memory, will not update the free memory pointer (but will update the memory
 	// pointer on the stack).
-	utils().encodeToMemory(
-		argumentTypes,
-		parameterTypes,
-		_functionType.padArguments(),
-		_functionType.takesArbitraryParameters(),
-		isCallCode || isDelegateCall
-	);
+	if (_functionType.takesArbitraryParameters())
+		utils().packedEncode(
+			argumentTypes,
+			parameterTypes,
+			isCallCode || isDelegateCall
+		);
+	else
+		utils().abiEncode(
+			argumentTypes,
+			parameterTypes,
+			isCallCode || isDelegateCall
+		);
 
 	// Stack now:
 	// <stack top>
