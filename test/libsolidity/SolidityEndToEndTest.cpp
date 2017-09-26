@@ -10205,6 +10205,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			);
 		}
 
+		/// @return the negation of p, i.e. p.add(p.negate()) should be zero.
 		function negate(G1Point p) internal returns (G1Point) {
 			// The prime q in the base field F_q for G1
 			uint q = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -10213,6 +10214,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			return G1Point(p.X, q - (p.Y % q));
 		}
 
+		/// @return the sum of two points of G1
 		function add(G1Point p1, G1Point p2) internal returns (G1Point r) {
 			uint[4] memory input;
 			input[0] = p1.X;
@@ -10221,11 +10223,15 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[3] = p2.Y;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 0x20, 0, input, 0xc0, r, 0x60)
+				success := call(sub(gas, 2000), 6, 0, input, 0xc0, r, 0x60)
+				// Use "invalid" to make gas estimation work
+				switch success case 0 { invalid() }
 			}
-			if (!success) throw;
+			require(success);
 		}
 
+		/// @return the product of a point on G1 and a scalar, i.e.
+		/// p == p.mul(1) and p.add(p) == p.mul(2) for all points p.
 		function mul(G1Point p, uint s) internal returns (G1Point r) {
 			uint[3] memory input;
 			input[0] = p.X;
@@ -10233,16 +10239,23 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[2] = s;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 0x21, 0, input, 0x80, r, 0x60)
+				success := call(sub(gas, 2000), 7, 0, input, 0x80, r, 0x60)
+				// Use "invalid" to make gas estimation work
+				switch success case 0 { invalid() }
 			}
-			if (!success) throw;
+			require(success);
 		}
 
+		/// @return the result of computing the pairing check
+		/// e(p1[0], p2[0]) *  .... * e(p1[n], p2[n]) == 1
+		/// For example pairing([P1(), P1().negate()], [P2(), P2()]) should
+		/// return true.
 		function pairing(G1Point[] p1, G2Point[] p2) internal returns (bool) {
-			if (p1.length != p2.length) throw;
+			require(p1.length == p2.length);
+			uint elements = p1.length;
 			uint inputSize = p1.length * 6;
 			uint[] memory input = new uint[](inputSize);
-			for (uint i = 0; i < p1.length; i++)
+			for (uint i = 0; i < elements; i++)
 			{
 				input[i * 6 + 0] = p1[i].X;
 				input[i * 6 + 1] = p1[i].Y;
@@ -10254,9 +10267,11 @@ BOOST_AUTO_TEST_CASE(snark)
 			uint[1] memory out;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 0x22, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+				success := call(sub(gas, 2000), 8, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+				// Use "invalid" to make gas estimation work
+				switch success case 0 { invalid() }
 			}
-			if (!success) throw;
+			require(success);
 			return out[0] != 0;
 		}
 		function pairingProd2(G1Point a1, G2Point a2, G1Point b1, G2Point b2) internal returns (bool) {
@@ -10361,8 +10376,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			Pairing.G2Point[] memory g2points = new Pairing.G2Point[](2);
 			// check e(5 P1, P2)e(-P1, 5 P2) == 1
 			g1points[0] = Pairing.P1().mul(5);
-			g1points[1] = Pairing.P1();
-			g1points[1].Y = p - g1points[1].Y;
+			g1points[1] = Pairing.P1().negate();
 			g2points[0] = Pairing.P2();
 			g2points[1] = fiveTimesP2;
 			if (!Pairing.pairing(g1points, g2points))
@@ -10399,7 +10413,7 @@ BOOST_AUTO_TEST_CASE(snark)
 		}
 		function verify(uint[] input, Proof proof) internal returns (uint) {
 			VerifyingKey memory vk = verifyingKey();
-			if (input.length + 1 != vk.IC.length) throw;
+			require(input.length + 1 == vk.IC.length);
 			// Compute the linear combination vk_x
 			Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
 			for (uint i = 0; i < input.length; i++)
@@ -10420,6 +10434,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			)) return 5;
 			return 0;
 		}
+		event Verified(string);
 		function verifyTx() returns (bool) {
 			uint[] memory input = new uint[](9);
 			Proof memory proof;
@@ -10442,7 +10457,12 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[6] = 5613571677741714971687805233468747950848449704454346829971683826953541367271;
 			input[7] = 9643208548031422463313148630985736896287522941726746581856185889848792022807;
 			input[8] = 18066496933330839731877828156604;
-			return verify(input, proof) == 0;
+			if (verify(input, proof) == 0) {
+				Verified("Transaction successfully verified.");
+				return true;
+			} else {
+				return false;
+			}
 		}
 
 	}
