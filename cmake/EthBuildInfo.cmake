@@ -39,5 +39,5 @@ function(create_build_info NAME)
 		-DPROJECT_VERSION="${PROJECT_VERSION}"
 		-P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
-	include_directories(BEFORE ${PROJECT_BINARY_DIR})
+	include_directories("${PROJECT_BINARY_DIR}/include")
 endfunction()
