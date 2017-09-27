@@ -203,7 +203,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+		return make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -327,11 +327,11 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
 	if (isAddress())
-		m_bits = 160;
+		solAssert(m_bits == 160, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
 		"Invalid bit number for integer type: " + dev::toString(_bits)
-				);
+	);
 }
 
 string IntegerType::identifier() const
@@ -1619,7 +1619,7 @@ string ContractType::canonicalName() const
 MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) const
 {
 	// All address members and all interface functions
-	MemberList::MemberMap members(IntegerType(120, IntegerType::Modifier::Address).nativeMembers(nullptr));
+	MemberList::MemberMap members(IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr));
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
@@ -2968,7 +2968,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -2977,7 +2977,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -2985,7 +2985,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	default:

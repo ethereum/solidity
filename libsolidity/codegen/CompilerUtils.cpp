@@ -541,7 +541,7 @@ void CompilerUtils::convertType(
 		else
 		{
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
-			IntegerType addressType(0, IntegerType::Modifier::Address);
+			IntegerType addressType(160, IntegerType::Modifier::Address);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::RationalNumber)

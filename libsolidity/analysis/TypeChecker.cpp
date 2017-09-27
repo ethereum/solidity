@@ -1954,7 +1954,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
-			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+			_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 		else
 			m_errorReporter.warning(
 				_literal.location(),
