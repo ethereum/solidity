@@ -538,7 +538,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 						mstore(pos, sub(tail, headStart))
 						tail := <encodeToMemoryFun>(<arrayElementAccess>, tail)
 						srcPtr := <nextArrayElement>(srcPtr)
-						pos := add(pos, <elementEncodedSize>)
+						pos := add(pos, 0x20)
 					}
 					pos := tail
 					<assignEnd>
@@ -832,7 +832,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			}
 			memberTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
 			encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
-			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, _encodeAsLibraryTypes, false));
+			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, _encodeAsLibraryTypes, true));
 
 			members.push_back({});
 			members.back()["encode"] = memberTempl.render();
@@ -1190,10 +1190,7 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 		if (t->isDynamicallyEncoded())
 			headSize += 0x20;
 		else
-		{
-			solAssert(t->calldataEncodedSize() > 0, "");
 			headSize += t->calldataEncodedSize();
-		}
 	}
 
 	return headSize;
