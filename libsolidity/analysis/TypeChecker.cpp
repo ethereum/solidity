@@ -1497,7 +1497,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				/* If no mobile type is available an error will be raised elsewhere. */
 				if (literal->mobileType())
 					m_errorReporter.warning(
-						_functionCall.location(),
+						arguments[i]->location(),
 						"The type of \"" +
 						argType->toString() +
 						"\" was inferred as " +
