@@ -116,13 +116,13 @@ Mathematical and Cryptographic Functions
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``keccak256(...) returns (bytes32)``:
-    compute the Ethereum-SHA-3 (Keccak-256) hash of the (tightly packed) arguments
+    compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 ``sha256(...) returns (bytes32)``:
-    compute the SHA-256 hash of the (tightly packed) arguments
+    compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 ``sha3(...) returns (bytes32)``:
     alias to ``keccak256``
 ``ripemd160(...) returns (bytes20)``:
-    compute RIPEMD-160 hash of the (tightly packed) arguments
+    compute RIPEMD-160 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
     (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
