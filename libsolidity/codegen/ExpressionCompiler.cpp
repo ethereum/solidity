@@ -581,7 +581,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					_context << Instruction::ADD;
 				}
 			);
-			utils().encodeToMemory(argumentTypes, function.parameterTypes());
+			utils().abiEncode(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
 			utils().toSizeAfterFreeMemoryPointer();
@@ -675,7 +675,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				argumentTypes.push_back(arg->annotation().type);
 			}
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
+			solAssert(!function.padArguments(), "");
+			utils().packedEncode(argumentTypes, TypePointers());
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << Instruction::KECCAK256;
 			break;
@@ -694,11 +695,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			arguments.front()->accept(*this);
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(
+			utils().packedEncode(
 				{arguments.front()->annotation().type},
-				{function.parameterTypes().front()},
-				false,
-				true);
+				{function.parameterTypes().front()}
+			);
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(logNumber);
 			break;
@@ -717,11 +717,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					if (auto const& arrayType = dynamic_pointer_cast<ArrayType const>(function.parameterTypes()[arg - 1]))
 					{
 						utils().fetchFreeMemoryPointer();
-						utils().encodeToMemory(
+						utils().packedEncode(
 							{arguments[arg - 1]->annotation().type},
-							{arrayType},
-							false,
-							true
+							{arrayType}
 						);
 						utils().toSizeAfterFreeMemoryPointer();
 						m_context << Instruction::KECCAK256;
@@ -751,7 +749,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					nonIndexedParamTypes.push_back(function.parameterTypes()[arg]);
 				}
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
 			// need: topic1 ... topicn memsize memstart
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(numIndexed);
@@ -1212,11 +1210,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			utils().fetchFreeMemoryPointer();
 			// stack: base index mem
 			// note: the following operations must not allocate memory!
-			utils().encodeToMemory(
+			utils().packedEncode(
 				TypePointers{_indexAccess.indexExpression()->annotation().type},
-				TypePointers{keyType},
-				false,
-				true
+				TypePointers{keyType}
 			);
 			m_context << Instruction::SWAP1;
 			utils().storeInMemoryDynamic(IntegerType(256));
