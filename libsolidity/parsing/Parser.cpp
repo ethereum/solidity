@@ -1133,6 +1133,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		options.allowVar = true;
 		options.allowLocationSpecifier = true;
 		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
+		nodeFactory.setEndPositionFromNode(variables.back());
 	}
 	if (m_scanner->currentToken() == Token::Assign)
 	{
