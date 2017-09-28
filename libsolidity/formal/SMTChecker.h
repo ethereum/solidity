@@ -17,8 +17,11 @@
 
 #pragma once
 
-#include <libsolidity/ast/ASTVisitor.h>
+
 #include <libsolidity/formal/SolverInterface.h>
+
+#include <libsolidity/ast/ASTVisitor.h>
+
 #include <libsolidity/interface/ReadFile.h>
 
 #include <map>
@@ -29,6 +32,7 @@ namespace dev
 namespace solidity
 {
 
+class VariableUsage;
 class ErrorReporter;
 
 class SMTChecker: private ASTConstVisitor
@@ -61,11 +65,12 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	void assignment(Declaration const& _variable, Expression const& _value);
+
 	// Visits the branch given by the statement, pushes and pops the SMT checker.
-	// @returns the set of touched declarations
 	// @param _condition if present, asserts that this condition is true within the branch.
-	std::set<Declaration const*> visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	std::set<Declaration const*> visitBranch(Statement const& _statement, smt::Expression _condition);
+	void visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	void visitBranch(Statement const& _statement, smt::Expression _condition);
 
 	void checkCondition(
 		smt::Expression _condition,
@@ -75,8 +80,9 @@ private:
 		smt::Expression* _additionalValue = nullptr
 	);
 
-	void resetVariables(std::set<Declaration const*> _variables);
-	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
+	void initializeLocalVariables(FunctionDefinition const& _function);
+	void resetVariables(std::vector<Declaration const*> _variables);
+	void createVariable(VariableDeclaration const& _varDecl);
 
 	static std::string uniqueSymbol(Declaration const& _decl);
 	static std::string uniqueSymbol(Expression const& _expr);
@@ -94,8 +100,10 @@ private:
 	/// sequence number to this value and returns the expression.
 	smt::Expression newValue(Declaration const& _decl);
 
-	/// Sets the value of the declaration either to zero or to its intrinsic range.
-	void setValue(Declaration const& _decl, bool _setToZero);
+	/// Sets the value of the declaration to zero.
+	void setZeroValue(Declaration const& _decl);
+	/// Resets the variable to an unknown value (in its range).
+	void setUnknownValue(Declaration const& decl);
 
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
@@ -110,6 +118,7 @@ private:
 	smt::Expression var(Declaration const& _decl);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
+	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_conditionalExecutionHappened = false;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
