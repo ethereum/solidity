@@ -45,12 +45,7 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback con
 void SMTChecker::analyze(SourceUnit const& _source)
 {
 	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-	{
-		m_interface->reset();
-		m_currentSequenceCounter.clear();
-		m_nextFreeSequenceCounter.clear();
 		_source.accept(*this);
-	}
 }
 
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
@@ -75,20 +70,21 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 			_function.location(),
 			"Assertion checker does not yet support constructors and functions with modifiers."
 		);
-	// TODO actually we probably also have to reset all local variables and similar things.
 	m_currentFunction = &_function;
-	m_interface->push();
+	// We only handle local variables, so we clear at the beginning of the function.
+	// If we add storage variables, those should be cleared differently.
+	m_interface->reset();
+	m_currentSequenceCounter.clear();
+	m_nextFreeSequenceCounter.clear();
+	m_conditionalExecutionHappened = false;
 	return true;
 }
 
 void SMTChecker::endVisit(FunctionDefinition const&)
 {
 	// TOOD we could check for "reachability", i.e. satisfiability here.
-	// We only handle local variables, so we clear everything.
+	// We only handle local variables, so we clear at the beginning of the function.
 	// If we add storage variables, those should be cleared differently.
-	m_currentSequenceCounter.clear();
-	m_nextFreeSequenceCounter.clear();
-	m_interface->pop();
 	m_currentFunction = nullptr;
 }
 
@@ -98,55 +94,39 @@ bool SMTChecker::visit(IfStatement const& _node)
 
 	// TODO Check if condition is always true
 
-	auto countersAtStart = m_currentSequenceCounter;
-	m_interface->push();
-	m_interface->addAssertion(expr(_node.condition()));
-	_node.trueStatement().accept(*this);
-	auto countersAtEndOfTrue = m_currentSequenceCounter;
-	m_interface->pop();
-
-	decltype(m_currentSequenceCounter) countersAtEndOfFalse;
+	auto touchedVariables = visitBranch(_node.trueStatement(), expr(_node.condition()));
 	if (_node.falseStatement())
-	{
-		m_currentSequenceCounter = countersAtStart;
-		m_interface->push();
-		m_interface->addAssertion(!expr(_node.condition()));
-		_node.falseStatement()->accept(*this);
-		countersAtEndOfFalse = m_currentSequenceCounter;
-		m_interface->pop();
-	}
-	else
-		countersAtEndOfFalse = countersAtStart;
+		touchedVariables += visitBranch(*_node.falseStatement(), !expr(_node.condition()));
 
-	// Reset all values that have been touched.
+	resetVariables(touchedVariables);
 
-	// TODO this should use a previously generated side-effect structure
-
-	solAssert(countersAtEndOfFalse.size() == countersAtEndOfTrue.size(), "");
-	for (auto const& declCounter: countersAtEndOfTrue)
-	{
-		solAssert(countersAtEndOfFalse.count(declCounter.first), "");
-		auto decl = declCounter.first;
-		int trueCounter = countersAtEndOfTrue.at(decl);
-		int falseCounter = countersAtEndOfFalse.at(decl);
-		if (trueCounter == falseCounter)
-			continue; // Was not modified
-		newValue(*decl);
-		setValue(*decl, 0);
-	}
 	return false;
 }
 
 bool SMTChecker::visit(WhileStatement const& _node)
 {
-	_node.condition().accept(*this);
+	// TODO Check if condition is always true
 
-	//m_interface->push();
-	//m_interface->addAssertion(expr(_node.condition()));
-	// TDOO clear knowledge (increment sequence numbers and add bounds assertions	) apart from assertions
+	// TODO Weird side effects like
+	// uint x = 1;
+	// while (x ++ > 0) { assert(x == 2); }
+	// solution: clear variables first, then execute and assert condition, then executed body.
+	if (_node.isDoWhile())
+	{
+		auto touchedVariables = visitBranch(_node.body());
+		// TODO what about the side-effects of this?
+		// If we have a "break", this might never be executed.
+		_node.condition().accept(*this);
+		resetVariables(touchedVariables);
+	}
+	else
+	{
+		_node.condition().accept(*this);
+		auto touchedVariables = visitBranch(_node.body(), expr(_node.condition()));
+		resetVariables(touchedVariables);
+	}
 
-	// TODO combine similar to if
-	return true;
+	return false;
 }
 
 void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
@@ -386,6 +366,7 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 	solAssert(_op.annotation().commonType, "");
 	if (_op.annotation().commonType->category() == Type::Category::Bool)
 	{
+		// @TODO check that both of them are not constant
 		if (_op.getOperator() == Token::And)
 			m_interface->addAssertion(expr(_op) == expr(_op.leftExpression()) && expr(_op.rightExpression()));
 		else
@@ -395,7 +376,37 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 		m_errorReporter.warning(
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
-		);
+					);
+}
+
+set<Declaration const*> SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
+{
+	return visitBranch(_statement, &_condition);
+}
+
+set<Declaration const*> SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
+{
+	VariableSequenceCounters sequenceCountersStart = m_currentSequenceCounter;
+
+	m_interface->push();
+	if (_condition)
+		m_interface->addAssertion(*_condition);
+	_statement.accept(*this);
+	m_interface->pop();
+
+	m_conditionalExecutionHappened = true;
+
+	set<Declaration const*> touched;
+	for (auto const& seq: m_currentSequenceCounter)
+	{
+		if (!sequenceCountersStart.count(seq.first))
+			touched.insert(seq.first);
+		else if (sequenceCountersStart[seq.first] != seq.second)
+			touched.insert(seq.first);
+	}
+	m_currentSequenceCounter = sequenceCountersStart;
+
+	return touched;
 }
 
 void SMTChecker::checkCondition(
@@ -446,6 +457,11 @@ void SMTChecker::checkCondition(
 		return;
 	}
 
+	string conditionalComment;
+	if (m_conditionalExecutionHappened)
+		conditionalComment =
+			"\nNote that some information is erased after conditional execution of parts of the code.\n"
+			"You can re-introduce information using require().";
 	switch (result)
 	{
 	case smt::CheckResult::SATISFIABLE:
@@ -471,13 +487,13 @@ void SMTChecker::checkCondition(
 		}
 		else
 			message << ".";
-		m_errorReporter.warning(_location, message.str());
+		m_errorReporter.warning(_location, message.str() + conditionalComment);
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.");
+		m_errorReporter.warning(_location, _description + " might happen here." + conditionalComment);
 		break;
 	case smt::CheckResult::ERROR:
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
@@ -486,6 +502,15 @@ void SMTChecker::checkCondition(
 		solAssert(false, "");
 	}
 	m_interface->pop();
+}
+
+void SMTChecker::resetVariables(set<Declaration const*> _variables)
+{
+	for (auto const* decl: _variables)
+	{
+		newValue(*decl);
+		setValue(*decl, false);
+	}
 }
 
 void SMTChecker::createVariable(VariableDeclaration const& _varDecl, bool _setToZero)
@@ -535,7 +560,6 @@ smt::Expression SMTChecker::valueAtSequence(const Declaration& _decl, int _seque
 
 smt::Expression SMTChecker::newValue(Declaration const& _decl)
 {
-	solAssert(m_currentSequenceCounter.count(&_decl), "");
 	solAssert(m_nextFreeSequenceCounter.count(&_decl), "");
 	m_currentSequenceCounter[&_decl] = m_nextFreeSequenceCounter[&_decl]++;
 	return currentValue(_decl);
