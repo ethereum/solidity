@@ -72,28 +72,21 @@ void Z3Interface::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
-//	cout << "---------------------------------" << endl;
-//	cout << m_solver << endl;
 	CheckResult result;
 	switch (m_solver.check())
 	{
 	case z3::check_result::sat:
 		result = CheckResult::SATISFIABLE;
-		cout << "sat" << endl;
 		break;
 	case z3::check_result::unsat:
 		result = CheckResult::UNSATISFIABLE;
-		cout << "unsat" << endl;
 		break;
 	case z3::check_result::unknown:
 		result = CheckResult::UNKNOWN;
-		cout << "unknown" << endl;
 		break;
 	default:
 		solAssert(false, "");
 	}
-//	cout << "---------------------------------" << endl;
-
 
 	vector<string> values;
 	if (result != CheckResult::UNSATISFIABLE)
