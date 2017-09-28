@@ -487,6 +487,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		// TODO if this is not a byte array, we might just copy byte-by-byte anyway,
 		// because the encoding is position-independent, but we have to check that.
 		Whiskers templ(R"(
+			// <readableTypeNameFrom> -> <readableTypeNameTo>
 			function <functionName>(start, length, pos) -> end {
 				<storeLength> // might update pos
 				<copyFun>(start, pos, length)
@@ -495,6 +496,8 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		)");
 		templ("storeLength", _to.isDynamicallySized() ? "mstore(pos, length) pos := add(pos, 0x20)" : "");
 		templ("functionName", functionName);
+		templ("readableTypeNameFrom", _from.toString(true));
+		templ("readableTypeNameTo", _to.toString(true));
 		templ("copyFun", copyToMemoryFunction(true));
 		templ("roundUpFun", roundUpFunction());
 		return templ.render();
@@ -527,6 +530,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		Whiskers templ(
 			dynamicBase ?
 			R"(
+				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
 					<storeLength> // might update pos
@@ -545,6 +549,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 				}
 			)" :
 			R"(
+				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
 					<storeLength> // might update pos
@@ -560,6 +565,8 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 			)"
 		);
 		templ("functionName", functionName);
+		templ("readableTypeNameFrom", _from.toString(true));
+		templ("readableTypeNameTo", _to.toString(true));
 		templ("return", dynamic ? " -> end " : "");
 		templ("assignEnd", dynamic ? "end := pos" : "");
 		templ("lengthFun", arrayLengthFunction(_from));
@@ -639,6 +646,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 		{
 			solAssert(_to.isByteArray(), "");
 			Whiskers templ(R"(
+				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) -> ret {
 					let slotValue := sload(value)
 					switch and(slotValue, 1)
@@ -665,6 +673,8 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 				}
 			)");
 			templ("functionName", functionName);
+			templ("readableTypeNameFrom", _from.toString(true));
+			templ("readableTypeNameTo", _to.toString(true));
 			templ("arrayDataSlot", arrayDataAreaFunction(_from));
 			return templ.render();
 		}
@@ -681,6 +691,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			// more than desired, i.e. it writes beyond the end of memory.
 			Whiskers templ(
 				R"(
+					// <readableTypeNameFrom> -> <readableTypeNameTo>
 					function <functionName>(value, pos) <return> {
 						let length := <lengthFun>(value)
 						<storeLength> // might update pos
@@ -701,6 +712,8 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 				)"
 			);
 			templ("functionName", functionName);
+			templ("readableTypeNameFrom", _from.toString(true));
+			templ("readableTypeNameTo", _to.toString(true));
 			templ("return", dynamic ? " -> end " : "");
 			templ("assignEnd", dynamic ? "end := pos" : "");
 			templ("lengthFun", arrayLengthFunction(_from));
@@ -748,6 +761,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		bool fromStorage = _from.location() == DataLocation::Storage;
 		bool dynamic = _to.isDynamicallyEncoded();
 		Whiskers templ(R"(
+			// <readableTypeNameFrom> -> <readableTypeNameTo>
 			function <functionName>(value, pos) <return> {
 				let tail := add(pos, <headSize>)
 				<init>
@@ -761,6 +775,8 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			}
 		)");
 		templ("functionName", functionName);
+		templ("readableTypeNameFrom", _from.toString(true));
+		templ("readableTypeNameTo", _to.toString(true));
 		templ("return", dynamic ? " -> end " : "");
 		templ("assignEnd", dynamic ? "end := tail" : "");
 		// to avoid multiple loads from the same slot for subsequent members
@@ -995,9 +1011,11 @@ string ABIFunctions::shiftLeftFunction(size_t _numBits)
 	return createFunction(functionName, [&]() {
 		solAssert(_numBits < 256, "");
 		return
-			Whiskers(R"(function <functionName>(value) -> newValue {
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
 				newValue := mul(value, <multiplier>)
-			})")
+			}
+			)")
 			("functionName", functionName)
 			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
 			.render();
@@ -1010,9 +1028,11 @@ string ABIFunctions::shiftRightFunction(size_t _numBits, bool _signed)
 	return createFunction(functionName, [&]() {
 		solAssert(_numBits < 256, "");
 		return
-			Whiskers(R"(function <functionName>(value) -> newValue {
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
 				newValue := <div>(value, <multiplier>)
-			})")
+			}
+			)")
 			("functionName", functionName)
 			("div", _signed ? "sdiv" : "div")
 			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
@@ -1025,9 +1045,11 @@ string ABIFunctions::roundUpFunction()
 	string functionName = "round_up_to_mul_of_32";
 	return createFunction(functionName, [&]() {
 		return
-			Whiskers(R"(function <functionName>(value) -> result {
+			Whiskers(R"(
+			function <functionName>(value) -> result {
 				result := and(add(value, 31), not(31))
-			})")
+			}
+			)")
 			("functionName", functionName)
 			.render();
 	});
