@@ -4,6 +4,7 @@ Features:
  * Parser: Better error message for unexpected trailing comma in parameter lists.
 
 Bugfixes:
+ * Parser: Fix source location of VariableDeclarationStatement.
 
 ### 0.4.17 (2017-09-21)
 
