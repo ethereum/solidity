@@ -1660,12 +1660,17 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 				&it.second->declaration()
 			));
 	}
-	// Add overloads from address only if there is no conflict
+	addNonConflictingAddressMembers(members);
+	return members;
+}
+
+void ContractType::addNonConflictingAddressMembers(MemberList::MemberMap& _members)
+{
 	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
 	for (auto const& addressMember: addressMembers)
 	{
 		bool clash = false;
-		for (auto const& member: members)
+		for (auto const& member: _members)
 		{
 			if (
 				member.name == addressMember.name &&
@@ -1686,13 +1691,12 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 		}
 
 		if (!clash)
-			members.push_back(MemberList::Member(
+			_members.push_back(MemberList::Member(
 				addressMember.name,
 				addressMember.type,
 				addressMember.declaration
 			));
 	}
-	return members;
 }
 
 shared_ptr<FunctionType const> const& ContractType::newExpressionType() const
