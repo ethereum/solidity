@@ -25,6 +25,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <libsolidity/parsing/Scanner.h>
+
 #include <libdevcore/SHA3.h>
 
 #include <boost/test/unit_test.hpp>
@@ -46,8 +48,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	m_compiler.addSource("", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source);
 	if (!m_compiler.parse())
 	{
-		printErrors();
-		BOOST_ERROR("Parsing contract failed in analysis test suite.");
+		BOOST_ERROR("Parsing contract failed in analysis test suite:" + formatErrors());
 	}
 
 	m_compiler.analyze();
@@ -73,8 +74,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 		{
 			if (firstError && !_allowMultipleErrors)
 			{
-				printErrors();
-				BOOST_FAIL("Multiple errors found.");
+				BOOST_FAIL("Multiple errors found: " + formatErrors());
 			}
 			if (!firstError)
 				firstError = currentError;
@@ -88,7 +88,10 @@ SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source);
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_REQUIRE(!sourceAndError.second);
+	string message;
+	if (sourceAndError.second)
+		message = "Unexpected error: " + formatError(*sourceAndError.second);
+	BOOST_REQUIRE_MESSAGE(!sourceAndError.second, message);
 	return sourceAndError.first;
 }
 
@@ -101,17 +104,23 @@ Error AnalysisFramework::expectError(std::string const& _source, bool _warning, 
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
 	BOOST_REQUIRE(!!sourceAndError.second);
-	BOOST_REQUIRE(!!sourceAndError.first);
+	BOOST_REQUIRE_MESSAGE(!!sourceAndError.first, "Expected error, but no error happened.");
 	return *sourceAndError.second;
 }
 
-void AnalysisFramework::printErrors()
+string AnalysisFramework::formatErrors()
 {
+	string message;
 	for (auto const& error: m_compiler.errors())
-		SourceReferenceFormatter::printExceptionInformation(
-			std::cerr,
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+		message += formatError(*error);
+	return message;
+}
+
+string AnalysisFramework::formatError(Error const& _error)
+{
+	return SourceReferenceFormatter::formatExceptionInformation(
+			_error,
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
 			[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
 		);
 }

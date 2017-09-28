@@ -57,7 +57,8 @@ protected:
 	bool success(std::string const& _source);
 	Error expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
-	void printErrors();
+	std::string formatErrors();
+	std::string formatError(Error const& _error);
 
 	static ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
 	static FunctionTypePointer retrieveFunctionBySignature(
@@ -105,7 +106,10 @@ CHECK_ERROR_OR_WARNING(text, Warning, substring, true, true)
 do \
 { \
 	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
-	BOOST_CHECK(sourceAndError.second == nullptr); \
+	std::string message; \
+	if (sourceAndError.second) \
+		message = formatError(*sourceAndError.second); \
+	BOOST_CHECK_MESSAGE(!sourceAndError.second, message); \
 } \
 while(0)
 
