@@ -56,8 +56,18 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	for (auto const& currentError: m_compiler.errors())
 	{
 		solAssert(currentError->comment(), "");
-		if (currentError->comment()->find("This is a pre-release compiler version") == 0)
-			continue;
+		if (currentError->type() == Error::Type::Warning)
+		{
+			bool ignoreWarning = false;
+			for (auto const& filter: m_warningsToFilter)
+				if (currentError->comment()->find(filter) == 0)
+				{
+					ignoreWarning = true;
+					break;
+				}
+			if (ignoreWarning)
+				continue;
+		}
 
 		if (_reportWarnings || (currentError->type() != Error::Type::Warning))
 		{

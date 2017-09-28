@@ -45,7 +45,7 @@ class AnalysisFramework
 {
 
 protected:
-	std::pair<SourceUnit const*, std::shared_ptr<Error const>>
+	virtual std::pair<SourceUnit const*, std::shared_ptr<Error const>>
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
@@ -65,6 +65,7 @@ protected:
 		std::string const& _signature
 	);
 
+	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 	dev::solidity::CompilerStack m_compiler;
 };
 
