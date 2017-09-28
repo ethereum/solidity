@@ -61,6 +61,12 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	// Visits the branch given by the statement, pushes and pops the SMT checker.
+	// @returns the set of touched declarations
+	// @param _condition if present, asserts that this condition is true within the branch.
+	std::set<Declaration const*> visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	std::set<Declaration const*> visitBranch(Statement const& _statement, smt::Expression _condition);
+
 	void checkCondition(
 		smt::Expression _condition,
 		SourceLocation const& _location,
@@ -69,6 +75,7 @@ private:
 		smt::Expression* _additionalValue = nullptr
 	);
 
+	void resetVariables(std::set<Declaration const*> _variables);
 	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
 
 	static std::string uniqueSymbol(Declaration const& _decl);
@@ -93,6 +100,8 @@ private:
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
 
+	using VariableSequenceCounters = std::map<Declaration const*, int>;
+
 	/// Returns the expression corresponding to the AST node. Creates a new expression
 	/// if it does not exist yet.
 	smt::Expression expr(Expression const& _e);
@@ -101,6 +110,7 @@ private:
 	smt::Expression var(Declaration const& _decl);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
+	bool m_conditionalExecutionHappened = false;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_expressions;
