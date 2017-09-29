@@ -72,6 +72,7 @@ private:
 	void visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
 	void visitBranch(Statement const& _statement, smt::Expression _condition);
 
+	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
 		SourceLocation const& _location,
@@ -79,6 +80,18 @@ private:
 		std::string const& _additionalValueName = "",
 		smt::Expression* _additionalValue = nullptr
 	);
+	/// Checks that a boolean condition is not constant. Do not warn if the expression
+	/// is a literal constant.
+	/// @param _description the warning string, $VALUE will be replaced by the constant value.
+	void checkBooleanNotConstant(
+		Expression const& _condition,
+		std::string const& _description
+	);
+
+	std::pair<smt::CheckResult, std::vector<std::string>>
+	checkSatisifableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+
+	smt::CheckResult checkSatisifable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);
