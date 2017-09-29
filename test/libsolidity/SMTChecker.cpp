@@ -344,6 +344,37 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 	CHECK_WARNING(text, "Assertion violation happens here");
 }
 
+BOOST_AUTO_TEST_CASE(constant_condition)
+{
+	string text = R"(
+		contract C {
+			function f(uint x) public pure {
+				if (x >= 0) { revert(); }
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Condition is always true");
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				if (x >= 10) { if (x < 10) { revert(); } }
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Condition is always false");
+// TODO
+//	// a plain literal constant is fine
+//	text = R"(
+//		contract C {
+//			function f(uint x) public pure {
+//				if (true) { revert(); }
+//			}
+//		}
+//	)";
+//	CHECK_SUCCESS_NO_WARNINGS(text);
+
+// TODO test unreacheable code
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
