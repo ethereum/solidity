@@ -75,6 +75,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
 	checkContractDuplicateFunctions(_contract);
+	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
 	checkContractAbstractConstructors(_contract);
@@ -201,6 +202,49 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			if (ssl.infos.size() > 0)
 			{
 				string msg = "Function with same name and arguments defined twice.";
+				size_t occurrences = ssl.infos.size();
+				if (occurrences > 32)
+				{
+					ssl.infos.resize(32);
+					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+				}
+
+				m_errorReporter.declarationError(
+					overloads[i]->location(),
+					ssl,
+					msg
+				);
+			}
+		}
+	}
+}
+
+void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
+{
+	/// Checks that two events with the same name defined in this contract have different
+	/// argument types
+	map<string, vector<EventDefinition const*>> events;
+	for (EventDefinition const* event: _contract.events())
+		events[event->name()].push_back(event);
+
+	for (auto const& it: events)
+	{
+		vector<EventDefinition const*> const& overloads = it.second;
+		set<size_t> reported;
+		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
+		{
+			SecondarySourceLocation ssl;
+
+			for (size_t j = i + 1; j < overloads.size(); ++j)
+				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
+				{
+					ssl.append("Other declaration is here:", overloads[j]->location());
+					reported.insert(j);
+				}
+
+			if (ssl.infos.size() > 0)
+			{
+				string msg = "Event with same name and arguments defined twice.";
 				size_t occurrences = ssl.infos.size();
 				if (occurrences > 32)
 				{
