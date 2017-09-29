@@ -2,6 +2,7 @@
 
 Features:
  * Parser: Better error message for unexpected trailing comma in parameter lists.
+ * Standard JSON: Support the ``outputSelection`` field for selective compilation of supplied sources.
  * Syntax Checker: Unary ``+`` is now a syntax error as experimental 0.5.0 feature.
  * Type Checker: Disallow non-pure constant state variables as experimental 0.5.0 feature.
 
