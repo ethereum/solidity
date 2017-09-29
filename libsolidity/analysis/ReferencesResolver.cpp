@@ -149,7 +149,7 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		if (!length->annotation().type)
 			ConstantEvaluator e(*length);
 		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
-		if (!lengthType || lengthType->isFractional())
+		if (!lengthType || lengthType->isFractional() || !lengthType->mobileType())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
 		else if (lengthType->isNegative())
 			fatalTypeError(length->location(), "Array with negative length specified.");

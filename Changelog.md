@@ -5,6 +5,7 @@ Features:
 
 Bugfixes:
  * Parser: Fix source location of VariableDeclarationStatement.
+ * Type Checker: Properly check array length and don't rely on an assertion in code generation.
  * Type Checker: Properly support overwriting members inherited from ``address`` in a contract
    (such as ``balance``, ``transfer``, etc.)
 

@@ -6976,6 +6976,16 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(array_length_validation)
+{
+	char const* text = R"(
+		contract C {
+			uint[8**90] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
