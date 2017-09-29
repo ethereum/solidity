@@ -121,7 +121,6 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"msg.data",
 		"msg.data[0]",
 		"msg.sig",
-		"block.blockhash", // Not evaluating the function
 		"msg",
 		"block",
 		"tx"
