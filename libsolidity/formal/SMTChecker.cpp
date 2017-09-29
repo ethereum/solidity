@@ -106,11 +106,6 @@ bool SMTChecker::visit(WhileStatement const& _node)
 {
 	// TODO Check if condition is always true
 
-	// TODO Weird side effects like
-	// uint x = 1;
-	// while (x ++ > 0) { assert(x == 2); }
-	// solution: clear variables first, then execute and assert condition, then executed body.
-
 	auto touchedVariables = m_variableUsage->touchedVariables(_node);
 	resetVariables(touchedVariables);
 	if (_node.isDoWhile())
