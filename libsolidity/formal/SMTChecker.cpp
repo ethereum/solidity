@@ -28,6 +28,7 @@
 #include <libsolidity/interface/ErrorReporter.h>
 
 #include <boost/range/adaptor/map.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 using namespace dev;
@@ -87,7 +88,7 @@ bool SMTChecker::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);
 
-	// TODO Check if condition is always true
+	checkBooleanNotConstant(_node.condition(), "Condition is always $VALUE.");
 
 	visitBranch(_node.trueStatement(), expr(_node.condition()));
 	vector<Declaration const*> touchedVariables = m_variableUsage->touchedVariables(_node.trueStatement());
@@ -104,8 +105,6 @@ bool SMTChecker::visit(IfStatement const& _node)
 
 bool SMTChecker::visit(WhileStatement const& _node)
 {
-	// TODO Check if condition is always true
-
 	auto touchedVariables = m_variableUsage->touchedVariables(_node);
 	resetVariables(touchedVariables);
 	if (_node.isDoWhile())
@@ -113,10 +112,13 @@ bool SMTChecker::visit(WhileStatement const& _node)
 		visitBranch(_node.body());
 		// TODO the assertions generated in the body should still be active in the condition
 		_node.condition().accept(*this);
+		checkBooleanNotConstant(_node.condition(), "Do-while loop condition is always $VALUE.");
 	}
 	else
 	{
 		_node.condition().accept(*this);
+		checkBooleanNotConstant(_node.condition(), "While loop condition is always $VALUE.");
+
 		visitBranch(_node.body(), expr(_node.condition()));
 	}
 	resetVariables(touchedVariables);
@@ -264,6 +266,8 @@ void SMTChecker::endVisit(Literal const& _literal)
 
 		m_interface->addAssertion(expr(_literal) == smt::Expression(type.literalValue(&_literal)));
 	}
+	else if (type.category() == Type::Category::Bool)
+		m_interface->addAssertion(expr(_literal) == smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
 		m_errorReporter.warning(
 			_literal.location(),
@@ -426,18 +430,7 @@ void SMTChecker::checkCondition(
 	}
 	smt::CheckResult result;
 	vector<string> values;
-	try
-	{
-		tie(result, values) = m_interface->check(expressionsToEvaluate);
-	}
-	catch (smt::SolverError const& _e)
-	{
-		string description("Error querying SMT solver");
-		if (_e.comment())
-			description += ": " + *_e.comment();
-		m_errorReporter.warning(_location, description);
-		return;
-	}
+	tie(result, values) = checkSatisifableAndGenerateModel(expressionsToEvaluate);
 
 	string conditionalComment;
 	if (m_conditionalExecutionHappened)
@@ -455,17 +448,7 @@ void SMTChecker::checkCondition(
 			message << " for:\n";
 			solAssert(values.size() == expressionNames.size(), "");
 			for (size_t i = 0; i < values.size(); ++i)
-			{
-				string formattedValue = values.at(i);
-				try
-				{
-					// Parse and re-format nicely
-					formattedValue = formatNumber(bigint(formattedValue));
-				}
-				catch (...) { }
-
-				message << "  " << expressionNames.at(i) << " = " << formattedValue << "\n";
-			}
+				message << "  " << expressionNames.at(i) << " = " << values.at(i) << "\n";
 		}
 		else
 			message << ".";
@@ -484,6 +467,84 @@ void SMTChecker::checkCondition(
 		solAssert(false, "");
 	}
 	m_interface->pop();
+}
+
+void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string const& _description)
+{
+	// Do not check for const-ness if this is a constant.
+	if (dynamic_cast<Literal const*>(&_condition))
+		return;
+
+	m_interface->push();
+	m_interface->addAssertion(expr(_condition));
+	auto positiveResult = checkSatisifable();
+	m_interface->pop();
+
+	m_interface->push();
+	m_interface->addAssertion(!expr(_condition));
+	auto negatedResult = checkSatisifable();
+	m_interface->pop();
+
+	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
+		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
+	else if (positiveResult == smt::CheckResult::SATISFIABLE && negatedResult == smt::CheckResult::SATISFIABLE)
+	{
+		// everything fine.
+	}
+	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
+		m_errorReporter.warning(_condition.location(), "Condition unreachable.");
+	else
+	{
+		string value;
+		if (positiveResult == smt::CheckResult::SATISFIABLE)
+		{
+			solAssert(negatedResult == smt::CheckResult::UNSATISFIABLE, "");
+			value = "true";
+		}
+		else
+		{
+			solAssert(positiveResult == smt::CheckResult::UNSATISFIABLE, "");
+			solAssert(negatedResult == smt::CheckResult::SATISFIABLE, "");
+			value = "false";
+		}
+		m_errorReporter.warning(_condition.location(), boost::algorithm::replace_all_copy(_description, "$VALUE", value));
+	}
+}
+
+pair<smt::CheckResult, vector<string>>
+SMTChecker::checkSatisifableAndGenerateModel(vector<smt::Expression> const& _expressionsToEvaluate)
+{
+	smt::CheckResult result;
+	vector<string> values;
+	try
+	{
+		tie(result, values) = m_interface->check(_expressionsToEvaluate);
+	}
+	catch (smt::SolverError const& _e)
+	{
+		string description("Error querying SMT solver");
+		if (_e.comment())
+			description += ": " + *_e.comment();
+		m_errorReporter.warning(description);
+		result = smt::CheckResult::ERROR;
+	}
+
+	for (string& value: values)
+	{
+		try
+		{
+			// Parse and re-format nicely
+			value = formatNumber(bigint(value));
+		}
+		catch (...) { }
+	}
+
+	return make_pair(result, values);
+}
+
+smt::CheckResult SMTChecker::checkSatisifable()
+{
+	return checkSatisifableAndGenerateModel({}).first;
 }
 
 void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)

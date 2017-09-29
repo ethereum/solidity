@@ -52,6 +52,7 @@ class Expression
 {
 	friend class SolverInterface;
 public:
+	explicit Expression(bool _v): name(_v ? "true" : "false") {}
 	Expression(size_t _number): name(std::to_string(_number)) {}
 	Expression(u256 const& _number): name(_number.str()) {}
 	Expression(bigint const& _number): name(_number.str()) {}
