@@ -109,6 +109,9 @@ private:
 	virtual void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	virtual void endVisit(Literal const& _literal) override;
 
+	template <class T>
+	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
+
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
 		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()

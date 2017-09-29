@@ -184,39 +184,8 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			msg
 		);
 	}
-	for (auto const& it: functions)
-	{
-		vector<FunctionDefinition const*> const& overloads = it.second;
-		set<size_t> reported;
-		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
-		{
-			SecondarySourceLocation ssl;
 
-			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
-				{
-					ssl.append("Other declaration is here:", overloads[j]->location());
-					reported.insert(j);
-				}
-
-			if (ssl.infos.size() > 0)
-			{
-				string msg = "Function with same name and arguments defined twice.";
-				size_t occurrences = ssl.infos.size();
-				if (occurrences > 32)
-				{
-					ssl.infos.resize(32);
-					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
-				}
-
-				m_errorReporter.declarationError(
-					overloads[i]->location(),
-					ssl,
-					msg
-				);
-			}
-		}
-	}
+	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
 }
 
 void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
@@ -227,9 +196,15 @@ void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contra
 	for (EventDefinition const* event: _contract.events())
 		events[event->name()].push_back(event);
 
-	for (auto const& it: events)
+	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
+}
+
+template <class T>
+void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
+{
+	for (auto const& it: _definitions)
 	{
-		vector<EventDefinition const*> const& overloads = it.second;
+		vector<T> const& overloads = it.second;
 		set<size_t> reported;
 		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
 		{
@@ -244,18 +219,17 @@ void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contra
 
 			if (ssl.infos.size() > 0)
 			{
-				string msg = "Event with same name and arguments defined twice.";
 				size_t occurrences = ssl.infos.size();
 				if (occurrences > 32)
 				{
 					ssl.infos.resize(32);
-					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+					_message += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
 				}
 
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
 					ssl,
-					msg
+					_message
 				);
 			}
 		}
