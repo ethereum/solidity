@@ -389,7 +389,7 @@ private:
 };
 
 /**
- * Integer and fixed point constants either literals or computed. 
+ * Integer and fixed point constants either literals or computed.
  * Example expressions: 2, 3.14, 2+10.2, ~10.
  * There is one distinct type per value.
  */
@@ -401,7 +401,7 @@ public:
 
 	/// @returns true if the literal is a valid integer.
 	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
-	
+
 	explicit RationalNumberType(rational const& _value):
 		m_value(_value)
 	{}
@@ -422,7 +422,7 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss. 
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss.
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
@@ -889,7 +889,9 @@ public:
 		AddMod, ///< ADDMOD
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
+		ArrayPop, ///< .pop() from a dynamically sized array in storage
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
+		ByteArrayPop, ///< ,pop() from a dynamically sized byte array in storage
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
 		Require ///< require()

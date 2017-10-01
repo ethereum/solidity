@@ -498,8 +498,8 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 {
 	solAssert(
 		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
-		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
-		"Invalid bit number(s) for fixed type: " + 
+		0 <= m_fractionalDigits && m_fractionalDigits <= 80,
+		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 }
@@ -883,7 +883,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
 			using boost::multiprecision::pow;
@@ -962,7 +962,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -1014,7 +1014,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1023,7 +1023,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
@@ -1510,6 +1510,14 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 	{
 		members.push_back({"length", make_shared<IntegerType>(256)});
 		if (isDynamicallySized() && location() == DataLocation::Storage)
+		{
+			members.push_back({"pop", make_shared<FunctionType>(
+				TypePointers{},
+				TypePointers{},
+				strings{string()},
+				strings{string()},
+				isByteArray() ? FunctionType::Kind::ByteArrayPop : FunctionType::Kind::ArrayPop
+			)});
 			members.push_back({"push", make_shared<FunctionType>(
 				TypePointers{baseType()},
 				TypePointers{make_shared<IntegerType>(256)},
@@ -1517,6 +1525,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			)});
+		}
 	}
 	return members;
 }

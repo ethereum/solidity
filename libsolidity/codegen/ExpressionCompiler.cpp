@@ -279,19 +279,19 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 	if (_tuple.isInlineArray())
 	{
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
-		
+
 		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
 		m_context << max(u256(32u), arrayType.memorySize());
 		utils().allocateMemory();
 		m_context << Instruction::DUP1;
-	
+
 		for (auto const& component: _tuple.components())
 		{
 			component->accept(*this);
 			utils().convertType(*component->annotation().type, *arrayType.baseType(), true);
-			utils().storeInMemoryDynamic(*arrayType.baseType(), true);				
+			utils().storeInMemoryDynamic(*arrayType.baseType(), true);
 		}
-		
+
 		m_context << Instruction::POP;
 	}
 	else
@@ -828,6 +828,45 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
+		case FunctionType::Kind::ByteArrayPop:
+		case FunctionType::Kind::ArrayPop:
+		{
+			_functionCall.expression().accept(*this);
+			solAssert(function.parameterTypes().size() == 0, "");
+			// solAssert(!!function.parameterTypes()[0], "");
+			//TypePointer paramType = function.parameterTypes()[0];
+			shared_ptr<ArrayType> arrayType = make_shared<ArrayType>(DataLocation::Storage);
+				// function.kind() == FunctionType::Kind::ArrayPop ?
+				// make_shared<ArrayType>(DataLocation::Storage) :
+				// make_shared<ArrayType>(DataLocation::Storage);
+			// get the current length
+			ArrayUtils(m_context).retrieveLength(*arrayType);
+			m_context << Instruction::DUP1;
+			// stack: ArrayReference currentLength currentLength
+			m_context << u256(1) << Instruction::SUB;
+			// stack: ArrayReference currentLength newLength
+			m_context << Instruction::DUP3 << Instruction::DUP2;
+			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
+			m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+			//m_context << Instruction::SWAP2 << Instruction::SWAP1;
+			// stack: newLength ArrayReference oldLength
+			//ArrayUtils(m_context).accessIndex(*arrayType, false);
+			//m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+			// stack: newLength storageSlot slotOffset
+			//arguments[0]->accept(*this);
+			// stack: newLength storageSlot slotOffset argValue
+			//TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			//solAssert(type, "");
+			//utils().convertType(*arguments[0]->annotation().type, *type);
+			//utils().moveToStackTop(1 + type->sizeOnStack());
+			//utils().moveToStackTop(1 + type->sizeOnStack());
+			// stack: newLength argValue storageSlot slotOffset
+			// if (function.kind() == FunctionType::Kind::ArrayPop)
+			// 	StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+			// else
+			// 	StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+			break;
+		}
 		case FunctionType::Kind::ObjectCreation:
 		{
 			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
@@ -1172,6 +1211,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				"Tried to use .push() on a non-dynamically sized array"
 			);
 		}
+		else if (member == "pop")
+		{
+			solAssert(
+				type.isDynamicallySized() && type.location() == DataLocation::Storage,
+				"Tried to use .pop() on a non-dynamically sized array"
+			);
+		}
 		else
 			solAssert(false, "Illegal array member.");
 		break;
@@ -1348,7 +1394,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	TypePointer type = _literal.annotation().type;
-	
+
 	switch (type->category())
 	{
 	case Type::Category::RationalNumber:
