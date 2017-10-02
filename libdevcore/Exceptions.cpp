@@ -27,7 +27,9 @@ char const* Exception::what() const noexcept
 	if (string const* cmt = comment())
 		return cmt->c_str();
 	else
-		return nullptr;
+		/// Boost accepts nullptr, but the C++ standard doesn't
+		/// and crashes on some platforms.
+		return std::exception::what();
 }
 
 string Exception::lineInfo() const
