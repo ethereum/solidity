@@ -4575,6 +4575,40 @@ BOOST_AUTO_TEST_CASE(array_push)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(5, 4, 3, 3));
 }
 
+BOOST_AUTO_TEST_CASE(array_pop)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[] data;
+			function pop_ok() returns (uint x, uint y, uint z, uint l) {
+				data.push(6);
+				data.push(5);
+				x = data.push(7);
+				data.pop();
+				data.pop();
+				y = data.push(2);
+				l = data.push(4);
+				z = data[1];
+			}
+
+			function pop1() returns (uint x) {
+				x = data.push(5);
+				data.pop();
+				data.pop();
+			}
+
+			function pop2() returns (uint x) {
+				data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("pop_ok()"), encodeArgs(3, 2, 3, 2));
+	// both should throw
+	ABI_CHECK(callContractFunction("pop1()"), encodeArgs());
+	ABI_CHECK(callContractFunction("pop2()"), encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(byte_array_push)
 {
 	char const* sourceCode = R"(
@@ -4593,6 +4627,43 @@ BOOST_AUTO_TEST_CASE(byte_array_push)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function pop_ok() returns (bool x) {
+				if (data.push(5) != 1)  return true;
+				if (data[0] != 5) return true;
+				data.push(4);
+				if (data[1] != 4) return true;
+				uint l = data.push(3);
+				if (data[2] != 3) return true;
+				if (l != 3) return true;
+				data.pop();
+				data.pop();
+				l = data.push(7);
+				if (l != 2) return true;
+			}
+
+			function pop1() returns (bool x) {
+				if (data.push(5) != 1) return true;
+				data.pop();
+				data.pop();
+			}
+
+			function pop2() returns (bool x) {
+				data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("pop_ok()"), encodeArgs(false));
+	// both should throw
+	ABI_CHECK(callContractFunction("pop1()"), encodeArgs());
+	ABI_CHECK(callContractFunction("pop2()"), encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(external_array_args)
