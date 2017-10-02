@@ -103,7 +103,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 	{
 		bigint i = *_t.get<bigint*>();
 		if (i < 0 || i > bigint(u256(0) - 1))
-			error<IntegerOutOfRange>();
+			error<IntegerOutOfRange>(toString(i));
 		m_asm.append((u256)i);
 		break;
 	}
@@ -157,7 +157,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			auto i = *++_t.begin();
 			if (i.tag())
-				error<InvalidName>();
+				error<InvalidName>(toString(i));
 			if (i.which() == sp::utree_type::string_type)
 			{
 				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
@@ -244,7 +244,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				if (ii == 1)
 				{
 					if (i.tag())
-						error<InvalidName>();
+						error<InvalidName>(toString(i));
 					if (i.which() == sp::utree_type::string_type)
 					{
 						auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
@@ -303,11 +303,11 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				{
 					pos = CodeFragment(i, _s);
 					if (pos.m_asm.deposit() != 1)
-						error<InvalidDeposit>(us);
+						error<InvalidDeposit>(toString(i));
 				}
 				else if (i.tag() != 0)
 				{
-					error<InvalidLiteral>();
+					error<InvalidLiteral>(toString(i));
 				}
 				else if (i.which() == sp::utree_type::string_type)
 				{
@@ -318,7 +318,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				{
 					bigint bi = *i.get<bigint*>();
 					if (bi < 0)
-						error<IntegerOutOfRange>();
+						error<IntegerOutOfRange>(toString(i));
 					else
 					{
 						bytes tmp = toCompactBigEndian(bi);
@@ -327,7 +327,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				else
 				{
-					error<InvalidLiteral>();
+					error<InvalidLiteral>(toString(i));
 				}
 
 				ii++;
