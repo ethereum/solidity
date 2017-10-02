@@ -85,6 +85,7 @@ public:
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 	AssemblyItems const& items() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
+	void pop_back() { m_items.pop_back(); }
 	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
 	void injectStart(AssemblyItem const& _i);
