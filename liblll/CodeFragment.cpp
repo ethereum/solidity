@@ -47,7 +47,8 @@ void CodeFragment::finalise(CompilerState const& _cs)
 	}
 }
 
-CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
+CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM):
+	m_readFile(_readFile)
 {
 /*
 	std::cout << "CodeFragment. Locals:";
@@ -214,7 +215,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					m_asm.append(CodeFragment(i, _s, true).m_asm);
+					m_asm.append(CodeFragment(i, _s, m_readFile, true).m_asm);
 		}
 		else if (us == "INCLUDE")
 		{
@@ -223,10 +224,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string fileName = firstAsString();
 			if (fileName.empty())
 				error<InvalidName>("Empty file name provided");
-			string contents = contentsString(fileName);
+			string contents = m_readFile(fileName);
 			if (contents.empty())
 				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
-			m_asm.append(CodeFragment::compile(contents, _s).m_asm);
+			m_asm.append(CodeFragment::compile(contents, _s, m_readFile).m_asm);
 		}
 		else if (us == "SET")
 		{
@@ -235,7 +236,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++ == 2)
-					m_asm.append(CodeFragment(i, _s, false).m_asm);
+					m_asm.append(CodeFragment(i, _s, m_readFile, false).m_asm);
 			m_asm.append((u256)varAddress(firstAsString(), true));
 			m_asm.append(Instruction::MSTORE);
 		}
@@ -276,7 +277,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					if (_t.size() == 3)
 					{
 						/// NOTE: some compilers could do the assignment first if this is done in a single line
-						CodeFragment code = CodeFragment(i, _s);
+						CodeFragment code = CodeFragment(i, _s, m_readFile);
 						_s.defs[n] = code;
 					}
 					else
@@ -317,7 +318,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				else if (ii == 1)
 				{
-					pos = CodeFragment(i, _s);
+					pos = CodeFragment(i, _s, m_readFile);
 					if (pos.m_asm.deposit() != 1)
 						error<InvalidDeposit>(toString(i));
 				}
@@ -396,9 +397,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (c++)
 			{
 				if (us == "LLL" && c == 1)
-					code.push_back(CodeFragment(i, ns));
+					code.push_back(CodeFragment(i, ns, m_readFile));
 				else
-					code.push_back(CodeFragment(i, _s));
+					code.push_back(CodeFragment(i, _s, m_readFile));
 			}
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };
@@ -419,7 +420,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				//requireDeposit(i, 1);
 				cs.args[m.args[i]] = code[i];
 			}
-			m_asm.append(CodeFragment(m.code, cs).m_asm);
+			m_asm.append(CodeFragment(m.code, cs, m_readFile).m_asm);
 			for (auto const& i: cs.defs)
 				_s.defs[i.first] = i.second;
 			for (auto const& i: cs.macros)
@@ -676,13 +677,13 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 	}
 }
 
-CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s)
+CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s, ReadCallback const& _readFile)
 {
 	CodeFragment ret;
 	sp::utree o;
 	parseTreeLLL(_src, o);
 	if (!o.empty())
-		ret = CodeFragment(o, _s);
+		ret = CodeFragment(o, _s, _readFile);
 	_s.treesToKill.push_back(o);
 	return ret;
 }
