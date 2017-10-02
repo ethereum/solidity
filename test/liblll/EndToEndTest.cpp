@@ -215,6 +215,92 @@ BOOST_AUTO_TEST_CASE(conditional_nested_then)
 	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_switch)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(def 'input (calldataload 0x04))
+				;; Calculates width in bytes of utf-8 characters.
+				(return
+					(switch
+						(< input 0x80) 1
+						(< input 0xE0) 2
+						(< input 0xF0) 3
+						(< input 0xF8) 4
+						(< input 0xFC) 5
+						6))))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0x00) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("test()", 0x80) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("test()", 0xe0) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("test()", 0xf0) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("test()", 0xf8) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("test()", 0xfc) == encodeArgs(u256(6)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_switch_one_arg_with_deposit)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return
+				(switch 42)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_switch_one_arg_no_deposit)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(switch [0]:42)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_switch_two_args)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(seq
+				(switch (= (calldataload 0x04) 1) [0]:42)
+				(return 0x00 0x20)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("test()", 1) == encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_switch_three_args_with_deposit)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return
+				(switch (= (calldataload 0x04) 1) 41 42)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0) == encodeArgs(u256(42)));
+	BOOST_CHECK(callContractFunction("test()", 1) == encodeArgs(u256(41)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_switch_three_args_no_deposit)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(switch
+				(= (calldataload 0x04) 1) (return 41)
+				(return 42)))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()", 0) == encodeArgs(u256(42)));
+	BOOST_CHECK(callContractFunction("test()", 1) == encodeArgs(u256(41)));
+}
+
 BOOST_AUTO_TEST_CASE(exp_operator_const)
 {
 	char const* sourceCode = R"(
