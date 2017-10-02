@@ -113,6 +113,22 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 	}
 }
 
+namespace
+{
+/// Returns true iff the instruction is valid as a function.
+bool validFunctionalInstruction(string us)
+{
+	auto it = c_instructions.find(us);
+	return !(
+		it == c_instructions.end() ||
+		solidity::isPushInstruction(it->second) ||
+		solidity::isDupInstruction(it->second) ||
+		solidity::isSwapInstruction(it->second) ||
+		it->second == solidity::Instruction::JUMPDEST
+	);
+}
+}
+
 void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 {
 	if (_t.tag() == 0 && _t.empty())
@@ -409,7 +425,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			for (auto const& i: cs.macros)
 				_s.macros.insert(i);
 		}
-		else if (c_instructions.count(us))
+		else if (c_instructions.count(us) && validFunctionalInstruction(us))
 		{
 			auto it = c_instructions.find(us);
 			requireSize(instructionInfo(it->second).args);
