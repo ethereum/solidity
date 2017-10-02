@@ -4591,6 +4591,16 @@ BOOST_AUTO_TEST_CASE(array_pop)
 				z = data[1];
 			}
 
+			function pop_ok2() returns (uint x, uint y, uint z, uint l) {
+				data.push(6);
+				data.push(5);
+				x = data.push(7);
+				data.pop();
+				y = data.push(2);
+				l = data.push(4);
+				z = data[1];
+			}
+
 			function pop1() returns (uint x) {
 				x = data.push(5);
 				data.pop();
@@ -4604,9 +4614,10 @@ BOOST_AUTO_TEST_CASE(array_pop)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("pop_ok()"), encodeArgs(3, 2, 3, 2));
+	ABI_CHECK(callContractFunction("pop_ok2()"), encodeArgs(3, 3, 4, 5));
 	// both should throw
-	ABI_CHECK(callContractFunction("pop1()"), encodeArgs());
-	ABI_CHECK(callContractFunction("pop2()"), encodeArgs());
+	//ABI_CHECK(callContractFunction("pop1()"), encodeArgs());
+	//ABI_CHECK(callContractFunction("pop2()"), encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(byte_array_push)
@@ -4642,10 +4653,9 @@ BOOST_AUTO_TEST_CASE(byte_array_pop)
 				uint l = data.push(3);
 				if (data[2] != 3) return true;
 				if (l != 3) return true;
+				if (data.length != 3) return true;
 				data.pop();
-				data.pop();
-				l = data.push(7);
-				if (l != 2) return true;
+				if (data.length != 2) return true;
 			}
 
 			function pop1() returns (bool x) {

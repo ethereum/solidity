@@ -828,6 +828,28 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
+		case FunctionType::Kind::ByteArrayPop:
+		case FunctionType::Kind::ArrayPop:
+		{
+			_functionCall.expression().accept(*this);
+			solAssert(function.parameterTypes().size() == 0, "");
+
+			// TODO: Extract proper type for regular arrays
+			shared_ptr<ArrayType> arrayType = make_shared<ArrayType>(DataLocation::Storage);
+
+			//get the current length
+			ArrayUtils(m_context).retrieveLength(*arrayType);
+			// stack: ArrayReference currentLength
+
+			// throw if table is too short
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context.appendConditionalInvalid();
+
+			m_context << u256(1) << Instruction::SUB;
+			// stack: ArrayReference newLength
+			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
+			break;
+		}
 		case FunctionType::Kind::ObjectCreation:
 		{
 			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
@@ -1177,6 +1199,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(
 				type.isDynamicallySized() && type.location() == DataLocation::Storage,
 				"Tried to use .push() on a non-dynamically sized array"
+			);
+		}
+		else if (member == "pop")
+		{
+			solAssert(
+				type.isDynamicallySized() && type.location() == DataLocation::Storage,
+				"Tried to use .pop() on a non-dynamically sized array"
 			);
 		}
 		else
