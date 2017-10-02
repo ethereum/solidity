@@ -256,7 +256,7 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 		{
 			if (
 				instruction.second == solidity::Instruction::JUMPDEST ||
-				(solidity::Instruction::PUSH1 <= instruction.second && instruction.second <= solidity::Instruction::PUSH32)
+				solidity::isPushInstruction(instruction.second)
 			)
 				continue;
 			string name = instruction.first;
@@ -443,9 +443,9 @@ assembly::Statement Parser::parseCall(assembly::Statement&& _instruction)
 		ret.location = ret.instruction.location;
 		solidity::Instruction instr = ret.instruction.instruction;
 		InstructionInfo instrInfo = instructionInfo(instr);
-		if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
+		if (solidity::isDupInstruction(instr))
 			fatalParserError("DUPi instructions not allowed for functional notation");
-		if (solidity::Instruction::SWAP1 <= instr && instr <= solidity::Instruction::SWAP16)
+		if (solidity::isSwapInstruction(instr))
 			fatalParserError("SWAPi instructions not allowed for functional notation");
 		expectToken(Token::LParen);
 		unsigned args = unsigned(instrInfo.args);
