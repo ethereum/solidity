@@ -39,10 +39,12 @@ struct CompilerState;
 class CodeFragment
 {
 public:
-	CodeFragment() {}
-	CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM = false);
+	using ReadCallback = std::function<std::string(std::string const&)>;
 
-	static CodeFragment compile(std::string const& _src, CompilerState& _s);
+	CodeFragment() {}
+	CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM = false);
+
+	static CodeFragment compile(std::string const& _src, CompilerState& _s, ReadCallback const& _readFile);
 
 	/// Consolidates data and compiles code.
 	Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
@@ -60,6 +62,7 @@ private:
 
 	bool m_finalised = false;
 	Assembly m_asm;
+	ReadCallback m_readFile;
 };
 
 static const CodeFragment NullCodeFragment;
