@@ -1395,6 +1395,61 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name_unnamed_arguments)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint);
+			event A(uint, uint);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(events_with_same_name_different_types)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint);
+			event A(bytes);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint i);
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration_ignores_anonymous)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint i) anonymous;
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration_ignores_indexed)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint indexed i);
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(

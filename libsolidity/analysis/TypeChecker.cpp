@@ -75,6 +75,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
 	checkContractDuplicateFunctions(_contract);
+	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
 	checkContractAbstractConstructors(_contract);
@@ -183,9 +184,27 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			msg
 		);
 	}
-	for (auto const& it: functions)
+
+	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
+}
+
+void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
+{
+	/// Checks that two events with the same name defined in this contract have different
+	/// argument types
+	map<string, vector<EventDefinition const*>> events;
+	for (EventDefinition const* event: _contract.events())
+		events[event->name()].push_back(event);
+
+	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
+}
+
+template <class T>
+void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
+{
+	for (auto const& it: _definitions)
 	{
-		vector<FunctionDefinition const*> const& overloads = it.second;
+		vector<T> const& overloads = it.second;
 		set<size_t> reported;
 		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
 		{
@@ -200,18 +219,17 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 
 			if (ssl.infos.size() > 0)
 			{
-				string msg = "Function with same name and arguments defined twice.";
 				size_t occurrences = ssl.infos.size();
 				if (occurrences > 32)
 				{
 					ssl.infos.resize(32);
-					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+					_message += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
 				}
 
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
 					ssl,
-					msg
+					_message
 				);
 			}
 		}
