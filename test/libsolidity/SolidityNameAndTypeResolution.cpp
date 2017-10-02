@@ -4354,7 +4354,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Array with fractional length specified.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
@@ -4366,7 +4366,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
@@ -4378,7 +4378,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
