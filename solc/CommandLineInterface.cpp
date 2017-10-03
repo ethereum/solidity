@@ -717,7 +717,7 @@ bool CommandLineInterface::processInput()
 	{
 		vector<string> paths;
 		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
-			m_allowedDirectories.push_back(boost::filesystem::path(path));
+			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_trailing_separator());
 	}
 
 	if (m_args.count(g_argStandardJSON))
