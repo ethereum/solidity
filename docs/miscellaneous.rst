@@ -318,7 +318,7 @@ Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is 
 +------------+----------+-----------+---------+
 | \+ (unary) | N/A      | N/A       | 1       |
 +------------+----------+-----------+---------+
-| \-, --, -= |          | x         |         |
+| -, --, -=  |          | x         |         |
 +------------+----------+-----------+---------+
 | \- (unary) |          |           | 2       |
 +------------+----------+-----------+---------+
@@ -344,7 +344,7 @@ Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is 
 +------------+----------+-----------+---------+
 
 1) Unary ``+`` has been deprecated.
-2) Note that unary ``-`` works on ``uints``, e.g. ``-uint(1) == ~uint(0) (> 1)``, although this is technically not an over/underflow.
+2) Unary ``-`` works on ``uints``, e.g. ``-uint(1) == ~uint(0)``.
 3) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
 4) Arithmetic right shift, implemented as division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
 
@@ -370,11 +370,11 @@ Signed integers are represented in two's complement, and are restricted to the r
 +------------+----------+-----------+---------+
 | /, /=      |          |           | 2       |
 +------------+----------+-----------+---------+
-| %, %=      |          | x         |         |
+| %, %=      |          |           | 4       |
 +------------+----------+-----------+---------+
-| <<, <<=    | x        |           | 4       |
+| <<, <<=    | x        | x         | 5       |
 +------------+----------+-----------+---------+
-| >>, >>=    |          |           | 5       |
+| >>, >>=    |          |           | 6       |
 +------------+----------+-----------+---------+
 | &, &=      |          |           |         |
 +------------+----------+-----------+---------+
@@ -386,10 +386,11 @@ Signed integers are represented in two's complement, and are restricted to the r
 +------------+----------+-----------+---------+
 
 1) Unary ``+`` has been deprecated.
-2) Due to the overflow protection for ``INT_MIN = 2**255``, which is built into the EVM, we have the following relation ``-INT_MIN == INT_MIN``. This affects a numer of arithmetic operations. See: `The Ethereum Yellow Paper <http://gavwood.com/paper>`_, ``SDIV``, Appendix H, Section 2 (Instruction set).
+2) Due to the overflow protection for ``INT_MIN = -2**255``, which is built into the EVM, we have the following relation ``-INT_MIN == INT_MIN``. This affects a number of arithmetic operations. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, ``SDIV``, Appendix H, Section 2 (Instruction set).
 3) The exponent must be signed.
-4) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
-5) Arithmetic right shift, implemented as signed division ``n >> m := n / 2**m``. The bitsize of the shifted value is that of ``n``.
+4) Implemented as ``a % b = sign(a)*(|a| mod |b|)``. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, ``SMOD``, Appendix H, Section 2 (Instruction set).
+5) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
+6) Arithmetic right shift, implemented as signed division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
 
 
 Global Variables
