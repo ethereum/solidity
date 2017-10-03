@@ -17,8 +17,6 @@
 
 #include <libevmasm/AssemblyItem.h>
 
-#include <libevmasm/SemanticInformation.h>
-
 #include <libdevcore/CommonData.h>
 #include <libdevcore/FixedHash.h>
 
@@ -112,7 +110,7 @@ bool AssemblyItem::canBeFunctional() const
 	switch (m_type)
 	{
 	case Operation:
-		return !SemanticInformation::isDupInstruction(*this) && !SemanticInformation::isSwapInstruction(*this);
+		return !isDupInstruction(instruction()) && !isSwapInstruction(instruction());
 	case Push:
 	case PushString:
 	case PushTag:

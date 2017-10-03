@@ -90,14 +90,14 @@ bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return Instruction::DUP1 <= _item.instruction() && _item.instruction() <= Instruction::DUP16;
+	return solidity::isDupInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return Instruction::SWAP1 <= _item.instruction() && _item.instruction() <= Instruction::SWAP16;
+	return solidity::isSwapInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
