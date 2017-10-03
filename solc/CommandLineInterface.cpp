@@ -700,7 +700,13 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			auto path = boost::filesystem::path(_path);
+			if (!boost::filesystem::exists(path))
+				return ReadCallback::Result{false, "File not found."};
+
 			auto canonicalPath = boost::filesystem::canonical(path);
+			if (!boost::filesystem::is_regular_file(canonicalPath))
+				return ReadCallback::Result{false, "Not a valid file."};
+
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -716,16 +722,10 @@ bool CommandLineInterface::processInput()
 			}
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
-			else if (!boost::filesystem::exists(path))
-				return ReadCallback::Result{false, "File not found."};
-			else if (!boost::filesystem::is_regular_file(canonicalPath))
-				return ReadCallback::Result{false, "Not a valid file."};
-			else
-			{
-				auto contents = dev::readFileAsString(canonicalPath.string());
-				m_sourceCodes[path.string()] = contents;
-				return ReadCallback::Result{true, contents};
-			}
+
+			auto contents = dev::readFileAsString(canonicalPath.string());
+			m_sourceCodes[path.string()] = contents;
+			return ReadCallback::Result{true, contents};
 		}
 		catch (Exception const& _exception)
 		{
