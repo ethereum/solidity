@@ -303,6 +303,95 @@ The following is the order of precedence for operators, listed in order of evalu
 
 .. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
+Overflow rules
+==============
+
+Unsigned Integers
+-----------------
+
+Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is the bitsize.
+
++------------+----------+-----------+---------+
+|  Operator  | Overflow | Underflow | Notes   |
++============+==========+===========+=========+
+| +, ++, +=  | x        |           |         |
++------------+----------+-----------+---------+
+| \+ (unary) | N/A      | N/A       | 1       |
++------------+----------+-----------+---------+
+| \-, --, -= |          | x         |         |
++------------+----------+-----------+---------+
+| \- (unary) |          |           | 2       |
++------------+----------+-----------+---------+
+| \*, \*=    | x        |           |         |
++------------+----------+-----------+---------+
+| \*\*       | x        |           |         |
++------------+----------+-----------+---------+
+| /, /=      |          |           |         |
++------------+----------+-----------+---------+
+| %, %=      |          |           |         |
++------------+----------+-----------+---------+
+| <<, <<=    |          |           | 3       |
++------------+----------+-----------+---------+
+| >>, >>=    |          |           | 4       |
++------------+----------+-----------+---------+
+| &, &=      |          |           |         |
++------------+----------+-----------+---------+
+| \|, \|=    |          |           |         |
++------------+----------+-----------+---------+
+| ^, ^=      |          |           |         |
++------------+----------+-----------+---------+
+| ~, ~=      |          |           |         |
++------------+----------+-----------+---------+
+
+1) Unary ``+`` has been deprecated.
+2) Note that unary ``-`` works on ``uints``, e.g. ``-uint(1) == ~uint(0) (> 1)``, although this is technically not an over/underflow.
+3) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
+4) Arithmetic right shift, implemented as division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
+
+Signed Integers
+---------------
+
+Signed integers are represented in two's complement, and are restricted to the range ``[-2**(N - 1), 2**(N - 1) - 1]``, , where ``N`` is the bitsize.
+
++------------+----------+-----------+---------+
+|  Operator  | Overflow | Underflow | Notes   |
++============+==========+===========+=========+
+| +, ++, +=  | x        | x         |         |
++------------+----------+-----------+---------+
+| \+ (unary) | N/A      | N/A       | 1       |
++------------+----------+-----------+---------+
+| -, --, -=  | x        | x         |         |
++------------+----------+-----------+---------+
+| \- (unary) | x        | x         | 2       |
++------------+----------+-----------+---------+
+| \*, \*=    | x        | x         | 2       |
++------------+----------+-----------+---------+
+| \*\*       | x        | x         | 3       |
++------------+----------+-----------+---------+
+| /, /=      |          |           | 2       |
++------------+----------+-----------+---------+
+| %, %=      |          | x         |         |
++------------+----------+-----------+---------+
+| <<, <<=    | x        |           | 4       |
++------------+----------+-----------+---------+
+| >>, >>=    |          |           | 5       |
++------------+----------+-----------+---------+
+| &, &=      |          |           |         |
++------------+----------+-----------+---------+
+| \|, \|=    |          |           |         |
++------------+----------+-----------+---------+
+| ^, ^=      |          |           |         |
++------------+----------+-----------+---------+
+| ~, ~=      |          |           |         |
++------------+----------+-----------+---------+
+
+1) Unary ``+`` has been deprecated.
+2) Due to the overflow protection for ``INT_MIN = 2**255``, which is built into the EVM, we have the following relation ``-INT_MIN == INT_MIN``. This affects a numer of arithmetic operations. See: `The Ethereum Yellow Paper <http://gavwood.com/paper>`_, ``SDIV``, Appendix H, Section 2 (Instruction set).
+3) The exponent must be signed.
+4) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
+5) Arithmetic right shift, implemented as signed division ``n >> m := n / 2**m``. The bitsize of the shifted value is that of ``n``.
+
+
 Global Variables
 ================
 
