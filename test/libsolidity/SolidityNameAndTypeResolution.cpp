@@ -6523,7 +6523,19 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
+	CHECK_WARNING(text, "Variable is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			struct S { uint a; }
+			S x;
+			function f() view public {
+				S y = x;
+				y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
