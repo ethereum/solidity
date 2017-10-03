@@ -645,14 +645,23 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (!allowed)
 				m_errorReporter.typeError(_variable.location(), "Constants of non-value type not yet implemented.");
 		}
+
 		if (!_variable.value())
 			m_errorReporter.typeError(_variable.location(), "Uninitialized \"constant\" variable.");
 		else if (!_variable.value()->annotation().isPure)
-			m_errorReporter.warning(
-				_variable.value()->location(),
-				"Initial value for constant variable has to be compile-time constant. "
-				"This will fail to compile with the next breaking version change."
-			);
+		{
+			if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+				m_errorReporter.typeError(
+					_variable.value()->location(),
+					"Initial value for constant variable has to be compile-time constant."
+				);
+			else
+				m_errorReporter.warning(
+					_variable.value()->location(),
+					"Initial value for constant variable has to be compile-time constant. "
+					"This will fail to compile with the next breaking version change."
+				);
+		}
 	}
 	if (!_variable.isStateVariable())
 	{

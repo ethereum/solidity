@@ -2361,15 +2361,26 @@ BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
 }
 
-BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable_0_4_x)
 {
 	char const* text = R"(
 		contract C {
 			address constant x = msg.sender;
 		}
 	)";
-	// Change to TypeError for 0.5.0.
 	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+
+		contract C {
+			address constant x = msg.sender;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
@@ -2388,7 +2399,7 @@ BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
 	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
 }
 
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant_0_4_x)
 {
 	char const* text = R"(
 		contract C {
@@ -2396,8 +2407,20 @@ BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
 			uint constant y = x();
 		}
 	)";
-	// Change to TypeError for 0.5.0.
 	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+
+		contract C {
+			function () constant returns (uint) x;
+			uint constant y = x();
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
