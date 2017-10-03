@@ -217,11 +217,11 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	{
 		"sealEngine": "NoProof",
 		"params": {
-			"accountStartNonce": "0x",
+			"accountStartNonce": "0x00",
 			"maximumExtraDataSize": "0x1000000",
 			"blockReward": "0x",
-			"allowFutureBlocks": "1",
-			"homsteadForkBlock": "0x00",
+			"allowFutureBlocks": true,
+			"homesteadForkBlock": "0x00",
 			"EIP150ForkBlock": "0x00",
 			"EIP158ForkBlock": "0x00"
 		},
