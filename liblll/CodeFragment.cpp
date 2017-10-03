@@ -224,6 +224,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string fileName = firstAsString();
 			if (fileName.empty())
 				error<InvalidName>("Empty file name provided");
+			if (!m_readFile)
+				error<InvalidName>("Import callback not present");
 			string contents = m_readFile(fileName);
 			if (contents.empty())
 				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
