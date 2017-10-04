@@ -362,18 +362,15 @@ BOOST_AUTO_TEST_CASE(constant_condition)
 		}
 	)";
 	CHECK_WARNING(text, "Condition is always false");
-// TODO
-//	// a plain literal constant is fine
-//	text = R"(
-//		contract C {
-//			function f(uint x) public pure {
-//				if (true) { revert(); }
-//			}
-//		}
-//	)";
-//	CHECK_SUCCESS_NO_WARNINGS(text);
-
-// TODO test unreacheable code
+	// a plain literal constant is fine
+	text = R"(
+		contract C {
+			function f(uint) public pure {
+				if (true) { revert(); }
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
