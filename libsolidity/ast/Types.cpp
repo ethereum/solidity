@@ -89,7 +89,7 @@ pair<u256, unsigned> const* StorageOffsets::offset(size_t _index) const
 
 MemberList& MemberList::operator=(MemberList&& _other)
 {
-	assert(&_other != this);
+	solAssert(&_other != this, "");
 
 	m_memberTypes = move(_other.m_memberTypes);
 	m_storageOffsets = move(_other.m_storageOffsets);
