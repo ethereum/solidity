@@ -28,6 +28,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+/// FIXME: this is pretty much a copy of TypeChecker::endVisit(BinaryOperation)
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
 	TypePointer const& subType = _operation.subExpression().annotation().type;
@@ -37,6 +38,7 @@ void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 	_operation.annotation().type = t;
 }
 
+/// FIXME: this is pretty much a copy of TypeChecker::endVisit(BinaryOperation)
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
 	TypePointer const& leftType = _operation.leftExpression().annotation().type;
@@ -46,9 +48,24 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 	if (!dynamic_cast<RationalNumberType const*>(rightType.get()))
 		m_errorReporter.fatalTypeError(_operation.rightExpression().location(), "Invalid constant expression.");
 	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	if (Token::isCompareOp(_operation.getOperator()))
-		commonType = make_shared<BoolType>();
-	_operation.annotation().type = commonType;
+	if (!commonType)
+	{
+		m_errorReporter.typeError(
+			_operation.location(),
+			"Operator " +
+			string(Token::toString(_operation.getOperator())) +
+			" not compatible with types " +
+			leftType->toString() +
+			" and " +
+			rightType->toString()
+		);
+		commonType = leftType;
+	}
+	_operation.annotation().commonType = commonType;
+	_operation.annotation().type =
+		Token::isCompareOp(_operation.getOperator()) ?
+		make_shared<BoolType>() :
+		commonType;
 }
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
