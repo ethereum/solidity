@@ -139,8 +139,13 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	}
 	else if (arguments.empty())
 	{
-		// We assume it is an integer...
-		return m_context.int_val(n.c_str());
+		if (n == "true")
+			return m_context.bool_val(true);
+		else if (n == "false")
+			return m_context.bool_val(false);
+		else
+			// We assume it is an integer...
+			return m_context.int_val(n.c_str());
 	}
 
 	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
