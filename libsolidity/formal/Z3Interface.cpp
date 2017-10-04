@@ -135,7 +135,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		return m_context.int_val(n.c_str());
 	}
 
-	assert(arity.count(n) && arity.at(n) == arguments.size());
+	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
 	if (n == "ite")
 		return z3::ite(arguments[0], arguments[1], arguments[2]);
 	else if (n == "not")
