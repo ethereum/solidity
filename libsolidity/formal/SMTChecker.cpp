@@ -234,6 +234,16 @@ void SMTChecker::endVisit(BinaryOperation const& _op)
 
 void SMTChecker::endVisit(FunctionCall const& _funCall)
 {
+	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
+	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	{
+		m_errorReporter.warning(
+			_funCall.location(),
+			"Assertion checker does not yet implement this expression."
+		);
+		return;
+	}
+
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 
 	std::vector<ASTPointer<Expression const>> const args = _funCall.arguments();
