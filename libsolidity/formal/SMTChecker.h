@@ -52,6 +52,7 @@ private:
 	virtual void endVisit(FunctionDefinition const& _node) override;
 	virtual bool visit(IfStatement const& _node) override;
 	virtual bool visit(WhileStatement const& _node) override;
+	virtual bool visit(ForStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
 	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;

@@ -126,6 +126,48 @@ bool SMTChecker::visit(WhileStatement const& _node)
 	return false;
 }
 
+bool SMTChecker::visit(ForStatement const& _node)
+{
+	if (_node.initializationExpression())
+		_node.initializationExpression()->accept(*this);
+
+	// Do not reset the init expression part.
+	auto touchedVariables =
+		m_variableUsage->touchedVariables(_node.body());
+	if (_node.condition())
+		touchedVariables += m_variableUsage->touchedVariables(*_node.condition());
+	if (_node.loopExpression())
+		touchedVariables += m_variableUsage->touchedVariables(*_node.loopExpression());
+	// Remove duplicates
+	std::sort(touchedVariables.begin(), touchedVariables.end());
+	touchedVariables.erase(std::unique(touchedVariables.begin(), touchedVariables.end()), touchedVariables.end());
+
+	resetVariables(touchedVariables);
+
+	if (_node.condition())
+	{
+		_node.condition()->accept(*this);
+		checkBooleanNotConstant(*_node.condition(), "For loop condition is always $VALUE.");
+	}
+
+	VariableSequenceCounters sequenceCountersStart = m_currentSequenceCounter;
+	m_interface->push();
+	if (_node.condition())
+		m_interface->addAssertion(expr(*_node.condition()));
+	_node.body().accept(*this);
+	if (_node.loopExpression())
+		_node.loopExpression()->accept(*this);
+
+	m_interface->pop();
+
+	m_conditionalExecutionHappened = true;
+	m_currentSequenceCounter = sequenceCountersStart;
+
+	resetVariables(touchedVariables);
+
+	return false;
+}
+
 void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 {
 	if (_varDecl.declarations().size() != 1)
