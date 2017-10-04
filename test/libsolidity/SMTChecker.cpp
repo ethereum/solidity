@@ -391,6 +391,73 @@ BOOST_AUTO_TEST_CASE(constant_condition)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+
+BOOST_AUTO_TEST_CASE(for_loop)
+{
+	string text = R"(
+		contract C {
+			function f(uint x) public pure {
+				require(x == 2);
+				for (;;) {}
+				assert(x == 2);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				for (; x == 2; ) {
+					assert(x == 2);
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				for (uint y = 2; x < 10; ) {
+					assert(y == 2);
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				for (uint y = 2; x < 10; y = 3) {
+					assert(y == 2);
+				}
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation");
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				for (uint y = 2; x < 10; ) {
+					y = 3;
+				}
+				assert(y == 3);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation");
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				for (uint y = 2; x < 10; ) {
+					y = 3;
+				}
+				assert(y == 2);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
