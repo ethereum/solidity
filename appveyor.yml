@@ -71,7 +71,7 @@ build_script:
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    - soltest.exe --show-progress -- --no-ipc
+    - soltest.exe --show-progress -- --no-ipc --no-smt
 
 artifacts:
     - path: solidity-windows.zip

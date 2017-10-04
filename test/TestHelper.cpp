@@ -45,6 +45,8 @@ Options::Options()
 			showMessages = true;
 		else if (string(suite.argv[i]) == "--no-ipc")
 			disableIPC = true;
+		else if (string(suite.argv[i]) == "--no-smt")
+			disableSMT = true;
 
 	if (!disableIPC && ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))

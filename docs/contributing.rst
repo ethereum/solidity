@@ -64,9 +64,11 @@ Running the compiler tests
 ==========================
 
 Solidity includes different types of tests. They are included in the application
-called ``soltest``. Some of them require the ``cpp-ethereum`` client in testing mode.
+called ``soltest``. Some of them require the ``cpp-ethereum`` client in testing mode,
+some others require ``libz3`` to be installed.
 
-To run a subset of the tests that do not require ``cpp-ethereum``, use ``./build/test/soltest -- --no-ipc``.
+To disable the z3 tests, use ``./build/test/soltest -- --no-smt`` and
+to run a subset of the tests that do not require ``cpp-ethereum``, use ``./build/test/soltest -- --no-ipc``.
 
 For all other tests, you need to install `cpp-ethereum <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth>`_ and run it in testing mode: ``eth --test -d /tmp/testeth``.
 
