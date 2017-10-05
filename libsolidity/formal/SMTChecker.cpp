@@ -207,7 +207,10 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 	{
 		Declaration const* decl = identifier->annotation().referencedDeclaration;
 		if (knownVariable(*decl))
+		{
 			assignment(*decl, _assignment.rightHandSide(), _assignment.location());
+			defineExpr(_assignment, expr(_assignment.rightHandSide()));
+		}
 		else
 			m_errorReporter.warning(
 				_assignment.location(),
@@ -778,31 +781,39 @@ smt::Expression SMTChecker::maxValue(IntegerType const& _t)
 
 smt::Expression SMTChecker::expr(Expression const& _e)
 {
-	solAssert(m_expressions.count(&_e), "");
+	if (!m_expressions.count(&_e))
+	{
+		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
+		createExpr(_e);
+	}
 	return m_expressions.at(&_e);
 }
 
 void SMTChecker::createExpr(Expression const& _e)
 {
-	solAssert(!m_expressions.count(&_e), "");
-	solAssert(_e.annotation().type, "");
-	switch (_e.annotation().type->category())
+	if (m_expressions.count(&_e))
+		m_errorReporter.warning(_e.location(), "Internal error: Expression created twice in SMT solver." );
+	else
 	{
-	case Type::Category::RationalNumber:
-	{
-		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
-			solAssert(!rational->isFractional(), "");
-		m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
-		break;
-	}
-	case Type::Category::Integer:
-		m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
-		break;
-	case Type::Category::Bool:
-		m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
-		break;
-	default:
-		solAssert(false, "Type not implemented.");
+		solAssert(_e.annotation().type, "");
+		switch (_e.annotation().type->category())
+		{
+		case Type::Category::RationalNumber:
+		{
+			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
+				solAssert(!rational->isFractional(), "");
+			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			break;
+		}
+		case Type::Category::Integer:
+			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			break;
+		case Type::Category::Bool:
+			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
+			break;
+		default:
+			solAssert(false, "Type not implemented.");
+		}
 	}
 }
 
