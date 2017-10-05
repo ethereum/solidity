@@ -318,13 +318,13 @@ Additionally, the EVM has its own overflow semantics for results that exceed 256
 
 **Truncation**
 
-Some operations will simply discard certain bits of the result rather then doing a modulo computation. This is referred to as *truncation*. Examples of truncating operators is the left and right arithmetic shifts.
+Some operations will discard certain bits of the result instead of doing a modulo computation. This is referred to as *truncation*. Examples of truncating operators are the left and right arithmetic shifts.
 
 **Examples**
 
-``uint8(257) == 257 % 2**8 == 1``
+``uint8(257) == 257 mod 2**8 == 1``
 
-``uint8(2 - 5) == -5 % 2**8 == 256 - 5 == 251``
+``uint8(2 - 5) == -3 mod 2**8 == 256 - 3 == 253``
 
 ``int8(-129) == -129 mod 256 == 127``
 
