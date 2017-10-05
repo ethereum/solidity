@@ -96,7 +96,9 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);
-	void createVariable(VariableDeclaration const& _varDecl);
+	/// Tries to create an uninitialized variable and returns true on success.
+	/// This fails if the type is not supported.
+	bool createVariable(VariableDeclaration const& _varDecl);
 
 	static std::string uniqueSymbol(Declaration const& _decl);
 	static std::string uniqueSymbol(Expression const& _expr);
