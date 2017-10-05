@@ -4,6 +4,9 @@ Features:
  * Parser: Better error message for unexpected trailing comma in parameter lists.
  * Syntax Checker: Unary ``+`` is now a syntax error as experimental 0.5.0 feature.
  * Type Checker: Disallow non-pure constant state variables as experimental 0.5.0 feature.
+ * Code Generator: Always use all available gas for calls as experimental 0.5.0 feature
+   (previously, some amount was retained in order to work in pre-tangerine whistle
+   EVM versions)
 
 Bugfixes:
  * Parser: Fix source location of VariableDeclarationStatement.
