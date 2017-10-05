@@ -87,7 +87,7 @@ string ABIFunctions::tupleEncoder(
 			);
 			elementTempl("values", valueNames);
 			elementTempl("pos", to_string(headPos));
-			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], _encodeAsLibraryTypes, false));
+			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], _encodeAsLibraryTypes, true));
 			encodeElements += elementTempl.render();
 			headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
 		}
@@ -371,7 +371,7 @@ string ABIFunctions::abiEncodingFunction(
 	Type const& _from,
 	Type const& _to,
 	bool _encodeAsLibraryTypes,
-	bool _compacted
+	bool _fromStack
 )
 {
 	solUnimplementedAssert(
@@ -415,7 +415,7 @@ string ABIFunctions::abiEncodingFunction(
 			dynamic_cast<FunctionType const&>(_from),
 			to,
 			_encodeAsLibraryTypes,
-			_compacted
+			_fromStack
 		);
 
 	solAssert(_from.sizeOnStack() == 1, "");
@@ -542,7 +542,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 						mstore(pos, sub(tail, headStart))
 						tail := <encodeToMemoryFun>(<arrayElementAccess>, tail)
 						srcPtr := <nextArrayElement>(srcPtr)
-						pos := add(pos, <elementEncodedSize>)
+						pos := add(pos, 0x20)
 					}
 					pos := tail
 					<assignEnd>
@@ -580,7 +580,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 			*_from.baseType(),
 			*_to.baseType(),
 			_encodeAsLibraryTypes,
-			true
+			false
 		));
 		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
 		templ("nextArrayElement", nextArrayElementFunction(_from));
@@ -729,7 +729,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 				*_from.baseType(),
 				*_to.baseType(),
 				_encodeAsLibraryTypes,
-				true
+				false
 			);
 			templ("encodeToMemoryFun", encodeToMemoryFun);
 			std::vector<std::map<std::string, std::string>> items(itemsPerSlot);
@@ -925,7 +925,7 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 	FunctionType const& _from,
 	Type const& _to,
 	bool _encodeAsLibraryTypes,
-	bool _compacted
+	bool _fromStack
 )
 {
 	solAssert(_from.kind() == FunctionType::Kind::External, "");
@@ -936,24 +936,10 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_compacted ? "_compacted" : "") +
+		(_fromStack ? "_fromStack" : "") +
 		(_encodeAsLibraryTypes ? "_library" : "");
 
-	if (_compacted)
-	{
-		return createFunction(functionName, [&]() {
-			return Whiskers(R"(
-				function <functionName>(addr_and_function_id, pos) {
-					mstore(pos, <cleanExtFun>(addr_and_function_id))
-				}
-			)")
-			("functionName", functionName)
-			("cleanExtFun", cleanupCombinedExternalFunctionIdFunction())
-			.render();
-		});
-	}
-	else
-	{
+	if (_fromStack)
 		return createFunction(functionName, [&]() {
 			return Whiskers(R"(
 				function <functionName>(addr, function_id, pos) {
@@ -964,7 +950,17 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 			("combineExtFun", combineExternalFunctionIdFunction())
 			.render();
 		});
-	}
+	else
+		return createFunction(functionName, [&]() {
+			return Whiskers(R"(
+				function <functionName>(addr_and_function_id, pos) {
+					mstore(pos, <cleanExtFun>(addr_and_function_id))
+				}
+			)")
+			("functionName", functionName)
+			("cleanExtFun", cleanupCombinedExternalFunctionIdFunction())
+			.render();
+		});
 }
 
 string ABIFunctions::copyToMemoryFunction(bool _fromCalldata)
@@ -1212,10 +1208,7 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 		if (t->isDynamicallyEncoded())
 			headSize += 0x20;
 		else
-		{
-			solAssert(t->calldataEncodedSize() > 0, "");
 			headSize += t->calldataEncodedSize();
-		}
 	}
 
 	return headSize;

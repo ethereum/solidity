@@ -462,6 +462,87 @@ BOOST_AUTO_TEST_CASE(structs)
 	)
 }
 
+BOOST_AUTO_TEST_CASE(empty_struct)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S { }
+			S s;
+			event e(uint16, S, uint16);
+			function f() returns (uint, S, uint) {
+				e(7, s, 8);
+				return (7, s, 8);
+			}
+		}
+	)";
+
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(7, 8);
+		BOOST_CHECK(callContractFunction("f()") == encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
+BOOST_AUTO_TEST_CASE(structs2)
+{
+	string sourceCode = R"(
+		contract C {
+			enum E {A, B, C}
+			struct T { uint x; E e; uint8 y; }
+			struct S { C c; T[] t;}
+			function f() public returns (uint a, S[2] s1, S[] s2, uint b) {
+				a = 7;
+				b = 8;
+				s1[0].c = this;
+				s1[0].t = new T[](1);
+				s1[0].t[0].x = 0x11;
+				s1[0].t[0].e = E.B;
+				s1[0].t[0].y = 0x12;
+				s2 = new S[](2);
+				s2[1].c = C(0x1234);
+				s2[1].t = new T[](3);
+				s2[1].t[1].x = 0x21;
+				s2[1].t[1].e = E.C;
+				s2[1].t[1].y = 0x22;
+			}
+		}
+	)";
+
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(
+			7, 0x80, 0x1e0, 8,
+			// S[2] s1
+			0x40,
+			0x100,
+			// S s1[0]
+			u256(u160(m_contractAddress)),
+			0x40,
+			// T s1[0].t
+			1, // length
+			// s1[0].t[0]
+			0x11, 1, 0x12,
+			// S s1[1]
+			0, 0x40,
+			// T s1[1].t
+			0,
+			// S[] s2 (0x1e0)
+			2, // length
+			0x40, 0xa0,
+			// S s2[0]
+			0, 0x40, 0,
+			// S s2[1]
+			0x1234, 0x40,
+			// s2[1].t
+			3, // length
+			0, 0, 0,
+			0x21, 2, 0x22,
+			0, 0, 0
+		));
+	)
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
