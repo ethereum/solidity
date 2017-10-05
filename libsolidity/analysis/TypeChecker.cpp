@@ -1122,7 +1122,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 						var.annotation().type->toString() +
 						". Try converting to type " +
 						valueComponentType->mobileType()->toString() +
-						" or use an explicit conversion." 
+						" or use an explicit conversion."
 					);
 				else
 					m_errorReporter.typeError(
@@ -1320,7 +1320,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
 		{
-			if (!inlineArrayType) 
+			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
 			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, inlineArrayType, types.size());
 		}
@@ -2000,7 +2000,9 @@ void TypeChecker::endVisit(Literal const& _literal)
 			m_errorReporter.warning(
 				_literal.location(),
 				"This looks like an address but has an invalid checksum. "
-				"If this is not used as an address, please prepend '00'."
+				"If this is not used as an address, please prepend '00'. "
+				"Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. "
+				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}
 	if (!_literal.annotation().type)

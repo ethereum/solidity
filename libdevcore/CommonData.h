@@ -209,4 +209,8 @@ bool contains(T const& _t, V const& _v)
 /// are considered valid.
 bool passesAddressChecksum(std::string const& _str, bool _strict);
 
+/// @returns the checksummed version of an address
+/// @param hex strings that look like an address
+std::string getChecksummedAddress(std::string const& _addr);
+
 }

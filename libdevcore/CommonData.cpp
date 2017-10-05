@@ -86,20 +86,23 @@ bool dev::passesAddressChecksum(string const& _str, bool _strict)
 	))
 		return true;
 
+	return _str == dev::getChecksummedAddress(_str);
+}
+
+string dev::getChecksummedAddress(string const& _addr)
+{
+	string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
 	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
-	for (size_t i = 0; i < 40; ++i)
+	string ret = "0x";
+
+	for (size_t i = 0; i < s.length(); ++i)
 	{
 		char addressCharacter = s[i];
-		bool lowerCase;
-		if ('a' <= addressCharacter && addressCharacter <= 'f')
-			lowerCase = true;
-		else if ('A' <= addressCharacter && addressCharacter <= 'F')
-			lowerCase = false;
-		else
-			continue;
 		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;
-		if ((nibble >= 8) == lowerCase)
-			return false;
+		if (nibble >= 8)
+			ret += toupper(addressCharacter);
+		else
+			ret += tolower(addressCharacter);
 	}
-	return true;
+	return ret;
 }
