@@ -306,10 +306,30 @@ The following is the order of precedence for operators, listed in order of evalu
 Overflow and underflow rules for operators
 ==========================================
 
-Unsigned Integers
------------------
+Integers in Solidity has a fixed range of possible values, and that range is defined by their bit-size. When an (arithmetic) operation attempts to create a number that is greater than the maximum value it results in an *overflow*. If it attempts to create a number that is less than the minimum value allowed then it is called an *underflow*.
 
 Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is the bitsize.
+
+Signed integers are represented in two's complement, and are restricted to the range ``[-2**(N - 1), 2**(N - 1) - 1]``, , where ``N`` is the bitsize.
+
+Overflow and underflow in signed and unsigned integers are generally handled by performing operations ``modulo N``, where ``N`` is the bitsize of the number in question, although there are exceptions. See tables I and II for details about each individual instruction.
+
+Additionally, the EVM has its own overflow semantics for results that exceed 256 bits. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, Appendix H, Section 2 (Instruction set).
+
+**Truncation**
+
+Some operations will simply discard certain bits of the result rather then doing a modulo computation. This is referred to as *truncation*. Examples of truncating operators is the left and right arithmetic shifts.
+
+**Examples**
+
+``uint8(257) == 257 % 2**8 == 1``
+
+``uint8(2 - 5) == -5 % 2**8 == 256 - 5 == 251``
+
+``int8(-129) == -129 mod 256 == 127``
+
+Table I: Rules for operators and unsigned Integers
+--------------------------------------------------
 
 +------------+----------+-----------+---------+
 |  Operator  | Overflow | Underflow | Notes   |
@@ -324,15 +344,15 @@ Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is 
 +------------+----------+-----------+---------+
 | \*, \*=    | x        |           |         |
 +------------+----------+-----------+---------+
-| \*\*       | x        |           |         |
+| \*\*       | x        |           | 3       |
 +------------+----------+-----------+---------+
 | /, /=      |          |           |         |
 +------------+----------+-----------+---------+
 | %, %=      |          |           |         |
 +------------+----------+-----------+---------+
-| <<, <<=    |          |           | 3       |
+| <<, <<=    |          |           | 4       |
 +------------+----------+-----------+---------+
-| >>, >>=    |          |           | 4       |
+| >>, >>=    |          |           | 5       |
 +------------+----------+-----------+---------+
 | &, &=      |          |           |         |
 +------------+----------+-----------+---------+
@@ -345,13 +365,12 @@ Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is 
 
 1) Unary ``+`` has been deprecated.
 2) Unary ``-`` works on ``uints``, e.g. ``-uint(1) == ~uint(0)``.
-3) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
-4) Arithmetic right shift, implemented as division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
+3) ``0**0 := 1``
+4) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
+5) Arithmetic right shift, implemented as division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
 
-Signed Integers
----------------
-
-Signed integers are represented in two's complement, and are restricted to the range ``[-2**(N - 1), 2**(N - 1) - 1]``, , where ``N`` is the bitsize.
+Table II: Rules for operators and signed integers
+-------------------------------------------------
 
 +------------+----------+-----------+---------+
 |  Operator  | Overflow | Underflow | Notes   |
@@ -387,7 +406,7 @@ Signed integers are represented in two's complement, and are restricted to the r
 
 1) Unary ``+`` has been deprecated.
 2) Due to the overflow protection for ``INT_MIN = -2**255``, which is built into the EVM, we have the following relation ``-INT_MIN == INT_MIN``. This affects a number of arithmetic operations. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, ``SDIV``, Appendix H, Section 2 (Instruction set).
-3) The exponent must be signed.
+3) The exponent must be signed, and ``0**0 := 1``.
 4) Implemented as ``a % b = sign(a)*(|a| mod |b|)``. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, ``SMOD``, Appendix H, Section 2 (Instruction set).
 5) Arithmetic left shift, implemented as truncated multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
 6) Arithmetic right shift, implemented as signed division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
