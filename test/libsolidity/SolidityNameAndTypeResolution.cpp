@@ -6371,6 +6371,17 @@ BOOST_AUTO_TEST_CASE(function_override_is_not_shadowing)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(event_parameter_cannot_shadow_state_variable)
+{
+	char const* text = R"(
+		contract C {
+			address a;
+			event E(address a);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(callable_crash)
 {
 	char const* text = R"(
