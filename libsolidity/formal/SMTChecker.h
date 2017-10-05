@@ -57,6 +57,7 @@ private:
 	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;
 	virtual void endVisit(TupleExpression const& _node) override;
+	virtual void endVisit(UnaryOperation const& _node) override;
 	virtual void endVisit(BinaryOperation const& _node) override;
 	virtual void endVisit(FunctionCall const& _node) override;
 	virtual void endVisit(Identifier const& _node) override;
@@ -66,7 +67,8 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
-	void assignment(Declaration const& _variable, Expression const& _value);
+	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
+	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
 	// Visits the branch given by the statement, pushes and pops the SMT checker.
 	// @param _condition if present, asserts that this condition is true within the branch.
@@ -88,6 +90,9 @@ private:
 		Expression const& _condition,
 		std::string const& _description
 	);
+	/// Checks that the value is in the range given by the type.
+	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, SourceLocation const& _location);
+
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
 	checkSatisifableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
@@ -126,9 +131,12 @@ private:
 
 	using VariableSequenceCounters = std::map<Declaration const*, int>;
 
-	/// Returns the expression corresponding to the AST node. Creates a new expression
-	/// if it does not exist yet.
+	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
+	/// Creates the expression (value can be arbitrary)
+	void createExpr(Expression const& _e);
+	/// Creates the expression and sets its value.
+	void defineExpr(Expression const& _e, smt::Expression _value);
 	/// Returns the function declaration corresponding to the given variable.
 	/// The function takes one argument which is the "sequence number".
 	smt::Expression var(Declaration const& _decl);

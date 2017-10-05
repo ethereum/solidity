@@ -55,7 +55,7 @@ void SMTChecker::analyze(SourceUnit const& _source)
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
-		assignment(_varDecl, *_varDecl.value());
+		assignment(_varDecl, *_varDecl.value(), _varDecl.location());
 }
 
 bool SMTChecker::visit(FunctionDefinition const& _function)
@@ -178,8 +178,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 	else if (knownVariable(*_varDecl.declarations()[0]))
 	{
 		if (_varDecl.initialValue())
-			// TODO more checks?
-			assignment(*_varDecl.declarations()[0], *_varDecl.initialValue());
+			assignment(*_varDecl.declarations()[0], *_varDecl.initialValue(), _varDecl.location());
 	}
 	else
 		m_errorReporter.warning(
@@ -208,7 +207,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 	{
 		Declaration const* decl = identifier->annotation().referencedDeclaration;
 		if (knownVariable(*decl))
-			assignment(*decl, _assignment.rightHandSide());
+			assignment(*decl, _assignment.rightHandSide(), _assignment.location());
 		else
 			m_errorReporter.warning(
 				_assignment.location(),
@@ -230,7 +229,81 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 			"Assertion checker does not yet implement tules and inline arrays."
 		);
 	else
-		m_interface->addAssertion(expr(_tuple) == expr(*_tuple.components()[0]));
+		defineExpr(_tuple, expr(*_tuple.components()[0]));
+}
+
+void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _type, SourceLocation const& _location)
+{
+	checkCondition(
+		_value < minValue(_type),
+		_location,
+		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
+		"value",
+		&_value
+	);
+	checkCondition(
+		_value > maxValue(_type),
+		_location,
+		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
+		"value",
+		&_value
+	);
+}
+
+void SMTChecker::endVisit(UnaryOperation const& _op)
+{
+	switch (_op.getOperator())
+	{
+	case Token::Not: // !
+	{
+		solAssert(_op.annotation().type->category() == Type::Category::Bool, "");
+		defineExpr(_op, !expr(_op.subExpression()));
+		break;
+	}
+	case Token::Inc: // ++ (pre- or postfix)
+	case Token::Dec: // -- (pre- or postfix)
+	{
+		solAssert(_op.annotation().type->category() == Type::Category::Integer, "");
+		solAssert(_op.subExpression().annotation().lValueRequested, "");
+		if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
+		{
+			Declaration const* decl = identifier->annotation().referencedDeclaration;
+			if (knownVariable(*decl))
+			{
+				auto innerValue = currentValue(*decl);
+				auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
+				assignment(*decl, newValue, _op.location());
+				defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+			}
+			else
+				m_errorReporter.warning(
+					_op.location(),
+					"Assertion checker does not yet implement such assignments."
+				);
+		}
+		else
+			m_errorReporter.warning(
+				_op.location(),
+				"Assertion checker does not yet implement such increments / decrements."
+			);
+		break;
+	}
+	case Token::Add: // +
+		defineExpr(_op, expr(_op.subExpression()));
+		break;
+	case Token::Sub: // -
+	{
+		defineExpr(_op, 0 - expr(_op.subExpression()));
+		if (auto intType = dynamic_cast<IntegerType const*>(_op.annotation().type.get()))
+			checkUnderOverflow(expr(_op), *intType, _op.location());
+		break;
+	}
+	default:
+		m_errorReporter.warning(
+			_op.location(),
+			"Assertion checker does not yet implement this operator."
+		);
+	}
 }
 
 void SMTChecker::endVisit(BinaryOperation const& _op)
@@ -274,10 +347,8 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	{
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
+		checkBooleanNotConstant(*args[0], "Condition is always $VALUE.");
 		m_interface->addAssertion(expr(*args[0]));
-		checkCondition(!(expr(*args[0])), _funCall.location(), "Unreachable code");
-		// TODO is there something meaningful we can check here?
-		// We can check whether the condition is always fulfilled or never fulfilled.
 	}
 }
 
@@ -290,7 +361,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 		// Will be translated as part of the node that requested the lvalue.
 	}
 	else if (dynamic_cast<IntegerType const*>(_identifier.annotation().type.get()))
-		m_interface->addAssertion(expr(_identifier) == currentValue(*decl));
+		defineExpr(_identifier, currentValue(*decl));
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
 		if (fun->kind() == FunctionType::Kind::Assert || fun->kind() == FunctionType::Kind::Require)
@@ -306,10 +377,10 @@ void SMTChecker::endVisit(Literal const& _literal)
 		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&type))
 			solAssert(!rational->isFractional(), "");
 
-		m_interface->addAssertion(expr(_literal) == smt::Expression(type.literalValue(&_literal)));
+		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
 	}
 	else if (type.category() == Type::Category::Bool)
-		m_interface->addAssertion(expr(_literal) == smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
+		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
 		m_errorReporter.warning(
 			_literal.location(),
@@ -326,6 +397,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	case Token::Add:
 	case Token::Sub:
 	case Token::Mul:
+	case Token::Div:
 	{
 		solAssert(_op.annotation().commonType, "");
 		solAssert(_op.annotation().commonType->category() == Type::Category::Integer, "");
@@ -335,27 +407,19 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 		smt::Expression value(
 			op == Token::Add ? left + right :
 			op == Token::Sub ? left - right :
+			op == Token::Div ? left / right :
 			/*op == Token::Mul*/ left * right
 		);
 
-		// Overflow check
-		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
-		checkCondition(
-			value < minValue(intType),
-			_op.location(),
-			"Underflow (resulting value less than " + formatNumber(intType.minValue()) + ")",
-			"value",
-			&value
-		);
-		checkCondition(
-			value > maxValue(intType),
-			_op.location(),
-			"Overflow (resulting value larger than " + formatNumber(intType.maxValue()) + ")",
-			"value",
-			&value
-		);
+		if (_op.getOperator() == Token::Div)
+		{
+			checkCondition(right == 0, _op.location(), "Division by zero", "value", &right);
+			m_interface->addAssertion(right != 0);
+		}
 
-		m_interface->addAssertion(expr(_op) == value);
+		checkUnderOverflow(value, dynamic_cast<IntegerType const&>(*_op.annotation().commonType), _op.location());
+
+		defineExpr(_op, value);
 		break;
 	}
 	default:
@@ -383,7 +447,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 			/*op == Token::GreaterThanOrEqual*/ (left >= right)
 		);
 		// TODO: check that other values for op are not possible.
-		m_interface->addAssertion(expr(_op) == value);
+		defineExpr(_op, value);
 	}
 	else
 		m_errorReporter.warning(
@@ -400,9 +464,9 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 	{
 		// @TODO check that both of them are not constant
 		if (_op.getOperator() == Token::And)
-			m_interface->addAssertion(expr(_op) == expr(_op.leftExpression()) && expr(_op.rightExpression()));
+			defineExpr(_op, expr(_op.leftExpression()) && expr(_op.rightExpression()));
 		else
-			m_interface->addAssertion(expr(_op) == expr(_op.leftExpression()) || expr(_op.rightExpression()));
+			defineExpr(_op, expr(_op.leftExpression()) || expr(_op.rightExpression()));
 	}
 	else
 		m_errorReporter.warning(
@@ -411,11 +475,17 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 					);
 }
 
-void SMTChecker::assignment(Declaration const& _variable, Expression const& _value)
+void SMTChecker::assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location)
 {
-	// TODO more checks?
-	// TODO add restrictions about type (might be assignment from smaller type)
-	m_interface->addAssertion(newValue(_variable) == expr(_value));
+	assignment(_variable, expr(_value), _location);
+}
+
+void SMTChecker::assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location)
+{
+	TypePointer type = _variable.type();
+	if (auto const* intType = dynamic_cast<IntegerType const*>(type.get()))
+		checkUnderOverflow(_value, *intType, _location);
+	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
 void SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
@@ -694,29 +764,38 @@ smt::Expression SMTChecker::maxValue(IntegerType const& _t)
 
 smt::Expression SMTChecker::expr(Expression const& _e)
 {
-	if (!m_expressions.count(&_e))
-	{
-		solAssert(_e.annotation().type, "");
-		switch (_e.annotation().type->category())
-		{
-		case Type::Category::RationalNumber:
-		{
-			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
-				solAssert(!rational->isFractional(), "");
-			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
-			break;
-		}
-		case Type::Category::Integer:
-			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
-			break;
-		case Type::Category::Bool:
-			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
-			break;
-		default:
-			solAssert(false, "Type not implemented.");
-		}
-	}
+	solAssert(m_expressions.count(&_e), "");
 	return m_expressions.at(&_e);
+}
+
+void SMTChecker::createExpr(Expression const& _e)
+{
+	solAssert(!m_expressions.count(&_e), "");
+	solAssert(_e.annotation().type, "");
+	switch (_e.annotation().type->category())
+	{
+	case Type::Category::RationalNumber:
+	{
+		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
+			solAssert(!rational->isFractional(), "");
+		m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+		break;
+	}
+	case Type::Category::Integer:
+		m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+		break;
+	case Type::Category::Bool:
+		m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
+		break;
+	default:
+		solAssert(false, "Type not implemented.");
+	}
+}
+
+void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
+{
+	createExpr(_e);
+	m_interface->addAssertion(expr(_e) == _value);
 }
 
 smt::Expression SMTChecker::var(Declaration const& _decl)
