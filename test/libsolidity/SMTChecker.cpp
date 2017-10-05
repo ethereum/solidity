@@ -533,6 +533,16 @@ BOOST_AUTO_TEST_CASE(division_truncates_correctly)
 	text = R"(
 		contract C {
 			function f(int x, int y) public pure {
+				x = 7;
+				y = -2;
+				assert(x / y == -3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure {
 				x = -7;
 				y = -2;
 				int r = x / y;
