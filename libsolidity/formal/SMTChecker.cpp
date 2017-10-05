@@ -592,21 +592,17 @@ smt::CheckResult SMTChecker::checkSatisifable()
 void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
 {
 	for (auto const& variable: _function.localVariables())
-	{
-		createVariable(*variable);
-		setZeroValue(*variable);
-	}
+		if (createVariable(*variable))
+			setZeroValue(*variable);
+
 	for (auto const& param: _function.parameters())
-	{
-		createVariable(*param);
-		setUnknownValue(*param);
-	}
+		if (createVariable(*param))
+			setUnknownValue(*param);
+
 	if (_function.returnParameterList())
 		for (auto const& retParam: _function.returnParameters())
-		{
-			createVariable(*retParam);
-			setZeroValue(*retParam);
-		}
+			if (createVariable(*retParam))
+				setZeroValue(*retParam);
 }
 
 void SMTChecker::resetVariables(vector<Declaration const*> _variables)
@@ -618,7 +614,7 @@ void SMTChecker::resetVariables(vector<Declaration const*> _variables)
 	}
 }
 
-void SMTChecker::createVariable(VariableDeclaration const& _varDecl)
+bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
 	if (dynamic_cast<IntegerType const*>(_varDecl.type().get()))
 	{
@@ -628,12 +624,16 @@ void SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 		m_currentSequenceCounter[&_varDecl] = 0;
 		m_nextFreeSequenceCounter[&_varDecl] = 1;
 		m_variables.emplace(&_varDecl, m_interface->newFunction(uniqueSymbol(_varDecl), smt::Sort::Int, smt::Sort::Int));
+		return true;
 	}
 	else
+	{
 		m_errorReporter.warning(
 			_varDecl.location(),
 			"Assertion checker does not yet support the type of this variable."
 		);
+		return false;
+	}
 }
 
 string SMTChecker::uniqueSymbol(Declaration const& _decl)
