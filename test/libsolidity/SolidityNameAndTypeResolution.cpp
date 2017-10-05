@@ -6210,6 +6210,26 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(no_unused_warning_interface_arguments)
+{
+	char const* text = R"(
+		interface I {
+			function f(uint a) pure public returns (uint b);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(no_unused_warning_abstract_arguments)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint a) pure public returns (uint b);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(no_unused_warnings)
 {
 	char const* text = R"(
