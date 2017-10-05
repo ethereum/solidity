@@ -147,7 +147,7 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 	if (Expression const* length = _typeName.length())
 	{
 		if (!length->annotation().type)
-			ConstantEvaluator e(*length);
+			ConstantEvaluator e(*length, m_errorReporter);
 		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
 		if (!lengthType || !lengthType->mobileType())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
