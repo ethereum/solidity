@@ -351,9 +351,9 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 	// Check that side-effects of condition are taken into account
 	text = R"(
 		contract C {
-			function f(uint x) public pure {
+			function f(uint x, uint y) public pure {
 				x = 7;
-				while ((x = 5) > 0) {
+				while ((x = y) > 0) {
 				}
 				assert(x == 7);
 			}
@@ -545,8 +545,7 @@ BOOST_AUTO_TEST_CASE(division_truncates_correctly)
 			function f(int x, int y) public pure {
 				x = -7;
 				y = -2;
-				int r = x / y;
-				assert(r == 3);
+				assert(x / y == 3);
 			}
 		}
 	)";
