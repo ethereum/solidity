@@ -67,6 +67,10 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	/// Division expression in the given type. Requires special treatment because
+	/// of rounding for signed division.
+	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
+
 	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
 	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 

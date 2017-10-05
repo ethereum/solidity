@@ -401,13 +401,14 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	{
 		solAssert(_op.annotation().commonType, "");
 		solAssert(_op.annotation().commonType->category() == Type::Category::Integer, "");
+		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
 		Token::Value op = _op.getOperator();
 		smt::Expression value(
 			op == Token::Add ? left + right :
 			op == Token::Sub ? left - right :
-			op == Token::Div ? left / right :
+			op == Token::Div ? division(left, right, intType) :
 			/*op == Token::Mul*/ left * right
 		);
 
@@ -417,7 +418,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 			m_interface->addAssertion(right != 0);
 		}
 
-		checkUnderOverflow(value, dynamic_cast<IntegerType const&>(*_op.annotation().commonType), _op.location());
+		checkUnderOverflow(value, intType, _op.location());
 
 		defineExpr(_op, value);
 		break;
@@ -473,6 +474,19 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
 					);
+}
+
+smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
+{
+	// Signed division in SMTLIB2 rounds differently for negative division.
+	if (_type.isSigned())
+		return (smt::Expression::ite(
+			_left >= 0,
+			smt::Expression::ite(_right >= 0, _left / _right, 0 - (_left / (0 - _right))),
+			smt::Expression::ite(_right >= 0, 0 - ((0 - _left) / _right), (0 - _left) / (0 - _right))
+		));
+	else
+		return _left / _right;
 }
 
 void SMTChecker::assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location)
