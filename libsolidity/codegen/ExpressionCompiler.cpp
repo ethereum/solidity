@@ -1714,6 +1714,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
+	else if (m_context.experimentalFeatureActive(ExperimentalFeature::V050))
+		// Send all gas (requires tangerine whistle EVM)
+		m_context << Instruction::GAS;
 	else
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
