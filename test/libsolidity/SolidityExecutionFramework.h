@@ -76,10 +76,8 @@ public:
 			SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
 
 			for (auto const& error: m_compiler.errors())
-				formatter.printExceptionInformation(
-					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-				);
+				formatter.printExceptionInformation(*error, error->severity());
+
 			BOOST_ERROR("Compiling contract failed");
 		}
 		eth::LinkerObject obj = m_compiler.object(_contractName.empty() ? m_compiler.lastContractName() : _contractName);

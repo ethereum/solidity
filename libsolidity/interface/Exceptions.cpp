@@ -67,3 +67,18 @@ Error::Error(Error::Type _type, const std::string& _description, const SourceLoc
 		*this << errinfo_sourceLocation(_location);
 	*this << errinfo_comment(_description);
 }
+
+string dev::solidity::severityToString(Error::Severity const& _severity)
+{
+	switch (_severity)
+	{
+	case Error::Severity::Fatal:
+		return "Fatal";
+	case Error::Severity::Error:
+		return "Error";
+	case Error::Severity::Warning:
+		return "Warning";
+	default:
+		solAssert(false, "Unknown severity.");
+	}
+}

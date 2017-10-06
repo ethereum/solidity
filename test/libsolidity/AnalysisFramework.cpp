@@ -126,7 +126,7 @@ string AnalysisFramework::formatError(Error const& _error) const
 {
 	return SourceReferenceFormatter::formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
+			_error.severity(),
 			[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
 		);
 }

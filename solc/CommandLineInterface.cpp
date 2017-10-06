@@ -837,17 +837,14 @@ bool CommandLineInterface::processInput()
 		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
-			formatter.printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter.printExceptionInformation(*error, error->severity());
 
 		if (!successful)
 			return false;
 	}
 	catch (CompilerError const& _exception)
 	{
-		formatter.printExceptionInformation(_exception, "Compiler error");
+		formatter.printExceptionInformation(_exception, Error::Severity::Fatal);
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -867,7 +864,7 @@ bool CommandLineInterface::processInput()
 		if (_error.type() == Error::Type::DocstringParsingError)
 			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
-			formatter.printExceptionInformation(_error, _error.typeName());
+			formatter.printExceptionInformation(_error, _error.severity());
 
 		return false;
 	}
@@ -1133,10 +1130,8 @@ bool CommandLineInterface::assemble(
 		SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
 
 		for (auto const& error: stack.errors())
-			formatter.printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter.printExceptionInformation(*error, error->severity());
+
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;
 	}

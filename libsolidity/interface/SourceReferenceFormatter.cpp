@@ -96,7 +96,7 @@ void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
 
 void SourceReferenceFormatter::printExceptionInformation(
 	Exception const& _exception,
-	string const& _name
+	Error::Severity const& _severity
 )
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -104,7 +104,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 
 	printSourceName(location);
 
-	m_stream << _name;
+	m_stream << severityToString(_severity);
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		m_stream << ": " << *description << endl;
 	else

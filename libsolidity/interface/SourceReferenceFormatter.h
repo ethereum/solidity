@@ -26,6 +26,7 @@
 #include <sstream>
 #include <functional>
 #include <libevmasm/SourceLocation.h>
+#include <libsolidity/interface/Exceptions.h>
 
 namespace dev
 {
@@ -53,18 +54,22 @@ public:
 
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceLocation const* _location);
-	void printExceptionInformation(Exception const& _exception, std::string const& _name);
+	void printExceptionInformation(
+		Exception const& _exception,
+		Error::Severity const& _severity
+	);
 
 	static std::string formatExceptionInformation(
 		Exception const& _exception,
-		std::string const& _name,
+		Error::Severity const& _severity,
 		ScannerFromSourceNameFun const& _scannerFromSourceName
 	)
 	{
 		std::ostringstream errorOutput;
 
 		SourceReferenceFormatter formatter(errorOutput, _scannerFromSourceName);
-		formatter.printExceptionInformation(_exception, _name);
+		formatter.printExceptionInformation(_exception, _severity);
+
 		return errorOutput.str();
 	}
 private:

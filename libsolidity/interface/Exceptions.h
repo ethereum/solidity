@@ -63,6 +63,13 @@ public:
 		Warning
 	};
 
+	enum class Severity
+	{
+		Fatal,
+		Error,
+		Warning
+	};
+
 	explicit Error(
 		Type _type,
 		SourceLocation const& _location = SourceLocation(),
@@ -72,6 +79,11 @@ public:
 	Error(Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation());
 
 	Type type() const { return m_type; }
+
+	Severity severity() const {
+		return (m_type == Type::Warning) ? Severity::Warning : Severity::Error;
+	}
+
 	std::string const& typeName() const { return m_typeName; }
 
 	/// helper functions
@@ -127,6 +139,8 @@ public:
 
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
 using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
+
+std::string severityToString(Error::Severity const& _severity);
 
 }
 }

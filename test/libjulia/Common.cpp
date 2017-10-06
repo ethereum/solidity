@@ -45,10 +45,7 @@ void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _sca
 	SourceReferenceFormatter formatter(cout, [&](std::string const&) -> Scanner const& { return _scanner; });
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printExceptionInformation(*error, error->severity());
 }
 
 

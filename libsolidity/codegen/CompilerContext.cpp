@@ -360,7 +360,7 @@ void CompilerContext::appendInlineAssembly(
 		for (auto const& error: errorReporter.errors())
 			message += SourceReferenceFormatter::formatExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				error->severity(),
 				[&](string const&) -> Scanner const& { return *scanner; }
 			);
 		message += "-------------------------------------------\n";

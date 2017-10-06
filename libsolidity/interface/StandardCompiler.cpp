@@ -20,6 +20,7 @@
  * Standard JSON compiler interface.
  */
 
+#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
@@ -65,15 +66,14 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 
 Json::Value formatErrorWithException(
 	Exception const& _exception,
-	bool const& _warning,
-	string const& _type,
+	Error::Severity const& _severity,
 	string const& _component,
 	string const& _message,
 	function<Scanner const&(string const&)> const& _scannerFromSourceName
 )
 {
 	string message;
-	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type, _scannerFromSourceName);
+	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _severity, _scannerFromSourceName);
 
 	// NOTE: the below is partially a copy from SourceReferenceFormatter
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -91,7 +91,7 @@ Json::Value formatErrorWithException(
 		sourceLocation["end"] = location->end;
 	}
 
-	return formatError(_warning, _type, _component, message, formattedMessage, sourceLocation);
+	return formatError(_severity == Error::Severity::Warning, severityToString(_severity), _component, message, formattedMessage, location);
 }
 
 set<string> requestedContractNames(Json::Value const& _outputSelection)
@@ -395,8 +395,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 			errors.append(formatErrorWithException(
 				*error,
-				err.type() == Error::Type::Warning,
-				err.typeName(),
+				err.severity(),
 				"general",
 				"",
 				scannerFromSourceName
@@ -408,8 +407,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		errors.append(formatErrorWithException(
 			_error,
-			false,
-			_error.typeName(),
+			_error.severity(),
 			"general",
 			"Uncaught error: ",
 			scannerFromSourceName
@@ -429,8 +427,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		errors.append(formatErrorWithException(
 			_exception,
-			false,
-			"CompilerError",
+			Error::Severity::Fatal,
 			"general",
 			"Compiler error (" + _exception.lineInfo() + ")",
 			scannerFromSourceName
@@ -440,8 +437,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		errors.append(formatErrorWithException(
 			_exception,
-			false,
-			"InternalCompilerError",
+			Error::Severity::Fatal,
 			"general",
 			"Internal compiler error (" + _exception.lineInfo() + ")",
 			scannerFromSourceName
@@ -451,8 +447,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		errors.append(formatErrorWithException(
 			_exception,
-			false,
-			"UnimplementedFeatureError",
+			Error::Severity::Fatal,
 			"general",
 			"Unimplemented feature (" + _exception.lineInfo() + ")",
 			scannerFromSourceName
