@@ -23,6 +23,7 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <termcolor.h>
 
 using namespace std;
 
@@ -31,7 +32,10 @@ namespace dev
 namespace solidity
 {
 
-void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _location)
+void SourceReferenceFormatter::printSourceLocation(
+	SourceLocation const* _location,
+	Error::Severity const& _severity
+)
 {
 	if (!_location || !_location->sourceName)
 		return; // Nothing we can print here
@@ -42,45 +46,31 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 	int endLine;
 	int endColumn;
 	tie(endLine, endColumn) = scanner.translatePositionToLineColumn(_location->end);
-	if (startLine == endLine)
-	{
-		string line = scanner.lineAtPosition(_location->start);
 
-		int locationLength = endColumn - startColumn;
-		if (locationLength > 150)
-		{
-			line = line.substr(0, startColumn + 35) + " ... " + line.substr(endColumn - 35);
-			endColumn = startColumn + 75;
-			locationLength = 75;
-		}
-		if (line.length() > 150)
-		{
-			line = " ... " + line.substr(startColumn, locationLength) + " ... ";
-			startColumn = 5;
-			endColumn = startColumn + locationLength;
-		}
+	if (startLine < endLine)
+		endColumn = startColumn;
 
-		m_stream << line << endl;
+	int width = std::to_string(startLine).size();
+	string line = scanner.lineAtPosition(_location->start);
 
-		for_each(
-			line.cbegin(),
-			line.cbegin() + startColumn,
-			[this](char const& ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
-		);
-		m_stream << "^";
-		if (endColumn > startColumn + 2)
-			m_stream << string(endColumn - startColumn - 2, '-');
-		if (endColumn > startColumn + 1)
-			m_stream << "^";
-		m_stream << endl;
-	}
-	else
-		m_stream <<
-			scanner.lineAtPosition(_location->start) <<
-			endl <<
-			string(startColumn, ' ') <<
-			"^ (Relevant source part starts here and spans across multiple lines)." <<
-			endl;
+	auto color = termcolor::red;
+	if (_severity == Error::Severity::Warning)
+		color = termcolor::yellow;
+
+	m_stream << termcolor::bold << termcolor::cyan << " " << (startLine + 1) << " | " << termcolor::reset;
+	m_stream << line.substr(0, startColumn) << color << line.substr(startColumn, endColumn - startColumn) << termcolor::reset << line.substr(endColumn) << endl;
+	m_stream << string(width + 1, ' ') << termcolor::bold << termcolor::cyan << " | " << termcolor::reset;
+	for_each(
+		line.cbegin(),
+		line.cbegin() + startColumn,
+		[this](char const& ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
+	);
+	m_stream << color << string(max(endColumn - startColumn, 1), '^');
+
+	if (startLine < endLine)
+		m_stream << " (Relevant source part starts here and spans across multiple lines).";
+
+	m_stream << termcolor::reset << endl;
 }
 
 void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
@@ -91,7 +81,11 @@ void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
 	int startLine;
 	int startColumn;
 	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
-	m_stream << *_location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+
+	int width = std::to_string(startLine).size();
+
+	m_stream << termcolor::bold << termcolor::cyan << string(width, ' ') << " --> " << termcolor::reset;
+	m_stream << *_location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << endl;
 }
 
 void SourceReferenceFormatter::printExceptionInformation(
@@ -102,26 +96,32 @@ void SourceReferenceFormatter::printExceptionInformation(
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
 
-	printSourceName(location);
+	auto color = termcolor::red;
+	if (_severity == Error::Severity::Warning)
+		color = termcolor::yellow;
 
-	m_stream << severityToString(_severity);
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
-		m_stream << ": " << *description << endl;
+	{
+		m_stream << termcolor::bold << color << severityToString(_severity) << ": " << termcolor::reset;
+		m_stream << termcolor::bold << *description << termcolor::reset << endl;
+	}
 	else
 		m_stream << endl;
 
-	printSourceLocation(location);
+	printSourceName(location);
+	printSourceLocation(location, _severity);
 
 	if (secondarylocation && !secondarylocation->infos.empty())
 	{
 		for (auto info: secondarylocation->infos)
 		{
+			m_stream << termcolor::bold << "Note: " << termcolor::reset << info.first << endl;
 			printSourceName(&info.second);
-			m_stream << info.first << endl;
-			printSourceLocation(&info.second);
+			printSourceLocation(&info.second, _severity);
 		}
-		m_stream << endl;
 	}
+
+	m_stream << endl;
 }
 
 }

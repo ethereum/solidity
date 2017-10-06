@@ -53,7 +53,10 @@ public:
 	{}
 
 	/// Prints source location if it is given.
-	void printSourceLocation(SourceLocation const* _location);
+	void printSourceLocation(
+		SourceLocation const* _location,
+		Error::Severity const& _severity
+	);
 	void printExceptionInformation(
 		Exception const& _exception,
 		Error::Severity const& _severity
