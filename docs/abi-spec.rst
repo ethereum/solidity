@@ -445,6 +445,13 @@ would result in the JSON:
 
 .. _abi_packed_mode:
 
+Strict Encoding Mode
+====================
+
+In strict encoding mode all dynamic types must be encoded at offsets taking the shortests possible paths and no gaps are allowed.
+
+TBD examples
+
 Non-standard Packed Mode
 ========================
 
