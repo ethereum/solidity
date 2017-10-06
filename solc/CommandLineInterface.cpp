@@ -716,8 +716,17 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argAllowPaths))
 	{
 		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
-			m_allowedDirectories.push_back(boost::filesystem::path(path));
+		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(","))) {
+			auto filesystem_path = boost::filesystem::path(path);
+			// If the given path had a trailing slash, the Boost filesystem
+			// path will have it's last component set to '.'. This breaks
+			// path comparison in later parts of the code, so we need to strip
+			// it.
+			if (filesystem_path.filename() == ".") {
+				filesystem_path.remove_filename();
+			}
+			m_allowedDirectories.push_back(filesystem_path);
+		}
 	}
 
 	if (m_args.count(g_argStandardJSON))
