@@ -2025,7 +2025,7 @@ unsigned EnumType::memberValue(ASTString const& _member) const
 			return index;
 		++index;
 	}
-	BOOST_THROW_EXCEPTION(m_enum.createTypeError("Requested unknown enum value ." + _member));
+	solAssert(false, "Requested unknown enum value " + _member);
 }
 
 bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const

@@ -22,7 +22,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>
@@ -71,11 +70,6 @@ ASTAnnotation& ASTNode::annotation() const
 	if (!m_annotation)
 		m_annotation = new ASTAnnotation();
 	return *m_annotation;
-}
-
-Error ASTNode::createTypeError(string const& _description) const
-{
-	return Error(Error::Type::TypeError) << errinfo_sourceLocation(location()) << errinfo_comment(_description);
 }
 
 SourceUnitAnnotation& SourceUnit::annotation() const

@@ -26,7 +26,6 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
 #include <libsolidity/ast/Types.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTEnums.h>
 
@@ -88,10 +87,6 @@ public:
 
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }
-
-	/// Creates a @ref TypeError exception and decorates it with the location of the node and
-	/// the given description
-	Error createTypeError(std::string const& _description) const;
 
 	///@todo make this const-safe by providing a different way to access the annotation
 	virtual ASTAnnotation& annotation() const;

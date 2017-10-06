@@ -7122,7 +7122,7 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(array_length_validation)
+BOOST_AUTO_TEST_CASE(array_length_too_large)
 {
 	char const* text = R"(
 		contract C {
@@ -7130,6 +7130,44 @@ BOOST_AUTO_TEST_CASE(array_length_validation)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
+{
+	char const* text = R"(
+		contract C {
+			uint[true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
+{
+	char const* text = R"(
+		contract C {
+			uint[-true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[true/1] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[1/true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[1.111111E1111111111111] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid literal value.");
 }
 
 BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
