@@ -222,7 +222,6 @@ activate themselves.
         // or time periods in seconds.
         address public beneficiary;
         uint public auctionEnd;
-        uint public biddingTime;
 
         // Current state of the auction.
         address public highestBidder;
@@ -251,8 +250,7 @@ activate themselves.
             address _beneficiary
         ) {
             beneficiary = _beneficiary;
-            auctionEnd = now + biddingTime;
-            biddingTime = _biddingTime;
+            auctionEnd = now + _biddingTime;
         }
 
         /// Bid on the auction with the value sent
