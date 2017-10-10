@@ -315,7 +315,7 @@ Signed integers are represented in two's complement, and are restricted to the r
 Overflow and underflow in signed and unsigned integers are generally handled by reducing the value ``modulo N``, where ``N`` is the bitsize of the integer in question, although there are some important exceptions (see the **special cases** section below).
 
 .. warning::
-Solidity does not automatically detect over/underflow.
+    Solidity does not automatically detect over/underflow.
 
 Additionally, the EVM has its own overflow semantics for results that exceed 256 bits. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, Appendix H, Section 2 (Instruction set).
 
