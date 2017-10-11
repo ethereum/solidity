@@ -4,6 +4,8 @@ Features:
  * Code Generator: Always use all available gas for calls as experimental 0.5.0 feature
    (previously, some amount was retained in order to work in pre-tangerine whistle
    EVM versions)
+ * Code Generator: Do not accept data with less than four bytes (truncated function
+   signature) for regular function calls - fallback function is invoked instead.
  * Parser: Better error message for unexpected trailing comma in parameter lists.
  * Standard JSON: Support the ``outputSelection`` field for selective compilation of supplied sources.
  * Syntax Checker: Unary ``+`` is now a syntax error as experimental 0.5.0 feature.
