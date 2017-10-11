@@ -675,7 +675,7 @@ Micropayment Channel
     }
 
     function ChannelTimeout(){
-        if (startDate + channelTimeout > now)
+        if (startDate + channelTimeout > now) selfdestruct(channelSender);
             throw;
 
         selfdestruct(channelSender);
