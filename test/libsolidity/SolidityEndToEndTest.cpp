@@ -7309,6 +7309,30 @@ BOOST_AUTO_TEST_CASE(create_memory_array)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(string("A"), u256(8), u256(4), string("B")));
 }
 
+BOOST_AUTO_TEST_CASE(create_memory_array_allocation_size)
+{
+	// Check allocation size of byte array. Should be 32 plus length rounded up to next
+	// multiple of 32
+	char const* sourceCode = R"(
+		contract C {
+			function f() pure returns (uint d1, uint d2, uint d3) {
+				bytes memory b1 = new bytes(31);
+				bytes memory b2 = new bytes(32);
+				bytes memory b3 = new bytes(256);
+				bytes memory b4 = new bytes(31);
+				assembly {
+					d1 := sub(b2, b1)
+					d2 := sub(b3, b2)
+					d3 := sub(b4, b3)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x40, 0x40, 0x20 + 256));
+}
+
+
 BOOST_AUTO_TEST_CASE(memory_arrays_of_various_sizes)
 {
 	// Computes binomial coefficients the chinese way

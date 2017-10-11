@@ -858,8 +858,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::DUP1 << Instruction::DUP3 << Instruction::MSTORE;
 			// Stack: memptr requested_length
 			// update free memory pointer
-			m_context << Instruction::DUP1 << arrayType.baseType()->memoryHeadSize();
-			m_context << Instruction::MUL << u256(32) << Instruction::ADD;
+			m_context << Instruction::DUP1;
+			// Stack: memptr requested_length requested_length
+			if (arrayType.isByteArray())
+				// Round up to multiple of 32
+				m_context << u256(31) << Instruction::ADD << u256(31) << Instruction::NOT << Instruction::AND;
+			else
+				m_context << arrayType.baseType()->memoryHeadSize() << Instruction::MUL;
+			// stacK: memptr requested_length data_size
+			m_context << u256(32) << Instruction::ADD;
 			m_context << Instruction::DUP3 << Instruction::ADD;
 			utils().storeFreeMemoryPointer();
 			// Stack: memptr requested_length

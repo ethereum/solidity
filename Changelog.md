@@ -13,6 +13,7 @@ Features:
  * Type Checker: Require ``storage`` or ``memory`` keyword for local variables as experimental 0.5.0 feature.
 
 Bugfixes:
+ * Code Generator: Allocate one byte per memory byte array element instead of 32.
  * Optimizer: Remove unused stack computation results.
  * Parser: Fix source location of VariableDeclarationStatement.
  * Type Checker: Properly check array length and don't rely on an assertion in code generation.
