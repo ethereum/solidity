@@ -20,6 +20,8 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
+#include <libdevcore/Keccak256.h>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -37,8 +39,8 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTLib2Interface::SMTLib2Interface(ReadCallback::Callback const& _queryCallback):
-	m_queryCallback(_queryCallback)
+SMTLib2Interface::SMTLib2Interface(map<h256, string> const& _smtlib2Responses):
+	m_smtlib2Responses(_smtlib2Responses)
 {
 	reset();
 }
@@ -212,11 +214,12 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 
 string SMTLib2Interface::querySolver(string const& _input)
 {
-	if (!m_queryCallback)
-		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment("No SMT solver available."));
-
-	ReadCallback::Result queryResult = m_queryCallback(_input);
-	if (!queryResult.success)
-		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment(queryResult.responseOrErrorMessage));
-	return queryResult.responseOrErrorMessage;
+	h256 inputHash = dev::keccak256(_input);
+	if (m_smtlib2Responses.count(inputHash))
+		return m_smtlib2Responses.at(inputHash);
+	else
+	{
+		m_unhandledQueries.push_back(_input);
+		return "unknown\n";
+	}
 }
