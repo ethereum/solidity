@@ -40,7 +40,7 @@ namespace test
 
 BOOST_FIXTURE_TEST_SUITE(ABIDecoderTest, SolidityExecutionFramework)
 
-BOOST_AUTO_TEST_CASE(BOTH_ENCODERS_macro)
+BOOST_AUTO_TEST_CASE(both_encoders_macro)
 {
 	// This tests that the "both decoders macro" at least runs twice and
 	// modifies the source.

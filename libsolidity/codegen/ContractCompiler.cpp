@@ -901,7 +901,6 @@ void ContractCompiler::appendMissingFunctions()
 	}
 	m_context.appendMissingLowLevelFunctions();
 	string abiFunctions = m_context.abiFunctions().requestedFunctions();
-//	cout << abiFunctions << endl;
 	if (!abiFunctions.empty())
 		m_context.appendInlineAssembly("{" + move(abiFunctions) + "}", {}, true);
 }

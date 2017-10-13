@@ -160,7 +160,7 @@ private:
 		bool _fromStack
 	);
 
-	/// @returns the name of the ABI decodinf function for the given type
+	/// @returns the name of the ABI decoding function for the given type
 	/// and queues the generation of the function to the requested functions.
 	/// The caller has to ensure that no out of bounds access (at least to the static
 	/// part) can happen inside this function.
@@ -172,6 +172,8 @@ private:
 		bool _forUseOnStack
 	);
 
+	/// Part of @a abiDecodingFunction for value types.
+	std::string abiDecodingFunctionValueType(Type const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for "regular" array types.
 	std::string abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for calldata array types.

@@ -111,9 +111,9 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	if (_fromMemory)
 		functionName += "_fromMemory";
 
-	return createFunction(functionName, [&]() {
-		solAssert(!_types.empty(), "");
+	solAssert(!_types.empty(), "");
 
+	return createFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
@@ -146,16 +146,22 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 				stackPos++;
 			}
 			bool dynamic = decodingTypes[i]->isDynamicallyEncoded();
-			Whiskers elementTempl(R"(
+			Whiskers elementTempl(
+				dynamic ?
+				R"(
 				{
-					let offset := )" + string(
-						dynamic ?
-						"<load>(add(headStart, <pos>))" :
-						"<pos>"
-					) + R"(
+					let offset := <load>(add(headStart, <pos>))
+					switch gt(offset, 0xffffffffffffffff) case 1 { revert(0, 0) }
 					<values> := <abiDecode>(add(headStart, offset), dataEnd)
 				}
-			)");
+				)" :
+				R"(
+				{
+					let offset := <pos>
+					<values> := <abiDecode>(add(headStart, offset), dataEnd)
+				}
+				)"
+			);
 			elementTempl("load", _fromMemory ? "mload" : "calldataload");
 			elementTempl("values", boost::algorithm::join(valueNamesLocal, ", "));
 			elementTempl("pos", to_string(headPos));
@@ -1053,6 +1059,10 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 
 string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bool _forUseOnStack)
 {
+	// The decoding function has to perform bounds checks unless it decodes a value type.
+	// Conversely, bounds checks have to be performed before the decoding function
+	// of a value type is called.
+
 	TypePointer decodingType = _type.decodingType();
 	solAssert(decodingType, "");
 
@@ -1072,7 +1082,14 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		return abiDecodingFunctionStruct(*structType, _fromMemory);
 	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType.get()))
 		return abiDecodingFunctionFunctionType(*functionType, _fromMemory, _forUseOnStack);
+	else
+		return abiDecodingFunctionValueType(_type, _fromMemory);
+}
 
+string ABIFunctions::abiDecodingFunctionValueType(const Type& _type, bool _fromMemory)
+{
+	TypePointer decodingType = _type.decodingType();
+	solAssert(decodingType, "");
 	solAssert(decodingType->sizeOnStack() == 1, "");
 	solAssert(decodingType->isValueType(), "");
 	solAssert(decodingType->calldataEncodedSize() == 32, "");
@@ -1095,6 +1112,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		templ("cleanup", cleanupFunction(_type, true));
 		return templ.render();
 	});
+
 }
 
 string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory)
@@ -1116,6 +1134,7 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 			R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> array {
+					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
 					let length := <retrieveLength>
 					array := <allocate>(<allocationSize>(length))
 					let dst := array
@@ -1125,7 +1144,6 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 					for { let i := 0 } lt(i, length) { i := add(i, 1) }
 					{
 						let elementPos := <retrieveElementPos>
-						<dynamicBoundsCheck>
 						mstore(dst, <decodingFun>(elementPos, end))
 						dst := add(dst, 0x20)
 						src := add(src, <baseEncodedSize>)
@@ -1145,10 +1163,6 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 		if (dynamicBase)
 		{
 			templ("staticBoundsCheck", "");
-			// The dynamic bounds check might not be needed (because we have an additional check
-			// one level deeper), but we keep it in just in case. This at least prevents
-			// the part one level deeper from reading the length from an out of bounds position.
-			templ("dynamicBoundsCheck", "switch gt(elementPos, end) case 1 { revert(0, 0) }");
 			templ("retrieveElementPos", "add(offset, " + load + "(src))");
 			templ("baseEncodedSize", "0x20");
 		}
@@ -1156,7 +1170,6 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 		{
 			string baseEncodedSize = toCompactHexWithPrefix(_type.baseType()->calldataEncodedSize());
 			templ("staticBoundsCheck", "switch gt(add(src, mul(length, " + baseEncodedSize + ")), end) case 1 { revert(0, 0) }");
-			templ("dynamicBoundsCheck", "");
 			templ("retrieveElementPos", "src");
 			templ("baseEncodedSize", baseEncodedSize);
 		}
@@ -1184,6 +1197,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 			templ = R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos, length {
+					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
 					length := calldataload(offset)
 					switch gt(length, 0xffffffffffffffff) case 1 { revert(0, 0) }
 					arrayPos := add(offset, 0x20)
@@ -1221,6 +1235,7 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 		Whiskers templ(
 			R"(
 				function <functionName>(offset, end) -> array {
+					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
 					let length := <load>(offset)
 					array := <allocate>(<allocationSize>(length))
 					mstore(array, length)
@@ -1277,10 +1292,18 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 			auto decodingType = member.type->decodingType();
 			solAssert(decodingType, "");
 			bool dynamic = decodingType->isDynamicallyEncoded();
-			Whiskers memberTempl(R"(
-				let offset := )" + string(dynamic ? "<load>(add(headStart, <pos>))" : "<pos>" ) + R"(
-				mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
-			)");
+			Whiskers memberTempl(
+				dynamic ?
+				R"(
+					let offset := <load>(add(headStart, <pos>))
+					switch gt(offset, 0xffffffffffffffff) case 1 { revert(0, 0) }
+					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
+				)" :
+				R"(
+					let offset := <pos>
+					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
+				)"
+			);
 			memberTempl("load", _fromMemory ? "mload" : "calldataload");
 			memberTempl("pos", to_string(headPos));
 			memberTempl("memoryOffset", toCompactHexWithPrefix(_type.memoryOffsetOfMember(member.name)));
@@ -1596,7 +1619,8 @@ string ABIFunctions::allocationFunction()
 			function <functionName>(size) -> memPtr {
 				memPtr := mload(<freeMemoryPointer>)
 				let newFreePtr := add(memPtr, size)
-				switch lt(newFreePtr, memPtr) case 1 { revert(0, 0) }
+				// protect against overflow
+				switch or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) case 1 { revert(0, 0) }
 				mstore(<freeMemoryPointer>, newFreePtr)
 			}
 		)")
