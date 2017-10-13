@@ -857,9 +857,9 @@ bool CommandLineInterface::processInput()
 			m_compiler->reset(false);
 			//use the compiler's analyzer to annotate, typecheck, etc...
 			if (!m_compiler->importASTs(sourceJsons))
-				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Import of the AST failed"));
+				astAssert(false, "Import of the AST failed");
 			if (!m_compiler->analyze())
-				BOOST_THROW_EXCEPTION(InvalidAstError() << errinfo_comment("Analysis of the AST failed"));
+				astAssert(false, "Analysis of the AST failed");
 		}
 		else
 		{
