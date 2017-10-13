@@ -243,6 +243,9 @@ Hexadecimal literals that are between 39 and 41 digits
 long and do not pass the checksum test produce
 a warning and are treated as regular rational number literals.
 
+.. note::
+    The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
+
 .. index:: literal, literal;rational
 
 .. _rational_literals:

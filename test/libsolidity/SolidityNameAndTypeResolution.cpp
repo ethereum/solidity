@@ -5879,6 +5879,28 @@ BOOST_AUTO_TEST_CASE(interface_function_bodies)
 	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot have an implementation");
 }
 
+BOOST_AUTO_TEST_CASE(interface_function_external)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		interface I {
+			function f() external;
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(interface_function_public)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		interface I {
+			function f() public;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Functions in interfaces must be declared external.");
+}
+
 BOOST_AUTO_TEST_CASE(interface_function_internal)
 {
 	char const* text = R"(
