@@ -231,6 +231,7 @@ case $(uname -s) in
                     autoconf \
                     automake \
                     boost-devel \
+                    boost-static \
                     cmake \
                     gcc \
                     gcc-c++ \
