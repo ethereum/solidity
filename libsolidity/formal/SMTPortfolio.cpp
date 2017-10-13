@@ -41,7 +41,13 @@ SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
 	m_solvers.emplace_back(make_shared<smt::CVC4Interface>());
 #endif
 #if !defined (HAVE_Z3) && !defined (HAVE_CVC4)
-	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_smtlib2Responses)),
+	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_smtlib2Responses));
+#else
+	if (!_smtlib2Responses.empty())
+		m_errorReporter.warning(
+			"Query responses for smtlib2 were given in the auxiliary input, "
+			"but this Solidity binary uses an SMT solver directly."
+		);
 #endif
 	(void)_smtlib2Responses;
 }

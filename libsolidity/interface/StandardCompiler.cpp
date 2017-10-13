@@ -539,8 +539,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (errors.size() > 0)
 		output["errors"] = errors;
 
-	if (!m_compilerStack.unhandledSMTQueries().empty())
-		for (string const& query: m_compilerStack.unhandledSMTQueries())
+	if (!m_compilerStack.unhandledSMTLib2Queries().empty())
+		for (string const& query: m_compilerStack.unhandledSMTLib2Queries())
 			output["auxiliaryInputRequested"]["smtlib2"]["0x" + keccak256(query).hex()] = query;
 
 	output["sources"] = Json::objectValue;

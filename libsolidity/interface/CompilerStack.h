@@ -156,10 +156,6 @@ public:
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
 	void addSMTLib2Response(h256 const& _hash, std::string const& _response) { m_smtlib2Responses[_hash] = _response; }
 
-	/// @returns a list of unhandled queries to the SMT solver (has to be supplied in a second run
-	/// by calling @a addSMTLib2Response.
-	std::vector<std::string> const& unhandledSMTQueries() const { return m_unhandledSMTLib2Queries; }
-
 	/// Parses all source units that were added
 	/// @returns false on error.
 	bool parse();
@@ -194,6 +190,10 @@ public:
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
+
+	/// @returns a list of unhandled queries to the SMT solver (has to be supplied in a second run
+	/// by calling @a addSMTLib2Response).
+	std::vector<std::string> const& unhandledSMTLib2Queries() const { return m_unhandledSMTLib2Queries; }
 
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
