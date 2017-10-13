@@ -13,6 +13,7 @@ Features:
  * Type Checker: Require ``storage`` or ``memory`` keyword for local variables as experimental 0.5.0 feature.
 
 Bugfixes:
+ * Optimizer: Remove unused stack computation results.
  * Parser: Fix source location of VariableDeclarationStatement.
  * Type Checker: Properly check array length and don't rely on an assertion in code generation.
  * Type Checker: Properly support overwriting members inherited from ``address`` in a contract
