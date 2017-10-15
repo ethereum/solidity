@@ -145,7 +145,7 @@ Byte = 'byte' | 'bytes' | 'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' |
 
 Fixed = 'fixed' | ( 'fixed' DecimalNumber 'x' DecimalNumber )
 
-Uixed = 'ufixed' | ( 'ufixed' DecimalNumber 'x' DecimalNumber )
+Ufixed = 'ufixed' | ( 'ufixed' DecimalNumber 'x' DecimalNumber )
 
 InlineAssemblyBlock = '{' AssemblyItem* '}'
 
