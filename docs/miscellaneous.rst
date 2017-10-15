@@ -332,7 +332,7 @@ Global Variables
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
-- ``suicide(address recipieint)``: an alias to ``selfdestruct``
+- ``suicide(address recipient)``: an alias to ``selfdestruct``
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
