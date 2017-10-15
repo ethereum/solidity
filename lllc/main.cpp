@@ -56,7 +56,7 @@ static void help()
 
 static void version()
 {
-	cout << "LLLC, the Lovely Little Language Compiler " << endl;
+	cout << "LLLC, the Lovely Little  Language Compiler " << endl;
 	cout << "Version: " << VersionString << endl;
 	exit(0);
 }
