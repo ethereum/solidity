@@ -198,6 +198,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
+	case Instruction::GAS:
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
@@ -223,7 +224,6 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::SSTORE:
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
-	case Instruction::GAS:
 	case Instruction::LOG0:
 	case Instruction::LOG1:
 	case Instruction::LOG2:

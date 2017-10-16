@@ -349,13 +349,16 @@ BOOST_AUTO_TEST_CASE(assembly)
 				assembly { x := 7 }
 			}
 			function g() view public {
-				assembly { for {} 1 { pop(sload(0)) } { } }
+				assembly { for {} 1 { pop(sload(0)) } { } pop(gas) }
 			}
 			function h() view public {
 				assembly { function g() { pop(blockhash(20)) } }
 			}
 			function j() public {
 				assembly { pop(call(0, 1, 2, 3, 4, 5, 6)) }
+			}
+			function k() public {
+				assembly { pop(call(gas, 1, 2, 3, 4, 5, 6)) }
 			}
 		}
 	)";
@@ -367,7 +370,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 	string text = R"(
 		contract C {
 			function i() view public {
-				assembly { pop(staticcall(0, 1, 2, 3, 4, 5)) }
+				assembly { pop(staticcall(gas, 1, 2, 3, 4, 5)) }
 			}
 		}
 	)";

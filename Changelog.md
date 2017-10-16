@@ -19,6 +19,7 @@ Bugfixes:
    (such as ``balance``, ``transfer``, etc.)
  * Type Checker: Prevent duplicate event declarations.
  * Type Checker: Do not mark event parameters as shadowing state variables.
+ * Type Checker: Allow ``gas`` in view functions.
 
 ### 0.4.17 (2017-09-21)
 
