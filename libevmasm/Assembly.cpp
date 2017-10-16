@@ -407,8 +407,11 @@ map<u256, u256> Assembly::optimiseInternal(
 		if (_settings.runPeephole)
 		{
 			PeepholeOptimiser peepOpt(m_items);
-			while (peepOpt.optimise() && count < 0xffffff)
+			while (peepOpt.optimise())
+			{
 				count++;
+				assertThrow(count < 64000, OptimizerException, "Peephole optimizer seems to be stuck.");
+			}
 		}
 
 		// This only modifies PushTags, we have to run again to actually remove code.
