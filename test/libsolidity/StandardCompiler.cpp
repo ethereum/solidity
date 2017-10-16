@@ -226,6 +226,183 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(output_selection_explicit)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+BOOST_AUTO_TEST_CASE(output_selection_all_contracts)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+BOOST_AUTO_TEST_CASE(output_selection_all_files_single_contract)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"*": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+BOOST_AUTO_TEST_CASE(output_selection_all_files_all_contracts)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"*": {
+					"*": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+BOOST_AUTO_TEST_CASE(output_selection_dependent_contract)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"*": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract B { } contract A { function f() { new B(); } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+}
+
+BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"*": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "import \"fileB\"; contract A { function f() { new B(); } }"
+			},
+			"fileB": {
+				"content": "contract B { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -279,7 +279,7 @@ Events
 
 Events are an abstraction of the Ethereum logging/event-watching protocol. Log entries provide the contract's address, a series of up to four topics and some arbitrary length binary data. Events leverage the existing function ABI in order to interpret this (together with an interface spec) as a properly typed structure.
 
-Given an event name and series of event parameters, we split them into two sub-series: those which are indexed and those which are not. Those which are indexed, which may number up to 3, are used alongside the Keccak hash of the event signature to form the topics of the log entry. Those which as not indexed form the byte array of the event.
+Given an event name and series of event parameters, we split them into two sub-series: those which are indexed and those which are not. Those which are indexed, which may number up to 3, are used alongside the Keccak hash of the event signature to form the topics of the log entry. Those which are not indexed form the byte array of the event.
 
 In effect, a log entry using this ABI is described as:
 
@@ -442,3 +442,22 @@ would result in the JSON:
       "outputs": []
     }
   ]
+
+.. _abi_packed_mode:
+
+Non-standard Packed Mode
+========================
+
+Solidity supports a non-standard packed mode where:
+
+- no :ref:`function selector <abi_function_selector>` is encoded,
+- short types are not zero padded and
+- dynamic types are encoded in-place and without the length.
+
+As an example encoding ``uint1, bytes1, uint8, string`` with values ``1, 0x42, 0x2424, "Hello, world!"`` results in ::
+
+    0x0142242448656c6c6f2c20776f726c6421
+      ^^                                 uint1(1)
+        ^^                               bytes1(0x42)
+          ^^^^                           uint8(0x2424)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field

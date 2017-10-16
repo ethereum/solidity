@@ -35,6 +35,7 @@ struct Options: boost::noncopyable
 	bool showMessages = false;
 	bool optimize = false;
 	bool disableIPC = false;
+	bool disableSMT = false;
 
 	static Options const& get();
 

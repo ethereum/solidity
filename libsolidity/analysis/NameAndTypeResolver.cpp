@@ -647,10 +647,12 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	bool warnAboutShadowing = true;
 	// Do not warn about shadowing for structs and enums because their members are
-	// not accessible without prefixes.
+	// not accessible without prefixes. Also do not warn about event parameters
+	// because they don't participate in any proper scope.
 	if (
 		dynamic_cast<StructDefinition const*>(m_currentScope) ||
-		dynamic_cast<EnumDefinition const*>(m_currentScope)
+		dynamic_cast<EnumDefinition const*>(m_currentScope) ||
+		dynamic_cast<EventDefinition const*>(m_currentScope)
 	)
 		warnAboutShadowing = false;
 	// Do not warn about the constructor shadowing the contract.

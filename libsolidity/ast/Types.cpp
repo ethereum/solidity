@@ -89,7 +89,7 @@ pair<u256, unsigned> const* StorageOffsets::offset(size_t _index) const
 
 MemberList& MemberList::operator=(MemberList&& _other)
 {
-	assert(&_other != this);
+	solAssert(&_other != this, "");
 
 	m_memberTypes = move(_other.m_memberTypes);
 	m_storageOffsets = move(_other.m_storageOffsets);
@@ -203,7 +203,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+		return make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -327,11 +327,11 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
 	if (isAddress())
-		m_bits = 160;
+		solAssert(m_bits == 160, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
 		"Invalid bit number for integer type: " + dev::toString(_bits)
-				);
+	);
 }
 
 string IntegerType::identifier() const
@@ -1616,10 +1616,10 @@ string ContractType::canonicalName() const
 	return m_contract.annotation().canonicalName;
 }
 
-MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _contract) const
 {
-	// All address members and all interface functions
-	MemberList::MemberMap members(IntegerType(120, IntegerType::Modifier::Address).nativeMembers(nullptr));
+	MemberList::MemberMap members;
+	solAssert(_contract, "");
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
@@ -1661,7 +1661,45 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 				&it.second->declaration()
 			));
 	}
+	// In 0.5.0 address members are not populated into the contract.
+	if (!_contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		addNonConflictingAddressMembers(members);
 	return members;
+}
+
+void ContractType::addNonConflictingAddressMembers(MemberList::MemberMap& _members)
+{
+	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
+	for (auto const& addressMember: addressMembers)
+	{
+		bool clash = false;
+		for (auto const& member: _members)
+		{
+			if (
+				member.name == addressMember.name &&
+				(
+					// Members with different types are not allowed
+					member.type->category() != addressMember.type->category() ||
+					// Members must overload functions without clash
+					(
+						member.type->category() == Type::Category::Function &&
+						dynamic_cast<FunctionType const&>(*member.type).hasEqualArgumentTypes(dynamic_cast<FunctionType const&>(*addressMember.type))
+					)
+				)
+			)
+			{
+				clash = true;
+				break;
+			}
+		}
+
+		if (!clash)
+			_members.push_back(MemberList::Member(
+				addressMember.name,
+				addressMember.type,
+				addressMember.declaration
+			));
+	}
 }
 
 shared_ptr<FunctionType const> const& ContractType::newExpressionType() const
@@ -1987,7 +2025,7 @@ unsigned EnumType::memberValue(ASTString const& _member) const
 			return index;
 		++index;
 	}
-	BOOST_THROW_EXCEPTION(m_enum.createTypeError("Requested unknown enum value ." + _member));
+	solAssert(false, "Requested unknown enum value " + _member);
 }
 
 bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
@@ -2968,7 +3006,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -2977,7 +3015,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -2985,7 +3023,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	default:

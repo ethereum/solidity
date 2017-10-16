@@ -167,6 +167,90 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(single_function_param_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			function(uint a,) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(single_return_param_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			function() returns (uint a,) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(single_modifier_arg_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			modifier modTest(uint a,) { _; }
+			function(uint a) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(single_event_arg_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			event Test(uint a,);
+			function(uint a) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_function_param_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			function(uint a, uint b,) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_return_param_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			function() returns (uint a, uint b,) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_modifier_arg_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			modifier modTest(uint a, uint b,) { _; }
+			function(uint a) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_event_arg_trailing_comma)
+{
+	char const* text = R"(
+		contract test {
+			event Test(uint a, uint b,);
+			function(uint a) {}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
+}
+
 BOOST_AUTO_TEST_CASE(function_no_body)
 {
 	char const* text = R"(

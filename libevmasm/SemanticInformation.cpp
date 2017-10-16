@@ -90,14 +90,14 @@ bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return Instruction::DUP1 <= _item.instruction() && _item.instruction() <= Instruction::DUP16;
+	return solidity::isDupInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return Instruction::SWAP1 <= _item.instruction() && _item.instruction() <= Instruction::SWAP16;
+	return solidity::isSwapInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
@@ -198,6 +198,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
+	case Instruction::GAS:
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
@@ -223,7 +224,6 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::SSTORE:
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
-	case Instruction::GAS:
 	case Instruction::LOG0:
 	case Instruction::LOG1:
 	case Instruction::LOG2:

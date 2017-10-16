@@ -182,8 +182,15 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
+	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	if (_operation.getOperator() == Token::Add)
-		m_errorReporter.warning(_operation.location(), "Use of unary + is deprecated.");
+	{
+		if (v050)
+			m_errorReporter.syntaxError(_operation.location(), "Use of unary + is deprecated.");
+		else
+			m_errorReporter.warning(_operation.location(), "Use of unary + is deprecated.");
+	}
 	return true;
 }
 

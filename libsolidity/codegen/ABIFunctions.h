@@ -89,13 +89,13 @@ private:
 
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
-	/// @param _compacted if true, the input value was just loaded from storage
+	/// @param _fromStack if false, the input value was just loaded from storage
 	/// or memory and thus might be compacted into a single slot (depending on the type).
 	std::string abiEncodingFunction(
 		Type const& _givenType,
 		Type const& _targetType,
 		bool _encodeAsLibraryTypes,
-		bool _compacted
+		bool _fromStack
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
 	std::string abiEncodingFunctionCalldataArray(
@@ -143,7 +143,7 @@ private:
 		FunctionType const& _from,
 		Type const& _to,
 		bool _encodeAsLibraryTypes,
-		bool _compacted
+		bool _fromStack
 	);
 
 	/// @returns a function that copies raw bytes of dynamic length from calldata

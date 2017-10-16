@@ -48,10 +48,3 @@ option(Boost_USE_STATIC_LIBS "Link Boost statically" ON)
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS regex filesystem unit_test_framework program_options system)
 
 eth_show_dependency(Boost boost)
-
-if (APPLE)
-	link_directories(/usr/local/lib)
-	include_directories(/usr/local/include)
-endif()
-
-include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")

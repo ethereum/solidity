@@ -47,7 +47,8 @@ void CodeFragment::finalise(CompilerState const& _cs)
 	}
 }
 
-CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
+CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM):
+	m_readFile(_readFile)
 {
 /*
 	std::cout << "CodeFragment. Locals:";
@@ -103,7 +104,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 	{
 		bigint i = *_t.get<bigint*>();
 		if (i < 0 || i > bigint(u256(0) - 1))
-			error<IntegerOutOfRange>();
+			error<IntegerOutOfRange>(toString(i));
 		m_asm.append((u256)i);
 		break;
 	}
@@ -111,6 +112,22 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		error<CompilerException>("Unexpected fragment type");
 		break;
 	}
+}
+
+namespace
+{
+/// Returns true iff the instruction is valid as a function.
+bool validFunctionalInstruction(string us)
+{
+	auto it = c_instructions.find(us);
+	return !(
+		it == c_instructions.end() ||
+		solidity::isPushInstruction(it->second) ||
+		solidity::isDupInstruction(it->second) ||
+		solidity::isSwapInstruction(it->second) ||
+		it->second == solidity::Instruction::JUMPDEST
+	);
+}
 }
 
 void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
@@ -157,7 +174,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			auto i = *++_t.begin();
 			if (i.tag())
-				error<InvalidName>();
+				error<InvalidName>(toString(i));
 			if (i.which() == sp::utree_type::string_type)
 			{
 				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
@@ -198,7 +215,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					m_asm.append(CodeFragment(i, _s, true).m_asm);
+					m_asm.append(CodeFragment(i, _s, m_readFile, true).m_asm);
 		}
 		else if (us == "INCLUDE")
 		{
@@ -207,10 +224,12 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string fileName = firstAsString();
 			if (fileName.empty())
 				error<InvalidName>("Empty file name provided");
-			string contents = contentsString(fileName);
+			if (!m_readFile)
+				error<InvalidName>("Import callback not present");
+			string contents = m_readFile(fileName);
 			if (contents.empty())
 				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
-			m_asm.append(CodeFragment::compile(contents, _s).m_asm);
+			m_asm.append(CodeFragment::compile(contents, _s, m_readFile).m_asm);
 		}
 		else if (us == "SET")
 		{
@@ -219,7 +238,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++ == 2)
-					m_asm.append(CodeFragment(i, _s, false).m_asm);
+					m_asm.append(CodeFragment(i, _s, m_readFile, false).m_asm);
 			m_asm.append((u256)varAddress(firstAsString(), true));
 			m_asm.append(Instruction::MSTORE);
 		}
@@ -244,7 +263,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				if (ii == 1)
 				{
 					if (i.tag())
-						error<InvalidName>();
+						error<InvalidName>(toString(i));
 					if (i.which() == sp::utree_type::string_type)
 					{
 						auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
@@ -260,7 +279,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					if (_t.size() == 3)
 					{
 						/// NOTE: some compilers could do the assignment first if this is done in a single line
-						CodeFragment code = CodeFragment(i, _s);
+						CodeFragment code = CodeFragment(i, _s, m_readFile);
 						_s.defs[n] = code;
 					}
 					else
@@ -301,13 +320,13 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				else if (ii == 1)
 				{
-					pos = CodeFragment(i, _s);
+					pos = CodeFragment(i, _s, m_readFile);
 					if (pos.m_asm.deposit() != 1)
-						error<InvalidDeposit>(us);
+						error<InvalidDeposit>(toString(i));
 				}
 				else if (i.tag() != 0)
 				{
-					error<InvalidLiteral>();
+					error<InvalidLiteral>(toString(i));
 				}
 				else if (i.which() == sp::utree_type::string_type)
 				{
@@ -318,7 +337,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				{
 					bigint bi = *i.get<bigint*>();
 					if (bi < 0)
-						error<IntegerOutOfRange>();
+						error<IntegerOutOfRange>(toString(i));
 					else
 					{
 						bytes tmp = toCompactBigEndian(bi);
@@ -327,7 +346,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				else
 				{
-					error<InvalidLiteral>();
+					error<InvalidLiteral>(toString(i));
 				}
 
 				ii++;
@@ -380,9 +399,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (c++)
 			{
 				if (us == "LLL" && c == 1)
-					code.push_back(CodeFragment(i, ns));
+					code.push_back(CodeFragment(i, ns, m_readFile));
 				else
-					code.push_back(CodeFragment(i, _s));
+					code.push_back(CodeFragment(i, _s, m_readFile));
 			}
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };
@@ -403,13 +422,13 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				//requireDeposit(i, 1);
 				cs.args[m.args[i]] = code[i];
 			}
-			m_asm.append(CodeFragment(m.code, cs).m_asm);
+			m_asm.append(CodeFragment(m.code, cs, m_readFile).m_asm);
 			for (auto const& i: cs.defs)
 				_s.defs[i.first] = i.second;
 			for (auto const& i: cs.macros)
 				_s.macros.insert(i);
 		}
-		else if (c_instructions.count(us))
+		else if (c_instructions.count(us) && validFunctionalInstruction(us))
 		{
 			auto it = c_instructions.find(us);
 			requireSize(instructionInfo(it->second).args);
@@ -513,6 +532,44 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.append(code[2].m_asm, 0);
 			m_asm.appendJump(begin);
 			m_asm << end.tag();
+		}
+		else if (us == "SWITCH")
+		{
+			requireMinSize(1);
+
+			bool hasDefault = (code.size() % 2 == 1);
+			int startDeposit = m_asm.deposit();
+			int targetDeposit = hasDefault ? code[code.size() - 1].m_asm.deposit() : 0;
+
+			// The conditions
+			AssemblyItems jumpTags;
+			for (unsigned i = 0; i < code.size() - 1; i += 2)
+			{
+				requireDeposit(i, 1);
+				m_asm.append(code[i].m_asm);
+				jumpTags.push_back(m_asm.appendJumpI());
+			}
+
+			// The default, if present
+			if (hasDefault)
+				m_asm.append(code[code.size() - 1].m_asm);
+
+			// The targets - appending in reverse makes the top case the most efficient.
+			if (code.size() > 1)
+			{
+				auto end = m_asm.appendJump();
+				for (int i = 2 * (code.size() / 2 - 1); i >= 0; i -= 2)
+				{
+					m_asm << jumpTags[i / 2].tag();
+					requireDeposit(i + 1, targetDeposit);
+					m_asm.append(code[i + 1].m_asm);
+					if (i != 0)
+						m_asm.appendJump(end);
+				}
+				m_asm << end.tag();
+			}
+
+			m_asm.setDeposit(startDeposit + targetDeposit);
 		}
 		else if (us == "ALLOC")
 		{
@@ -622,13 +679,13 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 	}
 }
 
-CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s)
+CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s, ReadCallback const& _readFile)
 {
 	CodeFragment ret;
 	sp::utree o;
 	parseTreeLLL(_src, o);
 	if (!o.empty())
-		ret = CodeFragment(o, _s);
+		ret = CodeFragment(o, _s, _readFile);
 	_s.treesToKill.push_back(o);
 	return ret;
 }

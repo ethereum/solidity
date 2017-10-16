@@ -49,13 +49,6 @@ env:
 
 matrix:
     include:
-        # Ubuntu 14.04 LTS "Trusty Tahr"
-        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
-        #
-        # TravisCI doesn't directly support any new Ubuntu releases.  These is
-        # some Docker support, which we should probably investigate, at least for
-        # Ubuntu 16.04 LTS "Xenial Xerus"
-        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
         - os: linux
           dist: trusty
           sudo: required

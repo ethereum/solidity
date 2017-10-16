@@ -265,7 +265,6 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		//ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream("todo"));
 		string srcString = dev::jsonCompactPrint(*m_sourceJsons[src.first]);
 		ASTPointer<Scanner> scanner = make_shared<Scanner>(CharStream(srcString), src.first);
 		source.scanner = scanner;
@@ -274,6 +273,14 @@ bool CompilerStack::importASTs(map<string, Json::Value const*> const& _sources)
 	m_stackState = ParsingSuccessful;
 	m_importedSources = true;
 	return true;
+}
+
+bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) const
+{
+	return
+		m_requestedContractNames.empty() ||
+		m_requestedContractNames.count(_contract.fullyQualifiedName()) ||
+		m_requestedContractNames.count(_contract.name());
 }
 
 bool CompilerStack::compile()
@@ -286,7 +293,8 @@ bool CompilerStack::compile()
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				compileContract(*contract, compiledContracts);
+				if (isRequestedContract(*contract))
+					compileContract(*contract, compiledContracts);
 	this->link();
 	m_stackState = CompilationSuccessful;
 	return true;

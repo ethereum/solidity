@@ -291,8 +291,11 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 	CompilerUtils utils(m_context);
 	unsigned baseSize = 1;
 	if (!_sourceType.isByteArray())
+	{
 		// We always pad the elements, regardless of _padToWordBoundaries.
 		baseSize = _sourceType.baseType()->calldataEncodedSize();
+		solAssert(baseSize >= 0x20, "");
+	}
 
 	if (_sourceType.location() == DataLocation::CallData)
 	{

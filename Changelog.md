@@ -1,8 +1,25 @@
 ### 0.4.18 (unreleased)
 
 Features:
+ * Code Generator: Always use all available gas for calls as experimental 0.5.0 feature
+   (previously, some amount was retained in order to work in pre-tangerine whistle
+   EVM versions)
+ * Parser: Better error message for unexpected trailing comma in parameter lists.
+ * Standard JSON: Support the ``outputSelection`` field for selective compilation of supplied sources.
+ * Syntax Checker: Unary ``+`` is now a syntax error as experimental 0.5.0 feature.
+ * Type Checker: Disallow non-pure constant state variables as experimental 0.5.0 feature.
+ * Type Checker: Do not add members of ``address`` to contracts as experimental 0.5.0 feature.
+ * Type Checker: Force interface functions to be external as experimental 0.5.0 feature.
+ * Type Checker: Require ``storage`` or ``memory`` keyword for local variables as experimental 0.5.0 feature.
 
 Bugfixes:
+ * Parser: Fix source location of VariableDeclarationStatement.
+ * Type Checker: Properly check array length and don't rely on an assertion in code generation.
+ * Type Checker: Properly support overwriting members inherited from ``address`` in a contract
+   (such as ``balance``, ``transfer``, etc.)
+ * Type Checker: Prevent duplicate event declarations.
+ * Type Checker: Do not mark event parameters as shadowing state variables.
+ * Type Checker: Allow ``gas`` in view functions.
 
 ### 0.4.17 (2017-09-21)
 

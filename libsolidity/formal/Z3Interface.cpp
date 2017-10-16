@@ -72,28 +72,21 @@ void Z3Interface::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
-//	cout << "---------------------------------" << endl;
-//	cout << m_solver << endl;
 	CheckResult result;
 	switch (m_solver.check())
 	{
 	case z3::check_result::sat:
 		result = CheckResult::SATISFIABLE;
-		cout << "sat" << endl;
 		break;
 	case z3::check_result::unsat:
 		result = CheckResult::UNSATISFIABLE;
-		cout << "unsat" << endl;
 		break;
 	case z3::check_result::unknown:
 		result = CheckResult::UNKNOWN;
-		cout << "unknown" << endl;
 		break;
 	default:
 		solAssert(false, "");
 	}
-//	cout << "---------------------------------" << endl;
-
 
 	vector<string> values;
 	if (result != CheckResult::UNSATISFIABLE)
@@ -142,7 +135,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		return m_context.int_val(n.c_str());
 	}
 
-	assert(arity.count(n) && arity.at(n) == arguments.size());
+	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
 	if (n == "ite")
 		return z3::ite(arguments[0], arguments[1], arguments[2]);
 	else if (n == "not")

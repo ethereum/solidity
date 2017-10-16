@@ -231,6 +231,7 @@ case $(uname -s) in
                     autoconf \
                     automake \
                     boost-devel \
+                    boost-static \
                     cmake \
                     gcc \
                     gcc-c++ \
@@ -256,15 +257,6 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
 # Ubuntu
 #
-# TODO - I wonder whether all of the Ubuntu-variants need some special
-# treatment?
-#
-# TODO - We should also test this code on Ubuntu Server, Ubuntu Snappy Core
-# and Ubuntu Phone.
-#
-# TODO - Our Ubuntu build is only working for amd64 and i386 processors.
-# It would be good to add armel, armhf and arm64.
-# See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
 
             Ubuntu)
@@ -320,6 +312,14 @@ case $(uname -s) in
                     libboost-all-dev \
                     "$install_z3"
                 if [ "$CI" = true ]; then
+                    # install Z3 from PPA if the distribution does not provide it
+		            if ! dpkg -l libz3-dev > /dev/null 2>&1
+                    then
+                        sudo apt-add-repository -y ppa:hvr/z3
+                        sudo apt-get -y update
+                        sudo apt-get -y install libz3-dev
+                    fi
+
                     # Install 'eth', for use in the Solidity Tests-over-IPC.
                     # We will not use this 'eth', but its dependencies
                     sudo add-apt-repository -y ppa:ethereum/ethereum

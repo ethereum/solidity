@@ -47,10 +47,12 @@ environment:
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
-    - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
-    - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
-    - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
-    - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
+    - ps: if ($env:priv_key) {
+        $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n";
+        $fileContent += $env:priv_key.Replace(' ', "`n");
+        $fileContent += "`n-----END RSA PRIVATE KEY-----`n";
+        Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
+        }
     - git submodule update --init --recursive
     - ps: $prerelease = "nightly."
     - ps: $prerelease += Get-Date -format "yyyy.M.d"
@@ -66,12 +68,15 @@ build_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION%
     - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
-    - ps: scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
+# Skip bytecode compare if private key is not available
+    - ps: if ($env:priv_key) {
+        scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
+        }
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    - soltest.exe --show-progress -- --no-ipc
+    - soltest.exe --show-progress -- --no-ipc --no-smt
 
 artifacts:
     - path: solidity-windows.zip
