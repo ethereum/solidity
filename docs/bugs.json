@@ -1,5 +1,12 @@
 [
     {
+        "name": "ZeroFunctionSelector",
+        "summary": "It is possible to craft the name of a function such that it is executed instead of the fallback function in very specific circumstances.",
+        "description": "If a function has a selector consisting only of zeros, is payable and part of a contract that does not have a fallback function and at most five external functions in total, this function is called instead of the fallback function if Ether is sent to the contract without data.",
+        "fixed": "0.4.18",
+        "severity": "very low"
+    },
+    {
         "name": "DelegateCallReturnValue",
         "summary": "The low-level .delegatecall() does not return the execution outcome, but converts the value returned by the functioned called to a boolean instead.",
         "description": "The return value of the low-level .delegatecall() function is taken from a position in memory, where the call data or the return data resides. This value is interpreted as a boolean and put onto the stack. This means if the called function returns at least 32 zero bytes, .delegatecall() returns false even if the call was successuful.",
