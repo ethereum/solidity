@@ -202,11 +202,10 @@ a "blockchain explorer" that tracks transactions and balances of your new coin.
 Blockchain Basics
 *****************
 
-Blockchains as a concept are not too hard to understand for programmers. The reason is that
-most of the complications (mining, `hashing <https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_, `elliptic-curve cryptography <https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_, `peer-to-peer networks <https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.)
-are just there to provide a certain set of features and promises. Once you accept these
-features as given, you do not have to worry about the underlying technology - or do you have
-to know how Amazon's AWS works internally in order to use it?
+Blockchains, as a concept, are not hard for programmers to understand. Much of the confusion
+comes from complicated features and promises (mining, `hashing <https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_, `elliptic-curve cryptography <https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_, `peer-to-peer networks <https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.),
+once these are understood the underlying technology is mostly irrelevant. For instance,
+it is unecessary to know the underlying technology of Amazon's AWS in order to use it effectively.
 
 .. index:: transaction
 
