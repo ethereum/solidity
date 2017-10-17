@@ -61,6 +61,9 @@ Available Solidity Integrations
 
 * `Solium <https://github.com/duaraghav8/Solium/>`_
     A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
+    
+* `Solhint <https://github.com/protofire/solhint>`_
+    Solidity linter that provides security, style guide and best practice rules for smart contract validation.
 
 * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
     Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
