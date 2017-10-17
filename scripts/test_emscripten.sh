@@ -39,7 +39,7 @@ DIR=$(mktemp -d)
     # disable "prepublish" script which downloads the latest version
     # (we will replace it anyway and it is often incorrectly cached
     # on travis)
-    npm set script.prepublish ''
+    npm config set script.prepublish ''
     npm install
 
     # Replace soljson with current build
