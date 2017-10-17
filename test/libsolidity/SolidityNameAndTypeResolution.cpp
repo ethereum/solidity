@@ -7106,7 +7106,7 @@ BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type");
 	text = R"(
 		contract C {
 			function f() pure public {
@@ -7125,6 +7125,22 @@ BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				(2**270, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				((2**270) / 2**100, 1);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_about_sha3)

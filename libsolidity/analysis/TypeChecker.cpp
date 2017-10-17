@@ -1295,7 +1295,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*components[i]));
 
 				// Note: code generation will visit each of the expression even if they are not assigned from.
-				if (types[i]->category() == Type::Category::RationalNumber)
+				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
 					if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
 						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
 
