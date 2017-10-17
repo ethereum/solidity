@@ -118,8 +118,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		{">=", 2},
 		{"+", 2},
 		{"-", 2},
-		{"*", 2},
-		{">=", 2}
+		{"*", 2}
 	};
 	string const& n = _expr.name;
 	if (m_functions.count(n))
