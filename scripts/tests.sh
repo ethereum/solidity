@@ -43,7 +43,7 @@ elif [ -z $CI ]; then
 else
     mkdir -p /tmp/test
     # Update hash below if binary is changed.
-    wget -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth_byzantium2
+    wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth_byzantium2
     test "$(shasum /tmp/test/eth)" = "4dc3f208475f622be7c8e53bee720e14cd254c6f  /tmp/test/eth"
     sync
     chmod +x /tmp/test/eth
