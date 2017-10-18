@@ -306,38 +306,36 @@ The following is the order of precedence for operators, listed in order of evalu
 Overflow and underflow rules for operators
 ==========================================
 
-Integers in Solidity have a fixed range of possible values, and that range is defined by their bit-size. When an (arithmetic) operation attempts to create a number that is greater than the maximum value it results in an *overflow*. If it attempts to create a number that is less than the minimum value allowed then it is called an *underflow*.
+Integers in Solidity have a fixed size. When an (arithmetic) operation attempts to
+create a number that is greater than the maximum value it results in an *overflow*,
+and if it tries to create number is less than the minimum value allowed it results
+in an *underflow*.
 
 Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is the bitsize.
 
-Signed integers are represented in two's complement, and are restricted to the range ``[-2**(N - 1), 2**(N - 1) - 1]``, , where ``N`` is the bitsize.
-
-Overflow and underflow in signed and unsigned integers are generally handled by reducing the value ``modulo N``, where ``N`` is the bitsize of the integer in question, although there are some important exceptions (see the **special cases** section below).
+Signed integers are represented in `two's complement <https://en.wikipedia.org/wiki/Two%27s_complement>`_,
+which means they have the range ``[-2**(N - 1), 2**(N - 1) - 1]``, where ``N`` is the bitsize.
 
 .. warning::
-    Solidity does not automatically detect over/underflow.
+Solidity does not automatically detect over/underflow.
 
-Additionally, the EVM has its own overflow semantics for results that exceed 256 bits. See: `The Ethereum Yellow Paper <https://ethereum.github.io/yellowpaper>`_, Appendix H, Section 2 (Instruction set).
-
-Examples:
-
-``uint8(257) == 257 mod 2**8 == 1``
-
-``uint8(2 - 5) == -3 mod 2**8 == 256 - 3 == 253``
-
-``int8(-129) == -129 mod 256 == 127``
+Overflow and underflow in signed and unsigned integers are generally handled by
+reducing the value ``modulo N``, where ``N`` is the bitsize of the integer in question.
 
 **Casting and demotion**
 
-When casting a value into an integer type, the result is always reduced `modulo N`, where `N` is the bit-size of that integer type. This is important to remember when demoting an integer to a new type with a smaller bit-size.
+When a value is casted to an integer type, the result is always reduced ``modulo N``,
+where ``N`` is the bitsize of the new type.
 
-Example: ``uint8(257) = 1``;
+**Examples**
 
-**Special cases**
+``uint8 x = 255; x + 2 == 1``
 
-The range of signed integer types, i.e. ``[-2**(N - 1), 2**(N - 1) - 1]``, is asymmetric around 0. As a result of this, inverting the minimum value will result in a value that is ``1`` greater then the maximum value, making it wrap around back to itself:
+``uint8 x = 2; = 2 - 5 == 253``
 
-``-INT_MIN = -(-2**(N - 1)) = 2**(N - 1) = 2**(N - 1) - 1 + 1 = INT_MAX + 1 = INT_MIN``
+``int8 x = -128; == x - 1 == 127``
+
+``var x = uint8(258); x == 2``
 
 Table I: Rules for operators and unsigned Integers
 --------------------------------------------------
@@ -375,7 +373,7 @@ Table I: Rules for operators and unsigned Integers
 +------------+----------+-----------+---------+
 
 1) Unary ``+`` has been deprecated.
-2) Unary ``-`` works on ``uints``, e.g. ``-uint(1) == ~uint(0)``.
+2) Unary ``-`` also works on ``uints``, e.g. ``-uint(1) == ~uint(0)``.
 3) ``0**0 := 1``
 4) Arithmetic left shift, implemented as clamped multiplication ``n << m == n * 2**m`` (overflowing bits are removed). The bitsize of the shifted value is that of ``n``.
 5) Arithmetic right shift, implemented as division ``n >> m == n / 2**m``. The bitsize of the shifted value is that of ``n``.
