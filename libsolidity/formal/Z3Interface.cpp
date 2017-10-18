@@ -98,7 +98,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 				values.push_back(toString(m.eval(toZ3Expr(e))));
 		}
 	}
-	catch (z3::exception const& _e)
+	catch (z3::exception const&)
 	{
 		result = CheckResult::ERROR;
 		values.clear();
