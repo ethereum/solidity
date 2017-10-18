@@ -35,15 +35,15 @@ using namespace dev::solidity;
 using namespace dev::eth;
 
 static string const VersionString =
-        string(ETH_PROJECT_VERSION) +
-        (string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
-        (string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
+	string(ETH_PROJECT_VERSION) +
+	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
+	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
 static void help()
 {
 	cout
 		<< "Usage lllc [OPTIONS] <file>" << endl
-        << "Options:" << endl
+		<< "Options:" << endl
 		<< "    -b,--binary  Parse, compile and assemble; output byte code in binary." << endl
 		<< "    -x,--hex  Parse, compile and assemble; output byte code in hex." << endl
 		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
@@ -51,12 +51,12 @@ static void help()
 		<< "    -o,--optimise  Turn on/off the optimiser; off by default." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
 		<< "    -V,--version  Show the version and exit." << endl;
-        exit(0);
+	exit(0);
 }
 
 static void version()
 {
-	cout << "LLLC, the Lovely Little Language Compiler " << endl;
+	cout << "LLLC, the Lovely Little Language Compiler" << endl;
 	cout << "Version: " << VersionString << endl;
 	exit(0);
 }
@@ -131,7 +131,9 @@ int main(int argc, char** argv)
 
 	vector<string> errors;
 	if (src.empty())
+	{
 		errors.push_back("Empty file.");
+	}
 	else if (mode == Disassemble)
 	{
 		cout << disassemble(fromHex(src)) << endl;
@@ -145,12 +147,17 @@ int main(int argc, char** argv)
 			cout.write((char const*)bs.data(), bs.size());
 	}
 	else if (mode == ParseTree)
+	{
 		cout << parseLLL(src) << endl;
+	}
 	else if (mode == Assembly)
+	{
 		cout << compileLLLToAsm(src, optimise ? true : false, &errors, contentsString) << endl;
+	}
+
 	for (auto const& i: errors)
 		cerr << i << endl;
-	if ( errors.size() )
+	if (errors.size())
 		return 1;
 	return 0;
 }
