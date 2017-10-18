@@ -110,6 +110,15 @@ void CompilerUtils::loadFromMemoryDynamic(
 	}
 }
 
+void CompilerUtils::abiDecode(
+	TypePointers const& _types,
+	bool _fromMemory
+)
+{
+	for (auto const& type: _types)
+		loadFromMemoryDynamic(*type, !_fromMemory, true, true);
+}
+
 void CompilerUtils::storeInMemory(unsigned _offset)
 {
 	unsigned numBytes = prepareMemoryStore(IntegerType(256), true);

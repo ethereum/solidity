@@ -67,14 +67,32 @@ public:
 		bool _padToWords = false
 	);
 	/// Dynamic version of @see loadFromMemory, expects the memory offset on the stack.
-	/// Stack pre: memory_offset
-	/// Stack post: value... (memory_offset+length)
+	/// Stack pre: <memory_offset>
+	/// Stack post: <value> [memory_offset+length]
 	void loadFromMemoryDynamic(
 		Type const& _type,
 		bool _fromCalldata = false,
 		bool _padToWords = true,
 		bool _keepUpdatedMemoryOffset = true
 	);
+
+	/// Special case of @a loadFromMemoryDynamic which assumes that everything is padded to words
+	/// and dynamic data is not encoded in place (i.e. a proper ABI encoding).
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	/// Stack pre: <memory_offset>
+	/// Stack post: <value0> <value1> ... <valueN-1> <updated_memory_offset>
+	void abiDecode(
+		TypePointers const& _types,
+		bool _fromMemory = false
+	);
+
+	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,
+	/// the data is taken from memory instead of from calldata.
+	/// Can allocate memory.
+	/// Stack pre: <source_offset>
+	/// Stack post: <value0> <value1> ... <valuen>
+	void abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory = false);
+
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
@@ -145,13 +163,6 @@ public:
 		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false
 	);
-
-	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,
-	/// the data is taken from memory instead of from calldata.
-	/// Can allocate memory.
-	/// Stack pre: <source_offset>
-	/// Stack post: <value0> <value1> ... <valuen>
-	void abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory = false);
 
 	/// Zero-initialises (the data part of) an already allocated memory array.
 	/// Length has to be nonzero!

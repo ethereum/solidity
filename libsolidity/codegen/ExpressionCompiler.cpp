@@ -1824,13 +1824,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else if (!_functionType.returnParameterTypes().empty())
 	{
 		utils().fetchFreeMemoryPointer();
+
 		bool memoryNeeded = false;
 		for (auto const& retType: _functionType.returnParameterTypes())
-		{
-			utils().loadFromMemoryDynamic(*retType, false, true, true);
 			if (dynamic_cast<ReferenceType const*>(retType.get()))
 				memoryNeeded = true;
-		}
+
+		utils().abiDecode(_functionType.returnParameterTypes(), true);
+
 		if (memoryNeeded)
 			utils().storeFreeMemoryPointer();
 		else
