@@ -309,7 +309,9 @@ Overflow and underflow rules for operators
 Integers in Solidity have a fixed size. When an arithmetic operation attempts to
 create a number that is greater than the maximum value it results in an *overflow*,
 and if it tries to create number is less than the minimum value allowed it results
-in an *underflow*.
+in an *underflow*. Overflow and underflow in signed and unsigned integers are generally
+handled by reducing the value ``modulo N``, where ``N`` is the bitsize of the integer
+in question.
 
 Unsigned integers are restricted to the range ``[0, 2**N - 1]``, where ``N`` is the bitsize.
 
@@ -318,9 +320,6 @@ which means they have the range ``[-2**(N - 1), 2**(N - 1) - 1]``, where ``N`` i
 
 .. warning::
     Solidity does not automatically detect over/underflow.
-
-Overflow and underflow in signed and unsigned integers are generally handled by
-reducing the value ``modulo N``, where ``N`` is the bitsize of the integer in question.
 
 **Casting and demotion**
 
