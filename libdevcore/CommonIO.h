@@ -32,7 +32,7 @@ namespace dev
 
 /// Retrieve and returns the contents of the given file as a std::string.
 /// If the file doesn't exist or isn't readable, returns an empty container / bytes.
-std::string contentsString(std::string const& _file);
+std::string readFileAsString(std::string const& _file);
 
 /// Write the given binary data into the given file, replacing the file if it pre-exists.
 /// Throws exception on error.
