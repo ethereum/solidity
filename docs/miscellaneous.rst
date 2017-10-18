@@ -317,7 +317,7 @@ Signed integers are represented in `two's complement <https://en.wikipedia.org/w
 which means they have the range ``[-2**(N - 1), 2**(N - 1) - 1]``, where ``N`` is the bitsize.
 
 .. warning::
-Solidity does not automatically detect over/underflow.
+    Solidity does not automatically detect over/underflow.
 
 Overflow and underflow in signed and unsigned integers are generally handled by
 reducing the value ``modulo N``, where ``N`` is the bitsize of the integer in question.
@@ -331,9 +331,9 @@ where ``N`` is the bitsize of the new type.
 
 ``uint8 x = 255; x + 2 == 1``
 
-``uint8 x = 2; = 2 - 5 == 253``
+``uint8 x = 2; x - 5 == 253``
 
-``int8 x = -128; == x - 1 == 127``
+``int8 x = -128; x - 1 == 127``
 
 ``var x = uint8(258); x == 2``
 
