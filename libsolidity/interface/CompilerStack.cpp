@@ -764,11 +764,15 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 {
 	if (m_contracts.empty())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+
 	auto it = m_contracts.find(_contractName);
+	if (it != m_contracts.end())
+		return it->second;
+
 	// To provide a measure of backward-compatibility, if a contract is not located by its
 	// fully-qualified name, a lookup will be attempted purely on the contract's name to see
 	// if anything will satisfy.
-	if (it == m_contracts.end() && _contractName.find(":") == string::npos)
+	if (_contractName.find(":") == string::npos)
 	{
 		for (auto const& contractEntry: m_contracts)
 		{
@@ -779,12 +783,13 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 			string foundName;
 			getline(ss, source, ':');
 			getline(ss, foundName, ':');
-			if (foundName == _contractName) return contractEntry.second;
+			if (foundName == _contractName)
+				return contractEntry.second;
 		}
-		// If we get here, both lookup methods failed.
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));
 	}
-	return it->second;
+
+	// If we get here, both lookup methods failed.
+	BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract \"" + _contractName + "\" not found."));
 }
 
 CompilerStack::Source const& CompilerStack::source(string const& _sourceName) const
