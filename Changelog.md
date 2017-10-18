@@ -1,3 +1,9 @@
+### 0.4.19 (unreleased)
+
+Features:
+
+Bugfixes:
+
 ### 0.4.18 (2017-10-18)
 
 Features:
