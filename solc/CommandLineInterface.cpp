@@ -430,14 +430,7 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			m_sourceCodes[g_stdinFileName].append(s + '\n');
-		}
-	}
+		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -731,13 +724,7 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argStandardJSON))
 	{
-		string input;
-		while (!cin.eof())
-		{
-			string tmp;
-			getline(cin, tmp);
-			input.append(tmp + "\n");
-		}
+		string input = dev::readStandardInput();
 		StandardCompiler compiler(fileReader);
 		cout << compiler.compile(input) << endl;
 		return true;

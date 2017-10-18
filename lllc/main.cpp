@@ -118,14 +118,7 @@ int main(int argc, char** argv)
 
 	string src;
 	if (infile.empty())
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			src.append(s);
-		}
-	}
+		src = readStandardInput();
 	else
 		src = readFileAsString(infile);
 

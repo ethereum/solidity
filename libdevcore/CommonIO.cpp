@@ -66,6 +66,20 @@ string dev::readFileAsString(string const& _file)
 	return readFile<string>(_file);
 }
 
+string dev::readStandardInput()
+{
+	string ret;
+	while (!cin.eof())
+	{
+		string tmp;
+		// NOTE: this will read until EOF or NL
+		getline(cin, tmp);
+		ret.append(tmp);
+		ret.append("\n");
+	}
+	return ret;
+}
+
 void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDeleteRename)
 {
 	namespace fs = boost::filesystem;

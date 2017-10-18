@@ -34,6 +34,9 @@ namespace dev
 /// If the file doesn't exist or isn't readable, returns an empty container / bytes.
 std::string readFileAsString(std::string const& _file);
 
+/// Retrieve and returns the contents of standard input (until EOF).
+std::string readStandardInput();
+
 /// Write the given binary data into the given file, replacing the file if it pre-exists.
 /// Throws exception on error.
 /// @param _writeDeleteRename useful not to lose any data: If set, first writes to another file in
