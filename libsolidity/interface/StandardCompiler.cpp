@@ -92,6 +92,22 @@ Json::Value formatErrorWithException(
 	return formatError(_warning, _type, _component, message, formattedMessage, location);
 }
 
+set<string> requestedContractNames(Json::Value const& _outputSelection)
+{
+	set<string> names;
+	for (auto const& sourceName: _outputSelection.getMemberNames())
+	{
+		for (auto const& contractName: _outputSelection[sourceName].getMemberNames())
+		{
+			/// Consider the "all sources" shortcuts as requesting everything.
+			if (contractName == "*" || contractName == "")
+				return set<string>();
+			names.insert((sourceName == "*" ? "" : sourceName) + ":" + contractName);
+		}
+	}
+	return names;
+}
+
 /// Returns true iff @a _hash (hex with 0x prefix) is the Keccak256 hash of the binary data in @a _content.
 bool hashMatchesContent(string const& _hash, string const& _content)
 {
@@ -264,6 +280,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
+
+	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
+	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
 

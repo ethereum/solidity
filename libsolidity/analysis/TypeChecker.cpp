@@ -75,6 +75,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
 	checkContractDuplicateFunctions(_contract);
+	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
 	checkContractAbstractConstructors(_contract);
@@ -183,9 +184,27 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			msg
 		);
 	}
-	for (auto const& it: functions)
+
+	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
+}
+
+void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
+{
+	/// Checks that two events with the same name defined in this contract have different
+	/// argument types
+	map<string, vector<EventDefinition const*>> events;
+	for (EventDefinition const* event: _contract.events())
+		events[event->name()].push_back(event);
+
+	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
+}
+
+template <class T>
+void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
+{
+	for (auto const& it: _definitions)
 	{
-		vector<FunctionDefinition const*> const& overloads = it.second;
+		vector<T> const& overloads = it.second;
 		set<size_t> reported;
 		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
 		{
@@ -200,18 +219,17 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 
 			if (ssl.infos.size() > 0)
 			{
-				string msg = "Function with same name and arguments defined twice.";
 				size_t occurrences = ssl.infos.size();
 				if (occurrences > 32)
 				{
 					ssl.infos.resize(32);
-					msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
+					_message += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
 				}
 
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
 					ssl,
-					msg
+					_message
 				);
 			}
 		}
@@ -577,8 +595,16 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
-		if (_function.visibility() < FunctionDefinition::Visibility::Public)
-			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+		if (_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		{
+			if (_function.visibility() != FunctionDefinition::Visibility::External)
+				m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
+		}
+		else
+		{
+			if (_function.visibility() < FunctionDefinition::Visibility::Public)
+				m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+		}
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
 	}
@@ -627,14 +653,23 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (!allowed)
 				m_errorReporter.typeError(_variable.location(), "Constants of non-value type not yet implemented.");
 		}
+
 		if (!_variable.value())
 			m_errorReporter.typeError(_variable.location(), "Uninitialized \"constant\" variable.");
 		else if (!_variable.value()->annotation().isPure)
-			m_errorReporter.warning(
-				_variable.value()->location(),
-				"Initial value for constant variable has to be compile-time constant. "
-				"This will fail to compile with the next breaking version change."
-			);
+		{
+			if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+				m_errorReporter.typeError(
+					_variable.value()->location(),
+					"Initial value for constant variable has to be compile-time constant."
+				);
+			else
+				m_errorReporter.warning(
+					_variable.value()->location(),
+					"Initial value for constant variable has to be compile-time constant. "
+					"This will fail to compile with the next breaking version change."
+				);
+		}
 	}
 	if (!_variable.isStateVariable())
 	{
@@ -1258,6 +1293,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
+
+				// Note: code generation will visit each of the expression even if they are not assigned from.
+				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
+					if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
+						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
+
 				if (_tuple.isInlineArray())
 					solAssert(!!types[i], "Inline array cannot have empty components");
 				if (_tuple.isInlineArray())
@@ -1497,7 +1538,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				/* If no mobile type is available an error will be raised elsewhere. */
 				if (literal->mobileType())
 					m_errorReporter.warning(
-						_functionCall.location(),
+						arguments[i]->location(),
 						"The type of \"" +
 						argType->toString() +
 						"\" was inferred as " +
@@ -1954,7 +1995,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
-			_literal.annotation().type = make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+			_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 		else
 			m_errorReporter.warning(
 				_literal.location(),

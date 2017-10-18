@@ -82,5 +82,5 @@ void CompilerState::populateStandard()
 	"(def 'shl (val shift) (mul val (exp 2 shift)))"
 	"(def 'shr (val shift) (div val (exp 2 shift)))"
 	"}";
-	CodeFragment::compile(s, *this);
+	CodeFragment::compile(s, *this, CodeFragment::ReadCallback());
 }

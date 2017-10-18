@@ -1,6 +1,7 @@
 {
     "0.1.0": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -17,6 +18,7 @@
     }, 
     "0.1.1": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -33,6 +35,7 @@
     }, 
     "0.1.2": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -49,6 +52,7 @@
     }, 
     "0.1.3": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -65,6 +69,7 @@
     }, 
     "0.1.4": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -81,6 +86,7 @@
     }, 
     "0.1.5": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -97,6 +103,7 @@
     }, 
     "0.1.6": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -114,6 +121,7 @@
     }, 
     "0.1.7": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -131,6 +139,7 @@
     }, 
     "0.2.0": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -148,6 +157,7 @@
     }, 
     "0.2.1": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -165,6 +175,7 @@
     }, 
     "0.2.2": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
             "ConstantOptimizerSubtraction", 
@@ -182,6 +193,7 @@
     }, 
     "0.3.0": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -199,6 +211,7 @@
     }, 
     "0.3.1": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -215,6 +228,7 @@
     }, 
     "0.3.2": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -231,6 +245,7 @@
     }, 
     "0.3.3": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -246,6 +261,7 @@
     }, 
     "0.3.4": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -261,6 +277,7 @@
     }, 
     "0.3.5": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -276,6 +293,7 @@
     }, 
     "0.3.6": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -289,6 +307,7 @@
     }, 
     "0.4.0": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -302,6 +321,7 @@
     }, 
     "0.4.1": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -315,6 +335,7 @@
     }, 
     "0.4.10": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -324,6 +345,7 @@
     }, 
     "0.4.11": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral"
@@ -332,6 +354,7 @@
     }, 
     "0.4.12": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
         ], 
@@ -339,6 +362,7 @@
     }, 
     "0.4.13": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
         ], 
@@ -346,24 +370,36 @@
     }, 
     "0.4.14": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue"
         ], 
         "released": "2017-07-31"
     }, 
     "0.4.15": {
-        "bugs": [], 
+        "bugs": [
+            "ZeroFunctionSelector"
+        ], 
         "released": "2017-08-08"
     }, 
     "0.4.16": {
-        "bugs": [], 
+        "bugs": [
+            "ZeroFunctionSelector"
+        ], 
         "released": "2017-08-24"
     }, 
     "0.4.17": {
-        "bugs": [], 
+        "bugs": [
+            "ZeroFunctionSelector"
+        ], 
         "released": "2017-09-21"
+    }, 
+    "0.4.18": {
+        "bugs": [], 
+        "released": "2017-10-18"
     }, 
     "0.4.2": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -376,6 +412,7 @@
     }, 
     "0.4.3": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -387,6 +424,7 @@
     }, 
     "0.4.4": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -397,6 +435,7 @@
     }, 
     "0.4.5": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -408,6 +447,7 @@
     }, 
     "0.4.6": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -418,6 +458,7 @@
     }, 
     "0.4.7": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -427,6 +468,7 @@
     }, 
     "0.4.8": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 
@@ -436,6 +478,7 @@
     }, 
     "0.4.9": {
         "bugs": [
+            "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
             "SkipEmptyStringLiteral", 

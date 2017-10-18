@@ -249,6 +249,11 @@ void applyMethods(OptimiserState& _state, Method, OtherMethods... _other)
 		applyMethods(_state, _other...);
 }
 
+size_t numberOfPops(AssemblyItems const& _items)
+{
+	return std::count(_items.begin(), _items.end(), Instruction::POP);
+}
+
 }
 
 bool PeepholeOptimiser::optimise()
@@ -257,8 +262,10 @@ bool PeepholeOptimiser::optimise()
 	while (state.i < m_items.size())
 		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
 	if (m_optimisedItems.size() < m_items.size() || (
-		m_optimisedItems.size() == m_items.size() &&
-		eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3)
+		m_optimisedItems.size() == m_items.size() && (
+			eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3) ||
+			numberOfPops(m_optimisedItems) > numberOfPops(m_items)
+		)
 	))
 	{
 		m_items = std::move(m_optimisedItems);

@@ -21,7 +21,6 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
-#include <libevmasm/EVMSchedule.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
@@ -50,7 +49,7 @@ public:
 		m_compiler.reset(false);
 		m_compiler.addSource("", "pragma solidity >=0.0;\n" + _sourceCode);
 		m_compiler.setOptimiserSettings(dev::test::Options::get().optimize);
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
+		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
 
 		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
 		ASTNode const& sourceUnit = m_compiler.ast();
@@ -63,15 +62,13 @@ public:
 
 	void testCreationTimeGas(string const& _sourceCode)
 	{
-		EVMSchedule schedule;
-
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
 		PathGasMeter meter(*m_compiler.assemblyItems());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject().bytecode.size());
 		// costs for deployment
-		gas += bytecodeSize * schedule.createDataGas;
+		gas += bytecodeSize * GasCosts::createDataGas;
 		// costs for transaction
 		gas += gasForTransaction(m_compiler.object().bytecode, true);
 
@@ -103,10 +100,9 @@ public:
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
 	{
-		EVMSchedule schedule;
-		GasMeter::GasConsumption gas = _isCreation ? schedule.txCreateGas : schedule.txGas;
+		GasMeter::GasConsumption gas = _isCreation ? GasCosts::txCreateGas : GasCosts::txGas;
 		for (auto i: _data)
-			gas += i != 0 ? schedule.txDataNonZeroGas : schedule.txDataZeroGas;
+			gas += i != 0 ? GasCosts::txDataNonZeroGas : GasCosts::txDataZeroGas;
 		return gas;
 	}
 

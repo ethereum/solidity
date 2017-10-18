@@ -841,6 +841,20 @@ BOOST_AUTO_TEST_CASE(peephole_double_push)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
+{
+	AssemblyItems items{
+		u256(4),
+		Instruction::CALLDATASIZE,
+		Instruction::LT,
+		Instruction::POP
+	};
+	PeepholeOptimiser peepOpt(items);
+	for (size_t i = 0; i < 3; i++)
+		BOOST_CHECK(peepOpt.optimise());
+	BOOST_CHECK(items.empty());
+}
+
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
 {
 	AssemblyItems items{

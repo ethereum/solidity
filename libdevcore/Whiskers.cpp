@@ -90,7 +90,13 @@ string Whiskers::replace(
 		string tagName(_match[1]);
 		if (!tagName.empty())
 		{
-			assertThrow(_parameters.count(tagName), WhiskersError, "Value for tag " + tagName + " not provided.");
+			assertThrow(
+				_parameters.count(tagName),
+				WhiskersError,
+				"Value for tag " + tagName + " not provided.\n" +
+				"Template:\n" +
+				_template
+			);
 			return _parameters.at(tagName);
 		}
 		else

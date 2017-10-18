@@ -57,6 +57,7 @@ class UserDefinedTypeName;
 class FunctionTypeName;
 class Mapping;
 class ArrayTypeName;
+class InlineAssembly;
 class Statement;
 class Block;
 class PlaceholderStatement;

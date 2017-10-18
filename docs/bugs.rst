@@ -48,7 +48,7 @@ fixed
 publish
     The date at which the bug became known publicly, optional
 severity
-    Severity of the bug: low, medium, high. Takes into account
+    Severity of the bug: very low, low, medium, high. Takes into account
     discoverability in contract tests, likelihood of occurrence and
     potential damage by exploits.
 conditions

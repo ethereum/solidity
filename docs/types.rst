@@ -107,6 +107,9 @@ Operators:
 
 * ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
 
+.. note::
+    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
+
 .. _members-of-addresses:
 
 Members of Addresses
@@ -239,6 +242,9 @@ Hexadecimal literals that pass the address checksum test, for example
 Hexadecimal literals that are between 39 and 41 digits
 long and do not pass the checksum test produce
 a warning and are treated as regular rational number literals.
+
+.. note::
+    The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
 
 .. index:: literal, literal;rational
 

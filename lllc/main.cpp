@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == Binary || mode == Hex)
 	{
-		auto bs = compileLLL(src, optimise ? true : false, &errors);
+		auto bs = compileLLL(src, optimise ? true : false, &errors, contentsString);
 		if (mode == Hex)
 			cout << toHex(bs) << endl;
 		else if (mode == Binary)
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 	else if (mode == ParseTree)
 		cout << parseLLL(src) << endl;
 	else if (mode == Assembly)
-		cout << compileLLLToAsm(src, optimise ? true : false, &errors) << endl;
+		cout << compileLLLToAsm(src, optimise ? true : false, &errors, contentsString) << endl;
 	for (auto const& i: errors)
 		cerr << i << endl;
 	if ( errors.size() )

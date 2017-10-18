@@ -147,10 +147,12 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 	if (Expression const* length = _typeName.length())
 	{
 		if (!length->annotation().type)
-			ConstantEvaluator e(*length);
+			ConstantEvaluator e(*length, m_errorReporter);
 		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
-		if (!lengthType || lengthType->isFractional())
+		if (!lengthType || !lengthType->mobileType())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
+		else if (lengthType->isFractional())
+			fatalTypeError(length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
 			fatalTypeError(length->location(), "Array with negative length specified.");
 		else
@@ -296,11 +298,19 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					{
 						typeLoc = DataLocation::Storage;
 						if (_variable.isLocalVariable())
-							m_errorReporter.warning(
-								_variable.location(),
-								"Variable is declared as a storage pointer. "
-								"Use an explicit \"storage\" keyword to silence this warning."
-							);
+						{
+							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+								typeError(
+									_variable.location(),
+									"Storage location must be specified as either \"memory\" or \"storage\"."
+								);
+							else
+								m_errorReporter.warning(
+									_variable.location(),
+									"Variable is declared as a storage pointer. "
+									"Use an explicit \"storage\" keyword to silence this warning."
+								);
+						}
 					}
 				}
 				else
@@ -347,4 +357,3 @@ void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, 
 	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(_location, _description);
 }
-

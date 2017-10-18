@@ -197,6 +197,24 @@ enum class Instruction: uint8_t
 	SELFDESTRUCT = 0xff	///< halt execution and register account for later deletion
 };
 
+/// @returns true if the instruction is a PUSH
+inline bool isPushInstruction(Instruction _inst)
+{
+	return Instruction::PUSH1 <= _inst && _inst <= Instruction::PUSH32;
+}
+
+/// @returns true if the instruction is a DUP
+inline bool isDupInstruction(Instruction _inst)
+{
+	return Instruction::DUP1 <= _inst && _inst <= Instruction::DUP16;
+}
+
+/// @returns true if the instruction is a SWAP
+inline bool isSwapInstruction(Instruction _inst)
+{
+	return Instruction::SWAP1 <= _inst && _inst <= Instruction::SWAP16;
+}
+
 /// @returns the number of PUSH Instruction _inst
 inline unsigned getPushNumber(Instruction _inst)
 {

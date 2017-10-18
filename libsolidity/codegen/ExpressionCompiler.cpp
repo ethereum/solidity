@@ -581,7 +581,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					_context << Instruction::ADD;
 				}
 			);
-			utils().encodeToMemory(argumentTypes, function.parameterTypes());
+			utils().abiEncode(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
 			utils().toSizeAfterFreeMemoryPointer();
@@ -675,7 +675,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				argumentTypes.push_back(arg->annotation().type);
 			}
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
+			solAssert(!function.padArguments(), "");
+			utils().packedEncode(argumentTypes, TypePointers());
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << Instruction::KECCAK256;
 			break;
@@ -694,11 +695,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			arguments.front()->accept(*this);
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(
+			utils().packedEncode(
 				{arguments.front()->annotation().type},
-				{function.parameterTypes().front()},
-				false,
-				true);
+				{function.parameterTypes().front()}
+			);
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(logNumber);
 			break;
@@ -717,11 +717,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					if (auto const& arrayType = dynamic_pointer_cast<ArrayType const>(function.parameterTypes()[arg - 1]))
 					{
 						utils().fetchFreeMemoryPointer();
-						utils().encodeToMemory(
+						utils().packedEncode(
 							{arguments[arg - 1]->annotation().type},
-							{arrayType},
-							false,
-							true
+							{arrayType}
 						);
 						utils().toSizeAfterFreeMemoryPointer();
 						m_context << Instruction::KECCAK256;
@@ -751,7 +749,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					nonIndexedParamTypes.push_back(function.parameterTypes()[arg]);
 				}
 			utils().fetchFreeMemoryPointer();
-			utils().encodeToMemory(nonIndexedArgTypes, nonIndexedParamTypes);
+			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
 			// need: topic1 ... topicn memsize memstart
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(numIndexed);
@@ -860,8 +858,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::DUP1 << Instruction::DUP3 << Instruction::MSTORE;
 			// Stack: memptr requested_length
 			// update free memory pointer
-			m_context << Instruction::DUP1 << arrayType.baseType()->memoryHeadSize();
-			m_context << Instruction::MUL << u256(32) << Instruction::ADD;
+			m_context << Instruction::DUP1;
+			// Stack: memptr requested_length requested_length
+			if (arrayType.isByteArray())
+				// Round up to multiple of 32
+				m_context << u256(31) << Instruction::ADD << u256(31) << Instruction::NOT << Instruction::AND;
+			else
+				m_context << arrayType.baseType()->memoryHeadSize() << Instruction::MUL;
+			// stacK: memptr requested_length data_size
+			m_context << u256(32) << Instruction::ADD;
 			m_context << Instruction::DUP3 << Instruction::ADD;
 			utils().storeFreeMemoryPointer();
 			// Stack: memptr requested_length
@@ -1014,59 +1019,65 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	switch (_memberAccess.expression().annotation().type->category())
 	{
 	case Type::Category::Contract:
+	case Type::Category::Integer:
 	{
 		bool alsoSearchInteger = false;
-		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
-		if (type.isSuper())
+		if (_memberAccess.expression().annotation().type->category() == Type::Category::Contract)
 		{
-			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
-				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
-				type.contractDefinition()
-			));
-		}
-		else
-		{
-			// ordinary contract type
-			if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
+			ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
+			if (type.isSuper())
 			{
-				u256 identifier;
-				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
-					identifier = FunctionType(*variable).externalIdentifier();
-				else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
-					identifier = FunctionType(*function).externalIdentifier();
-				else
-					solAssert(false, "Contract member is neither variable nor function.");
-				utils().convertType(type, IntegerType(0, IntegerType::Modifier::Address), true);
-				m_context << identifier;
+				solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+				utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
+					dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
+					type.contractDefinition()
+				));
 			}
 			else
-				// not found in contract, search in members inherited from address
-				alsoSearchInteger = true;
+			{
+				// ordinary contract type
+				if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
+				{
+					u256 identifier;
+					if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
+						identifier = FunctionType(*variable).externalIdentifier();
+					else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+						identifier = FunctionType(*function).externalIdentifier();
+					else
+						solAssert(false, "Contract member is neither variable nor function.");
+					utils().convertType(type, IntegerType(160, IntegerType::Modifier::Address), true);
+					m_context << identifier;
+				}
+				else
+					// not found in contract, search in members inherited from address
+					alsoSearchInteger = true;
+			}
 		}
-		if (!alsoSearchInteger)
-			break;
-	}
-	// fall-through
-	case Type::Category::Integer:
-		if (member == "balance")
-		{
-			utils().convertType(
-				*_memberAccess.expression().annotation().type,
-				IntegerType(0, IntegerType::Modifier::Address),
-				true
-			);
-			m_context << Instruction::BALANCE;
-		}
-		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
-			utils().convertType(
-				*_memberAccess.expression().annotation().type,
-				IntegerType(0, IntegerType::Modifier::Address),
-				true
-			);
 		else
-			solAssert(false, "Invalid member access to integer");
+			alsoSearchInteger = true;
+
+		if (alsoSearchInteger)
+		{
+			if (member == "balance")
+			{
+				utils().convertType(
+					*_memberAccess.expression().annotation().type,
+					IntegerType(160, IntegerType::Modifier::Address),
+					true
+				);
+				m_context << Instruction::BALANCE;
+			}
+			else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
+				utils().convertType(
+					*_memberAccess.expression().annotation().type,
+					IntegerType(160, IntegerType::Modifier::Address),
+					true
+				);
+			else
+				solAssert(false, "Invalid member access to integer");
+		}
 		break;
+	}
 	case Type::Category::Function:
 		if (member == "selector")
 		{
@@ -1206,11 +1217,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			utils().fetchFreeMemoryPointer();
 			// stack: base index mem
 			// note: the following operations must not allocate memory!
-			utils().encodeToMemory(
+			utils().packedEncode(
 				TypePointers{_indexAccess.indexExpression()->annotation().type},
-				TypePointers{keyType},
-				false,
-				true
+				TypePointers{keyType}
 			);
 			m_context << Instruction::SWAP1;
 			utils().storeInMemoryDynamic(IntegerType(256));
@@ -1712,6 +1721,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
+	else if (m_context.experimentalFeatureActive(ExperimentalFeature::V050))
+		// Send all gas (requires tangerine whistle EVM)
+		m_context << Instruction::GAS;
 	else
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"

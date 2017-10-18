@@ -102,18 +102,45 @@ public:
 	/// @note the locations of target reference types are ignored, because it will always be
 	/// memory.
 	void encodeToMemory(
-		TypePointers const& _givenTypes = {},
-		TypePointers const& _targetTypes = {},
-		bool _padToWords = true,
-		bool _copyDynamicDataInPlace = false,
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _padToWords,
+		bool _copyDynamicDataInPlace,
 		bool _encodeAsLibraryTypes = false
 	);
+
+	/// Special case of @a encodeToMemory which assumes tight packing, e.g. no zero padding
+	/// and dynamic data is encoded in-place.
+	/// Stack pre: <value0> <value1> ... <valueN-1> <head_start>
+	/// Stack post: <mem_ptr>
+	void packedEncode(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _encodeAsLibraryTypes = false
+	)
+	{
+		encodeToMemory(_givenTypes, _targetTypes, false, true, _encodeAsLibraryTypes);
+	}
 
 	/// Special case of @a encodeToMemory which assumes that everything is padded to words
 	/// and dynamic data is not copied in place (i.e. a proper ABI encoding).
 	/// Stack pre: <value0> <value1> ... <valueN-1> <head_start>
 	/// Stack post: <mem_ptr>
 	void abiEncode(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _encodeAsLibraryTypes = false
+	)
+	{
+		encodeToMemory(_givenTypes, _targetTypes, true, false, _encodeAsLibraryTypes);
+	}
+
+	/// Special case of @a encodeToMemory which assumes that everything is padded to words
+	/// and dynamic data is not copied in place (i.e. a proper ABI encoding).
+	/// Uses a new, less tested encoder implementation.
+	/// Stack pre: <value0> <value1> ... <valueN-1> <head_start>
+	/// Stack post: <mem_ptr>
+	void abiEncodeV2(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false

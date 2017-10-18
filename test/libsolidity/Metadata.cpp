@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	CompilerStack compilerStack;
 	compilerStack.addSource("", std::string(sourceCode));
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
 	std::string const& metadata = compilerStack.metadata("test");
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 	CompilerStack compilerStack;
 	compilerStack.addSource("", std::string(sourceCode));
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 	bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
 	std::string const& metadata = compilerStack.metadata("test");
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	)";
 	compilerStack.addSource("B", std::string(sourceCode));
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	)";
 	compilerStack.addSource("C", std::string(sourceCode));
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
-	ETH_TEST_REQUIRE_NO_THROW(compilerStack.compile(), "Compiling contract failed");
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("C");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));

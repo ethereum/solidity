@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.4.17")
+set(PROJECT_VERSION "0.4.18")
 project(solidity VERSION ${PROJECT_VERSION})
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
@@ -35,7 +35,7 @@ string(REGEX MATCHALL ".." LICENSE_TEXT "${LICENSE_TEXT}")
 string(REGEX REPLACE ";" ",\n\t0x" LICENSE_TEXT "${LICENSE_TEXT}")
 set(LICENSE_TEXT "0x${LICENSE_TEXT}")
 
-configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" "license.h")
+configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/license.h)
 
 include(EthOptions)
 configure_project(TESTS)

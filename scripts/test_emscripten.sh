@@ -36,6 +36,10 @@ DIR=$(mktemp -d)
     echo "Preparing solc-js..."
     git clone --depth 1 https://github.com/ethereum/solc-js "$DIR"
     cd "$DIR"
+    # disable "prepublish" script which downloads the latest version
+    # (we will replace it anyway and it is often incorrectly cached
+    # on travis)
+    npm config set script.prepublish ''
     npm install
 
     # Replace soljson with current build

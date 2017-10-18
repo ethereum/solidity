@@ -39,6 +39,17 @@
 
 using namespace boost::unit_test;
 
+namespace
+{
+void removeTestSuite(std::string const& _name)
+{
+	master_test_suite_t& master = framework::master_test_suite();
+	auto id = master.get(_name);
+	assert(id != INV_TEST_UNIT_ID);
+	master.remove(id);
+}
+}
+
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
@@ -57,12 +68,10 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"SolidityEndToEndTest",
 			"SolidityOptimizer"
 		})
-		{
-			auto id = master.get(suite);
-			assert(id != INV_TEST_UNIT_ID);
-			master.remove(id);
-		}
+			removeTestSuite(suite);
 	}
+	if (dev::test::Options::get().disableSMT)
+		removeTestSuite("SMTChecker");
 
 	return 0;
 }

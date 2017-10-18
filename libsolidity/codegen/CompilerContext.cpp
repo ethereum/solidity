@@ -26,6 +26,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
@@ -36,6 +37,13 @@
 
 #include <utility>
 #include <numeric>
+
+// Change to "define" to output all intermediate code
+#undef SOL_OUTPUT_ASM
+#ifdef SOL_OUTPUT_ASM
+#include <libsolidity/inlineasm/AsmPrinter.h>
+#endif
+
 
 using namespace std;
 
@@ -312,12 +320,31 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
-	solAssert(parserResult, "Failed to parse inline assembly block.");
-	solAssert(errorReporter.errors().empty(), "Failed to parse inline assembly block.");
-
+#ifdef SOL_OUTPUT_ASM
+	cout << assembly::AsmPrinter()(*parserResult) << endl;
+#endif
 	assembly::AsmAnalysisInfo analysisInfo;
-	assembly::AsmAnalyzer analyzer(analysisInfo, errorReporter, false, identifierAccess.resolve);
-	solAssert(analyzer.analyze(*parserResult), "Failed to analyze inline assembly block.");
+	bool analyzerResult = false;
+	if (parserResult)
+		analyzerResult = assembly::AsmAnalyzer(analysisInfo, errorReporter, false, identifierAccess.resolve).analyze(*parserResult);
+	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
+	{
+		string message =
+			"Error parsing/analyzing inline assembly block:\n"
+			"------------------ Input: -----------------\n" +
+			_assembly + "\n"
+			"------------------ Errors: ----------------\n";
+		for (auto const& error: errorReporter.errors())
+			message += SourceReferenceFormatter::formatExceptionInformation(
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				[&](string const&) -> Scanner const& { return *scanner; }
+			);
+		message += "-------------------------------------------\n";
+
+		solAssert(false, message);
+	}
+
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
 }

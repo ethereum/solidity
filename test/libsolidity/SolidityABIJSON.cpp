@@ -44,7 +44,7 @@ public:
 	{
 		m_compilerStack.reset(false);
 		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
-		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
+		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
 		Json::Value generatedInterface = m_compilerStack.contractABI("");
 		Json::Value expectedInterface;

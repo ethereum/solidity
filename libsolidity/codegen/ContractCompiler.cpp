@@ -251,13 +251,10 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	eth::AssemblyItem notFound = m_context.newTag();
-	// shortcut messages without data if we have many functions in order to be able to receive
-	// ether with constant gas
-	if (interfaceFunctions.size() > 5 || fallback)
-	{
-		m_context << Instruction::CALLDATASIZE << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(notFound);
-	}
+	// directly jump to fallback if the data is too short to contain a function selector
+	// also guards against short data
+	m_context << u256(4) << Instruction::CALLDATASIZE << Instruction::LT;
+	m_context.appendConditionalJumpTo(notFound);
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
@@ -421,7 +418,7 @@ void ContractCompiler::appendReturnValuePacker(TypePointers const& _typeParamete
 		utils.fetchFreeMemoryPointer();
 		//@todo optimization: if we return a single memory array, there should be enough space before
 		// its data to add the needed parts and we avoid a memory copy.
-		utils.encodeToMemory(_typeParameters, _typeParameters, true, false, _isLibrary);
+		utils.abiEncode(_typeParameters, _typeParameters, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
 		m_context << Instruction::RETURN;
 	}

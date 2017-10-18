@@ -1395,6 +1395,61 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(events_with_same_name_unnamed_arguments)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint);
+			event A(uint, uint);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(events_with_same_name_different_types)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint);
+			event A(bytes);
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint i);
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration_ignores_anonymous)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint i) anonymous;
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
+BOOST_AUTO_TEST_CASE(double_event_declaration_ignores_indexed)
+{
+	char const* text = R"(
+		contract test {
+			event A(uint i);
+			event A(uint indexed i);
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Event with same name and arguments defined twice.");
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
@@ -2306,15 +2361,26 @@ BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
 }
 
-BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable_0_4_x)
 {
 	char const* text = R"(
 		contract C {
 			address constant x = msg.sender;
 		}
 	)";
-	// Change to TypeError for 0.5.0.
 	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assigning_state_to_const_variable)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+
+		contract C {
+			address constant x = msg.sender;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
@@ -2333,7 +2399,7 @@ BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
 	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
 }
 
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant_0_4_x)
 {
 	char const* text = R"(
 		contract C {
@@ -2341,8 +2407,20 @@ BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
 			uint constant y = x();
 		}
 	)";
-	// Change to TypeError for 0.5.0.
 	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
+}
+
+BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+
+		contract C {
+			function () constant returns (uint) x;
+			uint constant y = x();
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
@@ -4135,6 +4213,8 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+
+	// Test deprecation warning under < 0.5.0
 	text = R"(
 		contract test {
 			function f() pure public {
@@ -4154,6 +4234,29 @@ BOOST_AUTO_TEST_CASE(rational_unary_operation)
 		}
 	)";
 	CHECK_WARNING(text,"Use of unary + is deprecated");
+
+	// Test syntax error under 0.5.0
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				ufixed16x2 a = +3.25;
+				fixed16x2 b = -3.25;
+				a; b;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "Use of unary + is deprecated");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f(uint x) pure public {
+				uint y = +x;
+				y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "Use of unary + is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
@@ -4251,7 +4354,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Array with fractional length specified.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
@@ -4263,7 +4366,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
@@ -4275,7 +4378,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
@@ -5434,7 +5537,7 @@ BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 				}
 			}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid mobile type.");
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
 }
 
 BOOST_AUTO_TEST_CASE(warns_msg_value_in_non_payable_public_function)
@@ -5776,6 +5879,28 @@ BOOST_AUTO_TEST_CASE(interface_function_bodies)
 	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot have an implementation");
 }
 
+BOOST_AUTO_TEST_CASE(interface_function_external)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		interface I {
+			function f() external;
+		}
+	)";
+	success(text);
+}
+
+BOOST_AUTO_TEST_CASE(interface_function_public)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		interface I {
+			function f() public;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Functions in interfaces must be declared external.");
+}
+
 BOOST_AUTO_TEST_CASE(interface_function_internal)
 {
 	char const* text = R"(
@@ -6107,6 +6232,26 @@ BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(no_unused_warning_interface_arguments)
+{
+	char const* text = R"(
+		interface I {
+			function f(uint a) pure public returns (uint b);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(no_unused_warning_abstract_arguments)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint a) pure public returns (uint b);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(no_unused_warnings)
 {
 	char const* text = R"(
@@ -6268,6 +6413,17 @@ BOOST_AUTO_TEST_CASE(function_override_is_not_shadowing)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(event_parameter_cannot_shadow_state_variable)
+{
+	char const* text = R"(
+		contract C {
+			address a;
+			event E(address a);
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(callable_crash)
 {
 	char const* text = R"(
@@ -6409,7 +6565,19 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
+	CHECK_WARNING(text, "Variable is declared as a storage pointer. Use an explicit \"storage\" keyword to silence this warning");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			struct S { uint a; }
+			S x;
+			function f() view public {
+				S y = x;
+				y;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
@@ -6928,6 +7096,53 @@ BOOST_AUTO_TEST_CASE(non_external_fallback)
 	CHECK_ERROR(text, TypeError, "Fallback function must be defined as \"external\".");
 }
 
+BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1E111);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type");
+	text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1, 1E111);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1E111, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				(2**270, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				((2**270) / 2**100, 1);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_about_sha3)
 {
 	char const* text = R"(
@@ -6951,6 +7166,135 @@ BOOST_AUTO_TEST_CASE(warn_about_suicide)
 		}
 	)";
 	CHECK_WARNING(text, "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+}
+
+BOOST_AUTO_TEST_CASE(address_overload_resolution)
+{
+	char const* text = R"(
+		contract C {
+			function balance() returns (uint) {
+				this.balance; // to avoid pureness warning
+				return 1;
+			}
+			function transfer(uint amount) {
+				address(this).transfer(amount); // to avoid pureness warning
+			}
+		}
+		contract D {
+			function f() {
+				var x = (new C()).balance();
+				x;
+				(new C()).transfer(5);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_too_large)
+{
+	char const* text = R"(
+		contract C {
+			uint[8**90] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
+{
+	char const* text = R"(
+		contract C {
+			uint[true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
+{
+	char const* text = R"(
+		contract C {
+			uint[-true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[true/1] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[1/true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	text = R"(
+		contract C {
+			uint[1.111111E1111111111111] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid literal value.");
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.balance;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"balance\" not found or not visible after argument-dependent lookup in contract");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.transfer;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"transfer\" not found or not visible after argument-dependent lookup in contract");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.send;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"send\" not found or not visible after argument-dependent lookup in contract");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.call;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"call\" not found or not visible after argument-dependent lookup in contract");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.callcode;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"callcode\" not found or not visible after argument-dependent lookup in contract");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() {
+				this.delegatecall;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"delegatecall\" not found or not visible after argument-dependent lookup in contract");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
