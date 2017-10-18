@@ -230,6 +230,7 @@ Or, on Windows:
 Command-Line Build
 ------------------
 
+**Be sure to install External Dependencies before build.**
 Solidity project uses CMake to configure the build.
 Building Solidity is quite similar on Linux, macOS and other Unices:
 
