@@ -24,6 +24,7 @@ Bugfixes:
  * Type Checker: Prevent duplicate event declarations.
  * Type Checker: Do not mark event parameters as shadowing state variables.
  * Type Checker: Allow ``gas`` in view functions.
+ * Type Checker: Validate each number literal in tuple expressions even if they are not assigned from.
 
 ### 0.4.17 (2017-09-21)
 
