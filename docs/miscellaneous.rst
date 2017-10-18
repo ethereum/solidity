@@ -306,7 +306,7 @@ The following is the order of precedence for operators, listed in order of evalu
 Overflow and underflow rules for operators
 ==========================================
 
-Integers in Solidity have a fixed size. When an (arithmetic) operation attempts to
+Integers in Solidity have a fixed size. When an arithmetic operation attempts to
 create a number that is greater than the maximum value it results in an *overflow*,
 and if it tries to create number is less than the minimum value allowed it results
 in an *underflow*.
