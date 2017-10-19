@@ -938,9 +938,10 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		if (m_compiler->runtimeAssemblyItems())
+		// FIXME: shouldn't this be done for every contract?
+		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
 			gasCosts = GasEstimator::breakToStatementLevel(
-				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(), asts),
+				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
 				asts
 			);
 
