@@ -74,7 +74,10 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error creating IPC socket object");
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
+	{
+		close(m_socket);
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
+	}
 #endif
 }
 
