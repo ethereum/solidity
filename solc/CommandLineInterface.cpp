@@ -424,20 +424,13 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.string()] = dev::contentsString(infile.string());
+				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			m_sourceCodes[g_stdinFileName].append(s + '\n');
-		}
-	}
+		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -447,7 +440,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	try
 	{
 		if (fs::is_regular_file(_input))
-			data = contentsString(_input);
+			data = readFileAsString(_input);
 	}
 	catch (fs::filesystem_error const&)
 	{
@@ -698,7 +691,7 @@ bool CommandLineInterface::processInput()
 				return ReadCallback::Result{false, "Not a valid file."};
 			else
 			{
-				auto contents = dev::contentsString(canonicalPath.string());
+				auto contents = dev::readFileAsString(canonicalPath.string());
 				m_sourceCodes[path.string()] = contents;
 				return ReadCallback::Result{true, contents};
 			}
@@ -731,13 +724,7 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argStandardJSON))
 	{
-		string input;
-		while (!cin.eof())
-		{
-			string tmp;
-			getline(cin, tmp);
-			input.append(tmp + "\n");
-		}
+		string input = dev::readStandardInput();
 		StandardCompiler compiler(fileReader);
 		cout << compiler.compile(input) << endl;
 		return true;
