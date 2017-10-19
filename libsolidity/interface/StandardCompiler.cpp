@@ -187,6 +187,14 @@ bool isTargetRequired(Json::Value const& _targets, string const& _file, string c
 	return false;
 }
 
+bool isTargetRequired(Json::Value const& _targets, string const& _file, string const& _contract, vector<string> const& _requested)
+{
+	for (auto const& requested: _requested)
+		if (isTargetRequired(_targets, _file, _contract, requested))
+			return true;
+	return false;
+}
+
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
 	Json::Value ret(Json::objectValue);
@@ -490,13 +498,23 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		if (isTargetRequired(outputSelection, file, name, "evm.gasEstimates"))
 			evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
-		if (isTargetRequired(outputSelection, file, name, "evm.bytecode"))
+		if (isTargetRequired(
+			outputSelection,
+			file,
+			name,
+			{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" }
+		))
 			evmData["bytecode"] = collectEVMObject(
 				m_compilerStack.object(contractName),
 				m_compilerStack.sourceMapping(contractName)
 			);
 
-		if (isTargetRequired(outputSelection, file, name, "evm.deployedBytecode"))
+		if (isTargetRequired(
+			outputSelection,
+			file,
+			name,
+			{ "evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes", "evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences" }
+		))
 			evmData["deployedBytecode"] = collectEVMObject(
 				m_compilerStack.runtimeObject(contractName),
 				m_compilerStack.runtimeSourceMapping(contractName)
