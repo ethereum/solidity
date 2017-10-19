@@ -150,10 +150,18 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	if (_memberAccess.memberName() == "callcode")
 		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			if (type->kind() == FunctionType::Kind::BareCallCode)
-				m_errorReporter.warning(
-					_memberAccess.location(),
-					"\"callcode\" has been deprecated in favour of \"delegatecall\"."
-				);
+			{
+				if (m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+					m_errorReporter.typeError(
+						_memberAccess.location(),
+						"\"callcode\" has been deprecated in favour of \"delegatecall\"."
+					);
+				else
+					m_errorReporter.warning(
+						_memberAccess.location(),
+						"\"callcode\" has been deprecated in favour of \"delegatecall\"."
+					);
+			}
 
 	if (m_constructor && m_currentContract)
 		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type.get()))

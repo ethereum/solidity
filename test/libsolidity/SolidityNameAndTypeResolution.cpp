@@ -4783,6 +4783,16 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 		}
 	)";
 	CHECK_WARNING(text, "\"callcode\" has been deprecated in favour of \"delegatecall\"");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				var x = address(0x12).callcode;
+				x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "\"callcode\" has been deprecated in favour of \"delegatecall\"");
 }
 
 BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
