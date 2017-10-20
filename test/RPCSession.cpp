@@ -339,22 +339,25 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	return result["result"];
 }
 
+string const& RPCSession::accountCreate()
+{
+	m_accounts.push_back(personal_newAccount(""));
+	personal_unlockAccount(m_accounts.back(), "", 100000);
+	return m_accounts.back();
+}
+
 string const& RPCSession::accountCreateIfNotExists(size_t _id)
 {
 	if (_id >= m_accounts.size())
-	{
-		m_accounts.push_back(personal_newAccount(""));
-		personal_unlockAccount(m_accounts.back(), "", 100000);
-	}
+		accountCreate();
 	return m_accounts[_id];
 }
 
 RPCSession::RPCSession(const string& _path):
 	m_ipcSocket(_path)
 {
-	string account = personal_newAccount("");
-	personal_unlockAccount(account, "", 100000);
-	m_accounts.push_back(account);
+	accountCreate();
+	// This will pre-fund the accounts create prior.
 	test_setChainParams(m_accounts);
 }
 
