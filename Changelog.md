@@ -147,6 +147,7 @@ Features:
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
  * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
+ * General: Allow underscores in numeric and hex literals to separate thousands and quads.
  * Inheritance: Error when using empty parentheses for base class constructors that require arguments as experimental 0.5.0 feature.
  * Inheritance: Error when using no parentheses in modifier-style constructor calls as experimental 0.5.0 feature.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.

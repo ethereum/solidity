@@ -726,8 +726,21 @@ Token::Value Scanner::scanHexString()
 
 void Scanner::scanDecimalDigits()
 {
-	while (isDecimalDigit(m_char))
+	if (!isDecimalDigit(m_char)) // avoid underscore at beginning
+		return;
+	while (isDecimalDigit(m_char) || m_char == '_') 
+	{
+		if (m_char == '_') 
+		{
+			advance();
+			if (!isDecimalDigit(m_char)) // avoid trailing underscore
+			{
+				rollback(1);
+				break;
+			}
+		}
 		addLiteralCharAndAdvance();
+	}
 }
 
 Token::Value Scanner::scanNumber(char _charSeen)
@@ -755,8 +768,19 @@ Token::Value Scanner::scanNumber(char _charSeen)
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
 					return Token::Illegal; // we must have at least one hex digit after 'x'/'X'
-				while (isHexDigit(m_char))
+				while (isHexDigit(m_char) || m_char == '_') // same logic as scanDecimalDigits
+				{
+					if (m_char == '_') 
+					{
+						advance();
+						if (!isHexDigit(m_char)) // avoid trailing underscore
+						{
+							rollback(1);
+							break;
+						}
+					}
 					addLiteralCharAndAdvance();
+				}
 			}
 			else if (isDecimalDigit(m_char))
 				// We do not allow octal numbers
