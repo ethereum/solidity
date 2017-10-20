@@ -21,6 +21,7 @@
 
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 
 #include <boost/algorithm/string.hpp>
@@ -92,10 +93,13 @@ bool dev::passesAddressChecksum(string const& _str, bool _strict)
 string dev::getChecksummedAddress(string const& _addr)
 {
 	string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
-	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
-	string ret = "0x";
+	assertThrow(s.length() == 40, InvalidAddress, "");
+	assertThrow(s.find_first_not_of("0123456789abcdefABCDEF") == string::npos, InvalidAddress, "");
 
-	for (size_t i = 0; i < s.length(); ++i)
+	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
+
+	string ret = "0x";
+	for (size_t i = 0; i < 40; ++i)
 	{
 		char addressCharacter = s[i];
 		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;
