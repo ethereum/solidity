@@ -348,7 +348,7 @@ string const& RPCSession::accountCreate()
 
 string const& RPCSession::accountCreateIfNotExists(size_t _id)
 {
-	if (_id >= m_accounts.size())
+	while ((_id + 1) > m_accounts.size())
 		accountCreate();
 	return m_accounts[_id];
 }
