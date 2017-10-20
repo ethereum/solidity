@@ -7247,6 +7247,12 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Invalid literal value.");
+	text = R"(
+		contract C {
+			uint[3/0] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator / not compatible with types int_const 3 and int_const 0");
 }
 
 BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
