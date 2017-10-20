@@ -170,6 +170,22 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK(containsAtMostWarnings(result));
 }
 
+BOOST_AUTO_TEST_CASE(empty_source_name)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Source name cannot be empty."));
+}
+
 BOOST_AUTO_TEST_CASE(basic_compilation)
 {
 	char const* input = R"(

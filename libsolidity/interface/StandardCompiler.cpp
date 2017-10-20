@@ -190,6 +190,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		string hash;
 
+		if (sourceName.empty())
+			return formatFatalError("JSONError", "Source name cannot be empty.");
+
 		if (!sources[sourceName].isObject())
 			return formatFatalError("JSONError", "Source input is not a JSON object.");
 
