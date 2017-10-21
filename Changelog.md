@@ -11,6 +11,7 @@ Features:
  * Type Checker: Do not add members of ``address`` to contracts as experimental 0.5.0 feature.
  * Type Checker: Force interface functions to be external as experimental 0.5.0 feature.
  * Type Checker: Require ``storage`` or ``memory`` keyword for local variables as experimental 0.5.0 feature.
+ * Compiler Interface: Better formatted error message for long source snippets
 
 Bugfixes:
  * Code Generator: Allocate one byte per memory byte array element instead of 32.
