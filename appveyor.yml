@@ -68,15 +68,14 @@ build_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION%
     - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
+
+test_script:
+    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
+    - soltest.exe --show-progress -- --no-ipc --no-smt
 # Skip bytecode compare if private key is not available
     - ps: if ($env:priv_key) {
         scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
         }
-
-test_script:
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    - soltest.exe --show-progress -- --no-ipc --no-smt
 
 artifacts:
     - path: solidity-windows.zip
