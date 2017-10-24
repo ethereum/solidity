@@ -95,7 +95,8 @@ This means that cyclic creation dependencies are impossible.
             // Create a new Token contract and return its address.
             // From the JavaScript side, the return type is simply
             // "address", as this is the closest type available in
-            // the ABI.
+            // the ABI. Address is only returned in javascript
+            // on calls not transactions.
             return new OwnedToken(name);
         }
 
