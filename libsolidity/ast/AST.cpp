@@ -587,7 +587,10 @@ bool Literal::passesAddressChecksum() const
 std::string Literal::getChecksummedAddress() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
-	if (value().length != 42)
+	/// Pad literal to be a proper hex address.
+	string address = value().substr(2);
+	if (address.length() > 40)
 		return string();
-	return dev::getChecksummedAddress(value());
+	address.insert(address.begin(), 40 - address.size(), '0');
+	return dev::getChecksummedAddress(address);
 }
