@@ -2000,8 +2000,8 @@ void TypeChecker::endVisit(Literal const& _literal)
 			m_errorReporter.warning(
 				_literal.location(),
 				"This looks like an address but has an invalid checksum. "
-				"If this is not used as an address, please prepend '00'. "
-				"Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. "
+				"If this is not used as an address, please prepend '00'. " +
+				(!_literal.getChecksummedAddress().empty() ? "Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. " : "") +
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}
