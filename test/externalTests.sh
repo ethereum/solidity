@@ -30,11 +30,18 @@ set -e
 
 if [ ! -f "$1" ]
 then
-  echo "Usage: $0 <path to soljson.js>"
-  exit 1
+    echo "Usage: $0 <path to soljson.js> <path to solc binary>"
+    exit 1
+fi
+
+if [ ! -f "$2" ]
+then
+    echo "Usage: $0 <path to soljson.js> <path to solc binary>"
+    exit 1
 fi
 
 SOLJSON="$1"
+SOLC="$2"
 
 DIR=$(mktemp -d)
 (
@@ -44,5 +51,19 @@ DIR=$(mktemp -d)
     npm install
     cp "$SOLJSON" ./node_modules/solc/soljson.js
     npm run test
+)
+rm -rf "$DIR"
+
+DIR=$(mktemp -d)
+(
+    echo "Running Augur tests..."
+    git clone https://github.com/AugurProject/augur-core.git "$DIR"
+    cd "$DIR"
+    npm install npx
+    npm install
+    npm install solc
+    pip install -r requirements.txt
+    cd tests
+    SOLC_BINARY="$SOLC" pytest -vv
 )
 rm -rf "$DIR"
