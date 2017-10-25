@@ -49,6 +49,21 @@ void SourceReferenceFormatter::printSourceLocation(
 	if (startLine == endLine)
 	{
 		string line = scanner.lineAtPosition(_location->start);
+
+		int locationLength = endColumn - startColumn;
+		if (locationLength > 150)
+		{
+			line = line.substr(0, startColumn + 35) + " ... " + line.substr(endColumn - 35);
+			endColumn = startColumn + 75;
+			locationLength = 75;
+		}
+		if (line.length() > 150)
+		{
+			line = " ... " + line.substr(startColumn, locationLength) + " ... ";
+			startColumn = 5;
+			endColumn = startColumn + locationLength;
+		}
+
 		_stream << line << endl;
 		for_each(
 			line.cbegin(),

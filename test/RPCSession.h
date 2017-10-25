@@ -121,6 +121,7 @@ public:
 	Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
+	std::string const& accountCreate();
 	std::string const& accountCreateIfNotExists(size_t _id);
 
 private:

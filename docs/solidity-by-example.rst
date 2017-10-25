@@ -221,8 +221,7 @@ activate themselves.
         // absolute unix timestamps (seconds since 1970-01-01)
         // or time periods in seconds.
         address public beneficiary;
-        uint public auctionStart;
-        uint public biddingTime;
+        uint public auctionEnd;
 
         // Current state of the auction.
         address public highestBidder;
@@ -251,8 +250,7 @@ activate themselves.
             address _beneficiary
         ) {
             beneficiary = _beneficiary;
-            auctionStart = now;
-            biddingTime = _biddingTime;
+            auctionEnd = now + _biddingTime;
         }
 
         /// Bid on the auction with the value sent
@@ -268,7 +266,7 @@ activate themselves.
 
             // Revert the call if the bidding
             // period is over.
-            require(now <= (auctionStart + biddingTime));
+            require(now <= auctionEnd);
 
             // If the bid is not higher, send the
             // money back.
@@ -322,7 +320,7 @@ activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= (auctionStart + biddingTime)); // auction did not yet end
+            require(now >= auctionEnd); // auction did not yet end
             require(!ended); // this function has already been called
 
             // 2. Effects
@@ -382,7 +380,6 @@ high or low invalid bids.
         }
 
         address public beneficiary;
-        uint public auctionStart;
         uint public biddingEnd;
         uint public revealEnd;
         bool public ended;
@@ -410,7 +407,6 @@ high or low invalid bids.
             address _beneficiary
         ) {
             beneficiary = _beneficiary;
-            auctionStart = now;
             biddingEnd = now + _biddingTime;
             revealEnd = biddingEnd + _revealTime;
         }
