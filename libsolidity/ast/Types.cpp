@@ -39,6 +39,7 @@
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <limits>
 
@@ -779,7 +780,9 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		if (boost::starts_with(_literal.value(), "0x"))
 		{
 			// process as hex
-			value = bigint(_literal.value());
+			ASTString valueString = _literal.value();
+			boost::erase_all(valueString, "_");// Remove underscore separators
+			value = bigint(valueString);
 		}
 		else if (expPoint != _literal.value().end())
 		{
