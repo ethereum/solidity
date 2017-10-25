@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(underscores_in_hex)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
-	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0xab19cf");
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0xab_19cf");
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Semicolon);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
