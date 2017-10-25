@@ -711,8 +711,8 @@ Function Names
 Functions should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
 
 
-Function Arguments Names
-========================
+Function Argument Names
+=======================
 
 Function arguments should use mixedCase. Examples: ``initialSupply``, ``account``, ``recipientAddress``, ``senderAddress``, ``newOwner``.
 
@@ -720,8 +720,8 @@ When writing library functions that operate on a custom struct, the struct
 should be the first argument and should always be named ``self``.
 
 
-Local and State Variables Names
-===============================
+Local and State Variable Names
+==============================
 
 Use mixedCase. Examples: ``totalSupply``, ``remainingSupply``, ``balancesOf``, ``creatorAddress``, ``isPreSale``, ``tokenExchangeRate``.
 
