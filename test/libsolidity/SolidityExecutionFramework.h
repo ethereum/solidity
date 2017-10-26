@@ -60,12 +60,13 @@ public:
 		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
 		if (!m_compiler.compile())
 		{
+			auto scannerFromSourceName = [&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); };
+			SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
+
 			for (auto const& error: m_compiler.errors())
-				SourceReferenceFormatter::printExceptionInformation(
-					std::cerr,
+				formatter.printExceptionInformation(
 					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-					[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 				);
 			BOOST_ERROR("Compiling contract failed");
 		}
