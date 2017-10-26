@@ -4036,6 +4036,35 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 	BOOST_CHECK(!success(text));
 }
 
+BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
+{
+	char const* text = R"(
+		contract test {
+			modifier mod() { _; }
+
+			function f() public {
+				mod g;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Name has to refer to a struct, enum or contract.");
+}
+
+BOOST_AUTO_TEST_CASE(function_is_not_a_valid_typename)
+{
+	char const* text = R"(
+		contract test {
+			function foo() public {
+			}
+
+			function f() public {
+				foo g;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Name has to refer to a struct, enum or contract.");
+}
+
 BOOST_AUTO_TEST_CASE(long_uint_variable_fails)
 {
 	char const* text = R"(
