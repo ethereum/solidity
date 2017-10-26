@@ -4050,7 +4050,7 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)

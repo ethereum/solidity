@@ -2,6 +2,7 @@
 
 Features:
  * Commandline interface: Support strict mode of assembly with the ``--strict--assembly`` switch.
+ * Compiler now continues resolving references after the first error.
  * Limit the number of warnings raised for creating abstract contracts.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
  * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Julia mode.
