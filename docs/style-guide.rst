@@ -385,7 +385,7 @@ No::
 Function Declaration
 ====================
 
-For short function declarations, it's recommended for the opening brace of the
+For short function declarations, it is recommended for the opening brace of the
 function body to be kept on the same line as the function declaration.
 
 The closing brace should be at the same indentation level as the function
@@ -436,7 +436,7 @@ No::
         selfdestruct(owner);
     }
 
-For long function declarations, it's recommended to drop each argument onto
+For long function declarations, it is recommended to drop each argument onto
 it's own line at the same indentation level as the function body.  The closing
 parenthesis and opening bracket should be placed on their own line as well at
 the same indentation level as the function declaration.
@@ -532,7 +532,7 @@ No::
     }
 
 For constructor functions on inherited contracts whose bases require arguments,
-it's recommended to drop the base constructors onto new lines in the same
+it is recommended to drop the base constructors onto new lines in the same
 manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
@@ -568,7 +568,7 @@ No::
         }
     }
 
-When declaring short functions with a single statement, it's permissible to do it on a single line.
+When declaring short functions with a single statement, it is permissible to do it on a single line.
 
 Permissible::
 
