@@ -834,8 +834,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 			solAssert(function.parameterTypes().size() == 0, "");
 
-			// TODO: Extract proper type for regular arrays
-			shared_ptr<ArrayType> arrayType = make_shared<ArrayType>(DataLocation::Storage);
+			shared_ptr<ArrayType> arrayType = make_shared<ArrayType>(DataLocation::Storage,
+				dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type);
 
 			//get the current length
 			ArrayUtils(m_context).retrieveLength(*arrayType);
