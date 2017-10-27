@@ -25,7 +25,7 @@ solidity code.  The goal of this guide is *consistency*.  A quote from python's
 captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
-    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
+    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgement. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
@@ -223,7 +223,7 @@ Whitespace in Expressions
 
 Avoid extraneous whitespace in the following  situations:
 
-Immediately inside parenthesis, brackets or braces, with the exception of single-line function declarations.
+Immediately inside parenthesis, brackets or braces, with the exception of single line function declarations.
 
 Yes::
 
@@ -385,7 +385,7 @@ No::
 Function Declaration
 ====================
 
-For short function declarations, it is recommended for the opening brace of the
+For short function declarations, it's recommended for the opening brace of the
 function body to be kept on the same line as the function declaration.
 
 The closing brace should be at the same indentation level as the function
@@ -436,7 +436,7 @@ No::
         selfdestruct(owner);
     }
 
-For long function declarations, it is recommended to drop each argument onto
+For long function declarations, it's recommended to drop each argument onto
 it's own line at the same indentation level as the function body.  The closing
 parenthesis and opening bracket should be placed on their own line as well at
 the same indentation level as the function declaration.
@@ -532,7 +532,7 @@ No::
     }
 
 For constructor functions on inherited contracts whose bases require arguments,
-it is recommended to drop the base constructors onto new lines in the same
+it's recommended to drop the base constructors onto new lines in the same
 manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
@@ -568,7 +568,7 @@ No::
         }
     }
 
-When declaring short functions with a single statement, it is permissible to do it on a single line.
+When declaring short functions with a single statement, it's permissible to do it on a single line.
 
 Permissible::
 
