@@ -2107,7 +2107,7 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 			function f(uint a) public { uint8[a] x; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Identifier must be declared constant");
+	CHECK_ERROR(text, TypeError, "Identifier must be declared constant.");
 }
 
 BOOST_AUTO_TEST_CASE(array_with_negative_length)
@@ -7279,6 +7279,101 @@ BOOST_AUTO_TEST_CASE(array_length_non_integer_constant_var)
 	char const* text = R"(
 		contract C {
 			bool constant LEN = true;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() {}
+			uint[f] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_recursive_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant L = 5;
+			uint constant LEN = L + 4 * L;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_function_call)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint x) {}
+			uint constant LEN = f();
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_const_cannot_be_fractional)
+{
+	char const* text = R"(
+		contract C {
+			fixed constant L = 10.5;
+			uint[L] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array with fractional length specified");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_struct)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			struct Test {
+				uint[LEN] ids;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_function)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_constant_function_parameter)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint constant LEN) {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_pure_functions)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = keccak256(ripemd160(33));
 			uint[LEN] ids;
 		}
 	)";
