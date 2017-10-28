@@ -48,6 +48,7 @@ private:
 	virtual void endVisit(BinaryOperation const& _operation);
 	virtual void endVisit(UnaryOperation const& _operation);
 	virtual void endVisit(Literal const& _literal);
+	virtual void endVisit(Identifier const& _identifier);
 
 	ErrorReporter& m_errorReporter;
 };

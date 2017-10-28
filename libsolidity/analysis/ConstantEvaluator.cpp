@@ -74,3 +74,21 @@ void ConstantEvaluator::endVisit(Literal const& _literal)
 	if (!_literal.annotation().type)
 		m_errorReporter.fatalTypeError(_literal.location(), "Invalid literal value.");
 }
+
+void ConstantEvaluator::endVisit(Identifier const& _identifier)
+{
+	VariableDeclaration const *variableDeclaration = dynamic_cast<VariableDeclaration const *>(_identifier.annotation().referencedDeclaration);
+	if (!variableDeclaration)
+		return;
+	if (!variableDeclaration->isConstant())
+		m_errorReporter.fatalTypeError(_identifier.location(), "Identifier must be declared constant.");
+
+	ASTPointer<Expression> value = variableDeclaration->value();
+	if (value)
+	{
+		if (!value->annotation().type)
+			ConstantEvaluator e(*value, m_errorReporter);
+
+		_identifier.annotation().type = value->annotation().type;
+	}
+}

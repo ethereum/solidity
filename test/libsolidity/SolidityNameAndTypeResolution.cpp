@@ -2107,7 +2107,7 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 			function f(uint a) public { uint8[a] x; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Identifier must be declared constant");
 }
 
 BOOST_AUTO_TEST_CASE(array_with_negative_length)
@@ -7258,6 +7258,28 @@ BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
 	char const* text = R"(
 		contract C {
 			uint[true] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_constant_var)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_non_integer_constant_var)
+{
+	char const* text = R"(
+		contract C {
+			bool constant LEN = true;
+			uint[LEN] ids;
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
