@@ -130,14 +130,14 @@ on the type of ``X`` being
   Note that in the dynamic case, ``head(X(i))`` is well-defined since the lengths of
   the head parts only depend on the types and not the values. Its value is the offset
   of the beginning of ``tail(X(i))`` relative to the start of ``enc(X)``.
-  
+
 - ``T[k]`` for any ``T`` and ``k``:
 
   ``enc(X) = enc((X[0], ..., X[k-1]))``
-  
+
   i.e. it is encoded as if it were a tuple with ``k`` elements
   of the same type.
-  
+
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
   ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
@@ -326,7 +326,7 @@ An event description is a JSON object with fairly similar fields:
 
 - ``anonymous``: ``true`` if the event was declared as ``anonymous``.
 
-For example, 
+For example,
 
 ::
 
@@ -334,8 +334,8 @@ For example,
 
   contract Test {
     function Test(){ b = 0x12345678901234567890123456789012; }
-    event Event(uint indexed a, bytes32 b)
-    event Event2(uint indexed a, bytes32 b)
+    event Event(uint indexed a, bytes32 b);
+    event Event2(uint indexed a, bytes32 b);
     function foo(uint a) { Event(a, b); }
     bytes32 b;
   }
