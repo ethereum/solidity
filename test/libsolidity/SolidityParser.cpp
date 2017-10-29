@@ -1698,6 +1698,46 @@ BOOST_AUTO_TEST_CASE(newInvalidTypeName)
 	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
+BOOST_AUTO_TEST_CASE(valid_function_type_variables)
+{
+	char const* text = R"(
+		contract test {
+			function(bytes memory) a;
+			function(bytes memory) internal b; // (explicit internal applies to the function type)
+			function(bytes memory) internal internal c;
+			function(bytes memory) external d;
+			function(bytes memory) external internal e;
+			function(bytes memory) internal public f;
+			function(bytes memory) internal pure public g;
+			function(bytes memory) pure internal public h;
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(incorrect_function_type_specifiers)
+{
+	char const* text = R"(
+		contract test {
+			function(bytes memory) internal external a;
+
+		}
+	)";
+	//BOOST_CHECK(successParse(text));
+	CHECK_PARSE_ERROR(text, "Expected identifier, got 'External'");
+}
+
+BOOST_AUTO_TEST_CASE(more_than_2_visibility_specivier)
+{
+	char const* text = R"(
+		contract c {
+			function f() private external public {}
+		})";
+	CHECK_PARSE_ERROR(text, "Expected token LBrace got 'External'");
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -352,8 +352,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->peekNextToken() == Token::Semicolon ||
 				m_scanner->peekNextToken() == Token::Assign
 			)
-				// Variable declaration, break here.
-				break;
+				break; // Variable declaration, break here.
 			else
 				result.modifiers.push_back(parseModifierInvocation());
 		}
@@ -361,12 +360,21 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
-				parserError(string(
-					"Visibility already specified as \"" +
-					Declaration::visibilityToString(result.visibility) +
-					"\"."
-				));
-				m_scanner->next();
+				// Is it part of function definition? Only a heuristic; will fail for more than 2 visibility modifiers
+				if (
+					m_scanner->peekNextToken() == Token::LBrace ||
+					Token::isStateMutabilitySpecifier(m_scanner->peekNextToken())
+				)
+				{
+					parserError(string(
+						"Visibility already specified as \"" +
+						Declaration::visibilityToString(result.visibility) +
+						"\"."
+					));
+					m_scanner->next();
+				}
+				else
+					break; // Part of function type, so make this token a part of variable declaration.
 			}
 			else
 				result.visibility = parseVisibilitySpecifier(token);
