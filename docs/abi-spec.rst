@@ -377,6 +377,9 @@ As an example, the code
 
 ::
 
+    pragma solidity ^0.4.17;
+    pragma experimental ABIEncoderV2;
+
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
