@@ -2081,6 +2081,93 @@ BOOST_AUTO_TEST_CASE(external_visibility)
 	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
 }
 
+BOOST_AUTO_TEST_CASE(similar_name_suggestions_expected)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function func() {}
+			function g() public { fun(); }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean func?");
+}
+
+BOOST_AUTO_TEST_CASE(no_name_suggestion)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public { fun(); }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_similar_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public {
+				uint var1 = 1;
+				uint var2 = 1;
+				uint var3 = 1;
+				uint var4 = 1;
+				uint var5 = varx;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean var1, var2, var3, var4 or var5?");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_scopes_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint log9 = 2;
+			function g() public {
+				uint log8 = 3;
+				uint var1 = lgox;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean log8, log9, log0, log1, log2, log3 or log4?");
+}
+
+BOOST_AUTO_TEST_CASE(inheritence_suggestions)
+{
+	char const* sourceCode = R"(
+		contract a { function func() public {} }
+		contract c is a {
+			function g() public {
+				uint var1 = fun();
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean func?");
+}
+
+BOOST_AUTO_TEST_CASE(no_spurious_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public {
+				uint va = 1;
+				uint vb = vaxyz;
+			 }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+
+	sourceCode = R"(
+		contract c {
+			function g() public {
+				uint va = 1;
+				uint vb = x;
+			 }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+}
+
 BOOST_AUTO_TEST_CASE(external_base_visibility)
 {
 	char const* sourceCode = R"(

@@ -93,6 +93,9 @@ public:
 	/// Generate and store warnings about variables that are named like instructions.
 	void warnVariablesNamedLikeInstructions();
 
+	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
+	std::string similarNameSuggestions(ASTString const& _name) const;
+
 private:
 	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);

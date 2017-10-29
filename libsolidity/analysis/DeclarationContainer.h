@@ -58,11 +58,19 @@ public:
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr) const;
 
+	/// @returns existing declaration names similar to @a _name.
+	std::vector<ASTString> similarNames(ASTString const& _name) const;
+
+
 private:
 	ASTNode const* m_enclosingNode;
 	DeclarationContainer const* m_enclosingContainer;
 	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
+
+	// Calculates the Damerau–Levenshtein distance and decides whether the two names are similar
+	static bool areSimilarNames(ASTString const& _name1, ASTString const& _name2);
+	static size_t const MAXIMUM_DISTANCE = 2;
 };
 
 }

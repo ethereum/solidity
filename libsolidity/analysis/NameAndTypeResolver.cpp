@@ -425,6 +425,23 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 	return result;
 }
 
+string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
+{
+	vector<ASTString> suggestions = m_currentScope->similarNames(_name);
+	if (suggestions.empty())
+		return "";
+	if (suggestions.size() == 1)
+		return suggestions.front();
+
+	string choices = suggestions.front();
+	for (size_t i = 1; i + 1 < suggestions.size(); ++i)
+		choices += ", " + suggestions[i];
+
+	choices += " or " + suggestions.back();
+
+	return choices;
+}
+
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
