@@ -194,7 +194,7 @@ Omitted Function Parameter Names
 --------------------------------
 
 The names of unused parameters (especially return parameters) can be omitted.
-Those names will still be present on the stack, but they are inaccessible.
+Those parameters will still be present on the stack, but they are inaccessible.
 
 ::
 
