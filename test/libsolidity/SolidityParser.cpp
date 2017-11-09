@@ -960,6 +960,16 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(event_with_no_argument_list_fails)
+{
+	char const* text = R"(
+		contract c {
+			event e;
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
+}
+
 BOOST_AUTO_TEST_CASE(visibility_specifiers)
 {
 	char const* text = R"(
