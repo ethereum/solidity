@@ -9,6 +9,7 @@ Bugfixes:
  * Standard JSON: Populate the ``sourceLocation`` field in the error list.
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
+ * Type Checker: Improve error message for wrong struct initialization.
 
 ### 0.4.19 (2017-11-30)
 
