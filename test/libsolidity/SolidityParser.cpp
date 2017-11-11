@@ -1702,14 +1702,23 @@ BOOST_AUTO_TEST_CASE(valid_function_type_variables)
 {
 	char const* text = R"(
 		contract test {
-			function(bytes memory) a;
-			function(bytes memory) internal b; // (explicit internal applies to the function type)
-			function(bytes memory) internal internal c;
-			function(bytes memory) external d;
-			function(bytes memory) external internal e;
-			function(bytes memory) internal public f;
-			function(bytes memory) internal pure public g;
-			function(bytes memory) pure internal public h;
+			function(bytes memory) fa {}
+			function(bytes memory) fb internal {}
+			function(bytes memory) fc internal {}
+			function(bytes memory) fd external {}
+			function(bytes memory) fe external {}
+			function(bytes memory) ff internal {}
+			function(bytes memory) fg internal pure {}
+			function(bytes memory) fh pure internal {}
+
+			function(bytes memory) a = fa;
+			function(bytes memory) internal b = fb; // (explicit internal applies to the function type)
+			function(bytes memory) internal internal c = fc;
+			function(bytes memory) external d = fd;
+			function(bytes memory) external internal e = fd;
+			function(bytes memory) internal public f = ff;
+			function(bytes memory) internal pure public g = fg;
+			function(bytes memory) pure internal public h = fh;
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -1723,7 +1732,6 @@ BOOST_AUTO_TEST_CASE(incorrect_function_type_specifiers)
 
 		}
 	)";
-	//BOOST_CHECK(successParse(text));
 	CHECK_PARSE_ERROR(text, "Expected identifier, got 'External'");
 }
 
