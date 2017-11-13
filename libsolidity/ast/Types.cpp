@@ -2574,7 +2574,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 				"selector",
 				make_shared<FixedBytesType>(4)
 			));
-		if (m_kind != Kind::BareDelegateCall && m_kind != Kind::DelegateCall)
+		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
 				members.push_back(MemberList::Member(
