@@ -51,6 +51,7 @@ public:
 	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
 	bool visit(InheritanceSpecifier const& _node) override;
+	bool visit(UsingForDirective const& _node) override;
 	bool visit(StructDefinition const& _node) override;
 	bool visit(EnumDefinition const& _node) override;
 	bool visit(EnumValue const& _node) override;
@@ -94,6 +95,7 @@ public:
 	void endVisit(ImportDirective const&) override;
 	void endVisit(ContractDefinition const&) override;
 	void endVisit(InheritanceSpecifier const&) override;
+	void endVisit(UsingForDirective const&) override;
 	void endVisit(StructDefinition const&) override;
 	void endVisit(EnumDefinition const&) override;
 	void endVisit(EnumValue const&) override;
