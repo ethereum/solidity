@@ -72,7 +72,24 @@ The problem is not too serious here because of the limited gas as part
 of ``send``, but it still exposes a weakness: Ether transfer always
 includes code execution, so the recipient could be a contract that calls
 back into ``withdraw``. This would let it get multiple refunds and
-basically retrieve all the Ether in the contract.
+basically retrieve all the Ether in the contract. In particular, the
+following contract will allow an attacker to refund multiple times
+as it uses ``call`` which forwards all remaining gas by default:
+
+::
+
+    pragma solidity ^0.4.0;
+
+    // THIS CONTRACT CONTAINS A BUG - DO NOT USE
+    contract Fund {
+        /// Mapping of ether shares of the contract.
+        mapping(address => uint) shares;
+        /// Withdraw your share.
+        function withdraw() {
+            if (msg.sender.call.value(shares[msg.sender])())
+                shares[msg.sender] = 0;
+        }
+    }
 
 To avoid re-entrancy, you can use the Checks-Effects-Interactions pattern as
 outlined further below:
