@@ -54,7 +54,7 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 				string(".") +
 				to_string(recommendedVersion.minor()) +
 				string(".") +
-				to_string(recommendedVersion.patch());
+				to_string(recommendedVersion.patch()) +
 				string(";\"");
 
 		m_errorReporter.warning(_sourceUnit.location(), errorString);
