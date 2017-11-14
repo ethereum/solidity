@@ -734,9 +734,12 @@ void CompilerStack::compileContract(
 
 	try
 	{
-		Compiler cloneCompiler(m_optimize, m_optimizeRuns);
-		cloneCompiler.compileClone(_contract, _compiledContracts);
-		compiledContract.cloneObject = cloneCompiler.assembledObject();
+		if (!_contract.isLibrary())
+		{
+			Compiler cloneCompiler(m_optimize, m_optimizeRuns);
+			cloneCompiler.compileClone(_contract, _compiledContracts);
+			compiledContract.cloneObject = cloneCompiler.assembledObject();
+		}
 	}
 	catch (eth::AssemblyException const&)
 	{

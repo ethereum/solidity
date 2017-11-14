@@ -283,6 +283,11 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 				createJsonValue("PUSHLIB", i.location().start, i.location().end, m_libraries.at(h256(i.data())))
 			);
 			break;
+		case PushDeployTimeAddress:
+			collection.append(
+				createJsonValue("PUSHDEPLOYADDRESS", i.location().start, i.location().end)
+			);
+			break;
 		case Tag:
 			collection.append(
 				createJsonValue("tag", i.location().start, i.location().end, string(i.data())));
@@ -588,6 +593,10 @@ LinkerObject const& Assembly::assemble() const
 		case PushLibraryAddress:
 			ret.bytecode.push_back(byte(Instruction::PUSH20));
 			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(i.data());
+			ret.bytecode.resize(ret.bytecode.size() + 20);
+			break;
+		case PushDeployTimeAddress:
+			ret.bytecode.push_back(byte(Instruction::PUSH20));
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
