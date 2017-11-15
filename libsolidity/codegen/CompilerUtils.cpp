@@ -121,7 +121,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 {
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
 	{
-		solUnimplementedAssert(ref->location() == DataLocation::Memory, "");
+		solUnimplementedAssert(ref->location() == DataLocation::Memory, "Only in-memory reference type can be stored.");
 		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
