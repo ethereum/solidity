@@ -85,11 +85,6 @@ Block and Transaction Properties
     consecutive blocks in the canonical chain.
 
 .. note::
-    If you want to implement access restrictions in library functions using
-    ``msg.sender``, you have to manually supply the value of
-    ``msg.sender`` as an argument.
-
-.. note::
     The block hashes are not available for all blocks for scalability reasons.
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
