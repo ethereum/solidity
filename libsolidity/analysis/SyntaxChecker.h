@@ -38,7 +38,7 @@ namespace solidity
 class SyntaxChecker: private ASTConstVisitor
 {
 public:
-	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
+	/// @param _errorReporter provides the error logging functionality.
 	SyntaxChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool checkSyntax(ASTNode const& _astRoot);

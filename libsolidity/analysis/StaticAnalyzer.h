@@ -43,7 +43,7 @@ namespace solidity
 class StaticAnalyzer: private ASTConstVisitor
 {
 public:
-	/// @param _errors the reference to the list of errors and warnings to add them found during static analysis.
+	/// @param _errorReporter provides the error logging functionality.
 	explicit StaticAnalyzer(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
