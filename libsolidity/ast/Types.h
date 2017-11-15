@@ -707,10 +707,6 @@ public:
 	/// Returns the function type of the constructor modified to return an object of the contract's type.
 	FunctionTypePointer const& newExpressionType() const;
 
-	/// @returns the identifier of the function with the given name or Invalid256 if such a name does
-	/// not exist.
-	u256 functionIdentifier(std::string const& _functionName) const;
-
 	/// @returns a list of all state variables (including inherited) of the contract and their
 	/// offsets in storage.
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
