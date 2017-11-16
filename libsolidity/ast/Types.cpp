@@ -3028,6 +3028,13 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		}
 		else
 		{
+			for (VariableDeclaration const* variable: contract.stateVariables())
+				if (variable->isConstant())
+					members.push_back(MemberList::Member(
+						variable->name(),
+						variable->annotation().type,
+						variable
+					));
 			for (auto const& stru: contract.definedStructs())
 				members.push_back(MemberList::Member(stru->name(), stru->type(), stru));
 			for (auto const& enu: contract.definedEnums())
