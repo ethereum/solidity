@@ -990,6 +990,6 @@ parameters or return parameters.
 .. warning::
     The type is only deduced from the first assignment, so
     the loop in the following snippet is infinite, as ``i`` will have the type
-    ``uint8`` and any value of this type is smaller than ``2000``.
+    ``uint8`` and the highest value of this type is smaller than ``2000``.
     ``for (var i = 0; i < 2000; i++) { ... }``
 
