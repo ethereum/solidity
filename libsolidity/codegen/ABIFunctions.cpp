@@ -483,7 +483,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		_to.identifier() +
 		(_encodeAsLibraryTypes ? "_library" : "");
 	return createFunction(functionName, [&]() {
-		solUnimplementedAssert(fromArrayType.isByteArray(), "");
+		solUnimplementedAssert(fromArrayType.isByteArray(), "Only byte arrays can be encoded from calldata currently.");
 		// TODO if this is not a byte array, we might just copy byte-by-byte anyway,
 		// because the encoding is position-independent, but we have to check that.
 		Whiskers templ(R"(
@@ -754,7 +754,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		_to.identifier() +
 		(_encodeAsLibraryTypes ? "_library" : "");
 
-	solUnimplementedAssert(!_from.dataStoredIn(DataLocation::CallData), "");
+	solUnimplementedAssert(!_from.dataStoredIn(DataLocation::CallData), "Encoding struct from calldata is not yet supported.");
 	solAssert(&_from.structDefinition() == &_to.structDefinition(), "");
 
 	return createFunction(functionName, [&]() {
