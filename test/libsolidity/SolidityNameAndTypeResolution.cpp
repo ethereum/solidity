@@ -7366,7 +7366,35 @@ BOOST_AUTO_TEST_CASE(array_length_cannot_be_constant_function_parameter)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Constant identifier declaration must have a constant value.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_cyclic_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = LEN;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_complex_cyclic_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant L2 = LEN - 10;
+			uint constant L1 = L2 / 10;
+			uint constant LEN = 10 + L1 * 5;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition.");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_with_pure_functions)

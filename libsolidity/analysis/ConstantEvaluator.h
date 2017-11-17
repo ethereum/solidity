@@ -38,8 +38,9 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	ConstantEvaluator(Expression const& _expr, ErrorReporter& _errorReporter):
-		m_errorReporter(_errorReporter)
+	ConstantEvaluator(Expression const& _expr, ErrorReporter& _errorReporter, size_t _newDepth = 0):
+		m_errorReporter(_errorReporter),
+		m_depth(_newDepth)
 	{
 		_expr.accept(*this);
 	}
@@ -51,6 +52,8 @@ private:
 	virtual void endVisit(Identifier const& _identifier);
 
 	ErrorReporter& m_errorReporter;
+	/// Current recursion depth.
+	size_t m_depth;
 };
 
 }

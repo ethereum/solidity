@@ -77,18 +77,22 @@ void ConstantEvaluator::endVisit(Literal const& _literal)
 
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
 {
-	VariableDeclaration const *variableDeclaration = dynamic_cast<VariableDeclaration const *>(_identifier.annotation().referencedDeclaration);
+	VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
 	if (!variableDeclaration)
 		return;
 	if (!variableDeclaration->isConstant())
 		m_errorReporter.fatalTypeError(_identifier.location(), "Identifier must be declared constant.");
 
 	ASTPointer<Expression> value = variableDeclaration->value();
-	if (value)
-	{
-		if (!value->annotation().type)
-			ConstantEvaluator e(*value, m_errorReporter);
+	if (!value)
+		m_errorReporter.fatalTypeError(_identifier.location(), "Constant identifier declaration must have a constant value.");
 
-		_identifier.annotation().type = value->annotation().type;
+	if (!value->annotation().type)
+	{
+		if (m_depth > 32)
+			m_errorReporter.fatalTypeError(_identifier.location(), "Cyclic constant definition.");
+		ConstantEvaluator e(*value, m_errorReporter, m_depth + 1);
 	}
+
+	_identifier.annotation().type = value->annotation().type;
 }
