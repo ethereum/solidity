@@ -68,8 +68,6 @@ private:
 	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
 
-	// Calculates the Damerau–Levenshtein distance and decides whether the two names are similar
-	static bool areSimilarNames(ASTString const& _name1, ASTString const& _name2);
 	static size_t const MAXIMUM_DISTANCE = 2;
 };
 

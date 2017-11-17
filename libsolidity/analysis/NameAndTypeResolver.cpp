@@ -431,13 +431,13 @@ string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 	if (suggestions.empty())
 		return "";
 	if (suggestions.size() == 1)
-		return suggestions.front();
+		return "\"" + suggestions.front() + "\"";
 
-	string choices = suggestions.front();
+	string choices = "\"" + suggestions.front() + "\"";
 	for (size_t i = 1; i + 1 < suggestions.size(); ++i)
-		choices += ", " + suggestions[i];
+		choices += ", \"" + suggestions[i] + "\"";
 
-	choices += " or " + suggestions.back();
+	choices += " or \"" + suggestions.back() + "\"";
 
 	return choices;
 }

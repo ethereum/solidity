@@ -2089,7 +2089,7 @@ BOOST_AUTO_TEST_CASE(similar_name_suggestions_expected)
 			function g() public { fun(); }
 		}
 	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean func?");
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"func\"?");
 }
 
 BOOST_AUTO_TEST_CASE(no_name_suggestion)
@@ -2115,7 +2115,7 @@ BOOST_AUTO_TEST_CASE(multiple_similar_suggestions)
 			}
 		}
 	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean var1, var2, var3, var4 or var5?");
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"var1\", \"var2\", \"var3\", \"var4\" or \"var5\"?");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_scopes_suggestions)
@@ -2129,7 +2129,7 @@ BOOST_AUTO_TEST_CASE(multiple_scopes_suggestions)
 			}
 		}
 	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean log8, log9, log0, log1, log2, log3 or log4?");
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"log8\", \"log9\", \"log0\", \"log1\", \"log2\", \"log3\" or \"log4\"?");
 }
 
 BOOST_AUTO_TEST_CASE(inheritence_suggestions)
@@ -2142,7 +2142,7 @@ BOOST_AUTO_TEST_CASE(inheritence_suggestions)
 			}
 		}
 	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean func?");
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"func\"?");
 }
 
 BOOST_AUTO_TEST_CASE(no_spurious_suggestions)
