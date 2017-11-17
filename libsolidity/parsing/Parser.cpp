@@ -352,7 +352,8 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->peekNextToken() == Token::Semicolon ||
 				m_scanner->peekNextToken() == Token::Assign
 			)
-				break; // Variable declaration, break here.
+				// Variable declaration, break here.
+				break;
 			else
 				result.modifiers.push_back(parseModifierInvocation());
 		}
@@ -374,7 +375,8 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 					m_scanner->next();
 				}
 				else
-					break; // Part of function type, so make this token a part of variable declaration.
+					// Part of function type, so make this token a part of variable declaration.
+					break;
 			}
 			else
 				result.visibility = parseVisibilitySpecifier(token);
