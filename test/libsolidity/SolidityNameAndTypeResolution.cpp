@@ -5766,7 +5766,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
@@ -5779,10 +5779,10 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
 }
 
-BOOST_AUTO_TEST_CASE(invalid_address_length)
+BOOST_AUTO_TEST_CASE(invalid_address_length_short)
 {
 	char const* text = R"(
 		contract C {
@@ -5792,7 +5792,20 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_length_long)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				address x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E0;
+				x;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, "This looks like an address but has an invalid checksum.");
 }
 
 BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
