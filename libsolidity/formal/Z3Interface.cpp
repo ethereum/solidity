@@ -117,6 +117,8 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 
 	static map<string, unsigned> arity{
 		{"ite", 3},
+		{"true", 0},
+		{"false", 0},
 		{"not", 1},
 		{"and", 2},
 		{"or", 2},
@@ -130,7 +132,11 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		{"*", 2}
 	};
 	string const& n = _expr.name;
-	if (m_functions.count(n))
+	if (n == "true")
+		return m_context.bool_val(true);
+	else if (n == "false")
+		return m_context.bool_val(false);
+	else  if (m_functions.count(n))
 		return m_functions.at(n)(arguments);
 	else if (m_constants.count(n))
 	{

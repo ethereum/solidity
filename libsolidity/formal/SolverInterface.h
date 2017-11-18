@@ -69,6 +69,21 @@ public:
 		});
 	}
 
+	static Expression implies(Expression _a, Expression _b)
+	{
+		return !_a || _b;
+	}
+
+	static Expression lTrue()
+	{
+		return Expression(std::string("true"));
+	}
+
+	static Expression lFalse()
+	{
+		return Expression(std::string("false"));
+	}
+
 	friend Expression operator!(Expression _a)
 	{
 		return Expression("not", std::move(_a));
