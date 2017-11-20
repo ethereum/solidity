@@ -72,6 +72,21 @@ public:
 		}, _trueValue.sort);
 	}
 
+	static Expression implies(Expression _a, Expression _b)
+	{
+		return !std::move(_a) || std::move(_b);
+	}
+
+	static Expression lTrue()
+	{
+		return Expression(std::string("true"));
+	}
+
+	static Expression lFalse()
+	{
+		return Expression(std::string("false"));
+	}
+
 	friend Expression operator!(Expression _a)
 	{
 		return Expression("not", std::move(_a), Sort::Bool);

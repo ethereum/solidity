@@ -26,6 +26,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace dev
 {
@@ -74,16 +75,19 @@ private:
 	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
 	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
+	using VariableSequenceCounters = std::map<Declaration const*, int>;
+
 	// Visits the branch given by the statement, pushes and pops the SMT checker.
 	// @param _condition if present, asserts that this condition is true within the branch.
-	void visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	void visitBranch(Statement const& _statement, smt::Expression _condition);
+	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
 		SourceLocation const& _location,
 		std::string const& _description,
+		smt::CheckResult _descResult = smt::CheckResult::SATISFIABLE,
 		std::string const& _additionalValueName = "",
 		smt::Expression* _additionalValue = nullptr
 	);
@@ -99,12 +103,13 @@ private:
 
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
-	checkSatisifableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
 
-	smt::CheckResult checkSatisifable();
+	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);
+	void mergeVariables(std::vector<Declaration const*> _variables, smt::Expression _condition, VariableSequenceCounters& _countersEndTrue, VariableSequenceCounters& _countersEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
@@ -133,8 +138,6 @@ private:
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
 
-	using VariableSequenceCounters = std::map<Declaration const*, int>;
-
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
@@ -145,6 +148,13 @@ private:
 	/// The function takes one argument which is the "sequence number".
 	smt::Expression var(Declaration const& _decl);
 
+	/// Adds a new path condition
+	void pushPathCondition(smt::Expression const& _e);
+	/// Remove the last path condition
+	void popPathCondition();
+	/// Returns the conjunction of all path conditions or True if empty
+	smt::Expression currentPathConditions();
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_conditionalExecutionHappened = false;
@@ -152,6 +162,7 @@ private:
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_expressions;
 	std::map<Declaration const*, smt::Expression> m_variables;
+	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
