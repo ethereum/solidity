@@ -707,7 +707,6 @@ void SMTChecker::mergeVariables(vector<Declaration const*> const& _variables, sm
 {
 	for (auto const* decl: _variables)
 	{
-		newValue(*decl);
 		int trueCounter = _countersEndTrue.at(decl);
 		int falseCounter = _countersEndFalse.at(decl);
 		m_interface->addAssertion(newValue(*decl) == smt::Expression::ite(
