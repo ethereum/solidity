@@ -349,6 +349,7 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkCondition(currentPathConditions() && !(expr(*args[0])), _funCall.location(), "Assertion violation");
+		m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), expr(*args[0])));
 	}
 	else if (funType.kind() == FunctionType::Kind::Require)
 	{
@@ -480,7 +481,7 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 		m_errorReporter.warning(
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
-					);
+		);
 }
 
 smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
@@ -517,7 +518,6 @@ SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _s
 SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
 {
 	VariableSequenceCounters sequenceCountersStart = m_currentSequenceCounter;
-	VariableSequenceCounters sequenceCountersEnd;
 
 	if (_condition)
 		pushPathCondition(*_condition);
@@ -526,9 +526,8 @@ SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _s
 		popPathCondition();
 
 	m_conditionalExecutionHappened = true;
-	sequenceCountersEnd = m_currentSequenceCounter;
-	m_currentSequenceCounter = sequenceCountersStart;
-	return sequenceCountersEnd;
+	std::swap(sequenceCountersStart, m_currentSequenceCounter);
+	return sequenceCountersStart;
 }
 
 void SMTChecker::checkCondition(
@@ -704,16 +703,18 @@ void SMTChecker::resetVariables(vector<Declaration const*> _variables)
 	}
 }
 
-void SMTChecker::mergeVariables(vector<Declaration const*> _variables, smt::Expression _condition, VariableSequenceCounters& _countersEndTrue, VariableSequenceCounters& _countersEndFalse)
+void SMTChecker::mergeVariables(vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse)
 {
 	for (auto const* decl: _variables)
 	{
 		newValue(*decl);
 		int trueCounter = _countersEndTrue.at(decl);
 		int falseCounter = _countersEndFalse.at(decl);
-		smt::Expression e = currentValue(*decl) == smt::Expression::ite(_condition, valueAtSequence(*decl, trueCounter), valueAtSequence(*decl, falseCounter));
-		m_interface->addAssertion(e);
-		setUnknownValue(*decl);
+		m_interface->addAssertion(newValue(*decl) == smt::Expression::ite(
+			_condition,
+			valueAtSequence(*decl, trueCounter),
+			valueAtSequence(*decl, falseCounter))
+		);
 	}
 }
 
@@ -859,6 +860,6 @@ void SMTChecker::pushPathCondition(smt::Expression const& _e)
 smt::Expression SMTChecker::currentPathConditions()
 {
 	if (m_pathConditions.size() == 0)
-		return smt::Expression::lTrue();
+		return smt::Expression(true);
 	return m_pathConditions.back();
 }

@@ -237,6 +237,24 @@ BOOST_AUTO_TEST_CASE(branches_clear_variables)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				uint a;
+				if (x == 0) {
+					a = 1;
+				} else {
+					if (x == 1)
+						a = 2;
+					else
+						a = 3;
+				}
+				assert(a < 4);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
 }
 
 BOOST_AUTO_TEST_CASE(branches_assert_condition)

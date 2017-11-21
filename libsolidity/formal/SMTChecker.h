@@ -75,6 +75,7 @@ private:
 	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
 	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
+	/// Maps a variable to an SSA index.
 	using VariableSequenceCounters = std::map<Declaration const*, int>;
 
 	// Visits the branch given by the statement, pushes and pops the SMT checker.
@@ -109,7 +110,10 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);
-	void mergeVariables(std::vector<Declaration const*> _variables, smt::Expression _condition, VariableSequenceCounters& _countersEndTrue, VariableSequenceCounters& _countersEndFalse);
+	/// Given two different branches and the touched variables,
+	/// merge the touched variables into after-branch ite variables
+	/// using the branch condition as guard.
+	void mergeVariables(std::vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
