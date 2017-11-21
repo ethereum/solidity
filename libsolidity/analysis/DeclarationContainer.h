@@ -68,7 +68,6 @@ private:
 	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
 
-	static size_t const MAXIMUM_DISTANCE = 2;
 };
 
 }

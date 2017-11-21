@@ -50,6 +50,38 @@ BOOST_AUTO_TEST_CASE(test_similarity)
 	BOOST_CHECK_EQUAL(stringWithinDistance("", "", 2), true);
 }
 
+BOOST_AUTO_TEST_CASE(test_dldistance)
+{
+	BOOST_CHECK_EQUAL(stringDistance("hello", "hellw"), 1);
+	BOOST_CHECK_EQUAL(stringDistance("hello", "helol"), 1);
+	BOOST_CHECK_EQUAL(stringDistance("hello", "helo"), 1);
+	BOOST_CHECK_EQUAL(stringDistance("hello", "helllo"), 1);
+	BOOST_CHECK_EQUAL(stringDistance("hello", "hlllo"), 1);
+	BOOST_CHECK_EQUAL(stringDistance("hello", "hllllo"), 2);
+	BOOST_CHECK_EQUAL(stringDistance("a", ""), 1);
+	BOOST_CHECK_EQUAL(stringDistance("abc", "ba"), 2);
+	BOOST_CHECK_EQUAL(stringDistance("abc", "abcdef"), 3);
+	BOOST_CHECK_EQUAL(stringDistance("abcd", "wxyz"), 4);
+	BOOST_CHECK_EQUAL(stringDistance("", ""), 0);
+	BOOST_CHECK_EQUAL(stringDistance("abcdefghijklmnopqrstuvwxyz", "abcabcabcabcabcabcabcabca"), 23);
+
+}
+
+BOOST_AUTO_TEST_CASE(test_alternatives_list)
+{
+	vector<string> strings;
+	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "");
+	strings.push_back("a");
+	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\"");
+	strings.push_back("b");
+	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\" or \"b\"");
+	strings.push_back("c");
+	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\" or \"c\"");
+	strings.push_back("d");
+	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\", \"c\" or \"d\"");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

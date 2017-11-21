@@ -24,12 +24,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace dev
 {
 
-/// Calculates the Damerau–Levenshtein distance between @a _name1 and @a _name2 and
-/// @returns true if that distance is not greater than @a _maxDistance
-bool stringWithinDistance(std::string const& _name1, std::string const& _name2, size_t _maxDistance);
+// Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that distance is not greater than _maxDistance
+bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance);
+// Calculates the Damerau–Levenshtein distance between _str1 and _str2
+size_t stringDistance(std::string const& _str1, std::string const& _str2);
+// Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
+std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
 
 }

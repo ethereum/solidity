@@ -29,16 +29,24 @@
 using namespace std;
 using namespace dev;
 
-namespace dev
+bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance)
 {
-
-bool stringWithinDistance(string const& _name1, string const& _name2, size_t _maxDistance)
-{
-	if (_name1 == _name2)
+	if (_str1 == _str2)
 		return true;
 
-	size_t n1 = _name1.size(), n2 = _name2.size();
-	vector<vector<size_t>> dp(n1 + 1, vector<size_t>(n2 + 1));
+	size_t n1 = _str1.size(), n2 = _str2.size();
+	size_t distance = stringDistance(_str1, _str2);
+
+	// if distance is not greater than _maxDistance, and distance is strictly less than length of both names, they can be considered similar
+	// this is to avoid irrelevant suggestions
+	return distance <=  _maxDistance && distance < n1 && distance < n2;
+}
+
+size_t dev::stringDistance(string const& _str1, string const& _str2)
+{
+	size_t n1 = _str1.size(), n2 = _str2.size();
+	// Optimize by storing only last 2 rows and current row. So first index is considered modulo 3
+	vector<vector<size_t>> dp(3, vector<size_t>(n2 + 1));
 
 	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are 1-based to make base case storage easier.
 	// So index accesser to _name1 and _name2 have to be adjusted accordingly
@@ -46,32 +54,37 @@ bool stringWithinDistance(string const& _name1, string const& _name2, size_t _ma
 	{
 		for (size_t i2 = 0; i2 <= n2; ++i2)
 		{
-			if (min(i1, i2) == 0)
-				// Base case
-				dp[i1][i2] = max(i1, i2);
-			else
-			{
-				dp[i1][i2] = min(dp[i1 - 1][i2] + 1, dp[i1][i2 - 1] + 1);
-				// Deletion and insertion
-				if (_name1[i1 - 1] == _name2[i2 - 1])
-					// Same chars, can skip
-					dp[i1][i2] = min(dp[i1][i2], dp[i1 - 1][i2 - 1]);
+				if (min(i1, i2) == 0) // base case
+					dp[i1 % 3][i2] = max(i1, i2);
 				else
-					// Different chars so try substitution
-					dp[i1][i2] = min(dp[i1][i2], dp[i1 - 1][i2 - 1] + 1);
+				{
+					dp[i1 % 3][i2] = min(dp[(i1-1) % 3][i2] + 1, dp[i1 % 3][i2-1] + 1); // deletion and insertion
+					if (_str1[i1-1] == _str2[i2-1])  // same chars, can skip
+						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-1) % 3][i2-1]);
+					else // different chars so try substitution
+						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-1) % 3][i2-1] + 1);
 
-				if (i1 > 1 && i2 > 1 && _name1[i1 - 1] == _name2[i2 - 2] && _name1[i1 - 2] == _name2[i2 - 1])
-					// Try transposing
-					dp[i1][i2] = min(dp[i1][i2], dp[i1 - 2][i2 - 2] + 1);
-			}
+					if (i1 > 1 && i2 > 1 && _str1[i1-1] == _str2[i2-2] && _str1[i1-2] == _str2[i2-1]) // Try transposing
+						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-2) % 3][i2-2] + 1);
+				}
 		}
 	}
 
-	size_t distance = dp[n1][n2];
-
-	// if distance is not greater than _maxDistance, and distance is strictly less than length of both names,
-	// they can be considered similar this is to avoid irrelevant suggestions
-	return distance <=  _maxDistance && distance < n1 && distance < n2;
+	return dp[n1 % 3][n2];
 }
 
+string dev::quotedAlternativesList(vector<string> const& suggestions) {
+	if (suggestions.empty())
+		return "";
+	if (suggestions.size() == 1)
+		return "\"" + suggestions.front() + "\"";
+
+	string choices = "\"" + suggestions.front() + "\"";
+	for (size_t i = 1; i + 1 < suggestions.size(); ++i)
+		choices += ", \"" + suggestions[i] + "\"";
+
+	choices += " or \"" + suggestions.back() + "\"";
+
+	return choices;
 }
+

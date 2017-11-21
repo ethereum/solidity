@@ -119,20 +119,19 @@ vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _n
 
 vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
 {
+	static size_t const MAXIMUM_EDIT_DISTANCE = 2;
+
 	vector<ASTString> similar;
 
 	for (auto const& declaration: m_declarations)
 	{
 		string const& declarationName = declaration.first;
-		if (stringWithinDistance(_name, declarationName, MAXIMUM_DISTANCE))
+		if (stringWithinDistance(_name, declarationName, MAXIMUM_EDIT_DISTANCE))
 			similar.push_back(declarationName);
 	}
 
 	if (m_enclosingContainer)
-	{
-		vector<ASTString> enclosingSimilar = m_enclosingContainer->similarNames(_name);
-		similar.insert(similar.end(), enclosingSimilar.begin(), enclosingSimilar.end());
-	}
+		similar += m_enclosingContainer->similarNames(_name);
 
 	return similar;
 }
