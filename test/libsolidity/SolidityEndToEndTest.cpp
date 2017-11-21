@@ -8032,6 +8032,24 @@ BOOST_AUTO_TEST_CASE(inline_assembly_embedded_function_call)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(4), u256(7), u256(0x10)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_if)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				assembly {
+					if gt(a, 1) { b := 2 }
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(1)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(2)), encodeArgs(u256(2)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(3)), encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_switch)
 {
 	char const* sourceCode = R"(

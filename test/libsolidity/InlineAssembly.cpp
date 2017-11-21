@@ -251,6 +251,21 @@ BOOST_AUTO_TEST_CASE(variable_use_before_decl)
 	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
+BOOST_AUTO_TEST_CASE(if_statement)
+{
+	BOOST_CHECK(successParse("{ if 42 {} }"));
+	BOOST_CHECK(successParse("{ if 42 { let x := 3 } }"));
+	BOOST_CHECK(successParse("{ function f() -> x {} if f() { pop(f()) } }"));
+}
+
+BOOST_AUTO_TEST_CASE(if_statement_invalid)
+{
+	CHECK_PARSE_ERROR("{ if calldatasize {}", ParserError, "Instructions are not supported as conditions for if");
+	BOOST_CHECK("{ if calldatasize() {}");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected token LBrace");
+}
+
 BOOST_AUTO_TEST_CASE(switch_statement)
 {
 	BOOST_CHECK(successParse("{ switch 42 default {} }"));
@@ -275,7 +290,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch.");
+	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 

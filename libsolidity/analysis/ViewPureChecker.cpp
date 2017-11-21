@@ -72,6 +72,11 @@ public:
 		for (auto const& arg: _funCall.arguments)
 			boost::apply_visitor(*this, arg);
 	}
+	void operator()(assembly::If const& _if)
+	{
+		boost::apply_visitor(*this, *_if.condition);
+		(*this)(_if.body);
+	}
 	void operator()(assembly::Switch const& _switch)
 	{
 		boost::apply_visitor(*this, *_switch.expression);
