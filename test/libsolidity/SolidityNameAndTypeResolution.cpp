@@ -7419,25 +7419,25 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
 			uint[-true] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[true/1] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[1/true] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[1.111111E1111111111111] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid literal value.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[3/0] ids;

@@ -33,7 +33,7 @@ void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
 	TypePointer const& subType = _operation.subExpression().annotation().type;
 	if (!dynamic_cast<RationalNumberType const*>(subType.get()))
-		m_errorReporter.fatalTypeError(_operation.subExpression().location(), "Invalid constant expression.");
+		return;
 	TypePointer t = subType->unaryOperatorResult(_operation.getOperator());
 	_operation.annotation().type = t;
 }
@@ -44,9 +44,9 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 	TypePointer const& leftType = _operation.leftExpression().annotation().type;
 	TypePointer const& rightType = _operation.rightExpression().annotation().type;
 	if (!dynamic_cast<RationalNumberType const*>(leftType.get()))
-		m_errorReporter.fatalTypeError(_operation.leftExpression().location(), "Invalid constant expression.");
+		return;
 	if (!dynamic_cast<RationalNumberType const*>(rightType.get()))
-		m_errorReporter.fatalTypeError(_operation.rightExpression().location(), "Invalid constant expression.");
+		return;
 	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
 	if (!commonType)
 	{
@@ -71,8 +71,6 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
 	_literal.annotation().type = Type::forLiteral(_literal);
-	if (!_literal.annotation().type)
-		m_errorReporter.fatalTypeError(_literal.location(), "Invalid literal value.");
 }
 
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
@@ -81,11 +79,11 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	if (!variableDeclaration)
 		return;
 	if (!variableDeclaration->isConstant())
-		m_errorReporter.fatalTypeError(_identifier.location(), "Identifier must be declared constant.");
+		return;
 
-	ASTPointer<Expression> value = variableDeclaration->value();
+	ASTPointer<Expression> const& value = variableDeclaration->value();
 	if (!value)
-		m_errorReporter.fatalTypeError(_identifier.location(), "Constant identifier declaration must have a constant value.");
+		return;
 
 	if (!value->annotation().type)
 	{
