@@ -17,8 +17,11 @@
 
 #pragma once
 
-#include <libsolidity/ast/ASTVisitor.h>
+
 #include <libsolidity/formal/SolverInterface.h>
+
+#include <libsolidity/ast/ASTVisitor.h>
+
 #include <libsolidity/interface/ReadFile.h>
 
 #include <map>
@@ -29,6 +32,7 @@ namespace dev
 namespace solidity
 {
 
+class VariableUsage;
 class ErrorReporter;
 
 class SMTChecker: private ASTConstVisitor
@@ -48,6 +52,7 @@ private:
 	virtual void endVisit(FunctionDefinition const& _node) override;
 	virtual bool visit(IfStatement const& _node) override;
 	virtual bool visit(WhileStatement const& _node) override;
+	virtual bool visit(ForStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
 	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;
@@ -61,6 +66,14 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	void assignment(Declaration const& _variable, Expression const& _value);
+
+	// Visits the branch given by the statement, pushes and pops the SMT checker.
+	// @param _condition if present, asserts that this condition is true within the branch.
+	void visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	void visitBranch(Statement const& _statement, smt::Expression _condition);
+
+	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
 		SourceLocation const& _location,
@@ -68,8 +81,24 @@ private:
 		std::string const& _additionalValueName = "",
 		smt::Expression* _additionalValue = nullptr
 	);
+	/// Checks that a boolean condition is not constant. Do not warn if the expression
+	/// is a literal constant.
+	/// @param _description the warning string, $VALUE will be replaced by the constant value.
+	void checkBooleanNotConstant(
+		Expression const& _condition,
+		std::string const& _description
+	);
 
-	void createVariable(VariableDeclaration const& _varDecl, bool _setToZero);
+	std::pair<smt::CheckResult, std::vector<std::string>>
+	checkSatisifableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+
+	smt::CheckResult checkSatisifable();
+
+	void initializeLocalVariables(FunctionDefinition const& _function);
+	void resetVariables(std::vector<Declaration const*> _variables);
+	/// Tries to create an uninitialized variable and returns true on success.
+	/// This fails if the type is not supported.
+	bool createVariable(VariableDeclaration const& _varDecl);
 
 	static std::string uniqueSymbol(Declaration const& _decl);
 	static std::string uniqueSymbol(Expression const& _expr);
@@ -87,11 +116,15 @@ private:
 	/// sequence number to this value and returns the expression.
 	smt::Expression newValue(Declaration const& _decl);
 
-	/// Sets the value of the declaration either to zero or to its intrinsic range.
-	void setValue(Declaration const& _decl, bool _setToZero);
+	/// Sets the value of the declaration to zero.
+	void setZeroValue(Declaration const& _decl);
+	/// Resets the variable to an unknown value (in its range).
+	void setUnknownValue(Declaration const& decl);
 
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
+
+	using VariableSequenceCounters = std::map<Declaration const*, int>;
 
 	/// Returns the expression corresponding to the AST node. Creates a new expression
 	/// if it does not exist yet.
@@ -101,6 +134,8 @@ private:
 	smt::Expression var(Declaration const& _decl);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
+	std::shared_ptr<VariableUsage> m_variableUsage;
+	bool m_conditionalExecutionHappened = false;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_expressions;
