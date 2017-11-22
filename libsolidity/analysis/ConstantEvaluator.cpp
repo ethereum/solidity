@@ -90,7 +90,7 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	if (!value->annotation().type)
 	{
 		if (m_depth > 32)
-			m_errorReporter.fatalTypeError(_identifier.location(), "Cyclic constant definition.");
+			m_errorReporter.fatalTypeError(_identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
 		ConstantEvaluator e(*value, m_errorReporter, m_depth + 1);
 	}
 

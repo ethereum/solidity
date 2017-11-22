@@ -7379,7 +7379,7 @@ BOOST_AUTO_TEST_CASE(array_length_with_cyclic_constant)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Cyclic constant definition.");
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_with_complex_cyclic_constant)
@@ -7394,7 +7394,7 @@ BOOST_AUTO_TEST_CASE(array_length_with_complex_cyclic_constant)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Cyclic constant definition.");
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_with_pure_functions)
