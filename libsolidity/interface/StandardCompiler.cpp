@@ -161,27 +161,18 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 	for (auto const& file: { _file, string("*") })
 		if (_outputSelection.isMember(file) && _outputSelection[file].isObject())
 		{
-			if (_contract.empty())
-			{
-				/// Special case for SourceUnit-level targets (such as AST)
+			/// For SourceUnit-level targets (such as AST) only allow empty name, otherwise
+			/// for Contract-level targets try both contract name and wildcard
+			vector<string> contracts{ _contract };
+			if (!_contract.empty())
+				contracts.push_back("*");
+			for (auto const& contract: contracts)
 				if (
-					_outputSelection[file].isMember("") &&
-					_outputSelection[file][""].isArray() &&
-					isArtifactRequested(_outputSelection[file][""], _artifact)
+					_outputSelection[file].isMember(contract) &&
+					_outputSelection[file][contract].isArray() &&
+					isArtifactRequested(_outputSelection[file][contract], _artifact)
 				)
 					return true;
-			}
-			else
-			{
-				/// Regular case for Contract-level targets
-				for (auto const& contract: { _contract, string("*") })
-					if (
-						_outputSelection[file].isMember(contract) &&
-						_outputSelection[file][contract].isArray() &&
-						isArtifactRequested(_outputSelection[file][contract], _artifact)
-					)
-						return true;
-			}
 		}
 
 	return false;
