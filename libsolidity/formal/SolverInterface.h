@@ -44,7 +44,9 @@ enum class CheckResult
 
 enum class Sort
 {
-	Int, Bool, IntIntFun
+	Int,
+	Bool,
+	IntIntFun // Function of one Int returning a single Int
 };
 
 /// C++ representation of an SMTLIB2 expression.
@@ -120,8 +122,10 @@ public:
 	}
 	Expression operator()(Expression _a) const
 	{
-		solAssert(sort == Sort::IntIntFun, "Attempted function application to non-function.");
-		solAssert(arguments.empty(), "Attempted function application to non-function.");
+		solAssert(
+			sort == Sort::IntIntFun && arguments.empty(),
+			"Attempted function application to non-function."
+		);
 		return Expression(name, _a, Sort::Int);
 	}
 
