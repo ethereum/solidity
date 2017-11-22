@@ -68,14 +68,6 @@ private:
 
 	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
-
-	enum class SMTVariableType {
-		Function,
-		Integer,
-		Bool
-	};
-
-	std::map<std::string,SMTVariableType> m_variables;
 };
 
 }

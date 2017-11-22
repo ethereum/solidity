@@ -64,8 +64,6 @@ void SMTLib2Interface::pop()
 
 Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codomain)
 {
-	solAssert(!m_variables.count(_name), "");
-	m_variables[_name] = SMTVariableType::Function;
 	write(
 		"(declare-fun |" +
 		_name +
@@ -80,16 +78,12 @@ Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codom
 
 Expression SMTLib2Interface::newInteger(string _name)
 {
-	solAssert(!m_variables.count(_name), "");
-	m_variables[_name] = SMTVariableType::Integer;
 	write("(declare-const |" + _name + "| Int)");
 	return SolverInterface::newInteger(move(_name));
 }
 
 Expression SMTLib2Interface::newBool(string _name)
 {
-	solAssert(!m_variables.count(_name), "");
-	m_variables[_name] = SMTVariableType::Bool;
 	write("(declare-const |" + _name + "| Bool)");
 	return SolverInterface::newBool(std::move(_name));
 }
@@ -151,9 +145,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(m_variables.count(e.name), "");
-			solAssert(m_variables[e.name] == SMTVariableType::Integer, "");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| Int)\n";
+			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + "\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";
