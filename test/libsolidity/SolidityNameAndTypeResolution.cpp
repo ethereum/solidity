@@ -7370,7 +7370,7 @@ BOOST_AUTO_TEST_CASE(array_length_cannot_be_constant_function_parameter)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Constant identifier declaration must have a constant value.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_with_cyclic_constant)
