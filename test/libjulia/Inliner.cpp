@@ -24,6 +24,8 @@
 #include <libjulia/optimiser/InlinableFunctionFilter.h>
 #include <libjulia/optimiser/FunctionalInliner.h>
 
+#include <libsolidity/inlineasm/AsmPrinter.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <boost/range/adaptors.hpp>
@@ -42,7 +44,7 @@ string inlinableFunctions(string const& _source)
 	auto ast = disambiguate(_source);
 
 	InlinableFunctionFilter filter;
-	filter(*ast);
+	filter(ast);
 
 	return boost::algorithm::join(
 		filter.inlinableFunctions() | boost::adaptors::map_keys,
@@ -50,9 +52,15 @@ string inlinableFunctions(string const& _source)
 	);
 }
 
+string inlineFunctions(string const& _source, bool _julia = true)
+{
+	auto ast = disambiguate(_source, _julia);
+	FunctionalInliner(ast).run();
+	return AsmPrinter(_julia)(ast);
+}
 }
 
-BOOST_AUTO_TEST_SUITE(IuliaInliner)
+BOOST_AUTO_TEST_SUITE(IuliaInlinableFunctionFilter)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -98,5 +106,60 @@ BOOST_AUTO_TEST_CASE(negative)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256, y:u256 { x := 2:u256 } }"), "");
 }
 
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(IuliaFunctionInliner)
+
+BOOST_AUTO_TEST_CASE(simple)
+{
+	BOOST_CHECK_EQUAL(
+		inlineFunctions("{ function f() -> x:u256 { x := 2:u256 } let y:u256 := f() }"),
+		format("{ function f() -> x:u256 { x := 2:u256 } let y:u256 := 2:u256 }")
+	);
+}
+
+BOOST_AUTO_TEST_CASE(with_args)
+{
+	BOOST_CHECK_EQUAL(
+		inlineFunctions("{ function f(a:u256) -> x:u256 { x := a } let y:u256 := f(7:u256) }"),
+		format("{ function f(a:u256) -> x:u256 { x := a } let y:u256 := 7:u256 }")
+	);
+}
+
+BOOST_AUTO_TEST_CASE(no_inline_with_mload)
+{
+	// Does not inline because mload could be moved out of sequence
+	BOOST_CHECK_EQUAL(
+		inlineFunctions("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false),
+		format("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(complex_with_evm)
+{
+	BOOST_CHECK_EQUAL(
+		inlineFunctions("{ function f(a) -> x { x := add(a, a) } let y := f(calldatasize()) }", false),
+		format("{ function f(a) -> x { x := add(a, a) } let y := add(calldatasize(), calldatasize()) }", false)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(double_calls)
+{
+	BOOST_CHECK_EQUAL(
+		inlineFunctions(R"({
+			function f(a) -> x { x := add(a, a) }
+			function g(b, c) -> y { y := mul(mload(c), f(b)) }
+			let y := g(calldatasize(), 7)
+		})", false),
+		format(R"({
+			function f(a) -> x { x := add(a, a) }
+			function g(b, c) -> y { y := mul(mload(c), add(b, b)) }
+			let y_1 := mul(mload(7), add(calldatasize(), calldatasize()))
+		})", false)
+	);
+}
+
+// TODO test double recursive calls
 
 BOOST_AUTO_TEST_SUITE_END()
