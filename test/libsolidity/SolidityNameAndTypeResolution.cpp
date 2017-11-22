@@ -1392,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 			event A(uint i);
 		}
 	)";
-	BOOST_CHECK(success(text));
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(events_with_same_name_unnamed_arguments)
@@ -4033,7 +4033,7 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
@@ -4074,7 +4074,7 @@ BOOST_AUTO_TEST_CASE(long_uint_variable_fails)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(bytes10abc_is_identifier)
@@ -4113,7 +4113,7 @@ BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup in function ()");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_types_0x7_mxn)
