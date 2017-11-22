@@ -131,43 +131,43 @@ StringMap createSourceList(Json::Value const& _input)
 	return sources;
 }
 
-bool isTargetRequired(Json::Value const& _targets, string const& _target)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact)
 {
-	for (auto const& target: _targets)
+	for (auto const& artifact: _outputSelection)
 		/// @TODO support sub-matching, e.g "evm" matches "evm.assembly"
-		if (target == "*" || target == _target)
+		if (artifact == "*" || artifact == _artifact)
 			return true;
 	return false;
 }
 
 ///
-/// @a _targets is a JSON object containining a two-level hashmap, where the first level is the filename,
-/// the second level is the contract name and the value is an array of target names to be requested for that contract.
+/// @a _outputSelection is a JSON object containining a two-level hashmap, where the first level is the filename,
+/// the second level is the contract name and the value is an array of artifact names to be requested for that contract.
 /// @a _file is the current file
 /// @a _contract is the current contract
-/// @a _target is the current target name
+/// @a _artifact is the current artifact name
 ///
-/// @returns true if the @a _targets has a match for the requested target in the specific file / contract.
+/// @returns true if the @a _outputSelection has a match for the requested target in the specific file / contract.
 ///
-/// In @a _targets the use of '*' as a wildcard is permitted.
+/// In @a _outputSelection the use of '*' as a wildcard is permitted.
 ///
 /// @TODO optimise this. Perhaps flatten the structure upfront.
 ///
-bool isTargetRequired(Json::Value const& _targets, string const& _file, string const& _contract, string const& _target)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, string const& _artifact)
 {
-	if (!_targets.isObject())
+	if (!_outputSelection.isObject())
 		return false;
 
 	for (auto const& file: { _file, string("*") })
-		if (_targets.isMember(file) && _targets[file].isObject())
+		if (_outputSelection.isMember(file) && _outputSelection[file].isObject())
 		{
 			if (_contract.empty())
 			{
 				/// Special case for SourceUnit-level targets (such as AST)
 				if (
-					_targets[file].isMember("") &&
-					_targets[file][""].isArray() &&
-					isTargetRequired(_targets[file][""], _target)
+					_outputSelection[file].isMember("") &&
+					_outputSelection[file][""].isArray() &&
+					isArtifactRequested(_outputSelection[file][""], _artifact)
 				)
 					return true;
 			}
@@ -176,9 +176,9 @@ bool isTargetRequired(Json::Value const& _targets, string const& _file, string c
 				/// Regular case for Contract-level targets
 				for (auto const& contract: { _contract, string("*") })
 					if (
-						_targets[file].isMember(contract) &&
-						_targets[file][contract].isArray() &&
-						isTargetRequired(_targets[file][contract], _target)
+						_outputSelection[file].isMember(contract) &&
+						_outputSelection[file][contract].isArray() &&
+						isArtifactRequested(_outputSelection[file][contract], _artifact)
 					)
 						return true;
 			}
@@ -187,10 +187,10 @@ bool isTargetRequired(Json::Value const& _targets, string const& _file, string c
 	return false;
 }
 
-bool isTargetRequired(Json::Value const& _targets, string const& _file, string const& _contract, vector<string> const& _requested)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, vector<string> const& _artifacts)
 {
-	for (auto const& requested: _requested)
-		if (isTargetRequired(_targets, _file, _contract, requested))
+	for (auto const& artifact: _artifacts)
+		if (isArtifactRequested(_outputSelection, _file, _contract, artifact))
 			return true;
 	return false;
 }
@@ -460,9 +460,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		if (isTargetRequired(outputSelection, sourceName, "", "ast"))
+		if (isArtifactRequested(outputSelection, sourceName, "", "ast"))
 			sourceResult["ast"] = ASTJsonConverter(false, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
-		if (isTargetRequired(outputSelection, sourceName, "", "legacyAST"))
+		if (isArtifactRequested(outputSelection, sourceName, "", "legacyAST"))
 			sourceResult["legacyAST"] = ASTJsonConverter(true, m_compilerStack.sourceIndices()).toJson(m_compilerStack.ast(sourceName));
 		output["sources"][sourceName] = sourceResult;
 	}
@@ -477,28 +477,28 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
-		if (isTargetRequired(outputSelection, file, name, "abi"))
+		if (isArtifactRequested(outputSelection, file, name, "abi"))
 			contractData["abi"] = m_compilerStack.contractABI(contractName);
-		if (isTargetRequired(outputSelection, file, name, "metadata"))
+		if (isArtifactRequested(outputSelection, file, name, "metadata"))
 			contractData["metadata"] = m_compilerStack.metadata(contractName);
-		if (isTargetRequired(outputSelection, file, name, "userdoc"))
+		if (isArtifactRequested(outputSelection, file, name, "userdoc"))
 			contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
-		if (isTargetRequired(outputSelection, file, name, "devdoc"))
+		if (isArtifactRequested(outputSelection, file, name, "devdoc"))
 			contractData["devdoc"] = m_compilerStack.natspecDev(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
-		if (isTargetRequired(outputSelection, file, name, "evm.assembly"))
+		if (isArtifactRequested(outputSelection, file, name, "evm.assembly"))
 			evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
-		if (isTargetRequired(outputSelection, file, name, "evm.legacyAssembly"))
+		if (isArtifactRequested(outputSelection, file, name, "evm.legacyAssembly"))
 			evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
-		if (isTargetRequired(outputSelection, file, name, "evm.methodIdentifiers"))
+		if (isArtifactRequested(outputSelection, file, name, "evm.methodIdentifiers"))
 			evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
-		if (isTargetRequired(outputSelection, file, name, "evm.gasEstimates"))
+		if (isArtifactRequested(outputSelection, file, name, "evm.gasEstimates"))
 			evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
-		if (isTargetRequired(
+		if (isArtifactRequested(
 			outputSelection,
 			file,
 			name,
@@ -509,7 +509,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				m_compilerStack.sourceMapping(contractName)
 			);
 
-		if (isTargetRequired(
+		if (isArtifactRequested(
 			outputSelection,
 			file,
 			name,
