@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
@@ -5690,7 +5690,7 @@ BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 			function D() public { }
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(return_structs)
@@ -5703,7 +5703,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(return_recursive_structs)
@@ -5753,7 +5753,7 @@ BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_address_checksum)
@@ -5896,7 +5896,7 @@ BOOST_AUTO_TEST_CASE(interface)
 		interface I {
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_constructor)
@@ -5917,7 +5917,7 @@ BOOST_AUTO_TEST_CASE(interface_functions)
 			function f();
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_function_bodies)
@@ -5939,7 +5939,7 @@ BOOST_AUTO_TEST_CASE(interface_function_external)
 			function f() external;
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_function_public)
@@ -5980,7 +5980,7 @@ BOOST_AUTO_TEST_CASE(interface_events)
 			event E();
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_inheritance)
@@ -6023,7 +6023,7 @@ BOOST_AUTO_TEST_CASE(interface_function_parameters)
 			function f(uint a) public returns (bool);
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_enums)
@@ -6047,7 +6047,7 @@ BOOST_AUTO_TEST_CASE(using_interface)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(using_interface_complex)
@@ -6064,7 +6064,7 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_about_throw)
@@ -6123,7 +6123,7 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
@@ -6239,7 +6239,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_function_parameter)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
