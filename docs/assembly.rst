@@ -9,11 +9,6 @@ This assembly language can also be used as "inline assembly" inside Solidity
 source code. We start with describing how to use inline assembly and how it
 differs from standalone assembly and then specify assembly itself.
 
-.. note::
-    TODO: Write about how scoping rules of inline assembly are a bit different
-    and the complications that arise when for example using internal functions
-    of libraries. Furthermore, write about the symbols defined by the compiler.
-
 .. _inline-assembly:
 
 Inline Assembly
@@ -40,6 +35,11 @@ We now want to describe the inline assembly language in detail.
     Inline assembly is a way to access the Ethereum Virtual Machine
     at a low level. This discards several important safety
     features of Solidity.
+
+.. note::
+    TODO: Write about how scoping rules of inline assembly are a bit different
+    and the complications that arise when for example using internal functions
+    of libraries. Furthermore, write about the symbols defined by the compiler.
 
 Example
 -------
