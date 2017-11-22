@@ -257,7 +257,7 @@ public:
 	}
 	virtual u256 literalValue(Literal const*) const
 	{
-		solAssert(false, "Literal value requested for type without literals.");
+		solAssert(false, "Literal value requested for type without literals: " + toString(false));
 	}
 
 	/// @returns a (simpler) type that is encoded in the same way for external function calls.
