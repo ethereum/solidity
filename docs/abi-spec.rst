@@ -451,13 +451,18 @@ Non-standard Packed Mode
 Solidity supports a non-standard packed mode where:
 
 - no :ref:`function selector <abi_function_selector>` is encoded,
-- short types are not zero padded and
+- types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``uint1, bytes1, uint8, string`` with values ``1, 0x42, 0x2424, "Hello, world!"`` results in ::
+As an example encoding ``int1, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in ::
 
-    0x0142242448656c6c6f2c20776f726c6421
-      ^^                                 uint1(1)
+    0xff42242448656c6c6f2c20776f726c6421
+      ^^                                 int1(-1)
         ^^                               bytes1(0x42)
-          ^^^^                           uint8(0x2424)
+          ^^^^                           uint16(0x2424)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
+
+More specifically, each statically-sized type takes as many bytes as its range has
+and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
+their length field. This means that the encoding is ambiguous as soon as there are two
+dynamically-sized elements.
