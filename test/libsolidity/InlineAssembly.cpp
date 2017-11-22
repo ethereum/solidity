@@ -258,6 +258,12 @@ BOOST_AUTO_TEST_CASE(if_statement)
 	BOOST_CHECK(successParse("{ function f() -> x {} if f() { pop(f()) } }"));
 }
 
+BOOST_AUTO_TEST_CASE(if_statement_scope)
+{
+	BOOST_CHECK(successParse("{ let x := 2 if 42 { x := 3 } }"));
+	CHECK_PARSE_ERROR("{ if 32 { let x := 3 } x := 2 }", DeclarationError, "Variable not found or variable not lvalue.");
+}
+
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_PARSE_ERROR("{ if calldatasize {}", ParserError, "Instructions are not supported as conditions for if");
@@ -502,6 +508,11 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 	parsePrintCompare(parsed);
 }
 
+BOOST_AUTO_TEST_CASE(print_if)
+{
+	parsePrintCompare("{\n    if 2\n    {\n        pop(mload(0))\n    }\n}");
+}
+
 BOOST_AUTO_TEST_CASE(print_switch)
 {
 	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
@@ -643,6 +654,11 @@ BOOST_AUTO_TEST_CASE(for_statement)
 	BOOST_CHECK(successAssemble("{ let x := calldatasize() for { let i := 0} lt(i, x) { i := add(i, 1) } { mstore(i, 2) } }"));
 }
 
+BOOST_AUTO_TEST_CASE(if_statement)
+{
+	BOOST_CHECK(successAssemble("{ if 1 {} }"));
+	BOOST_CHECK(successAssemble("{ let x := 0 if eq(calldatasize(), 0) { x := 1 } mstore(0, x) }"));
+}
 
 BOOST_AUTO_TEST_CASE(large_constant)
 {

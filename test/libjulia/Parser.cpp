@@ -269,6 +269,19 @@ BOOST_AUTO_TEST_CASE(multiple_assignment)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(if_statement)
+{
+	BOOST_CHECK(successParse("{ if 42:u256 {} }"));
+	BOOST_CHECK(successParse("{ if 42:u256 { let x:u256 := 3:u256 } }"));
+	BOOST_CHECK(successParse("{ function f() -> x:u256 {} if f() { let b:u256 := f() } }"));
+}
+
+BOOST_AUTO_TEST_CASE(if_statement_invalid)
+{
+	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
+	CHECK_ERROR("{ if 32:u256 let x:u256 := 3:u256 }", ParserError, "Expected token LBrace");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
