@@ -194,7 +194,7 @@ Omitted Function Parameter Names
 --------------------------------
 
 The names of unused parameters (especially return parameters) can be omitted.
-Those names will still be present on the stack, but they are inaccessible.
+Those parameters will still be present on the stack, but they are inaccessible.
 
 ::
 
@@ -363,15 +363,19 @@ As a result, the following code is illegal and cause the compiler to throw an er
 In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
 As a result, the following code is legal, despite being poorly written::
 
-    function foo() returns (uint) {
-        // baz is implicitly initialized as 0
-        uint bar = 5;
-        if (true) {
-            bar += baz;
-        } else {
-            uint baz = 10;// never executes
+    pragma solidity ^0.4.0;
+    
+    contract C {
+        function foo() returns (uint) {
+            // baz is implicitly initialized as 0
+            uint bar = 5;
+            if (true) {
+                bar += baz;
+            } else {
+                uint baz = 10;// never executes
+            }
+            return bar;// returns 5
         }
-        return bar;// returns 5
     }
 
 .. index:: ! exception, ! throw, ! assert, ! require, ! revert

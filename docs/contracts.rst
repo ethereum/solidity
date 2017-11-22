@@ -198,7 +198,6 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
         function compute(uint a, uint b) internal returns (uint) { return a+b; }
     }
 
-
     contract D {
         function readData() {
             C c = new C();
@@ -208,7 +207,6 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
             local = c.compute(3, 5); // error: member "compute" is not visible
         }
     }
-
 
     contract E is C {
         function g() {
@@ -237,7 +235,6 @@ be done at declaration.
     contract C {
         uint public data = 42;
     }
-
 
     contract Caller {
         C c = new C();
@@ -321,7 +318,6 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
     }
 
-
     contract mortal is owned {
         // This contract inherits the "onlyOwner"-modifier from
         // "owned" and applies it to the "close"-function, which
@@ -332,7 +328,6 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
     }
 
-
     contract priced {
         // Modifiers can receive arguments:
         modifier costs(uint price) {
@@ -341,7 +336,6 @@ inheritable properties of contracts and may be overridden by derived contracts.
             }
         }
     }
-
 
     contract Register is priced, owned {
         mapping (address => bool) registeredAddresses;
@@ -570,7 +564,6 @@ Please ensure you test your fallback function thoroughly to ensure the execution
         function() payable { }
     }
 
-
     contract Caller {
         function callTest(Test test) {
             test.call(0xabcdef01); // hash does not exist
@@ -687,12 +680,19 @@ as topics. The event call above can be performed in the same way as
 
 ::
 
-    log3(
-        msg.value,
-        0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
-        msg.sender,
-        _id
-    );
+    pragma solidity ^0.4.10;
+
+    contract C {
+        function f() {
+            bytes32 _id = 0x420042;
+            log3(
+                bytes32(msg.value),
+                bytes32(0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20),
+                bytes32(msg.sender),
+                _id
+            );
+        }
+    }
 
 where the long hexadecimal number is equal to
 ``keccak256("Deposit(address,hash256,uint256)")``, the signature of the event.
@@ -734,7 +734,6 @@ Details are given in the following example.
         address owner;
     }
 
-
     // Use "is" to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
@@ -745,7 +744,6 @@ Details are given in the following example.
         }
     }
 
-
     // These abstract contracts are only provided to make the
     // interface known to the compiler. Note the function
     // without body. If a contract does not implement all
@@ -754,12 +752,10 @@ Details are given in the following example.
         function lookup(uint id) returns (address adr);
     }
 
-
     contract NameReg {
         function register(bytes32 name);
         function unregister();
      }
-
 
     // Multiple inheritance is possible. Note that "owned" is
     // also a base class of "mortal", yet there is only a single
@@ -785,7 +781,6 @@ Details are given in the following example.
             }
         }
     }
-
 
     // If a constructor takes an argument, it needs to be
     // provided in the header (or modifier-invocation-style at
@@ -821,11 +816,9 @@ seen in the following example::
         function kill() { /* do cleanup 1 */ mortal.kill(); }
     }
 
-
     contract Base2 is mortal {
         function kill() { /* do cleanup 2 */ mortal.kill(); }
     }
-
 
     contract Final is Base1, Base2 {
     }
@@ -848,7 +841,6 @@ derived override, but this function will bypass
         }
     }
 
-
     contract Base1 is mortal {
         function kill() { /* do cleanup 1 */ super.kill(); }
     }
@@ -857,7 +849,6 @@ derived override, but this function will bypass
     contract Base2 is mortal {
         function kill() { /* do cleanup 2 */ super.kill(); }
     }
-
 
     contract Final is Base2, Base1 {
     }
@@ -887,7 +878,6 @@ the base constructors. This can be done in two ways::
         uint x;
         function Base(uint _x) { x = _x; }
     }
-
 
     contract Derived is Base(7) {
         function Derived(uint _y) Base(_y * _y) {
@@ -1081,7 +1071,6 @@ more advanced example to implement a set).
       }
     }
 
-
     contract C {
         Set.Data knownValues;
 
@@ -1156,7 +1145,6 @@ custom types without the overhead of external function calls:
             return a > b ? a : b;
         }
     }
-
 
     contract C {
         using BigInt for BigInt.bigint;
@@ -1250,7 +1238,6 @@ Let us rewrite the set example from the
       }
     }
 
-
     contract C {
         using Set for Set.Data; // this is the crucial change
         Set.Data knownValues;
@@ -1275,7 +1262,6 @@ It is also possible to extend elementary types in that way::
             return uint(-1);
         }
     }
-
 
     contract C {
         using Search for uint[];

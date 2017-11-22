@@ -20,12 +20,12 @@ State variables are values which are permanently stored in contract storage.
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract SimpleStorage {
-      uint storedData; // State variable
-      // ...
-  }
+    contract SimpleStorage {
+        uint storedData; // State variable
+        // ...
+    }
 
 See the :ref:`types` section for valid state variable types and
 :ref:`visibility-and-getters` for possible choices for
@@ -40,13 +40,13 @@ Functions are the executable units of code within a contract.
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract SimpleAuction {
-      function bid() payable { // Function
-          // ...
-      }
-  }
+    contract SimpleAuction {
+        function bid() payable { // Function
+            // ...
+        }
+    }
 
 :ref:`function-calls` can happen internally or externally
 and have different levels of visibility (:ref:`visibility-and-getters`)
@@ -62,20 +62,20 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 
 ::
 
-  pragma solidity ^0.4.11;
+    pragma solidity ^0.4.11;
 
-  contract Purchase {
-      address public seller;
+    contract Purchase {
+        address public seller;
 
-      modifier onlySeller() { // Modifier
-          require(msg.sender == seller);
-          _;
-      }
+        modifier onlySeller() { // Modifier
+            require(msg.sender == seller);
+            _;
+        }
 
-      function abort() onlySeller { // Modifier usage
-          // ...
-      }
-  }
+        function abort() onlySeller { // Modifier usage
+            // ...
+        }
+    }
 
 .. _structure-events:
 
@@ -86,16 +86,16 @@ Events are convenience interfaces with the EVM logging facilities.
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract SimpleAuction {
-      event HighestBidIncreased(address bidder, uint amount); // Event
+    contract SimpleAuction {
+        event HighestBidIncreased(address bidder, uint amount); // Event
 
-      function bid() payable {
-          // ...
-          HighestBidIncreased(msg.sender, msg.value); // Triggering event
-      }
-  }
+        function bid() payable {
+            // ...
+            HighestBidIncreased(msg.sender, msg.value); // Triggering event
+        }
+    }
 
 See :ref:`events` in contracts section for information on how events are declared
 and can be used from within a dapp.
@@ -110,16 +110,16 @@ Structs are custom defined types that can group several variables (see
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract Ballot {
-      struct Voter { // Struct
-          uint weight;
-          bool voted;
-          address delegate;
-          uint vote;
-      }
-  }
+    contract Ballot {
+        struct Voter { // Struct
+            uint weight;
+            bool voted;
+            address delegate;
+            uint vote;
+        }
+    }
 
 .. _structure-enum-types:
 
@@ -131,8 +131,8 @@ Enums can be used to create custom types with a finite set of values (see
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract Purchase {
-      enum State { Created, Locked, Inactive } // Enum
-  }
+    contract Purchase {
+        enum State { Created, Locked, Inactive } // Enum
+    }
