@@ -34,6 +34,7 @@ prerelease.txt
 build/
 docs/_build
 docs/utils/__pycache__
+docs/utils/*.pyc
 
 # vim stuff
 *.swp
