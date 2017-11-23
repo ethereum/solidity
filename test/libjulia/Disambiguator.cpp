@@ -19,90 +19,23 @@
  * Unit tests for the iulia name disambiguator.
  */
 
-#include <libsolidity/parsing/Scanner.h>
+#include <test/libjulia/Common.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
-
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
-
-#include <libjulia/optimiser/Disambiguator.h>
 
 #include <boost/test/unit_test.hpp>
 
-#include <string>
-#include <memory>
-
 using namespace std;
-using namespace dev::solidity::assembly;
-
-namespace dev
-{
-namespace solidity
-{
-namespace test
-{
-
-namespace
-{
-
-void printErrors(ErrorList const& _errors, Scanner const& _scanner)
-{
-	for (auto const& error: _errors)
-		SourceReferenceFormatter::printExceptionInformation(
-			cout,
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](std::string const&) -> Scanner const& { return _scanner; }
-		);
-}
-
-
-pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
-{
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, true).parse(scanner);
-	if (parserResult)
-	{
-		BOOST_REQUIRE(errorReporter.errors().empty());
-		auto analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, true);
-		if (analyzer.analyze(*parserResult))
-		{
-			BOOST_REQUIRE(errorReporter.errors().empty());
-			return make_pair(parserResult, analysisInfo);
-		}
-	}
-	printErrors(errors, *scanner);
-	BOOST_FAIL("Invalid source.");
-
-	// Unreachable.
-	return {};
-}
-
-string disambiguate(string const& _source)
-{
-	auto result = parse(_source);
-	julia::Disambiguator disambiguator(*result.first, *result.second);
-	return assembly::AsmPrinter(true)(*disambiguator.run());
-}
-
-string format(string const& _source)
-{
-	return assembly::AsmPrinter(true)(*parse(_source).first);
-}
-
-}
+using namespace dev::julia::test;
+using namespace dev::solidity;
 
 #define CHECK(_original, _expectation)\
 do\
 {\
-	BOOST_CHECK_EQUAL(disambiguate(_original), format(_expectation));\
-	BOOST_CHECK_EQUAL(disambiguate(_original), disambiguate(disambiguate(_original)));\
+	assembly::AsmPrinter p(true);\
+	string result = p(*disambiguate(_original));\
+	BOOST_CHECK_EQUAL(result, format(_expectation));\
+	BOOST_CHECK_EQUAL(result, p(*disambiguate(result)));\
 }\
 while(false)
 
@@ -170,8 +103,3 @@ BOOST_AUTO_TEST_CASE(if_statement)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-}
-}
-} // end namespaces
