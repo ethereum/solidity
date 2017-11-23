@@ -252,7 +252,7 @@ We will use a destructuring notation for the AST nodes.
         G, L, continue
     E(G, L, <if condition body>: If) =
         let G0, L0, v = E(G, L, condition)
-        if v is true or non-zero:
+        if v is true:
             E(G0, L0, body)
         else:
             G0, L0, regular
