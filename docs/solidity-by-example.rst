@@ -492,7 +492,7 @@ high or low invalid bids.
             if (amount > 0) {
                 // It is important to set this to zero because the recipient
                 // can call this function again as part of the receiving call
-                // before `send` returns (see the remark above about
+                // before `transfer` returns (see the remark above about
                 // conditions -> effects -> interaction).
                 pendingReturns[msg.sender] = 0;
 
@@ -508,11 +508,10 @@ high or low invalid bids.
             require(!ended);
             AuctionEnded(highestBidder, highestBid);
             ended = true;
-            // We send all the money we have, because some
-            // of the refunds might have failed.
-            beneficiary.transfer(this.balance);
+            beneficiary.transfer(highestBid);
         }
     }
+
 
 .. index:: purchase, remote purchase, escrow
 
