@@ -467,13 +467,13 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` is an alias to ``view``.
+  ``constant`` on functions is an alias to ``view``.
 
 .. note::
   Getter methods are marked ``view``.
 
 .. warning::
-  The compiler does not enforce yet that a ``view`` method is not modifying state.
+  Before version 0.4.17 the compiler didn't enforce that ``view`` is not modifying the state.
 
 .. index:: ! pure function, function;pure
 
@@ -503,7 +503,7 @@ In addition to the list of state modifying statements explained above, the follo
     }
 
 .. warning::
-  The compiler does not enforce yet that a ``pure`` method is not reading from the state.
+  Before version 0.4.17 the compiler didn't enforce that ``view`` is not reading the state.
 
 .. index:: ! fallback function, function;fallback
 
