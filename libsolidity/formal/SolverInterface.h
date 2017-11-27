@@ -44,7 +44,9 @@ enum class CheckResult
 
 enum class Sort
 {
-	Int, Bool
+	Int,
+	Bool,
+	IntIntFun // Function of one Int returning a single Int
 };
 
 /// C++ representation of an SMTLIB2 expression.
@@ -52,10 +54,10 @@ class Expression
 {
 	friend class SolverInterface;
 public:
-	explicit Expression(bool _v): name(_v ? "true" : "false") {}
-	Expression(size_t _number): name(std::to_string(_number)) {}
-	Expression(u256 const& _number): name(_number.str()) {}
-	Expression(bigint const& _number): name(_number.str()) {}
+	explicit Expression(bool _v): name(_v ? "true" : "false"), sort(Sort::Bool) {}
+	Expression(size_t _number): name(std::to_string(_number)), sort(Sort::Int) {}
+	Expression(u256 const& _number): name(_number.str()), sort(Sort::Int) {}
+	Expression(bigint const& _number): name(_number.str()), sort(Sort::Int) {}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
@@ -64,26 +66,27 @@ public:
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
+		solAssert(_trueValue.sort == _falseValue.sort, "");
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-		});
+		}, _trueValue.sort);
 	}
 
 	friend Expression operator!(Expression _a)
 	{
-		return Expression("not", std::move(_a));
+		return Expression("not", std::move(_a), Sort::Bool);
 	}
 	friend Expression operator&&(Expression _a, Expression _b)
 	{
-		return Expression("and", std::move(_a), std::move(_b));
+		return Expression("and", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator||(Expression _a, Expression _b)
 	{
-		return Expression("or", std::move(_a), std::move(_b));
+		return Expression("or", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator==(Expression _a, Expression _b)
 	{
-		return Expression("=", std::move(_a), std::move(_b));
+		return Expression("=", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator!=(Expression _a, Expression _b)
 	{
@@ -91,52 +94,56 @@ public:
 	}
 	friend Expression operator<(Expression _a, Expression _b)
 	{
-		return Expression("<", std::move(_a), std::move(_b));
+		return Expression("<", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator<=(Expression _a, Expression _b)
 	{
-		return Expression("<=", std::move(_a), std::move(_b));
+		return Expression("<=", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator>(Expression _a, Expression _b)
 	{
-		return Expression(">", std::move(_a), std::move(_b));
+		return Expression(">", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator>=(Expression _a, Expression _b)
 	{
-		return Expression(">=", std::move(_a), std::move(_b));
+		return Expression(">=", std::move(_a), std::move(_b), Sort::Bool);
 	}
 	friend Expression operator+(Expression _a, Expression _b)
 	{
-		return Expression("+", std::move(_a), std::move(_b));
+		return Expression("+", std::move(_a), std::move(_b), Sort::Int);
 	}
 	friend Expression operator-(Expression _a, Expression _b)
 	{
-		return Expression("-", std::move(_a), std::move(_b));
+		return Expression("-", std::move(_a), std::move(_b), Sort::Int);
 	}
 	friend Expression operator*(Expression _a, Expression _b)
 	{
-		return Expression("*", std::move(_a), std::move(_b));
+		return Expression("*", std::move(_a), std::move(_b), Sort::Int);
 	}
 	Expression operator()(Expression _a) const
 	{
-		solAssert(arguments.empty(), "Attempted function application to non-function.");
-		return Expression(name, _a);
+		solAssert(
+			sort == Sort::IntIntFun && arguments.empty(),
+			"Attempted function application to non-function."
+		);
+		return Expression(name, _a, Sort::Int);
 	}
 
 	std::string const name;
 	std::vector<Expression> const arguments;
+	Sort sort;
 
 private:
 	/// Manual constructor, should only be used by SolverInterface and this class itself.
-	Expression(std::string _name, std::vector<Expression> _arguments):
-		name(std::move(_name)), arguments(std::move(_arguments)) {}
+	Expression(std::string _name, std::vector<Expression> _arguments, Sort _sort):
+		name(std::move(_name)), arguments(std::move(_arguments)), sort(_sort) {}
 
-	explicit Expression(std::string _name):
-		Expression(std::move(_name), std::vector<Expression>{}) {}
-	Expression(std::string _name, Expression _arg):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}) {}
-	Expression(std::string _name, Expression _arg1, Expression _arg2):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}) {}
+	explicit Expression(std::string _name, Sort _sort):
+		Expression(std::move(_name), std::vector<Expression>{}, _sort) {}
+	Expression(std::string _name, Expression _arg, Sort _sort):
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _sort) {}
+	Expression(std::string _name, Expression _arg1, Expression _arg2, Sort _sort):
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _sort) {}
 };
 
 DEV_SIMPLE_EXCEPTION(SolverError);
@@ -149,20 +156,21 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual Expression newFunction(std::string _name, Sort /*_domain*/, Sort /*_codomain*/)
+	virtual Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
 	{
+		solAssert(_domain == Sort::Int && _codomain == Sort::Int, "Function sort not supported.");
 		// Subclasses should do something here
-		return Expression(std::move(_name), {});
+		return Expression(std::move(_name), {}, Sort::IntIntFun);
 	}
 	virtual Expression newInteger(std::string _name)
 	{
 		// Subclasses should do something here
-		return Expression(std::move(_name), {});
+		return Expression(std::move(_name), {}, Sort::Int);
 	}
 	virtual Expression newBool(std::string _name)
 	{
 		// Subclasses should do something here
-		return Expression(std::move(_name), {});
+		return Expression(std::move(_name), {}, Sort::Bool);
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;
