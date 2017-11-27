@@ -217,6 +217,19 @@ void CodeTransform::operator()(assembly::Instruction const& _instruction)
 	checkStackHeight(&_instruction);
 }
 
+void CodeTransform::operator()(If const& _if)
+{
+	visitExpression(*_if.condition);
+	m_assembly.setSourceLocation(_if.location);
+	m_assembly.appendInstruction(solidity::Instruction::ISZERO);
+	AbstractAssembly::LabelID end = m_assembly.newLabelId();
+	m_assembly.appendJumpToIf(end);
+	(*this)(_if.body);
+	m_assembly.setSourceLocation(_if.location);
+	m_assembly.appendLabel(end);
+	checkStackHeight(&_if);
+}
+
 void CodeTransform::operator()(Switch const& _switch)
 {
 	//@TODO use JUMPV in EVM1.5?

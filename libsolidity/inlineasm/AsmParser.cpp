@@ -73,13 +73,23 @@ assembly::Statement Parser::parseStatement()
 		return parseFunctionDefinition();
 	case Token::LBrace:
 		return parseBlock();
+	case Token::If:
+	{
+		assembly::If _if = createWithLocation<assembly::If>();
+		m_scanner->next();
+		_if.condition = make_shared<Statement>(parseExpression());
+		if (_if.condition->type() == typeid(assembly::Instruction))
+			fatalParserError("Instructions are not supported as conditions for if - try to append \"()\".");
+		_if.body = parseBlock();
+		return _if;
+	}
 	case Token::Switch:
 	{
 		assembly::Switch _switch = createWithLocation<assembly::Switch>();
 		m_scanner->next();
 		_switch.expression = make_shared<Statement>(parseExpression());
 		if (_switch.expression->type() == typeid(assembly::Instruction))
-			fatalParserError("Instructions are not supported as expressions for switch.");
+			fatalParserError("Instructions are not supported as expressions for switch - try to append \"()\".");
 		while (m_scanner->currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
 		if (m_scanner->currentToken() == Token::Default)

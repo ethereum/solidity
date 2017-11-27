@@ -104,6 +104,7 @@ public:
 	void operator()(solidity::assembly::StackAssignment const& _assignment);
 	void operator()(solidity::assembly::Assignment const& _assignment);
 	void operator()(solidity::assembly::VariableDeclaration const& _varDecl);
+	void operator()(solidity::assembly::If const& _if);
 	void operator()(solidity::assembly::Switch const& _switch);
 	void operator()(solidity::assembly::FunctionDefinition const&);
 	void operator()(solidity::assembly::ForLoop const&);

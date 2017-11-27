@@ -70,6 +70,7 @@ public:
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const& _functionCall);
+	bool operator()(assembly::If const& _if);
 	bool operator()(assembly::Switch const& _switch);
 	bool operator()(assembly::ForLoop const& _forLoop);
 	bool operator()(assembly::Block const& _block);

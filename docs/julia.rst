@@ -15,7 +15,7 @@ future versions of the Solidity compiler will even use JULIA as intermediate
 language. It should also be easy to build high-level optimizer stages for JULIA.
 
 The core components of JULIA are functions, blocks, variables, literals,
-for-loops, switch-statements, expressions and assignments to variables.
+for-loops, if-statements, switch-statements, expressions and assignments to variables.
 
 JULIA is typed, both variables and literals must specify the type with postfix
 notation. The supported types are ``bool``, ``u8``, ``s8``, ``u32``, ``s32``,
@@ -88,6 +88,8 @@ Grammar::
         IdentifierList ':=' Expression
     Expression =
         FunctionCall | Identifier | Literal
+    If =
+        'if' Expression Block
     Switch =
         'switch' Expression Case* ( 'default' Block )?
     Case =
@@ -248,8 +250,14 @@ We will use a destructuring notation for the AST nodes.
         G, L, break
     E(G, L, continue: BreakContinue) =
         G, L, continue
+    E(G, L, <if condition body>: If) =
+        let G0, L0, v = E(G, L, condition)
+        if v is true:
+            E(G0, L0, body)
+        else:
+            G0, L0, regular
     E(G, L, <switch condition case l1:t1 st1 ... case ln:tn stn>: Switch) =
-        E(G, L, switch condition case l1:t1 st1 ... case ln:tn stn default {}) =
+        E(G, L, switch condition case l1:t1 st1 ... case ln:tn stn default {})
     E(G, L, <switch condition case l1:t1 st1 ... case ln:tn stn default st'>: Switch) =
         let G0, L0, v = E(G, L, condition)
         // i = 1 .. n

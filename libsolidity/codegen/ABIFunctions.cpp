@@ -168,7 +168,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 		{
 			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
 			solAssert(members > 0, "empty enum should have caused a parser error.");
-			Whiskers w("switch lt(value, <members>) case 0 { <failure> } cleaned := value");
+			Whiskers w("if iszero(lt(value, <members>)) { <failure> } cleaned := value");
 			w("members", to_string(members));
 			if (_revertOnFailure)
 				w("failure", "revert(0, 0)");
@@ -988,8 +988,8 @@ string ABIFunctions::copyToMemoryFunction(bool _fromCalldata)
 					{
 						mstore(add(dst, i), mload(add(src, i)))
 					}
-					switch eq(i, length)
-					case 0 {
+					if gt(i, length)
+					{
 						// clear end
 						mstore(add(dst, length), 0)
 					}

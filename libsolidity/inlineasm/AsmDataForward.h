@@ -41,11 +41,12 @@ struct VariableDeclaration;
 struct FunctionalInstruction;
 struct FunctionDefinition;
 struct FunctionCall;
+struct If;
 struct Switch;
 struct ForLoop;
 struct Block;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, Switch, ForLoop, Block>;
+using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
 
 }
 }

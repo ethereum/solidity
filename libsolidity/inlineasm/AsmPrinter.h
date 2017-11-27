@@ -48,6 +48,7 @@ public:
 	std::string operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	std::string operator()(assembly::FunctionDefinition const& _functionDefinition);
 	std::string operator()(assembly::FunctionCall const& _functionCall);
+	std::string operator()(assembly::If const& _if);
 	std::string operator()(assembly::Switch const& _switch);
 	std::string operator()(assembly::ForLoop const& _forLoop);
 	std::string operator()(assembly::Block const& _block);
