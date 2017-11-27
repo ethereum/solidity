@@ -21,8 +21,6 @@
 
 #include "JumpdestRemover.h"
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
@@ -45,7 +43,7 @@ bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 			if (_item.type() != Tag)
 				return false;
 			auto asmIdAndTag = _item.splitForeignPushTag();
-			solAssert(asmIdAndTag.first == size_t(-1), "Sub-assembly tag used as label.");
+			assertThrow(asmIdAndTag.first == size_t(-1), OptimizerException, "Sub-assembly tag used as label.");
 			size_t tag = asmIdAndTag.second;
 			return !references.count(tag);
 		}
