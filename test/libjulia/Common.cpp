@@ -55,12 +55,12 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, true).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, _julia).parse(scanner);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
 		auto analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, true);
+		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, _julia);
 		if (analyzer.analyze(*parserResult))
 		{
 			BOOST_REQUIRE(errorReporter.errors().empty());
@@ -74,14 +74,13 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	return {};
 }
 
-shared_ptr<assembly::Block> dev::julia::test::disambiguate(string const& _source)
+assembly::Block dev::julia::test::disambiguate(string const& _source, bool _julia)
 {
-	auto result = parse(_source);
-	Disambiguator disambiguator(*result.first, *result.second);
-	return disambiguator.run();
+	auto result = parse(_source, _julia);
+	return boost::get<Block>(Disambiguator(*result.second)(*result.first));
 }
 
-string dev::julia::test::format(string const& _source)
+string dev::julia::test::format(string const& _source, bool _julia)
 {
 	return assembly::AsmPrinter(_julia)(*parse(_source, _julia).first);
 }

@@ -45,9 +45,10 @@ namespace test
 {
 
 void printErrors(solidity::ErrorList const& _errors, solidity::Scanner const& _scanner);
-std::pair<std::shared_ptr<solidity::assembly::Block>, std::shared_ptr<solidity::assembly::AsmAnalysisInfo>> parse(std::string const& _source);
-std::shared_ptr<solidity::assembly::Block> disambiguate(std::string const& _source);
-std::string format(std::string const& _source);
+std::pair<std::shared_ptr<solidity::assembly::Block>, std::shared_ptr<solidity::assembly::AsmAnalysisInfo>>
+parse(std::string const& _source, bool _julia = true);
+solidity::assembly::Block disambiguate(std::string const& _source, bool _julia = true);
+std::string format(std::string const& _source, bool _julia = true);
 
 }
 }

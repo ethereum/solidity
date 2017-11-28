@@ -33,9 +33,9 @@ using namespace dev::solidity;
 do\
 {\
 	assembly::AsmPrinter p(true);\
-	string result = p(*disambiguate(_original));\
+	string result = p(disambiguate(_original));\
 	BOOST_CHECK_EQUAL(result, format(_expectation));\
-	BOOST_CHECK_EQUAL(result, p(*disambiguate(result)));\
+	BOOST_CHECK_EQUAL(result, p(disambiguate(result)));\
 }\
 while(false)
 

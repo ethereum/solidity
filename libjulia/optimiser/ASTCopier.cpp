@@ -31,11 +31,6 @@ using namespace dev;
 using namespace dev::julia;
 
 
-shared_ptr<Block> ASTCopier::run()
-{
-	return make_shared<Block>(translate(m_block));
-}
-
 Statement ASTCopier::operator()(Instruction const& _instruction)
 {
 	return _instruction;

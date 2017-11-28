@@ -43,10 +43,8 @@ class EVMAssembly;
 class Disambiguator: public ASTCopier
 {
 public:
-	Disambiguator(
-		Block const& _block,
-		solidity::assembly::AsmAnalysisInfo const& _analysisInfo
-	): ASTCopier(_block), m_info(_analysisInfo)
+	Disambiguator(solidity::assembly::AsmAnalysisInfo const& _analysisInfo):
+		m_info(_analysisInfo)
 	{}
 
 protected:
