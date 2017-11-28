@@ -20,8 +20,9 @@
 
 #include <libjulia/backends/evm/EVMAssembly.h>
 
+#include <libjulia/AsmDataForward.h>
+
 #include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -95,38 +96,38 @@ protected:
 	{}
 
 public:
-	void operator()(solidity::assembly::Instruction const& _instruction);
-	void operator()(solidity::assembly::Literal const& _literal);
-	void operator()(solidity::assembly::Identifier const& _identifier);
-	void operator()(solidity::assembly::FunctionalInstruction const& _instr);
-	void operator()(solidity::assembly::FunctionCall const&);
-	void operator()(solidity::assembly::Label const& _label);
-	void operator()(solidity::assembly::StackAssignment const& _assignment);
-	void operator()(solidity::assembly::Assignment const& _assignment);
-	void operator()(solidity::assembly::VariableDeclaration const& _varDecl);
-	void operator()(solidity::assembly::If const& _if);
-	void operator()(solidity::assembly::Switch const& _switch);
-	void operator()(solidity::assembly::FunctionDefinition const&);
-	void operator()(solidity::assembly::ForLoop const&);
-	void operator()(solidity::assembly::Block const& _block);
+	void operator()(Instruction const& _instruction);
+	void operator()(Literal const& _literal);
+	void operator()(Identifier const& _identifier);
+	void operator()(FunctionalInstruction const& _instr);
+	void operator()(FunctionCall const&);
+	void operator()(Label const& _label);
+	void operator()(StackAssignment const& _assignment);
+	void operator()(Assignment const& _assignment);
+	void operator()(VariableDeclaration const& _varDecl);
+	void operator()(If const& _if);
+	void operator()(Switch const& _switch);
+	void operator()(FunctionDefinition const&);
+	void operator()(ForLoop const&);
+	void operator()(Block const& _block);
 
 private:
-	AbstractAssembly::LabelID labelFromIdentifier(solidity::assembly::Identifier const& _identifier);
+	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
 	/// @returns the label ID corresponding to the given label, allocating a new one if
 	/// necessary.
 	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
 	AbstractAssembly::LabelID functionEntryID(std::string const& _name, solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
-	void visitExpression(solidity::assembly::Statement const& _expression);
+	void visitExpression(Statement const& _expression);
 
-	void visitStatements(std::vector<solidity::assembly::Statement> const& _statements);
+	void visitStatements(std::vector<Statement> const& _statements);
 
 	/// Pops all variables declared in the block and checks that the stack height is equal
 	/// to @a _blackStartStackHeight.
-	void finalizeBlock(solidity::assembly::Block const& _block, int _blockStartStackHeight);
+	void finalizeBlock(Block const& _block, int _blockStartStackHeight);
 
-	void generateMultiAssignment(std::vector<solidity::assembly::Identifier> const& _variableNames);
-	void generateAssignment(solidity::assembly::Identifier const& _variableName);
+	void generateMultiAssignment(std::vector<Identifier> const& _variableNames);
+	void generateAssignment(Identifier const& _variableName);
 
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
