@@ -25,6 +25,8 @@
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
+#include <test/libsolidity/ABITestsCommon.h>
+
 using namespace std;
 using namespace std::placeholders;
 using namespace dev::test;
@@ -41,20 +43,6 @@ namespace test
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress); \
 	BOOST_CHECK_EQUAL(toHex(m_logs[0].data), toHex(DATA)); \
 } while (false)
-
-static string const NewEncoderPragma = "pragma experimental ABIEncoderV2;\n";
-
-#define NEW_ENCODER(CODE) \
-{ \
-	sourceCode = NewEncoderPragma + sourceCode; \
-	{ CODE } \
-}
-
-#define BOTH_ENCODERS(CODE) \
-{ \
-	{ CODE } \
-	NEW_ENCODER(CODE) \
-}
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
 
@@ -74,7 +62,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 	string sourceCode = R"(
 		contract C {
 			event E(uint a, uint16 b, uint24 c, int24 d, bytes3 x, bool, C);
-			function f() {
+			function f() public {
 				bytes6 x = hex"1bababababa2";
 				bool b;
 				assembly { b := 7 }
@@ -98,7 +86,7 @@ BOOST_AUTO_TEST_CASE(string_literal)
 	string sourceCode = R"(
 		contract C {
 			event E(string, bytes20, string);
-			function f() {
+			function f() public {
 				E("abcdef", "abcde", "abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl");
 			}
 		}
@@ -120,7 +108,7 @@ BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 	string sourceCode = R"(
 		contract C {
 			enum E { A, B }
-			function f(uint x) returns (E en) {
+			function f(uint x) public returns (E en) {
 				assembly { en := x }
 			}
 		}
@@ -138,7 +126,7 @@ BOOST_AUTO_TEST_CASE(conversion)
 	string sourceCode = R"(
 		contract C {
 			event E(bytes4, bytes4, uint16, uint8, int16, int8);
-			function f() {
+			function f() public {
 				bytes2 x; assembly { x := 0xf1f2f3f400000000000000000000000000000000000000000000000000000000 }
 				uint8 a;
 				uint16 b = 0x1ff;
@@ -164,7 +152,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 	string sourceCode = R"(
 		contract C {
 			event E(uint a, int16[] b, uint c);
-			function f() {
+			function f() public {
 				int16[] memory x = new int16[](3);
 				assembly {
 					for { let i := 0 } lt(i, 3) { i := add(i, 1) } {
@@ -191,7 +179,7 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 	string sourceCode = R"(
 		contract C {
 			event E(uint a, int16[][2] b, uint c);
-			function f() {
+			function f() public {
 				int16[][2] memory x;
 				x[0] = new int16[](3);
 				x[1] = new int16[](2);
@@ -216,7 +204,7 @@ BOOST_AUTO_TEST_CASE(memory_byte_array)
 	string sourceCode = R"(
 		contract C {
 			event E(uint a, bytes[] b, uint c);
-			function f() {
+			function f() public {
 				bytes[] memory x = new bytes[](2);
 				x[0] = "abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw";
 				x[1] = "abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw";
@@ -243,7 +231,7 @@ BOOST_AUTO_TEST_CASE(storage_byte_array)
 			bytes short;
 			bytes long;
 			event E(bytes s, bytes l);
-			function f() {
+			function f() public {
 				short = "123456789012345678901234567890a";
 				long = "ffff123456789012345678901234567890afffffffff123456789012345678901234567890a";
 				E(short, long);
@@ -267,7 +255,7 @@ BOOST_AUTO_TEST_CASE(storage_array)
 		contract C {
 			address[3] addr;
 			event E(address[3] a);
-			function f() {
+			function f() public {
 				assembly {
 					sstore(0, sub(0, 1))
 					sstore(1, sub(0, 2))
@@ -290,7 +278,7 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 		contract C {
 			address[] addr;
 			event E(address[] a);
-			function f() {
+			function f() public {
 				addr.push(1);
 				addr.push(2);
 				addr.push(3);
@@ -311,7 +299,7 @@ BOOST_AUTO_TEST_CASE(storage_array_compact)
 		contract C {
 			int72[] x;
 			event E(int72[]);
-			function f() {
+			function f() public {
 				x.push(-1);
 				x.push(2);
 				x.push(-3);
@@ -339,7 +327,7 @@ BOOST_AUTO_TEST_CASE(external_function)
 		contract C {
 			event E(function(uint) external returns (uint), function(uint) external returns (uint));
 			function(uint) external returns (uint) g;
-			function f(uint) returns (uint) {
+			function f(uint) public returns (uint) {
 				g = this.f;
 				E(this.f, g);
 			}
@@ -347,7 +335,7 @@ BOOST_AUTO_TEST_CASE(external_function)
 	)";
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
-		callContractFunction("f(uint256)");
+		callContractFunction("f(uint256)", u256(0));
 		string functionIdF = asString(m_contractAddress.ref()) + asString(FixedHash<4>(dev::keccak256("f(uint256)")).ref());
 		REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));
 	)
@@ -360,7 +348,7 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 			event E(function(uint) external returns (uint), function(uint) external returns (uint));
 			// This test relies on the fact that g is stored in slot zero.
 			function(uint) external returns (uint) g;
-			function f(uint) returns (uint) {
+			function f(uint) public returns (uint) {
 				function(uint) external returns (uint)[1] memory h;
 				assembly { sstore(0, sub(0, 1)) mstore(h, sub(0, 1)) }
 				E(h[0], g);
@@ -369,7 +357,7 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 	)";
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
-		callContractFunction("f(uint256)");
+		callContractFunction("f(uint256)", u256(0));
 		REQUIRE_LOG_DATA(encodeArgs(string(24, char(-1)), string(24, char(-1))));
 	)
 }
@@ -404,7 +392,7 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 	// and by the ABI encoder
 	string sourceCode = R"(
 		contract C {
-			function f(uint x) returns (uint) {
+			function f(uint x) public returns (uint) {
 				assembly {
 					function abi_encode_t_uint256_to_t_uint256() {
 						mstore(0, 7)
@@ -432,7 +420,7 @@ BOOST_AUTO_TEST_CASE(structs)
 			struct T { uint64[2] x; }
 			S s;
 			event e(uint16, S);
-			function f() returns (uint, S) {
+			function f() public returns (uint, S) {
 				uint16 x = 7;
 				s.a = 8;
 				s.b = 9;

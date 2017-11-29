@@ -84,12 +84,22 @@ public:
 		return callFallbackWithValue(0);
 	}
 
+	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
+	{
+		FixedHash<4> hash(dev::keccak256(_sig));
+		sendMessage(hash.asBytes() + _arguments, false, _value);
+		return m_output;
+	}
+
+	bytes const& callContractFunctionNoEncoding(std::string _sig, bytes const& _arguments)
+	{
+		return callContractFunctionWithValueNoEncoding(_sig, 0, _arguments);
+	}
+
 	template <class... Args>
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
-		FixedHash<4> hash(dev::keccak256(_sig));
-		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
-		return m_output;
+		return callContractFunctionWithValueNoEncoding(_sig, _value, encodeArgs(_arguments...));
 	}
 
 	template <class... Args>
