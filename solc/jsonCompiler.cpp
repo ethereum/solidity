@@ -128,6 +128,11 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	input["settings"]["optimizer"]["enabled"] = _optimize;
 	input["settings"]["optimizer"]["runs"] = 200;
 
+	// Enable all SourceUnit-level outputs.
+	input["settings"]["outputSelection"]["*"][""][0] = "*";
+	// Enable all Contract-level outputs.
+	input["settings"]["outputSelection"]["*"]["*"][0] = "*";
+
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
 	Json::Value ret = compiler.compile(input);
 
