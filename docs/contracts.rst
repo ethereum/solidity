@@ -211,7 +211,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
     contract E is C {
         function g() {
             C c = new C();
-            uint val = compute(3, 5);  // acces to internal member (from derivated to parent contract)
+            uint val = compute(3, 5); // access to internal member (from derived to parent contract)
         }
     }
 
