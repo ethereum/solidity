@@ -9,11 +9,6 @@ This assembly language can also be used as "inline assembly" inside Solidity
 source code. We start with describing how to use inline assembly and how it
 differs from standalone assembly and then specify assembly itself.
 
-.. note::
-    TODO: Write about how scoping rules of inline assembly are a bit different
-    and the complications that arise when for example using internal functions
-    of libraries. Furthermore, write about the symbols defined by the compiler.
-
 .. _inline-assembly:
 
 Inline Assembly
@@ -31,6 +26,7 @@ arising when writing manual assembly by the following features:
 * access to external variables: ``function f(uint x) { assembly { x := sub(x, 1) } }``
 * labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
+* if statements: ``if slt(x, 0) { x := sub(0, x) }``
 * switch statements: ``switch x case 0 { y := mul(x, 2) } default { y := 0 }``
 * function calls: ``function f(x) -> y { switch x case 0 { y := 1 } default { y := mul(x, f(sub(x, 1))) }   }``
 
@@ -40,6 +36,11 @@ We now want to describe the inline assembly language in detail.
     Inline assembly is a way to access the Ethereum Virtual Machine
     at a low level. This discards several important safety
     features of Solidity.
+
+.. note::
+    TODO: Write about how scoping rules of inline assembly are a bit different
+    and the complications that arise when for example using internal functions
+    of libraries. Furthermore, write about the symbols defined by the compiler.
 
 Example
 -------
@@ -400,7 +401,7 @@ Labels
 Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
 which can change easily. Solidity inline assembly provides labels to make the use of
 jumps easier. Note that labels are a low-level feature and it is possible to write
-efficient assembly without labels, just using assembly functions, loops and switch instructions
+efficient assembly without labels, just using assembly functions, loops, if and switch instructions
 (see below). The following code computes an element in the Fibonacci series.
 
 .. code::
@@ -523,6 +524,21 @@ is performed by replacing the variable's value on the stack by the new value.
         =: v // instruction style assignment, puts the result of sload(10) into v
     }
 
+If
+--
+
+The if statement can be used for conditionally executing code.
+There is no "else" part, consider using "switch" (see below) if
+you need multiple alternatives.
+
+.. code::
+
+    {
+        if eq(value, 0) { revert(0, 0) }
+    }
+
+The curly braces for the body are required.
+
 Switch
 ------
 
@@ -622,7 +638,7 @@ Things to Avoid
 ---------------
 
 Inline assembly might have a quite high-level look, but it actually is extremely
-low-level. Function calls, loops and switches are converted by simple
+low-level. Function calls, loops, ifs and switches are converted by simple
 rewriting rules and after that, the only thing the assembler does for you is re-arranging
 functional-style opcodes, managing jump labels, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
@@ -669,7 +685,7 @@ for the Solidity compiler. In this form, it tries to achieve several goals:
 3. Control flow should be easy to detect to help in formal verification and optimization.
 
 In order to achieve the first and last goal, assembly provides high-level constructs
-like ``for`` loops, ``switch`` statements and function calls. It should be possible
+like ``for`` loops, ``if`` and ``switch`` statements and function calls. It should be possible
 to write assembly programs that do not make use of explicit ``SWAP``, ``DUP``,
 ``JUMP`` and ``JUMPI`` statements, because the first two obfuscate the data flow
 and the last two obfuscate control flow. Furthermore, functional statements of
@@ -875,6 +891,7 @@ Grammar::
         FunctionalAssemblyAssignment |
         AssemblyAssignment |
         LabelDefinition |
+        AssemblyIf |
         AssemblySwitch |
         AssemblyFunctionDefinition |
         AssemblyFor |
@@ -891,6 +908,7 @@ Grammar::
     IdentifierList = Identifier ( ',' Identifier)*
     AssemblyAssignment = '=:' Identifier
     LabelDefinition = Identifier ':'
+    AssemblyIf = 'if' FunctionalAssemblyExpression AssemblyBlock
     AssemblySwitch = 'switch' FunctionalAssemblyExpression AssemblyCase*
         ( 'default' AssemblyBlock )?
     AssemblyCase = 'case' FunctionalAssemblyExpression AssemblyBlock

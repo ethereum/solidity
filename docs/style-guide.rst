@@ -25,7 +25,7 @@ solidity code.  The goal of this guide is *consistency*.  A quote from python's
 captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
-    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
+    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgement. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
@@ -223,7 +223,7 @@ Whitespace in Expressions
 
 Avoid extraneous whitespace in the following  situations:
 
-Immediately inside parenthesis, brackets or braces, with the exception of single-line function declarations.
+Immediately inside parenthesis, brackets or braces, with the exception of single line function declarations.
 
 Yes::
 
@@ -696,49 +696,51 @@ indistinguishable from the numerals one and zero.
 Contract and Library Names
 ==========================
 
-Contracts and libraries should be named using the CapWords style.
+Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``.
 
 
-Events
-======
+Event Names
+===========
 
-Events should be named using the CapWords style.
+Events should be named using the CapWords style. Examples: ``Deposit``, ``Transfer``, ``Approval``, ``BeforeTransfer``, ``AfterTransfer``.
 
 
 Function Names
 ==============
 
-Functions should use mixedCase.
+Functions should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
 
 
-Function Arguments
-==================
+Function Argument Names
+=======================
+
+Function arguments should use mixedCase. Examples: ``initialSupply``, ``account``, ``recipientAddress``, ``senderAddress``, ``newOwner``.
 
 When writing library functions that operate on a custom struct, the struct
 should be the first argument and should always be named ``self``.
 
 
-Local and State Variables
-=========================
+Local and State Variable Names
+==============================
 
-Use mixedCase.
+Use mixedCase. Examples: ``totalSupply``, ``remainingSupply``, ``balancesOf``, ``creatorAddress``, ``isPreSale``, ``tokenExchangeRate``.
 
 
 Constants
 =========
 
 Constants should be named with all capital letters with underscores separating
-words.  (for example:``MAX_BLOCKS``)
+words. Examples: ``MAX_BLOCKS``, `TOKEN_NAME`, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
 
 
-Modifiers
-=========
+Modifier Names
+==============
 
-Use mixedCase.
+Use mixedCase. Examples: ``onlyBy``, ``onlyAfter``, ``onlyDuringThePreSale``.
 
 
-Avoiding Collisions
-===================
+Avoiding Naming Collisions
+==========================
 
 * ``single_trailing_underscore_``
 

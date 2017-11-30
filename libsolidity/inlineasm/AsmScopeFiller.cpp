@@ -104,6 +104,11 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	return success;
 }
 
+bool ScopeFiller::operator()(If const& _if)
+{
+	return (*this)(_if.body);
+}
+
 bool ScopeFiller::operator()(Switch const& _switch)
 {
 	bool success = true;

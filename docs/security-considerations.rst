@@ -55,18 +55,18 @@ complete contract):
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  // THIS CONTRACT CONTAINS A BUG - DO NOT USE
-  contract Fund {
-      /// Mapping of ether shares of the contract.
-      mapping(address => uint) shares;
-      /// Withdraw your share.
-      function withdraw() {
-          if (msg.sender.send(shares[msg.sender]))
-              shares[msg.sender] = 0;
-      }
-  }
+    // THIS CONTRACT CONTAINS A BUG - DO NOT USE
+    contract Fund {
+        /// Mapping of ether shares of the contract.
+        mapping(address => uint) shares;
+        /// Withdraw your share.
+        function withdraw() {
+            if (msg.sender.send(shares[msg.sender]))
+                shares[msg.sender] = 0;
+        }
+    }
 
 The problem is not too serious here because of the limited gas as part
 of ``send``, but it still exposes a weakness: Ether transfer always
@@ -79,18 +79,18 @@ outlined further below:
 
 ::
 
-  pragma solidity ^0.4.11;
+    pragma solidity ^0.4.11;
 
-  contract Fund {
-      /// Mapping of ether shares of the contract.
-      mapping(address => uint) shares;
-      /// Withdraw your share.
-      function withdraw() {
-          var share = shares[msg.sender];
-          shares[msg.sender] = 0;
-          msg.sender.transfer(share);
-      }
-  }
+    contract Fund {
+        /// Mapping of ether shares of the contract.
+        mapping(address => uint) shares;
+        /// Withdraw your share.
+        function withdraw() {
+            var share = shares[msg.sender];
+            shares[msg.sender] = 0;
+            msg.sender.transfer(share);
+        }
+    }
 
 Note that re-entrancy is not only an effect of Ether transfer but of any
 function call on another contract. Furthermore, you also have to take
@@ -179,7 +179,9 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
     }
 
-Now someone tricks you into sending ether to the address of this attack wallet::
+Now someone tricks you into sending ether to the address of this attack wallet:
+
+::
 
     pragma solidity ^0.4.11;
 

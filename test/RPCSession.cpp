@@ -74,7 +74,10 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error creating IPC socket object");
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
+	{
+		close(m_socket);
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
+	}
 #endif
 }
 
@@ -237,9 +240,10 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 			"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
 			"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-			"0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 15, "word": 3 } } },
-			"0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 15, "word": 3 } } },
-			"0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product", "linear": { "base": 15, "word": 3 } } }
+			"0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
+			"0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
+			"0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
+			"0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
 		}
 	}
 	)";
@@ -336,22 +340,25 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	return result["result"];
 }
 
+string const& RPCSession::accountCreate()
+{
+	m_accounts.push_back(personal_newAccount(""));
+	personal_unlockAccount(m_accounts.back(), "", 100000);
+	return m_accounts.back();
+}
+
 string const& RPCSession::accountCreateIfNotExists(size_t _id)
 {
-	if (_id >= m_accounts.size())
-	{
-		m_accounts.push_back(personal_newAccount(""));
-		personal_unlockAccount(m_accounts.back(), "", 100000);
-	}
+	while ((_id + 1) > m_accounts.size())
+		accountCreate();
 	return m_accounts[_id];
 }
 
 RPCSession::RPCSession(const string& _path):
 	m_ipcSocket(_path)
 {
-	string account = personal_newAccount("");
-	personal_unlockAccount(account, "", 100000);
-	m_accounts.push_back(account);
+	accountCreate();
+	// This will pre-fund the accounts create prior.
 	test_setChainParams(m_accounts);
 }
 

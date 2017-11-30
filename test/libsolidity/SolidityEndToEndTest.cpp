@@ -2345,6 +2345,24 @@ BOOST_AUTO_TEST_CASE(constructor_static_array_argument)
 	ABI_CHECK(callContractFunction("b(uint256)", u256(2)), encodeArgs(u256(4)));
 }
 
+BOOST_AUTO_TEST_CASE(constant_var_as_array_length)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint constant LEN = 3;
+			uint[LEN] public a;
+
+			function C(uint[LEN] _a) {
+				a = _a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C", encodeArgs(u256(1), u256(2), u256(3)));
+	ABI_CHECK(callContractFunction("a(uint256)", u256(0)), encodeArgs(u256(1)));
+	ABI_CHECK(callContractFunction("a(uint256)", u256(1)), encodeArgs(u256(2)));
+	ABI_CHECK(callContractFunction("a(uint256)", u256(2)), encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 {
 	char const* sourceCode = R"(
@@ -8012,6 +8030,24 @@ BOOST_AUTO_TEST_CASE(inline_assembly_embedded_function_call)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(4), u256(7), u256(0x10)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_if)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a) returns (uint b) {
+				assembly {
+					if gt(a, 1) { b := 2 }
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(1)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(2)), encodeArgs(u256(2)));
+	ABI_CHECK(callContractFunction("f(uint256)", u256(3)), encodeArgs(u256(2)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_switch)

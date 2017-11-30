@@ -44,6 +44,7 @@ private:
 
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual Exception { const char* what() const noexcept override { return #X; } }
 
+DEV_SIMPLE_EXCEPTION(InvalidAddress);
 DEV_SIMPLE_EXCEPTION(BadHexCharacter);
 DEV_SIMPLE_EXCEPTION(FileError);
 

@@ -286,6 +286,22 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 	return success;
 }
 
+bool AsmAnalyzer::operator()(If const& _if)
+{
+	bool success = true;
+
+	if (!expectExpression(*_if.condition))
+		success = false;
+	m_stackHeight--;
+
+	if (!(*this)(_if.body))
+		success = false;
+
+	m_info.stackHeightInfo[&_if] = m_stackHeight;
+
+	return success;
+}
+
 bool AsmAnalyzer::operator()(Switch const& _switch)
 {
 	bool success = true;

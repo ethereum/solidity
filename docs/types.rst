@@ -129,7 +129,7 @@ and to send Ether (in units of wei) to an address using the ``transfer`` functio
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
 .. note::
-    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``transfer`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
+    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
 
 * ``send``
 
@@ -990,6 +990,6 @@ parameters or return parameters.
 .. warning::
     The type is only deduced from the first assignment, so
     the loop in the following snippet is infinite, as ``i`` will have the type
-    ``uint8`` and any value of this type is smaller than ``2000``.
+    ``uint8`` and the highest value of this type is smaller than ``2000``.
     ``for (var i = 0; i < 2000; i++) { ... }``
 

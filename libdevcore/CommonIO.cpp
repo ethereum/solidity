@@ -39,7 +39,7 @@ namespace
 {
 
 template <typename _T>
-inline _T contentsGeneric(std::string const& _file)
+inline _T readFile(std::string const& _file)
 {
 	_T ret;
 	size_t const c_elementSize = sizeof(typename _T::value_type);
@@ -61,9 +61,23 @@ inline _T contentsGeneric(std::string const& _file)
 
 }
 
-string dev::contentsString(string const& _file)
+string dev::readFileAsString(string const& _file)
 {
-	return contentsGeneric<string>(_file);
+	return readFile<string>(_file);
+}
+
+string dev::readStandardInput()
+{
+	string ret;
+	while (!cin.eof())
+	{
+		string tmp;
+		// NOTE: this will read until EOF or NL
+		getline(cin, tmp);
+		ret.append(tmp);
+		ret.append("\n");
+	}
+	return ret;
 }
 
 void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDeleteRename)

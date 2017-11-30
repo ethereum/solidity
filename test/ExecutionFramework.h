@@ -84,12 +84,22 @@ public:
 		return callFallbackWithValue(0);
 	}
 
+	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
+	{
+		FixedHash<4> hash(dev::keccak256(_sig));
+		sendMessage(hash.asBytes() + _arguments, false, _value);
+		return m_output;
+	}
+
+	bytes const& callContractFunctionNoEncoding(std::string _sig, bytes const& _arguments)
+	{
+		return callContractFunctionWithValueNoEncoding(_sig, 0, _arguments);
+	}
+
 	template <class... Args>
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
-		FixedHash<4> hash(dev::keccak256(_sig));
-		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
-		return m_output;
+		return callContractFunctionWithValueNoEncoding(_sig, _value, encodeArgs(_arguments...));
 	}
 
 	template <class... Args>
@@ -172,78 +182,13 @@ public:
 	{
 		return bytes();
 	}
+
 	//@todo might be extended in the future
 	template <class Arg>
 	static bytes encodeDyn(Arg const& _arg)
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
-	class ContractInterface
-	{
-	public:
-		ContractInterface(ExecutionFramework& _framework): m_framework(_framework) {}
-
-		void setNextValue(u256 const& _value) { m_nextValue = _value; }
-
-	protected:
-		template <class... Args>
-		bytes const& call(std::string const& _sig, Args const&... _arguments)
-		{
-			auto const& ret = m_framework.callContractFunctionWithValue(_sig, m_nextValue, _arguments...);
-			m_nextValue = 0;
-			return ret;
-		}
-
-		void callString(std::string const& _name, std::string const& _arg)
-		{
-			BOOST_CHECK(call(_name + "(string)", u256(0x20), _arg.length(), _arg).empty());
-		}
-
-		void callStringAddress(std::string const& _name, std::string const& _arg1, u160 const& _arg2)
-		{
-			BOOST_CHECK(call(_name + "(string,address)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
-		}
-
-		void callStringAddressBool(std::string const& _name, std::string const& _arg1, u160 const& _arg2, bool _arg3)
-		{
-			BOOST_CHECK(call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1).empty());
-		}
-
-		void callStringBytes32(std::string const& _name, std::string const& _arg1, h256 const& _arg2)
-		{
-			BOOST_CHECK(call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
-		}
-
-		u160 callStringReturnsAddress(std::string const& _name, std::string const& _arg)
-		{
-			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
-			BOOST_REQUIRE(ret.size() == 0x20);
-			BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
-			return u160(u256(h256(ret)));
-		}
-
-		std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
-		{
-			bytesConstRef const ret(&call(_name + "(address)", _arg));
-			BOOST_REQUIRE(ret.size() >= 0x40);
-			u256 offset(h256(ret.cropped(0, 0x20)));
-			BOOST_REQUIRE_EQUAL(offset, 0x20);
-			u256 len(h256(ret.cropped(0x20, 0x20)));
-			BOOST_REQUIRE_EQUAL(ret.size(), 0x40 + ((len + 0x1f) / 0x20) * 0x20);
-			return ret.cropped(0x40, size_t(len)).toString();
-		}
-
-		h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
-		{
-			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
-			BOOST_REQUIRE(ret.size() == 0x20);
-			return h256(ret);
-		}
-
-	private:
-		u256 m_nextValue;
-		ExecutionFramework& m_framework;
-	};
 
 private:
 	template <class CppFunction, class... Args>

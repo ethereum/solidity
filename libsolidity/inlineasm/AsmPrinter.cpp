@@ -174,6 +174,11 @@ string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
 		")";
 }
 
+string AsmPrinter::operator()(If const& _if)
+{
+	return "if " + boost::apply_visitor(*this, *_if.condition) + "\n" + (*this)(_if.body);
+}
+
 string AsmPrinter::operator()(Switch const& _switch)
 {
 	string out = "switch " + boost::apply_visitor(*this, *_switch.expression);

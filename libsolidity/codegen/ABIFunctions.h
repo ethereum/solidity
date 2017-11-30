@@ -66,6 +66,16 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
+	/// @returns name of an assembly function to ABI-decode values of @a _types
+	/// into memory. If @a _fromMemory is true, decodes from memory instead of
+	/// from calldata.
+	/// Can allocate memory.
+	/// Inputs: <source_offset> <source_end> (layout reversed on stack)
+	/// Outputs: <value0> <value1> ... <valuen>
+	/// The values represent stack slots. If a type occupies more or less than one
+	/// stack slot, it takes exactly that number of values.
+	std::string tupleDecoder(TypePointers const& _types, bool _fromMemory = false);
+
 	/// @returns concatenation of all generated functions.
 	std::string requestedFunctions();
 
@@ -86,6 +96,10 @@ private:
 	/// @returns a function that combines the address and selector to a single value
 	/// for use in the ABI.
 	std::string combineExternalFunctionIdFunction();
+
+	/// @returns a function that splits the address and selector from a single value
+	/// for use in the ABI.
+	std::string splitExternalFunctionIdFunction();
 
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
@@ -146,6 +160,31 @@ private:
 		bool _fromStack
 	);
 
+	/// @returns the name of the ABI decoding function for the given type
+	/// and queues the generation of the function to the requested functions.
+	/// The caller has to ensure that no out of bounds access (at least to the static
+	/// part) can happen inside this function.
+	/// @param _fromMemory if decoding from memory instead of from calldata
+	/// @param _forUseOnStack if the decoded value is stored on stack or in memory.
+	std::string abiDecodingFunction(
+		Type const& _Type,
+		bool _fromMemory,
+		bool _forUseOnStack
+	);
+
+	/// Part of @a abiDecodingFunction for value types.
+	std::string abiDecodingFunctionValueType(Type const& _type, bool _fromMemory);
+	/// Part of @a abiDecodingFunction for "regular" array types.
+	std::string abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory);
+	/// Part of @a abiDecodingFunction for calldata array types.
+	std::string abiDecodingFunctionCalldataArray(ArrayType const& _type);
+	/// Part of @a abiDecodingFunction for byte array types.
+	std::string abiDecodingFunctionByteArray(ArrayType const& _type, bool _fromMemory);
+	/// Part of @a abiDecodingFunction for struct types.
+	std::string abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory);
+	/// Part of @a abiDecodingFunction for array types.
+	std::string abiDecodingFunctionFunctionType(FunctionType const& _type, bool _fromMemory, bool _forUseOnStack);
+
 	/// @returns a function that copies raw bytes of dynamic length from calldata
 	/// or memory to memory.
 	/// Pads with zeros and might write more than exactly length.
@@ -158,6 +197,10 @@ private:
 	std::string roundUpFunction();
 
 	std::string arrayLengthFunction(ArrayType const& _type);
+	/// @returns the name of a function that computes the number of bytes required
+	/// to store an array in memory given its length (internally encoded, not ABI encoded).
+	/// The function reverts for too large lengthes.
+	std::string arrayAllocationSizeFunction(ArrayType const& _type);
 	/// @returns the name of a function that converts a storage slot number
 	/// or a memory pointer to the slot number / memory pointer for the data position of an array
 	/// which is stored in that slot / memory area.
@@ -165,6 +208,12 @@ private:
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that allocates memory.
+	/// Modifies the "free memory pointer"
+	/// Arguments: size
+	/// Return value: pointer
+	std::string allocationFunction();
 
 	/// Helper function that uses @a _creator to create a function and add it to
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both

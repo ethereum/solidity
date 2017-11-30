@@ -14,40 +14,37 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Forward declaration of classes for inline assembly / JULIA AST
- */
 
 #pragma once
 
-#include <boost/variant.hpp>
+#include <map>
+#include <set>
+#include <vector>
 
 namespace dev
 {
 namespace solidity
 {
-namespace assembly
+
+class ASTNode;
+class Declaration;
+
+/**
+ * This class collects information about which local variables of value type
+ * are modified in which parts of the AST.
+ */
+class VariableUsage
 {
+public:
+	explicit VariableUsage(ASTNode const& _node);
 
-struct Instruction;
-struct Literal;
-struct Label;
-struct StackAssignment;
-struct Identifier;
-struct Assignment;
-struct VariableDeclaration;
-struct FunctionalInstruction;
-struct FunctionDefinition;
-struct FunctionCall;
-struct If;
-struct Switch;
-struct ForLoop;
-struct Block;
+	std::vector<Declaration const*> touchedVariables(ASTNode const& _node) const;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
+private:
+	// Variable touched by a specific AST node.
+	std::map<ASTNode const*, Declaration const*> m_touchedVariable;
+	std::map<ASTNode const*, std::vector<ASTNode const*>> m_children;
+};
 
-}
 }
 }

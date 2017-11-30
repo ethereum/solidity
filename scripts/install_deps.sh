@@ -294,12 +294,17 @@ case $(uname -s) in
                         echo "Installing solidity dependencies on Ubuntu Zesty (17.04)."
                         install_z3="libz3-dev"
                         ;;
+                    artful)
+                        #artful
+                        echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
+                        install_z3="libz3-dev"
+                        ;;
                     *)
                         #other Ubuntu
                         echo "ERROR - Unknown or unsupported Ubuntu version (" $(lsb_release -cs) ")"
                         echo "ERROR - This might not work, but we are trying anyway."
                         echo "Please drop us a message at https://gitter.im/ethereum/solidity-dev."
-                        echo "We only support Trusty, Utopic, Vivid, Wily, Xenial and Yakkety."
+                        echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty and Artful."
                         install_z3="libz3-dev"
                         ;;
                 esac

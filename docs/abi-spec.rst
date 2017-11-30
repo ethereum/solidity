@@ -130,14 +130,14 @@ on the type of ``X`` being
   Note that in the dynamic case, ``head(X(i))`` is well-defined since the lengths of
   the head parts only depend on the types and not the values. Its value is the offset
   of the beginning of ``tail(X(i))`` relative to the start of ``enc(X)``.
-  
+
 - ``T[k]`` for any ``T`` and ``k``:
 
   ``enc(X) = enc((X[0], ..., X[k-1]))``
-  
+
   i.e. it is encoded as if it were a tuple with ``k`` elements
   of the same type.
-  
+
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
   ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
@@ -326,19 +326,19 @@ An event description is a JSON object with fairly similar fields:
 
 - ``anonymous``: ``true`` if the event was declared as ``anonymous``.
 
-For example, 
+For example,
 
 ::
 
-  pragma solidity ^0.4.0;
+    pragma solidity ^0.4.0;
 
-  contract Test {
-    function Test(){ b = 0x12345678901234567890123456789012; }
-    event Event(uint indexed a, bytes32 b)
-    event Event2(uint indexed a, bytes32 b)
-    function foo(uint a) { Event(a, b); }
-    bytes32 b;
-  }
+    contract Test {
+      function Test(){ b = 0x12345678901234567890123456789012; }
+      event Event(uint indexed a, bytes32 b);
+      event Event2(uint indexed a, bytes32 b);
+      function foo(uint a) { Event(a, b); }
+      bytes32 b;
+    }
 
 would result in the JSON:
 
@@ -377,11 +377,11 @@ As an example, the code
 
 ::
 
-  contract Test {
-    struct S { uint a; uint[] b; T[] c; }
-    struct T { uint x; uint y; }
-    function f(S s, T t, uint a) { }
-  }
+    contract Test {
+      struct S { uint a; uint[] b; T[] c; }
+      struct T { uint x; uint y; }
+      function f(S s, T t, uint a) { }
+    }
 
 would result in the JSON:
 
@@ -451,13 +451,18 @@ Non-standard Packed Mode
 Solidity supports a non-standard packed mode where:
 
 - no :ref:`function selector <abi_function_selector>` is encoded,
-- short types are not zero padded and
+- types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``uint1, bytes1, uint8, string`` with values ``1, 0x42, 0x2424, "Hello, world!"`` results in ::
+As an example encoding ``int1, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in ::
 
-    0x0142242448656c6c6f2c20776f726c6421
-      ^^                                 uint1(1)
+    0xff42242448656c6c6f2c20776f726c6421
+      ^^                                 int1(-1)
         ^^                               bytes1(0x42)
-          ^^^^                           uint8(0x2424)
+          ^^^^                           uint16(0x2424)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
+
+More specifically, each statically-sized type takes as many bytes as its range has
+and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
+their length field. This means that the encoding is ambiguous as soon as there are two
+dynamically-sized elements.

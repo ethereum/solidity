@@ -138,7 +138,7 @@ Input Description
         //   ewasm.wasm - eWASM binary format (not supported atm)
         //
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
-        // target part of that output.
+        // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         outputSelection: {
           // Enable the metadata and bytecode outputs of every single contract.
