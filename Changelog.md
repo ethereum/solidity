@@ -1,14 +1,14 @@
-### 0.4.19 (unreleased)
+### 0.4.19 (2017-11-30)
 
 Features:
- * Allow constant variables to be used as array length
  * Code Generator: New ABI decoder which supports structs and arbitrarily nested
-   arrays and checks input size (activate using ``pragma experimental ABIEncoderV2;``.
+   arrays and checks input size (activate using ``pragma experimental ABIEncoderV2;``).
+ * General: Allow constant variables to be used as array length.
+ * Inline Assembly: ``if`` statement.
  * Standard JSON: Support the ``outputSelection`` field for selective compilation of target artifacts.
  * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
  * Type Checker: Improve address checksum warning.
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
- * Inline Assembly: ``if`` statement.
 
 Bugfixes:
 
