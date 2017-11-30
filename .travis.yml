@@ -184,10 +184,8 @@ before_script:
 
 script:
     - test $SOLC_EMSCRIPTEN != On || (scripts/test_emscripten.sh)
-    - test $? == 0 || SOLC_STOREBYTECODE=Off
     - test $SOLC_DOCS != On || (scripts/docs.sh)
     - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
-    - test $? == 0 || SOLC_STOREBYTECODE=Off
     - test $SOLC_STOREBYTECODE != On || (cd $TRAVIS_BUILD_DIR && scripts/bytecodecompare/storebytecode.sh)
 
 deploy:
