@@ -20,7 +20,7 @@
 
 #include <libjulia/backends/evm/EVMAssembly.h>
 
-#include <libjulia/AsmDataForward.h>
+#include <libjulia/ASTDataForward.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
