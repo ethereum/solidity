@@ -71,10 +71,10 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	bool success = true;
 	vector<Scope::JuliaType> arguments;
-	for (auto const& _argument: _funDef.arguments)
+	for (auto const& _argument: _funDef.parameters)
 		arguments.push_back(_argument.type);
 	vector<Scope::JuliaType> returns;
-	for (auto const& _return: _funDef.returns)
+	for (auto const& _return: _funDef.returnVariables)
 		returns.push_back(_return.type);
 	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
 	{
@@ -91,7 +91,7 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	varScope.superScope = m_currentScope;
 	m_currentScope = &varScope;
 	varScope.functionScope = true;
-	for (auto const& var: _funDef.arguments + _funDef.returns)
+	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 		if (!registerVariable(var, _funDef.location, varScope))
 			success = false;
 

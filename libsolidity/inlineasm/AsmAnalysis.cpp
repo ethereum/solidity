@@ -217,14 +217,14 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	solAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
-	for (auto const& var: _funDef.arguments + _funDef.returns)
+	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
 		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	int const stackHeight = m_stackHeight;
-	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
+	m_stackHeight = _funDef.parameters.size() + _funDef.returnVariables.size();
 
 	bool success = (*this)(_funDef.body);
 
