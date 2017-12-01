@@ -28,6 +28,7 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	m_optimizer = new z3::optimize(m_context);
 }
 
 void Z3Interface::reset()
@@ -35,16 +36,21 @@ void Z3Interface::reset()
 	m_constants.clear();
 	m_functions.clear();
 	m_solver.reset();
+	if (m_optimizer != nullptr)
+		delete m_optimizer;
+	m_optimizer = new z3::optimize(m_context);
 }
 
 void Z3Interface::push()
 {
 	m_solver.push();
+	m_optimizer->push();
 }
 
 void Z3Interface::pop()
 {
 	m_solver.pop();
+	m_optimizer->pop();
 }
 
 Expression Z3Interface::newFunction(string _name, Sort _domain, Sort _codomain)
@@ -68,6 +74,7 @@ Expression Z3Interface::newBool(string _name)
 void Z3Interface::addAssertion(Expression const& _expr)
 {
 	m_solver.add(toZ3Expr(_expr));
+	m_optimizer->add(toZ3Expr(_expr));
 }
 
 pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
@@ -105,6 +112,70 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 	}
 
 	return make_pair(result, values);
+}
+
+pair<CheckResult, string> Z3Interface::maximize(Expression const& _expressionToMaximize)
+{
+	m_optimizer->push();
+	z3::optimize::handle handler = m_optimizer->maximize(toZ3Expr(_expressionToMaximize));
+	string result("");
+	CheckResult cResult;
+	try
+	{
+		switch(m_optimizer->check())
+		{
+		case z3::check_result::sat:
+			cResult = CheckResult::SATISFIABLE;
+			result = toString(m_optimizer->upper(handler));
+			break;
+		case z3::check_result::unsat:
+			cResult = CheckResult::UNSATISFIABLE;
+			break;
+		case z3::check_result::unknown:
+			cResult = CheckResult::UNKNOWN;
+			break;
+		default:
+			solAssert(false, "");
+		}
+	}
+	catch (z3::exception const& _e)
+	{
+		cResult = CheckResult::UNKNOWN;
+	}
+	m_optimizer->pop();
+	return make_pair(cResult, result);
+}
+
+pair<CheckResult, string> Z3Interface::minimize(Expression const& _expressionToMinimize)
+{
+	m_optimizer->push();
+	z3::optimize::handle handler = m_optimizer->minimize(toZ3Expr(_expressionToMinimize));
+	string result("");
+	CheckResult cResult;
+	try
+	{
+		switch(m_optimizer->check())
+		{
+		case z3::check_result::sat:
+			cResult = CheckResult::SATISFIABLE;
+			result = toString(m_optimizer->upper(handler));
+			break;
+		case z3::check_result::unsat:
+			cResult = CheckResult::UNSATISFIABLE;
+			break;
+		case z3::check_result::unknown:
+			cResult = CheckResult::UNKNOWN;
+			break;
+		default:
+			solAssert(false, "");
+		}
+	}
+	catch (z3::exception const& _e)
+	{
+		cResult = CheckResult::UNKNOWN;
+	}
+	m_optimizer->pop();
+	return make_pair(cResult, result);
 }
 
 z3::expr Z3Interface::toZ3Expr(Expression const& _expr)

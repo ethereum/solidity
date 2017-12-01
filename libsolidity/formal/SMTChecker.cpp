@@ -107,25 +107,47 @@ bool SMTChecker::visit(IfStatement const& _node)
 
 bool SMTChecker::visit(WhileStatement const& _node)
 {
-	auto touchedVariables = m_variableUsage->touchedVariables(_node);
-	resetVariables(touchedVariables);
+	auto countersEndFalse = m_currentSequenceCounter;
+	if (m_outterLoop == nullptr)
+		m_outterLoop = &_node;
+
 	if (_node.isDoWhile())
 	{
 		visitBranch(_node.body());
 		// TODO the assertions generated in the body should still be active in the condition
 		_node.condition().accept(*this);
-		checkBooleanNotConstant(_node.condition(), "Do-while loop condition is always $VALUE.");
+		solveMinMax(_node.condition());
+		//checkBooleanNotConstant(_node.condition(), "Do-while loop condition is always $VALUE.");
 	}
 	else
 	{
 		_node.condition().accept(*this);
-		checkBooleanNotConstant(_node.condition(), "While loop condition is always $VALUE.");
-
-		visitBranch(_node.body(), expr(_node.condition()));
+		solveMinMax(_node.condition());
+		if (m_maximizationResult.first == smt::CheckResult::UNSATISFIABLE)
+			m_errorReporter.warning(
+				_node.location(),
+				"While loop condition is always false."
+			);
 	}
-	resetVariables(touchedVariables);
+	decltype(countersEndFalse) countersEndTrue;
+	auto bound = computeLoopBound();
+	for(int i = 0; i < bound; ++i)
+	{
+		_node.condition().accept(*this);
+		countersEndTrue = visitBranch(_node.body(), expr(_node.condition()));
+		auto touchedVariables = m_variableUsage->touchedVariables(_node.body());
+		mergeVariables(touchedVariables, expr(_node.condition()), countersEndTrue, countersEndFalse);
+		std::swap(countersEndFalse, countersEndTrue);
+	}
 
 	return false;
+}
+
+void SMTChecker::endVisit(WhileStatement const& _node)
+{
+	solAssert(m_outterLoop != nullptr, "Loop should have been visited.");
+	if (&_node == m_outterLoop)
+		m_outterLoop = nullptr;
 }
 
 bool SMTChecker::visit(ForStatement const& _node)
@@ -747,9 +769,9 @@ string SMTChecker::uniqueSymbol(Declaration const& _decl)
 	return _decl.name() + "_" + to_string(_decl.id());
 }
 
-string SMTChecker::uniqueSymbol(Expression const& _expr)
+string SMTChecker::uniqueSymbol(Expression const& _expr, int _exprIteration)
 {
-	return "expr_" + to_string(_expr.id());
+	return "expr_" + to_string(_expr.id()) + "_" + to_string(_exprIteration);
 }
 
 bool SMTChecker::knownVariable(Declaration const& _decl)
@@ -805,30 +827,32 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
-	return m_expressions.at(&_e);
+	return (std::prev(m_expressions.equal_range(&_e).second))->second;
+	//return m_expressions.find(&_e)->second;
 }
 
 void SMTChecker::createExpr(Expression const& _e)
 {
-	if (m_expressions.count(&_e))
+	if (m_outterLoop == nullptr && m_expressions.count(&_e))
 		m_errorReporter.warning(_e.location(), "Internal error: Expression created twice in SMT solver." );
 	else
 	{
 		solAssert(_e.annotation().type, "");
+		auto exprIter = m_expressions.count(&_e);
 		switch (_e.annotation().type->category())
 		{
 		case Type::Category::RationalNumber:
 		{
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
 				solAssert(!rational->isFractional(), "");
-			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e, exprIter)));
 			break;
 		}
 		case Type::Category::Integer:
-			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
+			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e, exprIter)));
 			break;
 		case Type::Category::Bool:
-			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
+			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e, exprIter)));
 			break;
 		default:
 			solAssert(false, "Type not implemented.");
@@ -874,4 +898,74 @@ void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
 void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
 {
 	m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), _e));
+}
+
+void SMTChecker::solveMinMax(Expression const& _op)
+{
+	m_maximizationResult = make_pair(smt::CheckResult::UNKNOWN, "");
+	m_minimizationResult = make_pair(smt::CheckResult::UNKNOWN, "");
+
+	auto binaryOp = dynamic_cast<BinaryOperation const*>(&_op);
+	if (binaryOp != nullptr)
+	{
+		string warnMessage;
+		Token::Value op = binaryOp->getOperator();
+		if (op >= Token::LessThan && op <= Token::GreaterThanOrEqual)
+		{
+			smt::Expression left(expr(binaryOp->leftExpression()));
+			smt::Expression right(expr(binaryOp->rightExpression()));
+			smt::Expression toMinMax = (
+				op == Token::LessThan ? (right - left) :
+				op == Token::LessThanOrEqual ? (right - left + 1) :
+				op == Token::GreaterThan ? (left - right) :
+				/*op == Token::GreaterThanOrEqual*/ (left - right + 1)
+			);
+			m_interface->push();
+			m_interface->addAssertion(expr(_op));
+			m_maximizationResult = m_interface->maximize(toMinMax);
+			m_minimizationResult = m_interface->minimize(toMinMax);
+			m_interface->pop();
+
+			//warnMessage += "\nNote that automatic loop bound detection assumes that loop increment is at least one.\nTherefore if that is not always the case for this loop, assertions using variables that are touched inside the loop body might not work.\n";
+		}
+		else
+		{
+
+			warnMessage += "Loop bound cannot yet be automatically computed for this comparison type";
+			m_errorReporter.warning(
+				_op.location(),
+				warnMessage
+			);
+		}
+	}
+}
+
+int SMTChecker::computeLoopBound() const
+{
+	solAssert(m_maximizationResult.first == m_minimizationResult.first,
+		"Satisfiability of Maximization should be the same as Minimization"
+	);
+
+	int bound = 0;
+	switch(m_maximizationResult.first)
+	{
+	case smt::CheckResult::SATISFIABLE:
+		if (m_maximizationResult.second == m_minimizationResult.second)
+		{
+			stringstream ss(m_maximizationResult.second);
+			ss >> bound;
+		}
+		else
+			bound = 1;
+		break;
+	case smt::CheckResult::UNSATISFIABLE:
+		bound = 0;
+		break;
+	case smt::CheckResult::UNKNOWN:
+		bound = 1;
+		break;
+	default:
+		solAssert(false, "");
+	}
+	return bound;
 }

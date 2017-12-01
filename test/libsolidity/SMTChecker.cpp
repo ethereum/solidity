@@ -332,9 +332,28 @@ BOOST_AUTO_TEST_CASE(ways_to_merge_variables)
 	CHECK_WARNING(text, "Assertion violation happens here");
 }
 
+BOOST_AUTO_TEST_CASE(do_while_loop_simple)
+{
+	string text = R"(
+		contract C {
+			function f() public pure {
+				uint x;
+				uint y;
+				uint z = 7;
+				do {
+					++x;
+					++y;
+				} while (y < z);
+				assert(x == 7);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(while_loop_simple)
 {
-	// Check that variables are cleared
+	// Check that assignment in loop works
 	string text = R"(
 		contract C {
 			function f(uint x) public pure {
@@ -346,7 +365,7 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
+	CHECK_SUCCESS_NO_WARNINGS(text);
 	// Check that condition is assumed.
 	text = R"(
 		contract C {
@@ -357,7 +376,7 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Loop bound cannot yet be automatically computed for this comparison type");
 	// Check that condition is not assumed after the body anymore
 	text = R"(
 		contract C {
@@ -368,7 +387,8 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
+	CHECK_WARNING_ALLOW_MULTI(text, "Loop bound cannot yet be automatically computed for this comparison type");
+	//CHECK_WARNING(text, "Assertion violation happens here");
 	// Check that negation of condition is not assumed after the body anymore
 	text = R"(
 		contract C {
@@ -379,7 +399,8 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
+	CHECK_WARNING_ALLOW_MULTI(text, "Loop bound cannot yet be automatically computed for this comparison type");
+	//CHECK_WARNING(text, "Assertion violation happens here");
 	// Check that side-effects of condition are taken into account
 	text = R"(
 		contract C {
@@ -388,6 +409,36 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 				while ((x = y) > 0) {
 				}
 				assert(x == 7);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+	// Check that the variables are touched inside the loop
+	text = R"(
+		contract C {
+			function f() public pure {
+				uint x;
+				uint y;
+				while (y < 8) {
+					++x;
+					++y;
+				}
+				assert(x == 8);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	// Check that the variables are touched inside the loop
+	text = R"(
+		contract C {
+			function f() public pure {
+				uint x;
+				uint y;
+				while (y < 8) {
+					++x;
+					++y;
+				}
+				assert(x != 8);
 			}
 		}
 	)";
