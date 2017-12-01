@@ -31,7 +31,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
+
+using Scope = dev::solidity::assembly::Scope;
 
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {

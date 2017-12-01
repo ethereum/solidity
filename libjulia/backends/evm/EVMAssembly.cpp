@@ -26,7 +26,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace julia;
+using namespace dev::julia;
 
 namespace
 {
