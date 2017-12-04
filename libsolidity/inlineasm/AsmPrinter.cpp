@@ -144,17 +144,17 @@ string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefin
 {
 	string out = "function " + _functionDefinition.name + "(";
 	out += boost::algorithm::join(
-		_functionDefinition.arguments | boost::adaptors::transformed(
+		_functionDefinition.parameters | boost::adaptors::transformed(
 			[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
 		),
 		", "
 	);
 	out += ")";
-	if (!_functionDefinition.returns.empty())
+	if (!_functionDefinition.returnVariables.empty())
 	{
 		out += " -> ";
 		out += boost::algorithm::join(
-			_functionDefinition.returns | boost::adaptors::transformed(
+			_functionDefinition.returnVariables | boost::adaptors::transformed(
 				[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
 			),
 			", "

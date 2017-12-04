@@ -290,7 +290,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	solAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	solAssert(varScope, "");
-	for (auto const& v: _function.arguments | boost::adaptors::reversed)
+	for (auto const& v: _function.parameters | boost::adaptors::reversed)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
@@ -303,7 +303,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (m_evm15)
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
-		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.arguments.size());
+		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.parameters.size());
 	}
 	else
 	{
@@ -312,7 +312,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 	m_stackAdjustment += localStackAdjustment;
 
-	for (auto const& v: _function.returns)
+	for (auto const& v: _function.returnVariables)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
@@ -342,9 +342,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		// modified parallel to the actual stack.
 		vector<int> stackLayout;
 		if (!m_evm15)
-			stackLayout.push_back(_function.returns.size()); // Move return label to the top
-		stackLayout += vector<int>(_function.arguments.size(), -1); // discard all arguments
-		for (size_t i = 0; i < _function.returns.size(); ++i)
+			stackLayout.push_back(_function.returnVariables.size()); // Move return label to the top
+		stackLayout += vector<int>(_function.parameters.size(), -1); // discard all arguments
+		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
 			stackLayout.push_back(i); // Move return values down, but keep order.
 
 		solAssert(stackLayout.size() <= 17, "Stack too deep");
@@ -364,9 +364,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 
 	if (m_evm15)
-		m_assembly.appendReturnsub(_function.returns.size(), stackHeightBefore);
+		m_assembly.appendReturnsub(_function.returnVariables.size(), stackHeightBefore);
 	else
-		m_assembly.appendJump(stackHeightBefore - _function.returns.size());
+		m_assembly.appendJump(stackHeightBefore - _function.returnVariables.size());
 	m_stackAdjustment -= localStackAdjustment;
 	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);

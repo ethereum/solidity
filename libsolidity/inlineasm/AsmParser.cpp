@@ -419,7 +419,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	expectToken(Token::LParen);
 	while (currentToken() != Token::RParen)
 	{
-		funDef.arguments.emplace_back(parseTypedName());
+		funDef.parameters.emplace_back(parseTypedName());
 		if (currentToken() == Token::RParen)
 			break;
 		expectToken(Token::Comma);
@@ -431,7 +431,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 		expectToken(Token::GreaterThan);
 		while (true)
 		{
-			funDef.returns.emplace_back(parseTypedName());
+			funDef.returnVariables.emplace_back(parseTypedName());
 			if (currentToken() == Token::LBrace)
 				break;
 			expectToken(Token::Comma);
