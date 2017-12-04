@@ -573,6 +573,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			_function.visibility() > FunctionDefinition::Visibility::Internal &&
 			type(*var)->category() == Type::Category::Struct &&
+			!type(*var)->dataStoredIn(DataLocation::Storage) &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
 		)
 			m_errorReporter.typeError(
