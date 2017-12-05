@@ -35,7 +35,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 using namespace dev::julia::test;
-using namespace dev::solidity::assembly;
+using namespace dev::solidity;
 
 namespace
 {
@@ -56,7 +56,7 @@ string inlineFunctions(string const& _source, bool _julia = true)
 {
 	auto ast = disambiguate(_source, _julia);
 	FunctionalInliner(ast).run();
-	return AsmPrinter(_julia)(ast);
+	return assembly::AsmPrinter(_julia)(ast);
 }
 }
 
@@ -133,6 +133,26 @@ BOOST_AUTO_TEST_CASE(no_inline_with_mload)
 	BOOST_CHECK_EQUAL(
 		inlineFunctions("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false),
 		format("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(no_move_with_side_effects)
+{
+	// The calls to g and h cannot be moved because g and h are not movable. Therefore, the call
+	// to f is not inlined.
+	BOOST_CHECK_EQUAL(
+		inlineFunctions(R"({
+			function f(a, b) -> x { x := add(b, a) }
+			function g() -> y { y := mload(0) mstore(0, 4) }
+			function h() -> z { mstore(0, 4) z := mload(0) }
+			let r := f(g(), h())
+		})", false),
+		format(R"({
+			function f(a, b) -> x { x := add(b, a) }
+			function g() -> y { y := mload(0) mstore(0, 4) }
+			function h() -> z { mstore(0, 4) z := mload(0) }
+			let r := f(g(), h())
+		})", false)
 	);
 }
 
