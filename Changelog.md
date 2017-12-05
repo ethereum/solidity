@@ -1,6 +1,7 @@
 ### 0.4.20 (unreleased)
 
 Features:
+ * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
 
 Bugfixes:
 
