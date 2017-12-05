@@ -125,11 +125,11 @@ void CodeTransform::operator()(FunctionCall const& _call)
 void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 {
 	if (m_evm15 && (
-		_instruction.instruction.instruction == solidity::Instruction::JUMP ||
-		_instruction.instruction.instruction == solidity::Instruction::JUMPI
+		_instruction.instruction == solidity::Instruction::JUMP ||
+		_instruction.instruction == solidity::Instruction::JUMPI
 	))
 	{
-		bool const isJumpI = _instruction.instruction.instruction == solidity::Instruction::JUMPI;
+		bool const isJumpI = _instruction.instruction == solidity::Instruction::JUMPI;
 		if (isJumpI)
 		{
 			solAssert(_instruction.arguments.size() == 2, "");
@@ -150,7 +150,8 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 	{
 		for (auto const& arg: _instruction.arguments | boost::adaptors::reversed)
 			visitExpression(arg);
-		(*this)(_instruction.instruction);
+		m_assembly.setSourceLocation(_instruction.location);
+		m_assembly.appendInstruction(_instruction.instruction);
 	}
 	checkStackHeight(&_instruction);
 }

@@ -60,7 +60,7 @@ struct StackAssignment { SourceLocation location; Identifier variableName; };
 /// the same amount of items as the number of variables.
 struct Assignment { SourceLocation location; std::vector<Identifier> variableNames; std::shared_ptr<Statement> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
-struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
+struct FunctionalInstruction { SourceLocation location; solidity::Instruction instruction; std::vector<Statement> arguments; };
 struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
 struct VariableDeclaration { SourceLocation location; TypedNameList variables; std::shared_ptr<Statement> value; };

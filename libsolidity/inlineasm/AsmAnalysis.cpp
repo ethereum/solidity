@@ -146,10 +146,11 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 		if (!expectExpression(arg))
 			success = false;
 	// Parser already checks that the number of arguments is correct.
-	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
-	if (!(*this)(_instr.instruction))
-		success = false;
+	auto const& info = instructionInfo(_instr.instruction);
+	solAssert(info.args == int(_instr.arguments.size()), "");
+	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
+	warnOnInstructions(_instr.instruction, _instr.location);
 	return success;
 }
 
