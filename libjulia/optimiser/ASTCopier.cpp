@@ -31,9 +31,10 @@ using namespace dev;
 using namespace dev::julia;
 
 
-Statement ASTCopier::operator()(Instruction const& _instruction)
+Statement ASTCopier::operator()(Instruction const&)
 {
-	return _instruction;
+	solAssert(false, "Invalid operation.");
+	return {};
 }
 
 Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)

@@ -94,7 +94,7 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 {
 	solAssert(!m_julia, "");
 	return
-		(*this)(_functionalInstruction.instruction) +
+		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
 		"(" +
 		boost::algorithm::join(
 			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
