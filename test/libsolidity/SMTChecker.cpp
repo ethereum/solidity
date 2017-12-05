@@ -351,9 +351,9 @@ BOOST_AUTO_TEST_CASE(while_loop_simple)
 	// Check that side-effects of condition are taken into account
 	text = R"(
 		contract C {
-			function f(uint x) public pure {
+			function f(uint x, uint y) public pure {
 				x = 7;
-				while ((x = 5) > 0) {
+				while ((x = y) > 0) {
 				}
 				assert(x == 7);
 			}
@@ -456,6 +456,100 @@ BOOST_AUTO_TEST_CASE(for_loop)
 		}
 	)";
 	CHECK_WARNING(text, "Assertion violation");
+}
+
+BOOST_AUTO_TEST_CASE(division)
+{
+	string text = R"(
+		contract C {
+			function f(uint x, uint y) public pure returns (uint) {
+				return x / y;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Division by zero");
+	text = R"(
+		contract C {
+			function f(uint x, uint y) public pure returns (uint) {
+				require(y != 0);
+				return x / y;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure returns (int) {
+				require(y != 0);
+				return x / y;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Overflow");
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure returns (int) {
+				require(y != 0);
+				require(y != -1);
+				return x / y;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(division_truncates_correctly)
+{
+	string text = R"(
+		contract C {
+			function f(uint x, uint y) public pure {
+				x = 7;
+				y = 2;
+				assert(x / y == 3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure {
+				x = 7;
+				y = 2;
+				assert(x / y == 3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure {
+				x = -7;
+				y = 2;
+				assert(x / y == -3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure {
+				x = 7;
+				y = -2;
+				assert(x / y == -3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(int x, int y) public pure {
+				x = -7;
+				y = -2;
+				assert(x / y == 3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

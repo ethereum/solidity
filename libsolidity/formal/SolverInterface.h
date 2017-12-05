@@ -120,6 +120,10 @@ public:
 	{
 		return Expression("*", std::move(_a), std::move(_b), Sort::Int);
 	}
+	friend Expression operator/(Expression _a, Expression _b)
+	{
+		return Expression("/", std::move(_a), std::move(_b), Sort::Int);
+	}
 	Expression operator()(Expression _a) const
 	{
 		solAssert(
