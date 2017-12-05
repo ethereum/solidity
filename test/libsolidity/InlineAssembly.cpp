@@ -712,8 +712,8 @@ BOOST_AUTO_TEST_CASE(jump_warning)
 {
 	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
 	CHECK_PARSE_WARNING("{ 1 2 jumpi }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ a: jump(a) }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ a: jumpi(a, 2) }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ jump(44) }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", Warning, "Jump instructions");
 	CHECK_PARSE_WARNING("{ a: }", Warning, "Jump instructions");
 }
 
