@@ -527,7 +527,7 @@ SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _s
 
 	m_conditionalExecutionHappened = true;
 	std::swap(sequenceCountersStart, m_currentSequenceCounter);
-	return sequenceCountersStart;
+	return std::move(sequenceCountersStart);
 }
 
 void SMTChecker::checkCondition(
