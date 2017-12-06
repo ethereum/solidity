@@ -56,6 +56,8 @@ public:
 	Statement operator()(ForLoop const&);
 	Statement operator()(Block const& _block);
 
+	virtual Statement translate(Statement const& _statement);
+
 protected:
 	template <typename T>
 	std::vector<T> translateVector(std::vector<T> const& _values);
@@ -65,7 +67,6 @@ protected:
 	{
 		return _v ? std::make_shared<T>(translate(*_v)) : nullptr;
 	}
-	Statement translate(Statement const& _statement);
 	Block translate(Block const& _block);
 	Case translate(Case const& _case);
 	Identifier translate(Identifier const& _identifier);

@@ -92,7 +92,11 @@ protected:
 	void walkVector(T&& _statements)
 	{
 		for (auto& st: _statements)
-			boost::apply_visitor(*this, st);
+			visit(st);
+	}
+	virtual void visit(Statement& _st)
+	{
+		boost::apply_visitor(*this, _st);
 	}
 };
 

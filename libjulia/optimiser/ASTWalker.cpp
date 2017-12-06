@@ -104,24 +104,24 @@ void ASTModifier::operator()(Assignment& _assignment)
 {
 	for (auto& name: _assignment.variableNames)
 		(*this)(name);
-	boost::apply_visitor(*this, *_assignment.value);
+	visit(*_assignment.value);
 }
 
 void ASTModifier::operator()(VariableDeclaration& _varDecl)
 {
 	if (_varDecl.value)
-		boost::apply_visitor(*this, *_varDecl.value);
+		visit(*_varDecl.value);
 }
 
 void ASTModifier::operator()(If& _if)
 {
-	boost::apply_visitor(*this, *_if.condition);
+	visit(*_if.condition);
 	(*this)(_if.body);
 }
 
 void ASTModifier::operator()(Switch& _switch)
 {
-	boost::apply_visitor(*this, *_switch.expression);
+	visit(*_switch.expression);
 	for (auto& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -138,7 +138,7 @@ void ASTModifier::operator()(FunctionDefinition& _fun)
 void ASTModifier::operator()(ForLoop& _for)
 {
 	(*this)(_for.pre);
-	boost::apply_visitor(*this, *_for.condition);
+	visit(*_for.condition);
 	(*this)(_for.post);
 	(*this)(_for.body);
 }
