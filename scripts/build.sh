@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [[ "$(git tag --points-at HEAD 2>/dev/null)"=="v*" ]]; then
+	touch prerelease.txt
+fi
+
 if [ -z "$1" ]; then
     BUILD_TYPE=Release
 else
