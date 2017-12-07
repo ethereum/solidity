@@ -25,7 +25,8 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation )*
+                     ( StateMutability | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
