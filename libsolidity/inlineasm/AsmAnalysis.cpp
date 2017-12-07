@@ -56,6 +56,7 @@ bool AsmAnalyzer::operator()(Label const& _label)
 {
 	solAssert(!m_julia, "");
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
+	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
 	return true;
 }
 
@@ -523,11 +524,11 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			"the Metropolis hard fork. Before that it acts as an invalid instruction."
 		);
 
-	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI)
+	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 		m_errorReporter.warning(
 			_location,
-			"Jump instructions are low-level EVM features that can lead to "
+			"Jump instructions and labels are low-level EVM features that can lead to "
 			"incorrect stack access. Because of that they are discouraged. "
-			"Please consider using \"switch\" or \"for\" statements instead."
+			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
 		);
 }
