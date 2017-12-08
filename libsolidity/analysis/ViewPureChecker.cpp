@@ -50,6 +50,10 @@ public:
 		for (auto const& arg: _instr.arguments)
 			boost::apply_visitor(*this, arg);
 	}
+	void operator()(assembly::ExpressionStatement const& _expr)
+	{
+		boost::apply_visitor(*this, _expr.expression);
+	}
 	void operator()(assembly::StackAssignment const&) {}
 	void operator()(assembly::Assignment const& _assignment)
 	{

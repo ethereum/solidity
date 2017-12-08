@@ -155,6 +155,16 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	return success;
 }
 
+bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
+{
+//	size_t initialStackHeight = m_stackHeight;
+	bool success = boost::apply_visitor(*this, _statement.expression);
+//	if (!expectDeposit(0, initialStackHeight, _statement.location))
+//		success = false;
+	m_info.stackHeightInfo[&_statement] = m_stackHeight;
+	return success;
+}
+
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	solAssert(!m_julia, "");
@@ -407,13 +417,13 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	return success;
 }
 
-bool AsmAnalyzer::expectExpression(Statement const& _statement)
+bool AsmAnalyzer::expectExpression(Expression const& _expr)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, _statement))
+	if (!boost::apply_visitor(*this, _expr))
 		success = false;
-	if (!expectDeposit(1, initialHeight, locationOf(_statement)))
+	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
 	return success;
 }

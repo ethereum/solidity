@@ -34,28 +34,55 @@ namespace dev
 namespace julia
 {
 
+class ExpressionCopier: public boost::static_visitor<Expression>
+{
+public:
+	virtual Expression operator()(Literal const& _literal) = 0;
+	virtual Expression operator()(Identifier const& _identifier) = 0;
+	virtual Expression operator()(FunctionalInstruction const& _instr) = 0;
+	virtual Expression operator()(FunctionCall const&) = 0;
+};
+
+class StatementCopier: public boost::static_visitor<Statement>
+{
+public:
+	virtual Statement operator()(ExpressionStatement const& _statement) = 0;
+	virtual Statement operator()(Instruction const& _instruction) = 0;
+	virtual Statement operator()(Label const& _label) = 0;
+	virtual Statement operator()(StackAssignment const& _assignment) = 0;
+	virtual Statement operator()(Assignment const& _assignment) = 0;
+	virtual Statement operator()(VariableDeclaration const& _varDecl) = 0;
+	virtual Statement operator()(If const& _if) = 0;
+	virtual Statement operator()(Switch const& _switch) = 0;
+	virtual Statement operator()(FunctionDefinition const&) = 0;
+	virtual Statement operator()(ForLoop const&) = 0;
+	virtual Statement operator()(Block const& _block) = 0;
+};
+
 /**
  * Creates a copy of a iulia AST potentially replacing identifier names.
  * Base class to be extended.
  */
-class ASTCopier: public boost::static_visitor<Statement>
+class ASTCopier: public ExpressionCopier, public StatementCopier
 {
 public:
-	Statement operator()(Literal const& _literal);
-	Statement operator()(Instruction const& _instruction);
-	Statement operator()(Identifier const& _identifier);
-	Statement operator()(FunctionalInstruction const& _instr);
-	Statement operator()(FunctionCall const&);
-	Statement operator()(Label const& _label);
-	Statement operator()(StackAssignment const& _assignment);
-	Statement operator()(Assignment const& _assignment);
-	Statement operator()(VariableDeclaration const& _varDecl);
-	Statement operator()(If const& _if);
-	Statement operator()(Switch const& _switch);
-	Statement operator()(FunctionDefinition const&);
-	Statement operator()(ForLoop const&);
-	Statement operator()(Block const& _block);
+	virtual Expression operator()(Literal const& _literal) override;
+	virtual Statement operator()(Instruction const& _instruction) override;
+	virtual Expression operator()(Identifier const& _identifier) override;
+	virtual Expression operator()(FunctionalInstruction const& _instr) override;
+	virtual Expression operator()(FunctionCall const&) override;
+	virtual Statement operator()(ExpressionStatement const& _statement) override;
+	virtual Statement operator()(Label const& _label) override;
+	virtual Statement operator()(StackAssignment const& _assignment) override;
+	virtual Statement operator()(Assignment const& _assignment) override;
+	virtual Statement operator()(VariableDeclaration const& _varDecl) override;
+	virtual Statement operator()(If const& _if) override;
+	virtual Statement operator()(Switch const& _switch) override;
+	virtual Statement operator()(FunctionDefinition const&) override;
+	virtual Statement operator()(ForLoop const&) override;
+	virtual Statement operator()(Block const& _block) override;
 
+	virtual Expression translate(Expression const& _expression);
 	virtual Statement translate(Statement const& _statement);
 
 protected:

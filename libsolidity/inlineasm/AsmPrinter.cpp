@@ -102,6 +102,11 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 		")";
 }
 
+string AsmPrinter::operator()(ExpressionStatement const& _statement)
+{
+	return boost::apply_visitor(*this, _statement.expression);
+}
+
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
 	solAssert(!m_julia, "");

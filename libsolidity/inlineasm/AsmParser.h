@@ -44,6 +44,8 @@ public:
 	std::shared_ptr<Block> parse(std::shared_ptr<Scanner> const& _scanner);
 
 protected:
+	using ElementaryOperation = boost::variant<assembly::Instruction, assembly::Literal, assembly::Identifier>;
+
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation()) const
 	{
@@ -65,13 +67,13 @@ protected:
 	Case parseCase();
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
-	Statement parseExpression();
+	assembly::Expression parseExpression();
 	static std::map<std::string, dev::solidity::Instruction> const& instructions();
 	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
-	Statement parseElementaryOperation(bool _onlySinglePusher = false);
+	ElementaryOperation parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	Statement parseCall(Statement&& _instruction);
+	assembly::Expression parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
