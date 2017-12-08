@@ -30,6 +30,7 @@ set -e
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 SOLJSON="$REPO_ROOT/build/solc/soljson.js"
+SOLC="$REPO_ROOT/build/solc/solc"
 
 DIR=$(mktemp -d)
 (
@@ -58,4 +59,4 @@ DIR=$(mktemp -d)
 rm -rf "$DIR"
 
 echo "Running external tests...."
-"$REPO_ROOT/test/externalTests.sh" "$SOLJSON"
+"$REPO_ROOT/test/externalTests.sh" "$SOLJSON" "$SOLC"
