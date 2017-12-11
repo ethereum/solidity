@@ -447,31 +447,6 @@ will have a wrong impression about the stack height at label ``two``:
         three:
     }
 
-This problem can be fixed by manually adjusting the stack height for the
-assembler - you can provide a stack height delta that is added
-to the stack height just prior to the label.
-Note that you will not have to care about these things if you just use
-loops and assembly-level functions.
-
-As an example how this can be done in extreme cases, please see the following.
-
-.. code::
-
-    {
-        let x := 8
-        jump(two)
-        0 // This code is unreachable but will adjust the stack height correctly
-        one:
-            x := 9 // Now x can be accessed properly.
-            jump(three)
-            pop // Similar negative correction.
-        two:
-            7 // push something onto the stack
-            jump(one)
-        three:
-        pop // We have to pop the manually pushed value here again.
-    }
-
 Declaring Assembly-Local Variables
 ----------------------------------
 
