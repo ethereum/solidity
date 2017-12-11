@@ -90,6 +90,38 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_localVarUseCount.clear();
 }
 
+bool modifierOverridesInheritanceSpecifier(
+		ContractDefinition const* _contract,
+		ModifierInvocation const& _modifier,
+		InheritanceSpecifier const& _specifier
+)
+{
+	auto parent = _specifier.name().annotation().referencedDeclaration;
+	return _contract == parent && (!_specifier.arguments().empty() || _modifier.arguments().empty());
+}
+
+bool StaticAnalyzer::visit(ModifierInvocation const& _modifier)
+{
+	if (!m_constructor)
+		return true;
+
+	if (auto contract = dynamic_cast<ContractDefinition const*>(_modifier.name()->annotation().referencedDeclaration))
+		for (auto const& specifier: m_currentContract->baseContracts())
+			if (modifierOverridesInheritanceSpecifier(contract, _modifier, *specifier))
+			{
+				SecondarySourceLocation ssl;
+				ssl.append("Overriden constructor call is here:", specifier->location());
+
+				m_errorReporter.declarationError(
+					_modifier.location(),
+					ssl,
+					"Duplicated super constructor call."
+				);
+			}
+
+	return true;
+}
+
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
 	if (m_currentFunction)

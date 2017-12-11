@@ -28,6 +28,7 @@ Bugfixes:
  * Type System: Make external library functions accessible.
  * Type System: Prevent encoding of weird types.
  * Static Analyzer: Fix non-deterministic order of unused variable warnings.
+ * Static Analyzer: Error on duplicated super constructor calls.
 
 ### 0.4.21 (2018-03-07)
 

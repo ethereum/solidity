@@ -1034,9 +1034,12 @@ the base constructors. This can be done in two ways::
         constructor(uint _x) public { x = _x; }
     }
 
-    contract Derived is Base(7) {
-        constructor(uint _y) Base(_y * _y) public {
-        }
+    contract Derived1 is Base(7) {
+        constructor(uint _y) public {}
+    }
+
+    contract Derived2 is Base {
+        constructor(uint _y) Base(_y * _y) public {}
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
@@ -1046,8 +1049,9 @@ do it is more convenient if the constructor argument is a
 constant and defines the behaviour of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
-derived contract. If, as in this silly example, both places
-are used, the modifier-style argument takes precedence.
+derived contract. Arguments have to be given either in the
+inheritance list or in modifier-style in the derived constuctor.
+Specifying arguments in both places is an error.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
