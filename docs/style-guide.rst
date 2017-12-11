@@ -739,6 +739,12 @@ Modifier Names
 Use mixedCase. Examples: ``onlyBy``, ``onlyAfter``, ``onlyDuringThePreSale``.
 
 
+Enums
+=====
+
+Enums, in the style of simple type declarations, should be named using the CapWords style. Examples: ``TokenGroup``, ``Frame``, ``HashStyle``, ``CharacterLocation``.
+
+
 Avoiding Naming Collisions
 ==========================
 
