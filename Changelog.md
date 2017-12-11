@@ -1,7 +1,7 @@
 ### 0.5.3 (unreleased)
 
 Language Features:
-
+ * ABI Decoder: The experimental decoder to truncate on out-of-bounds boolean input.
 
 Compiler Features:
  * Control Flow Graph: Warn about unreachable code.

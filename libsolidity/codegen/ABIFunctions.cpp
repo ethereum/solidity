@@ -214,8 +214,15 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			templ("body", "cleaned := value");
 			break;
 		case Type::Category::Bool:
-			templ("body", "cleaned := iszero(iszero(value))");
+		{
+			Whiskers w("if gt(value, 1) { <failure> } cleaned := value");
+			if (_revertOnFailure)
+				w("failure", "revert(0, 0)");
+			else
+				w("failure", "invalid()");
+			templ("body", w.render());
 			break;
+		}
 		case Type::Category::FixedPoint:
 			solUnimplemented("Fixed point types not implemented.");
 			break;
