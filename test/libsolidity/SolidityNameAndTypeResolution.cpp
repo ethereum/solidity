@@ -947,6 +947,21 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(duplicated_super_constructor_call)
+{
+	char const* text = R"(
+		contract A { function A(uint) public { } }
+		contract B is A(2) { function B() A(3) public {  } }
+	)";
+	CHECK_ERROR(text, DeclarationError, "Duplicated super constructor call.");
+
+	text = R"(
+		contract A { function A() public { } }
+		contract B is A { function B() A() public {  } }
+	)";
+	CHECK_ERROR(text, DeclarationError, "Duplicated super constructor call.");
+}
+
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 {
 	char const* text = R"(

@@ -4835,7 +4835,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 			}
 			uint public m_i;
 		}
-		contract Derived is Base(2) {
+		contract Derived is Base {
 			function Derived(uint i) Base(i)
 			{}
 		}
@@ -4855,10 +4855,10 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base)
 			}
 			uint public m_i;
 		}
-		contract Base1 is Base(3) {
+		contract Base1 is Base {
 			function Base1(uint k) Base(k*k) {}
 		}
-		contract Derived is Base(3), Base1(2) {
+		contract Derived is Base, Base1 {
 			function Derived(uint i) Base(i) Base1(i)
 			{}
 		}
@@ -4879,7 +4879,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 			uint public m_i;
 		}
 		contract Base1 is Base(3) {}
-		contract Derived is Base(2), Base1 {
+		contract Derived is Base, Base1 {
 			function Derived(uint i) Base(i) {}
 		}
 		contract Final is Derived(4) {

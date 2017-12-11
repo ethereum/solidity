@@ -12,6 +12,7 @@ Bugfixes:
  * Parser: Disallow event declarations with no parameter list.
  * Standard JSON: Populate the ``sourceLocation`` field in the error list.
  * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).
+ * Static Analyzer: Error on duplicated super constructor calls.
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
  * Type Checker: Improve error message for wrong struct initialization.
