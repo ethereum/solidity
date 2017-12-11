@@ -602,6 +602,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 BOOST_AUTO_TEST_CASE(external_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
@@ -629,6 +630,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
@@ -3511,6 +3513,7 @@ BOOST_AUTO_TEST_CASE(using_for_not_used)
 BOOST_AUTO_TEST_CASE(library_memory_struct)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		library c {
 			struct S { uint x; }
 			function f() public returns (S ) {}
@@ -5696,6 +5699,7 @@ BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 BOOST_AUTO_TEST_CASE(return_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[] x; }

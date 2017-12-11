@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE(warn_on_typecast)
 BOOST_AUTO_TEST_CASE(warn_on_struct)
 {
 	string text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct A { uint a; uint b; }
 			function f() public pure returns (A) {
