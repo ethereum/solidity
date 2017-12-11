@@ -71,6 +71,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	m_interface->reset();
 	m_currentSequenceCounter.clear();
 	m_nextFreeSequenceCounter.clear();
+	m_pathConditions.clear();
 	m_conditionalExecutionHappened = false;
 	initializeLocalVariables(_function);
 	return true;
@@ -344,14 +345,14 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkCondition(!(expr(*args[0])), _funCall.location(), "Assertion violation");
-		m_interface->addAssertion(expr(*args[0]));
+		m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), expr(*args[0])));
 	}
 	else if (funType.kind() == FunctionType::Kind::Require)
 	{
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkBooleanNotConstant(*args[0], "Condition is always $VALUE.");
-		m_interface->addAssertion(expr(*args[0]));
+		m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), expr(*args[0])));
 	}
 }
 
@@ -514,11 +515,11 @@ void SMTChecker::visitBranch(Statement const& _statement, smt::Expression const*
 {
 	VariableSequenceCounters sequenceCountersStart = m_currentSequenceCounter;
 
-	m_interface->push();
 	if (_condition)
-		m_interface->addAssertion(*_condition);
+		pushPathCondition(*_condition);
 	_statement.accept(*this);
-	m_interface->pop();
+	if (_condition)
+		popPathCondition();
 
 	m_conditionalExecutionHappened = true;
 	m_currentSequenceCounter = sequenceCountersStart;
@@ -533,7 +534,7 @@ void SMTChecker::checkCondition(
 )
 {
 	m_interface->push();
-	m_interface->addAssertion(_condition);
+	m_interface->addAssertion(currentPathConditions() && _condition);
 
 	vector<smt::Expression> expressionsToEvaluate;
 	vector<string> expressionNames;
@@ -605,12 +606,12 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 		return;
 
 	m_interface->push();
-	m_interface->addAssertion(expr(_condition));
+	m_interface->addAssertion(currentPathConditions() && expr(_condition));
 	auto positiveResult = checkSatisifable();
 	m_interface->pop();
 
 	m_interface->push();
-	m_interface->addAssertion(!expr(_condition));
+	m_interface->addAssertion(currentPathConditions() && !expr(_condition));
 	auto negatedResult = checkSatisifable();
 	m_interface->pop();
 
@@ -827,4 +828,22 @@ smt::Expression SMTChecker::var(Declaration const& _decl)
 {
 	solAssert(m_variables.count(&_decl), "");
 	return m_variables.at(&_decl);
+}
+
+void SMTChecker::popPathCondition()
+{
+	solAssert(m_pathConditions.size() > 0, "Cannot pop path condition, empty.");
+	m_pathConditions.pop_back();
+}
+
+void SMTChecker::pushPathCondition(smt::Expression const& _e)
+{
+	m_pathConditions.push_back(currentPathConditions() && _e);
+}
+
+smt::Expression SMTChecker::currentPathConditions()
+{
+	if (m_pathConditions.size() == 0)
+		return smt::Expression(true);
+	return m_pathConditions.back();
 }
