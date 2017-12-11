@@ -570,6 +570,17 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+		if (
+			_function.visibility() > FunctionDefinition::Visibility::Internal &&
+			type(*var)->category() == Type::Category::Struct &&
+			!type(*var)->dataStoredIn(DataLocation::Storage) &&
+			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
+		)
+			m_errorReporter.typeError(
+				var->location(),
+				"Structs are only supported in the new experimental ABI encoder. "
+				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+			);
 
 		var->accept(*this);
 	}
