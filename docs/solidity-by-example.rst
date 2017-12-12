@@ -624,19 +624,20 @@ Micropayment Channel
     pragma solidity ^0.4.11;
 
     contract PaymentChannel {
-        address[2] users;
+        address initiator;
+        address acceptor;
         uint deposit;
         uint timeout;
         uint closeTimestamp;
         uint closeSequenceNumber;
-        uint closeBalanceUser0;
+        uint closeBalanceInitiator;
 
         enum State { Opened, Accepted, Closing, Closed }
         State state;
 
         function PaymentChannel(address _other, uint _timeout) payable {
-            users[0] = msg.sender;
-            users[1] = _other;
+            initator = msg.sender;
+            acceptor = _other;
             deposit = msg.value;
             require(deposit < 2**250);
             require(_timeout < 2 days);
@@ -644,33 +645,37 @@ Micropayment Channel
         }
 
         function accept() payable {
-            require(msg.sender == users[1]);
+            require(msg.sender == acceptor);
             require(msg.value == deposit);
             require(state == State.Opened);
             state = State.Accepted;
         }
 
-        function requestClose(uint _balanceUser0, uint _sequenceNumber, uint8 _v, bytes32 _r, bytes32 _s) {
+        function counterpartyAddress(uint _sequenceNumber) internal returns (address) {
+            return (_sequenceNumber % 2 == 1) ? acceptor : initiator;
+        }
+
+        function requestClose(uint _balanceInitiator, uint _sequenceNumber, uint8 _v, bytes32 _r, bytes32 _s) {
             require(state == State.Accepted || state == State.Closing);
             require(_sequenceNumber > closeSequenceNumber);
-            require(_balanceUser0 <= 2 * deposit);
+            require(_balanceInitiator <= 2 * deposit);
             require(closeTimestamp == 0 || now <= closeTimestamp + timeout);
-            require(ecrecover(sha3(_balanceUser0, _sequenceNumber), _v, _r, _s) == users[_sequenceNumber % 2]);
+            require(ecrecover(sha3(_balanceInitiator, _sequenceNumber), _v, _r, _s) == counterpartyAddress(_sequenceNumber));
             closeTimestamp = now;
             closeSequenceNumber = _sequenceNumber;
-            closeBalanceUser0 = _balanceUser0;
+            closeBalanceInitiator = _balanceInitiator;
             state = State.Closing;
         }
 
         function close()
         {
             // TODO Can we actually include this second condition?
-            require(now >= closeTimestamp + timeout || msg.sender == users[(closeSequenceNumber + 1) % 2]);
+            require(now >= closeTimestamp + timeout || msg.sender == counteryPartyAddress(closeSequenceNumber + 1));
             require(state == State.Closing || state == State.Closed);
             state = State.Closed;
-            if (users[0].send(closeBalanceUser0))
-                closeBalanceUser0 = 0;
-            if (users[1].send(2 * deposit - closeBalanceUser0))
+            if (initator.send(closeBalanceInitiator))
+                closeBalanceInitiator = 0;
+            if (acceptor.send(2 * deposit - closeBalanceInitiator))
                 deposit = 0;
         }
     }
