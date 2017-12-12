@@ -21,11 +21,11 @@ Storage
     contract SimpleStorage {
         uint storedData;
 
-        function set(uint x) {
+        function set(uint x) public {
             storedData = x;
         }
 
-        function get() constant returns (uint) {
+        function get() public constant returns (uint) {
             return storedData;
         }
     }
@@ -94,16 +94,16 @@ registering with username and password - all you need is an Ethereum keypair.
 
         // This is the constructor whose code is
         // run only when the contract is created.
-        function Coin() {
+        function Coin() public {
             minter = msg.sender;
         }
 
-        function mint(address receiver, uint amount) {
+        function mint(address receiver, uint amount) public {
             if (msg.sender != minter) return;
             balances[receiver] += amount;
         }
 
-        function send(address receiver, uint amount) {
+        function send(address receiver, uint amount) public {
             if (balances[msg.sender] < amount) return;
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
@@ -145,7 +145,7 @@ like this one. The :ref:`getter function<getter-functions>` created by the ``pub
 is a bit more complex in this case. It roughly looks like the
 following::
 
-    function balances(address _account) returns (uint) {
+    function balances(address _account) public view returns (uint) {
         return balances[_account];
     }
 

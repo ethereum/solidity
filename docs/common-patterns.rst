@@ -36,12 +36,12 @@ become the new richest.
 
         mapping (address => uint) pendingWithdrawals;
 
-        function WithdrawalContract() payable {
+        function WithdrawalContract() public payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
 
-        function becomeRichest() payable returns (bool) {
+        function becomeRichest() public payable returns (bool) {
             if (msg.value > mostSent) {
                 pendingWithdrawals[richest] += msg.value;
                 richest = msg.sender;
@@ -52,7 +52,7 @@ become the new richest.
             }
         }
 
-        function withdraw() {
+        function withdraw() public {
             uint amount = pendingWithdrawals[msg.sender];
             // Remember to zero the pending refund before
             // sending to prevent re-entrancy attacks
@@ -71,12 +71,12 @@ This is as opposed to the more intuitive sending pattern:
         address public richest;
         uint public mostSent;
 
-        function SendContract() payable {
+        function SendContract() public payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
 
-        function becomeRichest() payable returns (bool) {
+        function becomeRichest() public payable returns (bool) {
             if (msg.value > mostSent) {
                 // This line can cause problems (explained below).
                 richest.transfer(msg.value);
@@ -157,6 +157,7 @@ restrictions highly readable.
         /// Make `_newOwner` the new owner of this
         /// contract.
         function changeOwner(address _newOwner)
+            public
             onlyBy(owner)
         {
             owner = _newOwner;
@@ -171,6 +172,7 @@ restrictions highly readable.
         /// May only be called 6 weeks after
         /// the contract has been created.
         function disown()
+            public
             onlyBy(owner)
             onlyAfter(creationTime + 6 weeks)
         {
@@ -191,6 +193,7 @@ restrictions highly readable.
         }
 
         function forceOwnerChange(address _newOwner)
+            public
             costs(200 ether)
         {
             owner = _newOwner;
@@ -310,6 +313,7 @@ function finishes.
 
         // Order of the modifiers matters here!
         function bid()
+            public
             payable
             timedTransitions
             atStage(Stages.AcceptingBlindedBids)
@@ -318,6 +322,7 @@ function finishes.
         }
 
         function reveal()
+            public
             timedTransitions
             atStage(Stages.RevealBids)
         {
@@ -332,6 +337,7 @@ function finishes.
         }
 
         function g()
+            public
             timedTransitions
             atStage(Stages.AnotherStage)
             transitionNext
@@ -339,6 +345,7 @@ function finishes.
         }
 
         function h()
+            public
             timedTransitions
             atStage(Stages.AreWeDoneYet)
             transitionNext
@@ -346,6 +353,7 @@ function finishes.
         }
 
         function i()
+            public
             timedTransitions
             atStage(Stages.Finished)
         {
