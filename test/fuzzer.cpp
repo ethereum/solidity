@@ -20,7 +20,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
-#include <solc/jsonCompiler.h>
+#include <libsolc/libsolc.h>
 
 #include <json/json.h>
 
