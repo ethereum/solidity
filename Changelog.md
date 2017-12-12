@@ -1,9 +1,11 @@
 ### 0.4.20 (unreleased)
 
 Features:
+ * Limit the number of warnings raised for creating abstract contracts.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
 
 Bugfixes:
+ * Parser: Disallow event declarations with no parameter list.
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
 
@@ -20,7 +22,6 @@ Features:
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
 
 Bugfixes:
-  * Parser: Disallow event declarations with no parameter list.
 
 ### 0.4.18 (2017-10-18)
 
