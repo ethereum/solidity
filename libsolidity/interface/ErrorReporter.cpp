@@ -61,6 +61,8 @@ void ErrorReporter::warning(
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, string const& _description)
 {
+	abortIfExcessive();
+
 	auto err = make_shared<Error>(_type);
 	*err <<
 		errinfo_sourceLocation(_location) <<
@@ -71,6 +73,8 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, st
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
 {
+	abortIfExcessive();
+
 	auto err = make_shared<Error>(_type);
 	*err <<
 		errinfo_sourceLocation(_location) <<
@@ -80,6 +84,16 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, Se
 	m_errorList.push_back(err);
 }
 
+void ErrorReporter::abortIfExcessive()
+{
+	if (m_errorList.size() > 256)
+	{
+		auto err = make_shared<Error>(Error::Type::Warning);
+		*err << errinfo_comment("There are more than 256 errors. Aborting.");
+		m_errorList.push_back(err);
+		BOOST_THROW_EXCEPTION(FatalError());
+	}
+}
 
 void ErrorReporter::fatalError(Error::Type _type, SourceLocation const& _location, string const& _description)
 {

@@ -102,6 +102,8 @@ private:
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 
+	void abortIfExcessive();
+
 	ErrorList& m_errorList;
 };
 
