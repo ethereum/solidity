@@ -69,8 +69,8 @@ complete contract):
     }
 
 The problem is not too serious here because of the limited gas as part
-of ``send``, but it still exposes a weakness: Ether transfer always
-includes code execution, so the recipient could be a contract that calls
+of ``send``, but it still exposes a weakness: Ether transfer can always
+include code execution, so the recipient could be a contract that calls
 back into ``withdraw``. This would let it get multiple refunds and
 basically retrieve all the Ether in the contract. In particular, the
 following contract will allow an attacker to refund multiple times
