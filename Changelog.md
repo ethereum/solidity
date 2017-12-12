@@ -20,6 +20,7 @@ Features:
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
 
 Bugfixes:
+  * Parser: Disallow event declarations with no parameter list.
 
 ### 0.4.18 (2017-10-18)
 
