@@ -171,13 +171,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			ssl.append("Another declaration is here:", (*it)->location());
 
 		string msg = "More than one constructor defined.";
-		size_t occurrences = ssl.infos.size();
-		if (occurrences > 32)
-		{
-			ssl.infos.resize(32);
-			msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
-		}
-
+		ssl.limitSize(msg);
 		m_errorReporter.declarationError(
 			functions[_contract.name()].front()->location(),
 			ssl,
@@ -219,12 +213,7 @@ void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _defini
 
 			if (ssl.infos.size() > 0)
 			{
-				size_t occurrences = ssl.infos.size();
-				if (occurrences > 32)
-				{
-					ssl.infos.resize(32);
-					_message += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
-				}
+				ssl.limitSize(_message);
 
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
@@ -1679,10 +1668,12 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			SecondarySourceLocation ssl;
 			for (auto function: contract->annotation().unimplementedFunctions)
 				ssl.append("Missing implementation:", function->location());
+			string msg = "Trying to create an instance of an abstract contract.";
+			ssl.limitSize(msg);
 			m_errorReporter.typeError(
 				_newExpression.location(),
 				ssl,
-				"Trying to create an instance of an abstract contract."
+				msg
 			);
 		}
 		if (!contract->constructorIsPublic())
