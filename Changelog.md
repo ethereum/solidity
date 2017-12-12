@@ -6,6 +6,7 @@ Features:
 Bugfixes:
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
+  * Parser: Disallow event declarations with no parameter list.
 
 ### 0.4.19 (2017-11-30)
 
@@ -18,9 +19,6 @@ Features:
  * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
  * Type Checker: Improve address checksum warning.
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
-
-Bugfixes:
-  * Parser: Disallow event declarations with no parameter list.
 
 ### 0.4.18 (2017-10-18)
 
