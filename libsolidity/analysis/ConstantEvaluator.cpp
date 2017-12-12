@@ -56,7 +56,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 			_operation,
 			Token::isCompareOp(_operation.getOperator()) ?
 			make_shared<BoolType>() :
-			left->binaryOperatorResult(_operation.getOperator(), right)
+			commonType
 		);
 	}
 }
