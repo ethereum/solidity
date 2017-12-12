@@ -426,12 +426,20 @@ value types and strings.
         bytes32 constant myHash = keccak256("abc");
     }
 
+.. index:: ! functions
+
+.. _functions:
+
+*********
+Functions
+*********
+
+.. index:: ! view function, function;view
 
 .. _view-functions:
 
-**************
 View Functions
-**************
+==============
 
 Functions can be declared ``view`` in which case they promise not to modify the state.
 
@@ -465,11 +473,12 @@ The following statements are considered modifying the state:
 .. warning::
   The compiler does not enforce yet that a ``view`` method is not modifying state.
 
+.. index:: ! pure function, function;pure
+
 .. _pure-functions:
 
-**************
 Pure Functions
-**************
+==============
 
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 
@@ -498,9 +507,8 @@ In addition to the list of state modifying statements explained above, the follo
 
 .. _fallback-function:
 
-*****************
 Fallback Function
-*****************
+=================
 
 A contract can have exactly one unnamed function. This function cannot have
 arguments and cannot return anything.
@@ -576,6 +584,85 @@ Please ensure you test your fallback function thoroughly to ensure the execution
             //test.send(2 ether);
         }
     }
+
+.. index:: ! overload
+
+.. _overload-function:
+
+Function Overloading
+====================
+
+A Contract can have multiple functions of the same name but with different arguments.
+This also applies to inherited functions. The following example shows overloading of the
+``f`` function in the scope of contract ``A``.
+
+::
+  
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(uint _in) public pure returns (uint out) {
+            out = 1;
+        }
+
+        function f(uint _in, bytes32 _key) public pure returns (uint out) {
+            out = 2;
+        }
+    }
+
+Overloaded functions are also present in the external interface. It is an error if two
+externally visible functions differ by their Solidity types but not by their external types.
+
+::
+
+    // This will not compile
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(B _in) public pure returns (B out) {
+            out = _in;
+        }
+
+        function f(address _in) public pure returns (address out) {
+            out = _in;
+        }
+    }
+
+    contract B {
+    }
+
+
+Both ``f`` function overloads above end up accepting the address type for the ABI although
+they are considered different inside Solidity.
+
+Overload resolution and Argument matching
+-----------------------------------------
+
+Overloaded functions are selected by matching the function declarations in the current scope
+to the arguments supplied in the function call. Functions are selected as overload candidates
+if all arguments can be implicitly converted to the expected types. If there is not exactly one
+candidate, resolution fails.
+
+.. note::
+    Return parameters are not taken into account for overload resolution.
+
+::
+
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(uint8 _in) public pure returns (uint8 out) {
+            out = _in;
+        }
+
+        function f(uint256 _in) public pure returns (uint256 out) {
+            out = _in;
+        }
+    }
+
+Calling ``f(50)`` would create a type error since ``250`` can be implicitly converted both to ``uint8``
+and ``uint256`` types. On another hand ``f(256)`` would resolve to ``f(uint256)`` overload as ``256`` cannot be implicitly
+converted to ``uint8``.
 
 .. index:: ! event
 
@@ -854,7 +941,7 @@ derived override, but this function will bypass
     }
 
 If ``Base1`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts.  Rather, it 
+call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
 inheritance graph, so it will call ``Base2.kill()`` (note that
 the final inheritance sequence is -- starting with the most
