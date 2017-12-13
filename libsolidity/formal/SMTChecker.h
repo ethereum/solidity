@@ -152,6 +152,10 @@ private:
 	void popPathCondition();
 	/// Returns the conjunction of all path conditions or True if empty
 	smt::Expression currentPathConditions();
+	/// Conjoin the current path conditions with the given parameter and add to the solver
+	void addPathConjoinedExpression(smt::Expression const& _e);
+	/// Add to the solver: the given expression implied by the current path conditions
+	void addPathImpliedExpression(smt::Expression const& _e);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;

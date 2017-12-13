@@ -345,14 +345,14 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkCondition(!(expr(*args[0])), _funCall.location(), "Assertion violation");
-		m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), expr(*args[0])));
+		addPathImpliedExpression(expr(*args[0]));
 	}
 	else if (funType.kind() == FunctionType::Kind::Require)
 	{
 		solAssert(args.size() == 1, "");
 		solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
 		checkBooleanNotConstant(*args[0], "Condition is always $VALUE.");
-		m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), expr(*args[0])));
+		addPathImpliedExpression(expr(*args[0]));
 	}
 }
 
@@ -534,7 +534,7 @@ void SMTChecker::checkCondition(
 )
 {
 	m_interface->push();
-	m_interface->addAssertion(currentPathConditions() && _condition);
+	addPathConjoinedExpression(_condition);
 
 	vector<smt::Expression> expressionsToEvaluate;
 	vector<string> expressionNames;
@@ -606,12 +606,12 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 		return;
 
 	m_interface->push();
-	m_interface->addAssertion(currentPathConditions() && expr(_condition));
+	addPathConjoinedExpression(expr(_condition));
 	auto positiveResult = checkSatisifable();
 	m_interface->pop();
 
 	m_interface->push();
-	m_interface->addAssertion(currentPathConditions() && !expr(_condition));
+	addPathConjoinedExpression(!expr(_condition));
 	auto negatedResult = checkSatisifable();
 	m_interface->pop();
 
@@ -846,4 +846,14 @@ smt::Expression SMTChecker::currentPathConditions()
 	if (m_pathConditions.size() == 0)
 		return smt::Expression(true);
 	return m_pathConditions.back();
+}
+
+void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
+{
+	m_interface->addAssertion(currentPathConditions() && _e);
+}
+
+void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
+{
+	m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), _e));
 }
