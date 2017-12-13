@@ -43,7 +43,7 @@ Functions are the executable units of code within a contract.
     pragma solidity ^0.4.0;
 
     contract SimpleAuction {
-        function bid() payable { // Function
+        function bid() public payable { // Function
             // ...
         }
     }
@@ -72,7 +72,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
             _;
         }
 
-        function abort() onlySeller { // Modifier usage
+        function abort() public onlySeller { // Modifier usage
             // ...
         }
     }
@@ -91,7 +91,7 @@ Events are convenience interfaces with the EVM logging facilities.
     contract SimpleAuction {
         event HighestBidIncreased(address bidder, uint amount); // Event
 
-        function bid() payable {
+        function bid() public payable {
             // ...
             HighestBidIncreased(msg.sender, msg.value); // Triggering event
         }

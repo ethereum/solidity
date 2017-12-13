@@ -190,9 +190,9 @@ Given the contract:
     pragma solidity ^0.4.0;
 
     contract Foo {
-      function bar(bytes3[2] xy) {}
-      function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
-      function sam(bytes name, bool z, uint[] data) {}
+      function bar(bytes3[2] xy) public {}
+      function baz(uint32 x, bool y) public returns (bool r) { r = x > 32 || y; }
+      function sam(bytes name, bool z, uint[] data) public {}
     }
 
 
@@ -333,10 +333,10 @@ For example,
     pragma solidity ^0.4.0;
 
     contract Test {
-      function Test(){ b = 0x12345678901234567890123456789012; }
+      function Test() public { b = 0x12345678901234567890123456789012; }
       event Event(uint indexed a, bytes32 b);
       event Event2(uint indexed a, bytes32 b);
-      function foo(uint a) { Event(a, b); }
+      function foo(uint a) public { Event(a, b); }
       bytes32 b;
     }
 
@@ -383,8 +383,8 @@ As an example, the code
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
-      function f(S s, T t, uint a) { }
-      function g() returns (S s, T t, uint a) {}
+      function f(S s, T t, uint a) public { }
+      function g() public returns (S s, T t, uint a) {}
     }
 
 would result in the JSON:
