@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(if_statement_scope)
 
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
-	CHECK_PARSE_ERROR("{ if calldatasize {}", ParserError, "Instructions are not supported as conditions for if");
+	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected token \"(\"");
 	BOOST_CHECK("{ if calldatasize() {}");
 	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected token LBrace");
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch calldatasize default {} }", ParserError, "Instructions are not supported as expressions for switch");
+	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected token \"(\"");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected token LBrace got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected token LBrace got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected token LBrace got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} calldatasize {} {} }", ParserError, "Instructions are not supported as conditions for the for statement.");
+	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected token \"(\"");
 	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	function g(a, b, c)
 	{
 	}
-	g(1, mul(2, address), f(mul(2, caller)))
+	g(1, mul(2, address()), f(mul(2, caller())))
 	y()
 })";
 	boost::replace_all(source, "\t", "    ");
