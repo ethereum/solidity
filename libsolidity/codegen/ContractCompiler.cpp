@@ -278,6 +278,7 @@ void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 		m_context.appendProgramSize();
 		m_context << Instruction::DUP4 << Instruction::CODECOPY;
 		m_context << Instruction::DUP2 << Instruction::ADD;
+		m_context << Instruction::DUP1;
 		CompilerUtils(m_context).storeFreeMemoryPointer();
 		// stack: <memptr>
 		CompilerUtils(m_context).abiDecode(FunctionType(_constructor).parameterTypes(), true);
@@ -367,6 +368,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		{
 			// Parameter for calldataUnpacker
 			m_context << CompilerUtils::dataStartOffset;
+			m_context << Instruction::DUP1 << Instruction::CALLDATASIZE << Instruction::SUB;
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
