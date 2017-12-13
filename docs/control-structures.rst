@@ -135,7 +135,7 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
     contract Consumer {
         InfoFeed feed;
         function setFeed(address addr) public { feed = InfoFeed(addr); }
-        function public callFeed() { feed.info.value(10).gas(800)(); }
+        function callFeed() public { feed.info.value(10).gas(800)(); }
     }
 
 The modifier ``payable`` has to be used for ``info``, because otherwise, the `.value()`

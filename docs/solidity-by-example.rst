@@ -158,9 +158,9 @@ of votes.
                 returns (uint winningProposal)
         {
             uint winningVoteCount = 0;
-            for (uint p = 0; p < winningProposals.length; p++) {
-                if (winningProposals[p].voteCount > winningVoteCount) {
-                    winningVoteCount = winningProposals[p].voteCount;
+            for (uint p = 0; p < proposals.length; p++) {
+                if (proposals[p].voteCount > winningVoteCount) {
+                    winningVoteCount = proposals[p].voteCount;
                     winningProposal = p;
                 }
             }
@@ -172,7 +172,7 @@ of votes.
         function winnerName() public view
                 returns (bytes32 winnerName)
         {
-            name = proposals[winningProposal()].name;
+            winnerName = proposals[winningProposal()].name;
         }
     }
 

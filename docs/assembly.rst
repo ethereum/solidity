@@ -91,7 +91,7 @@ you really know what you are doing.
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
-        function sumAsm(uint[] _data) returns (uint o_sum) public {
+        function sumAsm(uint[] _data) public returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
                     o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
@@ -100,7 +100,7 @@ you really know what you are doing.
         }
 
         // Same as above, but accomplish the entire code within inline assembly.
-        function sumPureAsm(uint[] _data) returns (uint o_sum) public {
+        function sumPureAsm(uint[] _data) public returns (uint o_sum) {
             assembly {
                // Load the length (first 32 bytes)
                let len := mload(_data)
