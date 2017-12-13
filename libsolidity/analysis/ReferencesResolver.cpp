@@ -207,7 +207,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 	// Will be re-generated later with correct information
 	assembly::AsmAnalysisInfo analysisInfo;
-	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, false, resolver).analyze(_inlineAssembly.operations());
+	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
 

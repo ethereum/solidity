@@ -319,14 +319,19 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
-	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner);
 #ifdef SOL_OUTPUT_ASM
 	cout << assembly::AsmPrinter()(*parserResult) << endl;
 #endif
 	assembly::AsmAnalysisInfo analysisInfo;
 	bool analyzerResult = false;
 	if (parserResult)
-		analyzerResult = assembly::AsmAnalyzer(analysisInfo, errorReporter, false, identifierAccess.resolve).analyze(*parserResult);
+		analyzerResult = assembly::AsmAnalyzer(
+			analysisInfo,
+			errorReporter,
+			assembly::AsmFlavour::Strict,
+			identifierAccess.resolve
+		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
 	{
 		string message =

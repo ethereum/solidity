@@ -52,11 +52,11 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, true).parse(scanner);
+		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, true)).analyze(*parserResult);
+			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, assembly::AsmFlavour::IULIA)).analyze(*parserResult);
 		}
 	}
 	catch (FatalError const&)

@@ -54,7 +54,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
 	return true;
@@ -62,7 +62,7 @@ bool AsmAnalyzer::operator()(Label const& _label)
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -141,7 +141,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour != AsmFlavour::IULIA, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -157,17 +157,18 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 {
-//	size_t initialStackHeight = m_stackHeight;
+	size_t initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-//	if (!expectDeposit(0, initialStackHeight, _statement.location))
-//		success = false;
+	if (m_flavour != AsmFlavour::Loose)
+		if (!expectDeposit(0, initialStackHeight, _statement.location))
+			success = false;
 	m_info.stackHeightInfo[&_statement] = m_stackHeight;
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
@@ -507,7 +508,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (!m_julia)
+	if (m_flavour != AsmFlavour::IULIA)
 		return;
 
 	if (!builtinTypes.count(type))
