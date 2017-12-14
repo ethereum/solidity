@@ -54,8 +54,27 @@ As an example, neither ``mload`` nor ``mstore`` would be allowed.
 
 ## Full Function Inliner
 
-## Variable Eliminator
+## Rematerialisation
 
-## Unused Declaration Pruner
+The rematerialisation stage tries to replace variable references by the expression that
+was last assigned to the variable. This is of course only beneficial if this expression
+is comparatively cheap to evaluate. Furthermore, it is only semantically equivalent if
+the value of the expression did not change between the point of assignment and the
+point of use. The main benefit of this stage is that it can save stack slots if it
+leads to a variable being eliminated completely (see below), but it can also
+save a DUP opcode on the EVM if the expression is very cheap.
+
+The algorithm only allows movable expressions (see above for a definition) in this case.
+Expressions that contain other variables are also disallowed if one of those variables
+have been assigned to in the meantime. This is also not applied to variables where
+assignment and use span across loops and conditionals.
+
+## Unused Definition Pruner
+
+If a variable or function is not referenced, it is removed from the code.
+If there are two assignments to a variable where the first one is a movable expression
+and the variable is not used between the two assignments (and the second is not inside
+a loop or conditional, the first one is not inside), the first assignment is removed.
+
 
 ## Function Unifier
