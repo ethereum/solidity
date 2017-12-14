@@ -146,11 +146,12 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		if (!length->annotation().type)
-			ConstantEvaluator e(*length, m_errorReporter);
-		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
+		TypePointer lengthTypeGeneric = length->annotation().type;
+		if (!lengthTypeGeneric)
+			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
+		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
 		if (!lengthType || !lengthType->mobileType())
-			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
+			fatalTypeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
 		else if (lengthType->isFractional())
 			fatalTypeError(length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
