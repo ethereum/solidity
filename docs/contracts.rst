@@ -308,7 +308,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         address owner;
 
         // This contract only defines a modifier but does not use
-        // it - it will be used in derived contracts.
+        // it: it will be used in derived contracts.
         // The function body is inserted where the special symbol
         // "_;" in the definition of a modifier appears.
         // This means that if the owner calls this function, the
@@ -367,9 +367,9 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
 
         /// This function is protected by a mutex, which means that
-        /// reentrant calls from within msg.sender.call cannot call "f" again.
-        /// The ``return 7`` statement assigns 7 to the return value but still
-        /// executes the statement ``locked = false`` in the modifier.
+        /// reentrant calls from within "msg.sender.call" cannot call "f" again.
+        /// The "return 7" statement assigns 7 to the return value but still
+        /// executes the statement "locked = false" in the modifier.
         function f() public noReentrancy returns (uint) {
             require(msg.sender.call());
             return 7;
@@ -726,7 +726,7 @@ All non-indexed arguments will be stored in the data part of the log.
         function deposit(bytes32 _id) public payable {
             // Any call to this function (even deeply nested) can
             // be detected from the JavaScript API by filtering
-            // for `Deposit` to be called.
+            // for "Deposit" to be called.
             Deposit(msg.sender, _id, msg.value);
         }
     }
@@ -826,7 +826,7 @@ Details are given in the following example.
     // Use "is" to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
-    // accessed externally via `this`, though.
+    // accessed externally via "this", though.
     contract mortal is owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
