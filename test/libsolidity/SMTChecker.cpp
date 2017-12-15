@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(function_call_does_not_clear_local_vars)
 
 BOOST_AUTO_TEST_CASE(branches_clear_variables)
 {
-	// Only clears accessed variables
+	// Branch does not touch variable a
 	string text = R"(
 		contract C {
 			function f(uint x) public pure {
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(branches_clear_variables)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
-	// Clear also works on the else branch
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	// Variable a is touched, but assertion should hold
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(branches_clear_variables)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
+	CHECK_SUCCESS_NO_WARNINGS(text);
 	// Variable is not cleared, if it is only read.
 	text = R"(
 		contract C {
@@ -224,6 +224,38 @@ BOOST_AUTO_TEST_CASE(branches_clear_variables)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				uint a = 2;
+				if (x > 10) {
+					a = 3;
+				} else {
+					a = 3;
+				}
+				assert(a == 3);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function f(uint x) public pure {
+				uint a;
+				if (x == 0) {
+					a = 1;
+				} else {
+					if (x == 1)
+						a = 2;
+					else
+						a = 3;
+				}
+				assert(a < 4);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
 }
 
 BOOST_AUTO_TEST_CASE(branches_assert_condition)
@@ -275,6 +307,7 @@ BOOST_AUTO_TEST_CASE(ways_to_clear_variables)
 			}
 		}
 	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
