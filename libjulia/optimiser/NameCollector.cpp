@@ -67,3 +67,9 @@ map<string, size_t> ReferencesCounter::countReferences(Expression const& _expres
 	counter.visit(_expression);
 	return counter.references();
 }
+
+void Assignments::operator()(Assignment const& _assignment)
+{
+	for (auto const& var: _assignment.variableNames)
+		m_names.insert(var.name);
+}
