@@ -128,7 +128,7 @@ Visibility and Getters
 Since Solidity knows two kinds of function calls (internal
 ones that do not create an actual EVM call (also called
 a "message call") and external
-ones that do), there are four types of visibilities for
+ones that do, there are four types of visibilities for
 functions and state variables.
 
 Functions can be specified as being ``external``,
@@ -367,9 +367,9 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
 
         /// This function is protected by a mutex, which means that
-        /// reentrant calls from within msg.sender.call cannot call f again.
-        /// The `return 7` statement assigns 7 to the return value but still
-        /// executes the statement `locked = false` in the modifier.
+        /// reentrant calls from within msg.sender.call cannot call "f" again.
+        /// The ``return 7`` statement assigns 7 to the return value but still
+        /// executes the statement ``locked = false`` in the modifier.
         function f() public noReentrancy returns (uint) {
             require(msg.sender.call());
             return 7;
@@ -448,7 +448,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 The following statements are considered modifying the state:
 
 #. Writing to state variables.
-#. :ref:`Emitting events. <events>`.
+#. :ref:`Emitting events <events>`.
 #. :ref:`Creating other contracts <creating-contracts>`.
 #. Using ``selfdestruct``.
 #. Sending Ether via calls.
@@ -1177,7 +1177,7 @@ more advanced example to implement a set).
     }
 
 Of course, you do not have to follow this way to use
-libraries - they can also be used without defining struct
+libraries: they can also be used without defining struct
 data types. Functions also work without any storage
 reference parameters, and they can have multiple storage reference
 parameters and in any position.
@@ -1383,6 +1383,6 @@ It is also possible to extend elementary types in that way::
     }
 
 Note that all library calls are actual EVM function calls. This means that
-if you pass memory or value types, a copy will be performed, even of the
+if you pass ``memory`` or value types, a copy will be performed, even of the
 ``self`` variable. The only situation where no copy will be performed
-is when storage reference variables are used.
+is when ``storage`` reference variables are used.
