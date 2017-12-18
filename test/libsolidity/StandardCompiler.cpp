@@ -234,6 +234,46 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(compilation_error)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { function }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(result.isMember("errors"));
+	BOOST_CHECK(result["errors"].size() >= 1);
+	for (auto const& error: result["errors"])
+	{
+		BOOST_REQUIRE(error.isObject());
+		BOOST_REQUIRE(error["message"].isString());
+		if (error["message"].asString().find("pre-release compiler") == string::npos)
+		{
+			BOOST_CHECK_EQUAL(
+				dev::jsonCompactPrint(error),
+				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier, got 'RBrace'\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier, got 'RBrace'\","
+				"\"severity\":\"error\",\"sourceLocation\":{\"end\":22,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
+			);
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(output_selection_explicit)
 {
 	char const* input = R"(

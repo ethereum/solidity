@@ -81,15 +81,15 @@ Json::Value formatErrorWithException(
 	else
 		message = _message;
 
+	Json::Value sourceLocation;
 	if (location && location->sourceName)
 	{
-		Json::Value sourceLocation = Json::objectValue;
 		sourceLocation["file"] = *location->sourceName;
 		sourceLocation["start"] = location->start;
 		sourceLocation["end"] = location->end;
 	}
 
-	return formatError(_warning, _type, _component, message, formattedMessage, location);
+	return formatError(_warning, _type, _component, message, formattedMessage, sourceLocation);
 }
 
 set<string> requestedContractNames(Json::Value const& _outputSelection)
