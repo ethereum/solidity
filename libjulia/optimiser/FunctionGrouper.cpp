@@ -15,8 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Optimiser component that changes the code of a black so that all non-function definition
- * instructions are moved to a block of their own followed by all function definitions.
+ * Optimiser component that changes the code of a block so that all non-function definition
+ * statements are moved to a block of their own followed by all function definitions.
  */
 
 #include <libjulia/optimiser/FunctionGrouper.h>
