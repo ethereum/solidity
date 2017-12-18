@@ -295,6 +295,7 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
             // the rest of the values are discarded.
             (data.length,) = f(); // Sets the length to 7
             // The same can be done on the left side.
+            // If the tuple begins in an empty component, the beginning values are discarded.
             (,data[3]) = f(); // Sets data[3] to 2
             // Components can only be left out at the left-hand-side of assignments, with
             // one exception:
