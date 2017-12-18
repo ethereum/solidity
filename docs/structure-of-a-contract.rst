@@ -8,7 +8,7 @@ Structure of a Contract
 
 Contracts in Solidity are similar to classes in object-oriented languages.
 Each contract can contain declarations of :ref:`structure-state-variables`, :ref:`structure-functions`,
-:ref:`structure-function-modifiers`, :ref:`structure-events`, :ref:`structure-structs-types` and :ref:`structure-enum-types`.
+:ref:`structure-function-modifiers`, :ref:`structure-events`, :ref:`structure-struct-types` and :ref:`structure-enum-types`.
 Furthermore, contracts can inherit from other contracts.
 
 .. _structure-state-variables:
@@ -100,9 +100,9 @@ Events are convenience interfaces with the EVM logging facilities.
 See :ref:`events` in contracts section for information on how events are declared
 and can be used from within a dapp.
 
-.. _structure-structs-types:
+.. _structure-struct-types:
 
-Structs Types
+Struct Types
 =============
 
 Structs are custom defined types that can group several variables (see
