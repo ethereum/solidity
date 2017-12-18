@@ -100,9 +100,9 @@ private:
 
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
-	checkSatisifableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
 
-	smt::CheckResult checkSatisifable();
+	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);

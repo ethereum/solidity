@@ -560,7 +560,7 @@ void SMTChecker::checkCondition(
 	}
 	smt::CheckResult result;
 	vector<string> values;
-	tie(result, values) = checkSatisifableAndGenerateModel(expressionsToEvaluate);
+	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
 	string conditionalComment;
 	if (m_conditionalExecutionHappened)
@@ -607,12 +607,12 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 
 	m_interface->push();
 	addPathConjoinedExpression(expr(_condition));
-	auto positiveResult = checkSatisifable();
+	auto positiveResult = checkSatisfiable();
 	m_interface->pop();
 
 	m_interface->push();
 	addPathConjoinedExpression(!expr(_condition));
-	auto negatedResult = checkSatisifable();
+	auto negatedResult = checkSatisfiable();
 	m_interface->pop();
 
 	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
@@ -642,7 +642,7 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 }
 
 pair<smt::CheckResult, vector<string>>
-SMTChecker::checkSatisifableAndGenerateModel(vector<smt::Expression> const& _expressionsToEvaluate)
+SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	smt::CheckResult result;
 	vector<string> values;
@@ -672,9 +672,9 @@ SMTChecker::checkSatisifableAndGenerateModel(vector<smt::Expression> const& _exp
 	return make_pair(result, values);
 }
 
-smt::CheckResult SMTChecker::checkSatisifable()
+smt::CheckResult SMTChecker::checkSatisfiable()
 {
-	return checkSatisifableAndGenerateModel({}).first;
+	return checkSatisfiableAndGenerateModel({}).first;
 }
 
 void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
