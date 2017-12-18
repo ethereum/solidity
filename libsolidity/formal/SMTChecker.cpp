@@ -91,15 +91,16 @@ bool SMTChecker::visit(IfStatement const& _node)
 
 	checkBooleanNotConstant(_node.condition(), "Condition is always $VALUE.");
 
-	visitBranch(_node.trueStatement(), expr(_node.condition()));
+	auto countersEndFalse = m_currentSequenceCounter;
+	auto countersEndTrue = visitBranch(_node.trueStatement(), expr(_node.condition()));
 	vector<Declaration const*> touchedVariables = m_variableUsage->touchedVariables(_node.trueStatement());
 	if (_node.falseStatement())
 	{
-		visitBranch(*_node.falseStatement(), !expr(_node.condition()));
+		countersEndFalse = visitBranch(*_node.falseStatement(), !expr(_node.condition()));
 		touchedVariables += m_variableUsage->touchedVariables(*_node.falseStatement());
 	}
 
-	resetVariables(touchedVariables);
+	mergeVariables(touchedVariables, expr(_node.condition()), countersEndTrue, countersEndFalse);
 
 	return false;
 }
@@ -506,12 +507,12 @@ void SMTChecker::assignment(Declaration const& _variable, smt::Expression const&
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
-void SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
+SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
 {
-	visitBranch(_statement, &_condition);
+	return visitBranch(_statement, &_condition);
 }
 
-void SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
+SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
 {
 	VariableSequenceCounters sequenceCountersStart = m_currentSequenceCounter;
 
@@ -522,7 +523,8 @@ void SMTChecker::visitBranch(Statement const& _statement, smt::Expression const*
 		popPathCondition();
 
 	m_conditionalExecutionHappened = true;
-	m_currentSequenceCounter = sequenceCountersStart;
+	std::swap(sequenceCountersStart, m_currentSequenceCounter);
+	return sequenceCountersStart;
 }
 
 void SMTChecker::checkCondition(
@@ -699,6 +701,22 @@ void SMTChecker::resetVariables(vector<Declaration const*> _variables)
 	{
 		newValue(*decl);
 		setUnknownValue(*decl);
+	}
+}
+
+void SMTChecker::mergeVariables(vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse)
+{
+	set<Declaration const*> uniqueVars(_variables.begin(), _variables.end());
+	for (auto const* decl: uniqueVars)
+	{
+		int trueCounter = _countersEndTrue.at(decl);
+		int falseCounter = _countersEndFalse.at(decl);
+		solAssert(trueCounter != falseCounter, "");
+		m_interface->addAssertion(newValue(*decl) == smt::Expression::ite(
+			_condition,
+			valueAtSequence(*decl, trueCounter),
+			valueAtSequence(*decl, falseCounter))
+		);
 	}
 }
 
