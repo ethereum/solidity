@@ -120,7 +120,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 		Whiskers templ(R"(
 			function <functionName>(headStart, dataEnd) -> <valueReturnParams> {
-				switch slt(sub(dataEnd, headStart), <minimumSize>) case 1 { revert(0, 0) }
+				if slt(sub(dataEnd, headStart), <minimumSize>) { revert(0, 0) }
 				<decodeElements>
 			}
 		)");
@@ -151,7 +151,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 				R"(
 				{
 					let offset := <load>(add(headStart, <pos>))
-					switch gt(offset, 0xffffffffffffffff) case 1 { revert(0, 0) }
+					if gt(offset, 0xffffffffffffffff) { revert(0, 0) }
 					<values> := <abiDecode>(add(headStart, offset), dataEnd)
 				}
 				)" :
@@ -1134,7 +1134,7 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 			R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> array {
-					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 					let length := <retrieveLength>
 					array := <allocate>(<allocationSize>(length))
 					let dst := array
@@ -1169,7 +1169,7 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 		else
 		{
 			string baseEncodedSize = toCompactHexWithPrefix(_type.baseType()->calldataEncodedSize());
-			templ("staticBoundsCheck", "switch gt(add(src, mul(length, " + baseEncodedSize + ")), end) case 1 { revert(0, 0) }");
+			templ("staticBoundsCheck", "if gt(add(src, mul(length, " + baseEncodedSize + ")), end) { revert(0, 0) }");
 			templ("retrieveElementPos", "src");
 			templ("baseEncodedSize", baseEncodedSize);
 		}
@@ -1197,11 +1197,11 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 			templ = R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos, length {
-					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 					length := calldataload(offset)
-					switch gt(length, 0xffffffffffffffff) case 1 { revert(0, 0) }
+					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
 					arrayPos := add(offset, 0x20)
-					switch gt(add(arrayPos, mul(<length>, <baseEncodedSize>)), end) case 1 { revert(0, 0) }
+					if gt(add(arrayPos, mul(<length>, <baseEncodedSize>)), end) { revert(0, 0) }
 				}
 			)";
 		else
@@ -1209,7 +1209,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos {
 					arrayPos := offset
-					switch gt(add(arrayPos, mul(<length>, <baseEncodedSize>)), end) case 1 { revert(0, 0) }
+					if gt(add(arrayPos, mul(<length>, <baseEncodedSize>)), end) { revert(0, 0) }
 				}
 			)";
 		Whiskers w{templ};
@@ -1235,13 +1235,13 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 		Whiskers templ(
 			R"(
 				function <functionName>(offset, end) -> array {
-					switch slt(add(offset, 0x1f), end) case 0 { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 					let length := <load>(offset)
 					array := <allocate>(<allocationSize>(length))
 					mstore(array, length)
 					let src := add(offset, 0x20)
 					let dst := add(array, 0x20)
-					switch gt(add(src, length), end) case 1 { revert(0, 0) }
+					if gt(add(src, length), end) { revert(0, 0) }
 					<copyToMemFun>(src, dst, length)
 				}
 			)"
@@ -1268,7 +1268,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 		Whiskers templ(R"(
 			// <readableTypeName>
 			function <functionName>(headStart, end) -> value {
-				switch slt(sub(end, headStart), <minimumSize>) case 1 { revert(0, 0) }
+				if slt(sub(end, headStart), <minimumSize>) { revert(0, 0) }
 				value := <allocate>(<memorySize>)
 				<#members>
 				{
@@ -1296,7 +1296,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 				dynamic ?
 				R"(
 					let offset := <load>(add(headStart, <pos>))
-					switch gt(offset, 0xffffffffffffffff) case 1 { revert(0, 0) }
+					if gt(offset, 0xffffffffffffffff) { revert(0, 0) }
 					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
 				)" :
 				R"(
@@ -1501,7 +1501,7 @@ string ABIFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 		Whiskers w(R"(
 			function <functionName>(length) -> size {
 				// Make sure we can allocate memory without overflow
-				switch gt(length, 0xffffffffffffffff) case 1 { revert(0, 0) }
+				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
 				size := <allocationSize>
 				<addLengthSlot>
 			}
@@ -1620,7 +1620,7 @@ string ABIFunctions::allocationFunction()
 				memPtr := mload(<freeMemoryPointer>)
 				let newFreePtr := add(memPtr, size)
 				// protect against overflow
-				switch or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) case 1 { revert(0, 0) }
+				if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
 				mstore(<freeMemoryPointer>, newFreePtr)
 			}
 		)")
