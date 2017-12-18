@@ -26,6 +26,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace dev
 {
@@ -145,6 +146,17 @@ private:
 	/// The function takes one argument which is the "sequence number".
 	smt::Expression var(Declaration const& _decl);
 
+	/// Adds a new path condition
+	void pushPathCondition(smt::Expression const& _e);
+	/// Remove the last path condition
+	void popPathCondition();
+	/// Returns the conjunction of all path conditions or True if empty
+	smt::Expression currentPathConditions();
+	/// Conjoin the current path conditions with the given parameter and add to the solver
+	void addPathConjoinedExpression(smt::Expression const& _e);
+	/// Add to the solver: the given expression implied by the current path conditions
+	void addPathImpliedExpression(smt::Expression const& _e);
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_conditionalExecutionHappened = false;
@@ -152,6 +164,7 @@ private:
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
 	std::map<Expression const*, smt::Expression> m_expressions;
 	std::map<Declaration const*, smt::Expression> m_variables;
+	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
