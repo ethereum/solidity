@@ -95,14 +95,14 @@ This means that cyclic creation dependencies are impossible.
         {
             // Create a new Token contract and return its address.
             // From the JavaScript side, the return type is simply
-            // "address", as this is the closest type available in
+            // `address`, as this is the closest type available in
             // the ABI.
             return new OwnedToken(name);
         }
 
         function changeName(OwnedToken tokenAddress, bytes32 name)  public {
-            // Again, the external type of "tokenAddress" is
-            // simply "address".
+            // Again, the external type of `tokenAddress` is
+            // simply `address`.
             tokenAddress.changeName(name);
         }
 
@@ -203,10 +203,10 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
     contract D {
         function readData() public {
             C c = new C();
-            uint local = c.f(7); // error: member "f" is not visible
+            uint local = c.f(7); // error: member `f` is not visible
             c.setData(3);
             local = c.getData();
-            local = c.compute(3, 5); // error: member "compute" is not visible
+            local = c.compute(3, 5); // error: member `compute` is not visible
         }
     }
 
@@ -310,7 +310,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // This contract only defines a modifier but does not use
         // it: it will be used in derived contracts.
         // The function body is inserted where the special symbol
-        // "_;" in the definition of a modifier appears.
+        // `_;` in the definition of a modifier appears.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
@@ -321,9 +321,9 @@ inheritable properties of contracts and may be overridden by derived contracts.
     }
 
     contract mortal is owned {
-        // This contract inherits the "onlyOwner"-modifier from
-        // "owned" and applies it to the "close"-function, which
-        // causes that calls to "close" only have an effect if
+        // This contract inherits the `onlyOwner` modifier from
+        // `owned` and applies it to the `close` function, which
+        // causes that calls to `close` only have an effect if
         // they are made by the stored owner.
         function close() public onlyOwner {
             selfdestruct(owner);
@@ -346,7 +346,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         function Register(uint initialPrice) public { price = initialPrice; }
 
         // It is important to also provide the
-        // "payable" keyword here, otherwise the function will
+        // `payable` keyword here, otherwise the function will
         // automatically reject all Ether sent to it.
         function register() public payable costs(price) {
             registeredAddresses[msg.sender] = true;
@@ -367,9 +367,9 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
 
         /// This function is protected by a mutex, which means that
-        /// reentrant calls from within "msg.sender.call" cannot call "f" again.
-        /// The "return 7" statement assigns 7 to the return value but still
-        /// executes the statement "locked = false" in the modifier.
+        /// reentrant calls from within `msg.sender.call` cannot call `f` again.
+        /// The `return 7` statement assigns 7 to the return value but still
+        /// executes the statement `locked = false` in the modifier.
         function f() public noReentrancy returns (uint) {
             require(msg.sender.call());
             return 7;
@@ -561,7 +561,7 @@ Please ensure you test your fallback function thoroughly to ensure the execution
         // This function is called for all messages sent to
         // this contract (there is no other function).
         // Sending Ether to this contract will cause an exception,
-        // because the fallback function does not have the "payable"
+        // because the fallback function does not have the `payable`
         // modifier.
         function() public { x = 1; }
         uint x;
@@ -726,7 +726,7 @@ All non-indexed arguments will be stored in the data part of the log.
         function deposit(bytes32 _id) public payable {
             // Any call to this function (even deeply nested) can
             // be detected from the JavaScript API by filtering
-            // for "Deposit" to be called.
+            // for `Deposit` to be called.
             Deposit(msg.sender, _id, msg.value);
         }
     }
@@ -744,7 +744,7 @@ The use in the JavaScript API would be as follows:
     // watch for changes
     event.watch(function(error, result){
         // result will contain various information
-        // including the argumets given to the Deposit
+        // including the argumets given to the `Deposit`
         // call.
         if (!error)
             console.log(result);
@@ -823,10 +823,10 @@ Details are given in the following example.
         address owner;
     }
 
-    // Use "is" to derive from another contract. Derived
+    // Use `is` to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
-    // accessed externally via "this", though.
+    // accessed externally via `this`, though.
     contract mortal is owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
@@ -846,9 +846,9 @@ Details are given in the following example.
         function unregister() public;
      }
 
-    // Multiple inheritance is possible. Note that "owned" is
-    // also a base class of "mortal", yet there is only a single
-    // instance of "owned" (as for virtual inheritance in C++).
+    // Multiple inheritance is possible. Note that `owned` is
+    // also a base class of `mortal`, yet there is only a single
+    // instance of `owned` (as for virtual inheritance in C++).
     contract named is owned, mortal {
         function named(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
@@ -1133,7 +1133,7 @@ more advanced example to implement a set).
       // reference" and thus only its storage address and not
       // its contents is passed as part of the call.  This is a
       // special feature of library functions.  It is idiomatic
-      // to call the first parameter 'self', if the function can
+      // to call the first parameter `self`, if the function can
       // be seen as a method of that object.
       function insert(Data storage self, uint value)
           public
@@ -1343,7 +1343,7 @@ Let us rewrite the set example from the
             // Here, all variables of type Set.Data have
             // corresponding member functions.
             // The following function call is identical to
-            // Set.insert(knownValues, value)
+            // `Set.insert(knownValues, value)`
             require(knownValues.insert(value));
         }
     }
@@ -1383,6 +1383,6 @@ It is also possible to extend elementary types in that way::
     }
 
 Note that all library calls are actual EVM function calls. This means that
-if you pass ``memory`` or value types, a copy will be performed, even of the
+if you pass memory or value types, a copy will be performed, even of the
 ``self`` variable. The only situation where no copy will be performed
-is when ``storage`` reference variables are used.
+is when storage reference variables are used.
