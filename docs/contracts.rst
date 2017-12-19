@@ -128,7 +128,7 @@ Visibility and Getters
 Since Solidity knows two kinds of function calls (internal
 ones that do not create an actual EVM call (also called
 a "message call") and external
-ones that do, there are four types of visibilities for
+ones that do), there are four types of visibilities for
 functions and state variables.
 
 Functions can be specified as being ``external``,
