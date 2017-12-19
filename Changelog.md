@@ -12,6 +12,7 @@ Features:
  * Type Checker: Issue warning for using ``public`` visibility for interface functions.
 
 Bugfixes:
+ * Error Output: Truncate huge number literals in the middle to avoid output blow-up.
  * Parser: Disallow event declarations with no parameter list.
  * Standard JSON: Populate the ``sourceLocation`` field in the error list.
  * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).

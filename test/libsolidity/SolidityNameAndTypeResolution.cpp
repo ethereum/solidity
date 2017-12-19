@@ -1752,7 +1752,7 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			uint256 a;
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Type int_const 115792089237316195423570985008687907853269984665640564039458000000000000000000 is not implicitly convertible to expected type uint256.");
+	CHECK_ERROR(sourceCode, TypeError, "Type int_const 1157...(70 digits omitted)...0000 is not implicitly convertible to expected type uint256.");
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
