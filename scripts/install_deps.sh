@@ -253,19 +253,20 @@ case $(uname -s) in
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
                 ;;
-
 #------------------------------------------------------------------------------
 # Ubuntu
 #
 #------------------------------------------------------------------------------
 
-            Ubuntu)
+            Ubuntu|LinuxMint)
+                #LinuxMint is a distro on top of Ubuntu.
                 #Ubuntu
                 install_z3=""
                 case $(lsb_release -cs) in
-                    trusty)
+                    trusty|qiana|rebecca|rafaela|rosa)
                         #trusty
                         echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
+                        echo "Or, you may also be running Linux Mint Qiana / Rebecca / Rafaela / Rosa (base: Ubuntu Trusty Tahr (14.04).)"
                         ;;
                     utopic)
                         #utopic
@@ -279,9 +280,10 @@ case $(uname -s) in
                         #wily
                         echo "Installing solidity dependencies on Ubuntu Wily Werewolf (15.10)."
                         ;;
-                    xenial)
+                    xenial|sarah|serena|sonya|sylvia)
                         #xenial
                         echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
+                        echo "Or, you may also be running Linux Mint Sarah / Serena / Sonya / Sylvia (base: Ubuntu Xenial Xerus (16.04).)"
                         install_z3="libz3-dev"
                         ;;
                     yakkety)
@@ -298,6 +300,15 @@ case $(uname -s) in
                         #artful
                         echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
                         install_z3="libz3-dev"
+                        ;;
+                    betsy)
+                        #do not try anything for betsy.
+                        echo "Linux Mint Betsy is not supported at the moment as it runs off of Debian."
+                        echo "We only support Sylvia, Sonya, Serena, Sarah, Rosa, Rafaela, Rebecca, and Qiana."
+                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                        echo "If you would like to get your distro working, that would be fantastic."
+                        echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
+                        exit 1
                         ;;
                     *)
                         #other Ubuntu
