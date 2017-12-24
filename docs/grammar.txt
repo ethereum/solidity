@@ -27,14 +27,19 @@ ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 FunctionDefinition = 'function' Identifier? ParameterList
                      ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
-EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
+EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
-IndexedParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
-ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
-TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
+ParameterList = '(' ( Parameter (',' Parameter)* )? ')'
+Parameter = TypeName StorageLocation? Identifier?
+
+EventParameterList = '(' ( EventParameter (',' EventParameter )* )? ')'
+EventParameter = TypeName 'indexed'? Identifier?
+
+FunctionTypeParameterList = '(' ( FunctionTypeParameter (',' FunctionTypeParameter )* )? ')'
+FunctionTypeParameter = TypeName StorageLocation?
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
@@ -50,8 +55,8 @@ UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
-FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | StateMutability )*
-                   ( 'returns' TypeNameList )?
+FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external' | StateMutability )*
+                   ( 'returns' FunctionTypeParameterList )?
 StorageLocation = 'memory' | 'storage'
 StateMutability = 'pure' | 'constant' | 'view' | 'payable'
 
