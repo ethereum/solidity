@@ -498,8 +498,8 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 {
 	solAssert(
 		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
-		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
-		"Invalid bit number(s) for fixed type: " + 
+		0 <= m_fractionalDigits && m_fractionalDigits <= 80,
+		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 }
@@ -669,7 +669,23 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			// parse the exponent
 			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
 
-			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
+			// SOL-008: disallow gigantic exponents to limit memory consumption
+			bigint bytesNeeded = string(_literal.value().begin(), expPoint).length() + abs(exp);
+			auto decimalPoint = find(_literal.value().begin(), expPoint, '.');
+			if(decimalPoint != _literal.value().end())
+			{
+				// a.bE+c	=> len(a) + max(len(b), abs(c))
+				// a.bE-c	=> len(b) + max(len(a), abs(c))
+
+				bytesNeeded = (exp > 0) ? string(_literal.value().begin(), decimalPoint).length() : string(decimalPoint, expPoint).length();
+				bigint adjustment	= (exp > 0 ) ? string(decimalPoint, expPoint).length() : string(_literal.value().begin(), decimalPoint).length();
+				if(abs(exp) >= adjustment)
+					bytesNeeded += abs(exp);
+				else
+					bytesNeeded += adjustment;
+			}
+
+			if (bytesNeeded > 1250)
 				return make_tuple(false, rational(0));
 
 			// parse the base
@@ -883,7 +899,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
 			using boost::multiprecision::pow;
@@ -962,7 +978,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -1014,7 +1030,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1023,7 +1039,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
