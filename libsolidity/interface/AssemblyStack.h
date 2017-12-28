@@ -71,6 +71,9 @@ public:
 	/// Multiple calls overwrite the previous state.
 	bool analyze(assembly::Block const& _block, Scanner const* _scanner = nullptr);
 
+	/// Perform optimisation steps (modifies the AST).
+	void optimise();
+
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
