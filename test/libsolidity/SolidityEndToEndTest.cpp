@@ -10456,6 +10456,62 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0xa0, 0, 0x40, 44, "test1234567890123456789012345678901234567890"));
 }
 
+BOOST_AUTO_TEST_CASE(require_with_message)
+{
+	char const* sourceCode = R"(
+		contract D {
+			bool flag = false;
+			string storageError = "abc";
+			function f(uint x) public {
+				require(x > 7, "failed");
+			}
+			function g() public {
+				// As a side-effect of internalFun, the flag will be set to true
+				// (even if the condition is true),
+				// but it will only throw in the next evaluation.
+				bool flagCopy = flag;
+				require(flagCopy == false, internalFun());
+			}
+			function internalFun() returns (string) {
+				flag = true;
+				return "only on second run";
+			}
+			function h() public {
+				require(false, storageError);
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f(uint x) public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function g() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function h() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(uint256)", 8), encodeArgs(1, 0x40, 0));
+	ABI_CHECK(callContractFunction("f(uint256)", 5), encodeArgs(0, 0x40, 0x80, 0, 0x40, 6, "failed"));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(1, 0x40, 0));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 18	, "only on second run"));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 3, "abc"));
+}
+
 BOOST_AUTO_TEST_CASE(negative_stack_height)
 {
 	// This code was causing negative stack height during code generation

@@ -917,16 +917,42 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			if (arguments.size() > 1)
+			{
+				// Users probably expect the second argument to be evaluated
+				// even if the condition is false, as would be the case for an actual
+				// function call.
+				solAssert(arguments.size() == 2, "");
+				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				arguments.at(1)->accept(*this);
+				utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+			}
+			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
+			else if (arguments.size() > 1)
+			{
+				m_context << u256(0);
+				utils().moveIntoStack(arguments.at(1)->annotation().type->sizeOnStack(), 1);
+				utils().fetchFreeMemoryPointer();
+				utils().abiEncode(
+					{make_shared<IntegerType>(256), arguments.at(1)->annotation().type},
+					{make_shared<IntegerType>(256), make_shared<ArrayType>(DataLocation::Memory, true)}
+				);
+				utils().toSizeAfterFreeMemoryPointer();
+				m_context << Instruction::REVERT;
+				m_context.adjustStackOffset(arguments.at(1)->annotation().type->sizeOnStack());
+			}
 			else
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
+			if (arguments.size() > 1)
+				utils().popStackElement(*arguments.at(1)->annotation().type);
 			break;
 		}
 		case FunctionType::Kind::GasLeft:
