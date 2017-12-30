@@ -691,6 +691,7 @@ void CompilerUtils::convertType(
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
 			if (_asPartOfArgumentDecoding)
+				// TODO: error message?
 				m_context.appendConditionalRevert();
 			else
 				m_context.appendConditionalInvalid();

@@ -608,7 +608,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalRevert();
+			// TODO: Can we bubble up here? There might be different reasons for failure, I think.
+			m_context.appendConditionalRevert(true);
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -670,8 +671,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
+				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalRevert();
+				m_context.appendConditionalRevert(true);
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -1823,6 +1825,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+		// TODO: error message?
 		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
@@ -1865,7 +1868,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(true);
 	}
 
 	utils().popStackSlots(remainsSize);

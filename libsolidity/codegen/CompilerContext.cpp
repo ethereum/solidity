@@ -262,12 +262,20 @@ CompilerContext& CompilerContext::appendRevert()
 	return *this << u256(0) << u256(0) << Instruction::REVERT;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert()
+CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData)
 {
-	*this << Instruction::ISZERO;
-	eth::AssemblyItem afterTag = appendConditionalJump();
-	appendRevert();
-	*this << afterTag;
+	if (_forwardReturnData)
+		appendInlineAssembly(R"({
+			if condition {
+				returndatacopy(0, 0, returndatasize())
+				revert(0, returndatasize())
+			}
+		})", {"condition"});
+	else
+		appendInlineAssembly(R"({
+			if condition { revert(0, 0) }
+		})", {"condition"});
+	*this << Instruction::POP;
 	return *this;
 }
 

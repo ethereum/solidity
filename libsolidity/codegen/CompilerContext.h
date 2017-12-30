@@ -156,8 +156,9 @@ public:
 	CompilerContext& appendConditionalInvalid();
 	/// Appends a REVERT(0, 0) call
 	CompilerContext& appendRevert();
-	/// Appends a conditional REVERT(0, 0) call
-	CompilerContext& appendConditionalRevert();
+	/// Appends a conditional REVERT-call, either forwarding the RETURNDATA or providing the
+	/// empty string. Consumes the condition.
+	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
