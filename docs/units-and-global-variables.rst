@@ -101,6 +101,8 @@ Error Handling
     throws if the condition is not met - to be used for errors in inputs or external components.
 ``revert()``:
     abort execution and revert state changes
+``revert(string reason)``:
+    abort execution and revert state changes, providing an explanatory string
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 

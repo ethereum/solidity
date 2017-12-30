@@ -455,8 +455,9 @@ The ``require`` function should be used to ensure valid conditions, such as inpu
 If used properly, analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``. Properly functioning code should never reach a failing assert statement; if this happens there is a bug in your contract which you should fix.
 
 There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
-revert the current call. In the future it might be possible to also include details about the error
-in a call to ``revert``. The ``throw`` keyword can also be used as an alternative to ``revert()``.
+revert the current call. It is possible to provide a string message containing details about the error
+that will be passed back to the caller.
+The ``throw`` keyword can also be used as an alternative to ``revert()``, but is deprecated.
 
 .. note::
     From version 0.4.13 the ``throw`` keyword is deprecated and will be phased out in the future.
@@ -515,3 +516,24 @@ the EVM to revert all changes made to the state. The reason for reverting is tha
 did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
 (or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
 ``require``-style exceptions will not consume any gas starting from the Metropolis release.
+
+The following example shows how an error string can be used together with revert:
+
+::
+
+    pragma solidity ^0.4.0;
+
+    contract VendingMachine {
+        function buy(uint amount) payable {
+            if (amount > msg.value / 2 ether)
+                revert("Not enough Ether provided.");
+            // Perform the purchase.
+        }
+    }
+
+The provided string will be abi-encoded together with a uint value that will always be zero.
+This means that if a string ``x`` is provided, ``(0, x)`` will be encoded as if a function with arguments
+``(uint256, string)`` would be called. This zero is used as a version identifier. Future extensions
+of this feature might provide actual exception payload of dynamic type and this number could be used
+to encode the type or also as a simple numeric error code. Until this is specified, a zero will
+be used in all cases.
