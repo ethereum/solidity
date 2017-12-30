@@ -233,11 +233,22 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
+	string name = _name;
+	DataLocation location = DataLocation::Storage;
+	if (boost::algorithm::ends_with(name, " memory"))
+	{
+		name = name.substr(0, name.length() - 7);
+		location = DataLocation::Memory;
+	}
 	unsigned short firstNum;
 	unsigned short secondNum;
 	Token::Value token;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(_name);
- 	return fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
+	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
+		return ref->copyForLocation(location, true);
+	else
+		return t;
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
