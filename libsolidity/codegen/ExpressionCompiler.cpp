@@ -680,8 +680,25 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			m_context.appendRevert();
+		{
+			if (!arguments.empty())
+			{
+				solAssert(arguments.size() == 1, "");
+				solAssert(function.parameterTypes().size() == 1, "");
+				m_context << u256(0);
+				arguments.front()->accept(*this);
+				utils().fetchFreeMemoryPointer();
+				utils().abiEncode(
+					{make_shared<IntegerType>(256), arguments.front()->annotation().type},
+					{make_shared<IntegerType>(256), make_shared<ArrayType>(DataLocation::Memory, true)}
+				);
+				utils().toSizeAfterFreeMemoryPointer();
+				m_context << Instruction::REVERT;
+			}
+			else
+				m_context.appendRevert();
 			break;
+		}
 		case FunctionType::Kind::SHA3:
 		{
 			TypePointers argumentTypes;
