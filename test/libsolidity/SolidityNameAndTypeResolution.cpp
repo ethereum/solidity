@@ -5987,7 +5987,22 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Statement has no effect.");
+	CHECK_ERROR(text, TypeError, "No matching declaration found");
+}
+
+BOOST_AUTO_TEST_CASE(revert_with_reason)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint x) pure public {
+				if (x > 7)
+					revert("abc");
+				else
+					revert();
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(bare_others)
