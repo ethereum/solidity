@@ -47,7 +47,9 @@ NameAndTypeResolver::NameAndTypeResolver(
 	if (!m_scopes[nullptr])
 		m_scopes[nullptr].reset(new DeclarationContainer());
 	for (Declaration const* declaration: _globals)
-		m_scopes[nullptr]->registerDeclaration(*declaration);
+	{
+		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration), "Unable to register global declaration.");
+	}
 }
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope)
