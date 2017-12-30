@@ -831,6 +831,11 @@ public:
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
+	virtual FunctionTypePointer functionType(bool) const override
+	{
+		solAssert(m_type->category() == Type::Category::Function, "");
+		return std::dynamic_pointer_cast<FunctionType const>(m_type);
+	}
 	virtual TypePointer type() const override { return m_type; }
 
 private:

@@ -202,8 +202,9 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 		solAssert(
 			dynamic_cast<FunctionDefinition const*>(declaration) ||
 			dynamic_cast<EventDefinition const*>(declaration) ||
-			dynamic_cast<VariableDeclaration const*>(declaration),
-			"Found overloading involving something not a function or a variable."
+			dynamic_cast<VariableDeclaration const*>(declaration) ||
+			dynamic_cast<MagicVariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function, event or a (magic) variable."
 		);
 
 		FunctionTypePointer functionType { declaration->functionType(false) };
