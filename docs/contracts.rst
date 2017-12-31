@@ -955,6 +955,31 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
+.. index:: ! constructor
+
+Constructors
+============
+Constructor is an optional function with the same name as the contract which is executed upon contract creation. 
+Constructor functions can be either ``public`` or ``internal``.
+
+::
+
+    pragma solidity ^0.4.11;
+
+    contract A {
+        uint public a;
+
+        function A(uint _a) internal {
+            a = _a;
+        }
+    }
+
+    contract B is A(1) {
+        function B() public {}
+    }
+
+A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+
 .. index:: ! base;constructor
 
 Arguments for Base Constructors
@@ -1026,6 +1051,8 @@ This error is produced also by an event and a modifier of the same name, and a f
 As an exception, a state variable getter can override a public function.
 
 .. index:: ! contract;abstract, ! abstract contract
+
+.. _abstract-contract:
 
 ******************
 Abstract Contracts
