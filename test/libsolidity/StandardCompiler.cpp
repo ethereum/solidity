@@ -451,6 +451,36 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
 }
 
+BOOST_AUTO_TEST_CASE(filename_with_colon)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"http://github.com/ethereum/solidity/std/StandardToken.sol": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"http://github.com/ethereum/solidity/std/StandardToken.sol": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "http://github.com/ethereum/solidity/std/StandardToken.sol", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

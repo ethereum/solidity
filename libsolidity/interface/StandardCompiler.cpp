@@ -461,7 +461,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value contractsOutput = Json::objectValue;
 	for (string const& contractName: compilationSuccess ? m_compilerStack.contractNames() : vector<string>())
 	{
-		size_t colon = contractName.find(':');
+		size_t colon = contractName.rfind(':');
 		solAssert(colon != string::npos, "");
 		string file = contractName.substr(0, colon);
 		string name = contractName.substr(colon + 1);
