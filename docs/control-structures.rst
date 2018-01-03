@@ -472,13 +472,16 @@ of an exception instead of "bubbling up".
 Catching exceptions is not yet possible.
 
 In the following example, you can see how ``require`` can be used to easily check conditions on inputs
-and how ``assert`` can be used for internal error checking::
+and how ``assert`` can be used for internal error checking. Note that you can optionally provide
+a message string for require, but not for assert.
+
+::
 
     pragma solidity ^0.4.0;
 
     contract Sharer {
         function sendHalf(address addr) public payable returns (uint balance) {
-            require(msg.value % 2 == 0); // Only allow even numbers
+            require(msg.value % 2 == 0, "Even value required.");
             uint balanceBeforeTransfer = this.balance;
             addr.transfer(msg.value / 2);
             // Since transfer throws an exception on failure and
@@ -517,7 +520,7 @@ did not occur. Because we want to retain the atomicity of transactions, the safe
 (or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
 ``require``-style exceptions will not consume any gas starting from the Metropolis release.
 
-The following example shows how an error string can be used together with revert:
+The following example shows how an error string can be used together with revert and require:
 
 ::
 
@@ -527,13 +530,18 @@ The following example shows how an error string can be used together with revert
         function buy(uint amount) payable {
             if (amount > msg.value / 2 ether)
                 revert("Not enough Ether provided.");
+            // Alternative way to do it:
+            require(
+                amount <= msg.value / 2 ether,
+                "Not enough Ether provided."
+            );
             // Perform the purchase.
         }
     }
 
 The provided string will be abi-encoded together with a uint value that will always be zero.
 This means that if a string ``x`` is provided, ``(0, x)`` will be encoded as if a function with arguments
-``(uint256, string)`` would be called. This zero is used as a version identifier. Future extensions
+``(uint256, string)`` was called. This zero is used as a version identifier. Future extensions
 of this feature might provide actual exception payload of dynamic type and this number could be used
 to encode the type or also as a simple numeric error code. Until this is specified, a zero will
 be used in all cases.

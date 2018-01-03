@@ -87,17 +87,25 @@ of votes.
         // Give `voter` the right to vote on this ballot.
         // May only be called by `chairperson`.
         function giveRightToVote(address voter) public {
-            // If the argument of `require` evaluates to `false`,
-            // it terminates and reverts all changes to
-            // the state and to Ether balances. 
-            // This consumes all gas in old EVM versions, but not anymore.
-            // It is often a good idea to use this if functions are
-            // called incorrectly.
+            // If the first argument of `require` evaluates
+            // to `false`, execution terminates and all
+            // changes to the state and to Ether balances
+            // are reverted. 
+            // This used to consume all gas in old EVM versions, but
+            // not anymore.
+            // It is often a good idea to use `require` to check if
+            // functions are called correctly.
+            // As a second argument, you can also provide an
+            // explanation about what went wrong.
             require(
-                (msg.sender == chairperson) &&
-                !voters[voter].voted &&
-                (voters[voter].weight == 0)
+                msg.sender == chairperson,
+                "Only chairperson can give right to vote."
             );
+            require(
+                !voters[voter].voted,
+                "The voter already voted."
+            );
+            require(voters[voter].weight == 0);
             voters[voter].weight = 1;
         }
 
@@ -105,10 +113,9 @@ of votes.
         function delegate(address to) public {
             // assigns reference
             Voter storage sender = voters[msg.sender];
-            require(!sender.voted);
+            require(!sender.voted, "You already voted.");
 
-            // Self-delegation is not allowed.
-            require(to != msg.sender);
+            require(to != msg.sender, "Self-delegation is disallowed.");
 
             // Forward the delegation as long as
             // `to` also delegated.
@@ -122,7 +129,7 @@ of votes.
                 to = voters[to].delegate;
 
                 // We found a loop in the delegation, not allowed.
-                require(to != msg.sender);
+                require(to != msg.sender, "Found loop in delegation.");
             }
 
             // Since `sender` is a reference, this
@@ -145,7 +152,7 @@ of votes.
         /// to proposal `proposals[proposal].name`.
         function vote(uint proposal) public {
             Voter storage sender = voters[msg.sender];
-            require(!sender.voted);
+            require(!sender.voted, "Already voted.");
             sender.voted = true;
             sender.vote = proposal;
 
@@ -270,11 +277,17 @@ activate themselves.
 
             // Revert the call if the bidding
             // period is over.
-            require(now <= auctionEnd);
+            require(
+                now <= auctionEnd,
+                "Auction already ended."
+            );
 
             // If the bid is not higher, send the
             // money back.
-            require(msg.value > highestBid);
+            require(
+                msg.value > highestBid,
+                "There already is a higher bid."
+            );
 
             if (highestBid != 0) {
                 // Sending back the money by simply using
@@ -324,8 +337,8 @@ activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= auctionEnd); // auction did not yet end
-            require(!ended); // this function has already been called
+            require(now >= auctionEnd, "Auction not yet ended.");
+            require(!ended, "auctionEnd has already been called.");
 
             // 2. Effects
             ended = true;
@@ -543,7 +556,7 @@ Safe Remote Purchase
         function Purchase() public payable {
             seller = msg.sender;
             value = msg.value / 2;
-            require((2 * value) == msg.value);
+            require((2 * value) == msg.value, "Value has to be even.");
         }
 
         modifier condition(bool _condition) {
@@ -552,17 +565,26 @@ Safe Remote Purchase
         }
 
         modifier onlyBuyer() {
-            require(msg.sender == buyer);
+            require(
+                msg.sender == buyer,
+                "Only buyer can call this."
+            );
             _;
         }
 
         modifier onlySeller() {
-            require(msg.sender == seller);
+            require(
+                msg.sender == seller,
+                "Only seller can call this."
+            );
             _;
         }
 
         modifier inState(State _state) {
-            require(state == _state);
+            require(
+                state == _state,
+                "Invalid state."
+            );
             _;
         }
 
