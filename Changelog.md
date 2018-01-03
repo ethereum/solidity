@@ -5,7 +5,7 @@ Features:
  * Code Generator: More specialized and thus optimized implementation for ``x.push(...)``
  * Commandline interface: Error when missing or inaccessible file detected. Suppress it with the ``--ignore-missing`` flag.
  * Constant Evaluator: Fix evaluation of single element tuples.
- * General: Allow providing reason string for ``revert()``.
+ * General: Allow providing reason string for ``revert()`` and ``require()``.
  * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
