@@ -10545,8 +10545,76 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 3, "message"));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 3, "message"));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+}
+
+BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
+{
+	char const* sourceCode = R"(
+		contract D {
+			function() public payable {
+				revert("message");
+			}
+			function f() public {
+				this.transfer(0);
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+}
+
+BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
+{
+	char const* sourceCode = R"(
+		contract E {
+			function E() {
+				revert("message");
+			}
+		}
+		contract D {
+			function f() public {
+				var x = new E();
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
 }
 
 BOOST_AUTO_TEST_CASE(negative_stack_height)
