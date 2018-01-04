@@ -6009,7 +6009,8 @@ BOOST_AUTO_TEST_CASE(bare_others)
 {
 	CHECK_WARNING("contract C { function f() pure public { selfdestruct; } }", "Statement has no effect.");
 	CHECK_WARNING("contract C { function f() pure public { assert; } }", "Statement has no effect.");
-	CHECK_WARNING("contract C { function f() pure public { require; } }", "Statement has no effect.");
+	// This is different because it does have overloads.
+	CHECK_ERROR("contract C { function f() pure public { require; } }", TypeError, "No matching declaration found after variable lookup.");
 	CHECK_WARNING("contract C { function f() pure public { suicide; } }", "Statement has no effect.");
 }
 
@@ -6508,7 +6509,7 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
+BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 {
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
