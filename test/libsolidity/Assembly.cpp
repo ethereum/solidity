@@ -158,13 +158,24 @@ BOOST_AUTO_TEST_CASE(location_test)
 	}
 	)";
 	shared_ptr<string const> n = make_shared<string>("");
+	shared_ptr<string const> codegen = make_shared<string>("--CODEGEN--:8-17");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(24, SourceLocation(2, 75, n)) +
-		vector<SourceLocation>(32, SourceLocation(20, 72, n)) +
-		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
-		vector<SourceLocation>(2, SourceLocation(58, 67, n)) +
-		vector<SourceLocation>(2, SourceLocation(20, 72, n));
+		vector<SourceLocation>(24, SourceLocation(2, 75, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 72, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(8, 17, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(3, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(30, 31, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(27, 28, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(20, 32, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(24, SourceLocation(20, 72, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(42, 51, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(65, 67, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(58, 67, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 72, make_shared<string>("")));
+
+
 	checkAssemblyLocations(items, locations);
 }
 
