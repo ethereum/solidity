@@ -1058,7 +1058,7 @@ As an exception, a state variable getter can override a public function.
 Abstract Contracts
 ******************
 
-Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
+Contracts are marked as abstract when at least one of their functions lacks an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
 
     pragma solidity ^0.4.0;
 
@@ -1066,9 +1066,7 @@ Contract functions can lack an implementation as in the following example (note 
         function utterance() public returns (bytes32);
     }
 
-Such contracts cannot be compiled (even if they contain
-implemented functions alongside non-implemented functions),
-but they can be used as base contracts::
+Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
     pragma solidity ^0.4.0;
 
@@ -1080,7 +1078,7 @@ but they can be used as base contracts::
         function utterance() public returns (bytes32) { return "miaow"; }
     }
 
-If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
+If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract. 
 
 Note that a function without implementation is different from a :ref:`Function Type <function_types>` even though their syntax looks very similar.
 
