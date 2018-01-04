@@ -959,7 +959,7 @@ virtual method lookup.
 
 Constructors
 ============
-Constructor is an optional function with the same name as the contract which is executed upon contract creation. 
+A constructor is an optional function with the same name as the contract which is executed upon contract creation. 
 Constructor functions can be either ``public`` or ``internal``.
 
 ::
@@ -1078,7 +1078,7 @@ Such contracts cannot be compiled (even if they contain implemented functions al
         function utterance() public returns (bytes32) { return "miaow"; }
     }
 
-If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract. 
+If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
 
 Note that a function without implementation is different from a :ref:`Function Type <function_types>` even though their syntax looks very similar.
 
@@ -1090,6 +1090,8 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
 
