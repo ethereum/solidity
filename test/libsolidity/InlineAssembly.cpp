@@ -390,6 +390,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
+	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits)");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions)
