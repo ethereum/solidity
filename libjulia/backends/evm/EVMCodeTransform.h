@@ -101,6 +101,7 @@ public:
 	void operator()(Identifier const& _identifier);
 	void operator()(FunctionalInstruction const& _instr);
 	void operator()(FunctionCall const&);
+	void operator()(ExpressionStatement const& _statement);
 	void operator()(Label const& _label);
 	void operator()(StackAssignment const& _assignment);
 	void operator()(Assignment const& _assignment);
@@ -118,7 +119,7 @@ private:
 	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
 	AbstractAssembly::LabelID functionEntryID(std::string const& _name, solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
-	void visitExpression(Statement const& _expression);
+	void visitExpression(Expression const& _expression);
 
 	void visitStatements(std::vector<Statement> const& _statements);
 

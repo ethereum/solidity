@@ -77,6 +77,13 @@ void CodeTransform::operator()(StackAssignment const& _assignment)
 	checkStackHeight(&_assignment);
 }
 
+void CodeTransform::operator()(ExpressionStatement const& _statement)
+{
+	m_assembly.setSourceLocation(_statement.location);
+	boost::apply_visitor(*this, _statement.expression);
+	checkStackHeight(&_statement);
+}
+
 void CodeTransform::operator()(Label const& _label)
 {
 	m_assembly.setSourceLocation(_label.location);
@@ -460,7 +467,7 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(string const& _name, Sc
 	return m_context->functionEntryIDs[&_function];
 }
 
-void CodeTransform::visitExpression(Statement const& _expression)
+void CodeTransform::visitExpression(Expression const& _expression)
 {
 	int height = m_assembly.stackHeight();
 	boost::apply_visitor(*this, _expression);

@@ -45,11 +45,13 @@ struct If;
 struct Switch;
 struct Case;
 struct ForLoop;
+struct ExpressionStatement;
 struct Block;
 
 struct TypedName;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
+using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
+using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
 
 }
 }
