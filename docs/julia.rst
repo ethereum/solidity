@@ -14,6 +14,13 @@ It can already be used for "inline assembly" inside Solidity and
 future versions of the Solidity compiler will even use JULIA as intermediate
 language. It should also be easy to build high-level optimizer stages for JULIA.
 
+.. note::
+
+    Note that the flavour used for "inline assembly" does not have types
+    (everything is ``u256``) and the built-in functions are identical
+    to the EVM opcodes. Please resort to the inline assembly documentation
+    for details.
+
 The core components of JULIA are functions, blocks, variables, literals,
 for-loops, if-statements, switch-statements, expressions and assignments to variables.
 
