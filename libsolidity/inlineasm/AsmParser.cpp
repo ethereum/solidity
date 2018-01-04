@@ -566,10 +566,16 @@ string Parser::expectAsmIdentifier()
 	string name = currentLiteral();
 	if (m_julia)
 	{
-		if (currentToken() == Token::Bool)
+		switch (currentToken())
 		{
+		case Token::Return:
+		case Token::Byte:
+		case Token::Address:
+		case Token::Bool:
 			advance();
 			return name;
+		default:
+			break;
 		}
 	}
 	else if (instructions().count(name))

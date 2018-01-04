@@ -196,6 +196,14 @@ BOOST_AUTO_TEST_CASE(empty_call)
 	CHECK_ERROR("{ () }", ParserError, "Literal or identifier expected.");
 }
 
+BOOST_AUTO_TEST_CASE(tokens_as_identifers)
+{
+	BOOST_CHECK(successParse("{ let return:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let byte:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let address:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let bool:u256 := 1:u256 }"));
+}
+
 BOOST_AUTO_TEST_CASE(lacking_types)
 {
 	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected token Identifier got 'Assign'");
