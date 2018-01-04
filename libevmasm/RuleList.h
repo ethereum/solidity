@@ -153,6 +153,17 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 		{{Instruction::OR, {{Instruction::NOT, {X}}, X}}, [=]{ return ~u256(0); }, true},
 	};
 
+	// Replace MOD X, <power-of-two> with AND X, <power-of-two> - 1
+	for (size_t i = 0; i < 256; ++i)
+	{
+		u256 value = u256(1) << i;
+		rules.push_back({
+			{Instruction::MOD, {X, value}},
+			[=]() -> Pattern { return {Instruction::AND, {X, value - 1}}; },
+			false
+		});
+	}
+
 	// Double negation of opcodes with boolean result
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::EQ,
