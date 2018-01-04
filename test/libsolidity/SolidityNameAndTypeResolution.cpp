@@ -3608,6 +3608,20 @@ BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
 	CHECK_ERROR(text, TypeError, "Wrong argument count for function call: 0 arguments given but expected 1.");
 }
 
+BOOST_AUTO_TEST_CASE(invalid_args_creating_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+
+			function f() public {
+				var s = S({a: 1});
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Wrong argument count for struct constructor: 1 arguments given but expected 2.");
+}
+
 BOOST_AUTO_TEST_CASE(function_overload_array_type)
 {
 	char const* text = R"(
