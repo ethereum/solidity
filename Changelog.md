@@ -7,6 +7,7 @@ Features:
 Bugfixes:
  * Parser: Disallow event declarations with no parameter list.
  * Standard JSON: Populate the ``sourceLocation`` field in the error list.
+ * Standard JSON: Properly support file names containing a colon (such as URLs).
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
  * Type Checker: Improve error message for wrong struct initialization.
