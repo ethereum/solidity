@@ -347,6 +347,9 @@ void CompilerContext::appendInlineAssembly(
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
+
+	// Reset the source location to the one of the node (instead of the CODEGEN source location)
+	updateSourceLocation();
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(

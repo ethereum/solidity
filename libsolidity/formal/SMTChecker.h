@@ -75,10 +75,14 @@ private:
 	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
 	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
-	// Visits the branch given by the statement, pushes and pops the SMT checker.
-	// @param _condition if present, asserts that this condition is true within the branch.
-	void visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	void visitBranch(Statement const& _statement, smt::Expression _condition);
+	/// Maps a variable to an SSA index.
+	using VariableSequenceCounters = std::map<Declaration const*, int>;
+
+	/// Visits the branch given by the statement, pushes and pops the current path conditions.
+	/// @param _condition if present, asserts that this condition is true within the branch.
+	/// @returns the variable sequence counter after visiting the branch.
+	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
@@ -106,6 +110,10 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetVariables(std::vector<Declaration const*> _variables);
+	/// Given two different branches and the touched variables,
+	/// merge the touched variables into after-branch ite variables
+	/// using the branch condition as guard.
+	void mergeVariables(std::vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
@@ -133,8 +141,6 @@ private:
 
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
-
-	using VariableSequenceCounters = std::map<Declaration const*, int>;
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
