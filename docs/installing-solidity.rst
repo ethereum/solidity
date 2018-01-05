@@ -28,7 +28,7 @@ download the .ZIP file as explained on that page.
 npm / Node.js
 =============
 
-This is probably the most portable and most convenient way to install Solidity locally.
+We recommend installing with npm, it is the most portable and convenient way to install Solidity.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
 into JavaScript using Emscripten. It can be used in projects directly (such as Remix).
