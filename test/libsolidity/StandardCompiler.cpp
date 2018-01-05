@@ -480,6 +480,41 @@ BOOST_AUTO_TEST_CASE(filename_with_colon)
 	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
 }
 
+BOOST_AUTO_TEST_CASE(library_filename_with_colon)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"evm.bytecode"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "import \"git:library.sol\"; contract A { function f() returns (uint) { return L.g(); } }"
+			},
+			"git:library.sol": {
+				"content": "library L { function g() returns (uint) { return 1; } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"].isArray());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject());
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

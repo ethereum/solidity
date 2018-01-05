@@ -193,7 +193,7 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	for (auto const& ref: linkReferences)
 	{
 		string const& fullname = ref.second;
-		size_t colon = fullname.find(':');
+		size_t colon = fullname.rfind(':');
 		solAssert(colon != string::npos, "");
 		string file = fullname.substr(0, colon);
 		string name = fullname.substr(colon + 1);
