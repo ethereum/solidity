@@ -1,6 +1,7 @@
 ### 0.4.20 (unreleased)
 
 Features:
+ * Commandline interface: Support strict mode of assembly with the ``--strict--assembly`` switch.
  * Limit the number of warnings raised for creating abstract contracts.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
  * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Julia mode.
