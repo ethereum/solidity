@@ -206,11 +206,11 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | byte(n, x)              |     | F | nth byte of x, where the most significant byte is the 0th byte  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| shl(x, y)               |     | C | logical shift left x by y bits                                  |
+| shl(x, y)               |     | C | logical shift left y by x bits                                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| shr(x, y)               |     | C | logical shift right x by y bits                                 |
+| shr(x, y)               |     | C | logical shift right y by x bits                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| sar(x, y)               |     | C | arithmetic shift right x by y bits                              |
+| sar(x, y)               |     | C | arithmetic shift right y by x bits                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetics                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
