@@ -46,6 +46,8 @@ assembly::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
 	{
 	case AssemblyStack::Language::Assembly:
 		return assembly::AsmFlavour::Loose;
+	case AssemblyStack::Language::StrictAssembly:
+		return assembly::AsmFlavour::Strict;
 	case AssemblyStack::Language::JULIA:
 		return assembly::AsmFlavour::IULIA;
 	}
