@@ -70,7 +70,7 @@ protected:
 	assembly::Expression parseExpression();
 	static std::map<std::string, dev::solidity::Instruction> const& instructions();
 	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
-	ElementaryOperation parseElementaryOperation(bool _onlySinglePusher = false);
+	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	assembly::Expression parseCall(ElementaryOperation&& _initialOp);
