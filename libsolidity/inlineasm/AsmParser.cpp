@@ -123,7 +123,7 @@ assembly::Statement Parser::parseStatement()
 	// Simple instruction (might turn into functional),
 	// literal,
 	// identifier (might turn into label or functional assignment)
-	ElementaryOperation elementary(parseElementaryOperation(false));
+	ElementaryOperation elementary(parseElementaryOperation());
 	switch (currentToken())
 	{
 	case Token::LParen:
@@ -145,7 +145,7 @@ assembly::Statement Parser::parseStatement()
 		do
 		{
 			expectToken(Token::Comma);
-			elementary = parseElementaryOperation(false);
+			elementary = parseElementaryOperation();
 			if (elementary.type() != typeid(assembly::Identifier))
 				fatalParserError("Variable name expected in multiple assignemnt.");
 			assignment.variableNames.emplace_back(boost::get<assembly::Identifier>(elementary));
@@ -247,10 +247,11 @@ assembly::ForLoop Parser::parseForLoop()
 assembly::Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
-	ElementaryOperation operation = parseElementaryOperation(true);
+	ElementaryOperation operation = parseElementaryOperation();
 	if (operation.type() == typeid(Instruction))
 	{
 		Instruction const& instr = boost::get<Instruction>(operation);
+		// Enforce functional notation for instructions requiring multiple arguments.
 		int args = instructionInfo(instr.instruction).args;
 		if (args > 0 && currentToken() != Token::LParen)
 			fatalParserError(string(
@@ -260,11 +261,23 @@ assembly::Expression Parser::parseExpression()
 				boost::lexical_cast<string>(args) +
 				" arguments)"
 			));
+		// Disallow instructions returning multiple values (and DUP/SWAP) as expression.
+		if (
+			instructionInfo(instr.instruction).ret != 1 ||
+			isDupInstruction(instr.instruction) ||
+			isSwapInstruction(instr.instruction)
+		)
+			fatalParserError(
+				"Instruction \"" +
+				instructionNames().at(instr.instruction) +
+				"\" not allowed in this context."
+			);
 	}
 	if (currentToken() == Token::LParen)
 		return parseCall(std::move(operation));
 	else if (operation.type() == typeid(Instruction))
 	{
+		// Instructions not taking arguments are allowed as expressions.
 		Instruction& instr = boost::get<Instruction>(operation);
 		return FunctionalInstruction{std::move(instr.location), instr.instruction, {}};
 	}
@@ -317,7 +330,7 @@ std::map<dev::solidity::Instruction, string> const& Parser::instructionNames()
 	return s_instructionNames;
 }
 
-Parser::ElementaryOperation Parser::parseElementaryOperation(bool _onlySinglePusher)
+Parser::ElementaryOperation Parser::parseElementaryOperation()
 {
 	RecursionGuard recursionGuard(*this);
 	ElementaryOperation ret;
@@ -341,12 +354,6 @@ Parser::ElementaryOperation Parser::parseElementaryOperation(bool _onlySinglePus
 		if (!m_julia && instructions().count(literal))
 		{
 			dev::solidity::Instruction const& instr = instructions().at(literal);
-			if (_onlySinglePusher)
-			{
-				InstructionInfo info = dev::solidity::instructionInfo(instr);
-				if (info.ret != 1)
-					fatalParserError("Instruction \"" + literal + "\" not allowed in this context.");
-			}
 			ret = Instruction{location(), instr};
 		}
 		else
