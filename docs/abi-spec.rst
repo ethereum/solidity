@@ -115,7 +115,7 @@ that ``len(enc(X))`` depends on the value of ``X`` if and only if the type of ``
 **Definition:** For any ABI value ``X``, we recursively define ``enc(X)``, depending
 on the type of ``X`` being
 
-- ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
+- ``(T1,...,Tk)`` for ``k >= 1`` and any types ``T1``, ..., ``Tk``
 
   ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
@@ -126,7 +126,7 @@ on the type of ``X`` being
 
   and as
 
-    ``head(X(i)) = enc(len( head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
+    ``head(X(i)) = enc(len(head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
   otherwise, i.e. if ``Ti`` is a dynamic type.
@@ -144,7 +144,7 @@ on the type of ``X`` being
 
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
-  ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
+  ``enc(X) = enc(k) enc([X[0], ..., X[k-1]])``
 
   i.e. it is encoded as if it were an array of static size ``k``, prefixed with
   the number of elements.
