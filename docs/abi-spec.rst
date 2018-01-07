@@ -62,7 +62,7 @@ The following elementary types exist:
 
 The following (fixed-size) array type exists:
 
-- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M > 0``, of the given type.
+- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
 
 The following non-fixed-size types exist:
 
@@ -101,8 +101,8 @@ We distinguish static and dynamic types. Static types are encoded in-place and d
 * ``bytes``
 * ``string``
 * ``T[]`` for any ``T``
-* ``T[k]`` for any dynamic ``T`` and any ``k > 0``
-* ``(T1,...,Tk)`` if any ``Ti`` is dynamic for ``1 <= i <= k``
+* ``T[k]`` for any dynamic ``T`` and any ``k >= 0``
+* ``(T1,...,Tk)`` if ``Ti`` is dynamic for some ``1 <= i <= k``
 
 All other types are called "static".
 
@@ -115,11 +115,11 @@ that ``len(enc(X))`` depends on the value of ``X`` if and only if the type of ``
 **Definition:** For any ABI value ``X``, we recursively define ``enc(X)``, depending
 on the type of ``X`` being
 
-- ``(T1,...,Tk)`` for ``k >= 1`` and any types ``T1``, ..., ``Tk``
+- ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
 
   ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
-  where ``X(i)`` is the ``ith`` component of the value, and
+  where ``X = (X(1), ..., X(k))`` and
   ``head`` and ``tail`` are defined for ``Ti`` being a static type as
 
     ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
@@ -137,7 +137,7 @@ on the type of ``X`` being
 
 - ``T[k]`` for any ``T`` and ``k``:
 
-  ``enc(X) = enc((X[1], ..., X[k]))``
+  ``enc(X) = enc((X[0], ..., X[k-1]))``
 
   i.e. it is encoded as if it were a tuple with ``k`` elements
   of the same type.
