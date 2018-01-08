@@ -254,17 +254,6 @@ assembly::Expression Parser::parseExpression()
 	if (operation.type() == typeid(Instruction))
 	{
 		Instruction const& instr = boost::get<Instruction>(operation);
-		// Enforce functional notation for instructions requiring multiple arguments.
-		int args = instructionInfo(instr.instruction).args;
-		bool requireFunctionalNotation = (args > 0 || m_flavour != AsmFlavour::Loose);
-		if (requireFunctionalNotation && currentToken() != Token::LParen)
-			fatalParserError(string(
-				"Expected token \"(\" (\"" +
-				instructionNames().at(instr.instruction) +
-				"\" expects " +
-				boost::lexical_cast<string>(args) +
-				" arguments)"
-			));
 		// Disallow instructions returning multiple values (and DUP/SWAP) as expression.
 		if (
 			instructionInfo(instr.instruction).ret != 1 ||
@@ -276,6 +265,17 @@ assembly::Expression Parser::parseExpression()
 				instructionNames().at(instr.instruction) +
 				"\" not allowed in this context."
 			);
+		// Enforce functional notation for instructions requiring multiple arguments.
+		int args = instructionInfo(instr.instruction).args;
+		bool requireFunctionalNotation = (args > 0 || m_flavour != AsmFlavour::Loose);
+		if (requireFunctionalNotation && currentToken() != Token::LParen)
+			fatalParserError(string(
+				"Expected token \"(\" (\"" +
+				instructionNames().at(instr.instruction) +
+				"\" expects " +
+				boost::lexical_cast<string>(args) +
+				" arguments)"
+			));
 	}
 	if (currentToken() == Token::LParen)
 		return parseCall(std::move(operation));
