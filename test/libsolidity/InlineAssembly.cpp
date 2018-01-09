@@ -480,11 +480,11 @@ BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
 {
 	BOOST_CHECK(successParse("{ pop(callvalue) }"));
 	BOOST_CHECK(successParse("{ callvalue pop }"));
-	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Instruction \"callvalue\" not allowed in this context");
+	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Non-functional instructions are not allowed in this context.");
 	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
 	SUCCESS_STRICT("{ pop(callvalue()) }");
 	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
-	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Instruction \"callvalue\" not allowed in this context");
+	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Non-functional instructions are not allowed in this context.");
 }
 
 BOOST_AUTO_TEST_CASE(no_labels_in_strict)

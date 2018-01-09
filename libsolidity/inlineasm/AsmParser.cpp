@@ -265,10 +265,13 @@ assembly::Expression Parser::parseExpression()
 				instructionNames().at(instr.instruction) +
 				"\" not allowed in this context."
 			);
+		if (m_flavour != AsmFlavour::Loose && currentToken() != Token::LParen)
+			fatalParserError(
+				"Non-functional instructions are not allowed in this context."
+			);
 		// Enforce functional notation for instructions requiring multiple arguments.
 		int args = instructionInfo(instr.instruction).args;
-		bool requireFunctionalNotation = (args > 0 || m_flavour != AsmFlavour::Loose);
-		if (requireFunctionalNotation && currentToken() != Token::LParen)
+		if (args > 0 && currentToken() != Token::LParen)
 			fatalParserError(string(
 				"Expected token \"(\" (\"" +
 				instructionNames().at(instr.instruction) +
