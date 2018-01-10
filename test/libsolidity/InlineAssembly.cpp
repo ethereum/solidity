@@ -51,10 +51,11 @@ boost::optional<Error> parseAndReturnFirstError(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
+	AssemblyStack::Language _language = AssemblyStack::Language::Assembly,
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack;
+	AssemblyStack stack(_language);
 	bool success = false;
 	try
 	{
@@ -87,22 +88,29 @@ bool successParse(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
+	AssemblyStack::Language _language = AssemblyStack::Language::Assembly,
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _machine);
+	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _language, _machine);
 }
 
-bool successAssemble(string const& _source, bool _allowWarnings = true)
+bool successAssemble(string const& _source, bool _allowWarnings = true, AssemblyStack::Language _language = AssemblyStack::Language::Assembly)
 {
-	return successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM) &&
-		successParse(_source, true, _allowWarnings, AssemblyStack::Machine::EVM15);
+	return
+		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM) &&
+		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM15);
 }
 
-Error expectError(std::string const& _source, bool _assemble, bool _allowWarnings = false)
+Error expectError(
+	std::string const& _source,
+	bool _assemble,
+	bool _allowWarnings = false,
+	AssemblyStack::Language _language = AssemblyStack::Language::Assembly
+)
 {
 
-	auto error = parseAndReturnFirstError(_source, _assemble, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _assemble, _allowWarnings, _language);
 	BOOST_REQUIRE(error);
 	return *error;
 }
@@ -120,13 +128,16 @@ void parsePrintCompare(string const& _source, bool _canWarn = false)
 
 }
 
-#define CHECK_ERROR(text, assemble, typ, substring, warnings) \
+#define CHECK_ERROR_LANG(text, assemble, typ, substring, warnings, language) \
 do \
 { \
-	Error err = expectError((text), (assemble), warnings); \
+	Error err = expectError((text), (assemble), warnings, (language)); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
+
+#define CHECK_ERROR(text, assemble, typ, substring, warnings) \
+CHECK_ERROR_LANG(text, assemble, typ, substring, warnings, AssemblyStack::Language::Assembly)
 
 #define CHECK_PARSE_ERROR(text, type, substring) \
 CHECK_ERROR(text, false, type, substring, false)
@@ -137,6 +148,14 @@ CHECK_ERROR(text, false, type, substring, false)
 #define CHECK_ASSEMBLE_ERROR(text, type, substring) \
 CHECK_ERROR(text, true, type, substring, false)
 
+#define CHECK_STRICT_ERROR(text, type, substring) \
+CHECK_ERROR_LANG(text, false, type, substring, false, AssemblyStack::Language::StrictAssembly)
+
+#define CHECK_STRICT_WARNING(text, type, substring) \
+CHECK_ERROR(text, false, type, substring, false, AssemblyStack::Language::StrictAssembly)
+
+#define SUCCESS_STRICT(text) \
+do { successParse((text), false, false, AssemblyStack::Language::StrictAssembly); } while (false)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
@@ -451,6 +470,47 @@ BOOST_AUTO_TEST_CASE(multiple_assignment)
 	}
 	)";
 	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(LooseStrictMode)
+
+BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
+{
+	BOOST_CHECK(successParse("{ pop(callvalue) }"));
+	BOOST_CHECK(successParse("{ callvalue pop }"));
+	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Non-functional instructions are not allowed in this context.");
+	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
+	SUCCESS_STRICT("{ pop(callvalue()) }");
+	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
+	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Non-functional instructions are not allowed in this context.");
+}
+
+BOOST_AUTO_TEST_CASE(no_labels_in_strict)
+{
+	BOOST_CHECK(successParse("{ a: }"));
+	CHECK_STRICT_ERROR("{ a: }", ParserError, "Labels are not supported");
+}
+
+BOOST_AUTO_TEST_CASE(no_stack_assign_in_strict)
+{
+	BOOST_CHECK(successParse("{ let x 4 =: x }"));
+	CHECK_STRICT_ERROR("{ let x 4 =: x }", ParserError, "Call or assignment expected.");
+}
+
+BOOST_AUTO_TEST_CASE(no_dup_swap_in_strict)
+{
+	BOOST_CHECK(successParse("{ swap1 }"));
+	CHECK_STRICT_ERROR("{ swap1 }", ParserError, "Call or assignment expected.");
+	BOOST_CHECK(successParse("{ dup1 pop }"));
+	CHECK_STRICT_ERROR("{ dup1 pop }", ParserError, "Call or assignment expected.");
+	BOOST_CHECK(successParse("{ swap2 }"));
+	CHECK_STRICT_ERROR("{ swap2 }", ParserError, "Call or assignment expected.");
+	BOOST_CHECK(successParse("{ dup2 pop }"));
+	CHECK_STRICT_ERROR("{ dup2 pop }", ParserError, "Call or assignment expected.");
+	CHECK_PARSE_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
+	CHECK_STRICT_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

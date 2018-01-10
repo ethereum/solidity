@@ -52,15 +52,16 @@ void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _sca
 
 pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test::parse(string const& _source, bool _julia)
 {
+	auto flavour = _julia ? assembly::AsmFlavour::IULIA : assembly::AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, _julia).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
 		auto analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, _julia);
+		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, flavour);
 		if (analyzer.analyze(*parserResult))
 		{
 			BOOST_REQUIRE(errorReporter.errors().empty());
