@@ -126,4 +126,13 @@ BOOST_AUTO_TEST_CASE(reassignment)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(do_not_move_out_of_scope)
+{
+	// Cannot replace by `let b := x` by `let b := a` since a is out of scope.
+	CHECK(
+		"{ let x { let a := sload(0) x := a } let b := x }",
+		"{ let x { let a := sload(0) x := a } let b := x }"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

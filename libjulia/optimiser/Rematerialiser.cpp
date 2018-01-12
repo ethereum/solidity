@@ -29,6 +29,8 @@
 
 #include <libdevcore/CommonData.h>
 
+#include <boost/range/adaptor/reversed.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::julia;
@@ -46,6 +48,7 @@ void Rematerialiser::operator()(VariableDeclaration& _varDecl)
 	set<string> names;
 	for (auto const& var: _varDecl.variables)
 		names.insert(var.name);
+	m_variableScopes.back().first += names;
 	handleAssignment(names, _varDecl.value.get());
 }
 
@@ -74,9 +77,23 @@ void Rematerialiser::operator()(Switch& _switch)
 	handleAssignment(assignedVariables, nullptr);
 }
 
+void Rematerialiser::operator()(FunctionDefinition& _fun)
+{
+	m_variableScopes.push_back(make_pair(set<string>(), true));
+	for (auto const& parameter: _fun.parameters)
+		m_variableScopes.back().first.insert(parameter.name);
+	for (auto const& var: _fun.returnVariables)
+		m_variableScopes.back().first.insert(var.name);
+	ASTModifier::operator()(_fun);
+	m_variableScopes.pop_back();
+}
+
 void Rematerialiser::operator()(ForLoop& _for)
 {
-	(*this)(_for.pre);
+	// Special scope handling of the pre block.
+	m_variableScopes.push_back(make_pair(set<string>(), false));
+	for (auto& statement: _for.pre.statements)
+		visit(statement);
 
 	Assignments ass;
 	ass(_for.body);
@@ -88,6 +105,17 @@ void Rematerialiser::operator()(ForLoop& _for)
 	(*this)(_for.post);
 
 	handleAssignment(ass.names(), nullptr);
+
+	m_variableScopes.pop_back();
+}
+
+void Rematerialiser::operator()(Block& _block)
+{
+	size_t numScopes = m_variableScopes.size();
+	m_variableScopes.push_back(make_pair(set<string>(), false));
+	ASTModifier::operator()(_block);
+	m_variableScopes.pop_back();
+	solAssert(numScopes == m_variableScopes.size(), "");
 }
 
 void Rematerialiser::handleAssignment(set<string> const& _variables, Expression* _value)
@@ -128,6 +156,18 @@ void Rematerialiser::handleAssignment(set<string> const& _variables, Expression*
 	}
 }
 
+bool Rematerialiser::inScope(string const& _variableName) const
+{
+	for (auto const& scope: m_variableScopes | boost::adaptors::reversed)
+	{
+		if (scope.first.count(_variableName))
+			return true;
+		if (scope.second)
+			return false;
+	}
+	return false;
+}
+
 void Rematerialiser::visit(Expression& _e)
 {
 	if (_e.type() == typeid(Identifier))
@@ -136,7 +176,15 @@ void Rematerialiser::visit(Expression& _e)
 		if (m_substitutions.count(identifier.name))
 		{
 			string name = identifier.name;
-			_e = (ASTCopier{}).translate(*m_substitutions.at(name));
+			bool doSubstitute = true;
+			for (auto const& ref: m_references[name])
+				if (!inScope(ref))
+				{
+					doSubstitute = false;
+					break;
+				}
+			if (doSubstitute)
+				_e = (ASTCopier{}).translate(*m_substitutions.at(name));
 		}
 	}
 	ASTModifier::visit(_e);
