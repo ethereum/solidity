@@ -24,6 +24,7 @@
 #include <libsolidity/inlineasm/AsmScopeFiller.h>
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libsolidity/inlineasm/AsmPrinter.h>
 
 #include <libsolidity/interface/ErrorReporter.h>
 
@@ -48,6 +49,11 @@ bool AsmAnalyzer::analyze(Block const& _block)
 {
 	if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 		return false;
+
+	AsmPrinter p;
+	cout << "Starting analisis for ----------------------------" << endl;
+	cout << p(_block) << endl;
+	cout << " ----------------------------" << endl;
 
 	return (*this)(_block);
 }
@@ -82,6 +88,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	++m_stackHeight;
 	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
 	{
+		cout << "Analylysis error: string lit" << endl;
 		m_errorReporter.typeError(
 			_literal.location,
 			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
@@ -118,6 +125,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 					_identifier.location,
 					"Variable " + _identifier.name + " used before it was declared."
 				);
+								   cout << "Analylysis error: var" << endl;
 				success = false;
 			}
 			++m_stackHeight;
@@ -132,6 +140,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 				_identifier.location,
 				"Function " + _identifier.name + " used without being called."
 			);
+								   cout << "Analylysis error: fun" << endl;
 			success = false;
 		}
 	)))
@@ -150,6 +159,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 			// Only add an error message if the callback did not do it.
 			if (numErrorsBefore == m_errorReporter.errors().size())
 				m_errorReporter.declarationError(_identifier.location, "Identifier not found.");
+			cout << "Analylysis error: id " << _identifier.name << " not" << endl;
 			success = false;
 		}
 		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
@@ -164,7 +174,10 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
+		{
+			cout << "Analylysis error: expr" << endl;
 			success = false;
+		}
 	// Parser already checks that the number of arguments is correct.
 	auto const& info = instructionInfo(_instr.instruction);
 	solAssert(info.args == int(_instr.arguments.size()), "");
@@ -242,6 +255,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 		if ((m_stackHeight - stackHeight) != numVariables)
 		{
 			m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
+			cout << "Analylysis error: var cont" << endl;
 			return false;
 		}
 	}
@@ -290,6 +304,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 				_funCall.functionName.location,
 				"Attempt to call variable instead of function."
 			);
+									cout << "Analylysis error: varc" << endl;
+
 			success = false;
 		},
 		[&](Scope::Label const&)
@@ -298,6 +314,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 				_funCall.functionName.location,
 				"Attempt to call label instead of function."
 			);
+									cout << "Analylysis error: label" << endl;
+
 			success = false;
 		},
 		[&](Scope::Function const& _fun)
@@ -309,6 +327,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 	)))
 	{
 		m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
+		cout << "Analylysis error: funfound" << endl;
+
 		success = false;
 	}
 	if (success)
@@ -320,12 +340,18 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 				"Expected " + boost::lexical_cast<string>(arguments) + " arguments but got " +
 				boost::lexical_cast<string>(_funCall.arguments.size()) + "."
 			);
+			cout << "Analylysis error: arg78" << endl;
+
 			success = false;
 		}
 	}
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
+		{
+			cout << "Analylysis error: expr" << endl;
+
 			success = false;
+		}
 	m_stackHeight += int(returns) - int(arguments);
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
@@ -375,6 +401,8 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 					_case.location,
 					"Duplicate case defined"
 				);
+				cout << "Analylysis error: 2 case" << endl;
+
 				success = false;
 			}
 		}
@@ -442,6 +470,8 @@ bool AsmAnalyzer::operator()(Block const& _block)
 				to_string(-stackDiff) + string(" missing item(s).")
 			)
 		);
+		cout << "Analylysis error: stack" << endl;
+
 		success = false;
 	}
 
@@ -471,6 +501,8 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
 			" items."
 		);
+		cout << "Analylysis error: deposit" << endl;
+
 		return false;
 	}
 	return true;
@@ -487,6 +519,8 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		if (var->type() != typeid(Scope::Variable))
 		{
 			m_errorReporter.typeError(_variable.location, "Assignment requires variable.");
+			cout << "Analylysis error: novar" << endl;
+
 			success = false;
 		}
 		else if (!m_activeVariables.count(&boost::get<Scope::Variable>(*var)))
@@ -495,6 +529,8 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 				_variable.location,
 				"Variable " + _variable.name + " used before it was declared."
 			);
+			cout << "Analylysis error: var used" << endl;
+
 			success = false;
 		}
 		variableSize = 1;
@@ -509,6 +545,8 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		// Only add message if the callback did not.
 		if (numErrorsBefore == m_errorReporter.errors().size())
 			m_errorReporter.declarationError(_variable.location, "Variable not found or variable not lvalue.");
+		cout << "Analylysis error: nolval" << endl;
+
 		success = false;
 	}
 	if (_valueSize == size_t(-1))
@@ -526,6 +564,8 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 			to_string(_valueSize) +
 			") do not match."
 		);
+		cout << "Analylysis error: size mismatch" << endl;
+
 		success = false;
 	}
 	return success;

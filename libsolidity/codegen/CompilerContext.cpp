@@ -39,6 +39,7 @@
 #include <numeric>
 
 // Change to "define" to output all intermediate code
+#undef SOL_OUTPUT_ASM
 #define SOL_OUTPUT_ASM
 #ifdef SOL_OUTPUT_ASM
 #include <libsolidity/inlineasm/AsmPrinter.h>
