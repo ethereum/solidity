@@ -704,6 +704,12 @@ Contract and Library Names
 Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``.
 
 
+Struct Names
+==========================
+
+Structs should be named using the CapWords style. Examples: ``MyCoin``, ``Position``, ``PositionXY``.
+
+
 Event Names
 ===========
 
