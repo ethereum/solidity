@@ -433,14 +433,14 @@ What happens to a ``struct``'s mapping when copying over a ``struct``?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user {
+    struct User {
         mapping(string => string) comments;
     }
 
     function somefunction public {
-       user user1;
+       User user1;
        user1.comments["Hello"] = "World";
-       user user2 = user1;
+       User user2 = user1;
     }
 
 In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
