@@ -33,18 +33,17 @@ namespace julia
 
 /**
  * Specific AST copier that replaces certain identifiers with expressions.
- * Only works on ASTs that are expressions.
  */
 class Substitution: public ASTCopier
 {
 public:
-	Substitution(std::map<std::string, Statement const*> const& _substitutions):
+	Substitution(std::map<std::string, Expression const*> const& _substitutions):
 		m_substitutions(_substitutions)
 	{}
-	virtual Statement translate(Statement const& _statement) override;
+	virtual Expression translate(Expression const& _expression) override;
 
 private:
-	std::map<std::string, Statement const*> const& m_substitutions;
+	std::map<std::string, Expression const*> const& m_substitutions;
 };
 
 }

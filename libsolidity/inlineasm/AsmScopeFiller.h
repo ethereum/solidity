@@ -53,6 +53,7 @@ public:
 	bool operator()(assembly::Literal const&) { return true; }
 	bool operator()(assembly::Identifier const&) { return true; }
 	bool operator()(assembly::FunctionalInstruction const&) { return true; }
+	bool operator()(assembly::ExpressionStatement const& _expr);
 	bool operator()(assembly::Label const& _label);
 	bool operator()(assembly::StackAssignment const&) { return true; }
 	bool operator()(assembly::Assignment const&) { return true; }

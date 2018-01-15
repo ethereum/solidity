@@ -873,7 +873,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	assembly::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		false,
+		assembly::AsmFlavour::Loose,
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
@@ -1551,8 +1551,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
+		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+
 		string msg =
-			"Wrong argument count for function call: " +
+			"Wrong argument count for " +
+			string(isStructConstructorCall ? "struct constructor" : "function call") +
+			": " +
 			toString(arguments.size()) +
 			" arguments given but expected " +
 			toString(parameterTypes.size()) +

@@ -45,6 +45,11 @@ ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 	m_currentScope = &scope(nullptr);
 }
 
+bool ScopeFiller::operator()(ExpressionStatement const& _expr)
+{
+	return boost::apply_visitor(*this, _expr.expression);
+}
+
 bool ScopeFiller::operator()(Label const& _item)
 {
 	if (!m_currentScope->registerLabel(_item.name))

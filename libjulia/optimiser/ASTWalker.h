@@ -47,6 +47,7 @@ public:
 	virtual void operator()(Identifier const&) {}
 	virtual void operator()(FunctionalInstruction const& _instr);
 	virtual void operator()(FunctionCall const& _funCall);
+	virtual void operator()(ExpressionStatement const& _statement);
 	virtual void operator()(Label const&) { solAssert(false, ""); }
 	virtual void operator()(StackAssignment const&) { solAssert(false, ""); }
 	virtual void operator()(Assignment const& _assignment);
@@ -77,6 +78,7 @@ public:
 	virtual void operator()(Identifier&) {}
 	virtual void operator()(FunctionalInstruction& _instr);
 	virtual void operator()(FunctionCall& _funCall);
+	virtual void operator()(ExpressionStatement& _statement);
 	virtual void operator()(Label&) { solAssert(false, ""); }
 	virtual void operator()(StackAssignment&) { solAssert(false, ""); }
 	virtual void operator()(Assignment& _assignment);
@@ -97,6 +99,10 @@ protected:
 	virtual void visit(Statement& _st)
 	{
 		boost::apply_visitor(*this, _st);
+	}
+	virtual void visit(Expression& _e)
+	{
+		boost::apply_visitor(*this, _e);
 	}
 };
 
