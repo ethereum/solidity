@@ -14,6 +14,7 @@ Bugfixes:
  * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).
  * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
    (instead of an internal compiler error).
+ * Type Checker: Limit the size of the exponent in scientific notation of number literals. Limit: 1250.
  * Type Checker: Improve error message for wrong struct initialization.
 
 ### 0.4.19 (2017-11-30)
