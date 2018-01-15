@@ -21,13 +21,20 @@
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */
 
+#include <test/libsolidity/SolidityExecutionFramework.h>
+
+#include <test/TestHelper.h>
+
+#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/EVMVersion.h>
+
+#include <libevmasm/Assembly.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include <functional>
 #include <string>
 #include <tuple>
-#include <boost/test/unit_test.hpp>
-#include <libevmasm/Assembly.h>
-#include <libsolidity/interface/Exceptions.h>
-#include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -10776,6 +10783,51 @@ BOOST_AUTO_TEST_CASE(snark)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("pair()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
+{
+	char const* sourceCode = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			uint x;
+			function f() public returns (uint) {
+				x = 3;
+				return 1;
+			}
+		}
+		interface CView {
+			function f() view external returns (uint);
+		}
+		interface CPure {
+			function f() pure external returns (uint);
+		}
+		contract D {
+			function f() public returns (uint) {
+				return (new C()).f();
+			}
+			function fview() public returns (uint) {
+				return (CView(new C())).f();
+			}
+			function fpure() public returns (uint) {
+				return (CPure(new C())).f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	// This should work (called via CALL)
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		// These should throw (called via STATICCALL)
+		ABI_CHECK(callContractFunction("fview()"), encodeArgs());
+		ABI_CHECK(callContractFunction("fpure()"), encodeArgs());
+	}
+	else
+	{
+		ABI_CHECK(callContractFunction("fview()"), encodeArgs(1));
+		ABI_CHECK(callContractFunction("fpure()"), encodeArgs(1));
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
