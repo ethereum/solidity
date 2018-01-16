@@ -153,6 +153,31 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	}
 }
 
+bool SemanticInformation::movable(Instruction _instruction)
+{
+	// These are not really functional.
+	if (isDupInstruction(_instruction) || isSwapInstruction(_instruction))
+		return false;
+	InstructionInfo info = instructionInfo(_instruction);
+	if (info.sideEffects)
+		return false;
+	switch (_instruction)
+	{
+	case Instruction::KECCAK256:
+	case Instruction::BALANCE:
+	case Instruction::EXTCODESIZE:
+	case Instruction::RETURNDATASIZE:
+	case Instruction::SLOAD:
+	case Instruction::PC:
+	case Instruction::MSIZE:
+	case Instruction::GAS:
+		return false;
+	default:
+		return true;
+	}
+	return true;
+}
+
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 {
 	switch (_instruction)

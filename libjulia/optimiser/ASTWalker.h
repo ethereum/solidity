@@ -58,12 +58,21 @@ public:
 	virtual void operator()(ForLoop const&);
 	virtual void operator()(Block const& _block);
 
+	virtual void visit(Statement const& _st)
+	{
+		boost::apply_visitor(*this, _st);
+	}
+	virtual void visit(Expression const& _e)
+	{
+		boost::apply_visitor(*this, _e);
+	}
+
 protected:
 	template <class T>
 	void walkVector(T const& _statements)
 	{
 		for (auto const& st: _statements)
-			boost::apply_visitor(*this, st);
+			visit(st);
 	}
 };
 
@@ -89,13 +98,6 @@ public:
 	virtual void operator()(ForLoop&);
 	virtual void operator()(Block& _block);
 
-protected:
-	template <class T>
-	void walkVector(T&& _statements)
-	{
-		for (auto& st: _statements)
-			visit(st);
-	}
 	virtual void visit(Statement& _st)
 	{
 		boost::apply_visitor(*this, _st);
@@ -103,6 +105,14 @@ protected:
 	virtual void visit(Expression& _e)
 	{
 		boost::apply_visitor(*this, _e);
+	}
+
+protected:
+	template <class T>
+	void walkVector(T&& _statements)
+	{
+		for (auto& st: _statements)
+			visit(st);
 	}
 };
 

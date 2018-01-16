@@ -44,31 +44,31 @@ void ASTWalker::operator()(FunctionCall const& _funCall)
 
 void ASTWalker::operator()(ExpressionStatement const& _statement)
 {
-	boost::apply_visitor(*this, _statement.expression);
+	visit(_statement.expression);
 }
 
 void ASTWalker::operator()(Assignment const& _assignment)
 {
 	for (auto const& name: _assignment.variableNames)
 		(*this)(name);
-	boost::apply_visitor(*this, *_assignment.value);
+	visit(*_assignment.value);
 }
 
 void ASTWalker::operator()(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.value)
-		boost::apply_visitor(*this, *_varDecl.value);
+		visit(*_varDecl.value);
 }
 
 void ASTWalker::operator()(If const& _if)
 {
-	boost::apply_visitor(*this, *_if.condition);
+	visit(*_if.condition);
 	(*this)(_if.body);
 }
 
 void ASTWalker::operator()(Switch const& _switch)
 {
-	boost::apply_visitor(*this, *_switch.expression);
+	visit(*_switch.expression);
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -85,7 +85,7 @@ void ASTWalker::operator()(FunctionDefinition const& _fun)
 void ASTWalker::operator()(ForLoop const& _for)
 {
 	(*this)(_for.pre);
-	boost::apply_visitor(*this, *_for.condition);
+	visit(*_for.condition);
 	(*this)(_for.post);
 	(*this)(_for.body);
 }
@@ -107,7 +107,7 @@ void ASTModifier::operator()(FunctionCall& _funCall)
 
 void ASTModifier::operator()(ExpressionStatement& _statement)
 {
-	boost::apply_visitor(*this, _statement.expression);
+	visit(_statement.expression);
 }
 
 void ASTModifier::operator()(Assignment& _assignment)
