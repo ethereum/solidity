@@ -1,0 +1,68 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <libsolidity/formal/SolverInterface.h>
+
+#include <libsolidity/ast/AST.h>
+
+#include <memory>
+
+namespace dev
+{
+namespace solidity
+{
+
+class Declaration;
+
+/**
+ * This class represents the symbolic version of a program variable.
+ */
+class SymbolicVariable
+{
+public:
+	explicit SymbolicVariable(Declaration const* _decl,
+		smt::SolverInterface& _interface);
+	SymbolicVariable(SymbolicVariable const&) = default;
+	SymbolicVariable(SymbolicVariable&&) = default;
+	SymbolicVariable& operator=(SymbolicVariable const&) = default;
+	SymbolicVariable& operator=(SymbolicVariable&&) = default;
+
+	smt::Expression operator()(int _seq) const
+	{
+		return valueAtSequence(_seq);
+	}
+
+	std::string uniqueSymbol() const;
+
+	virtual void setZeroValue(int _seq) = 0;
+	virtual void setUnknownValue(int _seq) = 0;
+
+protected:
+	smt::Expression valueAtSequence(int _seq) const
+	{
+		return (*m_expression)(_seq);
+	}
+
+	Declaration const* m_declaration;
+	std::shared_ptr<smt::Expression> m_expression = nullptr;
+	smt::SolverInterface& m_interface;
+};
+
+}
+}
