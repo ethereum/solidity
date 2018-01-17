@@ -53,7 +53,7 @@ protected:
 		BOTH_ENCODERS(
 			compileAndRun(sourceCode);
 			bytecodeSize[run] = m_output.size();
-			callContractFunction(_funToCall));
+			callContractFunction(_funToCall);
 			runGas[run] = m_gasUsed;
 			run++;
 		)
