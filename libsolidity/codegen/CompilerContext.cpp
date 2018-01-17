@@ -313,6 +313,7 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 void CompilerContext::appendInlineAssembly(
 	string const& _assembly,
 	vector<string> const& _localVariables,
+	set<string> const&,
 	bool _system
 )
 {

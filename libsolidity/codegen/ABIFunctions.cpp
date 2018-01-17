@@ -49,7 +49,7 @@ string ABIFunctions::tupleEncoder(
 	if (_encodeAsLibraryTypes)
 		functionName += "_library";
 
-	return createFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [&]() {
 		solAssert(!_givenTypes.empty(), "");
 
 		// Note that the values are in reverse due to the difference in calling semantics.
@@ -113,7 +113,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 	solAssert(!_types.empty(), "");
 
-	return createFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
@@ -176,13 +176,13 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	});
 }
 
-string ABIFunctions::requestedFunctions()
+pair<string, set<string>> ABIFunctions::requestedFunctions()
 {
 	string result;
 	for (auto const& f: m_requestedFunctions)
 		result += f.second;
 	m_requestedFunctions.clear();
-	return result;
+	return make_pair(result, std::move(m_externallyUsedFunctions));
 }
 
 string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
@@ -1695,6 +1695,13 @@ string ABIFunctions::createFunction(string const& _name, function<string ()> con
 		m_requestedFunctions[_name] = fun;
 	}
 	return _name;
+}
+
+string ABIFunctions::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
+{
+	string name = createFunction(_name, _creator);
+	m_externallyUsedFunctions.insert(name);
+	return name;
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
