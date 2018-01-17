@@ -137,6 +137,9 @@ private:
 
 	std::string newName(std::string const& _prefix);
 
+	/// @returns an expression returning nothing.
+	Expression noop(SourceLocation const& _location);
+
 	/// List of statements that should go in front of the currently visited AST element,
 	/// at the statement level.
 	std::vector<Statement> m_statementsToPrefix;

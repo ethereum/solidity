@@ -119,7 +119,7 @@ void InlineModifier::visit(Expression& _expression)
 	// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
 	bool doInline = funCall.functionName.name != m_currentFunction;
 
-	if (fun.returnVariables.size() != 1)
+	if (fun.returnVariables.size() > 1)
 		doInline = false;
 
 	{
@@ -137,18 +137,23 @@ void InlineModifier::visit(Expression& _expression)
 		return;
 
 	map<string, string> variableReplacements;
-	string returnVariable = fun.returnVariables[0].name;
 	for (size_t i = 0; i < funCall.arguments.size(); ++i)
 		variableReplacements[fun.parameters[i].name] = boost::get<Identifier>(funCall.arguments[i]).name;
-	variableReplacements[returnVariable] = newName(fun.name + "_" + returnVariable);
+	if (fun.returnVariables.empty())
+		_expression = noop(funCall.location);
+	else
+	{
+		string returnVariable = fun.returnVariables[0].name;
+		variableReplacements[returnVariable] = newName(fun.name + "_" + returnVariable);
 
-	m_statementsToPrefix.emplace_back(VariableDeclaration{
-		funCall.location,
-		{{funCall.location, variableReplacements[returnVariable], fun.returnVariables[0].type}},
-		{}
-	});
+		m_statementsToPrefix.emplace_back(VariableDeclaration{
+			funCall.location,
+			{{funCall.location, variableReplacements[returnVariable], fun.returnVariables[0].type}},
+			{}
+		});
+		_expression = Identifier{funCall.location, variableReplacements[returnVariable]};
+	}
 	m_statementsToPrefix.emplace_back(BodyCopier(m_nameDispenser, fun.name + "_", variableReplacements)(fun.body));
-	_expression = Identifier{funCall.location, variableReplacements[returnVariable]};
 }
 
 void InlineModifier::visitArguments(
@@ -200,6 +205,13 @@ vector<Statement> InlineModifier::visitRecursively(Expression& _expression)
 string InlineModifier::newName(string const& _prefix)
 {
 	return m_nameDispenser.newName(_prefix);
+}
+
+Expression InlineModifier::noop(SourceLocation const& _location)
+{
+	return FunctionalInstruction{_location, solidity::Instruction::POP, {
+		Literal{_location, assembly::LiteralKind::Number, "0", ""}
+	}};
 }
 
 Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
