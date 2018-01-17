@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <functional>
+#include <set>
 #include <map>
 
 namespace dev {
@@ -80,8 +81,11 @@ public:
 	/// stack slot, it takes exactly that number of values.
 	std::string tupleDecoder(TypePointers const& _types, bool _fromMemory = false);
 
-	/// @returns concatenation of all generated functions.
-	std::string requestedFunctions();
+	/// @returns concatenation of all generated functions and a set of the
+	/// externally used functions.
+	/// Clears the internal list, i.e. calling it again will result in an
+	/// empty return value.
+	std::pair<std::string, std::set<std::string>> requestedFunctions();
 
 private:
 	/// @returns the name of the cleanup function for the given type and
@@ -224,12 +228,17 @@ private:
 	/// cases.
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
+	/// Helper function that uses @a _creator to create a function and add it to
+	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
+	/// cases. Also adds it to the list of externally used functions.
+	std::string createExternallyUsedFunction(std::string const& _name, std::function<std::string()> const& _creator);
+
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
 
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;
-
+	std::set<std::string> m_externallyUsedFunctions;
 	EVMVersion m_evmVersion;
 };
 

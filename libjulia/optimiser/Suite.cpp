@@ -38,7 +38,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 
-void OptimiserSuite::run(Block& _ast, solidity::assembly::AsmAnalysisInfo const& _analysisInfo)
+void OptimiserSuite::run(
+	Block& _ast,
+	solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+	set<string> const& _externallyUsedFunctions
+)
 {
 	solidity::assembly::AsmPrinter p;
 
@@ -69,7 +73,7 @@ void OptimiserSuite::run(Block& _ast, solidity::assembly::AsmAnalysisInfo const&
 		Rematerialiser{}(ast);
 		cout << "----------------------------------------------" << endl;
 		cout << p(ast) << endl;
-		UnusedPruner::runUntilStabilised(ast);
+		UnusedPruner::runUntilStabilised(ast, _externallyUsedFunctions);
 		cout << "----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		cout << "loooooooooooooooooooooooooooooooooooooooooooooop" << endl;
