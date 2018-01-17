@@ -38,7 +38,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-pair<Pattern, function<Pattern()> > const* Rules::findFirstMatch(
+tuple<Pattern, function<Pattern()>, bool> const* Rules::findFirstMatch(
 	Expression const& _expr,
 	ExpressionClasses const& _classes
 )
@@ -48,22 +48,22 @@ pair<Pattern, function<Pattern()> > const* Rules::findFirstMatch(
 	assertThrow(_expr.item, OptimizerException, "");
 	for (auto const& rule: m_rules[byte(_expr.item->instruction())])
 	{
-		if (rule.first.matches(_expr, _classes))
+		if (std::get<0>(rule).matches(_expr, _classes))
 			return &rule;
 		resetMatchGroups();
 	}
 	return nullptr;
 }
 
-void Rules::addRules(std::vector<std::pair<Pattern, std::function<Pattern ()> > > const& _rules)
+void Rules::addRules(std::vector<std::tuple<Pattern, std::function<Pattern ()>, bool>> const& _rules)
 {
 	for (auto const& r: _rules)
 		addRule(r);
 }
 
-void Rules::addRule(std::pair<Pattern, std::function<Pattern()> > const& _rule)
+void Rules::addRule(std::tuple<Pattern, std::function<Pattern()>, bool> const& _rule)
 {
-	m_rules[byte(_rule.first.instruction())].push_back(_rule);
+	m_rules[byte(std::get<0>(_rule).instruction())].push_back(_rule);
 }
 
 Rules::Rules()
