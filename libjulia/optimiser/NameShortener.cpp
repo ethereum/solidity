@@ -31,12 +31,16 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 
-NameShortener::NameShortener(Block const& _ast, size_t _maxSize)
+NameShortener::NameShortener(
+	Block const& _ast,
+	set<string> const& _externallyUsedFunctions,
+	size_t _maxSize
+)
 {
 	set<string> names = NameCollector(_ast).names();
 	for (auto const& name: names)
 	{
-		if (name.size() <= _maxSize)
+		if (name.size() <= _maxSize || _externallyUsedFunctions.count(name))
 			m_translations[name] = name;
 		else
 		{

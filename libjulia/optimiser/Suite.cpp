@@ -48,7 +48,7 @@ void OptimiserSuite::run(
 
 	Block ast = boost::get<Block>(Disambiguator(_analysisInfo)(_ast));
 
-	NameShortener shortener(ast, 10);
+	NameShortener shortener(ast, _externallyUsedFunctions, 10);
 	ast = boost::get<Block>(shortener(ast));
 
 	(FunctionHoister{})(ast);

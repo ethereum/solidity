@@ -42,7 +42,11 @@ namespace julia
 class NameShortener: public ASTCopier
 {
 public:
-	explicit NameShortener(Block const& _ast, size_t _maxSize = 0);
+	explicit NameShortener(
+		Block const& _ast,
+		std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>(),
+		size_t _maxSize = 0
+	);
 
 protected:
 	virtual std::string translateIdentifier(std::string const& _name) override;
