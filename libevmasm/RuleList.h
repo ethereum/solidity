@@ -43,6 +43,11 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(bigint(_a) % bigint(_b));
 }
 
+// TODO: Add a parameter that will cause rules with swapped arguments
+// to be added explicitly. This is needed by the new optimizer, but not
+// by the old. The new optimizer requires that the order of arbitrary
+// expressions is not altered.
+
 /// @returns a list of simplification rules given certain match placeholders.
 /// A, B and C should represent constants, X and Y arbitrary expressions.
 /// The third element in the tuple is a boolean flag that indicates whether
