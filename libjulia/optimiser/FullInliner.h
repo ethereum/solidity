@@ -116,6 +116,7 @@ public:
 
 	using ASTModifier::visit;
 	virtual void visit(Expression& _expression) override;
+	virtual void visit(Statement& _st) override;
 
 private:
 

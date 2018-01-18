@@ -156,6 +156,25 @@ void InlineModifier::visit(Expression& _expression)
 	m_statementsToPrefix.emplace_back(BodyCopier(m_nameDispenser, fun.name + "_", variableReplacements)(fun.body));
 }
 
+void InlineModifier::visit(Statement& _statement)
+{
+	ASTModifier::visit(_statement);
+	// Replace pop(0) expression statemets by empty blocks.
+	if (_statement.type() == typeid(ExpressionStatement))
+	{
+		ExpressionStatement& expSt = boost::get<ExpressionStatement&>(_statement);
+		if (expSt.expression.type() == typeid(FunctionalInstruction))
+		{
+			FunctionalInstruction& funInstr = boost::get<FunctionalInstruction&>(expSt.expression);
+			if (funInstr.instruction == solidity::Instruction::POP)
+			{
+				if (funInstr.arguments.at(0).type() == typeid(Literal))
+					_statement = Block{expSt.location, {}};
+			}
+		}
+	}
+}
+
 void InlineModifier::visitArguments(
 	vector<Expression>& _arguments,
 	vector<string> const& _nameHints,
