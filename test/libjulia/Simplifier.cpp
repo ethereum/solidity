@@ -63,4 +63,44 @@ BOOST_AUTO_TEST_CASE(constants)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(invariant)
+{
+	CHECK(
+		"{ let a := mload(sub(7, 7)) let b := sub(a, 0) }",
+		"{ let a := mload(0) let b := a }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(reversed)
+{
+	CHECK(
+		"{ let a := add(0, mload(0)) }",
+		"{ let a := mload(0) }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(constant_propagation)
+{
+	CHECK(
+		"{ let a := add(7, sub(mload(0), 7)) }",
+		"{ let a := mload(0) }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(including_function_calls)
+{
+	CHECK(
+		"{ function f() -> a {} let b := add(7, sub(f(), 7)) }",
+		"{ function f() -> a {} let b := f() }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inside_for)
+{
+	CHECK(
+		"{ for { let a := 10 } iszero(eq(a, 0)) { a := add(a, 1) } {} }",
+		"{ for { let a := 10 } iszero(iszero(a)) { a := add(a, 1) } {} }"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
