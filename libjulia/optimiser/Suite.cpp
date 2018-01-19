@@ -28,6 +28,7 @@
 #include <libjulia/optimiser/Rematerialiser.h>
 #include <libjulia/optimiser/UnusedPruner.h>
 #include <libjulia/optimiser/NameShortener.h>
+#include <libjulia/optimiser/ExpressionSimplifier.h>
 
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
@@ -59,6 +60,9 @@ void OptimiserSuite::run(
 	for (size_t i = 0; i < 10; i++)
 	{
 		Rematerialiser{}(ast);
+		cout << "----------------------------------------------" << endl;
+		cout << p(ast) << endl;
+		ExpressionSimplifier{}(ast);
 		cout << "----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		ExpressionInliner(ast).run();
