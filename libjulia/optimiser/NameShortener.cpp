@@ -33,14 +33,17 @@ using namespace dev::julia;
 
 NameShortener::NameShortener(
 	Block const& _ast,
-	set<string> const& _externallyUsedFunctions,
+	set<string> const& _externallyUsedIdentifiers,
 	size_t _maxSize
 )
 {
+	for (auto const& identifier: _externallyUsedIdentifiers)
+		m_translations[identifier] = identifier;
+
 	set<string> names = NameCollector(_ast).names();
 	for (auto const& name: names)
 	{
-		if (name.size() <= _maxSize || _externallyUsedFunctions.count(name))
+		if (name.size() <= _maxSize || _externallyUsedIdentifiers.count(name))
 			m_translations[name] = name;
 		else
 		{
@@ -52,7 +55,6 @@ NameShortener::NameShortener(
 				suffix++;
 				replacement = prefix + "_" + std::to_string(suffix);
 			}
-			cout << "Translating " << name << " to " << replacement << endl;
 			m_translations[name] = replacement;
 			names.insert(replacement);
 		}

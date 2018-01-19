@@ -44,7 +44,7 @@ class NameShortener: public ASTCopier
 public:
 	explicit NameShortener(
 		Block const& _ast,
-		std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>(),
+		std::set<std::string> const& _externallyUsedIdentifiers = std::set<std::string>(),
 		size_t _maxSize = 0
 	);
 
