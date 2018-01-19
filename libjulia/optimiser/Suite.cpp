@@ -42,14 +42,14 @@ using namespace dev::julia;
 void OptimiserSuite::run(
 	Block& _ast,
 	solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
-	set<string> const& _externallyUsedFunctions
+	set<string> const& _externallyUsedIdentifiers
 )
 {
 	solidity::assembly::AsmPrinter p;
 
-	Block ast = boost::get<Block>(Disambiguator(_analysisInfo)(_ast));
+	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, _externallyUsedIdentifiers)(_ast));
 
-	NameShortener shortener(ast, _externallyUsedFunctions, 10);
+	NameShortener shortener(ast, _externallyUsedIdentifiers, 10);
 	ast = boost::get<Block>(shortener(ast));
 
 	(FunctionHoister{})(ast);
@@ -77,7 +77,7 @@ void OptimiserSuite::run(
 		Rematerialiser{}(ast);
 		cout << "----------------------------------------------" << endl;
 		cout << p(ast) << endl;
-		UnusedPruner::runUntilStabilised(ast, _externallyUsedFunctions);
+		UnusedPruner::runUntilStabilised(ast, _externallyUsedIdentifiers);
 		cout << "----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		cout << "loooooooooooooooooooooooooooooooooooooooooooooop" << endl;

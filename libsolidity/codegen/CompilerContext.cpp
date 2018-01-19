@@ -373,7 +373,9 @@ void CompilerContext::appendInlineAssembly(
 	}
 
 	julia::OptimiserSuite suite;
-	suite.run(*parserResult, analysisInfo, _externallyUsedFunctions);
+	set<string> externallyUsedIdentifiers = _externallyUsedFunctions;
+	externallyUsedIdentifiers.insert(_localVariables.begin(), _localVariables.end());
+	suite.run(*parserResult, analysisInfo, externallyUsedIdentifiers);
 
 	analysisInfo = assembly::AsmAnalysisInfo{};
 	analyzerResult = assembly::AsmAnalyzer(

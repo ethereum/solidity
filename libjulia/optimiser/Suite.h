@@ -47,7 +47,7 @@ public:
 	void run(
 		Block& _ast,
 		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
-		std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>()
+		std::set<std::string> const& _externallyUsedIdentifiers = std::set<std::string>()
 	);
 };
 
