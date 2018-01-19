@@ -43,9 +43,14 @@ namespace yul
 class Disambiguator: public ASTCopier
 {
 public:
-	Disambiguator(solidity::assembly::AsmAnalysisInfo const& _analysisInfo):
-		m_info(_analysisInfo)
-	{}
+	explicit Disambiguator(
+		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+		std::set<std::string> const& _externallyUsedIdentifiers = {}
+	):
+		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers)
+	{
+		m_nameDispenser.m_usedNames = m_externallyUsedIdentifiers;
+	}
 
 protected:
 	virtual void enterScope(Block const& _block) override;
@@ -58,6 +63,7 @@ protected:
 	void leaveScopeInternal(solidity::assembly::Scope& _scope);
 
 	solidity::assembly::AsmAnalysisInfo const& m_info;
+	std::set<std::string> const& m_externallyUsedIdentifiers;
 
 	std::vector<solidity::assembly::Scope*> m_scopes;
 	std::map<void const*, std::string> m_translations;
