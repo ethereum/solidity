@@ -939,6 +939,8 @@ derived override, but this function will bypass
         function kill() public { /* do cleanup 2 */ super.kill(); }
     }
 
+    // note that the ordering of inherited contracts has been reversed from the above example to ensure that 
+    // 'do cleanup 1' is run before 'do cleanup 2'
     contract Final is Base2, Base1 {
     }
 
