@@ -17,6 +17,7 @@
 
 #include <libsolidity/formal/SSAVariable.h>
 
+#include <libsolidity/formal/SymbolicBoolVariable.h>
 #include <libsolidity/formal/SymbolicIntVariable.h>
 
 #include <libsolidity/ast/AST.h>
@@ -34,6 +35,8 @@ SSAVariable::SSAVariable(
 
 	if (dynamic_cast<IntegerType const*>(_decl->type().get()))
 		m_symbolicVar = make_shared<SymbolicIntVariable>(_decl, _interface);
+	else if (dynamic_cast<BoolType const*>(_decl->type().get()))
+		m_symbolicVar = make_shared<SymbolicBoolVariable>(_decl, _interface);
 	else
 	{
 		solAssert(false, "");
@@ -42,7 +45,8 @@ SSAVariable::SSAVariable(
 
 bool SSAVariable::supportedType(Type const* _decl)
 {
-	return dynamic_cast<IntegerType const*>(_decl);
+	return dynamic_cast<IntegerType const*>(_decl) ||
+		dynamic_cast<BoolType const*>(_decl);
 }
 
 void SSAVariable::resetIndex()

@@ -46,7 +46,8 @@ enum class Sort
 {
 	Int,
 	Bool,
-	IntIntFun // Function of one Int returning a single Int
+	IntIntFun, // Function of one Int returning a single Int
+	IntBoolFun // Function of one Int returning a single Bool
 };
 
 /// C++ representation of an SMTLIB2 expression.
@@ -132,10 +133,12 @@ public:
 	Expression operator()(Expression _a) const
 	{
 		solAssert(
-			sort == Sort::IntIntFun && arguments.empty(),
+			(sort == Sort::IntIntFun || sort == Sort::IntBoolFun) && arguments.empty(),
 			"Attempted function application to non-function."
 		);
-		return Expression(name, _a, Sort::Int);
+		if (sort == Sort::IntIntFun)
+			return Expression(name, _a, Sort::Int);
+		return Expression(name, _a, Sort::Bool);
 	}
 
 	std::string const name;
@@ -167,9 +170,11 @@ public:
 
 	virtual Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
 	{
-		solAssert(_domain == Sort::Int && _codomain == Sort::Int, "Function sort not supported.");
+		solAssert(_domain == Sort::Int && (_codomain == Sort::Int || _codomain == Sort::Bool), "Function sort not supported.");
 		// Subclasses should do something here
-		return Expression(std::move(_name), {}, Sort::IntIntFun);
+		if (_codomain == Sort::Int)
+			return Expression(std::move(_name), {}, Sort::IntIntFun);
+		return Expression(std::move(_name), {}, Sort::IntBoolFun);
 	}
 	virtual Expression newInteger(std::string _name)
 	{

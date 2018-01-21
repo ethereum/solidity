@@ -444,7 +444,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 void SMTChecker::compareOperation(BinaryOperation const& _op)
 {
 	solAssert(_op.annotation().commonType, "");
-	if (_op.annotation().commonType->category() == Type::Category::Integer)
+	if (SSAVariable::supportedType(_op.annotation().commonType.get()))
 	{
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));

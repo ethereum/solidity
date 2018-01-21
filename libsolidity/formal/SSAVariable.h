@@ -68,7 +68,7 @@ public:
 	void setZeroValue();
 	void setUnknownValue();
 
-	/// So far Int is supported.
+	/// So far Int and Bool are supported.
 	static bool supportedType(Type const* _decl);
 
 private:
