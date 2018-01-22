@@ -9,6 +9,7 @@ Features:
  * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Julia mode.
  * SMT Checker: If-else branch conditions are taken into account in the SMT encoding of the program
    variables.
+ * Syntax Checker: Deprecate the ``var`` keyword (and mark it an error as experimental 0.5.0 feature).
  * Type Checker: Issue warning for using ``public`` visibility for interface functions.
 
 Bugfixes:
