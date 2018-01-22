@@ -44,17 +44,20 @@ namespace test
 class ABICoderGasCostsFixture: SolidityExecutionFramework
 {
 protected:
-	void analyze(string const& _sourceCode, string const& _funToCall = "f()")
+	void analyze(string const& _sourceCode, vector<string> const& _funsToCall)
 	{
 		string sourceCode = _sourceCode;
 		size_t run = 0;
 		size_t bytecodeSize[2];
-		u256 runGas[2];
+		map<string, u256[2]> runGas;
 		BOTH_ENCODERS(
 			compileAndRun(sourceCode);
 			bytecodeSize[run] = m_output.size();
-			callContractFunction(_funToCall);
-			runGas[run] = m_gasUsed;
+			for (auto const& f: _funsToCall)
+			{
+				callContractFunction(f);
+				runGas[f][run] = m_gasUsed;
+			}
 			run++;
 		)
 		bytecodeSize[1] -= 14; // the experimental metadata tag
@@ -65,13 +68,20 @@ protected:
 			to_string((double)(bytecodeSize[1] - bytecodeSize[0]) / (double)(bytecodeSize[0]) * 100) <<
 			"%" <<
 			endl;
-		cout <<
-			"Gas difference runtime: " <<
-			(runGas[1] - runGas[0]) <<
-			" - " <<
-			to_string((double)(runGas[1] - runGas[0]) / (double)(runGas[0]) * 100) <<
-			"%" <<
-			endl;
+		for (auto const& f: _funsToCall)
+		{
+			cout <<
+				"Gas difference runtime - " << f << ": " <<
+				(runGas[f][1] - runGas[f][0]) <<
+				" - " <<
+				to_string((double)(runGas[f][1] - runGas[f][0]) / (double)(runGas[f][0]) * 100) <<
+				"%" <<
+				endl;
+		}
+	}
+	void analyze(string const& _sourceCode, string const& _funToCall = "f()")
+	{
+		analyze(_sourceCode, vector<string>{_funToCall});
 	}
 };
 
@@ -96,6 +106,19 @@ BOOST_AUTO_TEST_CASE(simple_return)
 		}
 	)";
 	analyze(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(multi_use)
+{
+	string sourceCode = R"(
+		contract C {
+			function f() public returns (uint) {}
+			function g() public returns (uint[]) {}
+			function h() public returns (address[], uint[]) {}
+			function i() public returns (uint[], uint) {}
+		}
+	)";
+	analyze(sourceCode, {"f()", "g()", "h()", "i()"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

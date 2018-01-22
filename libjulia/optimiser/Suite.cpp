@@ -51,41 +51,52 @@ void OptimiserSuite::run(
 {
 	solidity::assembly::AsmPrinter p;
 
-	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, _externallyUsedIdentifiers)(_ast));
+	set<string> reservedIdentifiers = _externallyUsedIdentifiers;
+	reservedIdentifiers += BuiltinFunctions::names(false);
 
-	NameShortener shortener(ast, BuiltinFunctions::names(false) + _externallyUsedIdentifiers, 10);
+	cout << "===============================================" << endl;
+	cout << "Optimizer input: ----------------------------------------------" << endl;
+	cout << p(_ast) << endl;
+	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, reservedIdentifiers)(_ast));
+	cout << "Disambiguator: ----------------------------------------------" << endl;
+	cout << p(ast) << endl;
+
+	NameShortener shortener(ast, reservedIdentifiers, 10);
 	ast = boost::get<Block>(shortener(ast));
+	cout << "Name shortener: ----------------------------------------------" << endl;
+	cout << p(ast) << endl;
 
 	(FunctionHoister{})(ast);
 	(FunctionGrouper{})(ast);
-	cout << "----------------------------------------------" << endl;
+	cout << "Function hoister and grouper: ----------------------------------------------" << endl;
 	cout << p(ast) << endl;
 
-	for (size_t i = 0; i < 10; i++)
+	for (size_t i = 0; i < 3; i++)
 	{
 		Rematerialiser{}(ast);
-		cout << "----------------------------------------------" << endl;
+		cout << "Rematerialiser: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		ExpressionSimplifier{}(ast);
-		cout << "----------------------------------------------" << endl;
+		cout << "Simplifier: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		ExpressionInliner(ast).run();
-		cout << "----------------------------------------------" << endl;
+		cout << "Functional Inliner: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		Rematerialiser{}(ast);
-		cout << "----------------------------------------------" << endl;
+		cout << "Rematerialiser: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		FullInliner(ast).run();
-		cout << "----------------------------------------------" << endl;
+		cout << "Full Inliner: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		Rematerialiser{}(ast);
-		cout << "----------------------------------------------" << endl;
+		cout << "Rematerialiser: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
-		UnusedPruner::runUntilStabilised(ast, _externallyUsedIdentifiers);
-		cout << "----------------------------------------------" << endl;
+		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+		cout << "Unused Pruner: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
-		cout << "loooooooooooooooooooooooooooooooooooooooooooooop" << endl;
+		cout << "===============================================" << endl;
 	}
+	cout << "===============================================" << endl;
 
 	_ast = std::move(ast);
 }
