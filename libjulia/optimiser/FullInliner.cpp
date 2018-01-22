@@ -23,6 +23,7 @@
 #include <libjulia/optimiser/ASTCopier.h>
 #include <libjulia/optimiser/ASTWalker.h>
 #include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/optimiser/Metrics.h>
 #include <libjulia/optimiser/Semantics.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
@@ -79,6 +80,37 @@ void FullInliner::handleFunction(FunctionDefinition& _fun)
 	(InlineModifier(*this, m_nameDispenser, _fun.name))(_fun.body);
 }
 
+bool FullInliner::shallInline(FunctionCall const& _funCall, string const& _callSite)
+{
+	if (_funCall.functionName.name == _callSite)
+		return false;
+
+	// TODO optimize the computation of these metrics.
+	// Note that most metrics change through an inlining operation, so it could be a little
+	// tricky.
+	// Another way would be to first compute all metrics, then decide where to inline,
+	// perform all inlinig operations and then run again. This also changes the
+	// metrics while we go but might still be easier.
+
+	FunctionDefinition& calledFunction = function(_funCall.functionName.name);
+
+	// If the function is only referenced once, always inline it.
+	if (ReferencesCounter::countReferences(m_ast)[calledFunction.name] <= 1)
+		return true;
+
+	// Constant arguments might provide a means for further optimization, so the cause a bonus.
+	bool constantArg = false;
+	for (auto const& argument: _funCall.arguments)
+		if (argument.type() == typeid(Literal))
+		{
+			constantArg = true;
+			break;
+		}
+
+	size_t size = CodeSize::codeSize(calledFunction);
+	return (size < 10 || (constantArg && size < 50));
+}
+
 void InlineModifier::operator()(FunctionalInstruction& _instruction)
 {
 	visitArguments(_instruction.arguments);
@@ -132,11 +164,12 @@ void InlineModifier::visit(Expression& _expression)
 
 	m_driver.handleFunction(fun);
 
-	// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
-	bool doInline = funCall.functionName.name != m_currentFunction;
+	bool doInline = true;
 
 	if (fun.returnVariables.size() > 1)
 		doInline = false;
+	if (doInline)
+		doInline = m_driver.shallInline(funCall, m_currentFunction);
 
 	{
 		vector<string> argNames;

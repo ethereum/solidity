@@ -75,6 +75,9 @@ public:
 	/// Perform inlining operations inside the given function.
 	void handleFunction(FunctionDefinition& _function);
 
+	/// Inlining heuristic.
+	bool shallInline(FunctionCall const& _funCall, std::string const& _callSite);
+
 	FunctionDefinition& function(std::string _name) { return *m_functions.at(_name); }
 
 private:
