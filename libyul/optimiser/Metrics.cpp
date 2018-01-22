@@ -39,6 +39,13 @@ size_t CodeSize::codeSize(Expression const& _expression)
 	return cs.m_size;
 }
 
+size_t CodeSize::codeSize(Block const& _block)
+{
+	CodeSize cs;
+	cs(_block);
+	return cs.m_size;
+}
+
 void CodeSize::visit(Statement const& _statement)
 {
 	++m_size;

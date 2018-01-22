@@ -36,6 +36,9 @@ public:
 	/// Returns a metric for the code size of an AST element.
 	/// More specifically, it returns the number of AST nodes.
 	static size_t codeSize(Expression const& _expression);
+	/// Returns a metric for the code size of an AST element.
+	/// More specifically, it returns the number of AST nodes.
+	static size_t codeSize(Block const& _block);
 
 private:
 	virtual void visit(Statement const& _statement) override;

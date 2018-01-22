@@ -24,6 +24,8 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Utilities.h>
+#include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
@@ -45,11 +47,23 @@ FullInliner::FullInliner(Block& _ast):
 	assertThrow(m_ast.statements.front().type() == typeid(Block), OptimizerException, "");
 	m_nameDispenser.m_usedNames = NameCollector(m_ast).names();
 
+	// Determine constants
+	SSAValueTracker tracker;
+	tracker(m_ast);
+	for (auto const& ssaValue: tracker.values())
+		if (ssaValue.second && ssaValue.second->type() == typeid(Literal))
+			m_constants.insert(ssaValue.first);
+
+	map<string, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (size_t i = 1; i < m_ast.statements.size(); ++i)
 	{
 		assertThrow(m_ast.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
 		m_functions[fun.name] = &fun;
+		// Always inline functions that are only called once.
+		if (references[fun.name] == 1)
+			m_alwaysInline.insert(fun.name);
+		updateCodeSize(fun);
 	}
 }
 
@@ -58,14 +72,51 @@ void FullInliner::run()
 	assertThrow(m_ast.statements[0].type() == typeid(Block), OptimizerException, "");
 
 	handleBlock("", boost::get<Block>(m_ast.statements[0]));
+	// TODO it might be good to determine a visiting order:
+	// first handle functions that are called from many places.
 	for (auto const& fun: m_functions)
+	{
 		handleBlock(fun.second->name, fun.second->body);
+		updateCodeSize(*fun.second);
+	}
+}
+
+void FullInliner::updateCodeSize(FunctionDefinition& fun)
+{
+	m_functionSizes[fun.name] = CodeSize::codeSize(fun.body);
 }
 
 void FullInliner::handleBlock(string const& _currentFunctionName, Block& _block)
 {
 	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
 }
+
+bool FullInliner::shallInline(FunctionCall const& _funCall, string const& _callSite)
+{
+	// No recursive inlining
+	if (_funCall.functionName.name == _callSite)
+		return false;
+
+	FunctionDefinition& calledFunction = function(_funCall.functionName.name);
+	if (m_alwaysInline.count(calledFunction.name))
+		return true;
+
+	// Constant arguments might provide a means for further optimization, so they cause a bonus.
+	bool constantArg = false;
+	for (auto const& argument: _funCall.arguments)
+		if (argument.type() == typeid(Literal) || (
+			argument.type() == typeid(Identifier) &&
+			m_constants.count(boost::get<Identifier>(argument).name)
+		))
+		{
+			constantArg = true;
+			break;
+		}
+
+	size_t size = m_functionSizes.at(calledFunction.name);
+	return (size < 10 || (constantArg && size < 50));
+}
+
 
 void InlineModifier::operator()(Block& _block)
 {
@@ -90,14 +141,8 @@ boost::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement&
 		FunctionCall* funCall = boost::apply_visitor(GenericFallbackReturnsVisitor<FunctionCall*, FunctionCall&>(
 			[](FunctionCall& _e) { return &_e; }
 		), *e);
-		if (funCall)
-		{
-			// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
-			bool doInline = funCall->functionName.name != m_currentFunction;
-
-			if (doInline)
-				return performInline(_statement, *funCall);
-		}
+		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
+			return performInline(_statement, *funCall);
 	}
 	return {};
 }
