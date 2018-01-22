@@ -30,10 +30,14 @@
 #include <libjulia/optimiser/NameShortener.h>
 #include <libjulia/optimiser/ExpressionSimplifier.h>
 
+#include <libjulia/Builtins.h>
+
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
+
+#include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
@@ -49,7 +53,7 @@ void OptimiserSuite::run(
 
 	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, _externallyUsedIdentifiers)(_ast));
 
-	NameShortener shortener(ast, _externallyUsedIdentifiers, 10);
+	NameShortener shortener(ast, BuiltinFunctions::names(false) + _externallyUsedIdentifiers, 10);
 	ast = boost::get<Block>(shortener(ast));
 
 	(FunctionHoister{})(ast);
