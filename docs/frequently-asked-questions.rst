@@ -39,12 +39,14 @@ This is just the bytecode "data" sent along with the request.
 Is there a decompiler available?
 ================================
 
-There is no decompiler to Solidity. This is in principle possible
-to some degree, but for example variable names will be lost and
-great effort will be necessary to make it look similar to
-the original source code.
+There is no official decompiler to Solidity, but third party security
+company `Comae <https://www.comae.io/>`_ has developed 
+`Porosity <https://github.com/comaeio/porosity>`_. 
+Because some information like variable names, comments, and 
+source code formatting is lost in the compilation process, 
+it is not possible to completely recover the original source code.
 
-Bytecode can be decompiled to opcodes, a service that is provided by
+Bytecode can be disassembled to opcodes, a service that is provided by
 several blockchain explorers.
 
 Contracts on the blockchain should have their original source
