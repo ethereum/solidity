@@ -40,21 +40,21 @@ The following elementary types exist:
 
 - ``int<M>``: two's complement signed integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``.
 
-- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing.
+- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing. For computing the function selector, ``address`` is used.
 
-- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively (this shorthand not to be used for computing the function selector).
+- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively. For computing the function selector, ``uint256`` and ``int256`` have to be used.
 
-- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1
+- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1. For computing the function selector, ``bool`` is used.
 
 - ``fixed<M>x<N>``: signed fixed-point decimal number of ``M`` bits, ``8 <= M <= 256``, ``M % 8 ==0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
 
 - ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
-- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively (this shorthand not to be used for computing the function selector).
+- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively. For computing the function selector, ``fixed128x19`` and ``ufixed128x19`` have to be used.
 
 - ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
-- ``function``: equivalent to ``bytes24``: an address, followed by a function selector
+- ``function``: an address (20 bytes) folled by a function selector (4 bytes). Encoded identical to ``bytes24``.
 
 The following (fixed-size) array type exists:
 
