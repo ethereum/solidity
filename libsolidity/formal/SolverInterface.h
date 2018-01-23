@@ -72,6 +72,11 @@ public:
 		}, _trueValue.sort);
 	}
 
+	static Expression implies(Expression _a, Expression _b)
+	{
+		return !std::move(_a) || std::move(_b);
+	}
+
 	friend Expression operator!(Expression _a)
 	{
 		return Expression("not", std::move(_a), Sort::Bool);
@@ -119,6 +124,10 @@ public:
 	friend Expression operator*(Expression _a, Expression _b)
 	{
 		return Expression("*", std::move(_a), std::move(_b), Sort::Int);
+	}
+	friend Expression operator/(Expression _a, Expression _b)
+	{
+		return Expression("/", std::move(_a), std::move(_b), Sort::Int);
 	}
 	Expression operator()(Expression _a) const
 	{

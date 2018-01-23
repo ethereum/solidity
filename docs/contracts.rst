@@ -40,7 +40,7 @@ This means that cyclic creation dependencies are impossible.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract OwnedToken {
         // TokenCreator is a contract type that is defined below.
@@ -52,7 +52,7 @@ This means that cyclic creation dependencies are impossible.
 
         // This is the constructor which registers the
         // creator and the assigned name.
-        function OwnedToken(bytes32 _name) {
+        function OwnedToken(bytes32 _name) public {
             // State variables are accessed via their name
             // and not via e.g. this.owner. This also applies
             // to functions and especially in the constructors,
@@ -67,7 +67,7 @@ This means that cyclic creation dependencies are impossible.
             name = _name;
         }
 
-        function changeName(bytes32 newName) {
+        function changeName(bytes32 newName) public {
             // Only the creator can alter the name --
             // the comparison is possible since contracts
             // are implicitly convertible to addresses.
@@ -75,7 +75,7 @@ This means that cyclic creation dependencies are impossible.
                 name = newName;
         }
 
-        function transfer(address newOwner) {
+        function transfer(address newOwner) public {
             // Only the current owner can transfer the token.
             if (msg.sender != owner) return;
             // We also want to ask the creator if the transfer
@@ -90,25 +90,27 @@ This means that cyclic creation dependencies are impossible.
 
     contract TokenCreator {
         function createToken(bytes32 name)
+           public
            returns (OwnedToken tokenAddress)
         {
             // Create a new Token contract and return its address.
             // From the JavaScript side, the return type is simply
-            // "address", as this is the closest type available in
+            // `address`, as this is the closest type available in
             // the ABI.
             return new OwnedToken(name);
         }
 
-        function changeName(OwnedToken tokenAddress, bytes32 name) {
-            // Again, the external type of "tokenAddress" is
-            // simply "address".
+        function changeName(OwnedToken tokenAddress, bytes32 name)  public {
+            // Again, the external type of `tokenAddress` is
+            // simply `address`.
             tokenAddress.changeName(name);
         }
 
-        function isTokenTransferOK(
-            address currentOwner,
-            address newOwner
-        ) returns (bool ok) {
+        function isTokenTransferOK(address currentOwner, address newOwner)
+            public
+            view
+            returns (bool ok)
+        {
             // Check some arbitrary condition.
             address tokenAddress = msg.sender;
             return (keccak256(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
@@ -171,10 +173,10 @@ return parameter list for functions.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f(uint a) private returns (uint b) { return a + 1; }
+        function f(uint a) private pure returns (uint b) { return a + 1; }
         function setData(uint a) internal { data = a; }
         uint public data;
     }
@@ -193,25 +195,25 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
         uint private data;
 
         function f(uint a) private returns(uint b) { return a + 1; }
-        function setData(uint a) { data = a; }
+        function setData(uint a) public { data = a; }
         function getData() public returns(uint) { return data; }
         function compute(uint a, uint b) internal returns (uint) { return a+b; }
     }
 
     contract D {
-        function readData() {
+        function readData() public {
             C c = new C();
-            uint local = c.f(7); // error: member "f" is not visible
+            uint local = c.f(7); // error: member `f` is not visible
             c.setData(3);
             local = c.getData();
-            local = c.compute(3, 5); // error: member "compute" is not visible
+            local = c.compute(3, 5); // error: member `compute` is not visible
         }
     }
 
     contract E is C {
-        function g() {
+        function g() public {
             C c = new C();
-            uint val = compute(3, 5);  // acces to internal member (from derivated to parent contract)
+            uint val = compute(3, 5); // access to internal member (from derived to parent contract)
         }
     }
 
@@ -238,7 +240,7 @@ be done at declaration.
 
     contract Caller {
         C c = new C();
-        function f() {
+        function f() public {
             uint local = c.data();
         }
     }
@@ -254,7 +256,7 @@ it is evaluated as a state variable.  If it is accessed externally
 
     contract C {
         uint public data;
-        function x() {
+        function x() public {
             data = 3; // internal access
             uint val = this.data(); // external access
         }
@@ -277,7 +279,7 @@ The next example is a bit more complex:
 
 It will generate a function of the following form::
 
-    function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b) {
+    function data(uint arg1, bool arg2, uint arg3) public returns (uint a, bytes3 b) {
         a = data[arg1][arg2][arg3].a;
         b = data[arg1][arg2][arg3].b;
     }
@@ -302,13 +304,13 @@ inheritable properties of contracts and may be overridden by derived contracts.
     pragma solidity ^0.4.11;
 
     contract owned {
-        function owned() { owner = msg.sender; }
+        function owned() public { owner = msg.sender; }
         address owner;
 
         // This contract only defines a modifier but does not use
-        // it - it will be used in derived contracts.
+        // it: it will be used in derived contracts.
         // The function body is inserted where the special symbol
-        // "_;" in the definition of a modifier appears.
+        // `_;` in the definition of a modifier appears.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
@@ -319,11 +321,11 @@ inheritable properties of contracts and may be overridden by derived contracts.
     }
 
     contract mortal is owned {
-        // This contract inherits the "onlyOwner"-modifier from
-        // "owned" and applies it to the "close"-function, which
-        // causes that calls to "close" only have an effect if
+        // This contract inherits the `onlyOwner` modifier from
+        // `owned` and applies it to the `close` function, which
+        // causes that calls to `close` only have an effect if
         // they are made by the stored owner.
-        function close() onlyOwner {
+        function close() public onlyOwner {
             selfdestruct(owner);
         }
     }
@@ -341,16 +343,16 @@ inheritable properties of contracts and may be overridden by derived contracts.
         mapping (address => bool) registeredAddresses;
         uint price;
 
-        function Register(uint initialPrice) { price = initialPrice; }
+        function Register(uint initialPrice) public { price = initialPrice; }
 
         // It is important to also provide the
-        // "payable" keyword here, otherwise the function will
+        // `payable` keyword here, otherwise the function will
         // automatically reject all Ether sent to it.
-        function register() payable costs(price) {
+        function register() public payable costs(price) {
             registeredAddresses[msg.sender] = true;
         }
 
-        function changePrice(uint _price) onlyOwner {
+        function changePrice(uint _price) public onlyOwner {
             price = _price;
         }
     }
@@ -365,10 +367,10 @@ inheritable properties of contracts and may be overridden by derived contracts.
         }
 
         /// This function is protected by a mutex, which means that
-        /// reentrant calls from within msg.sender.call cannot call f again.
+        /// reentrant calls from within `msg.sender.call` cannot call `f` again.
         /// The `return 7` statement assigns 7 to the return value but still
         /// executes the statement `locked = false` in the modifier.
-        function f() noReentrancy returns (uint) {
+        function f() public noReentrancy returns (uint) {
             require(msg.sender.call());
             return 7;
         }
@@ -426,19 +428,27 @@ value types and strings.
         bytes32 constant myHash = keccak256("abc");
     }
 
+.. index:: ! functions
+
+.. _functions:
+
+*********
+Functions
+*********
+
+.. index:: ! view function, function;view
 
 .. _view-functions:
 
-**************
 View Functions
-**************
+==============
 
 Functions can be declared ``view`` in which case they promise not to modify the state.
 
 The following statements are considered modifying the state:
 
 #. Writing to state variables.
-#. :ref:`Emitting events. <events>`.
+#. :ref:`Emitting events <events>`.
 #. :ref:`Creating other contracts <creating-contracts>`.
 #. Using ``selfdestruct``.
 #. Sending Ether via calls.
@@ -451,7 +461,7 @@ The following statements are considered modifying the state:
     pragma solidity ^0.4.16;
 
     contract C {
-        function f(uint a, uint b) view returns (uint) {
+        function f(uint a, uint b) public view returns (uint) {
             return a * (b + 42) + now;
         }
     }
@@ -465,11 +475,12 @@ The following statements are considered modifying the state:
 .. warning::
   The compiler does not enforce yet that a ``view`` method is not modifying state.
 
+.. index:: ! pure function, function;pure
+
 .. _pure-functions:
 
-**************
 Pure Functions
-**************
+==============
 
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 
@@ -486,7 +497,7 @@ In addition to the list of state modifying statements explained above, the follo
     pragma solidity ^0.4.16;
 
     contract C {
-        function f(uint a, uint b) pure returns (uint) {
+        function f(uint a, uint b) public pure returns (uint) {
             return a * (b + 42);
         }
     }
@@ -498,9 +509,8 @@ In addition to the list of state modifying statements explained above, the follo
 
 .. _fallback-function:
 
-*****************
 Fallback Function
-*****************
+=================
 
 A contract can have exactly one unnamed function. This function cannot have
 arguments and cannot return anything.
@@ -551,9 +561,9 @@ Please ensure you test your fallback function thoroughly to ensure the execution
         // This function is called for all messages sent to
         // this contract (there is no other function).
         // Sending Ether to this contract will cause an exception,
-        // because the fallback function does not have the "payable"
+        // because the fallback function does not have the `payable`
         // modifier.
-        function() { x = 1; }
+        function() public { x = 1; }
         uint x;
     }
 
@@ -561,11 +571,11 @@ Please ensure you test your fallback function thoroughly to ensure the execution
     // This contract keeps all Ether sent to it with no way
     // to get it back.
     contract Sink {
-        function() payable { }
+        function() public payable { }
     }
 
     contract Caller {
-        function callTest(Test test) {
+        function callTest(Test test) public {
             test.call(0xabcdef01); // hash does not exist
             // results in test.x becoming == 1.
 
@@ -576,6 +586,85 @@ Please ensure you test your fallback function thoroughly to ensure the execution
             //test.send(2 ether);
         }
     }
+
+.. index:: ! overload
+
+.. _overload-function:
+
+Function Overloading
+====================
+
+A Contract can have multiple functions of the same name but with different arguments.
+This also applies to inherited functions. The following example shows overloading of the
+``f`` function in the scope of contract ``A``.
+
+::
+
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(uint _in) public pure returns (uint out) {
+            out = 1;
+        }
+
+        function f(uint _in, bytes32 _key) public pure returns (uint out) {
+            out = 2;
+        }
+    }
+
+Overloaded functions are also present in the external interface. It is an error if two
+externally visible functions differ by their Solidity types but not by their external types.
+
+::
+
+    // This will not compile
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(B _in) public pure returns (B out) {
+            out = _in;
+        }
+
+        function f(address _in) public pure returns (address out) {
+            out = _in;
+        }
+    }
+
+    contract B {
+    }
+
+
+Both ``f`` function overloads above end up accepting the address type for the ABI although
+they are considered different inside Solidity.
+
+Overload resolution and Argument matching
+-----------------------------------------
+
+Overloaded functions are selected by matching the function declarations in the current scope
+to the arguments supplied in the function call. Functions are selected as overload candidates
+if all arguments can be implicitly converted to the expected types. If there is not exactly one
+candidate, resolution fails.
+
+.. note::
+    Return parameters are not taken into account for overload resolution.
+
+::
+
+    pragma solidity ^0.4.16;
+
+    contract A {
+        function f(uint8 _in) public pure returns (uint8 out) {
+            out = _in;
+        }
+
+        function f(uint256 _in) public pure returns (uint256 out) {
+            out = _in;
+        }
+    }
+
+Calling ``f(50)`` would create a type error since ``250`` can be implicitly converted both to ``uint8``
+and ``uint256`` types. On another hand ``f(256)`` would resolve to ``f(uint256)`` overload as ``256`` cannot be implicitly
+converted to ``uint8``.
 
 .. index:: ! event
 
@@ -634,7 +723,7 @@ All non-indexed arguments will be stored in the data part of the log.
             uint _value
         );
 
-        function deposit(bytes32 _id) payable {
+        function deposit(bytes32 _id) public payable {
             // Any call to this function (even deeply nested) can
             // be detected from the JavaScript API by filtering
             // for `Deposit` to be called.
@@ -655,7 +744,7 @@ The use in the JavaScript API would be as follows:
     // watch for changes
     event.watch(function(error, result){
         // result will contain various information
-        // including the argumets given to the Deposit
+        // including the argumets given to the `Deposit`
         // call.
         if (!error)
             console.log(result);
@@ -683,7 +772,7 @@ as topics. The event call above can be performed in the same way as
     pragma solidity ^0.4.10;
 
     contract C {
-        function f() {
+        function f() public payable {
             bytes32 _id = 0x420042;
             log3(
                 bytes32(msg.value),
@@ -727,14 +816,14 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract owned {
         function owned() { owner = msg.sender; }
         address owner;
     }
 
-    // Use "is" to derive from another contract. Derived
+    // Use `is` to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
@@ -749,20 +838,20 @@ Details are given in the following example.
     // without body. If a contract does not implement all
     // functions it can only be used as an interface.
     contract Config {
-        function lookup(uint id) returns (address adr);
+        function lookup(uint id) public returns (address adr);
     }
 
     contract NameReg {
-        function register(bytes32 name);
-        function unregister();
+        function register(bytes32 name) public;
+        function unregister() public;
      }
 
-    // Multiple inheritance is possible. Note that "owned" is
-    // also a base class of "mortal", yet there is only a single
-    // instance of "owned" (as for virtual inheritance in C++).
+    // Multiple inheritance is possible. Note that `owned` is
+    // also a base class of `mortal`, yet there is only a single
+    // instance of `owned` (as for virtual inheritance in C++).
     contract named is owned, mortal {
         function named(bytes32 name) {
-            Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
+            Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
 
@@ -771,9 +860,9 @@ Details are given in the following example.
         // types of output parameters, that causes an error.
         // Both local and message-based function calls take these overrides
         // into account.
-        function kill() {
+        function kill() public {
             if (msg.sender == owner) {
-                Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
+                Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
                 // It is still possible to call a specific
                 // overridden function.
@@ -786,11 +875,11 @@ Details are given in the following example.
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
     contract PriceFeed is owned, mortal, named("GoldFeed") {
-       function updateInfo(uint newInfo) {
+       function updateInfo(uint newInfo) public {
           if (msg.sender == owner) info = newInfo;
        }
 
-       function get() constant returns(uint r) { return info; }
+       function get() public view returns(uint r) { return info; }
 
        uint info;
     }
@@ -802,22 +891,22 @@ seen in the following example::
     pragma solidity ^0.4.0;
 
     contract owned {
-        function owned() { owner = msg.sender; }
+        function owned() public { owner = msg.sender; }
         address owner;
     }
 
     contract mortal is owned {
-        function kill() {
+        function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
     contract Base1 is mortal {
-        function kill() { /* do cleanup 1 */ mortal.kill(); }
+        function kill() public { /* do cleanup 1 */ mortal.kill(); }
     }
 
     contract Base2 is mortal {
-        function kill() { /* do cleanup 2 */ mortal.kill(); }
+        function kill() public { /* do cleanup 2 */ mortal.kill(); }
     }
 
     contract Final is Base1, Base2 {
@@ -831,30 +920,30 @@ derived override, but this function will bypass
     pragma solidity ^0.4.0;
 
     contract owned {
-        function owned() { owner = msg.sender; }
+        function owned() public { owner = msg.sender; }
         address owner;
     }
 
     contract mortal is owned {
-        function kill() {
+        function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
     contract Base1 is mortal {
-        function kill() { /* do cleanup 1 */ super.kill(); }
+        function kill() public { /* do cleanup 1 */ super.kill(); }
     }
 
 
     contract Base2 is mortal {
-        function kill() { /* do cleanup 2 */ super.kill(); }
+        function kill() public { /* do cleanup 2 */ super.kill(); }
     }
 
     contract Final is Base2, Base1 {
     }
 
 If ``Base1`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts.  Rather, it 
+call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
 inheritance graph, so it will call ``Base2.kill()`` (note that
 the final inheritance sequence is -- starting with the most
@@ -876,11 +965,11 @@ the base constructors. This can be done in two ways::
 
     contract Base {
         uint x;
-        function Base(uint _x) { x = _x; }
+        function Base(uint _x) public { x = _x; }
     }
 
     contract Derived is Base(7) {
-        function Derived(uint _y) Base(_y * _y) {
+        function Derived(uint _y) Base(_y * _y) public {
         }
     }
 
@@ -945,7 +1034,7 @@ Contract functions can lack an implementation as in the following example (note 
     pragma solidity ^0.4.0;
 
     contract Feline {
-        function utterance() returns (bytes32);
+        function utterance() public returns (bytes32);
     }
 
 Such contracts cannot be compiled (even if they contain
@@ -955,11 +1044,11 @@ but they can be used as base contracts::
     pragma solidity ^0.4.0;
 
     contract Feline {
-        function utterance() returns (bytes32);
+        function utterance() public returns (bytes32);
     }
 
     contract Cat is Feline {
-        function utterance() returns (bytes32) { return "miaow"; }
+        function utterance() public returns (bytes32) { return "miaow"; }
     }
 
 If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
@@ -990,7 +1079,7 @@ Interfaces are denoted by their own keyword:
     pragma solidity ^0.4.11;
 
     interface Token {
-        function transfer(address recipient, uint amount);
+        function transfer(address recipient, uint amount) public;
     }
 
 Contracts can inherit interfaces as they would inherit other contracts.
@@ -1033,7 +1122,7 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.16;
 
     library Set {
       // We define a new struct datatype that will be used to
@@ -1044,9 +1133,10 @@ more advanced example to implement a set).
       // reference" and thus only its storage address and not
       // its contents is passed as part of the call.  This is a
       // special feature of library functions.  It is idiomatic
-      // to call the first parameter 'self', if the function can
+      // to call the first parameter `self`, if the function can
       // be seen as a method of that object.
       function insert(Data storage self, uint value)
+          public
           returns (bool)
       {
           if (self.flags[value])
@@ -1056,6 +1146,7 @@ more advanced example to implement a set).
       }
 
       function remove(Data storage self, uint value)
+          public
           returns (bool)
       {
           if (!self.flags[value])
@@ -1065,6 +1156,8 @@ more advanced example to implement a set).
       }
 
       function contains(Data storage self, uint value)
+          public
+          view
           returns (bool)
       {
           return self.flags[value];
@@ -1074,7 +1167,7 @@ more advanced example to implement a set).
     contract C {
         Set.Data knownValues;
 
-        function register(uint value) {
+        function register(uint value) public {
             // The library functions can be called without a
             // specific instance of the library, since the
             // "instance" will be the current contract.
@@ -1084,7 +1177,7 @@ more advanced example to implement a set).
     }
 
 Of course, you do not have to follow this way to use
-libraries - they can also be used without defining struct
+libraries: they can also be used without defining struct
 data types. Functions also work without any storage
 reference parameters, and they can have multiple storage reference
 parameters and in any position.
@@ -1103,19 +1196,19 @@ custom types without the overhead of external function calls:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     library BigInt {
         struct bigint {
             uint[] limbs;
         }
 
-        function fromUint(uint x) internal returns (bigint r) {
+        function fromUint(uint x) internal pure returns (bigint r) {
             r.limbs = new uint[](1);
             r.limbs[0] = x;
         }
 
-        function add(bigint _a, bigint _b) internal returns (bigint r) {
+        function add(bigint _a, bigint _b) internal pure returns (bigint r) {
             r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
             uint carry = 0;
             for (uint i = 0; i < r.limbs.length; ++i) {
@@ -1137,11 +1230,11 @@ custom types without the overhead of external function calls:
             }
         }
 
-        function limb(bigint _a, uint _limb) internal returns (uint) {
+        function limb(bigint _a, uint _limb) internal pure returns (uint) {
             return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
         }
 
-        function max(uint a, uint b) private returns (uint) {
+        function max(uint a, uint b) private pure returns (uint) {
             return a > b ? a : b;
         }
     }
@@ -1149,7 +1242,7 @@ custom types without the overhead of external function calls:
     contract C {
         using BigInt for BigInt.bigint;
 
-        function f() {
+        function f() public pure {
             var x = BigInt.fromUint(7);
             var y = BigInt.fromUint(uint(-1));
             var z = x.add(y);
@@ -1207,13 +1300,14 @@ available without having to add further code.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.16;
 
     // This is the same code as before, just without comments
     library Set {
       struct Data { mapping(uint => bool) flags; }
 
       function insert(Data storage self, uint value)
+          public
           returns (bool)
       {
           if (self.flags[value])
@@ -1223,6 +1317,7 @@ Let us rewrite the set example from the
       }
 
       function remove(Data storage self, uint value)
+          public
           returns (bool)
       {
           if (!self.flags[value])
@@ -1232,6 +1327,8 @@ Let us rewrite the set example from the
       }
 
       function contains(Data storage self, uint value)
+          public
+          view
           returns (bool)
       {
           return self.flags[value];
@@ -1242,21 +1339,25 @@ Let us rewrite the set example from the
         using Set for Set.Data; // this is the crucial change
         Set.Data knownValues;
 
-        function register(uint value) {
+        function register(uint value) public {
             // Here, all variables of type Set.Data have
             // corresponding member functions.
             // The following function call is identical to
-            // Set.insert(knownValues, value)
+            // `Set.insert(knownValues, value)`
             require(knownValues.insert(value));
         }
     }
 
 It is also possible to extend elementary types in that way::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     library Search {
-        function indexOf(uint[] storage self, uint value) returns (uint) {
+        function indexOf(uint[] storage self, uint value)
+            public
+            view
+            returns (uint)
+        {
             for (uint i = 0; i < self.length; i++)
                 if (self[i] == value) return i;
             return uint(-1);
@@ -1267,11 +1368,11 @@ It is also possible to extend elementary types in that way::
         using Search for uint[];
         uint[] data;
 
-        function append(uint value) {
+        function append(uint value) public {
             data.push(value);
         }
 
-        function replace(uint _old, uint _new) {
+        function replace(uint _old, uint _new) public {
             // This performs the library function call
             uint index = data.indexOf(_old);
             if (index == uint(-1))

@@ -644,15 +644,11 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 
 	expectToken(Token::Event);
 	ASTPointer<ASTString> name(expectIdentifierToken());
-	ASTPointer<ParameterList> parameters;
-	if (m_scanner->currentToken() == Token::LParen)
-	{
-		VarDeclParserOptions options;
-		options.allowIndexed = true;
-		parameters = parseParameterList(options);
-	}
-	else
-		parameters = createEmptyParameterList();
+
+	VarDeclParserOptions options;
+	options.allowIndexed = true;
+	ASTPointer<ParameterList> parameters = parseParameterList(options);
+
 	bool anonymous = false;
 	if (m_scanner->currentToken() == Token::Anonymous)
 	{

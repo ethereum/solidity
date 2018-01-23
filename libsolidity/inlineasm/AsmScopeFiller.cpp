@@ -45,6 +45,11 @@ ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 	m_currentScope = &scope(nullptr);
 }
 
+bool ScopeFiller::operator()(ExpressionStatement const& _expr)
+{
+	return boost::apply_visitor(*this, _expr.expression);
+}
+
 bool ScopeFiller::operator()(Label const& _item)
 {
 	if (!m_currentScope->registerLabel(_item.name))
@@ -71,10 +76,10 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	bool success = true;
 	vector<Scope::JuliaType> arguments;
-	for (auto const& _argument: _funDef.arguments)
+	for (auto const& _argument: _funDef.parameters)
 		arguments.push_back(_argument.type);
 	vector<Scope::JuliaType> returns;
-	for (auto const& _return: _funDef.returns)
+	for (auto const& _return: _funDef.returnVariables)
 		returns.push_back(_return.type);
 	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
 	{
@@ -91,7 +96,7 @@ bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 	varScope.superScope = m_currentScope;
 	m_currentScope = &varScope;
 	varScope.functionScope = true;
-	for (auto const& var: _funDef.arguments + _funDef.returns)
+	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 		if (!registerVariable(var, _funDef.location, varScope))
 			success = false;
 

@@ -28,51 +28,42 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-/// FIXME: this is pretty much a copy of TypeChecker::endVisit(BinaryOperation)
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
-	TypePointer const& subType = _operation.subExpression().annotation().type;
-	if (!dynamic_cast<RationalNumberType const*>(subType.get()))
-		m_errorReporter.fatalTypeError(_operation.subExpression().location(), "Invalid constant expression.");
-	TypePointer t = subType->unaryOperatorResult(_operation.getOperator());
-	_operation.annotation().type = t;
+	auto sub = type(_operation.subExpression());
+	if (sub)
+		setType(_operation, sub->unaryOperatorResult(_operation.getOperator()));
 }
 
-/// FIXME: this is pretty much a copy of TypeChecker::endVisit(BinaryOperation)
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
-	TypePointer const& leftType = _operation.leftExpression().annotation().type;
-	TypePointer const& rightType = _operation.rightExpression().annotation().type;
-	if (!dynamic_cast<RationalNumberType const*>(leftType.get()))
-		m_errorReporter.fatalTypeError(_operation.leftExpression().location(), "Invalid constant expression.");
-	if (!dynamic_cast<RationalNumberType const*>(rightType.get()))
-		m_errorReporter.fatalTypeError(_operation.rightExpression().location(), "Invalid constant expression.");
-	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	if (!commonType)
+	auto left = type(_operation.leftExpression());
+	auto right = type(_operation.rightExpression());
+	if (left && right)
 	{
-		m_errorReporter.typeError(
-			_operation.location(),
-			"Operator " +
-			string(Token::toString(_operation.getOperator())) +
-			" not compatible with types " +
-			leftType->toString() +
-			" and " +
-			rightType->toString()
+		auto commonType = left->binaryOperatorResult(_operation.getOperator(), right);
+		if (!commonType)
+			m_errorReporter.fatalTypeError(
+				_operation.location(),
+				"Operator " +
+				string(Token::toString(_operation.getOperator())) +
+				" not compatible with types " +
+				left->toString() +
+				" and " +
+				right->toString()
+			);
+		setType(
+			_operation,
+			Token::isCompareOp(_operation.getOperator()) ?
+			make_shared<BoolType>() :
+			commonType
 		);
-		commonType = leftType;
 	}
-	_operation.annotation().commonType = commonType;
-	_operation.annotation().type =
-		Token::isCompareOp(_operation.getOperator()) ?
-		make_shared<BoolType>() :
-		commonType;
 }
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
-	_literal.annotation().type = Type::forLiteral(_literal);
-	if (!_literal.annotation().type)
-		m_errorReporter.fatalTypeError(_literal.location(), "Invalid literal value.");
+	setType(_literal, Type::forLiteral(_literal));
 }
 
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
@@ -81,18 +72,34 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	if (!variableDeclaration)
 		return;
 	if (!variableDeclaration->isConstant())
-		m_errorReporter.fatalTypeError(_identifier.location(), "Identifier must be declared constant.");
+		return;
 
-	ASTPointer<Expression> value = variableDeclaration->value();
+	ASTPointer<Expression> const& value = variableDeclaration->value();
 	if (!value)
-		m_errorReporter.fatalTypeError(_identifier.location(), "Constant identifier declaration must have a constant value.");
-
-	if (!value->annotation().type)
+		return;
+	else if (!m_types->count(value.get()))
 	{
 		if (m_depth > 32)
 			m_errorReporter.fatalTypeError(_identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
-		ConstantEvaluator e(*value, m_errorReporter, m_depth + 1);
+		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
 	}
 
-	_identifier.annotation().type = value->annotation().type;
+	setType(_identifier, type(*value));
+}
+
+void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
+{
+	if (_type && _type->category() == Type::Category::RationalNumber)
+		(*m_types)[&_node] = _type;
+}
+
+TypePointer ConstantEvaluator::type(ASTNode const& _node)
+{
+	return (*m_types)[&_node];
+}
+
+TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
+{
+	_expr.accept(*this);
+	return type(_expr);
 }

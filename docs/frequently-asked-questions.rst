@@ -111,10 +111,10 @@ array in the return statement. Pretty cool, huh?
 
 Example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f() returns (uint8[5]) {
+        function f() public pure returns (uint8[5]) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
             return ([1, 2, 3, 4, 5]);
         }
@@ -190,11 +190,11 @@ you should always convert it to a ``bytes`` first::
     contract C {
         string s;
 
-        function append(byte c) {
+        function append(byte c) public {
             bytes(s).push(c);
         }
 
-        function set(uint i, byte c) {
+        function set(uint i, byte c) public {
             bytes(s)[i] = c;
         }
     }
@@ -232,12 +232,14 @@ situation.
 
 If you do not want to throw, you can return a pair::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         uint[] counters;
 
         function getCounter(uint index)
+            public
+            view
             returns (uint counter, bool error) {
                 if (index >= counters.length)
                     return (0, true);
@@ -245,7 +247,7 @@ If you do not want to throw, you can return a pair::
                     return (counters[index], false);
         }
 
-        function checkCounter(uint index) {
+        function checkCounter(uint index) public view {
             var (counter, error) = getCounter(index);
             if (error) {
                 // ...
@@ -316,11 +318,11 @@ Example::
         uint[] data1;
         uint[] data2;
 
-        function appendOne() {
+        function appendOne() public {
             append(data1);
         }
 
-        function appendTwo() {
+        function appendTwo() public {
             append(data2);
         }
 
@@ -349,7 +351,7 @@ be created in memory, although it will be created in storage::
         uint someVariable;
         uint[] data;
 
-        function f() {
+        function f() public {
             uint[] x;
             x.push(2);
             data = x;
@@ -375,7 +377,7 @@ The correct way to do this is the following::
         uint someVariable;
         uint[] data;
 
-        function f() {
+        function f() public {
             uint[] x = data;
             x.push(2);
         }
@@ -431,14 +433,14 @@ What happens to a ``struct``'s mapping when copying over a ``struct``?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user {
+    struct User {
         mapping(string => string) comments;
     }
 
-    function somefunction {
-       user user1;
+    function somefunction public {
+       User user1;
        user1.comments["Hello"] = "World";
-       user user2 = user1;
+       User user2 = user1;
     }
 
 In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
@@ -456,13 +458,13 @@ In this example::
     pragma solidity ^0.4.0;
 
     contract B {
-        function B() payable {}
+        function B() public payable {}
     }
 
     contract A {
         address child;
 
-        function test() {
+        function test() public {
             child = (new B).value(10)(); //construct a new B with 10 wei
         }
     }
@@ -501,17 +503,17 @@ Can a contract pass an array (static size) or string or ``bytes`` (dynamic size)
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         uint[20] x;
 
-        function f() {
+        function f() public {
             g(x);
             h(x);
         }
 
-        function g(uint[20] y) internal {
+        function g(uint[20] y) internal pure {
             y[2] = 3;
         }
 

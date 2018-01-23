@@ -138,7 +138,7 @@ Input Description
         //   ewasm.wasm - eWASM binary format (not supported atm)
         //
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
-        // target part of that output.
+        // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         outputSelection: {
           // Enable the metadata and bytecode outputs of every single contract.
@@ -147,11 +147,11 @@ Input Description
           },
           // Enable the abi and opcodes output of MyContract defined in file def.
           "def": {
-            "MyContract": [ "abi", "evm.opcodes" ]
+            "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           },
           // Enable the source map output of every single contract.
           "*": {
-            "*": [ "evm.sourceMap" ]
+            "*": [ "evm.bytecode.sourceMap" ]
           },
           // Enable the legacy AST output of every single file.
           "*": {
@@ -177,7 +177,8 @@ Output Description
             start: 0,
             end: 100
           ],
-          // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc
+          // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
+          // See below for complete list of types.
           type: "TypeError",
           // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
           component: "general",
@@ -273,3 +274,21 @@ Output Description
         }
       }
     }
+
+
+Error types
+~~~~~~~~~~~
+
+1. ``JSONError``: JSON input doesn't conform to the required format, e.g. input is not a JSON object, the language is not supported, etc.
+2. ``IOError``: IO and import processing errors, such as unresolvable URL or hash mismatch in supplied sources.
+3. ``ParserError``: Source code doesn't conform to the language rules.
+4. ``DocstringParsingError``: The NatSpec tags in the comment block cannot be parsed.
+5. ``SyntaxError``: Syntactical error, such as ``continue`` is used outside of a ``for`` loop.
+6. ``DeclarationError``: Invalid, unresolvable or clashing identifier names. e.g. ``Identifier not found``
+7. ``TypeError``: Error within the type system, such as invalid type conversions, invalid assignments, etc.
+8. ``UnimplementedFeatureError``: Feature is not supported by the compiler, but is expected to be supported in future versions.
+9. ``InternalCompilerError``: Internal bug triggered in the compiler - this should be reported as an issue.
+10. ``Exception``: Unknown failure during compilation - this should be reported as an issue.
+11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
+12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
+13. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.

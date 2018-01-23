@@ -43,10 +43,22 @@ struct FunctionDefinition;
 struct FunctionCall;
 struct If;
 struct Switch;
+struct Case;
 struct ForLoop;
+struct ExpressionStatement;
 struct Block;
 
-using Statement = boost::variant<Instruction, Literal, Label, StackAssignment, Identifier, Assignment, FunctionCall, FunctionalInstruction, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
+struct TypedName;
+
+using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
+using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
+
+enum class AsmFlavour
+{
+	Loose,  // no types, EVM instructions as function, jumps and direct stack manipulations
+	Strict, // no types, EVM instructions as functions, but no jumps and no direct stack manipulations
+	IULIA   // same as Strict mode with types
+};
 
 }
 }

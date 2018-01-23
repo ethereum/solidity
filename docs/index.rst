@@ -70,7 +70,7 @@ Available Solidity Integrations
     Configurable Solidty linter for Atom using Solium as a base.
 
 * `Solium <https://github.com/duaraghav8/Solium/>`_
-    A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
+    Linter to identify and fix style and security issues in Solidity.
     
 * `Solhint <https://github.com/protofire/solhint>`_
     Solidity linter that provides security, style guide and best practice rules for smart contract validation.

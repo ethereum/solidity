@@ -179,6 +179,14 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 			"fileA": {
 				"content": "contract A { }"
 			}
+		},
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [ "abi", "devdoc", "userdoc", "evm.bytecode", "evm.assembly", "evm.gasEstimates", "metadata" ],
+					"": [ "legacyAST" ]
+				}
+			}
 		}
 	}
 	)";
@@ -224,6 +232,46 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],\"name\":\"A\",\"nodes\":[null],\"scope\":2},"
 		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
 	);
+}
+
+BOOST_AUTO_TEST_CASE(compilation_error)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { function }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(result.isMember("errors"));
+	BOOST_CHECK(result["errors"].size() >= 1);
+	for (auto const& error: result["errors"])
+	{
+		BOOST_REQUIRE(error.isObject());
+		BOOST_REQUIRE(error["message"].isString());
+		if (error["message"].asString().find("pre-release compiler") == string::npos)
+		{
+			BOOST_CHECK_EQUAL(
+				dev::jsonCompactPrint(error),
+				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier, got 'RBrace'\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier, got 'RBrace'\","
+				"\"severity\":\"error\",\"sourceLocation\":{\"end\":22,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
+			);
+		}
+	}
 }
 
 BOOST_AUTO_TEST_CASE(output_selection_explicit)
@@ -402,6 +450,71 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 	BOOST_CHECK(contract["abi"].isArray());
 	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
 }
+
+BOOST_AUTO_TEST_CASE(filename_with_colon)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"http://github.com/ethereum/solidity/std/StandardToken.sol": {
+					"A": [
+						"abi"
+					]
+				}
+			}
+		},
+		"sources": {
+			"http://github.com/ethereum/solidity/std/StandardToken.sol": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "http://github.com/ethereum/solidity/std/StandardToken.sol", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["abi"].isArray());
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[]");
+}
+
+BOOST_AUTO_TEST_CASE(library_filename_with_colon)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"evm.bytecode"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "import \"git:library.sol\"; contract A { function f() returns (uint) { return L.g(); } }"
+			},
+			"git:library.sol": {
+				"content": "library L { function g() returns (uint) { return 1; } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"].isArray());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject());
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

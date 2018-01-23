@@ -187,8 +187,8 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
-	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
-	/// prior to parsing the inline assembly.
+	/// Appends inline assembly (strict mode).
+	/// @a _replacements are string-matching replacements that are performed prior to parsing the inline assembly.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
 	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
 	void appendInlineAssembly(

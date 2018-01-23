@@ -1,11 +1,32 @@
-### 0.4.19 (unreleased)
+### 0.4.20 (unreleased)
 
 Features:
- * Allow constant variables to be used as array length
+ * Commandline interface: Support strict mode of assembly with the ``--strict--assembly`` switch.
+ * Limit the number of warnings raised for creating abstract contracts.
+ * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
+ * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Julia mode.
+ * SMT Checker: If-else branch conditions are taken into account in the SMT encoding of the program
+   variables.
+
+Bugfixes:
+ * Parser: Disallow event declarations with no parameter list.
+ * Standard JSON: Populate the ``sourceLocation`` field in the error list.
+ * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).
+ * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
+   (instead of an internal compiler error).
+ * Type Checker: Improve error message for wrong struct initialization.
+
+### 0.4.19 (2017-11-30)
+
+Features:
+ * Code Generator: New ABI decoder which supports structs and arbitrarily nested
+   arrays and checks input size (activate using ``pragma experimental ABIEncoderV2;``).
+ * General: Allow constant variables to be used as array length.
+ * Inline Assembly: ``if`` statement.
+ * Standard JSON: Support the ``outputSelection`` field for selective compilation of target artifacts.
  * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
  * Type Checker: Improve address checksum warning.
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
- * Inline Assembly: ``if`` statement.
 
 Bugfixes:
 

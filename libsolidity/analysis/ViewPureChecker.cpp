@@ -40,18 +40,19 @@ public:
 	void operator()(assembly::Label const&) { }
 	void operator()(assembly::Instruction const& _instruction)
 	{
-		if (eth::SemanticInformation::invalidInViewFunctions(_instruction.instruction))
-			m_reportMutability(StateMutability::NonPayable, _instruction.location);
-		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction.instruction))
-			m_reportMutability(StateMutability::View, _instruction.location);
+		checkInstruction(_instruction.location, _instruction.instruction);
 	}
 	void operator()(assembly::Literal const&) {}
 	void operator()(assembly::Identifier const&) {}
 	void operator()(assembly::FunctionalInstruction const& _instr)
 	{
-		(*this)(_instr.instruction);
+		checkInstruction(_instr.location, _instr.instruction);
 		for (auto const& arg: _instr.arguments)
 			boost::apply_visitor(*this, arg);
+	}
+	void operator()(assembly::ExpressionStatement const& _expr)
+	{
+		boost::apply_visitor(*this, _expr.expression);
 	}
 	void operator()(assembly::StackAssignment const&) {}
 	void operator()(assembly::Assignment const& _assignment)
@@ -102,6 +103,13 @@ public:
 
 private:
 	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
+	void checkInstruction(SourceLocation _location, solidity::Instruction _instruction)
+	{
+		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
+			m_reportMutability(StateMutability::NonPayable, _location);
+		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
+			m_reportMutability(StateMutability::View, _location);
+	}
 };
 
 }

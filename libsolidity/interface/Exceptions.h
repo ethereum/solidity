@@ -109,6 +109,18 @@ public:
 		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
 		return *this;
 	}
+	/// Limits the number of secondary source locations to 32 and appends a notice to the
+	/// error message.
+	void limitSize(std::string& _message)
+	{
+		size_t occurrences = infos.size();
+		if (occurrences > 32)
+		{
+			infos.resize(32);
+			_message += " Truncated from " + boost::lexical_cast<std::string>(occurrences) + " to the first 32 occurrences.";
+		}
+	}
+
 	std::vector<errorSourceLocationInfo> infos;
 };
 

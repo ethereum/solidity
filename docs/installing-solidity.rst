@@ -2,9 +2,9 @@
 
 .. _installing-solidity:
 
-###################
-Installing Solidity
-###################
+################################
+Installing the Solidity Compiler
+################################
 
 Versioning
 ==========
@@ -18,29 +18,37 @@ will use the latest release.
 Remix
 =====
 
-If you just want to try Solidity for small contracts, you
-can try `Remix <https://remix.ethereum.org/>`_
-which does not need any installation. If you want to use it
-without connection to the Internet, you can go to
-https://github.com/ethereum/browser-solidity/tree/gh-pages and
-download the .ZIP file as explained on that page.
+*We recommend Remix for small contracts and for quickly learning Solidity.*
+
+`Access Remix online <https://remix.ethereum.org/>`_, you don't need to install anything.
+If you want to use it without connection to the Internet, go to
+https://github.com/ethereum/browser-solidity/tree/gh-pages and download the .ZIP file as
+explained on that page.
+
+Further options on this page detail installing commandline Solidity compiler software
+on your computer. Choose a commandline compiler if you are working on a larger contract
+or if you require more compilation options.
 
 npm / Node.js
 =============
 
-This is probably the most portable and most convenient way to install Solidity locally.
+Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
+`solcjs` program has less features than all options further down this page. Our 
+`Using the compiler <using-the-compiler.html>` documentation assumes you are using
+the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
+stop reading the documentation here and then continue to <https://github.com/ethereum/solc-js>,
 
-A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten. It can be used in projects directly (such as Remix).
+Note: The `solc-js <https://github.com/ethereum/solc-js>` project is derived from the C++
+`solc` by using Emscripten. `solc-js` can be used in JavaScript projects directly (such as Remix).
 Please refer to the `solc-js <https://github.com/ethereum/solc-js>`_ repository for instructions.
-
-It also contains a commandline tool called `solcjs`, which can be installed via npm:
 
 .. code:: bash
 
     npm install -g solc
 
 .. note::
+
+    The commandline is named `solcjs`.
 
     The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
     expecting the behaviour of `solc` will not work with `solcjs`.
@@ -63,7 +71,7 @@ output directories.
 Binary Packages
 ===============
 
-Binary packages of Solidity available at
+Binary packages of Solidity are available at
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
 
 We also have PPAs for Ubuntu.  For the latest stable version.

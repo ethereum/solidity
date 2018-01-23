@@ -190,9 +190,9 @@ Given the contract:
     pragma solidity ^0.4.0;
 
     contract Foo {
-      function bar(bytes3[2] xy) {}
-      function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
-      function sam(bytes name, bool z, uint[] data) {}
+      function bar(bytes3[2] xy) public {}
+      function baz(uint32 x, bool y) public returns (bool r) { r = x > 32 || y; }
+      function sam(bytes name, bool z, uint[] data) public {}
     }
 
 
@@ -288,6 +288,8 @@ In effect, a log entry using this ABI is described as:
 - ``topics[n]``: ``EVENT_INDEXED_ARGS[n - 1]`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are indexed);
 - ``data``: ``abi_serialise(EVENT_NON_INDEXED_ARGS)`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_serialise`` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
 
+For all fixed-length Solidity types, the ``EVENT_INDEXED_ARGS`` array contains the 32-byte encoded value directly. However, for *types of dynamic length*, which include ``string``, ``bytes``, and arrays, ``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of the encoded value, rather than the encoded value directly. This allows applications to efficiently query for values of dynamic-length types (by setting the hash of the encoded value as the topic), but leaves applications unable to decode indexed values they have not queried for. For dynamic-length types, application developers face a trade-off between fast search for predetermined values (if the argument is indexed) and legibility of arbitrary values (which requires that the arguments not be indexed). Developers may overcome this tradeoff and achieve both efficient search and arbitrary legibility by defining events with two arguments — one indexed, one not — intended to hold the same value.
+
 JSON
 ====
 
@@ -333,10 +335,10 @@ For example,
     pragma solidity ^0.4.0;
 
     contract Test {
-      function Test(){ b = 0x12345678901234567890123456789012; }
+      function Test() public { b = 0x12345678901234567890123456789012; }
       event Event(uint indexed a, bytes32 b);
       event Event2(uint indexed a, bytes32 b);
-      function foo(uint a) { Event(a, b); }
+      function foo(uint a) public { Event(a, b); }
       bytes32 b;
     }
 
@@ -377,10 +379,14 @@ As an example, the code
 
 ::
 
+    pragma solidity ^0.4.19;
+    pragma experimental ABIEncoderV2;
+
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
-      function f(S s, T t, uint a) { }
+      function f(S s, T t, uint a) public { }
+      function g() public returns (S s, T t, uint a) {}
     }
 
 would result in the JSON:

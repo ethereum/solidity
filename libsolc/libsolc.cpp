@@ -20,7 +20,7 @@
  * JSON interface for the solidity compiler to be used from Javascript.
  */
 
-#include <solc/jsonCompiler.h>
+#include <libsolc/libsolc.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/StandardCompiler.h>
@@ -127,6 +127,11 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	input["settings"]["optimizer"] = Json::objectValue;
 	input["settings"]["optimizer"]["enabled"] = _optimize;
 	input["settings"]["optimizer"]["runs"] = 200;
+
+	// Enable all SourceUnit-level outputs.
+	input["settings"]["outputSelection"]["*"][""][0] = "*";
+	// Enable all Contract-level outputs.
+	input["settings"]["outputSelection"]["*"]["*"][0] = "*";
 
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
 	Json::Value ret = compiler.compile(input);

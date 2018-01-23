@@ -86,22 +86,58 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	return AssemblyItems();
 }
 
+void printAssemblyLocations(AssemblyItems const& _items)
+{
+	auto printRepeated = [](SourceLocation const& _loc, size_t _repetitions)
+	{
+		cout <<
+			"\t\tvector<SourceLocation>(" <<
+			_repetitions <<
+			", SourceLocation(" <<
+			_loc.start <<
+			", " <<
+			_loc.end <<
+			", make_shared<string>(\"" <<
+			*_loc.sourceName <<
+			"\"))) +" << endl;
+	};
+
+	vector<SourceLocation> locations;
+	for (auto const& item: _items)
+		locations.push_back(item.location());
+	size_t repetitions = 0;
+	SourceLocation const* previousLoc = nullptr;
+	for (size_t i = 0; i < locations.size(); ++i)
+	{
+		SourceLocation& loc = locations[i];
+		if (previousLoc && *previousLoc == loc)
+			repetitions++;
+		else
+		{
+			if (previousLoc)
+				printRepeated(*previousLoc, repetitions);
+			previousLoc = &loc;
+			repetitions = 1;
+		}
+	}
+	if (previousLoc)
+		printRepeated(*previousLoc, repetitions);
+}
+
 void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> const& _locations)
 {
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
 	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
-		BOOST_CHECK_MESSAGE(
-			_items[i].location() == _locations[i],
-			"Location mismatch for assembly item " + to_string(i) + ". Found: " +
-					(_items[i].location().sourceName ? *_items[i].location().sourceName + ":" : "(null source name)") +
-					to_string(_items[i].location().start) + "-" +
-					to_string(_items[i].location().end) + ", expected: " +
-					(_locations[i].sourceName ? *_locations[i].sourceName + ":" : "(null source name)") +
-					to_string(_locations[i].start) + "-" +
-					to_string(_locations[i].end));
+		if (_items[i].location() != _locations[i])
+		{
+			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
+			printAssemblyLocations(_items);
+			return;
+		}
 	}
 }
+
 
 } // end anonymous namespace
 

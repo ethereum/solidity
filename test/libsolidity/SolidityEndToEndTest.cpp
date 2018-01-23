@@ -2971,7 +2971,7 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event Deposit;
+			event Deposit();
 			function deposit() {
 				Deposit();
 			}
@@ -3013,7 +3013,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event Deposit;
+			event Deposit();
 			event Deposit(address _addr);
 			event Deposit(address _addr, uint _amount);
 			function deposit() returns (uint) {
@@ -3059,7 +3059,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name_inherited)
 {
 	char const* sourceCode = R"(
 		contract A {
-			event Deposit;
+			event Deposit();
 		}
 
 		contract B {

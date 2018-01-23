@@ -97,6 +97,7 @@ static string const g_strJulia = "julia";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
+static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
@@ -112,6 +113,7 @@ static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
+static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 
@@ -134,10 +136,10 @@ static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
-static string const g_argJulia = "julia";
+static string const g_argJulia = g_strJulia;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
-static string const g_argMachine = "machine";
+static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
@@ -148,6 +150,7 @@ static string const g_argOptimizeRuns = g_strOptimizeRuns;
 static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argStandardJSON = g_strStandardJSON;
+static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 
@@ -575,6 +578,10 @@ Allowed options)",
 			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
 		)
 		(
+			g_argStrictAssembly.c_str(),
+			"Switch to strict assembly mode, ignoring all options except --machine and assumes input is strict assembly."
+		)
+		(
 			g_argMachine.c_str(),
 			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
 			"Target machine in assembly or JULIA mode."
@@ -737,13 +744,13 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
-	if (m_args.count(g_argAssemble) || m_args.count(g_argJulia))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = AssemblyStack::Language;
 		using Machine = AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : Input::Assembly;
+		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		if (m_args.count(g_argMachine))
 		{
