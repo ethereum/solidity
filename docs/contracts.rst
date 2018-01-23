@@ -939,7 +939,7 @@ derived override, but this function will bypass
         function kill() public { /* do cleanup 2 */ super.kill(); }
     }
 
-    contract Final is Base2, Base1 {
+    contract Final is Base1, Base2 {
     }
 
 If ``Base1`` calls a function of ``super``, it does not simply
