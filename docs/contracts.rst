@@ -942,12 +942,12 @@ derived override, but this function will bypass
     contract Final is Base1, Base2 {
     }
 
-If ``Base1`` calls a function of ``super``, it does not simply
+If ``Base2`` calls a function of ``super``, it does not simply
 call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base2.kill()`` (note that
+inheritance graph, so it will call ``Base1.kill()`` (note that
 the final inheritance sequence is -- starting with the most
-derived contract: Final, Base1, Base2, mortal, owned).
+derived contract: Final, Base2, Base1, mortal, owned).
 The actual function that is called when using super is
 not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
