@@ -86,7 +86,7 @@ case $(uname -s) in
                 ;;
             *)
                 echo "Unsupported macOS version."
-                echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
+                echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on High Sierra."
                 exit 1
                 ;;
         esac
