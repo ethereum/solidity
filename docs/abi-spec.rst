@@ -187,12 +187,12 @@ Given the contract:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract Foo {
-      function bar(bytes3[2] xy) public {}
-      function baz(uint32 x, bool y) public returns (bool r) { r = x > 32 || y; }
-      function sam(bytes name, bool z, uint[] data) public {}
+      function bar(bytes3[2]) public pure {}
+      function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
+      function sam(bytes name, bool z, uint[] data) public pure {name=name; z=z; data=data;}
     }
 
 
