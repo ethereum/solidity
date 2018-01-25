@@ -62,6 +62,9 @@ Available Solidity Integrations
 
 * `Etheratom <https://github.com/0mkara/etheratom>`_
     Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (Backend node & VM compatible).
+    
+* `EthFiddle <https://ethfiddle.com/>`_
+    Solidity IDE in the Browser. Write and share your solidity code.
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
     Plugin for the Atom editor that provides Solidity linting.
