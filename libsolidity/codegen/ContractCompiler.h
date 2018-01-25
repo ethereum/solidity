@@ -75,10 +75,19 @@ private:
 	/// with a new and initialized context. Adds the constructor code.
 	/// @returns the identifier of the runtime sub assembly
 	size_t packIntoContractCreator(ContractDefinition const& _contract);
+	/// Appends code that deploys the given contract as a library.
+	/// Will also add code that modifies the contract in memory by injecting the current address
+	/// for the call protector.
+	size_t deployLibrary(ContractDefinition const& _contract);
 	/// Appends state variable initialisation and constructor code.
 	void appendInitAndConstructorCode(ContractDefinition const& _contract);
 	void appendBaseConstructor(FunctionDefinition const& _constructor);
 	void appendConstructor(FunctionDefinition const& _constructor);
+	/// Appends code that returns a boolean flag on the stack that tells whether
+	/// the contract has been called via delegatecall (false) or regular call (true).
+	/// This is done by inserting a specific push constant as the first instruction
+	/// whose data will be modified in memory at deploy time.
+	void appendDelegatecallCheck();
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	void appendCallValueCheck();
 	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.

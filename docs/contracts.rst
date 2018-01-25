@@ -1100,7 +1100,11 @@ is executed in the context of the calling contract, i.e. ``this`` points to the
 calling contract, and especially the storage from the calling contract can be
 accessed. As a library is an isolated piece of source code, it can only access
 state variables of the calling contract if they are explicitly supplied (it
-would have no way to name them, otherwise).
+would have no way to name them, otherwise). Library functions can only be
+called directly (i.e. without the use of ``DELEGATECALL``) if they do not modify
+the state (i.e. if they are ``view`` or ``pure`` functions),
+because libraries are assumed to be stateless. In particular, it is
+not possible to destroy a library unless Solidity's type system is circumvented.
 
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
@@ -1267,6 +1271,30 @@ Restrictions for libraries in comparison to contracts:
 - Cannot receive Ether
 
 (These might be lifted at a later point.)
+
+Call Protection For Libraries
+=============================
+
+As mentioned in the introduction, if a library's code is executed
+using a ``CALL`` instead of a ``DELEGATECALL`` or ``CALLCODE``,
+it will revert unless a ``view`` or ``pure`` function is called.
+
+The EVM does not provide a direct way for a contract to detect
+whether it was called using ``CALL`` or not, but a contract
+can use the ``ADDRESS`` opcode to find out "where" it is
+currently running. The generated code compares this address
+to the address used at construction time to determine the mode
+of calling.
+
+More specifically, the runtime code of a library always starts
+with a push instruction, which is a zero of 20 bytes at
+compilation time. When the deploy code runs, this constant
+is replaced in memory by the current address and this
+modified code is stored in the contract. At runtime,
+this causes the deploy time address to be the first
+constant to be pushed onto the stack and the dispatcher
+code compares the current address against this constant
+for any non-view and non-pure function.
 
 .. index:: ! using for, library
 

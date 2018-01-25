@@ -64,6 +64,12 @@ void ContractCompiler::compileContract(
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
+
+	if (_contract.isLibrary())
+		// Check whether this is a call (true) or a delegatecall (false).
+		// This has to be the first code in the contract.
+		appendDelegatecallCheck();
+
 	initializeContext(_contract, _contracts);
 	appendFunctionSelector(_contract);
 	appendMissingFunctions();
@@ -75,8 +81,13 @@ size_t ContractCompiler::compileConstructor(
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
-	initializeContext(_contract, _contracts);
-	return packIntoContractCreator(_contract);
+	if (_contract.isLibrary())
+		return deployLibrary(_contract);
+	else
+	{
+		initializeContext(_contract, _contracts);
+		return packIntoContractCreator(_contract);
+	}
 }
 
 size_t ContractCompiler::compileClone(
@@ -122,6 +133,7 @@ void ContractCompiler::appendCallValueCheck()
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 {
+	solAssert(!_contract.isLibrary(), "Tried to initialize library.");
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 	// Determine the arguments that are used for the base constructors.
 	std::vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
@@ -163,6 +175,7 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
 {
 	solAssert(!!m_runtimeCompiler, "");
+	solAssert(!_contract.isLibrary(), "Tried to use contract creator or library.");
 
 	appendInitAndConstructorCode(_contract);
 
@@ -184,6 +197,34 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::CODECOPY;
 	m_context << u256(0) << Instruction::RETURN;
+
+	return m_context.runtimeSub();
+}
+
+size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
+{
+	solAssert(!!m_runtimeCompiler, "");
+	solAssert(_contract.isLibrary(), "Tried to deploy contract as library.");
+
+	CompilerContext::LocationSetter locationSetter(m_context, _contract);
+
+	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
+	m_context.pushSubroutineSize(m_context.runtimeSub());
+	m_context.pushSubroutineOffset(m_context.runtimeSub());
+	m_context.appendInlineAssembly(R"(
+	{
+		// If code starts at 11, an mstore(0) writes to the full PUSH20 plus data
+		// without the need for a shift.
+		let codepos := 11
+		codecopy(codepos, subOffset, subSize)
+		// Check that the first opcode is a PUSH20
+		switch eq(0x73, byte(0, mload(codepos)))
+		case 0 { invalid() }
+		mstore(0, address())
+		mstore8(codepos, 0x73)
+		return(codepos, subSize)
+	}
+	)", {"subSize", "subOffset"});
 
 	return m_context.runtimeSub();
 }
@@ -244,10 +285,25 @@ void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 	_constructor.accept(*this);
 }
 
+void ContractCompiler::appendDelegatecallCheck()
+{
+	// Special constant that will be replaced by the address at deploy time.
+	// At compilation time, this is just "PUSH20 00...000".
+	m_context.appendDeployTimeAddress();
+	m_context << Instruction::ADDRESS << Instruction::EQ;
+	// The result on the stack is
+	// "We have not been called via DELEGATECALL".
+}
+
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
 	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
+
+	if (_contract.isLibrary())
+	{
+		solAssert(m_context.stackHeight() == 1, "CALL / DELEGATECALL flag expected.");
+	}
 
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	eth::AssemblyItem notFound = m_context.newTag();
@@ -260,7 +316,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	if (!interfaceFunctions.empty())
 		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
-	// stack now is: 1 0 <funhash>
+	// stack now is: <can-call-non-view-functions>? <funhash>
 	for (auto const& it: interfaceFunctions)
 	{
 		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
@@ -272,6 +328,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context << notFound;
 	if (fallback)
 	{
+		solAssert(!_contract.isLibrary(), "");
 		if (!fallback->isPayable())
 			appendCallValueCheck();
 
@@ -291,6 +348,13 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		CompilerContext::LocationSetter locationSetter(m_context, functionType->declaration());
 
 		m_context << callDataUnpackerEntryPoints.at(it.first);
+		if (_contract.isLibrary() && functionType->stateMutability() > StateMutability::View)
+		{
+			// If the function is not a view function and is called without DELEGATECALL,
+			// we revert.
+			m_context << dupInstruction(2);
+			m_context.appendConditionalRevert();
+		}
 		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
@@ -441,6 +505,7 @@ void ContractCompiler::registerStateVariables(ContractDefinition const& _contrac
 
 void ContractCompiler::initializeStateVariables(ContractDefinition const& _contract)
 {
+	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
 			ExpressionCompiler(m_context, m_optimise).appendStateVariableInitialization(*variable);

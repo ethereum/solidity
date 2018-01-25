@@ -52,6 +52,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	case PushSubSize:
 	case PushProgramSize:
 	case PushLibraryAddress:
+	case PushDeployTimeAddress:
 		gas = runGas(Instruction::PUSH1);
 		break;
 	case Tag:

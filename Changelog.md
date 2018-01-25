@@ -1,6 +1,7 @@
 ### 0.4.20 (unreleased)
 
 Features:
+ * Code Generator: Prevent non-view functions in libraries from being called directly.
  * Commandline interface: Support strict mode of assembly with the ``--strict--assembly`` switch.
  * Limit the number of warnings raised for creating abstract contracts.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).

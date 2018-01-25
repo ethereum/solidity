@@ -35,6 +35,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item)
 	default:
 	case UndefinedItem:
 	case Tag:
+	case PushDeployTimeAddress:
 		return true;
 	case Push:
 	case PushString:

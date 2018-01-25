@@ -174,6 +174,9 @@ public:
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
 	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
+	/// Appends a zero-address that can be replaced by something else at deploy time (if the
+	/// position in bytecode is known).
+	void appendDeployTimeAddress() { m_asm->append(eth::PushDeployTimeAddress); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
