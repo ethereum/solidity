@@ -1115,7 +1115,7 @@ if the library were a base contract. Of course, calls to internal functions
 use the internal calling convention, which means that all internal types
 can be passed and memory types will be passed by reference and not copied.
 To realize this in the EVM, code of internal library functions
-and all functions called from therein will be pulled into the calling
+and all functions called from therein will at compile time be pulled into the calling
 contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
 .. index:: using for, set
