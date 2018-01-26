@@ -39,9 +39,8 @@ This is just the bytecode "data" sent along with the request.
 Is there a decompiler available?
 ================================
 
-There is no official decompiler to Solidity, but third party security
-company `Comae <https://www.comae.io/>`_ has developed 
-`Porosity <https://github.com/comaeio/porosity>`_. 
+There is no exact decompiler to Solidity, but
+`Porosity <https://github.com/comaeio/porosity>`_ is close. 
 Because some information like variable names, comments, and 
 source code formatting is lost in the compilation process, 
 it is not possible to completely recover the original source code.
