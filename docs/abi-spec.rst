@@ -192,7 +192,7 @@ Given the contract:
     contract Foo {
       function bar(bytes3[2]) public pure {}
       function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
-      function sam(bytes name, bool z, uint[] data) public pure {name=name; z=z; data=data;}
+      function sam(bytes, bool, uint[]) public pure {}
     }
 
 
