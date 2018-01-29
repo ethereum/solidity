@@ -54,7 +54,7 @@ idea is that assembly libraries will be used to enhance the language in such way
     pragma solidity ^0.4.0;
 
     library GetCode {
-        function at(address _addr) public returns (bytes o_code) {
+        function at(address _addr) public view returns (bytes o_code) {
             assembly {
                 // retrieve the size of the code, this needs assembly
                 let size := extcodesize(_addr)
@@ -78,12 +78,12 @@ you really know what you are doing.
 
 .. code::
 
-    pragma solidity ^0.4.12;
+    pragma solidity ^0.4.16;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
         // remove the bounds checks in array access.
-        function sumSolidity(uint[] _data) public returns (uint o_sum) {
+        function sumSolidity(uint[] _data) public view returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i)
                 o_sum += _data[i];
         }
@@ -91,7 +91,7 @@ you really know what you are doing.
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
-        function sumAsm(uint[] _data) public returns (uint o_sum) {
+        function sumAsm(uint[] _data) public view returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
                     o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
@@ -100,7 +100,7 @@ you really know what you are doing.
         }
 
         // Same as above, but accomplish the entire code within inline assembly.
-        function sumPureAsm(uint[] _data) public returns (uint o_sum) {
+        function sumPureAsm(uint[] _data) public view returns (uint o_sum) {
             assembly {
                // Load the length (first 32 bytes)
                let len := mload(_data)
@@ -459,10 +459,10 @@ be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f(uint x) public returns (uint b) {
+        function f(uint x) public view returns (uint b) {
             assembly {
                 let v := add(x, 1)
                 mstore(0x80, v)
@@ -710,10 +710,10 @@ Example:
 We will follow an example compilation from Solidity to desugared assembly.
 We consider the runtime bytecode of the following Solidity program::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-      function f(uint x) public returns (uint y) {
+      function f(uint x) public pure returns (uint y) {
         y = 1;
         for (uint i = 0; i < x; i++)
           y = 2 * y;
