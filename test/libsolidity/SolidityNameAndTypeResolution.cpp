@@ -6656,6 +6656,16 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
 }
 
+BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint storage a) public { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Storage location can only be given for array or struct types.");
+}
+
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
 {
 	char const* text = R"(
