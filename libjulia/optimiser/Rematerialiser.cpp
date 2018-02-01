@@ -136,6 +136,10 @@ void Rematerialiser::handleAssignment(set<string> const& _variables, Expression*
 		else
 			m_substitutions.erase(name);
 	}
+	else
+		for (auto const& name: _variables)
+			m_substitutions.erase(name);
+
 	// Disallow substitutions that use a variable that will be reassigned by this assignment.
 	for (auto const& name: _variables)
 		for (auto const& ref: m_referencedBy[name])
