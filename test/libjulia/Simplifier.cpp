@@ -87,6 +87,30 @@ BOOST_AUTO_TEST_CASE(constant_propagation)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(identity_rules_simple)
+{
+	CHECK(
+		"{ let a := mload(0) let b := sub(a, a) }",
+		"{ let a := mload(0) let b := 0 }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(identity_rules_complex)
+{
+	CHECK(
+		"{ let a := sub(calldataload(0), calldataload(0)) }",
+		"{ let a := 0 }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(identity_rules_negative)
+{
+	CHECK(
+		"{ let a := sub(calldataload(1), calldataload(0)) }",
+		"{ let a := sub(calldataload(1), calldataload(0)) }"
+	);
+}
+
 BOOST_AUTO_TEST_CASE(including_function_calls)
 {
 	CHECK(

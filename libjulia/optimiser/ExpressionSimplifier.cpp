@@ -40,6 +40,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	ASTModifier::visit(_expression);
 	while (auto match = SimplificationRules::findFirstMatch(_expression))
 	{
+		// Do not apply the rule if it removes non-constant parts of the expression.
 		// TODO: The check could actually be less strict than "movable".
 		// We only require "Does not cause side-effects".
 		if (std::get<2>(*match) && !MovableChecker(_expression).movable())

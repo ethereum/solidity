@@ -22,6 +22,8 @@
 
 #include <libjulia/optimiser/Utilities.h>
 #include <libjulia/optimiser/ASTCopier.h>
+#include <libjulia/optimiser/Semantics.h>
+#include <libjulia/optimiser/SyntacticalEquality.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -121,12 +123,20 @@ bool Pattern::matches(Expression const& _expr) const
 	{
 		assertThrow(m_arguments.empty(), OptimizerException, "");
 	}
-	// We do not support matching multiple expressions that require the same value.
+	// We support matching multiple expressions that require the same value
+	// based on identical ASTs, which have to be movable.
 	if (m_matchGroup)
 	{
 		if (m_matchGroups->count(m_matchGroup))
-			return false;
-		(*m_matchGroups)[m_matchGroup] = &_expr;
+		{
+			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
+			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
+			return
+				SyntacticalEqualityChecker::equal(*firstMatch, _expr) &&
+				MovableChecker(_expr).movable();
+		}
+		else
+			(*m_matchGroups)[m_matchGroup] = &_expr;
 	}
 	return true;
 }
