@@ -181,10 +181,10 @@ BOOST_AUTO_TEST_CASE(interface)
 {
 	string text = R"(
 		interface D {
-			function f() view public;
+			function f() view external;
 		}
 		contract C is D {
-			function f() view public {}
+			function f() view external {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);

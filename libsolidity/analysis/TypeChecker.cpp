@@ -604,6 +604,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (_function.visibility() < FunctionDefinition::Visibility::Public)
 				m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+			else if (_function.visibility() != FunctionDefinition::Visibility::External)
+				m_errorReporter.warning(_function.location(), "Functions in interfaces should be declared external.");
 		}
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
