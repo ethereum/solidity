@@ -21,6 +21,14 @@ crowdfunding, blind auctions, multi-signature wallets and more.
     `Remix <https://remix.ethereum.org/>`_
     (it can take a while to load, please be patient).
 
+.. warning::
+    Since software is written by humans, it can have bugs. Thus, also
+    smart contracts should be created following well-known best-practices in
+    software development. This includes code review, testing, audits and correctness proofs.
+    Also note that users are sometimes more confident in code than its authors.
+    Finally, blockchains have their own things to watch out for, so please take
+    a look at the section :ref:`security_considerations`.
+
 Translations
 ------------
 
