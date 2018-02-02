@@ -29,6 +29,7 @@
 #include <libjulia/optimiser/UnusedPruner.h>
 #include <libjulia/optimiser/NameShortener.h>
 #include <libjulia/optimiser/ExpressionSimplifier.h>
+#include <libjulia/optimiser/CommonSubexpressionEliminator.h>
 
 #include <libjulia/Builtins.h>
 
@@ -90,6 +91,12 @@ void OptimiserSuite::run(
 		cout << p(ast) << endl;
 		Rematerialiser{}(ast);
 		cout << "Rematerialiser: ----------------------------------------------" << endl;
+		cout << p(ast) << endl;
+		ExpressionSimplifier{}(ast);
+		cout << "Simplifier: ----------------------------------------------" << endl;
+		cout << p(ast) << endl;
+		CommonSubexpressionEliminator{}(ast);
+		cout << "Common Subexpression Eliminator: ----------------------------------------------" << endl;
 		cout << p(ast) << endl;
 		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
 		cout << "Unused Pruner: ----------------------------------------------" << endl;
