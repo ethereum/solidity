@@ -48,7 +48,7 @@ protected:
 	{
 		string sourceCode = _sourceCode;
 		size_t run = 0;
-		size_t bytecodeSize[2];
+		int bytecodeSize[2];
 		map<string, u256[2]> runGas;
 		BOTH_ENCODERS(
 			compileAndRun(sourceCode);
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(multi_use)
 	string sourceCode = R"(
 		contract C {
 			function f() public returns (uint) {}
-			function g() public returns (uint[]) {}
+			function g() public returns (uint[] x) { x = new uint[](10); x[4] = 2; x[9] = 7; }
 			function h() public returns (address[], uint[]) {}
 			function i() public returns (uint[], uint) {}
 		}
