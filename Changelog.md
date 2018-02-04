@@ -31,6 +31,7 @@ Features:
  * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
 
 Bugfixes:
+ * Parser: Allow visibility modifier for both function type and variable declaration.
 
 ### 0.4.18 (2017-10-18)
 

@@ -7524,6 +7524,19 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	CHECK_ERROR(text, TypeError, "Member \"delegatecall\" not found or not visible after argument-dependent lookup in contract");
 }
 
+BOOST_AUTO_TEST_CASE(incorrect_function_type_specifiers)
+{
+	char const* text = R"(
+		contract test {
+			function fa(bytes memory) { }
+			function(bytes memory) external internal a = fa;
+
+		}
+	)";
+
+	CHECK_ERROR(text, TypeError, "Type function (bytes memory) is not implicitly convertible to expected type function (bytes memory) external.");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
