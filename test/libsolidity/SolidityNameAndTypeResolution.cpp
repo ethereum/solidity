@@ -122,6 +122,20 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
 }
 
+BOOST_AUTO_TEST_CASE(undeclared_name_is_not_fatal)
+{
+	char const* text = R"(
+		contract test {
+			uint256 variable;
+			function f(uint256 arg) public {
+				f(notfound);
+				f(notfound);
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Undeclared identifier.");
+}
+
 BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 {
 	char const* text = R"(
@@ -4050,7 +4064,7 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
@@ -4065,6 +4079,21 @@ BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Name has to refer to a struct, enum or contract.");
+}
+
+BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename_is_not_fatal)
+{
+	char const* text = R"(
+		contract test {
+			modifier mod() { _; }
+
+			function f() public {
+				mod g;
+				g = f;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Name has to refer to a struct, enum or contract.");
 }
 
 BOOST_AUTO_TEST_CASE(function_is_not_a_valid_typename)
@@ -5130,6 +5159,20 @@ BOOST_AUTO_TEST_CASE(payable_internal_function_type)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Only external function types can be payable.");
+}
+
+BOOST_AUTO_TEST_CASE(payable_internal_function_type_is_not_fatal)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) internal payable returns (uint) x;
+
+			function g() {
+				x = g;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Only external function types can be payable.");
 }
 
 BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
@@ -6654,6 +6697,28 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint storage a) public { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Storage location can only be given for array or struct types.");
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed_is_not_fatal)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint storage a) public {
+				a = f;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Storage location can only be given for array or struct types.");
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
