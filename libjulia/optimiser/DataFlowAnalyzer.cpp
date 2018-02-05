@@ -51,7 +51,7 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	set<string> names;
 	for (auto const& var: _varDecl.variables)
 		names.insert(var.name);
-	m_variableScopes.back().first += names;
+	m_variableScopes.back().variables += names;
 	if (_varDecl.value)
 		visit(*_varDecl.value);
 	handleAssignment(names, _varDecl.value.get());
@@ -84,11 +84,11 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 
 void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
-	m_variableScopes.push_back(make_pair(set<string>(), true));
+	m_variableScopes.emplace_back(true);
 	for (auto const& parameter: _fun.parameters)
-		m_variableScopes.back().first.insert(parameter.name);
+		m_variableScopes.back().variables.insert(parameter.name);
 	for (auto const& var: _fun.returnVariables)
-		m_variableScopes.back().first.insert(var.name);
+		m_variableScopes.back().variables.insert(var.name);
 	ASTModifier::operator()(_fun);
 	m_variableScopes.pop_back();
 }
@@ -96,7 +96,7 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 void DataFlowAnalyzer::operator()(ForLoop& _for)
 {
 	// Special scope handling of the pre block.
-	m_variableScopes.push_back(make_pair(set<string>(), false));
+	m_variableScopes.emplace_back(false);
 	for (auto& statement: _for.pre.statements)
 		visit(statement);
 
@@ -117,7 +117,7 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 void DataFlowAnalyzer::operator()(Block& _block)
 {
 	size_t numScopes = m_variableScopes.size();
-	m_variableScopes.push_back(make_pair(set<string>(), false));
+	m_variableScopes.emplace_back(false);
 	ASTModifier::operator()(_block);
 	m_variableScopes.pop_back();
 	solAssert(numScopes == m_variableScopes.size(), "");
@@ -186,9 +186,9 @@ bool DataFlowAnalyzer::inScope(string const& _variableName) const
 {
 	for (auto const& scope: m_variableScopes | boost::adaptors::reversed)
 	{
-		if (scope.first.count(_variableName))
+		if (scope.variables.count(_variableName))
 			return true;
-		if (scope.second)
+		if (scope.isFunction)
 			return false;
 	}
 	return false;

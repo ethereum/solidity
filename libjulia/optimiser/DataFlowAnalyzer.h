@@ -69,9 +69,15 @@ protected:
 	std::map<std::string, std::set<std::string>> m_references;
 	/// m_referencedBy[b].contains(a) <=> the current expression assigned to a references b
 	std::map<std::string, std::set<std::string>> m_referencedBy;
-	/// List of scopes, where each scope is a set of variables and a bool that tells
-	/// whether it is a function body (true) or not.
-	std::vector<std::pair<std::set<std::string>, bool>> m_variableScopes;
+
+	struct Scope
+	{
+		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
+		std::set<std::string> variables;
+		bool isFunction;
+	};
+	/// List of scopes.
+	std::vector<Scope> m_variableScopes;
 };
 
 }
