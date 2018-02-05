@@ -49,8 +49,10 @@ public:
 	using ASTModifier::operator();
 	virtual void operator()(Block& _block) override;
 
+	// @returns true iff the code changed in the previous run.
 	bool shouldRunAgain() const { return m_shouldRunAgain; }
 
+	// Run the pruner until the code does not change anymore.
 	static void runUntilStabilised(Block& _ast);
 
 private:
