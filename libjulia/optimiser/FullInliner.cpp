@@ -23,6 +23,7 @@
 #include <libjulia/optimiser/ASTCopier.h>
 #include <libjulia/optimiser/ASTWalker.h>
 #include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/optimiser/Semantics.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -159,7 +160,7 @@ void InlineModifier::visit(Expression& _expression)
 void InlineModifier::visit(Statement& _statement)
 {
 	ASTModifier::visit(_statement);
-	// Replace pop(0) expression statemets by empty blocks.
+	// Replace pop(0) expression statemets (and others) by empty blocks.
 	if (_statement.type() == typeid(ExpressionStatement))
 	{
 		ExpressionStatement& expSt = boost::get<ExpressionStatement&>(_statement);
@@ -167,10 +168,8 @@ void InlineModifier::visit(Statement& _statement)
 		{
 			FunctionalInstruction& funInstr = boost::get<FunctionalInstruction&>(expSt.expression);
 			if (funInstr.instruction == solidity::Instruction::POP)
-			{
-				if (funInstr.arguments.at(0).type() == typeid(Literal))
+				if (MovableChecker(funInstr.arguments.at(0)).movable())
 					_statement = Block{expSt.location, {}};
-			}
 		}
 	}
 }
