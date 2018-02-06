@@ -71,6 +71,22 @@ BOOST_AUTO_TEST_CASE(multi_declarations)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(multi_assignments)
+{
+	CHECK(
+		"{ let x, y x := 1 y := 2 }",
+		"{ let x, y x := 1 y := 2 }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(multi_partial_assignments)
+{
+	CHECK(
+		"{ let x, y x := 1 }",
+		"{ let x, y x := 1 }"
+	);
+}
+
 BOOST_AUTO_TEST_CASE(functions)
 {
 	CHECK(
@@ -84,6 +100,13 @@ BOOST_AUTO_TEST_CASE(intermediate_assignment)
 	CHECK(
 		"{ let a := 1 a := 4 let b := 1 }",
 		"{ let a := 1 a := 4 }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(intermediate_multi_assignment){
+	CHECK(
+		"{ let a, b function f() -> x { } a := f() b := 1 }",
+		"{ let a, b function f() -> x { } a := f() b := 1 }"
 	);
 }
 
