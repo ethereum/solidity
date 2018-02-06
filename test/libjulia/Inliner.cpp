@@ -70,31 +70,31 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 BOOST_AUTO_TEST_CASE(simple)
 {
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := 2:u256 } }"), "f");
-	BOOST_CHECK_EQUAL(inlinableFunctions(R"({
-		function g(a:u256) -> b:u256 { b := a }
-		function f() -> x:u256 { x := g(2:u256) }
-	})"), "f,g");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{"
+		"function g(a:u256) -> b:u256 { b := a }"
+		"function f() -> x:u256 { x := g(2:u256) }"
+	"}"), "f,g");
 }
 
 BOOST_AUTO_TEST_CASE(simple_inside_structures)
 {
-	BOOST_CHECK_EQUAL(inlinableFunctions(R"({
-		switch 2:u256
-		case 2:u256 {
-			function g(a:u256) -> b:u256 { b := a }
-			function f() -> x:u256 { x := g(2:u256) }
-		}
-	})"), "f,g");
-	BOOST_CHECK_EQUAL(inlinableFunctions(R"({
-		for {
-			function g(a:u256) -> b:u256 { b := a }
-		} 1:u256 {
-			function f() -> x:u256 { x := g(2:u256) }
-		}
-		{
-			function h() -> y:u256 { y := 2:u256 }
-		}
-	})"), "f,g,h");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{"
+		"switch 2:u256 "
+		"case 2:u256 {"
+			"function g(a:u256) -> b:u256 { b := a }"
+			"function f() -> x:u256 { x := g(2:u256) }"
+		"}"
+	"}"), "f,g");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{"
+		"for {"
+			"function g(a:u256) -> b:u256 { b := a }"
+		"} 1:u256 {"
+			"function f() -> x:u256 { x := g(2:u256) }"
+		"}"
+		"{"
+			"function h() -> y:u256 { y := 2:u256 }"
+		"}"
+	"}"), "f,g,h");
 }
 
 BOOST_AUTO_TEST_CASE(negative)
@@ -141,18 +141,18 @@ BOOST_AUTO_TEST_CASE(no_move_with_side_effects)
 	// The calls to g and h cannot be moved because g and h are not movable. Therefore, the call
 	// to f is not inlined.
 	BOOST_CHECK_EQUAL(
-		inlineFunctions(R"({
-			function f(a, b) -> x { x := add(b, a) }
-			function g() -> y { y := mload(0) mstore(0, 4) }
-			function h() -> z { mstore(0, 4) z := mload(0) }
-			let r := f(g(), h())
-		})", false),
-		format(R"({
-			function f(a, b) -> x { x := add(b, a) }
-			function g() -> y { y := mload(0) mstore(0, 4) }
-			function h() -> z { mstore(0, 4) z := mload(0) }
-			let r := f(g(), h())
-		})", false)
+		inlineFunctions("{"
+			"function f(a, b) -> x { x := add(b, a) }"
+			"function g() -> y { y := mload(0) mstore(0, 4) }"
+			"function h() -> z { mstore(0, 4) z := mload(0) }"
+			"let r := f(g(), h())"
+		"}", false),
+		format("{"
+			"function f(a, b) -> x { x := add(b, a) }"
+			"function g() -> y { y := mload(0) mstore(0, 4) }"
+			"function h() -> z { mstore(0, 4) z := mload(0) }"
+			"let r := f(g(), h())"
+		"}", false)
 	);
 }
 
@@ -167,32 +167,32 @@ BOOST_AUTO_TEST_CASE(complex_with_evm)
 BOOST_AUTO_TEST_CASE(double_calls)
 {
 	BOOST_CHECK_EQUAL(
-		inlineFunctions(R"({
-			function f(a) -> x { x := add(a, a) }
-			function g(b, c) -> y { y := mul(mload(c), f(b)) }
-			let y := g(calldatasize(), 7)
-		})", false),
-		format(R"({
-			function f(a) -> x { x := add(a, a) }
-			function g(b, c) -> y { y := mul(mload(c), add(b, b)) }
-			let y_1 := mul(mload(7), add(calldatasize(), calldatasize()))
-		})", false)
+		inlineFunctions("{"
+			"function f(a) -> x { x := add(a, a) }"
+			"function g(b, c) -> y { y := mul(mload(c), f(b)) }"
+			"let y := g(calldatasize(), 7)"
+		"}", false),
+		format("{"
+			"function f(a) -> x { x := add(a, a) }"
+			"function g(b, c) -> y { y := mul(mload(c), add(b, b)) }"
+			"let y_1 := mul(mload(7), add(calldatasize(), calldatasize()))"
+		"}", false)
 	);
 }
 
 BOOST_AUTO_TEST_CASE(double_recursive_calls)
 {
 	BOOST_CHECK_EQUAL(
-		inlineFunctions(R"({
-			function f(a, r) -> x { x := g(a, g(r, r)) }
-			function g(b, s) -> y { y := f(b, f(s, s)) }
-			let y := g(calldatasize(), 7)
-		})", false),
-		format(R"({
-			function f(a, r) -> x { x := g(a, f(r, f(r, r))) }
-			function g(b, s) -> y { y := f(b, g(s, f(s, f(s, s))))}
-			let y_1 := f(calldatasize(), g(7, f(7, f(7, 7))))
-		})", false)
+		inlineFunctions("{"
+			"function f(a, r) -> x { x := g(a, g(r, r)) }"
+			"function g(b, s) -> y { y := f(b, f(s, s)) }"
+			"let y := g(calldatasize(), 7)"
+		"}", false),
+		format("{"
+			"function f(a, r) -> x { x := g(a, f(r, f(r, r))) }"
+			"function g(b, s) -> y { y := f(b, g(s, f(s, f(s, s))))}"
+			"let y_1 := f(calldatasize(), g(7, f(7, f(7, 7))))"
+		"}", false)
 	);
 }
 
