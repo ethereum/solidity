@@ -63,6 +63,14 @@ BOOST_AUTO_TEST_CASE(trivial)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(multi_declarations)
+{
+	CHECK(
+		"{ let x, y }",
+		"{ }"
+	);
+}
+
 BOOST_AUTO_TEST_CASE(functions)
 {
 	CHECK(

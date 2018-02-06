@@ -60,12 +60,14 @@ void UnusedPruner::operator()(Block& _block)
 				[=](TypedName const& _typedName) { return used(_typedName.name); }
 			))
 			{
-				if (!varDecl.value || MovableChecker(*varDecl.value).movable())
+				if (!varDecl.value)
+					statement = Block{std::move(varDecl.location), {}};
+				else if (MovableChecker(*varDecl.value).movable())
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
 				}
-				else if (varDecl.value && varDecl.variables.size() == 1)
+				else if (varDecl.variables.size() == 1)
 					statement = ExpressionStatement{varDecl.location, FunctionalInstruction{
 						varDecl.location,
 						solidity::Instruction::POP,
