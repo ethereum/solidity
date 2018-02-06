@@ -25,6 +25,7 @@
 #include <functional>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/SimplificationRule.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -45,12 +46,10 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 /// @returns a list of simplification rules given certain match placeholders.
 /// A, B and C should represent constants, X and Y arbitrary expressions.
-/// The third element in the tuple is a boolean flag that indicates whether
-/// any non-constant elements in the pattern are removed by applying it.
 /// The simplifications should neven change the order of evaluation of
-/// arbitrary operations, though.
+/// arbitrary operations.
 template <class Pattern>
-std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> simplificationRuleList(
+std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	Pattern A,
 	Pattern B,
 	Pattern C,
@@ -58,8 +57,8 @@ std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> simplificationR
 	Pattern Y
 )
 {
-	std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> rules;
-	rules += std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>>{
+	std::vector<SimplificationRule<Pattern>> rules;
+	rules += std::vector<SimplificationRule<Pattern>>{
 		// arithmetics on constants
 		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
 		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
@@ -196,7 +195,7 @@ std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> simplificationR
 		// xa can be (X, A) or (A, X)
 		for (auto xa: {std::vector<Pattern>{X, A}, std::vector<Pattern>{A, X}})
 		{
-			rules += std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>>{{
+			rules += std::vector<SimplificationRule<Pattern>>{{
 				// (X+A)+B -> X+(A+B)
 				{op, {{op, xa}, B}},
 				[=]() -> Pattern { return {op, {X, fun(A.d(), B.d())}}; },
@@ -221,7 +220,7 @@ std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> simplificationR
 	}
 
 	// move constants across subtractions
-	rules += std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>>{
+	rules += std::vector<SimplificationRule<Pattern>>{
 		{
 			// X - A -> X + (-A)
 			{Instruction::SUB, {X, A}},

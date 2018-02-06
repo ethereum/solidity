@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libevmasm/ExpressionClasses.h>
+#include <libevmasm/SimplificationRule.h>
 
 #include <functional>
 #include <vector>
@@ -47,21 +48,21 @@ public:
 
 	/// @returns a pointer to the first matching pattern and sets the match
 	/// groups accordingly.
-	std::tuple<Pattern, std::function<Pattern()>, bool> const* findFirstMatch(
+	SimplificationRule<Pattern> const* findFirstMatch(
 		Expression const& _expr,
 		ExpressionClasses const& _classes
 	);
 
 private:
-	void addRules(std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> const& _rules);
-	void addRule(std::tuple<Pattern, std::function<Pattern()>, bool> const& _rule);
+	void addRules(std::vector<SimplificationRule<Pattern>> const& _rules);
+	void addRule(SimplificationRule<Pattern> const& _rule);
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
 	std::map<unsigned, Expression const*> m_matchGroups;
 	/// Pattern to match, replacement to be applied and flag indicating whether
 	/// the replacement might remove some elements (except constants).
-	std::vector<std::tuple<Pattern, std::function<Pattern()>, bool>> m_rules[256];
+	std::vector<SimplificationRule<Pattern>> m_rules[256];
 };
 
 /**

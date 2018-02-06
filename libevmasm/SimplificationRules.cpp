@@ -23,7 +23,6 @@
 
 #include <libevmasm/ExpressionClasses.h>
 #include <utility>
-#include <tuple>
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/noncopyable.hpp>
@@ -38,7 +37,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-tuple<Pattern, function<Pattern()>, bool> const* Rules::findFirstMatch(
+SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	Expression const& _expr,
 	ExpressionClasses const& _classes
 )
@@ -48,22 +47,22 @@ tuple<Pattern, function<Pattern()>, bool> const* Rules::findFirstMatch(
 	assertThrow(_expr.item, OptimizerException, "");
 	for (auto const& rule: m_rules[byte(_expr.item->instruction())])
 	{
-		if (std::get<0>(rule).matches(_expr, _classes))
+		if (rule.pattern.matches(_expr, _classes))
 			return &rule;
 		resetMatchGroups();
 	}
 	return nullptr;
 }
 
-void Rules::addRules(std::vector<std::tuple<Pattern, std::function<Pattern ()>, bool>> const& _rules)
+void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 {
 	for (auto const& r: _rules)
 		addRule(r);
 }
 
-void Rules::addRule(std::tuple<Pattern, std::function<Pattern()>, bool> const& _rule)
+void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[byte(std::get<0>(_rule).instruction())].push_back(_rule);
+	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
 }
 
 Rules::Rules()

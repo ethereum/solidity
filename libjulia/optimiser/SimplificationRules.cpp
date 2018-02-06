@@ -34,7 +34,7 @@ using namespace dev;
 using namespace dev::julia;
 
 
-tuple<Pattern, function<Pattern()>, bool> const* SimplificationRules::findFirstMatch(Expression const& _expr)
+SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(Expression const& _expr)
 {
 	if (_expr.type() != typeid(FunctionalInstruction))
 		return nullptr;
@@ -45,21 +45,21 @@ tuple<Pattern, function<Pattern()>, bool> const* SimplificationRules::findFirstM
 	for (auto const& rule: rules.m_rules[byte(instruction.instruction)])
 	{
 		rules.resetMatchGroups();
-		if (std::get<0>(rule).matches(_expr))
+		if (rule.pattern.matches(_expr))
 			return &rule;
 	}
 	return nullptr;
 }
 
-void SimplificationRules::addRules(vector<tuple<Pattern, function<Pattern()>, bool>> const& _rules)
+void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _rules)
 {
 	for (auto const& r: _rules)
 		addRule(r);
 }
 
-void SimplificationRules::addRule(tuple<Pattern, function<Pattern()>, bool> const& _rule)
+void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[byte(std::get<0>(_rule).instruction())].push_back(_rule);
+	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
 }
 
 SimplificationRules::SimplificationRules()
