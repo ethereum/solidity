@@ -21,8 +21,8 @@
 
 #include <test/libjulia/Common.h>
 
-#include <libjulia/optimiser/InlinableFunctionFilter.h>
-#include <libjulia/optimiser/FunctionalInliner.h>
+#include <libjulia/optimiser/ExpressionInliner.h>
+#include <libjulia/optimiser/InlinableExpressionFunctionFinder.h>
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
 
@@ -43,11 +43,11 @@ string inlinableFunctions(string const& _source)
 {
 	auto ast = disambiguate(_source);
 
-	InlinableFunctionFilter filter;
-	filter(ast);
+	InlinableExpressionFunctionFinder funFinder;
+	funFinder(ast);
 
 	return boost::algorithm::join(
-		filter.inlinableFunctions() | boost::adaptors::map_keys,
+		funFinder.inlinableFunctions() | boost::adaptors::map_keys,
 		","
 	);
 }
@@ -55,7 +55,7 @@ string inlinableFunctions(string const& _source)
 string inlineFunctions(string const& _source, bool _julia = true)
 {
 	auto ast = disambiguate(_source, _julia);
-	FunctionalInliner(ast).run();
+	ExpressionInliner(ast).run();
 	return assembly::AsmPrinter(_julia)(ast);
 }
 }
@@ -180,6 +180,20 @@ BOOST_AUTO_TEST_CASE(double_calls)
 	);
 }
 
-// TODO test double recursive calls
+BOOST_AUTO_TEST_CASE(double_recursive_calls)
+{
+	BOOST_CHECK_EQUAL(
+		inlineFunctions(R"({
+			function f(a, r) -> x { x := g(a, g(r, r)) }
+			function g(b, s) -> y { y := f(b, f(s, s)) }
+			let y := g(calldatasize(), 7)
+		})", false),
+		format(R"({
+			function f(a, r) -> x { x := g(a, f(r, f(r, r))) }
+			function g(b, s) -> y { y := f(b, g(s, f(s, f(s, s))))}
+			let y_1 := f(calldatasize(), g(7, f(7, f(7, 7))))
+		})", false)
+	);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
