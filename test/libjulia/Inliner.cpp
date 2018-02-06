@@ -310,4 +310,34 @@ BOOST_AUTO_TEST_CASE(move_up_rightwards_arguments)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(pop_result)
+{
+	// This tests that `pop(r)` is removed.
+	BOOST_CHECK_EQUAL(
+		fullInline(R"({
+			function f(a) -> x { let r := mul(a, a) x := add(r, r) }
+			pop(add(f(7), 2))
+		})", false),
+		format(R"({
+			{
+				let _1 := 2
+				let f_a := 7
+				let f_x
+				{
+					let f_r := mul(f_a, f_a)
+					f_x := add(f_r, f_r)
+				}
+				{
+				}
+			}
+			function f(a) -> x
+			{
+				let r := mul(a, a)
+				x := add(r, r)
+			}
+		})", false)
+	);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
