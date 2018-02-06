@@ -155,4 +155,16 @@ BOOST_AUTO_TEST_CASE(do_not_move_out_of_scope)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(do_not_remat_large_amounts_of_code)
+{
+	CHECK(
+		"{ let x := add(mul(calldataload(2), calldataload(4)), mul(2, calldatasize())) let b := x }",
+		"{ let x := add(mul(calldataload(2), calldataload(4)), mul(2, calldatasize())) let b := x }"
+	);
+	CHECK(
+		"{ let x := add(mul(calldataload(2), calldataload(4)), calldatasize()) let b := x }",
+		"{ let x := add(mul(calldataload(2), calldataload(4)), calldatasize()) let b := add(mul(calldataload(2), calldataload(4)), calldatasize()) }"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
