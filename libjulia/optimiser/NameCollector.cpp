@@ -42,3 +42,28 @@ void NameCollector::operator ()(FunctionDefinition const& _funDef)
 		m_names.insert(ret.name);
 	ASTWalker::operator ()(_funDef);
 }
+
+void ReferencesCounter::operator()(Identifier const& _identifier)
+{
+	++m_references[_identifier.name];
+}
+
+void ReferencesCounter::operator()(FunctionCall const& _funCall)
+{
+	++m_references[_funCall.functionName.name];
+	ASTWalker::operator()(_funCall);
+}
+
+map<string, size_t> ReferencesCounter::countReferences(Block const& _block)
+{
+	ReferencesCounter counter;
+	counter(_block);
+	return counter.references();
+}
+
+map<string, size_t> ReferencesCounter::countReferences(Expression const& _expression)
+{
+	ReferencesCounter counter;
+	counter.visit(_expression);
+	return counter.references();
+}
