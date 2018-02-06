@@ -86,8 +86,8 @@ void ASTWalker::operator()(ForLoop const& _for)
 {
 	(*this)(_for.pre);
 	visit(*_for.condition);
-	(*this)(_for.post);
 	(*this)(_for.body);
+	(*this)(_for.post);
 }
 
 void ASTWalker::operator()(Block const& _block)
