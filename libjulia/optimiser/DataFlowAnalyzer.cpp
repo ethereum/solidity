@@ -135,9 +135,7 @@ void DataFlowAnalyzer::handleAssignment(set<string> const& _variables, Expressio
 		string const& name = *_variables.begin();
 		// Expression has to be movable and cannot contain a reference
 		// to the variable that will be assigned to.
-		// TODO: Add a test for that
 		if (_value && movableChecker.movable() && !movableChecker.referencedVariables().count(name))
-			// TODO If _value is null, we could use zero.
 			m_value[name] = _value;
 	}
 

@@ -146,6 +146,15 @@ BOOST_AUTO_TEST_CASE(reassignment)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(update_assignment_remat)
+{
+	// We cannot substitute `a` in `let b := a`
+	CHECK(
+		"{ let a := extcodesize(0) a := mul(a, 2) let b := a }",
+		"{ let a := extcodesize(0) a := mul(a, 2) let b := a }"
+	);
+}
+
 BOOST_AUTO_TEST_CASE(do_not_move_out_of_scope)
 {
 	// Cannot replace by `let b := x` by `let b := a` since a is out of scope.
