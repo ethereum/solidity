@@ -18,7 +18,7 @@
  * Optimiser component that identifies functions to be inlined.
  */
 
-#include <libjulia/optimiser/InlinableFunctionFilter.h>
+#include <libjulia/optimiser/InlinableExpressionFunctionFinder.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -28,19 +28,19 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 
-void InlinableFunctionFilter::operator()(Identifier const& _identifier)
+void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {
 	checkAllowed(_identifier.name);
 	ASTWalker::operator()(_identifier);
 }
 
-void InlinableFunctionFilter::operator()(FunctionCall const& _funCall)
+void InlinableExpressionFunctionFinder::operator()(FunctionCall const& _funCall)
 {
 	checkAllowed(_funCall.functionName.name);
 	ASTWalker::operator()(_funCall);
 }
 
-void InlinableFunctionFilter::operator()(FunctionDefinition const& _function)
+void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _function)
 {
 	if (_function.returnVariables.size() == 1 && _function.body.statements.size() == 1)
 	{

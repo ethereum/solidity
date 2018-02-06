@@ -41,7 +41,7 @@ namespace julia
  *
  * This component can only be used on sources with unique names.
  */
-class InlinableFunctionFilter: public ASTWalker
+class InlinableExpressionFunctionFinder: public ASTWalker
 {
 public:
 

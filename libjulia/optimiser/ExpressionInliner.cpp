@@ -15,12 +15,12 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Optimiser component that performs function inlining.
+ * Optimiser component that performs function inlining inside expressions.
  */
 
-#include <libjulia/optimiser/FunctionalInliner.h>
+#include <libjulia/optimiser/ExpressionInliner.h>
 
-#include <libjulia/optimiser/InlinableFunctionFilter.h>
+#include <libjulia/optimiser/InlinableExpressionFunctionFinder.h>
 #include <libjulia/optimiser/Substitution.h>
 #include <libjulia/optimiser/Semantics.h>
 
@@ -33,17 +33,22 @@ using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
 
-void FunctionalInliner::run()
+void ExpressionInliner::run()
 {
-	InlinableFunctionFilter filter;
-	filter(m_block);
-	m_inlinableFunctions = filter.inlinableFunctions();
+	InlinableExpressionFunctionFinder funFinder;
+	funFinder(m_block);
+	m_inlinableFunctions = funFinder.inlinableFunctions();
 
 	(*this)(m_block);
 }
 
 
-void FunctionalInliner::visit(Expression& _expression)
+void ExpressionInliner::operator()(FunctionDefinition& _fun)
+{
+	ASTModifier::operator()(_fun);
+}
+
+void ExpressionInliner::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
 	if (_expression.type() == typeid(FunctionCall))
@@ -62,10 +67,8 @@ void FunctionalInliner::visit(Expression& _expression)
 				substitutions[fun.parameters[i].name] = &funCall.arguments[i];
 			_expression = Substitution(substitutions).translate(*boost::get<Assignment>(fun.body.statements.front()).value);
 
-			// TODO actually in the process of inlining, we could also make a function non-inlinable
-			// because it could now call itself
-
-			// If two functions call each other, we have to exit after some iterations.
+			// TODO Add metric! This metric should perform well on a pair of functions who
+			// call each other recursively.
 		}
 	}
 }

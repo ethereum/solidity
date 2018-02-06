@@ -46,20 +46,25 @@ namespace julia
  *
  * This component can only be used on sources with unique names.
  */
-class FunctionalInliner: public ASTModifier
+class ExpressionInliner: public ASTModifier
 {
 public:
-	FunctionalInliner(Block& _block):
+	ExpressionInliner(Block& _block):
 		m_block(_block)
 	{}
 
 	void run();
 
-private:
+	using ASTModifier::operator();
+	virtual void operator()(FunctionDefinition& _fun) override;
+
 	virtual void visit(Expression& _expression) override;
 
+private:
 	std::map<std::string, FunctionDefinition const*> m_inlinableFunctions;
 	std::map<std::string, std::string> m_varReplacements;
+	/// Set of functions we are currently visiting inside.
+	std::set<std::string> m_currentFunctions;
 
 	Block& m_block;
 };
