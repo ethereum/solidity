@@ -2,6 +2,8 @@ if (OSSFUZZ)
     add_subdirectory(ossfuzz)
 endif()
 
+add_subdirectory(yulInterpreter)
+
 add_executable(solfuzzer afl_fuzzer.cpp fuzzer_common.cpp)
 target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_SYSTEM_LIBRARIES})
 
