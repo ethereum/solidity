@@ -170,6 +170,18 @@ inline std::string toCompactHexWithPrefix(u256 val)
 	return "0x" + ret.str();
 }
 
+/// Workaround for a bug in some versions of boost::multiprecision.
+template <class S> S divWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) / bigint(_b));
+}
+
+/// Workaround for a bug in some versions of boost::multiprecision.
+template <class S> S modWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) % bigint(_b));
+}
+
 // Algorithms for string and string-like collections.
 
 /// Escapes a string into the C-string representation.

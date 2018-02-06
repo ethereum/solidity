@@ -27,6 +27,7 @@
 #include <libevmasm/Instruction.h>
 
 #include <libdevcore/SHA3.h>
+#include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
@@ -34,16 +35,6 @@ using namespace dev::julia;
 
 namespace
 {
-
-template <class S> S divWorkaround(S const& _a, S const& _b)
-{
-	return (S)(bigint(_a) / bigint(_b));
-}
-
-template <class S> S modWorkaround(S const& _a, S const& _b)
-{
-	return (S)(bigint(_a) % bigint(_b));
-}
 
 u256 exp256(u256 _base, u256 _exponent)
 {
