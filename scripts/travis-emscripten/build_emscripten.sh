@@ -42,6 +42,10 @@ fi
 
 WORKSPACE=/root/project
 
+# Increase nodejs stack size
+sed -i -e 's/NODE_JS="nodejs"/NODE_JS=["nodejs", "--stack_size=8192"]/' /root/.emscripten
+
+
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
 cd "$WORKSPACE"/boost_1_57_0
