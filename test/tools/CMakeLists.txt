@@ -3,3 +3,6 @@ target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_L
 
 add_executable(isoltest isoltest.cpp ../Options.cpp ../libsolidity/SyntaxTest.cpp ../libsolidity/AnalysisFramework.cpp)
 target_link_libraries(isoltest PRIVATE libsolc solidity evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+
+add_executable(iuliarun iuliarun.cpp)
+target_link_libraries(iuliarun PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES})
