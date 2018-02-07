@@ -23,6 +23,7 @@
 #include "../TestHelper.h"
 #include <libsolidity/interface/CompilerStack.h>
 #include <libdevcore/SwarmHash.h>
+#include <libdevcore/JSON.h>
 
 namespace dev
 {
@@ -111,7 +112,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
-	BOOST_REQUIRE(Json::Reader().parse(serialisedMetadata, metadata, false));
+	BOOST_REQUIRE(jsonParseStrict(serialisedMetadata, metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
 	BOOST_CHECK(metadata["sources"].isMember("A"));
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	std::string const& serialisedMetadata = compilerStack.metadata("C");
 	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
-	BOOST_REQUIRE(Json::Reader().parse(serialisedMetadata, metadata, false));
+	BOOST_REQUIRE(jsonParseStrict(serialisedMetadata, metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 3);
 	BOOST_CHECK(metadata["sources"].isMember("A"));

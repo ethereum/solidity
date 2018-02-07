@@ -2,8 +2,8 @@
 
 Features:
  * Code Generator: Assert that ``k != 0`` for ``molmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
+ * Standard JSON: Reject badly formatted invalid JSON inputs.
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
-
 
 Bugfixes:
  * JSON-AST: Add "documentation" property to function, event and modifier definition.
