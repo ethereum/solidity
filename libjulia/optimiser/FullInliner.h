@@ -23,6 +23,7 @@
 
 #include <libjulia/optimiser/ASTCopier.h>
 #include <libjulia/optimiser/ASTWalker.h>
+#include <libjulia/optimiser/NameDispenser.h>
 
 #include <libsolidity/interface/Exceptions.h>
 
@@ -37,13 +38,6 @@ namespace julia
 {
 
 class NameCollector;
-
-struct NameDispenser
-{
-	std::string newName(std::string const& _prefix);
-	std::set<std::string> m_usedNames;
-};
-
 
 
 /**

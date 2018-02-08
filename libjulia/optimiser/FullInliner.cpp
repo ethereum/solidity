@@ -252,16 +252,3 @@ string BodyCopier::translateIdentifier(string const& _name)
 	else
 		return _name;
 }
-
-string NameDispenser::newName(string const& _prefix)
-{
-	string name = _prefix;
-	size_t suffix = 0;
-	while (name.empty() || m_usedNames.count(name))
-	{
-		suffix++;
-		name = _prefix + "_" + std::to_string(suffix);
-	}
-	m_usedNames.insert(name);
-	return name;
-}
