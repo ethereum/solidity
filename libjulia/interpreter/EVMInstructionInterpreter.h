@@ -61,7 +61,7 @@ public:
 	explicit EVMInstructionInterpreter(InterpreterState& _state):
 		m_state(_state)
 	{}
-	u256 eval(solidity::Instruction const& _instruction, std::vector<u256> const& _arguments);
+	u256 eval(solidity::Instruction _instruction, std::vector<u256> const& _arguments);
 
 private:
 	/// Record a memory read in the trace. Also updaes m_state.msize
@@ -69,11 +69,12 @@ private:
 	bool logMemoryRead(u256 const& _offset, u256 const& _size = 32);
 	/// Record a memory write in the trace. Also updaes m_state.msize
 	/// @returns true if m_state.memory can be used at that offset.
-	bool logMemoryWrite(u256 const& _offset, u256 const& _size = 32);
+	bool logMemoryWrite(u256 const& _offset, u256 const& _size = 32, bytes const& _data = {});
 
-	bool logMemory(std::string const& _type, u256 const& _offset, u256 const& _size = 32);
+	bool logMemory(bool _write, u256 const& _offset, u256 const& _size = 32, bytes const& _data = {});
 
-	void logTrace(std::string const& _message);
+	void logTrace(solidity::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 
 	InterpreterState& m_state;
 };

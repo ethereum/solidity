@@ -85,7 +85,7 @@ void copyZeroExtended(
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 u256 EVMInstructionInterpreter::eval(
-	solidity::Instruction const& _instruction,
+	solidity::Instruction _instruction,
 	vector<u256> const& _arguments
 )
 {
@@ -217,10 +217,10 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
 	case Instruction::EXTCODESIZE:
-		logTrace("Extcodesize " + arg[0].str());
+		logTrace(_instruction, arg);
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODECOPY:
-		logTrace("Extcodecopy " + arg[0].str() + " - " + arg[1].str() + " - " + arg[2].str() + " - " + arg[3].str());
+		logTrace(_instruction, arg);
 		if (logMemoryWrite(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the sam ething.
 			copyZeroExtended(
@@ -229,10 +229,10 @@ u256 EVMInstructionInterpreter::eval(
 			);
 		return 0;
 	case Instruction::RETURNDATASIZE:
-		logTrace("Returndatasize " + arg[0].str());
+		logTrace(_instruction, arg);
 		return m_state.returndata.size();
 	case Instruction::RETURNDATACOPY:
-		logTrace("Returndatacopy " + arg[0].str() + " - " + arg[1].str() + " - " + arg[2].str());
+		logTrace(_instruction, arg);
 		if (logMemoryWrite(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.returndata,
@@ -261,114 +261,88 @@ u256 EVMInstructionInterpreter::eval(
 		else
 			return 0x1234 + arg[0];
 	case Instruction::MSTORE:
-		if (logMemoryWrite(arg[0], 0x20))
+		if (logMemoryWrite(arg[0], 0x20, h256(arg[1]).asBytes()))
 			*reinterpret_cast<h256*>(m_state.memory.data() + size_t(arg[0])) = h256(arg[1]);
 		return 0;
 	case Instruction::MSTORE8:
-		if (logMemoryWrite(arg[0], 1))
+		if (logMemoryWrite(arg[0], 1, bytes{1, uint8_t(arg[1] & 0xff)}))
 			m_state.memory[size_t(arg[0])] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
-		logTrace("SLoad " + arg[0].str());
+		logTrace(_instruction, arg);
 		return m_state.storage[h256(arg[0])];
 	case Instruction::SSTORE:
-		logTrace("SStore " + arg[0].str() + " := " + arg[1].str());
+		logTrace(Instruction::SSTORE, arg);
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	case Instruction::PC:
-		logTrace("PC");
+		logTrace(_instruction);
 		return 0x77;
 	case Instruction::MSIZE:
-		logTrace("MSize");
+		logTrace(_instruction);
 		return m_state.msize;
 	case Instruction::GAS:
-		logTrace("GAS");
+		logTrace(_instruction);
 		return 0x99;
 	case Instruction::LOG0:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace("Log0 with data mem at " + arg[0].str() + " size " + arg[1].str());
+		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG1:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace("Log1 with topics " + arg[2].str() + " and data mem at " + arg[0].str() + " size " + arg[1].str());
+		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG2:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace(
-			"Log2 with topics " + arg[2].str() + ", " + arg[3].str() +
-			" and data mem at " + arg[0].str() + " size " + arg[1].str()
-		);
+		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG3:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace(
-			"Log3 with topics " + arg[2].str() + ", " + arg[3].str() + ", " + arg[4].str() +
-			" and data mem at " + arg[0].str() + " size " + arg[1].str()
-		);
+		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG4:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace(
-			"Log4 with topics " + arg[2].str() + ", " + arg[3].str() + ", " + arg[4].str() + ", " + arg[5].str() +
-			" and data mem at " + arg[0].str() + " size " + arg[1].str()
-		);
+		logTrace(_instruction, arg);
 		return 0;
 	// --------------- calls ---------------
 	case Instruction::CREATE:
 		logMemoryRead(arg[1], arg[2]);
-		logTrace("Create with args " + arg[0].str() + ", " + arg[1].str() + ", " + arg[2].str());
+		logTrace(_instruction, arg);
 		return 0xcccccc + arg[1];
 	case Instruction::CREATE2:
 		logMemoryRead(arg[2], arg[3]);
-		logTrace("Create2 with args " + arg[0].str() + ", " + arg[1].str() + ", " + arg[2].str() + ", " + arg[3].str());
+		logTrace(_instruction, arg);
 		return 0xdddddd + arg[1];
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
 		logMemoryRead(arg[3], arg[4]);
 		logMemoryWrite(arg[5], arg[6]);
-		logTrace(
-			string(_instruction == Instruction::CALL ? "Call" : "Callcode") + " with args " +
-			arg[0].str() + ", " +
-			arg[1].str() + ", " +
-			arg[2].str() + ", " +
-			arg[3].str() + ", " +
-			arg[4].str() + ", " +
-			arg[5].str() + ", " +
-			arg[6].str()
-		);
+		logTrace(_instruction, arg);
 		return arg[0] & 1;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
 		logMemoryRead(arg[2], arg[3]);
 		logMemoryWrite(arg[4], arg[5]);
-		logTrace(
-			string(_instruction == Instruction::DELEGATECALL ? "Delegatecall" : "Staticcall") + " with args " +
-			arg[0].str() + ", " +
-			arg[2].str() + ", " +
-			arg[3].str() + ", " +
-			arg[4].str() + ", " +
-			arg[5].str() + ", " +
-			arg[6].str()
-		);
+		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::RETURN:
 	{
-		string data = "????";
+		bytes data;
 		if (logMemoryRead(arg[0], arg[1]))
-			data = toHex(bytesConstRef(m_state.memory.data() + size_t(arg[0]), size_t(arg[1])));
-		logTrace("Return " + arg[0].str() + ", " + arg[1].str() + ": " + data);
+			data = bytesConstRef(m_state.memory.data() + size_t(arg[0]), size_t(arg[1])).toBytes();
+		logTrace(_instruction, arg, data);
 		throw InterpreterTerminated();
 	}
 	case Instruction::REVERT:
 		logMemoryRead(arg[0], arg[1]);
-		logTrace("Revert " + arg[0].str() + ", " + arg[1].str());
+		logTrace(_instruction, arg);
 		throw InterpreterTerminated();
 	case Instruction::INVALID:
-		logTrace("Invalid");
+		logTrace(_instruction);
 		throw InterpreterTerminated();
 	case Instruction::SELFDESTRUCT:
-		logTrace("Selfdestruct " + arg[0].str());
+		logTrace(_instruction, arg);
 		throw InterpreterTerminated();
 	// --------------- invalid in strict assembly ---------------
 	case Instruction::JUMP:
@@ -461,21 +435,21 @@ u256 EVMInstructionInterpreter::eval(
 
 bool EVMInstructionInterpreter::logMemoryRead(u256 const& _offset, u256 const& _size)
 {
-	return logMemory("read", _offset, _size);
+	return logMemory(false, _offset, _size);
 }
 
-bool EVMInstructionInterpreter::logMemoryWrite(u256 const& _offset, u256 const& _size)
+bool EVMInstructionInterpreter::logMemoryWrite(u256 const& _offset, u256 const& _size, bytes const& _data)
 {
-	return logMemory("write", _offset, _size);
+	return logMemory(true, _offset, _size, _data);
 }
 
-bool EVMInstructionInterpreter::logMemory(string const& _type, u256 const& _offset, u256 const& _size)
+bool EVMInstructionInterpreter::logMemory(bool _write, u256 const& _offset, u256 const& _size, bytes const& _data)
 {
 	/// Memory size limit. Anything beyond this will still work, but it has
 	/// deterministic yet not necessarily consistent behaviour.
 	size_t constexpr maxMemSize = 0x20000000;
 
-	logTrace("Memory " + _type + " at " + _offset.str() + " for " + _size.str() + " bytes");
+	logTrace(_write ? "MSTORE_AT_SIZE" : "MLOAD_FROM_SIZE", {_offset, _size}, _data);
 	if (_offset + _size >= _offset)
 	{
 		u256 newSize = _offset + _size;
@@ -494,7 +468,18 @@ bool EVMInstructionInterpreter::logMemory(string const& _type, u256 const& _offs
 	return false;
 }
 
-void EVMInstructionInterpreter::logTrace(string const& _message)
+void EVMInstructionInterpreter::logTrace(solidity::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
-	m_state.trace.push_back(_message);
+	logTrace(solidity::instructionInfo(_instruction).name, _arguments, _data);
+}
+
+void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+{
+	string message = _pseudoInstruction + "(";
+	for (size_t i = 0; i < _arguments.size(); ++i)
+		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+	message += ")";
+	if (!_data.empty())
+		message += " [" + toHex(_data) + "]";
+	m_state.trace.emplace_back(std::move(message));
 }
