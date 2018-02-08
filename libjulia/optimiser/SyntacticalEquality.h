@@ -15,25 +15,36 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Small useful snippets for the optimiser.
+ * Component that can compare ASTs for equality on a syntactic basis.
  */
 
 #pragma once
 
 #include <libjulia/ASTDataForward.h>
 
-#include <libdevcore/Exceptions.h>
+#include <vector>
 
 namespace dev
 {
 namespace julia
 {
 
-struct IuliaException: virtual Exception {};
-struct OptimizerException: virtual IuliaException {};
+/**
+ * Component that can compare ASTs for equality on a syntactic basis.
+ * Ignores source locations but requires exact matches otherwise.
+ *
+ * TODO: Only implemented for Expressions for now.
+ * A future version might also recognize renamed variables and thus could be used to
+ * remove duplicate functions.
+ */
+class SyntacticalEqualityChecker
+{
+public:
+	static bool equal(Expression const& _e1, Expression const& _e2);
 
-/// Removes statements that are just empty blocks (non-recursive).
-void removeEmptyBlocks(Block& _block);
+protected:
+	static bool equalVector(std::vector<Expression> const& _e1, std::vector<Expression> const& _e2);
+};
 
 }
 }

@@ -15,25 +15,31 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Small useful snippets for the optimiser.
+ * Expression simplification pattern.
  */
 
 #pragma once
 
-#include <libjulia/ASTDataForward.h>
-
-#include <libdevcore/Exceptions.h>
+#include <functional>
 
 namespace dev
 {
-namespace julia
+namespace solidity
 {
 
-struct IuliaException: virtual Exception {};
-struct OptimizerException: virtual IuliaException {};
-
-/// Removes statements that are just empty blocks (non-recursive).
-void removeEmptyBlocks(Block& _block);
+/**
+ * Rule that contains a pattern, an action that can be applied
+ * after the pattern has matched and a bool that indicates
+ * whether the action would remove something from the expression
+ * than is not a constant literal.
+ */
+template <class Pattern>
+struct SimplificationRule
+{
+	Pattern pattern;
+	std::function<Pattern()> action;
+	bool removesNonConstants;
+};
 
 }
 }

@@ -78,3 +78,12 @@ a loop or conditional, the first one is not inside), the first assignment is rem
 
 
 ## Function Unifier
+
+## Expression Simplifier
+
+This step can only be applied for the EVM-flavoured dialect of iulia. It applies
+simple rules like ``x + 0 == x`` to simplify expressions.
+
+## Ineffective Statement Remover
+
+This step removes statements that have no side-effects.
