@@ -44,10 +44,12 @@ FullInliner::FullInliner(Block& _ast):
 	m_ast(_ast)
 {
 	solAssert(m_ast.statements.size() >= 1, "");
+	solAssert(m_ast.statements.front().type() == typeid(Block), "");
 	m_nameDispenser.m_usedNames = NameCollector(m_ast).names();
 
 	for (size_t i = 1; i < m_ast.statements.size(); ++i)
 	{
+		solAssert(m_ast.statements.at(i).type() == typeid(FunctionDefinition), "");
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
 		m_functions[fun.name] = &fun;
 		m_functionsToVisit.insert(&fun);
