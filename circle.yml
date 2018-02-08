@@ -81,12 +81,15 @@ jobs:
       - run:
           name: Commandline tests
           command: test/cmdlineTests.sh
+      - run: mkdir -p test_results
       - run:
           name: Test without optimizer (exclude IPC tests)
-          command: build/test/soltest --show-progress -- --no-ipc
+          command: build/test/soltest --logger=JUNIT,test_suite,test_results/no_opt.xml  -- --no-ipc
       - run:
           name: Test with optimizer (exclude IPC tests)
-          command: build/test/soltest --show-progress -- --optimize --no-ipc
+          command: build/test/soltest --logger=JUNIT,test_suite,test_results/opt.xml -- --optimize --no-ipc
+      - store_test_results:
+          path: test_results/
 
 workflows:
   version: 2
