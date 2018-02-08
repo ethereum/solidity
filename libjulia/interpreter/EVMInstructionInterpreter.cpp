@@ -478,11 +478,13 @@ bool EVMInstructionInterpreter::logMemory(string const& _type, u256 const& _offs
 	logTrace("Memory " + _type + " at " + _offset.str() + " for " + _size.str() + " bytes");
 	if (_offset + _size >= _offset)
 	{
-		m_state.msize = max(m_state.msize, _offset + _size);
-		if (_offset + _size < maxMemSize)
+		u256 newSize = _offset + _size;
+		newSize = (newSize + 0x1f) & ~u256(0x1f);
+		m_state.msize = max(m_state.msize, newSize);
+		if (newSize < maxMemSize)
 		{
-			if (m_state.memory.size() < _offset + _size)
-				m_state.memory.resize(size_t(_offset) + size_t(_size));
+			if (m_state.memory.size() < newSize)
+				m_state.memory.resize(size_t(newSize));
 			return true;
 		}
 	}
