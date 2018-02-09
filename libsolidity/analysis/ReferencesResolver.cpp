@@ -43,6 +43,37 @@ bool ReferencesResolver::resolve(ASTNode const& _root)
 	return !m_errorOccurred;
 }
 
+bool ReferencesResolver::visit(Block const& _block)
+{
+	if (!m_resolveInsideCode)
+		return false;
+	m_resolver.setScope(&_block);
+	return true;
+}
+
+void ReferencesResolver::endVisit(Block const& _block)
+{
+	if (!m_resolveInsideCode)
+		return;
+
+	m_resolver.setScope(_block.scope());
+}
+
+bool ReferencesResolver::visit(ForStatement const& _for)
+{
+	if (!m_resolveInsideCode)
+		return false;
+	m_resolver.setScope(&_for);
+	return true;
+}
+
+void ReferencesResolver::endVisit(ForStatement const& _for)
+{
+	if (!m_resolveInsideCode)
+		return;
+	m_resolver.setScope(_for.scope());
+}
+
 bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());

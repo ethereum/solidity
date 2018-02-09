@@ -610,6 +610,30 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(Block& _block)
+{
+	enterNewSubScope(_block);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(Block&)
+{
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(ForStatement& _for)
+{
+	// TODO special scoping rules for the init statement - if it is a block, then it should
+	// not open its own scope.
+	enterNewSubScope(_for);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(ForStatement&)
+{
+	closeCurrentScope();
+}
+
 void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
 {
 	// Register the local variables with the function

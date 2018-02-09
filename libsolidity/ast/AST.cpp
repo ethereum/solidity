@@ -415,6 +415,15 @@ bool VariableDeclaration::isLValue() const
 	return !isExternalCallableParameter() && !m_isConstant;
 }
 
+bool VariableDeclaration::isLocalVariable() const
+{
+	auto s = scope();
+	return
+		dynamic_cast<CallableDeclaration const*>(s) ||
+		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<ForStatement const*>(s);
+}
+
 bool VariableDeclaration::isCallableParameter() const
 {
 	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
@@ -460,8 +469,7 @@ bool VariableDeclaration::isExternalCallableParameter() const
 
 bool VariableDeclaration::canHaveAutoType() const
 {
-	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
-	return (!!callable && !isCallableParameter());
+	return isLocalVariable() && !isCallableParameter();
 }
 
 TypePointer VariableDeclaration::type() const

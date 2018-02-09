@@ -299,6 +299,8 @@ private:
 
 /**
  * Abstract class that is added to each AST node that can store local variables.
+ * Local variables in functions are always added to functions, even though they are not
+ * in scope for the whole function.
  */
 class VariableScope
 {
@@ -672,7 +674,7 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
-	bool isLocalVariable() const { return !!dynamic_cast<CallableDeclaration const*>(scope()); }
+	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
 	/// @returns true if this variable is a return parameter of a function.
@@ -1014,7 +1016,7 @@ private:
 /**
  * Brace-enclosed block containing zero or more statements.
  */
-class Block: public Statement
+class Block: public Statement, public Scopable
 {
 public:
 	Block(
@@ -1121,7 +1123,7 @@ private:
 /**
  * For loop statement
  */
-class ForStatement: public BreakableStatement
+class ForStatement: public BreakableStatement, public Scopable
 {
 public:
 	ForStatement(

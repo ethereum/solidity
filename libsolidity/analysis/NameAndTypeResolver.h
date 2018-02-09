@@ -167,6 +167,10 @@ private:
 	void endVisit(FunctionDefinition& _function) override;
 	bool visit(ModifierDefinition& _modifier) override;
 	void endVisit(ModifierDefinition& _modifier) override;
+	bool visit(Block& _block) override;
+	void endVisit(Block& _block) override;
+	bool visit(ForStatement& _forLoop) override;
+	void endVisit(ForStatement& _forLoop) override;
 	void endVisit(VariableDeclarationStatement& _variableDeclarationStatement) override;
 	bool visit(VariableDeclaration& _declaration) override;
 	bool visit(EventDefinition& _event) override;
