@@ -34,25 +34,19 @@ jobs:
           root: workspace
           paths:
             - soljson.js
-  test_emscripten:
+  test_emscripten_solcjs:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: mkdir -p build/libsolc/
-      - run: cp /tmp/workspace/soljson.js build/libsolc/soljson.js
-      - run: cp /tmp/workspace/soljson.js soljson.js
       - run:
           name: Install external tests deps
           command: |
             apt-get -qq update
             apt-get -qy install netcat curl
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-      - run:
-          name: Test external tests deps
-          command: |
             export NVM_DIR="/usr/local/nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm --version
@@ -60,10 +54,34 @@ jobs:
             node --version
             npm --version
       - run:
-          name: Test
+          name: Test solcjs
           command: |
             . /usr/local/nvm/nvm.sh
-            scripts/test_emscripten.sh
+            test/solcjsTests.sh /tmp/workspace/soljson.js
+  test_emscripten_external:
+    docker:
+      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install external tests deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install netcat curl
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
+            export NVM_DIR="/usr/local/nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            nvm --version
+            nvm install 6
+            node --version
+            npm --version
+      - run:
+          name: External tests
+          command: |
+            . /usr/local/nvm/nvm.sh
+            test/externalTests.sh /tmp/workspace/soljson.js
   build_x86:
     docker:
       - image: buildpack-deps:artful
@@ -115,7 +133,10 @@ workflows:
   build_all:
     jobs:
       - build_emscripten
-      - test_emscripten:
+      - test_emscripten_solcjs:
+          requires:
+            - build_emscripten
+      - test_emscripten_external:
           requires:
             - build_emscripten
       - build_x86
