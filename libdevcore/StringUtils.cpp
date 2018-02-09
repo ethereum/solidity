@@ -48,7 +48,8 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 	size_t n1 = _str1.size();
 	size_t n2 = _str2.size();
 	// Optimize by storing only last 2 rows and current row. So first index is considered modulo 3
-	vector<vector<size_t>> dp(3, vector<size_t>(n2 + 1));
+	// This is a two-dimensional array of size 3 x (n2 + 1).
+	vector<size_t> dp(3 * (n2 + 1));
 
 	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are 1-based to make base case storage easier.
 	// So index accesser to _name1 and _name2 have to be adjusted accordingly
@@ -60,9 +61,9 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 				x = max(i1, i2);
 			else
 			{
-				size_t left = dp[(i1-1) % 3][i2];
-				size_t up = dp[i1 % 3][i2-1];
-				size_t upleft = dp[(i1 - 1) % 3][i2-1];
+				size_t left = dp[(i1 - 1) % 3 + i2 * 3];
+				size_t up = dp[(i1 % 3) + (i2 - 1) * 3];
+				size_t upleft = dp[((i1 - 1) % 3) + (i2 - 1) * 3];
 				// deletion and insertion
 				x = min(left + 1, up + 1);
 				if (_str1[i1-1] == _str2[i2-1])
@@ -74,12 +75,12 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 
 				// transposing
 				if (i1 > 1 && i2 > 1 && _str1[i1 - 1] == _str2[i2 - 2] && _str1[i1 - 2] == _str2[i2 - 1])
-					x = min(x, dp[(i1 - 2) % 3][i2 - 2] + 1);
+					x = min(x, dp[((i1 - 2) % 3) + (i2 - 2) * 3] + 1);
 			}
-			dp[i1 % 3][i2] = x;
+			dp[(i1 % 3) + i2 * 3] = x;
 		}
 
-	return dp[n1 % 3][n2];
+	return dp[(n1 % 3) + n2 * 3];
 }
 
 string dev::quotedAlternativesList(vector<string> const& suggestions)
