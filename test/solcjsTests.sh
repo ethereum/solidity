@@ -28,13 +28,14 @@
 
 set -e
 
-if [ ! -f "$1" ]
+if [ ! -f "$1" -o -z "$2" ]
 then
-  echo "Usage: $0 <path to soljson.js>"
+  echo "Usage: $0 <path to soljson.js> <version>"
   exit 1
 fi
 
 SOLJSON="$1"
+VERSION="$2"
 
 DIR=$(mktemp -d)
 (
@@ -53,7 +54,6 @@ DIR=$(mktemp -d)
     cp "$SOLJSON" soljson.js
 
     # Update version (needed for some tests)
-    VERSION=$("$REPO_ROOT/scripts/get_version.sh")
     echo "Updating package.json to version $VERSION"
     npm version --no-git-tag-version $VERSION
 

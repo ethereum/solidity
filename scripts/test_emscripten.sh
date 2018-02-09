@@ -30,8 +30,9 @@ set -e
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 SOLJSON="$REPO_ROOT/build/libsolc/soljson.js"
+VERSION=$("$REPO_ROOT"/scripts/get_version.sh)
 
 echo "Running solcjs tests...."
-"$REPO_ROOT/test/solcjsTests.sh" "$SOLJSON"
+"$REPO_ROOT/test/solcjsTests.sh" "$SOLJSON" "$VERSION"
 echo "Running external tests...."
 "$REPO_ROOT/test/externalTests.sh" "$SOLJSON"
