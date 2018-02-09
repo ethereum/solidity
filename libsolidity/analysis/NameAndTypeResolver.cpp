@@ -244,19 +244,24 @@ void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 	}
 }
 
+void NameAndTypeResolver::setScope(ASTNode const* _node)
+{
+	m_currentScope = m_scopes[_node].get();
+}
+
 bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode)
 {
 	if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(&_node))
 	{
 		bool success = true;
-		m_currentScope = m_scopes[contract->scope()].get();
+		setScope(contract->scope());
 		solAssert(!!m_currentScope, "");
 
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
 			if (!resolveNamesAndTypes(*baseContract, true))
 				success = false;
 
-		m_currentScope = m_scopes[contract].get();
+		setScope(contract);
 
 		if (success)
 		{
@@ -273,7 +278,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		// these can contain code, only resolve parameters for now
 		for (ASTPointer<ASTNode> const& node: contract->subNodes())
 		{
-			m_currentScope = m_scopes[contract].get();
+			setScope(contract);
 			if (!resolveNamesAndTypes(*node, false))
 			{
 				success = false;
@@ -287,12 +292,12 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		if (!_resolveInsideCode)
 			return success;
 
-		m_currentScope = m_scopes[contract].get();
+		setScope(contract);
 
 		// now resolve references inside the code
 		for (ASTPointer<ASTNode> const& node: contract->subNodes())
 		{
-			m_currentScope = m_scopes[contract].get();
+			setScope(contract);
 			if (!resolveNamesAndTypes(*node, true))
 				success = false;
 		}
@@ -301,7 +306,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 	else
 	{
 		if (m_scopes.count(&_node))
-			m_currentScope = m_scopes[&_node].get();
+			setScope(&_node);
 		return ReferencesResolver(m_errorReporter, *this, _resolveInsideCode).resolve(_node);
 	}
 }
@@ -632,14 +637,17 @@ void DeclarationRegistrationHelper::endVisit(EventDefinition&)
 	closeCurrentScope();
 }
 
-void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
+void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 {
+	if (auto s = dynamic_cast<Scopable*>(&_subScope))
+		s->setScope(m_currentScope);
+
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>::iterator iter;
 	bool newlyAdded;
 	shared_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
-	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, move(container));
+	tie(iter, newlyAdded) = m_scopes.emplace(&_subScope, move(container));
 	solAssert(newlyAdded, "Unable to add new scope.");
-	m_currentScope = &_declaration;
+	m_currentScope = &_subScope;
 }
 
 void DeclarationRegistrationHelper::closeCurrentScope()
@@ -669,9 +677,10 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, m_errorReporter);
 
-	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
+	else
+		_declaration.setScope(m_currentScope);
 }
 
 string DeclarationRegistrationHelper::currentCanonicalName() const

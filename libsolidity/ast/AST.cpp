@@ -98,11 +98,12 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 
 SourceUnit const& Declaration::sourceUnit() const
 {
-	solAssert(!!m_scope, "");
-	ASTNode const* scope = m_scope;
-	while (dynamic_cast<Declaration const*>(scope) && dynamic_cast<Declaration const*>(scope)->m_scope)
-		scope = dynamic_cast<Declaration const*>(scope)->m_scope;
-	return dynamic_cast<SourceUnit const&>(*scope);
+	ASTNode const* s = scope();
+	solAssert(s, "");
+	// will not always be a declaratoion
+	while (dynamic_cast<Scopable const*>(s) && dynamic_cast<Scopable const*>(s)->scope())
+		s = dynamic_cast<Scopable const*>(s)->scope();
+	return dynamic_cast<SourceUnit const&>(*s);
 }
 
 string Declaration::sourceUnitName() const

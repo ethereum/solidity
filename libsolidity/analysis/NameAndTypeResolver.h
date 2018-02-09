@@ -97,6 +97,9 @@ public:
 	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
 	std::string similarNameSuggestions(ASTString const& _name) const;
 
+	/// Sets the current scope.
+	void setScope(ASTNode const* _node);
+
 private:
 	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
@@ -169,7 +172,7 @@ private:
 	bool visit(EventDefinition& _event) override;
 	void endVisit(EventDefinition& _event) override;
 
-	void enterNewSubScope(Declaration const& _declaration);
+	void enterNewSubScope(ASTNode& _subScope);
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 

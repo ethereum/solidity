@@ -140,9 +140,25 @@ private:
 };
 
 /**
+ * Abstract class that is added to each AST node that is stored inside a scope
+ * (including scopes).
+ */
+class Scopable
+{
+public:
+	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
+	/// Available only after name and type resolution step.
+	ASTNode const* scope() const { return m_scope; }
+	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+
+protected:
+	ASTNode const* m_scope = nullptr;
+};
+
+/**
  * Abstract AST class for a declaration (contract, function, struct, variable, import directive).
  */
-class Declaration: public ASTNode
+class Declaration: public ASTNode, public Scopable
 {
 public:
 	/// Visibility ordered from restricted to unrestricted.
@@ -171,7 +187,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility = Visibility::Default
 	):
-		ASTNode(_location), m_name(_name), m_visibility(_visibility), m_scope(nullptr) {}
+		ASTNode(_location), m_name(_name), m_visibility(_visibility) {}
 
 	/// @returns the declared name.
 	ASTString const& name() const { return *m_name; }
@@ -180,11 +196,6 @@ public:
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
-
-	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
-	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return m_scope; }
-	void setScope(ASTNode const* _scope) { m_scope = _scope; }
 
 	/// @returns the source unit this declaration is present in.
 	SourceUnit const& sourceUnit() const;
@@ -213,7 +224,6 @@ protected:
 private:
 	ASTPointer<ASTString> m_name;
 	Visibility m_visibility;
-	ASTNode const* m_scope;
 };
 
 /**
