@@ -154,7 +154,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, assembly::LiteralKind::Number, m_data->str(), ""};
+		return Literal{_location, assembly::LiteralKind::Number, formatNumber(*m_data), ""};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
