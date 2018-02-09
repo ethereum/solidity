@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(undeclared_name_is_not_fatal)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Undeclared identifier.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (vector<string>{"Undeclared identifier", "Undeclared identifier"}));
 }
 
 BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
@@ -864,7 +864,7 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 		contract A is B { }
 		contract B is A { }
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Definition of base has to precede definition of derived contract");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<string>{"Definition of base has to precede definition of derived contract"}));
 }
 
 BOOST_AUTO_TEST_CASE(legal_override_direct)
@@ -1092,9 +1092,10 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) public { } }
 	)";
-	// Error: Identifier already declared.
-	// Error: Override changes modifier to function.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared.");
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Identifier already declared"},
+		{Error::Type::TypeError, "Override changes modifier to function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1103,9 +1104,10 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) public { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	// Error: Identifier already declared.
-	// Error: Override changes function to modifier.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared.");
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Identifier already declared"},
+		{Error::Type::TypeError, "Override changes function to modifier"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -1342,7 +1344,10 @@ BOOST_AUTO_TEST_CASE(fallback_function_twice)
 			function() public { x = 3; }
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Function with same name and arguments defined twice.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (vector<string>{
+		"Function with same name and arguments defined twice.",
+		"Only one fallback function is"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
@@ -1677,7 +1682,11 @@ BOOST_AUTO_TEST_CASE(constant_input_parameter)
 			function f(uint[] constant a) public { }
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Illegal use of \"constant\" specifier.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<string>{
+		"Illegal use of \"constant\" specifier",
+		"Constants of non-value type not yet implemented",
+		"Uninitialized \"constant\" variable"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
@@ -2616,7 +2625,10 @@ BOOST_AUTO_TEST_CASE(equal_overload)
 			function test(uint a) external {}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(sourceCode, DeclarationError, "Function with same name and arguments defined twice.");
+	CHECK_ALLOW_MULTI(sourceCode, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Function with same name and arguments defined twice."},
+		{Error::Type::TypeError, "Overriding function visibility differs"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_var)
@@ -3118,7 +3130,10 @@ BOOST_AUTO_TEST_CASE(library_constructor)
 			function Lib();
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in libraries.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<std::string>{
+		"Constructor cannot be defined in libraries.",
+		"Constructor must be implemented if declared."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(valid_library)
@@ -3845,7 +3860,10 @@ BOOST_AUTO_TEST_CASE(left_value_in_conditional_expression_not_supported_yet)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Conditional expression as left value is not supported yet.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"Conditional expression as left value is not supported yet.",
+		"Expression has to be an lvalue"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(conditional_expression_with_different_struct)
@@ -4064,7 +4082,11 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier not found or not unique.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (std::vector<std::string>{
+		"Identifier not found or not unique.",
+		"Identifier not found or not unique.",
+		"Identifier not found or not unique."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
@@ -4093,7 +4115,7 @@ BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename_is_not_fatal)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Name has to refer to a struct, enum or contract.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Name has to refer to a struct, enum or contract."}));
 }
 
 BOOST_AUTO_TEST_CASE(function_is_not_a_valid_typename)
@@ -4832,7 +4854,10 @@ BOOST_AUTO_TEST_CASE(unused_return_value_callcode)
 			}
 		}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Return value of low-level calls not used");
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"Return value of low-level calls not used",
+		"\"callcode\" has been deprecated"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
@@ -5012,9 +5037,9 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 {
 	char const* text = "contract C {}";
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
-	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second, "Source file does not specify required compiler version!"));
+	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
 }
 
 BOOST_AUTO_TEST_CASE(unsatisfied_version)
@@ -5023,10 +5048,10 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version)
 		pragma solidity ^99.99.0;
 	)";
 	auto sourceAndError = parseAnalyseAndReturnError(text, false, false, false);
-	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(sourceAndError.second->type() == Error::Type::SyntaxError);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second, "Source file requires different compiler version"));
+	BOOST_CHECK(sourceAndError.second.front()->type() == Error::Type::SyntaxError);
+	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file requires different compiler version"));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_constructor_statemutability)
@@ -5172,7 +5197,7 @@ BOOST_AUTO_TEST_CASE(payable_internal_function_type_is_not_fatal)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Only external function types can be payable.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Only external function types can be payable."}));
 }
 
 BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
@@ -5866,7 +5891,10 @@ BOOST_AUTO_TEST_CASE(invalid_address_length_long)
 			}
 		}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "This looks like an address but has an invalid checksum.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "This looks like an address but has an invalid checksum."},
+		{Error::Type::TypeError, "not implicitly convertible"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
@@ -5939,7 +5967,11 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 			uint constant d = 2 + a;
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "a has a cyclic dependency via c");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"a has a cyclic dependency via c",
+		"c has a cyclic dependency via d",
+		"d has a cyclic dependency via a"
+	}));
 	text = R"(
 		contract C {
 			uint constant a = b * c;
@@ -5967,7 +5999,10 @@ BOOST_AUTO_TEST_CASE(interface_constructor)
 			function I();
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in interfaces");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"Constructor cannot be defined in interfaces",
+		"Constructor must be implemented if declared.",
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)
@@ -6650,15 +6685,23 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+		{Error::Type::Warning, "only available after the Metropolis"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(create2_as_variable)
 {
 	char const* text = R"(
-		contract c { function f() public { uint create2; assembly { create2(0, 0, 0, 0) }}}
+		contract c { function f() public { uint create2; assembly { create2(0, 0, 0, 0) } }}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::Warning, "only available after the Metropolis"},
+		{Error::Type::DeclarationError, "Unbalanced stack"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
@@ -6718,7 +6761,7 @@ BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed_is_not_fata
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Storage location can only be given for array or struct types.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Storage location can only be given for array or struct types."}));
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
@@ -6916,7 +6959,11 @@ BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lvalue)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"is not callable",
+		"Expression has to be an lvalue",
+		"Type int_const 2 is not implicitly"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(builtin_reject_gas)
@@ -7119,11 +7166,11 @@ BOOST_AUTO_TEST_CASE(experimental_pragma)
 		pragma experimental __test;
 	)";
 	CHECK_WARNING(text, "Experimental features are turned on. Do not use experimental features on live deployments.");
-//	text = R"(
-//		pragma experimental __test;
-//		pragma experimental __test;
-//	)";
-//	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, "Duplicate experimental feature name.");
+	text = R"(
+		pragma experimental __test;
+		pragma experimental __test;
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, (std::vector<std::string>{"Duplicate experimental feature name."}));
 }
 
 BOOST_AUTO_TEST_CASE(reject_interface_creation)
@@ -7186,7 +7233,10 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 			}
 		}
 	)";
-//	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"The type of \"int_const 1\" was inferred as uint8.",
+		"\"sha3\" has been deprecated in favour of \"keccak256\""
+	}));
 	text = R"(
 		contract C {
 			function f() pure public returns (bytes32) {
