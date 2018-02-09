@@ -76,15 +76,19 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 
 BOOST_AUTO_TEST_CASE(double_variable_declaration)
 {
-	char const* text = R"(
+	string text = R"(
 		contract test {
-			function f() public {
+			function f() pure public {
 				uint256 x;
 				if (true) { uint256 x; }
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"This declaration shadows an existing declaration.",
+		"Unused local variable",
+		"Unused local variable"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(name_shadowing)
@@ -1043,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	CHECK_SUCCESS(text);
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)

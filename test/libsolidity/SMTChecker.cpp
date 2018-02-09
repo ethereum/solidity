@@ -466,7 +466,8 @@ BOOST_AUTO_TEST_CASE(for_loop)
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
-				for (uint y = 2; x < 10; ) {
+				uint y;
+				for (y = 2; x < 10; ) {
 					y = 3;
 				}
 				assert(y == 3);
@@ -477,7 +478,8 @@ BOOST_AUTO_TEST_CASE(for_loop)
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
-				for (uint y = 2; x < 10; ) {
+				uint y;
+				for (y = 2; x < 10; ) {
 					y = 3;
 				}
 				assert(y == 2);
