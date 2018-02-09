@@ -53,24 +53,31 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are 1-based to make base case storage easier.
 	// So index accesser to _name1 and _name2 have to be adjusted accordingly
 	for (size_t i1 = 0; i1 <= n1; ++i1)
-	{
 		for (size_t i2 = 0; i2 <= n2; ++i2)
 		{
-				if (min(i1, i2) == 0) // base case
-					dp[i1 % 3][i2] = max(i1, i2);
+			size_t x = 0;
+			if (min(i1, i2) == 0) // base case
+				x = max(i1, i2);
+			else
+			{
+				size_t left = dp[(i1-1) % 3][i2];
+				size_t up = dp[i1 % 3][i2-1];
+				size_t upleft = dp[(i1 - 1) % 3][i2-1];
+				// deletion and insertion
+				x = min(left + 1, up + 1);
+				if (_str1[i1-1] == _str2[i2-1])
+					// same chars, can skip
+					x = min(x, upleft);
 				else
-				{
-					dp[i1 % 3][i2] = min(dp[(i1-1) % 3][i2] + 1, dp[i1 % 3][i2-1] + 1); // deletion and insertion
-					if (_str1[i1-1] == _str2[i2-1])  // same chars, can skip
-						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-1) % 3][i2-1]);
-					else // different chars so try substitution
-						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-1) % 3][i2-1] + 1);
+					// different chars so try substitution
+					x = min(x, upleft + 1);
 
-					if (i1 > 1 && i2 > 1 && _str1[i1-1] == _str2[i2-2] && _str1[i1-2] == _str2[i2-1]) // Try transposing
-						dp[i1 % 3][i2] = min(dp[i1 % 3][i2], dp[(i1-2) % 3][i2-2] + 1);
-				}
+				// transposing
+				if (i1 > 1 && i2 > 1 && _str1[i1 - 1] == _str2[i2 - 2] && _str1[i1 - 2] == _str2[i2 - 1])
+					x = min(x, dp[(i1 - 2) % 3][i2 - 2] + 1);
+			}
+			dp[i1 % 3][i2] = x;
 		}
-	}
 
 	return dp[n1 % 3][n2];
 }
