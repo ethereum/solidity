@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build_emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
@@ -48,3 +48,52 @@ jobs:
       - store_artifacts:
           path: build/solc/soljson.js
           destination: soljson.js
+  build_x86:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - restore_cache:
+          key: ccache-{{ arch }}-{{ .Branch }}
+          key: ccache-{{ arch }}
+          key: ccache
+      - run:
+          name: Build
+          command: ./scripts/build.sh RelWithDebInfo
+      - save_cache:
+          key: ccache-{{ arch }}-{{ .Branch }}
+          paths:
+            - ~/.ccache
+      - run:
+          name: Commandline tests
+          command: test/cmdlineTests.sh
+      - run: mkdir -p test_results
+      - run:
+          name: Test without optimizer (exclude IPC tests)
+          command: build/test/soltest --logger=JUNIT,test_suite,test_results/no_opt.xml  -- --no-ipc
+      - run:
+          name: Test with optimizer (exclude IPC tests)
+          command: build/test/soltest --logger=JUNIT,test_suite,test_results/opt.xml -- --optimize --no-ipc
+      - store_test_results:
+          path: test_results/
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - build_emscripten
+      - build_x86
