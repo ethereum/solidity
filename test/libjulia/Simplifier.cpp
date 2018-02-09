@@ -127,4 +127,16 @@ BOOST_AUTO_TEST_CASE(inside_for)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(mod_and)
+{
+	CHECK(
+		"{ mstore(0, mod(calldataload(0), exp(2, 8))) }",
+		"{ mstore(0, and(calldataload(0), 255)) }"
+	);
+	CHECK(
+		"{ mstore(0, mod(calldataload(0), exp(2, 255))) }",
+		"{ mstore(0, and(calldataload(0), 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)) }"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
