@@ -91,6 +91,50 @@ BOOST_AUTO_TEST_CASE(double_variable_declaration)
 	}));
 }
 
+BOOST_AUTO_TEST_CASE(scoping)
+{
+	char const* text = R"(
+		contract test {
+			function f() public {
+				{
+					uint256 x;
+				}
+				x = 2;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for)
+{
+	char const* text = R"(
+		contract test {
+			function f() public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for2)
+{
+	char const* text = R"(
+		contract test {
+			function f() public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+				x = 4;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
 BOOST_AUTO_TEST_CASE(name_shadowing)
 {
 	char const* text = R"(
