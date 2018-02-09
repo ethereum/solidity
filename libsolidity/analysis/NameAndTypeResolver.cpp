@@ -159,15 +159,15 @@ vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _na
 	return iterator->second->resolveName(_name, false);
 }
 
-vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _recursive) const
+vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name) const
 {
-	return m_currentScope->resolveName(_name, _recursive);
+	return m_currentScope->resolveName(_name, true);
 }
 
-Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path, bool _recursive) const
+Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
 {
 	solAssert(!_path.empty(), "");
-	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), _recursive);
+	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), true);
 	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
 	{
 		if (!m_scopes.count(candidates.front()))

@@ -73,16 +73,17 @@ public:
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the pre-defined global variables).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
+	/// SHOULD only be used for testing.
 	std::vector<Declaration const*> resolveName(ASTString const& _name, ASTNode const* _scope = nullptr) const;
 
-	/// Resolves a name in the "current" scope. Should only be called during the initial
-	/// resolving phase.
-	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _recursive = true) const;
+	/// Resolves a name in the "current" scope, but also searches parent scopes.
+	/// Should only be called during the initial resolving phase.
+	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name) const;
 
-	/// Resolves a path starting from the "current" scope. Should only be called during the initial
-	/// resolving phase.
+	/// Resolves a path starting from the "current" scope, but also searches parent scopes.
+	/// Should only be called during the initial resolving phase.
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
-	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path, bool _recursive = true) const;
+	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
 	/// returns the vector of declarations without repetitions
 	std::vector<Declaration const*> cleanedDeclarations(
