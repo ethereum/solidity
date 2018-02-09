@@ -34,17 +34,19 @@ bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t 
 	if (_str1 == _str2)
 		return true;
 
-	size_t n1 = _str1.size(), n2 = _str2.size();
+	size_t n1 = _str1.size();
+	size_t n2 = _str2.size();
 	size_t distance = stringDistance(_str1, _str2);
 
 	// if distance is not greater than _maxDistance, and distance is strictly less than length of both names, they can be considered similar
 	// this is to avoid irrelevant suggestions
-	return distance <=  _maxDistance && distance < n1 && distance < n2;
+	return distance <= _maxDistance && distance < n1 && distance < n2;
 }
 
 size_t dev::stringDistance(string const& _str1, string const& _str2)
 {
-	size_t n1 = _str1.size(), n2 = _str2.size();
+	size_t n1 = _str1.size();
+	size_t n2 = _str2.size();
 	// Optimize by storing only last 2 rows and current row. So first index is considered modulo 3
 	vector<vector<size_t>> dp(3, vector<size_t>(n2 + 1));
 
@@ -73,7 +75,8 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 	return dp[n1 % 3][n2];
 }
 
-string dev::quotedAlternativesList(vector<string> const& suggestions) {
+string dev::quotedAlternativesList(vector<string> const& suggestions)
+{
 	if (suggestions.empty())
 		return "";
 	if (suggestions.size() == 1)
