@@ -93,10 +93,15 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		# testing on at least OS X and Ubuntu.
 		add_compile_options(-Wno-unused-function)
 		add_compile_options(-Wno-dangling-else)
-		
+
+		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+			# Set stack size to 16MB - by default Apple's clang defines a stack size of 8MB, some tests require more.
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000")
+		endif()
+
 		# Some Linux-specific Clang settings.  We don't want these for OS X.
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-		
+
 			# TODO - Is this even necessary?  Why?
 			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
 			add_compile_options(-stdlib=libstdc++)
