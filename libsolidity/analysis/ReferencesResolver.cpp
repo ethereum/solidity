@@ -48,8 +48,10 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
 	{
-		string const& suggestions = m_resolver.similarNameSuggestions(_identifier.name());
-		string errorMessage = "Undeclared identifier." + (suggestions.empty()? "": " Did you mean " + suggestions + "?");
+		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
+		string errorMessage =
+			"Undeclared identifier." +
+			(suggestions.empty()? "": " Did you mean " + std::move(suggestions) + "?");
 		declarationError(_identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
