@@ -2196,6 +2196,16 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
 	CHECK_ERROR(text, TypeError, "Type uint256[] storage ref is not implicitly convertible to expected type uint256[80] storage ref.");
 }
 
+BOOST_AUTO_TEST_CASE(array_of_undeclared_type)
+{
+	char const* text = R"(
+		contract c {
+			a[] public foo;
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
+}
+
 BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
 {
 	char const* text = R"(
