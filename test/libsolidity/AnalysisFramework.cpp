@@ -36,7 +36,7 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 
-pair<SourceUnit const*, shared_ptr<Error const>>
+pair<SourceUnit const*, ErrorList>
 AnalysisFramework::parseAnalyseAndReturnError(
 	string const& _source,
 	bool _reportWarnings,
@@ -53,7 +53,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 
 	m_compiler.analyze();
 
-	std::shared_ptr<Error const> firstError;
+	ErrorList errors;
 	for (auto const& currentError: m_compiler.errors())
 	{
 		solAssert(currentError->comment(), "");
@@ -72,16 +72,15 @@ AnalysisFramework::parseAnalyseAndReturnError(
 
 		if (_reportWarnings || (currentError->type() != Error::Type::Warning))
 		{
-			if (firstError && !_allowMultipleErrors)
+			if (!_allowMultipleErrors && !errors.empty())
 			{
 				BOOST_FAIL("Multiple errors found: " + formatErrors());
 			}
-			if (!firstError)
-				firstError = currentError;
+			errors.emplace_back(std::move(currentError));
 		}
 	}
 
-	return make_pair(&m_compiler.ast(""), firstError);
+	return make_pair(&m_compiler.ast(""), errors);
 }
 
 SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
@@ -89,23 +88,23 @@ SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
 	auto sourceAndError = parseAnalyseAndReturnError(_source);
 	BOOST_REQUIRE(!!sourceAndError.first);
 	string message;
-	if (sourceAndError.second)
-		message = "Unexpected error: " + formatError(*sourceAndError.second);
-	BOOST_REQUIRE_MESSAGE(!sourceAndError.second, message);
+	if (!sourceAndError.second.empty())
+		message = "Unexpected error: " + formatErrors();
+	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
 	return sourceAndError.first;
 }
 
 bool AnalysisFramework::success(string const& _source)
 {
-	return !parseAnalyseAndReturnError(_source).second;
+	return parseAnalyseAndReturnError(_source).second.empty();
 }
 
-Error AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
+ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
 {
-	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
-	BOOST_REQUIRE(!!sourceAndError.second);
-	BOOST_REQUIRE_MESSAGE(!!sourceAndError.first, "Expected error, but no error happened.");
-	return *sourceAndError.second;
+	auto sourceAndErrors = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
+	BOOST_REQUIRE(!sourceAndErrors.second.empty());
+	BOOST_REQUIRE_MESSAGE(!!sourceAndErrors.first, "Expected error, but no error happened.");
+	return sourceAndErrors.second;
 }
 
 string AnalysisFramework::formatErrors()

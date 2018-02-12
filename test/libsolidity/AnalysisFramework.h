@@ -45,7 +45,7 @@ class AnalysisFramework
 {
 
 protected:
-	virtual std::pair<SourceUnit const*, std::shared_ptr<Error const>>
+	virtual std::pair<SourceUnit const*, ErrorList>
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
@@ -55,7 +55,7 @@ protected:
 
 	SourceUnit const* parseAndAnalyse(std::string const& _source);
 	bool success(std::string const& _source);
-	Error expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
+	ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
 	std::string formatErrors();
 	std::string formatError(Error const& _error);
@@ -70,34 +70,51 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 };
 
-
-#define CHECK_ERROR_OR_WARNING(text, typ, substring, warning, allowMulti) \
+// Asserts that the compilation down to typechecking
+// emits multiple errors of different types and messages, provided in the second argument.
+#define CHECK_ALLOW_MULTI(text, expectations) \
 do \
 { \
-	Error err = expectError((text), (warning), (allowMulti)); \
-	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+	ErrorList errors = expectError((text), true, true); \
+	auto message = searchErrors(errors, (expectations)); \
+	BOOST_CHECK_MESSAGE(message.empty(), message); \
+} while(0)
+
+#define CHECK_ERROR_OR_WARNING(text, typ, substrings, warning, allowMulti) \
+do \
+{ \
+	ErrorList errors = expectError((text), (warning), (allowMulti)); \
+	std::vector<std::pair<Error::Type, std::string>> expectations; \
+	for (auto const& str: substrings) \
+		expectations.emplace_back((Error::Type::typ), str); \
+	auto message = searchErrors(errors, expectations); \
+	BOOST_CHECK_MESSAGE(message.empty(), message); \
 } while(0)
 
 // [checkError(text, type, substring)] asserts that the compilation down to typechecking
 // emits an error of type [type] and with a message containing [substring].
 #define CHECK_ERROR(text, type, substring) \
-CHECK_ERROR_OR_WARNING(text, type, substring, false, false)
+CHECK_ERROR_OR_WARNING(text, type, std::vector<std::string>{(substring)}, false, false)
 
 // [checkError(text, type, substring)] asserts that the compilation down to typechecking
-// emits an error of type [type] and with a message containing [substring].
-#define CHECK_ERROR_ALLOW_MULTI(text, type, substring) \
-CHECK_ERROR_OR_WARNING(text, type, substring, false, true)
+// emits multiple errors of the same type [type] and with a messages containing [substrings].
+// Because of the limitations of the preprocessor, you cannot use {{T1, "abc"}, {T2, "def"}} as arguments,
+// but have to replace them by (std::vector<std::pair<Error::Type, std::string>>{"abc", "def"})
+// (note the parentheses)
+#define CHECK_ERROR_ALLOW_MULTI(text, type, substrings) \
+CHECK_ERROR_OR_WARNING(text, type, substrings, false, true)
 
 // [checkWarning(text, substring)] asserts that the compilation down to typechecking
 // emits a warning and with a message containing [substring].
 #define CHECK_WARNING(text, substring) \
-CHECK_ERROR_OR_WARNING(text, Warning, substring, true, false)
+CHECK_ERROR_OR_WARNING(text, Warning, std::vector<std::string>{(substring)}, true, false)
 
 // [checkWarningAllowMulti(text, substring)] aserts that the compilation down to typechecking
 // emits a warning and with a message containing [substring].
-#define CHECK_WARNING_ALLOW_MULTI(text, substring) \
-CHECK_ERROR_OR_WARNING(text, Warning, substring, true, true)
+// Because of the limitations of the preprocessor, you cannot use {"abc", "def"} as arguments,
+// but have to replace them by (std::vector<std::string>{"abc", "def"}) (note the parentheses)
+#define CHECK_WARNING_ALLOW_MULTI(text, substrings) \
+CHECK_ERROR_OR_WARNING(text, Warning, substrings, true, true)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
 #define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
@@ -107,9 +124,9 @@ do \
 { \
 	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
 	std::string message; \
-	if (sourceAndError.second) \
-		message = formatError(*sourceAndError.second); \
-	BOOST_CHECK_MESSAGE(!sourceAndError.second, message); \
+	if (!sourceAndError.second.empty()) \
+		message = formatErrors();\
+	BOOST_CHECK_MESSAGE(sourceAndError.second.empty(), message); \
 } \
 while(0)
 
