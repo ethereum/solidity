@@ -155,6 +155,14 @@ inline std::string formatNumber(bigint const& _value)
 		return _value.str();
 }
 
+inline std::string formatNumber(u256 const& _value)
+{
+	if (_value > 0x1000000)
+		return toHex(toCompactBigEndian(_value), 2, HexPrefix::Add);
+	else
+		return _value.str();
+}
+
 inline std::string toCompactHexWithPrefix(u256 val)
 {
 	std::ostringstream ret;
