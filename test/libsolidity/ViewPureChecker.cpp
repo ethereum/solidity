@@ -136,10 +136,12 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	}
 	for (string const& x: pure)
 	{
-		CHECK_WARNING(
+		CHECK_WARNING_ALLOW_MULTI(
 			"contract C { function f() view public { var x = " + x + "; x; } }",
-			"restricted to pure"
-		);
+			(std::vector<std::string>{
+				"Function state mutability can be restricted to pure",
+				"Use of the \"var\" keyword is deprecated."
+		}));
 	}
 }
 
