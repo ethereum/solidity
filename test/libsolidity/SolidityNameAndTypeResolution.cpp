@@ -7349,7 +7349,7 @@ BOOST_AUTO_TEST_CASE(warn_about_sha3)
 	char const* text = R"(
 		contract test {
 			function f() pure public {
-				var x = sha3(uint8(1));
+				bytes32 x = sha3(uint8(1));
 				x;
 			}
 		}
