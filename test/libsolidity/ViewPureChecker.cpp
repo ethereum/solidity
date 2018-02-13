@@ -330,10 +330,11 @@ BOOST_AUTO_TEST_CASE(selector)
 {
 	string text = R"(
 		contract C {
+			uint public x;
 			function f() payable public {
 			}
 			function g() pure public returns (bytes4) {
-				return this.f.selector;
+				return this.f.selector ^ this.x.selector;
 			}
 		}
 	)";
