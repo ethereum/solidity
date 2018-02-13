@@ -1844,7 +1844,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint8, which can hold values between 0 and 255",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		contract test {
 			function f() pure public {
@@ -1853,7 +1856,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		contract test {
 			function f() pure public {
@@ -1862,7 +1868,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"int8, which can hold values between -128 and 127",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		 contract test {
 			 function f() pure public {
@@ -1870,7 +1879,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			 }
 		 }
 	)";
-	CHECK_WARNING(sourceCode, "uint8, which can hold");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint8, which can hold",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -4887,8 +4899,7 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 	char const* text = R"(
 		contract test {
 			function f() pure public {
-				var x = address(0x12).callcode;
-				x;
+				address(0x12).callcode;
 			}
 		}
 	)";
@@ -4897,8 +4908,7 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 		pragma experimental "v0.5.0";
 		contract test {
 			function f() pure public {
-				var x = address(0x12).callcode;
-				x;
+				address(0x12).callcode;
 			}
 		}
 	)";
@@ -6918,7 +6928,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Use of the \"var\" keyword is deprecated.");
 	text = R"(
 		contract C {
 			function h() pure external {
@@ -6941,7 +6951,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Use of the \"var\" keyword is deprecated.");
 }
 
 BOOST_AUTO_TEST_CASE(using_this_in_constructor)
@@ -7349,7 +7359,7 @@ BOOST_AUTO_TEST_CASE(warn_about_sha3)
 	char const* text = R"(
 		contract test {
 			function f() pure public {
-				var x = sha3(uint8(1));
+				bytes32 x = sha3(uint8(1));
 				x;
 			}
 		}

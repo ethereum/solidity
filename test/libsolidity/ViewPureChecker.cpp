@@ -136,10 +136,12 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	}
 	for (string const& x: pure)
 	{
-		CHECK_WARNING(
+		CHECK_WARNING_ALLOW_MULTI(
 			"contract C { function f() view public { var x = " + x + "; x; } }",
-			"restricted to pure"
-		);
+			(std::vector<std::string>{
+				"Function state mutability can be restricted to pure",
+				"Use of the \"var\" keyword is deprecated."
+		}));
 	}
 }
 
@@ -282,9 +284,9 @@ BOOST_AUTO_TEST_CASE(builtin_functions)
 				require(this.call());
 			}
 			function g() pure public {
-				var x = keccak256("abc");
-				var y = sha256("abc");
-				var z = ecrecover(1, 2, 3, 4);
+				bytes32 x = keccak256("abc");
+				bytes32 y = sha256("abc");
+				address z = ecrecover(1, 2, 3, 4);
 				require(true);
 				assert(true);
 				x; y; z;
