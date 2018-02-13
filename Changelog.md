@@ -4,7 +4,7 @@ Features:
  * Code Generator: Prevent non-view functions in libraries from being called
    directly (as opposed to via delegatecall).
  * Commandline interface: Support strict mode of assembly (disallowing jumps,
-   instructional opcodes, etc) with the ``--strict--assembly`` switch.
+   instructional opcodes, etc) with the ``--strict-assembly`` switch.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
  * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Iulia mode.
  * Optimiser: Replace ``x % 2**i`` by ``x & (2**i-1)``.
