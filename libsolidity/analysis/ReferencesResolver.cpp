@@ -47,7 +47,13 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
-		declarationError(_identifier.location(), "Undeclared identifier.");
+	{
+		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
+		string errorMessage =
+			"Undeclared identifier." +
+			(suggestions.empty()? "": " Did you mean " + std::move(suggestions) + "?");
+		declarationError(_identifier.location(), errorMessage);
+	}
 	else if (declarations.size() == 1)
 		_identifier.annotation().referencedDeclaration = declarations.front();
 	else
