@@ -949,25 +949,25 @@ bool RationalNumberType::operator==(Type const& _other) const
 	return m_value == other.m_value;
 }
 
-string RationalNumberType::bigintToString(dev::bigint const& _num, bool _short)
+string RationalNumberType::bigintToReadableString(dev::bigint const& _num)
 {
 	string str = _num.str();
-	if (_short && str.size() > 32)
+	if (str.size() > 32)
 	{
 		int omitted = str.size() - 8;
-		return str.substr(0, 4) + "...(" + to_string(omitted) + " digits omitted)..." + str.substr(str.size() - 4, 4);
+		str = str.substr(0, 4) + "...(" + to_string(omitted) + " digits omitted)..." + str.substr(str.size() - 4, 4);
 	}
 	return str;
 }
 
-string RationalNumberType::toString(bool _short) const
+string RationalNumberType::toString(bool) const
 {
 	if (!isFractional())
-		return "int_const " + bigintToString(m_value.numerator(), _short);
+		return "int_const " + bigintToReadableString(m_value.numerator());
 
-	string numerator = bigintToString(m_value.numerator(), _short);
-	string denominator = bigintToString(m_value.denominator(), _short);
-	return "rational_const " + numerator + '/' + denominator;
+	string numerator = bigintToReadableString(m_value.numerator());
+	string denominator = bigintToReadableString(m_value.denominator());
+	return "rational_const " + numerator + " / " + denominator;
 }
 
 u256 RationalNumberType::literalValue(Literal const*) const

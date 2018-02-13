@@ -440,7 +440,7 @@ private:
 
 	/// @returns a truncated readable representation of the bigint keeping only
 	/// up to 4 leading and 4 trailing digits.
-	static std::string bigintToString(dev::bigint const& num, bool _short);
+	static std::string bigintToReadableString(dev::bigint const& num);
 };
 
 /**

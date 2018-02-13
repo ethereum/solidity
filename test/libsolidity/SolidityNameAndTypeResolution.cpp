@@ -4574,7 +4574,7 @@ BOOST_AUTO_TEST_CASE(rational_index_access)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "rational_const 1/2 is not implicitly convertible to expected type uint256");
+	CHECK_ERROR(text, TypeError, "rational_const 1 / 2 is not implicitly convertible to expected type uint256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
