@@ -56,6 +56,7 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifierDef) override;
 	virtual void endVisit(ModifierDefinition const& _modifierDef) override;
 	virtual void endVisit(Identifier const& _identifier) override;
+	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual void endVisit(MemberAccess const& _memberAccess) override;
 	virtual void endVisit(IndexAccess const& _indexAccess) override;
 	virtual void endVisit(ModifierInvocation const& _modifier) override;

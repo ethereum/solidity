@@ -1014,6 +1014,30 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			_memberAccess.expression().accept(*this);
 		return false;
 	}
+	// Another special case for `this.f.selector` which does not need the address.
+	// There are other uses of `.selector` which do need the address, but we want this
+	// specific use to be a pure expression.
+	if (
+		_memberAccess.expression().annotation().type->category() == Type::Category::Function &&
+		member == "selector"
+	)
+		if (auto const* expr = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
+			if (auto const* exprInt = dynamic_cast<Identifier const*>(&expr->expression()))
+				if (exprInt->name() == "this")
+					if (Declaration const* declaration = expr->annotation().referencedDeclaration)
+					{
+						u256 identifier;
+						if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
+							identifier = FunctionType(*variable).externalIdentifier();
+						else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+							identifier = FunctionType(*function).externalIdentifier();
+						else
+							solAssert(false, "Contract member is neither variable nor function.");
+						m_context << identifier;
+						/// need to store store it as bytes4
+						utils().leftShiftNumberOnStack(224);
+						return false;
+					}
 
 	_memberAccess.expression().accept(*this);
 	switch (_memberAccess.expression().annotation().type->category())

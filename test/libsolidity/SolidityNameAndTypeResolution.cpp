@@ -6904,15 +6904,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_ERROR(text, TypeError, "Member \"selector\" not found");
 	text = R"(
 		contract C {
-			function f() view external returns (bytes4) {
-				return this.f.selector;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f() view external returns (bytes4) {
+			function f() pure external returns (bytes4) {
 				return this.f.selector;
 			}
 		}

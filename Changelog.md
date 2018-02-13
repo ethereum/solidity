@@ -11,6 +11,7 @@ Features:
    variables.
  * Syntax Checker: Deprecate the ``var`` keyword (and mark it an error as experimental 0.5.0 feature).
  * Type Checker: Issue warning for using ``public`` visibility for interface functions.
+ * Type Checker: Allow `this.f.selector` to be a pure expression.
 
 Bugfixes:
  * Parser: Disallow event declarations with no parameter list.
