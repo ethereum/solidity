@@ -1,19 +1,21 @@
-### 0.4.20 (unreleased)
+### 0.4.20 (2018-02-14)
 
 Features:
- * Code Generator: Prevent non-view functions in libraries from being called directly.
- * Commandline interface: Support strict mode of assembly with the ``--strict--assembly`` switch.
- * Compiler now continues resolving references after the first error.
- * Limit the number of warnings raised for creating abstract contracts.
+ * Code Generator: Prevent non-view functions in libraries from being called
+   directly (as opposed to via delegatecall).
+ * Commandline interface: Support strict mode of assembly (disallowing jumps,
+   instructional opcodes, etc) with the ``--strict--assembly`` switch.
  * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
- * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Julia mode.
- * Optimiser: Replace `x % 2**i` by `x & (2**i-1)`.
+ * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Iulia mode.
+ * Optimiser: Replace ``x % 2**i`` by ``x & (2**i-1)``.
+ * Resolver: Continue resolving references after the first error.
  * Resolver: Suggest alternative identifiers if a given identifier is not found.
- * SMT Checker: If-else branch conditions are taken into account in the SMT encoding of the program
+ * SMT Checker: Take if-else branch conditions into account in the SMT encoding of the program
    variables.
  * Syntax Checker: Deprecate the ``var`` keyword (and mark it an error as experimental 0.5.0 feature).
- * Type Checker: Issue warning for using ``public`` visibility for interface functions.
  * Type Checker: Allow `this.f.selector` to be a pure expression.
+ * Type Checker: Issue warning for using ``public`` visibility for interface functions.
+ * Type Checker: Limit the number of warnings raised for creating abstract contracts.
 
 Bugfixes:
  * Error Output: Truncate huge number literals in the middle to avoid output blow-up.
