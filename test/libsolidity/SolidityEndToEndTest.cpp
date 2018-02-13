@@ -10219,17 +10219,21 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (bytes4) {
+			uint public x;
+			function f() pure returns (bytes4) {
 				return this.f.selector;
 			}
 			function g() returns (bytes4) {
-				function () external returns (bytes4) fun = this.f;
+				function () pure external returns (bytes4) fun = this.f;
 				return fun.selector;
 			}
 			function h() returns (bytes4) {
-				function () external returns (bytes4) fun = this.f;
+				function () pure external returns (bytes4) fun = this.f;
 				var funvar = fun;
 				return funvar.selector;
+			}
+			function i() pure returns (bytes4) {
+				return this.x.selector;
 			}
 		}
 	)";
@@ -10237,6 +10241,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	ABI_CHECK(callContractFunction("i()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("x()")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(constant_string)

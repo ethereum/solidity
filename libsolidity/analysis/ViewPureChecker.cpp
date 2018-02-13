@@ -275,6 +275,22 @@ void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 	reportMutability(mut, _functionCall.location());
 }
 
+bool ViewPureChecker::visit(MemberAccess const& _memberAccess)
+{
+	// Catch the special case of `this.f.selector` which is a pure expression.
+	ASTString const& member = _memberAccess.memberName();
+	if (
+		_memberAccess.expression().annotation().type->category() == Type::Category::Function &&
+		member == "selector"
+	)
+		if (auto const* expr = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
+			if (auto const* exprInt = dynamic_cast<Identifier const*>(&expr->expression()))
+				if (exprInt->name() == "this")
+					// Do not continue visiting.
+					return false;
+	return true;
+}
+
 void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 {
 	StateMutability mutability = StateMutability::Pure;

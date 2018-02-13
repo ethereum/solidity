@@ -326,6 +326,53 @@ BOOST_AUTO_TEST_CASE(function_types)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(selector)
+{
+	string text = R"(
+		contract C {
+			uint public x;
+			function f() payable public {
+			}
+			function g() pure public returns (bytes4) {
+				return this.f.selector ^ this.x.selector;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(selector_complex)
+{
+	string text = R"(
+		contract C {
+			function f(C c) pure public returns (C) {
+				return c;
+			}
+			function g() pure public returns (bytes4) {
+				// By passing `this`, we read from the state, even if f itself is pure.
+				return f(this).f.selector;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "reads from the environment or state and thus requires \"view\"");
+}
+
+BOOST_AUTO_TEST_CASE(selector_complex2)
+{
+	string text = R"(
+		contract C {
+				function f() payable public returns (C) {
+				return this;
+			}
+			function g() pure public returns (bytes4) {
+				C x = C(0x123);
+				return x.f.selector;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(creation)
 {
 	string text = R"(
