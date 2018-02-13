@@ -13,7 +13,7 @@ project(solidity VERSION ${PROJECT_VERSION})
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
-option(INSTALL_LLLC "Include lllc executable in installation" ON)
+option(INSTALL_LLLC "Include lllc executable in installation" OFF)
 
 # Setup cccache.
 include(EthCcache)
