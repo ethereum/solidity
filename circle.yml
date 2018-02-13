@@ -93,7 +93,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
+            apt-get -qy install ccache cmake libboost-all-dev libz3-dev libleveldb1v5
       - run:
           name: Init submodules
           command: |
@@ -114,16 +114,10 @@ jobs:
           key: ccache-{{ arch }}-{{ .Branch }}
           paths:
             - ~/.ccache
-      - run:
-          name: Commandline tests
-          command: test/cmdlineTests.sh
       - run: mkdir -p test_results
       - run:
-          name: Test without optimizer (exclude IPC tests)
-          command: build/test/soltest --logger=JUNIT,test_suite,test_results/no_opt.xml  -- --no-ipc
-      - run:
-          name: Test with optimizer (exclude IPC tests)
-          command: build/test/soltest --logger=JUNIT,test_suite,test_results/opt.xml -- --optimize --no-ipc
+          name: Tests
+          command: scripts/tests.sh --junit_report test_results
       - store_test_results:
           path: test_results/
       - store_artifacts:
