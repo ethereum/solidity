@@ -38,12 +38,18 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	ConstantEvaluator(Expression const& _expr, ErrorReporter& _errorReporter, size_t _newDepth = 0):
+	ConstantEvaluator(
+		ErrorReporter& _errorReporter,
+		size_t _newDepth = 0,
+		std::shared_ptr<std::map<ASTNode const*, TypePointer>> _types = std::make_shared<std::map<ASTNode const*, TypePointer>>()
+	):
 		m_errorReporter(_errorReporter),
-		m_depth(_newDepth)
+		m_depth(_newDepth),
+		m_types(_types)
 	{
-		_expr.accept(*this);
 	}
+
+	TypePointer evaluate(Expression const& _expr);
 
 private:
 	virtual void endVisit(BinaryOperation const& _operation);
@@ -51,9 +57,13 @@ private:
 	virtual void endVisit(Literal const& _literal);
 	virtual void endVisit(Identifier const& _identifier);
 
+	void setType(ASTNode const& _node, TypePointer const& _type);
+	TypePointer type(ASTNode const& _node);
+
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth.
-	size_t m_depth;
+	size_t m_depth = 0;
+	std::shared_ptr<std::map<ASTNode const*, TypePointer>> m_types;
 };
 
 }

@@ -174,6 +174,9 @@ public:
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
 	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
+	/// Appends a zero-address that can be replaced by something else at deploy time (if the
+	/// position in bytecode is known).
+	void appendDeployTimeAddress() { m_asm->append(eth::PushDeployTimeAddress); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
@@ -187,8 +190,8 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
-	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
-	/// prior to parsing the inline assembly.
+	/// Appends inline assembly (strict mode).
+	/// @a _replacements are string-matching replacements that are performed prior to parsing the inline assembly.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
 	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
 	void appendInlineAssembly(

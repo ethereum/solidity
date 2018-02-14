@@ -40,7 +40,7 @@ TMPDIR=$(mktemp -d)
 
     if [[ "$SOLC_EMSCRIPTEN" = "On" ]]
     then
-        cp "$REPO_ROOT/build/solc/soljson.js" .
+        cp "$REPO_ROOT/build/libsolc/soljson.js" .
         npm install solc
         cat > solc <<EOF
 #!/usr/bin/env node

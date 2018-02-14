@@ -42,6 +42,7 @@ public:
 	std::string operator()(assembly::Literal const& _literal);
 	std::string operator()(assembly::Identifier const& _identifier);
 	std::string operator()(assembly::FunctionalInstruction const& _functionalInstruction);
+	std::string operator()(assembly::ExpressionStatement const& _expr);
 	std::string operator()(assembly::Label const& _label);
 	std::string operator()(assembly::StackAssignment const& _assignment);
 	std::string operator()(assembly::Assignment const& _assignment);

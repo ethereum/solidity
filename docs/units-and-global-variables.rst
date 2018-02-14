@@ -34,7 +34,7 @@ library has to be updated by an external oracle.
 These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
 
-    function f(uint start, uint daysAfter) {
+    function f(uint start, uint daysAfter) public {
         if (now >= start + daysAfter * 1 days) {
           // ...
         }

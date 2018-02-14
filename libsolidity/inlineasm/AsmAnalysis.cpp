@@ -54,14 +54,15 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
+	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
 	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -140,22 +141,34 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour != AsmFlavour::IULIA, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
 	// Parser already checks that the number of arguments is correct.
-	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
-	if (!(*this)(_instr.instruction))
-		success = false;
+	auto const& info = instructionInfo(_instr.instruction);
+	solAssert(info.args == int(_instr.arguments.size()), "");
+	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
+	warnOnInstructions(_instr.instruction, _instr.location);
+	return success;
+}
+
+bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
+{
+	size_t initialStackHeight = m_stackHeight;
+	bool success = boost::apply_visitor(*this, _statement.expression);
+	if (m_flavour != AsmFlavour::Loose)
+		if (!expectDeposit(0, initialStackHeight, _statement.location))
+			success = false;
+	m_info.stackHeightInfo[&_statement] = m_stackHeight;
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour == AsmFlavour::Loose, "");
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
@@ -217,14 +230,14 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	solAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
-	for (auto const& var: _funDef.arguments + _funDef.returns)
+	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
 		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	int const stackHeight = m_stackHeight;
-	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
+	m_stackHeight = _funDef.parameters.size() + _funDef.returnVariables.size();
 
 	bool success = (*this)(_funDef.body);
 
@@ -405,13 +418,13 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	return success;
 }
 
-bool AsmAnalyzer::expectExpression(Statement const& _statement)
+bool AsmAnalyzer::expectExpression(Expression const& _expr)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, _statement))
+	if (!boost::apply_visitor(*this, _expr))
 		success = false;
-	if (!expectDeposit(1, initialHeight, locationOf(_statement)))
+	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
 	return success;
 }
@@ -495,7 +508,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (!m_julia)
+	if (m_flavour != AsmFlavour::IULIA)
 		return;
 
 	if (!builtinTypes.count(type))
@@ -522,11 +535,11 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			"the Metropolis hard fork. Before that it acts as an invalid instruction."
 		);
 
-	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI)
+	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 		m_errorReporter.warning(
 			_location,
-			"Jump instructions are low-level EVM features that can lead to "
+			"Jump instructions and labels are low-level EVM features that can lead to "
 			"incorrect stack access. Because of that they are discouraged. "
-			"Please consider using \"switch\" or \"for\" statements instead."
+			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
 		);
 }

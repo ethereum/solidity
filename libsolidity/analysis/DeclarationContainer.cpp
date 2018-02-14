@@ -23,6 +23,7 @@
 #include <libsolidity/analysis/DeclarationContainer.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
+#include <libdevcore/StringUtils.h>
 
 using namespace std;
 using namespace dev;
@@ -105,7 +106,7 @@ bool DeclarationContainer::registerDeclaration(
 	return true;
 }
 
-std::vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
+vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);
@@ -114,4 +115,23 @@ std::vector<Declaration const*> DeclarationContainer::resolveName(ASTString cons
 	if (_recursive && m_enclosingContainer)
 		return m_enclosingContainer->resolveName(_name, true);
 	return vector<Declaration const*>({});
+}
+
+vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
+{
+	static size_t const MAXIMUM_EDIT_DISTANCE = 2;
+
+	vector<ASTString> similar;
+
+	for (auto const& declaration: m_declarations)
+	{
+		string const& declarationName = declaration.first;
+		if (stringWithinDistance(_name, declarationName, MAXIMUM_EDIT_DISTANCE))
+			similar.push_back(declarationName);
+	}
+
+	if (m_enclosingContainer)
+		similar += m_enclosingContainer->similarNames(_name);
+
+	return similar;
 }

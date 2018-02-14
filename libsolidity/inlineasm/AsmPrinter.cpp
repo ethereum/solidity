@@ -94,12 +94,17 @@ string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functional
 {
 	solAssert(!m_julia, "");
 	return
-		(*this)(_functionalInstruction.instruction) +
+		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
 		"(" +
 		boost::algorithm::join(
 			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
 			", " ) +
 		")";
+}
+
+string AsmPrinter::operator()(ExpressionStatement const& _statement)
+{
+	return boost::apply_visitor(*this, _statement.expression);
 }
 
 string AsmPrinter::operator()(assembly::Label const& _label)
@@ -144,17 +149,17 @@ string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefin
 {
 	string out = "function " + _functionDefinition.name + "(";
 	out += boost::algorithm::join(
-		_functionDefinition.arguments | boost::adaptors::transformed(
+		_functionDefinition.parameters | boost::adaptors::transformed(
 			[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
 		),
 		", "
 	);
 	out += ")";
-	if (!_functionDefinition.returns.empty())
+	if (!_functionDefinition.returnVariables.empty())
 	{
 		out += " -> ";
 		out += boost::algorithm::join(
-			_functionDefinition.returns | boost::adaptors::transformed(
+			_functionDefinition.returnVariables | boost::adaptors::transformed(
 				[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
 			),
 			", "

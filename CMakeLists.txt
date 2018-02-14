@@ -8,10 +8,12 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.4.19")
+set(PROJECT_VERSION "0.4.20")
 project(solidity VERSION ${PROJECT_VERSION})
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
+option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
+option(INSTALL_LLLC "Include lllc executable in installation" OFF)
 
 # Setup cccache.
 include(EthCcache)
@@ -43,9 +45,10 @@ configure_project(TESTS)
 add_subdirectory(libdevcore)
 add_subdirectory(libevmasm)
 add_subdirectory(libsolidity)
-add_subdirectory(solc)
+add_subdirectory(libsolc)
 
 if (NOT EMSCRIPTEN)
+	add_subdirectory(solc)
 	add_subdirectory(liblll)
 	add_subdirectory(lllc)
 endif()

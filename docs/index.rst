@@ -21,6 +21,14 @@ crowdfunding, blind auctions, multi-signature wallets and more.
     `Remix <https://remix.ethereum.org/>`_
     (it can take a while to load, please be patient).
 
+.. warning::
+    Since software is written by humans, it can have bugs. Thus, also
+    smart contracts should be created following well-known best-practices in
+    software development. This includes code review, testing, audits and correctness proofs.
+    Also note that users are sometimes more confident in code than its authors.
+    Finally, blockchains have their own things to watch out for, so please take
+    a look at the section :ref:`security_considerations`.
+
 Translations
 ------------
 
@@ -70,7 +78,7 @@ Available Solidity Integrations
     Configurable Solidty linter for Atom using Solium as a base.
 
 * `Solium <https://github.com/duaraghav8/Solium/>`_
-    A commandline linter for Solidity which strictly follows the rules prescribed by the `Solidity Style Guide <http://solidity.readthedocs.io/en/latest/style-guide.html>`_.
+    Linter to identify and fix style and security issues in Solidity.
     
 * `Solhint <https://github.com/protofire/solhint>`_
     Solidity linter that provides security, style guide and best practice rules for smart contract validation.

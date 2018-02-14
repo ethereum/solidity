@@ -42,6 +42,15 @@ fi
 
 WORKSPACE=/root/project
 
+# Increase nodejs stack size
+if [ -e ~/.emscripten ]
+then
+    sed -i -e 's/NODE_JS="nodejs"/NODE_JS=["nodejs", "--stack_size=8192"]/' ~/.emscripten
+else
+    echo 'NODE_JS=["nodejs", "--stack_size=8192"]' > ~/.emscripten
+fi
+
+
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
 cd "$WORKSPACE"/boost_1_57_0
@@ -87,8 +96,8 @@ make -j 4
 
 cd ..
 mkdir -p upload
-cp build/solc/soljson.js upload/
-cp build/solc/soljson.js ./
+cp build/libsolc/soljson.js upload/
+cp build/libsolc/soljson.js ./
 
 OUTPUT_SIZE=`ls -la soljson.js`
 

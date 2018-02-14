@@ -136,10 +136,12 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	}
 	for (string const& x: pure)
 	{
-		CHECK_WARNING(
+		CHECK_WARNING_ALLOW_MULTI(
 			"contract C { function f() view public { var x = " + x + "; x; } }",
-			"restricted to pure"
-		);
+			(std::vector<std::string>{
+				"Function state mutability can be restricted to pure",
+				"Use of the \"var\" keyword is deprecated."
+		}));
 	}
 }
 
@@ -181,10 +183,10 @@ BOOST_AUTO_TEST_CASE(interface)
 {
 	string text = R"(
 		interface D {
-			function f() view public;
+			function f() view external;
 		}
 		contract C is D {
-			function f() view public {}
+			function f() view external {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -282,9 +284,9 @@ BOOST_AUTO_TEST_CASE(builtin_functions)
 				require(this.call());
 			}
 			function g() pure public {
-				var x = keccak256("abc");
-				var y = sha256("abc");
-				var z = ecrecover(1, 2, 3, 4);
+				bytes32 x = keccak256("abc");
+				bytes32 y = sha256("abc");
+				address z = ecrecover(1, 2, 3, 4);
 				require(true);
 				assert(true);
 				x; y; z;
@@ -318,6 +320,53 @@ BOOST_AUTO_TEST_CASE(function_types)
 				function () external nonpayFun;
 
 				nonpayFun();
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(selector)
+{
+	string text = R"(
+		contract C {
+			uint public x;
+			function f() payable public {
+			}
+			function g() pure public returns (bytes4) {
+				return this.f.selector ^ this.x.selector;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(selector_complex)
+{
+	string text = R"(
+		contract C {
+			function f(C c) pure public returns (C) {
+				return c;
+			}
+			function g() pure public returns (bytes4) {
+				// By passing `this`, we read from the state, even if f itself is pure.
+				return f(this).f.selector;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "reads from the environment or state and thus requires \"view\"");
+}
+
+BOOST_AUTO_TEST_CASE(selector_complex2)
+{
+	string text = R"(
+		contract C {
+				function f() payable public returns (C) {
+				return this;
+			}
+			function g() pure public returns (bytes4) {
+				C x = C(0x123);
+				return x.f.selector;
 			}
 		}
 	)";

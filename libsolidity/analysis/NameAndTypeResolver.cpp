@@ -25,6 +25,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -423,6 +424,11 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		removeCandidate(candidate);
 	}
 	return result;
+}
+
+string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
+{
+	return quotedAlternativesList(m_currentScope->similarNames(_name));
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(

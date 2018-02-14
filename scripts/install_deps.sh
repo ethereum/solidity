@@ -84,9 +84,12 @@ case $(uname -s) in
             10.12)
                 echo "Installing solidity dependencies on macOS 10.12 Sierra."
                 ;;
+            10.13)
+                echo "Installing solidity dependencies on macOS 10.13 High Sierra."
+                ;;
             *)
                 echo "Unsupported macOS version."
-                echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
+                echo "We only support Mavericks, Yosemite, El Capitan, Sierra and High Sierra."
                 exit 1
                 ;;
         esac
@@ -137,7 +140,7 @@ case $(uname -s) in
                 # All our dependencies can be found in the Arch Linux official repositories.
                 # See https://wiki.archlinux.org/index.php/Official_repositories
                 # Also adding ethereum-git to allow for testing with the `eth` client
-                sudo pacman -Sy \
+                sudo pacman -Syu \
                     base-devel \
                     boost \
                     cmake \
@@ -253,19 +256,20 @@ case $(uname -s) in
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
                 ;;
-
 #------------------------------------------------------------------------------
 # Ubuntu
 #
 #------------------------------------------------------------------------------
 
-            Ubuntu)
+            Ubuntu|LinuxMint)
+                #LinuxMint is a distro on top of Ubuntu.
                 #Ubuntu
                 install_z3=""
                 case $(lsb_release -cs) in
-                    trusty)
+                    trusty|qiana|rebecca|rafaela|rosa)
                         #trusty
                         echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
+                        echo "Or, you may also be running Linux Mint Qiana / Rebecca / Rafaela / Rosa (base: Ubuntu Trusty Tahr (14.04).)"
                         ;;
                     utopic)
                         #utopic
@@ -279,9 +283,10 @@ case $(uname -s) in
                         #wily
                         echo "Installing solidity dependencies on Ubuntu Wily Werewolf (15.10)."
                         ;;
-                    xenial)
+                    xenial|sarah|serena|sonya|sylvia)
                         #xenial
                         echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
+                        echo "Or, you may also be running Linux Mint Sarah / Serena / Sonya / Sylvia (base: Ubuntu Xenial Xerus (16.04).)"
                         install_z3="libz3-dev"
                         ;;
                     yakkety)
@@ -298,6 +303,15 @@ case $(uname -s) in
                         #artful
                         echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
                         install_z3="libz3-dev"
+                        ;;
+                    betsy)
+                        #do not try anything for betsy.
+                        echo "Linux Mint Betsy is not supported at the moment as it runs off of Debian."
+                        echo "We only support Sylvia, Sonya, Serena, Sarah, Rosa, Rafaela, Rebecca, and Qiana."
+                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                        echo "If you would like to get your distro working, that would be fantastic."
+                        echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
+                        exit 1
                         ;;
                     *)
                         #other Ubuntu
@@ -345,7 +359,7 @@ case $(uname -s) in
                     # Make Sure we have the EPEL repos
                     sudo yum -y install epel-release
                     # Get g++ 4.8
-                    sudo rpm --import http://ftp.scientificlinux.org/linux/scientific/5x/x86_64/RPM-GPG-KEYs/RPM-GPG-KEY-cern
+                    sudo rpm --import http://linuxsoft.cern.ch/cern/slc6X/i386/RPM-GPG-KEY-cern
                     wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
                     sudo yum -y install devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
 

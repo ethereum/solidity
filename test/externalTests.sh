@@ -36,61 +36,32 @@ fi
 
 SOLJSON="$1"
 
-DIR=$(mktemp -d)
-(
-    echo "Running Zeppelin tests..."
-    git clone --depth 1 https://github.com/OpenZeppelin/zeppelin-solidity.git "$DIR"
-    cd "$DIR"
-    npm install
-    find . -name soljson.js -exec cp "$SOLJSON" {} \;
+function test_truffle
+{
+    name="$1"
+    repo="$2"
+    echo "Running $name tests..."
+    DIR=$(mktemp -d)
+    (
+      git clone --depth 1 "$repo" "$DIR"
+      cd "$DIR"
+      npm install
+      find . -name soljson.js -exec cp "$SOLJSON" {} \;
+      if [ "$name" == "Zeppelin" ]; then
+        # Fix some things that look like bugs (only seemed to fail on Node 6 and not Node 8)
+        # FIXME: report upstream or to web3.js?
+        sed -i -e 's/let token = await ERC827TokenMock.new();//;' test/token/ERC827/ERC827Token.js
+        sed -i -e 's/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0)/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address)/' test/crowdsale/CappedCrowdsale.test.js
+        sed -i -e 's/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, { from: owner })/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address, { from: owner })/' test/crowdsale/RefundableCrowdsale.test.js
+      fi
+      if [ "$name" == "Gnosis" ]; then
+        # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
+        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
+      fi
+      npm run test
+    )
+    rm -rf "$DIR"
+}
 
-    # This is a patch that lets truffle ignore the pre-release compiler warning
-    cat > truffle.patch <<EOF
---- node_modules/truffle/build/cli.bundled.js	2017-11-27 16:56:47.114830112 +0100
-+++ /tmp/patched	2017-11-27 16:52:31.887064115 +0100
-@@ -313846,9 +313846,12 @@
-     });
- 
-     output = JSON.parse(output);
-+	var errors = output.errors.filter(function(solidity_error) {
-+		return solidity_error.formattedMessage.indexOf("pre-release compiler") < 0;
-+    });
- 
--    if (output.errors) {
--      throw new CompileError(output.errors[0].formattedMessage);
-+    if (errors) {
-+      throw new CompileError(errors[0].formattedMessage);
-     }
- 
-     return {
-@@ -313901,9 +313904,13 @@
-       return {error: importErrorKey};
-     });
- 
--    output = JSON.parse(output);
-+	output = JSON.parse(output);
-+	
-+	var errors = output.errors.filter(function(solidity_error) {
-+		return solidity_error.formattedMessage.indexOf("pre-release compiler") < 0;
-+    });
- 
--    var nonImportErrors = output.errors.filter(function(solidity_error) {
-+    var nonImportErrors = errors.filter(function(solidity_error) {
-       // If the import error key is not found, we must not have an import error.
-       // This means we have a *different* parsing error which we should show to the user.
-       // Note: solc can return multiple parsing errors at once.
-@@ -313917,7 +313924,7 @@
- 
-     // Now, all errors must be import errors.
-     // Filter out our forced import, then get the import paths of the rest.
--    var imports = output.errors.filter(function(solidity_error) {
-+    var imports = errors.filter(function(solidity_error) {
-       return solidity_error.message.indexOf(failingImportFileName) < 0;
-     }).map(function(solidity_error) {
-       var matches = solidity_error.formattedMessage.match(/import[^'"]+("|')([^'"]+)("|');/);
-EOF
-
-    patch node_modules/truffle/build/cli.bundled.js ./truffle.patch
-    npm run test
-)
-rm -rf "$DIR"
+test_truffle Gnosis https://github.com/gnosis/gnosis-contracts.git
+test_truffle Zeppelin https://github.com/OpenZeppelin/zeppelin-solidity.git

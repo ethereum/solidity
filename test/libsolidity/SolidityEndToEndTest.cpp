@@ -2971,7 +2971,7 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event Deposit;
+			event Deposit();
 			function deposit() {
 				Deposit();
 			}
@@ -3013,7 +3013,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event Deposit;
+			event Deposit();
 			event Deposit(address _addr);
 			event Deposit(address _addr, uint _amount);
 			function deposit() returns (uint) {
@@ -3059,7 +3059,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name_inherited)
 {
 	char const* sourceCode = R"(
 		contract A {
-			event Deposit;
+			event Deposit();
 		}
 
 		contract B {
@@ -3541,6 +3541,39 @@ BOOST_AUTO_TEST_CASE(library_call_in_homestead)
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
 	ABI_CHECK(callContractFunction("f()"), encodeArgs());
 	ABI_CHECK(callContractFunction("sender()"), encodeArgs(u160(m_sender)));
+}
+
+BOOST_AUTO_TEST_CASE(library_call_protection)
+{
+	// This tests code that reverts a call if it is a direct call to a library
+	// as opposed to a delegatecall.
+	char const* sourceCode = R"(
+		library Lib {
+			struct S { uint x; }
+			// a direct call to this should revert
+			function np(S storage s) public returns (address) { s.x = 3; return msg.sender; }
+			// a direct call to this is fine
+			function v(S storage) public view returns (address) { return msg.sender; }
+			// a direct call to this is fine
+			function pu() public pure returns (uint) { return 2; }
+		}
+		contract Test {
+			Lib.S public s;
+			function np() public returns (address) { return Lib.np(s); }
+			function v() public view returns (address) { return Lib.v(s); }
+			function pu() public pure returns (uint) { return Lib.pu(); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	ABI_CHECK(callContractFunction("np(Lib.S storage)"), encodeArgs());
+	ABI_CHECK(callContractFunction("v(Lib.S storage)"), encodeArgs(u160(m_sender)));
+	ABI_CHECK(callContractFunction("pu()"), encodeArgs(2));
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("s()"), encodeArgs(0));
+	ABI_CHECK(callContractFunction("np()"), encodeArgs(u160(m_sender)));
+	ABI_CHECK(callContractFunction("s()"), encodeArgs(3));
+	ABI_CHECK(callContractFunction("v()"), encodeArgs(u160(m_sender)));
+	ABI_CHECK(callContractFunction("pu()"), encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(store_bytes)
@@ -10186,17 +10219,21 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (bytes4) {
+			uint public x;
+			function f() pure returns (bytes4) {
 				return this.f.selector;
 			}
 			function g() returns (bytes4) {
-				function () external returns (bytes4) fun = this.f;
+				function () pure external returns (bytes4) fun = this.f;
 				return fun.selector;
 			}
 			function h() returns (bytes4) {
-				function () external returns (bytes4) fun = this.f;
+				function () pure external returns (bytes4) fun = this.f;
 				var funvar = fun;
 				return funvar.selector;
+			}
+			function i() pure returns (bytes4) {
+				return this.x.selector;
 			}
 		}
 	)";
@@ -10204,6 +10241,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("f()")).asBytes())));
+	ABI_CHECK(callContractFunction("i()"), encodeArgs(asString(FixedHash<4>(dev::keccak256("x()")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(constant_string)

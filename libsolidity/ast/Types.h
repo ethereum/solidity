@@ -257,7 +257,7 @@ public:
 	}
 	virtual u256 literalValue(Literal const*) const
 	{
-		solAssert(false, "Literal value requested for type without literals.");
+		solAssert(false, "Literal value requested for type without literals: " + toString(false));
 	}
 
 	/// @returns a (simpler) type that is encoded in the same way for external function calls.
@@ -437,6 +437,10 @@ private:
 
 	/// @returns true if the literal is a valid rational number.
 	static std::tuple<bool, rational> parseRational(std::string const& _value);
+
+	/// @returns a truncated readable representation of the bigint keeping only
+	/// up to 4 leading and 4 trailing digits.
+	static std::string bigintToReadableString(dev::bigint const& num);
 };
 
 /**

@@ -52,11 +52,11 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, true).parse(scanner);
+		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, true)).analyze(*parserResult);
+			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, assembly::AsmFlavour::IULIA)).analyze(*parserResult);
 		}
 	}
 	catch (FatalError const&)
@@ -194,6 +194,14 @@ BOOST_AUTO_TEST_CASE(assign_from_stack)
 BOOST_AUTO_TEST_CASE(empty_call)
 {
 	CHECK_ERROR("{ () }", ParserError, "Literal or identifier expected.");
+}
+
+BOOST_AUTO_TEST_CASE(tokens_as_identifers)
+{
+	BOOST_CHECK(successParse("{ let return:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let byte:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let address:u256 := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let bool:u256 := 1:u256 }"));
 }
 
 BOOST_AUTO_TEST_CASE(lacking_types)

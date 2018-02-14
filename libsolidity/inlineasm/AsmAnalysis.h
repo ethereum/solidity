@@ -54,9 +54,9 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorReporter& _errorReporter,
-		bool _julia = false,
+		AsmFlavour _flavour = AsmFlavour::Loose,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_julia(_julia) {}
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_flavour(_flavour) {}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -65,6 +65,7 @@ public:
 	bool operator()(assembly::Identifier const&);
 	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
 	bool operator()(assembly::Label const& _label);
+	bool operator()(assembly::ExpressionStatement const&);
 	bool operator()(assembly::StackAssignment const&);
 	bool operator()(assembly::Assignment const& _assignment);
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
@@ -77,7 +78,7 @@ public:
 
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
-	bool expectExpression(Statement const& _statement);
+	bool expectExpression(Expression const& _expr);
 	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists and has the same size
@@ -96,7 +97,7 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
-	bool m_julia = false;
+	AsmFlavour m_flavour = AsmFlavour::Loose;
 };
 
 }

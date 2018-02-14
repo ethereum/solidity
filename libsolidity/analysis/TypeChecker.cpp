@@ -171,13 +171,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			ssl.append("Another declaration is here:", (*it)->location());
 
 		string msg = "More than one constructor defined.";
-		size_t occurrences = ssl.infos.size();
-		if (occurrences > 32)
-		{
-			ssl.infos.resize(32);
-			msg += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
-		}
-
+		ssl.limitSize(msg);
 		m_errorReporter.declarationError(
 			functions[_contract.name()].front()->location(),
 			ssl,
@@ -219,12 +213,7 @@ void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _defini
 
 			if (ssl.infos.size() > 0)
 			{
-				size_t occurrences = ssl.infos.size();
-				if (occurrences > 32)
-				{
-					ssl.infos.resize(32);
-					_message += " Truncated from " + boost::lexical_cast<string>(occurrences) + " to the first 32 occurrences.";
-				}
+				ssl.limitSize(_message);
 
 				m_errorReporter.declarationError(
 					overloads[i]->location(),
@@ -570,6 +559,17 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+		if (
+			_function.visibility() > FunctionDefinition::Visibility::Internal &&
+			type(*var)->category() == Type::Category::Struct &&
+			!type(*var)->dataStoredIn(DataLocation::Storage) &&
+			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
+		)
+			m_errorReporter.typeError(
+				var->location(),
+				"Structs are only supported in the new experimental ABI encoder. "
+				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+			);
 
 		var->accept(*this);
 	}
@@ -604,6 +604,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (_function.visibility() < FunctionDefinition::Visibility::Public)
 				m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
+			else if (_function.visibility() != FunctionDefinition::Visibility::External)
+				m_errorReporter.warning(_function.location(), "Functions in interfaces should be declared external.");
 		}
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
@@ -873,7 +875,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	assembly::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		false,
+		assembly::AsmFlavour::Loose,
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
@@ -1060,7 +1062,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 						_statement.initialValue()->location(),
 						"Invalid rational " +
 						valueComponentType->toString() +
-						" (absolute value too large or divison by zero)."
+						" (absolute value too large or division by zero)."
 					);
 				else
 					solAssert(false, "");
@@ -1551,8 +1553,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
+		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+
 		string msg =
-			"Wrong argument count for function call: " +
+			"Wrong argument count for " +
+			string(isStructConstructorCall ? "struct constructor" : "function call") +
+			": " +
 			toString(arguments.size()) +
 			" arguments given but expected " +
 			toString(parameterTypes.size()) +
@@ -1668,10 +1674,12 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			SecondarySourceLocation ssl;
 			for (auto function: contract->annotation().unimplementedFunctions)
 				ssl.append("Missing implementation:", function->location());
+			string msg = "Trying to create an instance of an abstract contract.";
+			ssl.limitSize(msg);
 			m_errorReporter.typeError(
 				_newExpression.location(),
 				ssl,
-				"Trying to create an instance of an abstract contract."
+				msg
 			);
 		}
 		if (!contract->constructorIsPublic())

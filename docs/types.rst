@@ -79,8 +79,8 @@ Fixed Point Numbers
     Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
     cannot be assigned to or from.
 
-``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represent the number of bits taken by 
-the type and ``N`` represent how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
+the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
 ``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
 
 Operators:
@@ -331,14 +331,14 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
         ActionChoices choice;
         ActionChoices constant defaultChoice = ActionChoices.GoStraight;
 
-        function setGoStraight() {
+        function setGoStraight() public {
             choice = ActionChoices.GoStraight;
         }
 
@@ -347,11 +347,11 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
         // for all matters external to Solidity. The integer type used is just
         // large enough to hold all enum values, i.e. if you have more values,
         // `uint16` will be used and so on.
-        function getChoice() returns (ActionChoices) {
+        function getChoice() public view returns (ActionChoices) {
             return choice;
         }
 
-        function getDefaultChoice() returns (uint) {
+        function getDefaultChoice() public pure returns (uint) {
             return uint(defaultChoice);
         }
     }
@@ -409,23 +409,24 @@ just use ``f``, if you want to use its external form, use ``this.f``.
 Additionally, public (or external) functions also have a special member called ``selector``,
 which returns the :ref:`ABI function selector <abi_function_selector>`::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract Selector {
-      function f() returns (bytes4) {
+      function f() public view returns (bytes4) {
         return this.f.selector;
       }
     }
 
 Example that shows how to use internal function types::
 
-    pragma solidity ^0.4.5;
+    pragma solidity ^0.4.16;
 
     library ArrayUtils {
       // internal functions can be used in internal library functions because
       // they will be part of the same code context
-      function map(uint[] memory self, function (uint) returns (uint) f)
+      function map(uint[] memory self, function (uint) pure returns (uint) f)
         internal
+        pure
         returns (uint[] memory r)
       {
         r = new uint[](self.length);
@@ -435,9 +436,10 @@ Example that shows how to use internal function types::
       }
       function reduce(
         uint[] memory self,
-        function (uint, uint) returns (uint) f
+        function (uint, uint) pure returns (uint) f
       )
         internal
+        pure
         returns (uint r)
       {
         r = self[0];
@@ -445,23 +447,23 @@ Example that shows how to use internal function types::
           r = f(r, self[i]);
         }
       }
-      function range(uint length) internal returns (uint[] memory r) {
+      function range(uint length) internal pure returns (uint[] memory r) {
         r = new uint[](length);
         for (uint i = 0; i < r.length; i++) {
           r[i] = i;
         }
       }
     }
-    
+
     contract Pyramid {
       using ArrayUtils for *;
-      function pyramid(uint l) returns (uint) {
+      function pyramid(uint l) public pure returns (uint) {
         return ArrayUtils.range(l).map(square).reduce(sum);
       }
-      function square(uint x) internal returns (uint) {
+      function square(uint x) internal pure returns (uint) {
         return x * x;
       }
-      function sum(uint x, uint y) internal returns (uint) {
+      function sum(uint x, uint y) internal pure returns (uint) {
         return x + y;
       }
     }
@@ -477,11 +479,11 @@ Another example that uses external function types::
       }
       Request[] requests;
       event NewRequest(uint);
-      function query(bytes data, function(bytes memory) external callback) {
+      function query(bytes data, function(bytes memory) external callback) public {
         requests.push(Request(data, callback));
         NewRequest(requests.length - 1);
       }
-      function reply(uint requestID, bytes response) {
+      function reply(uint requestID, bytes response) public {
         // Here goes the check that the reply comes from a trusted source
         requests[requestID].callback(response);
       }
@@ -492,7 +494,7 @@ Another example that uses external function types::
       function buySomething() {
         oracle.query("USD", this.oracleResponse);
       }
-      function oracleResponse(bytes response) {
+      function oracleResponse(bytes response) public {
         require(msg.sender == address(oracle));
         // Use the data
       }
@@ -543,7 +545,7 @@ memory-stored reference type do not create a copy.
         uint[] x; // the data location of x is storage
 
         // the data location of memoryArray is memory
-        function f(uint[] memoryArray) {
+        function f(uint[] memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
             var y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
@@ -560,7 +562,7 @@ memory-stored reference type do not create a copy.
         }
 
         function g(uint[] storage storageArray) internal {}
-        function h(uint[] memoryArray) {}
+        function h(uint[] memoryArray) public {}
     }
 
 Summary
@@ -620,10 +622,10 @@ the ``.length`` member.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f(uint len) {
+        function f(uint len) public pure {
             uint[] memory a = new uint[](7);
             bytes memory b = new bytes(len);
             // Here we have a.length == 7 and b.length == len
@@ -641,13 +643,13 @@ assigned to a variable right away.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f() {
+        function f() public pure {
             g([uint(1), 2, 3]);
         }
-        function g(uint[3] _data) {
+        function g(uint[3] _data) public pure {
             // ...
         }
     }
@@ -667,7 +669,7 @@ possible:
     pragma solidity ^0.4.0;
 
     contract C {
-        function f() {
+        function f() public {
             // The next line creates a type error because uint[3] memory
             // cannot be converted to uint[] memory.
             uint[] x = [uint(1), 3, 4];
@@ -703,7 +705,7 @@ Members
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -712,23 +714,23 @@ Members
         bool[2][] m_pairsOfFlags;
         // newPairs is stored in memory - the default for function arguments
 
-        function setAllFlagPairs(bool[2][] newPairs) {
+        function setAllFlagPairs(bool[2][] newPairs) public {
             // assignment to a storage array replaces the complete array
             m_pairsOfFlags = newPairs;
         }
 
-        function setFlagPair(uint index, bool flagA, bool flagB) {
+        function setFlagPair(uint index, bool flagA, bool flagB) public {
             // access to a non-existing index will throw an exception
             m_pairsOfFlags[index][0] = flagA;
             m_pairsOfFlags[index][1] = flagB;
         }
 
-        function changeFlagArraySize(uint newSize) {
+        function changeFlagArraySize(uint newSize) public {
             // if the new size is smaller, removed array elements will be cleared
             m_pairsOfFlags.length = newSize;
         }
 
-        function clear() {
+        function clear() public {
             // these clear the arrays completely
             delete m_pairsOfFlags;
             delete m_aLotOfIntegers;
@@ -738,20 +740,20 @@ Members
 
         bytes m_byteData;
 
-        function byteArrays(bytes data) {
+        function byteArrays(bytes data) public {
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
             m_byteData = data;
             m_byteData.length += 7;
-            m_byteData[3] = 8;
+            m_byteData[3] = byte(8);
             delete m_byteData[2];
         }
 
-        function addFlag(bool[2] flag) returns (uint) {
+        function addFlag(bool[2] flag) public returns (uint) {
             return m_pairsOfFlags.push(flag);
         }
 
-        function createMemoryArray(uint size) returns (bytes) {
+        function createMemoryArray(uint size) public pure returns (bytes) {
             // Dynamic memory arrays are created using `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
             // Create a dynamic byte array:
@@ -795,13 +797,13 @@ shown in the following example:
         uint numCampaigns;
         mapping (uint => Campaign) campaigns;
 
-        function newCampaign(address beneficiary, uint goal) returns (uint campaignID) {
+        function newCampaign(address beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
             // Creates new struct and saves in storage. We leave out the mapping type.
             campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
         }
 
-        function contribute(uint campaignID) payable {
+        function contribute(uint campaignID) public payable {
             Campaign storage c = campaigns[campaignID];
             // Creates a new temporary memory struct, initialised with the given values
             // and copies it over to storage.
@@ -810,7 +812,7 @@ shown in the following example:
             c.amount += msg.value;
         }
 
-        function checkGoalReached(uint campaignID) returns (bool reached) {
+        function checkGoalReached(uint campaignID) public returns (bool reached) {
             Campaign storage c = campaigns[campaignID];
             if (c.amount < c.fundingGoal)
                 return false;
@@ -872,13 +874,13 @@ for each ``_KeyType``, recursively.
     contract MappingExample {
         mapping(address => uint) public balances;
 
-        function update(uint newBalance) {
+        function update(uint newBalance) public {
             balances[msg.sender] = newBalance;
         }
     }
 
     contract MappingUser {
-        function f() returns (uint) {
+        function f() public returns (uint) {
             MappingExample m = new MappingExample();
             m.update(100);
             return m.balances(this);
@@ -897,7 +899,7 @@ Operators Involving LValues
 
 If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the following operators are available as shorthands:
 
-``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``, ``a |=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but return the value after the change.
+``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``, ``|=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but return the value after the change.
 
 delete
 ------
@@ -916,11 +918,11 @@ It is important to note that ``delete a`` really behaves like an assignment to `
         uint data;
         uint[] dataArray;
 
-        function f() {
+        function f() public {
             uint x = data;
             delete x; // sets x to 0, does not affect data
             delete data; // sets data to 0, does not affect x which still holds a copy
-            uint[] y = dataArray;
+            uint[] storage y = dataArray;
             delete dataArray; // this sets dataArray.length to zero, but as uint[] is a complex object, also
             // y is affected which is an alias to the storage object
             // On the other hand: "delete y" is not valid, as assignments to local variables

@@ -62,17 +62,34 @@ complete contract):
         /// Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
-        function withdraw() {
+        function withdraw() public {
             if (msg.sender.send(shares[msg.sender]))
                 shares[msg.sender] = 0;
         }
     }
 
 The problem is not too serious here because of the limited gas as part
-of ``send``, but it still exposes a weakness: Ether transfer always
-includes code execution, so the recipient could be a contract that calls
+of ``send``, but it still exposes a weakness: Ether transfer can always
+include code execution, so the recipient could be a contract that calls
 back into ``withdraw``. This would let it get multiple refunds and
-basically retrieve all the Ether in the contract.
+basically retrieve all the Ether in the contract. In particular, the
+following contract will allow an attacker to refund multiple times
+as it uses ``call`` which forwards all remaining gas by default:
+
+::
+
+    pragma solidity ^0.4.0;
+
+    // THIS CONTRACT CONTAINS A BUG - DO NOT USE
+    contract Fund {
+        /// Mapping of ether shares of the contract.
+        mapping(address => uint) shares;
+        /// Withdraw your share.
+        function withdraw() public {
+            if (msg.sender.call.value(shares[msg.sender])())
+                shares[msg.sender] = 0;
+        }
+    }
 
 To avoid re-entrancy, you can use the Checks-Effects-Interactions pattern as
 outlined further below:
@@ -85,7 +102,7 @@ outlined further below:
         /// Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
-        function withdraw() {
+        function withdraw() public {
             var share = shares[msg.sender];
             shares[msg.sender] = 0;
             msg.sender.transfer(share);
@@ -113,7 +130,7 @@ Sending and Receiving Ether
 - Neither contracts nor "external accounts" are currently able to prevent that someone sends them Ether.
   Contracts can react on and reject a regular transfer, but there are ways
   to move Ether without creating a message call. One way is to simply "mine to"
-  the contract address and the second way is using ``selfdestruct(x)``. 
+  the contract address and the second way is using ``selfdestruct(x)``.
 
 - If a contract receives Ether (without a function being called), the fallback function is executed.
   If it does not have a fallback function, the Ether will be rejected (by throwing an exception).
@@ -169,11 +186,11 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
     contract TxUserWallet {
         address owner;
 
-        function TxUserWallet() {
+        function TxUserWallet() public {
             owner = msg.sender;
         }
 
-        function transferTo(address dest, uint amount) {
+        function transferTo(address dest, uint amount) public {
             require(tx.origin == owner);
             dest.transfer(amount);
         }
@@ -186,17 +203,17 @@ Now someone tricks you into sending ether to the address of this attack wallet:
     pragma solidity ^0.4.11;
 
     interface TxUserWallet {
-        function transferTo(address dest, uint amount);
+        function transferTo(address dest, uint amount) public;
     }
 
     contract TxAttackWallet {
         address owner;
 
-        function TxAttackWallet() {
+        function TxAttackWallet() public {
             owner = msg.sender;
         }
 
-        function() {
+        function() public {
             TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }

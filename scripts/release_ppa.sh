@@ -54,7 +54,7 @@ keyid=703F83D0
 email=builds@ethereum.org
 packagename=solc
 
-for distribution in trusty vivid xenial zesty
+for distribution in trusty vivid xenial zesty artful
 do
 cd /tmp/
 rm -rf $distribution
@@ -166,6 +166,9 @@ override_dh_auto_test:
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
+override_dh_auto_configure:
+        dh_auto_configure -- -DINSTALL_LLLC=Off
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/

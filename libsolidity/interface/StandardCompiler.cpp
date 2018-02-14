@@ -81,15 +81,15 @@ Json::Value formatErrorWithException(
 	else
 		message = _message;
 
+	Json::Value sourceLocation;
 	if (location && location->sourceName)
 	{
-		Json::Value sourceLocation = Json::objectValue;
 		sourceLocation["file"] = *location->sourceName;
 		sourceLocation["start"] = location->start;
 		sourceLocation["end"] = location->end;
 	}
 
-	return formatError(_warning, _type, _component, message, formattedMessage, location);
+	return formatError(_warning, _type, _component, message, formattedMessage, sourceLocation);
 }
 
 set<string> requestedContractNames(Json::Value const& _outputSelection)
@@ -193,7 +193,7 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	for (auto const& ref: linkReferences)
 	{
 		string const& fullname = ref.second;
-		size_t colon = fullname.find(':');
+		size_t colon = fullname.rfind(':');
 		solAssert(colon != string::npos, "");
 		string file = fullname.substr(0, colon);
 		string name = fullname.substr(colon + 1);
@@ -461,7 +461,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value contractsOutput = Json::objectValue;
 	for (string const& contractName: compilationSuccess ? m_compilerStack.contractNames() : vector<string>())
 	{
-		size_t colon = contractName.find(':');
+		size_t colon = contractName.rfind(':');
 		solAssert(colon != string::npos, "");
 		string file = contractName.substr(0, colon);
 		string name = contractName.substr(colon + 1);

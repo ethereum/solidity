@@ -47,7 +47,13 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
-		fatalDeclarationError(_identifier.location(), "Undeclared identifier.");
+	{
+		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
+		string errorMessage =
+			"Undeclared identifier." +
+			(suggestions.empty()? "": " Did you mean " + std::move(suggestions) + "?");
+		declarationError(_identifier.location(), errorMessage);
+	}
 	else if (declarations.size() == 1)
 		_identifier.annotation().referencedDeclaration = declarations.front();
 	else
@@ -90,7 +96,10 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 {
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
-		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
+	{
+		declarationError(_typeName.location(), "Identifier not found or not unique.");
+		return;
+	}
 
 	_typeName.annotation().referencedDeclaration = declaration;
 
@@ -101,7 +110,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 		_typeName.annotation().type = make_shared<ContractType>(*contract);
 	else
-		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
+		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 }
 
 void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
@@ -112,17 +121,25 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	case VariableDeclaration::Visibility::External:
 		break;
 	default:
-		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+		typeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+		return;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
-		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
+	{
+		typeError(_typeName.location(), "Only external function types can be payable.");
+		return;
+	}
+
 	if (_typeName.visibility() == VariableDeclaration::Visibility::External)
 		for (auto const& t: _typeName.parameterTypes() + _typeName.returnParameterTypes())
 		{
 			solAssert(t->annotation().type, "Type not set for parameter.");
 			if (!t->annotation().type->canBeUsedExternally(false))
-				fatalTypeError(t->location(), "Internal type cannot be used for external function type.");
+			{
+				typeError(t->location(), "Internal type cannot be used for external function type.");
+				return;
+			}
 		}
 
 	_typeName.annotation().type = make_shared<FunctionType>(_typeName);
@@ -142,15 +159,21 @@ void ReferencesResolver::endVisit(Mapping const& _typeName)
 void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 {
 	TypePointer baseType = _typeName.baseType().annotation().type;
+	if (!baseType)
+	{
+		solAssert(!m_errorReporter.errors().empty(), "");
+		return;
+	}
 	if (baseType->storageBytes() == 0)
 		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		if (!length->annotation().type)
-			ConstantEvaluator e(*length, m_errorReporter);
-		auto const* lengthType = dynamic_cast<RationalNumberType const*>(length->annotation().type.get());
+		TypePointer lengthTypeGeneric = length->annotation().type;
+		if (!lengthTypeGeneric)
+			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
+		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
 		if (!lengthType || !lengthType->mobileType())
-			fatalTypeError(length->location(), "Invalid array length, expected integer literal.");
+			fatalTypeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
 		else if (lengthType->isFractional())
 			fatalTypeError(length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
@@ -206,7 +229,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 	// Will be re-generated later with correct information
 	assembly::AsmAnalysisInfo analysisInfo;
-	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, false, resolver).analyze(_inlineAssembly.operations());
+	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
 
@@ -321,17 +344,13 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 			type = ref->copyForLocation(typeLoc, isPointer);
 		}
 		else if (varLoc != Location::Default && !ref)
-			fatalTypeError(_variable.location(), "Storage location can only be given for array or struct types.");
+			typeError(_variable.location(), "Storage location can only be given for array or struct types.");
 
-		if (!type)
-			fatalTypeError(_variable.location(), "Invalid type name.");
-
+		_variable.annotation().type = type;
 	}
 	else if (!_variable.canHaveAutoType())
-		fatalTypeError(_variable.location(), "Explicit type needed.");
+		typeError(_variable.location(), "Explicit type needed.");
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
-
-	_variable.annotation().type = type;
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)

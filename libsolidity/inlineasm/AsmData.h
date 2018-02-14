@@ -58,23 +58,25 @@ struct StackAssignment { SourceLocation location; Identifier variableName; };
 /// Multiple assignment ("x, y := f()"), where the left hand side variables each occupy
 /// a single stack slot and expects a single expression on the right hand returning
 /// the same amount of items as the number of variables.
-struct Assignment { SourceLocation location; std::vector<Identifier> variableNames; std::shared_ptr<Statement> value; };
+struct Assignment { SourceLocation location; std::vector<Identifier> variableNames; std::shared_ptr<Expression> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
-struct FunctionalInstruction { SourceLocation location; Instruction instruction; std::vector<Statement> arguments; };
-struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Statement> arguments; };
+struct FunctionalInstruction { SourceLocation location; solidity::Instruction instruction; std::vector<Expression> arguments; };
+struct FunctionCall { SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
+/// Statement that contains only a single expression
+struct ExpressionStatement { SourceLocation location; Expression expression; };
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
-struct VariableDeclaration { SourceLocation location; TypedNameList variables; std::shared_ptr<Statement> value; };
+struct VariableDeclaration { SourceLocation location; TypedNameList variables; std::shared_ptr<Expression> value; };
 /// Block that creates a scope (frees declared stack variables)
 struct Block { SourceLocation location; std::vector<Statement> statements; };
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { SourceLocation location; std::string name; TypedNameList arguments; TypedNameList returns; Block body; };
+struct FunctionDefinition { SourceLocation location; std::string name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
 /// Conditional execution without "else" part.
-struct If { SourceLocation location; std::shared_ptr<Statement> condition; Block body; };
+struct If { SourceLocation location; std::shared_ptr<Expression> condition; Block body; };
 /// Switch case or default case
 struct Case { SourceLocation location; std::shared_ptr<Literal> value; Block body; };
 /// Switch statement
-struct Switch { SourceLocation location; std::shared_ptr<Statement> expression; std::vector<Case> cases; };
-struct ForLoop { SourceLocation location; Block pre; std::shared_ptr<Statement> condition; Block post; Block body; };
+struct Switch { SourceLocation location; std::shared_ptr<Expression> expression; std::vector<Case> cases; };
+struct ForLoop { SourceLocation location; Block pre; std::shared_ptr<Expression> condition; Block post; Block body; };
 
 struct LocationExtractor: boost::static_visitor<SourceLocation>
 {

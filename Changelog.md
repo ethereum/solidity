@@ -1,3 +1,31 @@
+### 0.4.20 (2018-02-14)
+
+Features:
+ * Code Generator: Prevent non-view functions in libraries from being called
+   directly (as opposed to via delegatecall).
+ * Commandline interface: Support strict mode of assembly (disallowing jumps,
+   instructional opcodes, etc) with the ``--strict-assembly`` switch.
+ * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
+ * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Iulia mode.
+ * Optimiser: Replace ``x % 2**i`` by ``x & (2**i-1)``.
+ * Resolver: Continue resolving references after the first error.
+ * Resolver: Suggest alternative identifiers if a given identifier is not found.
+ * SMT Checker: Take if-else branch conditions into account in the SMT encoding of the program
+   variables.
+ * Syntax Checker: Deprecate the ``var`` keyword (and mark it an error as experimental 0.5.0 feature).
+ * Type Checker: Allow `this.f.selector` to be a pure expression.
+ * Type Checker: Issue warning for using ``public`` visibility for interface functions.
+ * Type Checker: Limit the number of warnings raised for creating abstract contracts.
+
+Bugfixes:
+ * Error Output: Truncate huge number literals in the middle to avoid output blow-up.
+ * Parser: Disallow event declarations with no parameter list.
+ * Standard JSON: Populate the ``sourceLocation`` field in the error list.
+ * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).
+ * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
+   (instead of an internal compiler error).
+ * Type Checker: Improve error message for wrong struct initialization.
+
 ### 0.4.19 (2017-11-30)
 
 Features:
