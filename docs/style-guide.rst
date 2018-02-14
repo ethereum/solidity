@@ -421,6 +421,20 @@ No::
     function increment(uint x) public pure returns (uint) {
         return x + 1;}
 
+Explicitly label the visibility of all functions, including constructors.  
+
+Yes::
+
+    function explicitlyPublic(uint val) public returns (bool) {
+        doSomething();
+    }
+
+No::
+
+    function implicitlyPublic(uint val) returns (bool) {
+        doSomething(); 
+    }
+
 The visibility modifiers for a function should come before any custom
 modifiers.
 
