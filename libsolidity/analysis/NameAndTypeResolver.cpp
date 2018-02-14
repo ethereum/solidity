@@ -612,26 +612,34 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
-	enterNewSubScope(_block);
+	_block.setScope(m_currentScope);
+	// Enable C99-scoped variables.
+	if (_block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		enterNewSubScope(_block);
 	return true;
 }
 
-void DeclarationRegistrationHelper::endVisit(Block&)
+void DeclarationRegistrationHelper::endVisit(Block& _block)
 {
-	closeCurrentScope();
+	// Enable C99-scoped variables.
+	if (_block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
-	// TODO special scoping rules for the init statement - if it is a block, then it should
-	// not open its own scope.
-	enterNewSubScope(_for);
+	_for.setScope(m_currentScope);
+	if (_for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		// TODO special scoping rules for the init statement - if it is a block, then it should
+		// not open its own scope.
+		enterNewSubScope(_for);
 	return true;
 }
 
-void DeclarationRegistrationHelper::endVisit(ForStatement&)
+void DeclarationRegistrationHelper::endVisit(ForStatement& _for)
 {
-	closeCurrentScope();
+	if (_for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+		closeCurrentScope();
 }
 
 void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
@@ -663,9 +671,6 @@ void DeclarationRegistrationHelper::endVisit(EventDefinition&)
 
 void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 {
-	if (auto s = dynamic_cast<Scopable*>(&_subScope))
-		s->setScope(m_currentScope);
-
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>::iterator iter;
 	bool newlyAdded;
 	shared_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
@@ -701,10 +706,9 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, m_errorReporter);
 
+	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
-	else
-		_declaration.setScope(m_currentScope);
 }
 
 string DeclarationRegistrationHelper::currentCanonicalName() const

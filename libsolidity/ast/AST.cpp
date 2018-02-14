@@ -96,21 +96,6 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 	return sourceUnits;
 }
 
-SourceUnit const& Declaration::sourceUnit() const
-{
-	ASTNode const* s = scope();
-	solAssert(s, "");
-	// will not always be a declaratoion
-	while (dynamic_cast<Scopable const*>(s) && dynamic_cast<Scopable const*>(s)->scope())
-		s = dynamic_cast<Scopable const*>(s)->scope();
-	return dynamic_cast<SourceUnit const&>(*s);
-}
-
-string Declaration::sourceUnitName() const
-{
-	return sourceUnit().annotation().path;
-}
-
 ImportAnnotation& ImportDirective::annotation() const
 {
 	if (!m_annotation)
@@ -407,6 +392,21 @@ UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
 	if (!m_annotation)
 		m_annotation = new UserDefinedTypeNameAnnotation();
 	return dynamic_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
+}
+
+SourceUnit const& Scopable::sourceUnit() const
+{
+	ASTNode const* s = scope();
+	solAssert(s, "");
+	// will not always be a declaratoion
+	while (dynamic_cast<Scopable const*>(s) && dynamic_cast<Scopable const*>(s)->scope())
+		s = dynamic_cast<Scopable const*>(s)->scope();
+	return dynamic_cast<SourceUnit const&>(*s);
+}
+
+string Scopable::sourceUnitName() const
+{
+	return sourceUnit().annotation().path;
 }
 
 bool VariableDeclaration::isLValue() const

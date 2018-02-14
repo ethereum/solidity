@@ -47,7 +47,10 @@ bool ReferencesResolver::visit(Block const& _block)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_resolver.setScope(&_block);
+	m_experimental050Mode = _block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(&_block);
 	return true;
 }
 
@@ -56,14 +59,19 @@ void ReferencesResolver::endVisit(Block const& _block)
 	if (!m_resolveInsideCode)
 		return;
 
-	m_resolver.setScope(_block.scope());
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(_block.scope());
 }
 
 bool ReferencesResolver::visit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_resolver.setScope(&_for);
+	m_experimental050Mode = _for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(&_for);
 	return true;
 }
 
@@ -71,7 +79,8 @@ void ReferencesResolver::endVisit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return;
-	m_resolver.setScope(_for.scope());
+	if (m_experimental050Mode)
+		m_resolver.setScope(_for.scope());
 }
 
 bool ReferencesResolver::visit(Identifier const& _identifier)

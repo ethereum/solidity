@@ -151,6 +151,13 @@ public:
 	ASTNode const* scope() const { return m_scope; }
 	void setScope(ASTNode const* _scope) { m_scope = _scope; }
 
+	/// @returns the source unit this scopable is present in.
+	SourceUnit const& sourceUnit() const;
+
+	/// @returns the source name this scopable is present in.
+	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
+	std::string sourceUnitName() const;
+
 protected:
 	ASTNode const* m_scope = nullptr;
 };
@@ -197,12 +204,6 @@ public:
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
 
-	/// @returns the source unit this declaration is present in.
-	SourceUnit const& sourceUnit() const;
-
-	/// @returns the source name this declaration is present in.
-	/// Can be combined with annotation().canonicalName to form a globally unique name.
-	std::string sourceUnitName() const;
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
