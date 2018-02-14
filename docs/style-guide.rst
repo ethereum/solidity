@@ -112,6 +112,109 @@ No::
         }
     }
 
+Maximum Line Length
+===================
+
+Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ of 79 (or 99) 
+characters helps readers easily parse the code.
+
+Wrapped lines should conform to the following guidelines.
+
+1. The first argument should not be attached to the opening parenthesis. 
+2. One, and only one, indent should be used.
+3. Each argument should fall on its own line.
+4. The terminating element, :code:`);`, should be placed on the final line by itself.
+
+Function Calls
+
+Yes::
+
+    thisFunctionCallIsReallyLong(
+        longArgument1, 
+        longArgument2, 
+        longArgument3
+    );
+
+No::
+
+    thisFunctionCallIsReallyLong(longArgument1, 
+                                  longArgument2, 
+                                  longArgument3
+    );
+                                  
+    thisFunctionCallIsReallyLong(longArgument1, 
+        longArgument2, 
+        longArgument3
+    );                                  
+                                  
+    thisFunctionCallIsReallyLong(
+        longArgument1, longArgument2,
+        longArgument3
+    );                                    
+
+    thisFunctionCallIsReallyLong(
+    longArgument1, 
+    longArgument2, 
+    longArgument3
+    );
+
+    thisFunctionCallIsReallyLong(
+        longArgument1, 
+        longArgument2, 
+        longArgument3);        
+
+Assignment Statements
+
+Yes::
+
+    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(
+        argument1,
+        argument2,
+        argument3,
+        argument4
+    );
+
+No::
+
+    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(argument1,
+                                                                       argument2,
+                                                                       argument3,
+                                                                       argument4);
+
+Event Definitions and Event Emitters
+
+Yes::
+
+    event LongAndLotsOfArgs(
+        adress sender,
+        adress recipient,
+        uint256 publicKey,
+        uint256 amount,
+        bytes32[] options
+    );
+
+    LongAndLotsOfArgs(
+        sender,
+        recipient,
+        publicKey,
+        amount,
+        options
+    );
+
+No::
+
+    event LongAndLotsOfArgs(adress sender,
+                            adress recipient,
+                            uint256 publicKey,
+                            uint256 amount,
+                            bytes32[] options);
+
+    LongAndLotsOfArgs(sender,
+                      recipient,
+                      publicKey,
+                      amount,
+                      options); 
+
 Source File Encoding
 ====================
 
