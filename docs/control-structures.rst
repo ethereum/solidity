@@ -407,7 +407,7 @@ and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level ``call``, ``delegatecall`` and ``callcode`` will return success if the calling account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+    The low-level ``call``, ``delegatecall`` and ``callcode`` will return success if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
 
 Catching exceptions is not yet possible.
 
