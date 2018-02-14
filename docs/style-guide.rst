@@ -112,6 +112,128 @@ No::
         }
     }
 
+Wrapping Lines
+==============
+
+Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ of 79 (or 99) 
+characters helps readers easily parse the code.
+
+The first argument should not be attached to the opening parenthesis, each argument should fall on its own line, only one
+indent should be used (instead of none), and wrapped lines should terminate with a closing parenthesis on the final line.
+
+Function Calls
+
+Yes::
+
+    thisFunctionCallIsReallyLong.(
+        longArgument1, 
+        longArgument2, 
+        longArgument3);
+
+No::
+
+    thisFunctionCallIsReallyLong.(longArgument1, 
+                                  longArgument2, 
+                                  longArgument3);
+                                  
+    thisFunctionCallIsReallyLong.(longArgument1, 
+        longArgument2, 
+        longArgument3);                                  
+                                  
+    thisFunctionCallIsReallyLong.(
+        longArgument1, longArgument2,
+        longArgument3);                                    
+
+    thisFunctionCallIsReallyLong.(
+    longArgument1, 
+    longArgument2, 
+    longArgument3);
+
+    thisFunctionCallIsReallyLong.(
+        longArgument1, 
+        longArgument2, 
+        longArgument3
+    );        
+
+Assignment Statements
+
+Yes::
+
+    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(
+        argument1,
+        argument2,
+        argument3,
+        argument4);
+
+No::
+
+    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(argument1,
+                                                                       argument2,
+                                                                       argument3,
+                                                                       argument4);
+
+Event Definitions and Event Emitters
+
+Yes::
+
+    event LongAndLotsOfArgs(
+        adress sender,
+        adress recipient,
+        uint256 publicKey,
+        uint256 amount,
+        bytes32[] options);
+
+    LongAndLotsOfArgs(
+        sender,
+        recipient,
+        publicKey,
+        amount,
+        options);
+
+No::
+
+    event LongAndLotsOfArgs(adress sender,
+                            adress recipient,
+                            uint256 publicKey,
+                            uint256 amount,
+                            bytes32[] options);
+
+    LongAndLotsOfArgs(sender,
+                      recipient,
+                      publicKey,
+                      amount,
+                      options); 
+
+Return Parameters and Return Statements
+
+Yes::
+    
+    function func() public returns(
+        adress someAddressName, 
+        uint256 LongArgument, 
+        uint256 Argument)
+    {    
+        doSomething()
+        
+        return (
+            structName.longProp1, 
+            structName.longProp2, 
+            structName.longProp3);
+    }
+
+No::
+
+    function func() public returns(adress someAddressName, 
+                                   uint256 LongArgument, 
+                                   uint256 Argument2)
+    {    
+        doSomething()
+        
+        return (structName.longProp1, 
+                structName.longProp2, 
+                structName.longProp3);
+    }
+
 Source File Encoding
 ====================
 
