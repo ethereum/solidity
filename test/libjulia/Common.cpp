@@ -67,6 +67,7 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 			*analysisInfo,
 			errorReporter,
 			dev::test::Options::get().evmVersion(),
+			boost::none,
 			flavour
 		);
 		if (analyzer.analyze(*parserResult))

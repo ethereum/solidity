@@ -60,6 +60,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 				analysisInfo,
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
+				boost::none,
 				assembly::AsmFlavour::IULIA
 			)).analyze(*parserResult);
 		}
