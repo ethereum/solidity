@@ -1,6 +1,7 @@
 ### 0.4.24 (unreleased)
 
 Features:
+ * Build System: Update internal dependency of jsoncpp to 1.8.4, which introduces more strictness and reduces memory usage.
  * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
  * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
 

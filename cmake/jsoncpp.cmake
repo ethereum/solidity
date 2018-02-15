@@ -6,15 +6,9 @@ else()
     set(JSONCPP_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-# Disable implicit fallthrough warning in jsoncpp for gcc >= 7 until the upstream handles it properly
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-    set(JSONCCP_EXTRA_FLAGS -Wno-implicit-fallthrough)
-else()
-    set(JSONCCP_EXTRA_FLAGS "")
-endif()
-
+include(GNUInstallDirs)
 set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(JSONCPP_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
 set(byproducts "")
@@ -25,9 +19,9 @@ endif()
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
-    DOWNLOAD_NAME jsoncpp-1.7.7.tar.gz
-    URL https://github.com/open-source-parsers/jsoncpp/archive/1.7.7.tar.gz
-    URL_HASH SHA256=087640ebcf7fbcfe8e2717a0b9528fff89c52fcf69fa2a18cc2b538008098f97
+    DOWNLOAD_NAME jsoncpp-1.8.4.tar.gz
+    URL https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz
+    URL_HASH SHA256=c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6
     CMAKE_COMMAND ${JSONCPP_CMAKE_COMMAND}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
