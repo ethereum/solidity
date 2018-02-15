@@ -1,6 +1,7 @@
 ### 0.4.21 (unreleased)
 
 Features:
+ * Code Generator: Assert that ``k != 0`` for ``molmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
 
 
