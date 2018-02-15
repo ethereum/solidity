@@ -107,9 +107,9 @@ Mathematical and Cryptographic Functions
 ----------------------------------------
 
 ``addmod(uint x, uint y, uint k) returns (uint)``:
-    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
+    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
-    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
+    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``keccak256(...) returns (bytes32)``:
     compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 ``sha256(...) returns (bytes32)``:

@@ -765,7 +765,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::AddMod:
 		case FunctionType::Kind::MulMod:
 		{
-			for (unsigned i = 0; i < 3; i ++)
+			arguments[2]->accept(*this);
+			utils().convertType(*arguments[2]->annotation().type, IntegerType(256));
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context.appendConditionalInvalid();
+			for (unsigned i = 1; i < 3; i ++)
 			{
 				arguments[2 - i]->accept(*this);
 				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
