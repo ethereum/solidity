@@ -330,6 +330,7 @@ void CompilerContext::appendInlineAssembly(
 			analysisInfo,
 			errorReporter,
 			m_evmVersion,
+			boost::none,
 			assembly::AsmFlavour::Strict,
 			identifierAccess.resolve
 		).analyze(*parserResult);
