@@ -56,7 +56,7 @@ public:
 	/// @returns false in case of error.
 	/// @param _currentScope should be nullptr but can be used to inject new declarations into
 	/// existing scopes, used by the snippets feature.
-	bool registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope = nullptr);
+	bool registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope = nullptr);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
 	/// Resolves all names and types referenced from the given AST Node.
@@ -69,6 +69,9 @@ public:
 	/// that create their own scope.
 	/// @returns false in case of error.
 	bool updateDeclaration(Declaration const& _declaration);
+	/// Activates a previously inactive (invisible) variable. To be used in C99 scpoing for
+	/// VariableDeclarationStatements.
+	void activateVariable(std::string const& _name);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the pre-defined global variables).
@@ -78,7 +81,7 @@ public:
 
 	/// Resolves a name in the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
-	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name) const;
+	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles = false) const;
 
 	/// Resolves a path starting from the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
@@ -139,6 +142,7 @@ public:
 	DeclarationRegistrationHelper(
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		ASTNode& _astRoot,
+		bool _useC99Scoping,
 		ErrorReporter& _errorReporter,
 		ASTNode const* _currentScope = nullptr
 	);
@@ -149,6 +153,7 @@ public:
 		std::string const* _name,
 		SourceLocation const* _errorLocation,
 		bool _warnOnShadow,
+		bool _inactive,
 		ErrorReporter& _errorReporter
 	);
 
@@ -185,6 +190,7 @@ private:
 	/// @returns the canonical name of the current scope.
 	std::string currentCanonicalName() const;
 
+	bool m_useC99Scoping = false;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 	ASTNode const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;

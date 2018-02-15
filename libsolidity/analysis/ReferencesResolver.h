@@ -61,6 +61,7 @@ private:
 	virtual void endVisit(Block const& _block) override;
 	virtual bool visit(ForStatement const& _for) override;
 	virtual void endVisit(ForStatement const& _for) override;
+	virtual void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
 	virtual bool visit(Identifier const& _identifier) override;
 	virtual bool visit(ElementaryTypeName const& _typeName) override;
 	virtual bool visit(FunctionDefinition const& _functionDefinition) override;

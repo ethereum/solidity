@@ -51,12 +51,16 @@ public:
 	/// @param _update if true, replaces a potential declaration that is already present
 	/// @returns false if the name was already declared.
 	bool registerDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr, bool _invisible = false, bool _update = false);
-	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
+	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false, bool _alsoInvisible = false) const;
 	ASTNode const* enclosingNode() const { return m_enclosingNode; }
 	DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
 	std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr) const;
+
+	/// Activates a previously inactive (invisible) variable. To be used in C99 scpoing for
+	/// VariableDeclarationStatements.
+	void activateVariable(ASTString const& _name);
 
 	/// @returns existing declaration names similar to @a _name.
 	/// Searches this and all parent containers.

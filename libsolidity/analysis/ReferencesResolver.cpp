@@ -83,6 +83,16 @@ void ReferencesResolver::endVisit(ForStatement const& _for)
 		m_resolver.setScope(_for.scope());
 }
 
+void ReferencesResolver::endVisit(VariableDeclarationStatement const& _varDeclStatement)
+{
+	if (!m_resolveInsideCode)
+		return;
+	if (m_experimental050Mode)
+		for (auto const& var: _varDeclStatement.declarations())
+			if (var)
+				m_resolver.activateVariable(var->name());
+}
+
 bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());

@@ -135,19 +135,59 @@ BOOST_AUTO_TEST_CASE(scoping)
 	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
 }
 
-BOOST_AUTO_TEST_CASE(scoping_for)
+BOOST_AUTO_TEST_CASE(scoping_activation_old)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_activation)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use)
 {
 	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract test {
 			function f() public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
 				for (uint x = 0; x < 10; x ++){
 					x = 2;
 				}
 			}
 		}
 	)";
-	CHECK_SUCCESS(text);
+	CHECK_WARNING(text, "Experimental features");
 }
 
 BOOST_AUTO_TEST_CASE(scoping_for2)
@@ -155,11 +195,40 @@ BOOST_AUTO_TEST_CASE(scoping_for2)
 	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract test {
-			function f() public {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++)
+					x = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for3)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
 				for (uint x = 0; x < 10; x ++){
 					x = 2;
 				}
 				x = 4;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for_decl_in_body)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (;; y++){
+					uint y = 3;
+				}
 			}
 		}
 	)";

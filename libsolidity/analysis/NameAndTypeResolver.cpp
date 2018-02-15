@@ -50,12 +50,13 @@ NameAndTypeResolver::NameAndTypeResolver(
 		m_scopes[nullptr]->registerDeclaration(*declaration);
 }
 
-bool NameAndTypeResolver::registerDeclarations(ASTNode& _sourceUnit, ASTNode const* _currentScope)
+bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope)
 {
+	bool useC99Scoping = _sourceUnit.annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
-		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errorReporter, _currentScope);
+		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, useC99Scoping, m_errorReporter, _currentScope);
 	}
 	catch (FatalError const&)
 	{
@@ -106,7 +107,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					else
 						for (Declaration const* declaration: declarations)
 							if (!DeclarationRegistrationHelper::registerDeclaration(
-								target, *declaration, alias.second.get(), &imp->location(), true, m_errorReporter
+								target, *declaration, alias.second.get(), &imp->location(), true, false, m_errorReporter
 							))
 								error = true;
 				}
@@ -114,7 +115,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 				for (auto const& nameAndDeclaration: scope->second->declarations())
 					for (auto const& declaration: nameAndDeclaration.second)
 						if (!DeclarationRegistrationHelper::registerDeclaration(
-							target, *declaration, &nameAndDeclaration.first, &imp->location(), true, m_errorReporter
+							target, *declaration, &nameAndDeclaration.first, &imp->location(), true, false, m_errorReporter
 						))
 							error =  true;
 		}
@@ -151,6 +152,12 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	return true;
 }
 
+void NameAndTypeResolver::activateVariable(string const& _name)
+{
+	solAssert(m_currentScope, "");
+	m_currentScope->activateVariable(_name);
+}
+
 vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
@@ -159,9 +166,9 @@ vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _na
 	return iterator->second->resolveName(_name, false);
 }
 
-vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name) const
+vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles) const
 {
-	return m_currentScope->resolveName(_name, true);
+	return m_currentScope->resolveName(_name, true, _includeInvisibles);
 }
 
 Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
@@ -229,7 +236,7 @@ void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 	for (auto const& instruction: c_instructions)
 	{
 		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
-		auto declarations = nameFromCurrentScope(instructionName);
+		auto declarations = nameFromCurrentScope(instructionName, true);
 		for (Declaration const* const declaration: declarations)
 		{
 			solAssert(!!declaration, "");
@@ -439,9 +446,11 @@ string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
+	bool _useC99Scoping,
 	ErrorReporter& _errorReporter,
 	ASTNode const* _currentScope
 ):
+	m_useC99Scoping(_useC99Scoping),
 	m_scopes(_scopes),
 	m_currentScope(_currentScope),
 	m_errorReporter(_errorReporter)
@@ -456,6 +465,7 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	string const* _name,
 	SourceLocation const* _errorLocation,
 	bool _warnOnShadow,
+	bool _inactive,
 	ErrorReporter& _errorReporter
 )
 {
@@ -465,10 +475,13 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	string name = _name ? *_name : _declaration.name();
 	Declaration const* shadowedDeclaration = nullptr;
 	if (_warnOnShadow && !name.empty() && _container.enclosingContainer())
-		for (auto const* decl: _container.enclosingContainer()->resolveName(name, true))
+		for (auto const* decl: _container.enclosingContainer()->resolveName(name, true, true))
 			shadowedDeclaration = decl;
 
-	if (!_container.registerDeclaration(_declaration, _name, !_declaration.isVisibleInContract()))
+	// We use "invisible" for both inactive variables in blocks and for members invisible in contracts.
+	// They cannot both be true at the same time.
+	solAssert(!(_inactive && !_declaration.isVisibleInContract()), "");
+	if (!_container.registerDeclaration(_declaration, _name, !_declaration.isVisibleInContract() || _inactive))
 	{
 		SourceLocation firstDeclarationLocation;
 		SourceLocation secondDeclarationLocation;
@@ -613,32 +626,28 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
 	_block.setScope(m_currentScope);
-	// Enable C99-scoped variables.
-	if (_block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+	if (m_useC99Scoping)
 		enterNewSubScope(_block);
 	return true;
 }
 
-void DeclarationRegistrationHelper::endVisit(Block& _block)
+void DeclarationRegistrationHelper::endVisit(Block&)
 {
-	// Enable C99-scoped variables.
-	if (_block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+	if (m_useC99Scoping)
 		closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
 	_for.setScope(m_currentScope);
-	if (_for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-		// TODO special scoping rules for the init statement - if it is a block, then it should
-		// not open its own scope.
+	if (m_useC99Scoping)
 		enterNewSubScope(_for);
 	return true;
 }
 
-void DeclarationRegistrationHelper::endVisit(ForStatement& _for)
+void DeclarationRegistrationHelper::endVisit(ForStatement&)
 {
-	if (_for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+	if (m_useC99Scoping)
 		closeCurrentScope();
 }
 
@@ -704,7 +713,12 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 		if (fun->isConstructor())
 			warnAboutShadowing = false;
 
-	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, m_errorReporter);
+	// Register declaration as inactive if we are in block scope and C99 mode.
+	bool inactive =
+		m_useC99Scoping &&
+		(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
+
+	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
 
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
