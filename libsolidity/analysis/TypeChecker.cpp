@@ -972,7 +972,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				string errorText{"Uninitialized storage pointer."};
 				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
-				m_errorReporter.warning(varDecl.location(), errorText);
+				solAssert(m_scope, "");
+				if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+					m_errorReporter.declarationError(varDecl.location(), errorText);
+				else
+					m_errorReporter.warning(varDecl.location(), errorText);
 			}
 		}
 		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))

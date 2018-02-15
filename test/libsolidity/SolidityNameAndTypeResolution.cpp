@@ -3021,6 +3021,20 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 	CHECK_WARNING(sourceCode, "Uninitialized storage pointer");
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable_050)
+{
+	char const* sourceCode = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				mapping(uint => uint)[] storage x;
+				x;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Uninitialized storage pointer");
+}
+
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 {
 	char const* sourceCode = R"(
@@ -3318,6 +3332,24 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	)";
 
 	CHECK_WARNING(text, "Uninitialized storage pointer");
+}
+
+BOOST_AUTO_TEST_CASE(non_initialized_references_050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract c
+		{
+			struct s {
+				uint a;
+			}
+			function f() public {
+				s storage x;
+			}
+		}
+	)";
+
+	CHECK_ERROR(text, DeclarationError, "Uninitialized storage pointer");
 }
 
 BOOST_AUTO_TEST_CASE(keccak256_with_large_integer_constant)
