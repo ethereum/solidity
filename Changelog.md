@@ -1,6 +1,7 @@
 ### 0.4.21 (unreleased)
 
 Features:
+ * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
 
 
 Bugfixes:
