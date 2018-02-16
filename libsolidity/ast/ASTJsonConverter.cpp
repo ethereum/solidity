@@ -324,6 +324,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
+		make_pair("documentation", _node.documentation() ? Json::Value(*_node.documentation()) : Json::nullValue),
 		// FIXME: remove with next breaking release
 		make_pair(m_legacy ? "constant" : "isDeclaredConst", _node.stateMutability() <= StateMutability::View),
 		make_pair("payable", _node.isPayable()),
@@ -365,6 +366,7 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 {
 	setJsonNode(_node, "ModifierDefinition", {
 		make_pair("name", _node.name()),
+		make_pair("documentation", _node.documentation() ? Json::Value(*_node.documentation()) : Json::nullValue),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("body", toJson(_node.body()))
@@ -386,6 +388,7 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 	m_inEvent = true;
 	setJsonNode(_node, "EventDefinition", {
 		make_pair("name", _node.name()),
+		make_pair("documentation", _node.documentation() ? Json::Value(*_node.documentation()) : Json::nullValue),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("anonymous", _node.isAnonymous())
 	});
