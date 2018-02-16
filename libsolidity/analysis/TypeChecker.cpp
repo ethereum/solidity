@@ -2287,10 +2287,17 @@ void TypeChecker::endVisit(Literal const& _literal)
 
 	if (_literal.looksLikeAddress())
 	{
-		if (_literal.passesAddressChecksum())
-			_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
-		else
-			m_errorReporter.warning(
+		// Assign type here if it even looks like an address. This prevents double error in 050 mode for invalid address
+		_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+
+		if (_literal.value().length() != 42) // "0x" + 40 hex digits
+			m_errorReporter.syntaxError(
+				_literal.location(),
+				"This looks like an address but is not exactly 20 bytes long. Current length is " +
+				to_string(_literal.value().length()) + " (should be 42)."
+			);
+		else if (!_literal.passesAddressChecksum())
+			m_errorReporter.syntaxError(
 				_literal.location(),
 				"This looks like an address but has an invalid checksum. "
 				"If this is not used as an address, please prepend '00'. " +
