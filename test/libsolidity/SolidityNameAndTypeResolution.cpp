@@ -2452,8 +2452,8 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 31, 0)) == *make_shared<FixedBytesType>(31));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 32, 0)) == *make_shared<FixedBytesType>(32));
 
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
 }
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
@@ -4471,7 +4471,7 @@ BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Type fixed128x19 is not implicitly convertible to expected type int256");
+	CHECK_ERROR(text, TypeError, "Type fixed128x18 is not implicitly convertible to expected type int256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_unary_operation)
@@ -4589,7 +4589,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_size)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Type ufixed128x19 is not implicitly convertible to expected type ufixed248x8");
+	CHECK_ERROR(text, TypeError, "Type ufixed128x18 is not implicitly convertible to expected type ufixed248x8");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
@@ -4676,7 +4676,7 @@ BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "fixed128x19 is not implicitly convertible to expected type bytes32");
+	CHECK_ERROR(text, TypeError, "fixed128x18 is not implicitly convertible to expected type bytes32");
 }
 
 BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
