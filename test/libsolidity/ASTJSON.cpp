@@ -239,9 +239,9 @@ BOOST_AUTO_TEST_CASE(documentation)
 	);
 	c.addSource("c",
 		"contract C {"
-    "  /** Some comment on Evt.*/ event Evt();"
-    "  /** Some comment on mod.*/ modifier mod() { _; }"
-    "  /** Some comment on fn.*/ function fn() public {}"
+		"  /** Some comment on Evt.*/ event Evt();"
+		"  /** Some comment on mod.*/ modifier mod() { _; }"
+		"  /** Some comment on fn.*/ function fn() public {}"
 		"}"
 	);
 	c.parseAndAnalyze();
