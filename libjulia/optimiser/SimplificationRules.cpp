@@ -41,7 +41,7 @@ SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(Expressio
 
 	static SimplificationRules rules;
 
-	FunctionalInstruction const& instruction = boost::get<FunctionalInstruction const&>(_expr);
+	FunctionalInstruction const& instruction = boost::get<FunctionalInstruction>(_expr);
 	for (auto const& rule: rules.m_rules[byte(instruction.instruction)])
 	{
 		rules.resetMatchGroups();
@@ -100,7 +100,7 @@ bool Pattern::matches(Expression const& _expr) const
 	{
 		if (_expr.type() != typeid(Literal))
 			return false;
-		Literal const& literal = boost::get<Literal const&>(_expr);
+		Literal const& literal = boost::get<Literal>(_expr);
 		if (literal.kind != assembly::LiteralKind::Number)
 			return false;
 		if (m_data && *m_data != u256(literal.value))
@@ -111,7 +111,7 @@ bool Pattern::matches(Expression const& _expr) const
 	{
 		if (_expr.type() != typeid(FunctionalInstruction))
 			return false;
-		FunctionalInstruction const& instr = boost::get<FunctionalInstruction const&>(_expr);
+		FunctionalInstruction const& instr = boost::get<FunctionalInstruction>(_expr);
 		if (m_instruction != instr.instruction)
 			return false;
 		assertThrow(m_arguments.size() == instr.arguments.size(), OptimizerException, "");
@@ -168,7 +168,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 
 u256 Pattern::d() const
 {
-	Literal const& literal = boost::get<Literal const&>(matchGroupValue());
+	Literal const& literal = boost::get<Literal>(matchGroupValue());
 	assertThrow(literal.kind == assembly::LiteralKind::Number, OptimizerException, "");
 	return u256(literal.value);
 }
