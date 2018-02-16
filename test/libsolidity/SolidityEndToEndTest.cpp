@@ -2967,6 +2967,29 @@ BOOST_AUTO_TEST_CASE(event)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(event_emit)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(address indexed _from, bytes32 indexed _id, uint _value);
+			function deposit(bytes32 _id) payable {
+				emit Deposit(msg.sender, _id, msg.value);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	u256 value(18);
+	u256 id(0x1234);
+	callContractFunctionWithValue("deposit(bytes32)", value, id);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256)")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender, h256::AlignRight));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
+}
+
 BOOST_AUTO_TEST_CASE(event_no_arguments)
 {
 	char const* sourceCode = R"(
@@ -2996,6 +3019,28 @@ BOOST_AUTO_TEST_CASE(event_access_through_base_name)
 		contract B is A {
 			function f() returns (uint) {
 				A.x();
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("f()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("x()")));
+}
+
+BOOST_AUTO_TEST_CASE(event_access_through_base_name_emit)
+{
+	char const* sourceCode = R"(
+		contract A {
+			event x();
+		}
+		contract B is A {
+			function f() returns (uint) {
+				emit A.x();
 				return 1;
 			}
 		}
@@ -3078,6 +3123,58 @@ BOOST_AUTO_TEST_CASE(events_with_same_name_inherited)
 			}
 			function deposit(address _addr, uint _amount) returns (uint) {
 				Deposit(_addr, _amount);
+				return 1;
+			}
+		}
+	)";
+	u160 const c_loggedAddress = m_contractAddress;
+
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+
+	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
+
+	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(1)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+}
+
+BOOST_AUTO_TEST_CASE(events_with_same_name_inherited_emit)
+{
+	char const* sourceCode = R"(
+		contract A {
+			event Deposit();
+		}
+
+		contract B {
+			event Deposit(address _addr);
+		}
+
+		contract ClientReceipt is A, B {
+			event Deposit(address _addr, uint _amount);
+			function deposit() returns (uint) {
+				emit Deposit();
+				return 1;
+			}
+			function deposit(address _addr) returns (uint) {
+				emit Deposit(_addr);
+				return 1;
+			}
+			function deposit(address _addr, uint _amount) returns (uint) {
+				emit Deposit(_addr, _amount);
 				return 1;
 			}
 		}

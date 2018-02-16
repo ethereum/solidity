@@ -69,6 +69,7 @@ class Continue;
 class Break;
 class Return;
 class Throw;
+class EmitStatement;
 class VariableDeclarationStatement;
 class ExpressionStatement;
 class Expression;

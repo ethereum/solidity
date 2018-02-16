@@ -1197,6 +1197,27 @@ public:
 };
 
 /**
+ * The emit statement is used to emit events: emit EventName(arg1, ..., argn)
+ */
+class EmitStatement: public Statement
+{
+public:
+	explicit EmitStatement(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
+		ASTPointer<FunctionCall> const& _functionCall
+	):
+		Statement(_location, _docString), m_eventCall(_functionCall) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	FunctionCall const& eventCall() const { return *m_eventCall; }
+
+private:
+	ASTPointer<FunctionCall> m_eventCall;
+};
+
+/**
  * Definition of a variable as a statement inside a function. It requires a type name (which can
  * also be "var") but the actual assignment can be missing.
  * Examples: var a = 2; uint256 a;
