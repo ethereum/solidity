@@ -961,7 +961,8 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 		_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
-		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event.");
+		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event invocation.");
+	m_insideEmitStatement = false;
 }
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
@@ -1539,6 +1540,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			m_errorReporter.warning(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
 		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+	}
+	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
+	{
+		if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+			m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
+		else
+			m_errorReporter.warning(_functionCall.location(), "Invoking events without \"emit\" prefix is deprecated.");
 	}
 
 	TypePointers parameterTypes = functionType->parameterTypes();
