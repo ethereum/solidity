@@ -266,7 +266,28 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_multiple_imports)
 	}
 }
 
-
+BOOST_AUTO_TEST_CASE(shadowing_builtins_with_alias)
+{
+	CompilerStack c;
+	c.addSource("B.sol", "contract C {} pragma solidity >=0.0;");
+	c.addSource("b", R"(
+		pragma solidity >=0.0;
+		import {C as msg} from "B.sol";
+	)");
+	BOOST_CHECK(c.compile());
+	auto numErrors = c.errors().size();
+	// Sometimes we get the prerelease warning, sometimes not.
+	BOOST_CHECK(1 <= numErrors && numErrors <= 2);
+	for (auto const& e: c.errors())
+	{
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		BOOST_CHECK(
+			msg->find("pre-release") != string::npos ||
+			msg->find("shadows a builtin symbol") != string::npos
+		);
+	}
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
