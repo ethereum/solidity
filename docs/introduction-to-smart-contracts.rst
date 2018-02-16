@@ -80,7 +80,7 @@ registering with username and password - all you need is an Ethereum keypair.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.20; // should actually be 0.4.21
 
     contract Coin {
         // The keyword "public" makes those variables
@@ -107,7 +107,7 @@ registering with username and password - all you need is an Ethereum keypair.
             if (balances[msg.sender] < amount) return;
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
-            Sent(msg.sender, receiver, amount);
+            emit Sent(msg.sender, receiver, amount);
         }
     }
 
@@ -157,10 +157,10 @@ single account.
 .. index:: event
 
 The line ``event Sent(address from, address to, uint amount);`` declares
-a so-called "event" which is fired in the last line of the function
+a so-called "event" which is emitted in the last line of the function
 ``send``. User interfaces (as well as server applications of course) can
-listen for those events being fired on the blockchain without much
-cost. As soon as it is fired, the listener will also receive the
+listen for those events being emitted on the blockchain without much
+cost. As soon as it is emitted, the listener will also receive the
 arguments ``from``, ``to`` and ``amount``, which makes it easy to track
 transactions. In order to listen for this event, you would use ::
 

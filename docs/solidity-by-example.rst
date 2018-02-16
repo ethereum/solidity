@@ -214,7 +214,7 @@ activate themselves.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.20; // should actually be 0.4.21
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -282,7 +282,7 @@ activate themselves.
             }
             highestBidder = msg.sender;
             highestBid = msg.value;
-            HighestBidIncreased(msg.sender, msg.value);
+            emit HighestBidIncreased(msg.sender, msg.value);
         }
 
         /// Withdraw a bid that was overbid.
@@ -325,7 +325,7 @@ activate themselves.
 
             // 2. Effects
             ended = true;
-            AuctionEnded(highestBidder, highestBid);
+            emit AuctionEnded(highestBidder, highestBid);
 
             // 3. Interaction
             beneficiary.transfer(highestBid);
@@ -371,7 +371,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.20; // should actually be 0.4.21
 
     contract BlindAuction {
         struct Bid {
@@ -509,7 +509,7 @@ high or low invalid bids.
             onlyAfter(revealEnd)
         {
             require(!ended);
-            AuctionEnded(highestBidder, highestBid);
+            emit AuctionEnded(highestBidder, highestBid);
             ended = true;
             beneficiary.transfer(highestBid);
         }
@@ -524,7 +524,7 @@ Safe Remote Purchase
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.20; // should actually be 0.4.21
 
     contract Purchase {
         uint public value;
@@ -574,7 +574,7 @@ Safe Remote Purchase
             onlySeller
             inState(State.Created)
         {
-            Aborted();
+            emit Aborted();
             state = State.Inactive;
             seller.transfer(this.balance);
         }
@@ -589,7 +589,7 @@ Safe Remote Purchase
             condition(msg.value == (2 * value))
             payable
         {
-            PurchaseConfirmed();
+            emit PurchaseConfirmed();
             buyer = msg.sender;
             state = State.Locked;
         }
@@ -601,7 +601,7 @@ Safe Remote Purchase
             onlyBuyer
             inState(State.Locked)
         {
-            ItemReceived();
+            emit ItemReceived();
             // It is important to change the state first because
             // otherwise, the contracts called using `send` below
             // can call in again here.

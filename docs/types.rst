@@ -470,7 +470,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.20; // should actually be 0.4.21
 
     contract Oracle {
       struct Request {
@@ -481,7 +481,7 @@ Another example that uses external function types::
       event NewRequest(uint);
       function query(bytes data, function(bytes memory) external callback) public {
         requests.push(Request(data, callback));
-        NewRequest(requests.length - 1);
+        emit NewRequest(requests.length - 1);
       }
       function reply(uint requestID, bytes response) public {
         // Here goes the check that the reply comes from a trusted source
