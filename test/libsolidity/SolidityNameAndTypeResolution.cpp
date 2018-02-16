@@ -7818,6 +7818,29 @@ BOOST_AUTO_TEST_CASE(emit_events)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(old_style_events_050)
+{
+	char const* text = R"(
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_WARNING(text, "without \"emit\" prefix");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "have to be prefixed");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
