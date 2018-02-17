@@ -140,9 +140,6 @@ private:
 	/// Resets the variable to an unknown value (in its range).
 	void setUnknownValue(Declaration const& decl);
 
-	static smt::Expression minValue(IntegerType const& _t);
-	static smt::Expression maxValue(IntegerType const& _t);
-
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)

@@ -24,6 +24,7 @@
 #endif
 
 #include <libsolidity/formal/SSAVariable.h>
+#include <libsolidity/formal/SymbolicIntVariable.h>
 #include <libsolidity/formal/VariableUsage.h>
 
 #include <libsolidity/interface/ErrorReporter.h>
@@ -244,14 +245,14 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _type, SourceLocation const& _location)
 {
 	checkCondition(
-		_value < minValue(_type),
+		_value < SymbolicIntVariable::minValue(_type),
 		_location,
 		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
 		"value",
 		&_value
 	);
 	checkCondition(
-		_value > maxValue(_type),
+		_value > SymbolicIntVariable::maxValue(_type),
 		_location,
 		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
 		"value",
@@ -828,15 +829,6 @@ void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
 	m_interface->addAssertion(expr(_e) == _value);
 }
 
-smt::Expression SMTChecker::minValue(IntegerType const& _t)
-{
-	return smt::Expression(_t.minValue());
-}
-
-smt::Expression SMTChecker::maxValue(IntegerType const& _t)
-{
-	return smt::Expression(_t.maxValue());
-}
 void SMTChecker::popPathCondition()
 {
 	solAssert(m_pathConditions.size() > 0, "Cannot pop path condition, empty.");

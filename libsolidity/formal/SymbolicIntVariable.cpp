@@ -43,12 +43,12 @@ void SymbolicIntVariable::setUnknownValue(int _seq)
 	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(intType));
 }
 
-smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t) const
+smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t)
 {
 	return smt::Expression(_t.minValue());
 }
 
-smt::Expression SymbolicIntVariable::maxValue(IntegerType const& _t) const
+smt::Expression SymbolicIntVariable::maxValue(IntegerType const& _t)
 {
 	return smt::Expression(_t.maxValue());
 }

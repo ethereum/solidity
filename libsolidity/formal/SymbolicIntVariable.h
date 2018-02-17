@@ -39,12 +39,13 @@ public:
 	SymbolicIntVariable& operator=(SymbolicIntVariable const&) = default;
 	SymbolicIntVariable& operator=(SymbolicIntVariable&&) = default;
 
+	/// Sets the var to 0.
 	void setZeroValue(int _seq);
+	/// Sets the valid interval for the var.
 	void setUnknownValue(int _seq);
 
-private:
-	smt::Expression minValue(IntegerType const& _t) const;
-	smt::Expression maxValue(IntegerType const& _t) const;
+	static smt::Expression minValue(IntegerType const& _t);
+	static smt::Expression maxValue(IntegerType const& _t);
 };
 
 }
