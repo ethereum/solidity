@@ -50,7 +50,10 @@ public:
 
 	std::string uniqueSymbol() const;
 
+	/// Sets the var to the default value of its type.
 	virtual void setZeroValue(int _seq) = 0;
+	/// The unknown value depends on the type. For example, an interval is set for Integers.
+	/// This is decided by the subclasses.
 	virtual void setUnknownValue(int _seq) = 0;
 
 protected:

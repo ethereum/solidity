@@ -370,7 +370,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (dynamic_cast<IntegerType const*>(_identifier.annotation().type.get()))
+	else if (SSAVariable::supportedType(_identifier.annotation().type.get()))
 		defineExpr(_identifier, currentValue(*decl));
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
@@ -728,7 +728,7 @@ void SMTChecker::mergeVariables(vector<Declaration const*> const& _variables, sm
 
 bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
-	if (dynamic_cast<IntegerType const*>(_varDecl.type().get()))
+	if (SSAVariable::supportedType(_varDecl.type().get()))
 	{
 		solAssert(m_variables.count(&_varDecl) == 0, "");
 		m_variables.emplace(&_varDecl, SSAVariable(&_varDecl, *m_interface));

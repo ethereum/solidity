@@ -34,8 +34,13 @@ SSAVariable::SSAVariable(Declaration const* _decl,
 		m_symbVar = make_shared<SymbolicIntVariable>(_decl, _interface);
 	else
 	{
-		//solAssert(false, "");
+		solAssert(false, "");
 	}
+}
+
+bool SSAVariable::supportedType(Type const* _decl)
+{
+	return dynamic_cast<IntegerType const*>(_decl);
 }
 
 void SSAVariable::resetIndex()

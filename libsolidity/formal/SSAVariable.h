@@ -34,6 +34,8 @@ class Declaration;
 class SSAVariable
 {
 public:
+	/// @param _decl Used to determine the type and forwarded to the symbolic var.
+	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
 	explicit SSAVariable(Declaration const* _decl,
 		smt::SolverInterface& _interface);
 	SSAVariable(SSAVariable const&) = default;
@@ -61,8 +63,13 @@ public:
 		return valueAtSequence(_seq);
 	}
 
+	/// These two functions forward the call to the symbolic var
+	/// which generates the constraints according to the type.
 	void setZeroValue();
 	void setUnknownValue();
+
+	/// So far Int is supported.
+	static bool supportedType(Type const* _decl);
 
 private:
 	smt::Expression valueAtSequence(int _seq) const
@@ -72,6 +79,8 @@ private:
 
 	std::shared_ptr<SymbolicVariable> m_symbVar = nullptr;
 	int m_currentSequenceCounter;
+	/// The next free sequence counter is a shared pointer because we want
+	/// the copy and the copied to share it.
 	std::shared_ptr<int> m_nextFreeSequenceCounter;
 };
 
