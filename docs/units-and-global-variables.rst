@@ -154,15 +154,15 @@ Address Related
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
 ``<address>.transfer(uint256 amount)``:
-    send given amount of Wei to :ref:`address`, throws on failure
+    send given amount of Wei to :ref:`address`, throws on failure, forwards 2300 gas stipend
 ``<address>.send(uint256 amount) returns (bool)``:
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend
 ``<address>.call(...) returns (bool)``:
-    issue low-level ``CALL``, returns ``false`` on failure
+    issue low-level ``CALL``, returns ``false`` on failure, forwards all available gas
 ``<address>.callcode(...) returns (bool)``:
-    issue low-level ``CALLCODE``, returns ``false`` on failure
+    issue low-level ``CALLCODE``, returns ``false`` on failure, forwards all available gas
 ``<address>.delegatecall(...) returns (bool)``:
-    issue low-level ``DELEGATECALL``, returns ``false`` on failure
+    issue low-level ``DELEGATECALL``, returns ``false`` on failure, forwards all available gas
 
 For more information, see the section on :ref:`address`.
 
