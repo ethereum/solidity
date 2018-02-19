@@ -6,7 +6,7 @@ Features:
 
 
 Bugfixes:
-
+ * Standard JSON: catch errors properly when invalid "sources" are passed
 
 ### 0.4.20 (2018-02-14)
 

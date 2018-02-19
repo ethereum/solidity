@@ -154,6 +154,42 @@ BOOST_AUTO_TEST_CASE(no_sources)
 	BOOST_CHECK(containsError(result, "JSONError", "No input sources specified."));
 }
 
+BOOST_AUTO_TEST_CASE(no_sources_empty_object)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "No input sources specified."));
+}
+
+BOOST_AUTO_TEST_CASE(no_sources_empty_array)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": []
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+}
+
+BOOST_AUTO_TEST_CASE(sources_is_array)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": ["aa", "bb"]
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+}
+
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* input = R"(
