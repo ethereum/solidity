@@ -5776,6 +5776,21 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_variable_via_offset)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 2;
+			function f() pure public {
+				assembly {
+					let r := x_offset
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly.");
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)
 {
 	char const* text = R"(
