@@ -94,7 +94,11 @@ of votes.
             // called incorrectly. But watch out, this
             // will currently also consume all provided gas
             // (this is planned to change in the future).
-            require((msg.sender == chairperson) && !voters[voter].voted && (voters[voter].weight == 0));
+            require(
+                (msg.sender == chairperson) &&
+                !voters[voter].voted &&
+                (voters[voter].weight == 0)
+            );
             voters[voter].weight = 1;
         }
 
@@ -126,15 +130,15 @@ of votes.
             // modifies `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
-            Voter storage delegate = voters[to];
-            if (delegate.voted) {
+            Voter storage delegate_ = voters[to];
+            if (delegate_.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
-                proposals[delegate.vote].voteCount += sender.weight;
+                proposals[delegate_.vote].voteCount += sender.weight;
             } else {
                 // If the delegate did not vote yet,
                 // add to her weight.
-                delegate.weight += sender.weight;
+                delegate_.weight += sender.weight;
             }
         }
 
@@ -155,13 +159,13 @@ of votes.
         /// @dev Computes the winning proposal taking all
         /// previous votes into account.
         function winningProposal() public view
-                returns (uint winningProposal)
+                returns (uint winningProposal_)
         {
             uint winningVoteCount = 0;
             for (uint p = 0; p < proposals.length; p++) {
                 if (proposals[p].voteCount > winningVoteCount) {
                     winningVoteCount = proposals[p].voteCount;
-                    winningProposal = p;
+                    winningProposal_ = p;
                 }
             }
         }
@@ -170,11 +174,12 @@ of votes.
         // of the winner contained in the proposals array and then
         // returns the name of the winner
         function winnerName() public view
-                returns (bytes32 winnerName)
+                returns (bytes32 winnerName_)
         {
-            winnerName = proposals[winningProposal()].name;
+            winnerName_ = proposals[winningProposal()].name;
         }
     }
+
 
 Possible Improvements
 =====================
