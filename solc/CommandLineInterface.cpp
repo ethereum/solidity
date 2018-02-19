@@ -777,7 +777,10 @@ bool CommandLineInterface::processInput()
 	}
 
 	m_compiler.reset(new CompilerStack(fileReader));
+
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
+	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 	try
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
@@ -796,11 +799,9 @@ bool CommandLineInterface::processInput()
 		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 
 		if (!successful)
@@ -808,7 +809,7 @@ bool CommandLineInterface::processInput()
 	}
 	catch (CompilerError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", scannerFromSourceName);
+		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -828,7 +829,7 @@ bool CommandLineInterface::processInput()
 		if (_error.type() == Error::Type::DocstringParsingError)
 			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
-			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), scannerFromSourceName);
+			formatter.printExceptionInformation(_error, _error.typeName());
 
 		return false;
 	}
@@ -1086,15 +1087,17 @@ bool CommandLineInterface::assemble(
 			return false;
 		}
 	}
+
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
+		auto scannerFromSourceName = [&](string const&) -> Scanner const& { return stack.scanner(); };
+		SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 		for (auto const& error: stack.errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				[&](string const&) -> Scanner const& { return stack.scanner(); }
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;
