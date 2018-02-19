@@ -17,6 +17,7 @@ Bugfixes:
  * Standalone Assembly: Do not ignore input after closing brace of top level block.
  * Standard JSON: Catch errors properly when invalid "sources" are passed.
  * Standard JSON: Ensure that library addresses supplied are of correct length and hex prefixed.
+ * Type Checker: Properly detect which array and struct types are unsupported by the old ABI encoder.
  * Type Checker: Properly warn when using ``_offset`` and ``_slot`` for constants in inline assembly.
  * Commandline interface: throw error if option is unknown
 
