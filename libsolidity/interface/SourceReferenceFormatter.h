@@ -45,10 +45,10 @@ public:
 
 	explicit SourceReferenceFormatter(
 		std::ostream& _stream,
-		ScannerFromSourceNameFun const& _scannerFromSourceName
+		ScannerFromSourceNameFun _scannerFromSourceName
 	):
 		m_stream(_stream),
-		m_scannerFromSourceName(_scannerFromSourceName)
+		m_scannerFromSourceName(std::move(_scannerFromSourceName))
 	{}
 
 	/// Prints source location if it is given.
@@ -72,7 +72,7 @@ private:
 	void printSourceName(SourceLocation const* _location);
 
 	std::ostream& m_stream;
-	ScannerFromSourceNameFun const& m_scannerFromSourceName;
+	ScannerFromSourceNameFun m_scannerFromSourceName;
 };
 
 }
