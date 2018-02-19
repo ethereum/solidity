@@ -1053,15 +1053,13 @@ but they can be used as base contracts::
 
 If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
 
-Note that a function without implementation is different from a :ref:`Function Type <function-types>` even though their syntax looks very similar.
+Note that a function without implementation is different from a :ref:`Function Type <function_types>` even though their syntax looks very similar.
 
-Example of function without implementation (a function declaration)
-::
+Example of function without implementation (a function declaration)::
 
     function foo(address) external returns (address);
 
-Example of a Function Type (a variable declaration, where the variable is of type ``function``)
-::
+Example of a Function Type (a variable declaration, where the variable is of type ``function``)::
 
     function(address) external returns (address) foo;
 
