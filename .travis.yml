@@ -92,6 +92,7 @@ matrix:
               - nvm use 8
               - docker pull trzeci/emscripten:sdk-tag-1.37.21-64bit
           env:
+              - EMCC_DEBUG=1
               - SOLC_EMSCRIPTEN=On
               - SOLC_INSTALL_DEPS_TRAVIS=Off
               - SOLC_RELEASE=Off
