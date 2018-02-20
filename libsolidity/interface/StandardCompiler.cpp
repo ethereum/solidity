@@ -554,12 +554,11 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 string StandardCompiler::compile(string const& _input)
 {
 	Json::Value input;
-	Json::Reader reader;
-
+	string errors;
 	try
 	{
-		if (!reader.parse(_input, input, false))
-			return jsonCompactPrint(formatFatalError("JSONError", reader.getFormattedErrorMessages()));
+		if (!jsonParseStrict(_input, input, &errors))
+			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
 	catch(...)
 	{

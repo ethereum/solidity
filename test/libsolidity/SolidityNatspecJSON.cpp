@@ -22,7 +22,7 @@
 
 #include "../TestHelper.h"
 #include <string>
-#include <json/json.h>
+#include <libdevcore/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libdevcore/Exceptions.h>
@@ -55,7 +55,7 @@ public:
 		else
 			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
 		Json::Value expectedDocumentation;
-		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
+		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
 			"Expected:\n" << expectedDocumentation.toStyledString() <<
@@ -73,7 +73,6 @@ public:
 
 private:
 	CompilerStack m_compilerStack;
-	Json::Reader m_reader;
 };
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
