@@ -88,6 +88,11 @@ public:
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true);
 
+	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	/// Expects source offset on the stack, which is removed.
+	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false);
+
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
 	/// Removes the values from the stack and leaves the updated memory pointer.

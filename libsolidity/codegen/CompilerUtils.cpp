@@ -159,6 +159,105 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 }
 
+void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory)
+{
+	// We do not check the calldata size, everything is zero-padded
+
+	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+	{
+		// Use the new JULIA-based decoding function
+		auto stackHeightBefore = m_context.stackHeight();
+		abiDecodeV2(_typeParameters, _fromMemory);
+		solAssert(m_context.stackHeight() - stackHeightBefore == sizeOnStack(_typeParameters) - 1, "");
+		return;
+	}
+
+	//@todo this does not yet support nested dynamic arrays
+
+	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
+	m_context << Instruction::DUP1;
+	for (TypePointer const& parameterType: _typeParameters)
+	{
+		// stack: v1 v2 ... v(k-1) base_offset current_offset
+		TypePointer type = parameterType->decodingType();
+		solUnimplementedAssert(type, "No decoding type found.");
+		if (type->category() == Type::Category::Array)
+		{
+			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
+			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			if (_fromMemory)
+			{
+				solUnimplementedAssert(
+					arrayType.baseType()->isValueType(),
+					"Nested memory arrays not yet implemented here."
+				);
+				// @todo If base type is an array or struct, it is still calldata-style encoded, so
+				// we would have to convert it like below.
+				solAssert(arrayType.location() == DataLocation::Memory, "");
+				if (arrayType.isDynamicallySized())
+				{
+					// compute data pointer
+					m_context << Instruction::DUP1 << Instruction::MLOAD;
+					m_context << Instruction::DUP3 << Instruction::ADD;
+					m_context << Instruction::SWAP2 << Instruction::SWAP1;
+					m_context << u256(0x20) << Instruction::ADD;
+				}
+				else
+				{
+					m_context << Instruction::SWAP1 << Instruction::DUP2;
+					m_context << u256(arrayType.calldataEncodedSize(true)) << Instruction::ADD;
+				}
+			}
+			else
+			{
+				// first load from calldata and potentially convert to memory if arrayType is memory
+				TypePointer calldataType = arrayType.copyForLocation(DataLocation::CallData, false);
+				if (calldataType->isDynamicallySized())
+				{
+					// put on stack: data_pointer length
+					loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
+					// stack: base_offset data_offset next_pointer
+					m_context << Instruction::SWAP1 << Instruction::DUP3 << Instruction::ADD;
+					// stack: base_offset next_pointer data_pointer
+					// retrieve length
+					loadFromMemoryDynamic(IntegerType(256), !_fromMemory, true);
+					// stack: base_offset next_pointer length data_pointer
+					m_context << Instruction::SWAP2;
+					// stack: base_offset data_pointer length next_pointer
+				}
+				else
+				{
+					// leave the pointer on the stack
+					m_context << Instruction::DUP1;
+					m_context << u256(calldataType->calldataEncodedSize()) << Instruction::ADD;
+				}
+				if (arrayType.location() == DataLocation::Memory)
+				{
+					// stack: base_offset calldata_ref [length] next_calldata
+					// copy to memory
+					// move calldata type up again
+					moveIntoStack(calldataType->sizeOnStack());
+					convertType(*calldataType, arrayType, false, false, true);
+					// fetch next pointer again
+					moveToStackTop(arrayType.sizeOnStack());
+				}
+				// move base_offset up
+				moveToStackTop(1 + arrayType.sizeOnStack());
+				m_context << Instruction::SWAP1;
+			}
+		}
+		else
+		{
+			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
+			loadFromMemoryDynamic(*type, !_fromMemory, true);
+			moveToStackTop(1 + type->sizeOnStack());
+			m_context << Instruction::SWAP1;
+		}
+		// stack: v1 v2 ... v(k-1) v(k) base_offset mem_offset
+	}
+	m_context << Instruction::POP << Instruction::POP;
+}
+
 void CompilerUtils::encodeToMemory(
 	TypePointers const& _givenTypes,
 	TypePointers const& _targetTypes,
