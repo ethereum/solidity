@@ -7,6 +7,7 @@ Features:
 
 Bugfixes:
  * JSON-AST: Add "documentation" property to function, event and modifier definition.
+ * Resolver: Properly determine shadowing for imports with aliases.
  * Standard JSON: catch errors properly when invalid "sources" are passed
  * Type Checker: Properly warn when using ``_offset`` and ``_slot`` for constants in inline assembly.
 
