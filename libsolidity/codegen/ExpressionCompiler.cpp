@@ -139,8 +139,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
-	solAssert(accessorType.returnParameterTypes().size() >= 1, "");
-	auto const& returnTypes = accessorType.returnParameterTypes();
+	auto returnTypes = accessorType.returnParameterTypes();
+	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		// remove offset
@@ -1618,15 +1618,22 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
 		m_context.evmVersion().hasStaticCall();
 
+	bool allowDynamicTypes = false; // @TODO
 	unsigned retSize = 0;
+	TypePointers returnTypes;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
+	else if (allowDynamicTypes)
+		returnTypes = _functionType.returnParameterTypes();
 	else
-		for (auto const& retType: _functionType.returnParameterTypes())
+	{
+		returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
+		for (auto const& retType: returnTypes)
 		{
 			solAssert(!retType->isDynamicallySized(), "Unable to return dynamic type from external call.");
 			retSize += retType->calldataEncodedSize();
 		}
+	}
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1824,11 +1831,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().fetchFreeMemoryPointer();
 		m_context << Instruction::SUB << Instruction::MLOAD;
 	}
-	else if (!_functionType.returnParameterTypes().empty())
+	else if (!returnTypes.empty())
 	{
 		utils().fetchFreeMemoryPointer();
 		bool memoryNeeded = false;
-		for (auto const& retType: _functionType.returnParameterTypes())
+		for (auto const& retType: returnTypes)
 		{
 			utils().loadFromMemoryDynamic(*retType, false, true, true);
 			if (dynamic_cast<ReferenceType const*>(retType.get()))

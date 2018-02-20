@@ -973,6 +973,9 @@ public:
 	TypePointers parameterTypes() const;
 	std::vector<std::string> parameterNames() const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
+	/// @returns the list of return parameter types. All dynamically-sized types (this excludes
+	/// storage pointers) are replaced by InaccessibleDynamicType instances.
+	TypePointers returnParameterTypesWithoutDynamicTypes() const;
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
 	/// @returns the "self" parameter type for a bound function
 	TypePointer const& selfType() const;
