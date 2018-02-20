@@ -76,13 +76,13 @@ public:
 		bool _keepUpdatedMemoryOffset = true
 	);
 
-	/// Special case of @a loadFromMemoryDynamic which assumes that everything is padded to words
-	/// and dynamic data is not encoded in place (i.e. a proper ABI encoding).
+	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data.
 	/// Stack pre: <memory_offset>
-	/// Stack post: <value0> <value1> ... <valueN-1> <updated_memory_offset>
+	/// Stack post: <value0> <value1> ... <valueN-1>
+	/// Expects source offset on the stack, which is removed.
 	void abiDecode(
-		TypePointers const& _types,
+		TypePointers const& _typeParameters,
 		bool _fromMemory = false
 	);
 
