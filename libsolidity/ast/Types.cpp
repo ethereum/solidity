@@ -2153,32 +2153,19 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	m_stateMutability(_function.stateMutability()),
 	m_declaration(&_function)
 {
-	TypePointers params;
-	vector<string> paramNames;
-	TypePointers retParams;
-	vector<string> retParamNames;
-
 	if (_isInternal && m_stateMutability == StateMutability::Payable)
 		m_stateMutability = StateMutability::NonPayable;
 
-	params.reserve(_function.parameters().size());
-	paramNames.reserve(_function.parameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
-		paramNames.push_back(var->name());
-		params.push_back(var->annotation().type);
+		m_parameterNames.push_back(var->name());
+		m_parameterTypes.push_back(var->annotation().type);
 	}
-	retParams.reserve(_function.returnParameters().size());
-	retParamNames.reserve(_function.returnParameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _function.returnParameters())
 	{
-		retParamNames.push_back(var->name());
-		retParams.push_back(var->annotation().type);
+		m_returnParameterNames.push_back(var->name());
+		m_returnParameterTypes.push_back(var->annotation().type);
 	}
-	swap(params, m_parameterTypes);
-	swap(paramNames, m_parameterNames);
-	swap(retParams, m_returnParameterTypes);
-	swap(retParamNames, m_returnParameterNames);
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
@@ -2186,16 +2173,14 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_stateMutability(StateMutability::View),
 	m_declaration(&_varDecl)
 {
-	TypePointers paramTypes;
-	vector<string> paramNames;
 	auto returnType = _varDecl.annotation().type;
 
 	while (true)
 	{
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
-			paramTypes.push_back(mappingType->keyType());
-			paramNames.push_back("");
+			m_parameterTypes.push_back(mappingType->keyType());
+			m_parameterNames.push_back("");
 			returnType = mappingType->valueType();
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
@@ -2204,15 +2189,13 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				// Return byte arrays as as whole.
 				break;
 			returnType = arrayType->baseType();
-			paramNames.push_back("");
-			paramTypes.push_back(make_shared<IntegerType>(256));
+			m_parameterNames.push_back("");
+			m_parameterTypes.push_back(make_shared<IntegerType>(256));
 		}
 		else
 			break;
 	}
 
-	TypePointers retParams;
-	vector<string> retParamNames;
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		for (auto const& member: structType->members(nullptr))
@@ -2223,24 +2206,19 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
 					if (!arrayType->isByteArray())
 						continue;
-				retParams.push_back(member.type);
-				retParamNames.push_back(member.name);
+				m_returnParameterTypes.push_back(member.type);
+				m_returnParameterNames.push_back(member.name);
 			}
 		}
 	}
 	else
 	{
-		retParams.push_back(ReferenceType::copyForLocationIfReference(
+		m_returnParameterTypes.push_back(ReferenceType::copyForLocationIfReference(
 			DataLocation::Memory,
 			returnType
 		));
-		retParamNames.push_back("");
+		m_returnParameterNames.push_back("");
 	}
-
-	swap(paramTypes, m_parameterTypes);
-	swap(paramNames, m_parameterNames);
-	swap(retParams, m_returnParameterTypes);
-	swap(retParamNames, m_returnParameterNames);
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
@@ -2248,17 +2226,11 @@ FunctionType::FunctionType(EventDefinition const& _event):
 	m_stateMutability(StateMutability::NonPayable),
 	m_declaration(&_event)
 {
-	TypePointers params;
-	vector<string> paramNames;
-	params.reserve(_event.parameters().size());
-	paramNames.reserve(_event.parameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _event.parameters())
 	{
-		paramNames.push_back(var->name());
-		params.push_back(var->annotation().type);
+		m_parameterNames.push_back(var->name());
+		m_parameterTypes.push_back(var->annotation().type);
 	}
-	swap(params, m_parameterTypes);
-	swap(paramNames, m_parameterNames);
 }
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
