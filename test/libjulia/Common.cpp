@@ -56,7 +56,7 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner, false);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
