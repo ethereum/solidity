@@ -2206,7 +2206,10 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
 					if (!arrayType->isByteArray())
 						continue;
-				m_returnParameterTypes.push_back(member.type);
+				m_returnParameterTypes.push_back(ReferenceType::copyForLocationIfReference(
+					DataLocation::Memory,
+					member.type
+				));
 				m_returnParameterNames.push_back(member.name);
 			}
 		}
