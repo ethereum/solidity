@@ -3372,12 +3372,10 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	m_compiler.setEVMVersion(EVMVersion{});
-	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
-	m_compiler.setEVMVersion(*EVMVersion::fromString("byzantium"));
-	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
-	m_compiler.setEVMVersion(*EVMVersion::fromString("homestead"));
-	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
+	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
+		CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
+	else
+		CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
@@ -6390,6 +6388,23 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		}
 	)";
 	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(read_returned_struct)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+		contract A {
+			struct T {
+				int x;
+				int y;
+			}
+			function g() public returns (T) {
+				return this.g();
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
 }
 
 BOOST_AUTO_TEST_CASE(return_recursive_structs)

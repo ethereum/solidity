@@ -786,6 +786,89 @@ BOOST_AUTO_TEST_CASE(complex_struct)
 }
 
 
+BOOST_AUTO_TEST_CASE(return_dynamic_types_cross_call_simple)
+{
+	if (m_evmVersion == EVMVersion::homestead())
+		return;
+
+	string sourceCode = R"(
+		contract C {
+			function dyn() public returns (bytes) {
+				return "1234567890123456789012345678901234567890";
+			}
+			function f() public returns (bytes) {
+				return this.dyn();
+			}
+		}
+	)";
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, 40, string("1234567890123456789012345678901234567890")));
+	)
+}
+
+BOOST_AUTO_TEST_CASE(return_dynamic_types_cross_call_advanced)
+{
+	if (m_evmVersion == EVMVersion::homestead())
+		return;
+
+	string sourceCode = R"(
+		contract C {
+			function dyn() public returns (bytes a, uint b, bytes20[] c, uint d) {
+				a = "1234567890123456789012345678901234567890";
+				b = uint(-1);
+				c = new bytes20[](4);
+				c[0] = bytes20(1234);
+				c[3] = bytes20(6789);
+				d = 0x1234;
+			}
+			function f() public returns (bytes, uint, bytes20[], uint) {
+				return this.dyn();
+			}
+		}
+	)";
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(
+			0x80, u256(-1), 0xe0, 0x1234,
+			40, string("1234567890123456789012345678901234567890"),
+			4, u256(1234) << (8 * (32 - 20)), 0, 0, u256(6789) << (8 * (32 - 20))
+		));
+	)
+}
+
+BOOST_AUTO_TEST_CASE(return_dynamic_types_cross_call_out_of_range)
+{
+	string sourceCode = R"(
+		contract C {
+			function dyn(uint x) public returns (bytes a) {
+				assembly {
+					mstore(0, 0x20)
+					mstore(0x20, 0x21)
+					return(0, x)
+				}
+			}
+			function f(uint x) public returns (bool) {
+				this.dyn(x);
+				return true;
+			}
+		}
+	)";
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		if (m_evmVersion == EVMVersion::homestead())
+		{
+			ABI_CHECK(callContractFunction("f(uint256)", 0x60), encodeArgs(true));
+			ABI_CHECK(callContractFunction("f(uint256)", 0x7f), encodeArgs(true));
+		}
+		else
+		{
+			ABI_CHECK(callContractFunction("f(uint256)", 0x60), encodeArgs());
+			ABI_CHECK(callContractFunction("f(uint256)", 0x61), encodeArgs(true));
+		}
+		ABI_CHECK(callContractFunction("f(uint256)", 0x80), encodeArgs(true));
+	)
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
