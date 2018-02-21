@@ -198,7 +198,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
-			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			solUnimplementedAssert(!arrayType.baseType()->isDynamicallyEncoded(), "Nested arrays not yet implemented.");
 			if (_fromMemory)
 			{
 				solUnimplementedAssert(
@@ -308,7 +308,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 		}
 		else
 		{
-			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
+			solAssert(!type->isDynamicallyEncoded(), "Unknown dynamically sized type: " + type->toString());
 			loadFromMemoryDynamic(*type, !_fromMemory, true);
 			// stack: v1 v2 ... v(k-1) input_end base_offset v(k) mem_offset
 			moveToStackTop(1, type->sizeOnStack());
