@@ -168,6 +168,11 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK(successParse("{ }"));
 }
 
+BOOST_AUTO_TEST_CASE(surplus_input)
+{
+	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected token EOS");
+}
+
 BOOST_AUTO_TEST_CASE(simple_instructions)
 {
 	BOOST_CHECK(successParse("{ dup1 dup1 mul dup1 sub pop }"));

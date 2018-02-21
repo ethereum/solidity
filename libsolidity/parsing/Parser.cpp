@@ -926,7 +926,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	}
 
 	assembly::Parser asmParser(m_errorReporter);
-	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
+	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner, true);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }

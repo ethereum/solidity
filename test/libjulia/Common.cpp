@@ -40,12 +40,12 @@ using namespace dev::solidity;
 
 void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
 {
+	SourceReferenceFormatter formatter(cout, [&](std::string const&) -> Scanner const& { return _scanner; });
+
 	for (auto const& error: _errors)
-		SourceReferenceFormatter::printExceptionInformation(
-			cout,
+		formatter.printExceptionInformation(
 			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](std::string const&) -> Scanner const& { return _scanner; }
+			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 		);
 }
 
@@ -56,7 +56,7 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner, false);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());

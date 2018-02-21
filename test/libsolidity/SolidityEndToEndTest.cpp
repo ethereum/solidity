@@ -3565,8 +3565,8 @@ BOOST_AUTO_TEST_CASE(library_call_protection)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Lib");
-	ABI_CHECK(callContractFunction("np(Lib.S storage)"), encodeArgs());
-	ABI_CHECK(callContractFunction("v(Lib.S storage)"), encodeArgs(u160(m_sender)));
+	ABI_CHECK(callContractFunction("np(Lib.S storage)", 0), encodeArgs());
+	ABI_CHECK(callContractFunction("v(Lib.S storage)", 0), encodeArgs(u160(m_sender)));
 	ABI_CHECK(callContractFunction("pu()"), encodeArgs(2));
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
 	ABI_CHECK(callContractFunction("s()"), encodeArgs(0));
@@ -7457,6 +7457,33 @@ BOOST_AUTO_TEST_CASE(addmod_mulmod)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(addmod_mulmod_zero)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() pure returns (uint) {
+				addmod(1, 2, 0);
+				return 2;
+			}
+			function g() pure returns (uint) {
+				mulmod(1, 2, 0);
+				return 2;
+			}
+			function h() pure returns (uint) {
+				mulmod(0, 1, 2);
+				mulmod(1, 0, 2);
+				addmod(0, 1, 2);
+				addmod(1, 0, 2);
+				return 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(divisiod_by_zero)

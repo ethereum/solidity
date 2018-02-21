@@ -804,7 +804,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(!!declaration, "");
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
-			if (ref->second.isSlot || ref->second.isOffset)
+			if (var->isConstant())
+			{
+				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
+			else if (ref->second.isSlot || ref->second.isOffset)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
@@ -816,11 +821,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "Storage variables cannot be assigned to.");
 					return size_t(-1);
 				}
-			}
-			else if (var->isConstant())
-			{
-				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
-				return size_t(-1);
 			}
 			else if (!var->isLocalVariable())
 			{
@@ -972,7 +972,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				string errorText{"Uninitialized storage pointer."};
 				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
-				m_errorReporter.warning(varDecl.location(), errorText);
+				solAssert(m_scope, "");
+				if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+					m_errorReporter.declarationError(varDecl.location(), errorText);
+				else
+					m_errorReporter.warning(varDecl.location(), errorText);
 			}
 		}
 		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))

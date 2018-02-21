@@ -3021,6 +3021,20 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 	CHECK_WARNING(sourceCode, "Uninitialized storage pointer");
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable_050)
+{
+	char const* sourceCode = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				mapping(uint => uint)[] storage x;
+				x;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Uninitialized storage pointer");
+}
+
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 {
 	char const* sourceCode = R"(
@@ -3318,6 +3332,24 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	)";
 
 	CHECK_WARNING(text, "Uninitialized storage pointer");
+}
+
+BOOST_AUTO_TEST_CASE(non_initialized_references_050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract c
+		{
+			struct s {
+				uint a;
+			}
+			function f() public {
+				s storage x;
+			}
+		}
+	)";
+
+	CHECK_ERROR(text, DeclarationError, "Uninitialized storage pointer");
 }
 
 BOOST_AUTO_TEST_CASE(keccak256_with_large_integer_constant)
@@ -5742,6 +5774,21 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_variable_via_offset)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 2;
+			function f() pure public {
+				assembly {
+					let r := x_offset
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly.");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)

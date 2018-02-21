@@ -89,7 +89,7 @@ Json::Value compile(string const& _input)
 	StandardCompiler compiler;
 	string output = compiler.compile(_input);
 	Json::Value ret;
-	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
+	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
 }
 
@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(assume_object_input)
 
 	/// Use the string interface of StandardCompiler to trigger these
 	result = compile("");
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
+	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column 1\n  A valid JSON document must be either an array or an object value.\n"));
 	result = compile("invalid");
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
+	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column 2\n  Extra non-whitespace after JSON value.\n"));
 	result = compile("\"invalid\"");
-	BOOST_CHECK(containsError(result, "JSONError", "Input is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  A valid JSON document must be either an array or an object value.\n"));
 	BOOST_CHECK(!containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
 	result = compile("{}");
 	BOOST_CHECK(!containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
@@ -153,6 +153,61 @@ BOOST_AUTO_TEST_CASE(no_sources)
 	Json::Value result = compile(input);
 	BOOST_CHECK(containsError(result, "JSONError", "No input sources specified."));
 }
+
+BOOST_AUTO_TEST_CASE(no_sources_empty_object)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "No input sources specified."));
+}
+
+BOOST_AUTO_TEST_CASE(no_sources_empty_array)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": []
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+}
+
+BOOST_AUTO_TEST_CASE(sources_is_array)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": ["aa", "bb"]
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+}
+
+BOOST_AUTO_TEST_CASE(unexpected_trailing_test)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"A": {
+				"content": "contract A { function f() {} }"
+			}
+		}
+	}
+	}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "* Line 10, Column 2\n  Extra non-whitespace after JSON value.\n"));
+}
+
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

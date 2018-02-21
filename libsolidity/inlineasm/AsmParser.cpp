@@ -34,13 +34,16 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
+shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
 	m_recursionDepth = 0;
 	try
 	{
 		m_scanner = _scanner;
-		return make_shared<Block>(parseBlock());
+		auto block = make_shared<Block>(parseBlock());
+		if (!_reuseScanner)
+			expectToken(Token::EOS);
+		return block;
 	}
 	catch (FatalError const&)
 	{

@@ -101,7 +101,7 @@ jobs:
       - run:
           name: Store commit hash and prerelease
           command: |
-            date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
             echo -n "$CIRCLE_SHA1" > commit_hash.txt
       - restore_cache:
           key: ccache-{{ arch }}-{{ .Branch }}
@@ -130,6 +130,28 @@ jobs:
           path: build/solc/solc
           destination: solc
 
+  docs:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install python-sphinx
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - run:
+          name: Build documentation
+          command: ./scripts/docs.sh
+      - store_artifacts:
+          path: docs/_build/html/
+          destination: docs-html
+
 workflows:
   version: 2
   build_all:
@@ -142,3 +164,4 @@ workflows:
           requires:
             - build_emscripten
       - build_x86
+      - docs

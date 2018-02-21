@@ -236,7 +236,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
 
 	Json::Value const& sources = _input["sources"];
-	if (!sources)
+
+	if (!sources.isObject() && !sources.isNull())
+		return formatFatalError("JSONError", "\"sources\" is not a JSON object.");
+
+	if (sources.empty())
 		return formatFatalError("JSONError", "No input sources specified.");
 
 	Json::Value errors = Json::arrayValue;
@@ -550,12 +554,11 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 string StandardCompiler::compile(string const& _input)
 {
 	Json::Value input;
-	Json::Reader reader;
-
+	string errors;
 	try
 	{
-		if (!reader.parse(_input, input, false))
-			return jsonCompactPrint(formatFatalError("JSONError", reader.getFormattedErrorMessages()));
+		if (!jsonParseStrict(_input, input, &errors))
+			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
 	catch(...)
 	{

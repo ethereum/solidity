@@ -26,7 +26,7 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/SwarmHash.h>
 
-#include <json/json.h>
+#include <libdevcore/JSON.h>
 
 namespace dev
 {
@@ -48,7 +48,7 @@ public:
 
 		Json::Value generatedInterface = m_compilerStack.contractABI(m_compilerStack.lastContractName());
 		Json::Value expectedInterface;
-		BOOST_REQUIRE(m_reader.parse(_expectedInterfaceString, expectedInterface));
+		BOOST_REQUIRE(jsonParseStrict(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
 			"Expected:\n" << expectedInterface.toStyledString() <<
@@ -58,7 +58,6 @@ public:
 
 protected:
 	CompilerStack m_compilerStack;
-	Json::Reader m_reader;
 };
 
 BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, JSONInterfaceChecker)

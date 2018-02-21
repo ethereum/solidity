@@ -1,3 +1,17 @@
+### 0.4.21 (unreleased)
+
+Features:
+ * Code Generator: Assert that ``k != 0`` for ``molmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
+ * Standard JSON: Reject badly formatted invalid JSON inputs.
+ * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
+
+Bugfixes:
+ * JSON-AST: Add "documentation" property to function, event and modifier definition.
+ * Resolver: Properly determine shadowing for imports with aliases.
+ * Standalone Assembly: Do not ignore input after closing brace of top level block.
+ * Standard JSON: catch errors properly when invalid "sources" are passed
+ * Type Checker: Properly warn when using ``_offset`` and ``_slot`` for constants in inline assembly.
+
 ### 0.4.20 (2018-02-14)
 
 Features:

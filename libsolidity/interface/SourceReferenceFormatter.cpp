@@ -31,15 +31,11 @@ namespace dev
 namespace solidity
 {
 
-void SourceReferenceFormatter::printSourceLocation(
-	ostream& _stream,
-	SourceLocation const* _location,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
-)
+void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _location)
 {
 	if (!_location || !_location->sourceName)
 		return; // Nothing we can print here
-	auto const& scanner = _scannerFromSourceName(*_location->sourceName);
+	auto const& scanner = m_scannerFromSourceName(*_location->sourceName);
 	int startLine;
 	int startColumn;
 	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
@@ -64,21 +60,22 @@ void SourceReferenceFormatter::printSourceLocation(
 			endColumn = startColumn + locationLength;
 		}
 
-		_stream << line << endl;
+		m_stream << line << endl;
+
 		for_each(
 			line.cbegin(),
 			line.cbegin() + startColumn,
-			[&_stream](char const& ch) { _stream << (ch == '\t' ? '\t' : ' '); }
+			[this](char const& ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
 		);
-		_stream << "^";
+		m_stream << "^";
 		if (endColumn > startColumn + 2)
-			_stream << string(endColumn - startColumn - 2, '-');
+			m_stream << string(endColumn - startColumn - 2, '-');
 		if (endColumn > startColumn + 1)
-			_stream << "^";
-		_stream << endl;
+			m_stream << "^";
+		m_stream << endl;
 	}
 	else
-		_stream <<
+		m_stream <<
 			scanner.lineAtPosition(_location->start) <<
 			endl <<
 			string(startColumn, ' ') <<
@@ -86,50 +83,44 @@ void SourceReferenceFormatter::printSourceLocation(
 			"Spanning multiple lines.\n";
 }
 
-void SourceReferenceFormatter::printSourceName(
-	ostream& _stream,
-	SourceLocation const* _location,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
-)
+void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
 {
 	if (!_location || !_location->sourceName)
 		return; // Nothing we can print here
-	auto const& scanner = _scannerFromSourceName(*_location->sourceName);
+	auto const& scanner = m_scannerFromSourceName(*_location->sourceName);
 	int startLine;
 	int startColumn;
 	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
-	_stream << *_location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+	m_stream << *_location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
 }
 
 void SourceReferenceFormatter::printExceptionInformation(
-	ostream& _stream,
 	Exception const& _exception,
-	string const& _name,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
+	string const& _name
 )
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
 
-	printSourceName(_stream, location, _scannerFromSourceName);
+	printSourceName(location);
 
-	_stream << _name;
+	m_stream << _name;
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
-		_stream << ": " << *description << endl;
+		m_stream << ": " << *description << endl;
 	else
-		_stream << endl;
+		m_stream << endl;
 
-	printSourceLocation(_stream, location, _scannerFromSourceName);
+	printSourceLocation(location);
 
 	if (secondarylocation && !secondarylocation->infos.empty())
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			printSourceName(_stream, &info.second, _scannerFromSourceName);
-			_stream << info.first << endl;
-			printSourceLocation(_stream, &info.second, _scannerFromSourceName);
+			printSourceName(&info.second);
+			m_stream << info.first << endl;
+			printSourceLocation(&info.second);
 		}
-		_stream << endl;
+		m_stream << endl;
 	}
 }
 

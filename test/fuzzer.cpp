@@ -22,7 +22,7 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libsolc/libsolc.h>
 
-#include <json/json.h>
+#include <libdevcore/JSON.h>
 
 #include <boost/program_options.hpp>
 
@@ -101,7 +101,7 @@ void testStandardCompiler()
 	string input = readInput();
 	string outputString(compileStandard(input.c_str(), NULL));
 	Json::Value output;
-	if (!Json::Reader().parse(outputString, output))
+	if (!jsonParseStrict(outputString, output))
 	{
 		cout << "Compiler produced invalid JSON output." << endl;
 		abort();
@@ -129,7 +129,7 @@ void testCompiler(bool optimize)
 
 	string outputString(compileJSON(input.c_str(), optimize));
 	Json::Value outputJson;
-	if (!Json::Reader().parse(outputString, outputJson))
+	if (!jsonParseStrict(outputString, outputJson))
 	{
 		cout << "Compiler produced invalid JSON output." << endl;
 		abort();
