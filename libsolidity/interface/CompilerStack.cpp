@@ -684,7 +684,7 @@ void CompilerStack::compileContract(
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
 	bytes cborEncodedHash =
@@ -743,7 +743,7 @@ void CompilerStack::compileContract(
 	{
 		if (!_contract.isLibrary())
 		{
-			Compiler cloneCompiler(m_optimize, m_optimizeRuns);
+			Compiler cloneCompiler(m_evmVersion, m_optimize, m_optimizeRuns);
 			cloneCompiler.compileClone(_contract, _compiledContracts);
 			compiledContract.cloneObject = cloneCompiler.assembledObject();
 		}
