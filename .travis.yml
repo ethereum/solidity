@@ -39,7 +39,6 @@ env:
     global:
         - ENCRYPTION_LABEL="6d4541b72666"
         - SOLC_BUILD_TYPE=RelWithDebInfo
-        - SOLC_DOCS=Off
         - SOLC_EMSCRIPTEN=Off
         - SOLC_INSTALL_DEPS_TRAVIS=On
         - SOLC_RELEASE=On
@@ -64,18 +63,6 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
               - SOLC_STOREBYTECODE=On
-
-        # Documentation target, which generates documentation using Phoenix / ReadTheDocs.
-        - os: linux
-          dist: trusty
-          sudo: required
-          compiler: gcc
-          before_install:
-            - sudo apt-get -y install python-sphinx 
-          env:
-              - SOLC_DOCS=On
-              - SOLC_RELEASE=Off
-              - SOLC_TESTS=Off
 
         # Docker target, which generates a statically linked alpine image
         - os: linux
@@ -184,7 +171,6 @@ before_script:
 
 script:
     - test $SOLC_EMSCRIPTEN != On || (scripts/test_emscripten.sh)
-    - test $SOLC_DOCS != On || (scripts/docs.sh)
     - test $SOLC_TESTS != On || (cd $TRAVIS_BUILD_DIR && scripts/tests.sh)
     - test $SOLC_STOREBYTECODE != On || (cd $TRAVIS_BUILD_DIR && scripts/bytecodecompare/storebytecode.sh)
 
