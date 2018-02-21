@@ -74,6 +74,12 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 	swap(m_remappings, remappings);
 }
 
+void CompilerStack::setEVMVersion(EVMVersion _version)
+{
+	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	m_evmVersion = _version;
+}
+
 void CompilerStack::reset(bool _keepSources)
 {
 	if (_keepSources)
@@ -88,6 +94,7 @@ void CompilerStack::reset(bool _keepSources)
 		m_sources.clear();
 	}
 	m_libraries.clear();
+	m_evmVersion = EVMVersion();
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();

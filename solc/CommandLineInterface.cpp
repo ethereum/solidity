@@ -71,7 +71,6 @@ namespace solidity
 
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strAbi = "abi";
-static string const g_strAddStandard = "add-std";
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
@@ -87,6 +86,7 @@ static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
+static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
@@ -118,7 +118,6 @@ static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 
 static string const g_argAbi = g_strAbi;
-static string const g_argAddStandard = g_strAddStandard;
 static string const g_argPrettyJson = g_strPrettyJson;
 static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
@@ -537,13 +536,17 @@ Allowed options)",
 		(g_argHelp.c_str(), "Show help message and exit.")
 		(g_argVersion.c_str(), "Show version and exit.")
 		(g_strLicense.c_str(), "Show licensing information and exit.")
+		(
+			g_strEVMVersion.c_str(),
+			po::value<string>()->value_name("version"),
+			"Select desired EVM version. Either homestead or byzantium (default)."
+		)
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
 			"Estimated number of contract runs for optimizer tuning."
 		)
-		(g_argAddStandard.c_str(), "Add standard contracts.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -779,6 +782,19 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
+	EVMVersion evmVersion;
+	if (m_args.count(g_strEVMVersion))
+	{
+		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
+		boost::optional<EVMVersion> versionOption = EVMVersion::fromString(versionOptionStr);
+		if (!versionOption)
+		{
+			cerr << "Invalid option for --evm-version: " << versionOptionStr << endl;
+			return false;
+		}
+		evmVersion = *versionOption;
+	}
+
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
 
@@ -792,6 +808,8 @@ bool CommandLineInterface::processInput()
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		if (m_args.count(g_strEVMVersion))
+			m_compiler->setEVMVersion(evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
