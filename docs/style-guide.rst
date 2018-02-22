@@ -494,7 +494,7 @@ function body to be kept on the same line as the function declaration.
 The closing brace should be at the same indentation level as the function
 declaration.
 
-The opening brace should be preceeded by a single space.
+The opening brace should be preceded by a single space.
 
 Yes::
 
@@ -524,7 +524,21 @@ No::
     function increment(uint x) public pure returns (uint) {
         return x + 1;}
 
-The visibility modifiers for a function should come before any custom
+You should explicitly label the visibility of all functions, including constructors.  
+
+Yes::
+
+    function explicitlyPublic(uint val) public {
+        doSomething();
+    }
+
+No::
+
+    function implicitlyPublic(uint val) {
+        doSomething(); 
+    }
+
+The visibility modifier for a function should come before any custom
 modifiers.
 
 Yes::
