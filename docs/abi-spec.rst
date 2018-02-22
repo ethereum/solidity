@@ -155,15 +155,15 @@ on the type of ``X`` being
 
   ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is utf-8 encoded and this value is interpreted as of ``bytes`` type and encoded further. Note that the length used in this subsequent encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
 
-- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order (left) side with zero-bytes such that the length is a multiple of 32 bytes.
+- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order (left) side with zero-bytes such that the length is 32 bytes.
 - ``address``: as in the ``uint160`` case
-- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is a multiple of 32 bytes.
+- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is 32 bytes.
 - ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
 - ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
 - ``fixed``: as in the ``fixed128x19`` case
 - ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
 - ``ufixed``: as in the ``ufixed128x19`` case
-- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with zero-bytes to a length of 32.
+- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with trailing zero-bytes to a length of 32 bytes.
 
 Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
 
