@@ -163,7 +163,7 @@ on the type of ``X`` being
 - ``fixed``: as in the ``fixed128x19`` case
 - ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
 - ``ufixed``: as in the ``ufixed128x19`` case
-- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with zero-bytes on the _right_ to a length of 32.
+- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with trailing zero-bytes to a length of 32 bytes.
 
 Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
 
