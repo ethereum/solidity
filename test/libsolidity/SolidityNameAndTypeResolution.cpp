@@ -3350,6 +3350,11 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
+	m_compiler.setEVMVersion(EVMVersion{});
+	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
+	m_compiler.setEVMVersion(*EVMVersion::fromString("byzantium"));
+	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
+	m_compiler.setEVMVersion(*EVMVersion::fromString("homestead"));
 	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
 }
 

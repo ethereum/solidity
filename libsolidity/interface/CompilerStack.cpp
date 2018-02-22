@@ -205,7 +205,7 @@ bool CompilerStack::analyze()
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
-	TypeChecker typeChecker(m_errorReporter);
+	TypeChecker typeChecker(m_evmVersion, m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
