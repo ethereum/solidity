@@ -90,6 +90,11 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
+	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	{
+		solAssert(m_flavour == AsmFlavour::IULIA, "");
+		solAssert(_literal.value == "true" || _literal.value == "false", "");
+	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }
