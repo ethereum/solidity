@@ -4,6 +4,7 @@ Features:
  * Code Generator: Assert that ``k != 0`` for ``molmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
  * Standard JSON: Reject badly formatted invalid JSON inputs.
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
+ * Syntax Analyser: Do not warn about experimental features if they do not concern code generation.
 
 Bugfixes:
  * Assembly: Raise error on oversized number literals in assembly.

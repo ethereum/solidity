@@ -93,8 +93,10 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 				m_errorReporter.syntaxError(_pragma.location(), "Duplicate experimental feature name.");
 			else
 			{
-				m_sourceUnit->annotation().experimentalFeatures.insert(ExperimentalFeatureNames.at(literal));
-				m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
+				auto feature = ExperimentalFeatureNames.at(literal);
+				m_sourceUnit->annotation().experimentalFeatures.insert(feature);
+				if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+					m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
 			}
 		}
 	}
