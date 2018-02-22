@@ -7785,6 +7785,62 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	CHECK_ERROR(text, TypeError, "Member \"delegatecall\" not found or not visible after argument-dependent lookup in contract");
 }
 
+BOOST_AUTO_TEST_CASE(emit_events)
+{
+	char const* text = R"(
+		contract C {
+			event e();
+			function f() public {
+				emit e();
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			event e(uint a, string b);
+			function f() public {
+				emit e(2, "abc");
+				emit e({b: "abc", a: 8});
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract A { event e(uint a, string b); }
+		contract C is A {
+			function f() public {
+				emit A.e(2, "abc");
+				emit A.e({b: "abc", a: 8});
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(old_style_events_050)
+{
+	char const* text = R"(
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_WARNING(text, "without \"emit\" prefix");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "have to be prefixed");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -1708,6 +1708,19 @@ BOOST_AUTO_TEST_CASE(newInvalidTypeName)
 	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
+BOOST_AUTO_TEST_CASE(emitWithoutEvent)
+{
+	char const* text = R"(
+		contract C {
+			event A();
+			function f() {
+				emit A;
+			}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

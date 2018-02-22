@@ -109,6 +109,7 @@ private:
 	virtual bool visit(Break const& _breakStatement) override;
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(Throw const& _throw) override;
+	virtual bool visit(EmitStatement const& _emit) override;
 	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;

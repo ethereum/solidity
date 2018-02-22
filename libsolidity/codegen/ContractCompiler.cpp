@@ -903,6 +903,15 @@ bool ContractCompiler::visit(Throw const& _throw)
 	return false;
 }
 
+bool ContractCompiler::visit(EmitStatement const& _emit)
+{
+	CompilerContext::LocationSetter locationSetter(m_context, _emit);
+	StackHeightChecker checker(m_context);
+	compileExpression(_emit.eventCall());
+	checker.check();
+	return false;
+}
+
 bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
 	StackHeightChecker checker(m_context);

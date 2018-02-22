@@ -94,6 +94,8 @@ private:
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
 	virtual void endVisit(Return const& _return) override;
+	virtual bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
+	virtual void endVisit(EmitStatement const& _emit) override;
 	virtual bool visit(VariableDeclarationStatement const& _variable) override;
 	virtual void endVisit(ExpressionStatement const& _statement) override;
 	virtual bool visit(Conditional const& _conditional) override;
@@ -129,6 +131,9 @@ private:
 	void requireLValue(Expression const& _expression);
 
 	ContractDefinition const* m_scope = nullptr;
+
+	/// Flag indicating whether we are currently inside an EmitStatement.
+	bool m_insideEmitStatement = false;
 
 	ErrorReporter& m_errorReporter;
 };

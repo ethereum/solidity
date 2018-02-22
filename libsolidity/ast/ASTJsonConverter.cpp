@@ -540,7 +540,15 @@ bool ASTJsonConverter::visit(Return const& _node)
 
 bool ASTJsonConverter::visit(Throw const& _node)
 {
-	setJsonNode(_node, "Throw", {});;
+	setJsonNode(_node, "Throw", {});
+	return false;
+}
+
+bool ASTJsonConverter::visit(EmitStatement const& _node)
+{
+	setJsonNode(_node, "EmitStatement", {
+		make_pair("eventCall", toJson(_node.eventCall()))
+	});
 	return false;
 }
 
