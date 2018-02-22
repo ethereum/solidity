@@ -724,6 +724,39 @@ BOOST_AUTO_TEST_CASE(library_linking)
 	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"]["L2"][0].isObject());
 }
 
+BOOST_AUTO_TEST_CASE(evm_version)
+{
+	auto inputForVersion = [](string const& _version)
+	{
+		return R"(
+			{
+				"language": "Solidity",
+				"sources": { "fileA": { "content": "contract A { }" } },
+				"settings": {
+					)" + _version + R"(
+					"outputSelection": {
+						"fileA": {
+							"A": [ "metadata" ]
+						}
+					}
+				}
+			}
+		)";
+	};
+	Json::Value result;
+	result = compile(inputForVersion("\"evmVersion\": \"homestead\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"homestead\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"byzantium\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
+	// test default
+	result = compile(inputForVersion(""));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
+	// test invalid
+	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
+	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
