@@ -83,7 +83,7 @@ jobs:
           name: External tests
           command: |
             . /usr/local/nvm/nvm.sh
-            test/externalTests.sh /tmp/workspace/soljson.js
+            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
   build_x86:
     docker:
       - image: buildpack-deps:artful
