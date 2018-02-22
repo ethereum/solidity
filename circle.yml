@@ -5,10 +5,6 @@ jobs:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
       - checkout
-      - run:
-          name: Init submodules
-          command: |
-            git submodule update --init
       - restore_cache:
           name: Restore Boost build
           key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
@@ -94,10 +90,6 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install ccache cmake libboost-all-dev libz3-dev
-      - run:
-          name: Init submodules
-          command: |
-            git submodule update --init
       - run:
           name: Store commit hash and prerelease
           command: |

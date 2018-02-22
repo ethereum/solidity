@@ -19,8 +19,12 @@
 * @date 2014
 */
 
+#include <test/TestHelper.h>
+
+#include <libsolidity/interface/EVMVersion.h>
+
 #include <boost/test/framework.hpp>
-#include "TestHelper.h"
+
 using namespace std;
 using namespace dev::test;
 
@@ -41,6 +45,11 @@ Options::Options()
 		}
 		else if (string(suite.argv[i]) == "--optimize")
 			optimize = true;
+		else if (string(suite.argv[i]) == "--evm-version")
+		{
+			evmVersion = i + 1 < suite.argc ? suite.argv[i + 1] : "INVALID";
+			++i;
+		}
 		else if (string(suite.argv[i]) == "--show-messages")
 			showMessages = true;
 		else if (string(suite.argv[i]) == "--no-ipc")

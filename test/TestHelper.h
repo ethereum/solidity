@@ -19,10 +19,13 @@
 
 #pragma once
 
-#include <functional>
+#include <libsolidity/interface/EVMVersion.h>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
+
+#include <functional>
 
 namespace dev
 {
@@ -33,6 +36,7 @@ struct Options: boost::noncopyable
 {
 	std::string ipcPath;
 	bool showMessages = false;
+	std::string evmVersion;
 	bool optimize = false;
 	bool disableIPC = false;
 	bool disableSMT = false;

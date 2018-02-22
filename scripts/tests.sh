@@ -37,11 +37,9 @@ then
         echo "Usage: $0 [--junit_report <report_directory>]"
         exit 1
     fi
-    testargs_no_opt="--logger=JUNIT,test_suite,$2/no_opt.xml"
-    testargs_opt="--logger=JUNIT,test_suite,$2/opt.xml"
+    log_directory="$2"
 else
-    testargs_no_opt=''
-    testargs_opt=''
+    log_directory=""
 fi
 
 echo "Running commandline tests..."
@@ -98,10 +96,31 @@ then
     progress=""
 fi
 
-echo "--> Running tests without optimizer..."
-"$REPO_ROOT"/build/test/soltest $testargs_no_opt $progress -- --ipcpath /tmp/test/geth.ipc
-echo "--> Running tests WITH optimizer..."
-"$REPO_ROOT"/build/test/soltest $testargs_opt $progress -- --optimize --ipcpath /tmp/test/geth.ipc
+ERROR_CODE=0
+# And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
+# and homestead / byzantium VM, # pointing to that IPC endpoint.
+for optimize in "" "--optimize"
+do
+  for vm in homestead byzantium
+  do
+    echo "--> Running tests using "$optimize" --evm-version "$vm"..."
+    log=""
+    if [ -n "$log_directory" ]
+    then
+      if [ -n "$optimize" ]
+      then
+        log=--logger=JUNIT,test_suite,$log_directory/opt_$vm.xml $testargs
+      else
+        log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
+      fi
+    fi
+    set +e
+    "$REPO_ROOT"/build/test/soltest $progress $log -- "$optimize" --evm-version "$vm" --ipcpath /tmp/test/geth.ipc
+    THIS_ERR=$?
+    set -e
+    if [ $? -ne 0 ]; then ERROR_CODE=$?; fi
+  done
+done
 
 wait $CMDLINE_PID
 
