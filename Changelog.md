@@ -6,6 +6,7 @@ Features:
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
 
 Bugfixes:
+ * Assembly: Raise error on oversized number literals in assembly.
  * JSON-AST: Add "documentation" property to function, event and modifier definition.
  * Resolver: Properly determine shadowing for imports with aliases.
  * Standalone Assembly: Do not ignore input after closing brace of top level block.

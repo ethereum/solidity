@@ -82,6 +82,19 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
+	else if (_literal.kind == assembly::LiteralKind::Number && bigint(_literal.value) > u256(-1))
+	{
+		m_errorReporter.typeError(
+			_literal.location,
+			"Number literal too large (> 256 bits)"
+		);
+		return false;
+	}
+	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	{
+		solAssert(m_flavour == AsmFlavour::IULIA, "");
+		solAssert(_literal.value == "true" || _literal.value == "false", "");
+	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }

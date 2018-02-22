@@ -228,6 +228,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_ERROR("{ let x:u256 := .1:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 1e5:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 67.235:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff:u256 }", TypeError, "Number literal too large (> 256 bits)");
 }
 
 BOOST_AUTO_TEST_CASE(builtin_types)
