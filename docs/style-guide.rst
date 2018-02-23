@@ -112,7 +112,9 @@ No::
         }
     }
 
-Maximum Line Length
+.. _maximum_line_length:
+
+Maximum Line Length 
 ===================
 
 Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ of 79 (or 99) 
@@ -648,6 +650,50 @@ No::
         priced
         returns (address) {
         doSomething();
+    }
+
+Multiline output parameters and return statements should follow the same style recommended for wrapping long lines found in the :ref:`Maximum Line Length <maximum_line_length>` section.
+
+Yes::
+
+    function thisFunctionNameIsReallyLong(
+        address a,
+        address b,
+        address c
+    ) 
+        public 
+        returns (
+            address someAddressName, 
+            uint256 LongArgument, 
+            uint256 Argument
+        )
+    {    
+        doSomething()
+        
+        return (
+            veryLongReturnArg1, 
+            veryLongReturnArg2, 
+            veryLongReturnArg3
+        );
+    }
+
+No::
+
+    function thisFunctionNameIsReallyLong(
+        address a,
+        address b,
+        address c
+    ) 
+        public 
+        returns (address someAddressName, 
+                 uint256 LongArgument, 
+                 uint256 Argument)
+    {    
+        doSomething()
+        
+        return (veryLongReturnArg1, 
+                veryLongReturnArg1, 
+                veryLongReturnArg1);
     }
 
 For constructor functions on inherited contracts whose bases require arguments,
