@@ -20,6 +20,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>

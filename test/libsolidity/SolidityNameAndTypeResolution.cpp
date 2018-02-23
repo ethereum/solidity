@@ -22,6 +22,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/SHA3.h>

@@ -20,6 +20,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
@@ -46,6 +48,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 {
 	m_compiler.reset();
 	m_compiler.addSource("", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source);
+	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
 	if (!m_compiler.parse())
 	{
 		BOOST_ERROR("Parsing contract failed in analysis test suite:" + formatErrors());

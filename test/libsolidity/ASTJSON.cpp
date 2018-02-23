@@ -20,11 +20,15 @@
  * Tests for the json ast output.
  */
 
-#include <string>
-#include <boost/test/unit_test.hpp>
+#include <test/TestHelper.h>
+
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <string>
 
 using namespace std;
 
@@ -41,6 +45,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C {}");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -52,6 +57,7 @@ BOOST_AUTO_TEST_CASE(source_location)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { function f() { var x = 2; x++; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -66,6 +72,7 @@ BOOST_AUTO_TEST_CASE(inheritance_specifier)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C1 {} contract C2 is C1 {}");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -81,6 +88,7 @@ BOOST_AUTO_TEST_CASE(using_for_directive)
 {
 	CompilerStack c;
 	c.addSource("a", "library L {} contract C { using L for uint; }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -98,6 +106,7 @@ BOOST_AUTO_TEST_CASE(enum_value)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { enum E { A, B } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -115,6 +124,7 @@ BOOST_AUTO_TEST_CASE(modifier_definition)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -129,6 +139,7 @@ BOOST_AUTO_TEST_CASE(modifier_invocation)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -145,6 +156,7 @@ BOOST_AUTO_TEST_CASE(event_definition)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { event E(); }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -159,6 +171,7 @@ BOOST_AUTO_TEST_CASE(array_type_name)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { uint[] i; }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -172,6 +185,7 @@ BOOST_AUTO_TEST_CASE(placeholder_statement)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M { _; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -185,6 +199,7 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { function f() { var x = hex\"ff\"; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -204,6 +219,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 		"contract C { function f(function() external payable returns (uint) x) "
 		"returns (function() external constant returns (uint)) {} }"
 	);
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -244,6 +260,7 @@ BOOST_AUTO_TEST_CASE(documentation)
 		"  /** Some comment on fn.*/ function fn() public {}"
 		"}"
 	);
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 0;

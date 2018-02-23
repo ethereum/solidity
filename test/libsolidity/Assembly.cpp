@@ -20,6 +20,8 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
+#include <test/TestHelper.h>
+
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
 
@@ -72,7 +74,7 @@ eth::AssemblyItems compileContract(string const& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker(EVMVersion{}, errorReporter);
+			TypeChecker checker(dev::test::Options::get().evmVersion(), errorReporter);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
 			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
@@ -80,7 +82,7 @@ eth::AssemblyItems compileContract(string const& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler compiler;
+			Compiler compiler(dev::test::Options::get().evmVersion());
 			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();
