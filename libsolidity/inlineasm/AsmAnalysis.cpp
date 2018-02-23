@@ -533,19 +533,33 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 
 void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location)
 {
-	static set<solidity::Instruction> futureInstructions{
-		solidity::Instruction::CREATE2,
-		solidity::Instruction::RETURNDATACOPY,
-		solidity::Instruction::RETURNDATASIZE,
-		solidity::Instruction::STATICCALL
-	};
-	if (futureInstructions.count(_instr))
+	// We assume that returndatacopy, returndatasize and staticcall are either all available
+	// or all not available.
+	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
+
+	if (_instr == solidity::Instruction::CREATE2)
 		m_errorReporter.warning(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available after " +
-			"the Metropolis hard fork. Before that it acts as an invalid instruction."
+			+ "\" instruction is not supported by the VM version \"" +
+			"" + m_evmVersion.name() +
+			"\" you are currently compiling for. " +
+			"It will be interpreted as an invalid instruction on this VM."
+		);
+	else if ((
+		_instr == solidity::Instruction::RETURNDATACOPY ||
+		_instr == solidity::Instruction::RETURNDATASIZE ||
+		_instr == solidity::Instruction::STATICCALL
+	) && !m_evmVersion.supportsReturndata())
+		m_errorReporter.warning(
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is only available for Byzantium-compatible VMs. " +
+			"You are currently compiling for \"" +
+			m_evmVersion.name() +
+			"\", where it will be interpreted as an invalid instruction."
 		);
 
 	static set<solidity::Instruction> experimentalInstructions{

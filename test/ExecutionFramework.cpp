@@ -51,17 +51,11 @@ string getIPCSocketPath()
 
 ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
+	m_evmVersion(dev::test::Options::get().evmVersion()),
 	m_optimize(dev::test::Options::get().optimize),
 	m_showMessages(dev::test::Options::get().showMessages),
 	m_sender(m_rpc.account(0))
 {
-	if (!dev::test::Options::get().evmVersion.empty())
-	{
-		auto version = solidity::EVMVersion::fromString(dev::test::Options::get().evmVersion);
-		BOOST_REQUIRE_MESSAGE(version, "Invalid EVM version: " + dev::test::Options::get().evmVersion);
-		m_evmVersion = *version;
-	}
-
 	m_rpc.test_rewindToBlock(0);
 }
 

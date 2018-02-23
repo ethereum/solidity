@@ -36,14 +36,17 @@ struct Options: boost::noncopyable
 {
 	std::string ipcPath;
 	bool showMessages = false;
-	std::string evmVersion;
 	bool optimize = false;
 	bool disableIPC = false;
 	bool disableSMT = false;
 
+	solidity::EVMVersion evmVersion() const;
+
 	static Options const& get();
 
 private:
+	std::string evmVersionString;
+
 	Options();
 };
 

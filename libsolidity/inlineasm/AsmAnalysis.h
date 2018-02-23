@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
@@ -54,9 +55,10 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorReporter& _errorReporter,
+		EVMVersion _evmVersion,
 		AsmFlavour _flavour = AsmFlavour::Loose,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_flavour(_flavour) {}
+	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_evmVersion(_evmVersion), m_flavour(_flavour) {}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -97,6 +99,7 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
+	EVMVersion m_evmVersion;
 	AsmFlavour m_flavour = AsmFlavour::Loose;
 };
 

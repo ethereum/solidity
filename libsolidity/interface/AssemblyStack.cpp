@@ -91,7 +91,7 @@ bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scann
 bool AssemblyStack::analyzeParsed()
 {
 	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, languageToAsmFlavour(m_language));
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, languageToAsmFlavour(m_language));
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }

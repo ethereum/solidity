@@ -54,7 +54,7 @@ private:
 	bool link();
 	void writeLinkedFiles();
 
-	bool assemble(AssemblyStack::Language _language, AssemblyStack::Machine _targetMachine);
+	bool assemble(EVMVersion _evmVersion, AssemblyStack::Language _language, AssemblyStack::Machine _targetMachine);
 
 	void outputCompilationResults();
 
