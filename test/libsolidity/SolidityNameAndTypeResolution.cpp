@@ -3352,11 +3352,6 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	m_compiler.setEVMVersion(EVMVersion{});
-	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
-	m_compiler.setEVMVersion(*EVMVersion::fromString("byzantium"));
-	CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
-	m_compiler.setEVMVersion(*EVMVersion::fromString("homestead"));
 	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
 }
 
@@ -7088,11 +7083,13 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
 	)";
-	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
-		{Error::Type::DeclarationError, "Unbalanced stack"},
-		{Error::Type::Warning, "only available after the Metropolis"}
-	}));
+		{Error::Type::DeclarationError, "Unbalanced stack"}
+	});
+	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
+		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible")));
+	CHECK_ALLOW_MULTI(text, expectations);
 }
 
 BOOST_AUTO_TEST_CASE(create2_as_variable)
