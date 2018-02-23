@@ -19,7 +19,11 @@
 /// @file RPCSession.cpp
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
-#include "RPCSession.h"
+#include <test/RPCSession.h>
+
+#include <test/TestHelper.h>
+
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -215,6 +219,9 @@ string RPCSession::personal_newAccount(string const& _password)
 
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
 {
+	string enableByzantium;
+	if (test::Options::get().evmVersion() == solidity::EVMVersion::byzantium())
+		 enableByzantium = "\"byzantiumForkBlock\": \"0x00\",";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
@@ -224,6 +231,7 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"blockReward": "0x",
 			"allowFutureBlocks": true,
 			"homesteadForkBlock": "0x00",
+			)" + enableByzantium + R"(
 			"EIP150ForkBlock": "0x00",
 			"EIP158ForkBlock": "0x00"
 		},
