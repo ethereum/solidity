@@ -170,6 +170,26 @@ string parenthesizeUserIdentifier(string const& _internal)
 
 }
 
+string Type::escapeIdentifier(string const& _identifier)
+{
+	string ret = _identifier;
+	boost::algorithm::replace_all(ret, "$", "_$$$_");
+	boost::algorithm::replace_all(ret, ",", "_$_");
+	boost::algorithm::replace_all(ret, "(", "$_");
+	boost::algorithm::replace_all(ret, ")", "_$");
+	return ret;
+}
+
+string Type::unescapeIdentifier(string const& _identifier)
+{
+	string ret = _identifier;
+	boost::algorithm::replace_all(ret, "_$_", ",");
+	boost::algorithm::replace_all(ret, "_$$$_", "$");
+	boost::algorithm::replace_all(ret, "$_", "(");
+	boost::algorithm::replace_all(ret, "_$", ")");
+	return ret;
+}
+
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	solAssert(Token::isElementaryTypeName(_type.token()),
