@@ -354,7 +354,7 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	);
 }
 
-string IntegerType::identifier() const
+string IntegerType::richIdentifier() const
 {
 	if (isAddress())
 		return "t_address";
@@ -524,7 +524,7 @@ FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPoint
 	);
 }
 
-string FixedPointType::identifier() const
+string FixedPointType::richIdentifier() const
 {
 	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(m_totalBits) + "x" + std::to_string(m_fractionalDigits);
 }
@@ -956,7 +956,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	}
 }
 
-string RationalNumberType::identifier() const
+string RationalNumberType::richIdentifier() const
 {
 	return "t_rational_" + m_value.numerator().str() + "_by_" + m_value.denominator().str();
 }
@@ -1097,7 +1097,7 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 }
 
-string StringLiteralType::identifier() const
+string StringLiteralType::richIdentifier() const
 {
 	// Since we have to return a valid identifier and the string itself may contain
 	// anything, we hash it.
@@ -1197,7 +1197,7 @@ MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) c
 	return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
 }
 
-string FixedBytesType::identifier() const
+string FixedBytesType::richIdentifier() const
 {
 	return "t_bytes" + std::to_string(m_bytes);
 }
@@ -1390,7 +1390,7 @@ bool ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
 	return true;
 }
 
-string ArrayType::identifier() const
+string ArrayType::richIdentifier() const
 {
 	string id;
 	if (isString())
@@ -1624,7 +1624,7 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 	return copy;
 }
 
-string ContractType::identifier() const
+string ContractType::richIdentifier() const
 {
 	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
 }
@@ -1776,7 +1776,7 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	return this->m_struct == convertTo.m_struct;
 }
 
-string StructType::identifier() const
+string StructType::richIdentifier() const
 {
 	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
 }
@@ -2008,7 +2008,7 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
-string EnumType::identifier() const
+string EnumType::richIdentifier() const
 {
 	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
 }
@@ -2094,7 +2094,7 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 		return false;
 }
 
-string TupleType::identifier() const
+string TupleType::richIdentifier() const
 {
 	return "t_tuple" + identifierList(components());
 }
@@ -2354,7 +2354,7 @@ TypePointers FunctionType::parameterTypes() const
 	return TypePointers(m_parameterTypes.cbegin() + 1, m_parameterTypes.cend());
 }
 
-string FunctionType::identifier() const
+string FunctionType::richIdentifier() const
 {
 	string id = "t_function_";
 	switch (m_kind)
@@ -2847,7 +2847,7 @@ ASTPointer<ASTString> FunctionType::documentation() const
 	return ASTPointer<ASTString>();
 }
 
-string MappingType::identifier() const
+string MappingType::richIdentifier() const
 {
 	return "t_mapping" + identifierList(m_keyType, m_valueType);
 }
@@ -2870,7 +2870,7 @@ string MappingType::canonicalName() const
 	return "mapping(" + keyType()->canonicalName() + " => " + valueType()->canonicalName() + ")";
 }
 
-string TypeType::identifier() const
+string TypeType::richIdentifier() const
 {
 	return "t_type" + identifierList(actualType());
 }
@@ -2955,7 +2955,7 @@ u256 ModifierType::storageSize() const
 	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
-string ModifierType::identifier() const
+string ModifierType::richIdentifier() const
 {
 	return "t_modifier" + identifierList(m_parameterTypes);
 }
@@ -2984,7 +2984,7 @@ string ModifierType::toString(bool _short) const
 	return name + ")";
 }
 
-string ModuleType::identifier() const
+string ModuleType::richIdentifier() const
 {
 	return "t_module_" + std::to_string(m_sourceUnit.id());
 }
@@ -3010,7 +3010,7 @@ string ModuleType::toString(bool) const
 	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
 }
 
-string MagicType::identifier() const
+string MagicType::richIdentifier() const
 {
 	switch (m_kind)
 	{
