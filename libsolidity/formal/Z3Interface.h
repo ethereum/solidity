@@ -46,6 +46,8 @@ public:
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::string> maximize(Expression const&);
+	std::pair<CheckResult, std::string> minimize(Expression const&);
 
 private:
 	z3::expr toZ3Expr(Expression const& _expr);
@@ -56,6 +58,7 @@ private:
 
 	z3::context m_context;
 	z3::solver m_solver;
+	z3::optimize* m_optimizer = nullptr;
 	std::map<std::string, z3::expr> m_constants;
 	std::map<std::string, z3::func_decl> m_functions;
 };

@@ -53,6 +53,7 @@ private:
 	virtual void endVisit(FunctionDefinition const& _node) override;
 	virtual bool visit(IfStatement const& _node) override;
 	virtual bool visit(WhileStatement const& _node) override;
+	virtual void endVisit(WhileStatement const& _node) override;
 	virtual bool visit(ForStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
 	virtual void endVisit(ExpressionStatement const& _node) override;
@@ -119,7 +120,7 @@ private:
 	bool createVariable(VariableDeclaration const& _varDecl);
 
 	static std::string uniqueSymbol(Declaration const& _decl);
-	static std::string uniqueSymbol(Expression const& _expr);
+	static std::string uniqueSymbol(Expression const& _expr, int _exprIteration = 0);
 
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
 	/// has a valid sequence number
@@ -163,17 +164,33 @@ private:
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
+	/// Computes the max and min of an equation, used to calculate the bound of a loop given its condition.
+	/// Supports only <, <=, >, >=.
+	void solveMinMax(Expression const& _op);
+	/// The computed bound is the difference between the two sides, that is,
+	/// we have the assumption that this difference decreases by at least 1 per iteration.
+	/// It uses m_maximizationResult and m_minizationResult.
+	int computeLoopBound() const;
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_conditionalExecutionHappened = false;
 	std::map<Declaration const*, int> m_currentSequenceCounter;
 	std::map<Declaration const*, int> m_nextFreeSequenceCounter;
-	std::map<Expression const*, smt::Expression> m_expressions;
+	/// A Solidity expression may have several SMT expressions due
+	/// to loops.
+	std::multimap<Expression const*, smt::Expression> m_expressions;
 	std::map<Declaration const*, smt::Expression> m_variables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
+	/// The outtermost loop. When inside a loop, the statements
+	/// are visited more than once.
+	BreakableStatement const* m_outterLoop = nullptr;
+	/// Stores the latest loop bound analysis result.
+	std::pair<smt::CheckResult, std::string> m_maximizationResult = std::make_pair(smt::CheckResult::UNKNOWN, "");
+	std::pair<smt::CheckResult, std::string> m_minimizationResult = std::make_pair(smt::CheckResult::UNKNOWN, "");
 };
 
 }

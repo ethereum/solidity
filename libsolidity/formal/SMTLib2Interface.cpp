@@ -117,6 +117,16 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	return make_pair(result, values);
 }
 
+pair<CheckResult, string> SMTLib2Interface::maximize(Expression const&)
+{
+	return std::make_pair(CheckResult::UNKNOWN, "");
+}
+
+pair<CheckResult, string> SMTLib2Interface::minimize(Expression const&)
+{
+	return std::make_pair(CheckResult::UNKNOWN, "");
+}
+
 string SMTLib2Interface::toSExpr(Expression const& _expr)
 {
 	if (_expr.arguments.empty())

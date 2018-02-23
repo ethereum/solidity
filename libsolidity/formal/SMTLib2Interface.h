@@ -55,6 +55,9 @@ public:
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
+	std::pair<CheckResult, std::string> maximize(Expression const&);
+	std::pair<CheckResult, std::string> minimize(Expression const&);
+
 private:
 	std::string toSExpr(Expression const& _expr);
 
