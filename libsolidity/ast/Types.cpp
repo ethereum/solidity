@@ -131,28 +131,28 @@ namespace
 
 string parenthesizeIdentifier(string const& _internal)
 {
-	return "$_" + _internal + "_$";
+	return "(" + _internal + ")";
 }
 
 template <class Range>
 string identifierList(Range const&& _list)
 {
-	return parenthesizeIdentifier(boost::algorithm::join(_list, "_$_"));
+	return parenthesizeIdentifier(boost::algorithm::join(_list, ","));
 }
 
-string identifier(TypePointer const& _type)
+string richIdentifier(TypePointer const& _type)
 {
-	return _type ? _type->identifier() : "";
+	return _type ? _type->richIdentifier() : "";
 }
 
 string identifierList(vector<TypePointer> const& _list)
 {
-	return identifierList(_list | boost::adaptors::transformed(identifier));
+	return identifierList(_list | boost::adaptors::transformed(richIdentifier));
 }
 
 string identifierList(TypePointer const& _type)
 {
-	return parenthesizeIdentifier(identifier(_type));
+	return parenthesizeIdentifier(richIdentifier(_type));
 }
 
 string identifierList(TypePointer const& _type1, TypePointer const& _type2)
@@ -165,7 +165,7 @@ string identifierList(TypePointer const& _type1, TypePointer const& _type2)
 
 string parenthesizeUserIdentifier(string const& _internal)
 {
-	return parenthesizeIdentifier(boost::algorithm::replace_all_copy(_internal, "$", "$$$"));
+	return parenthesizeIdentifier(_internal);
 }
 
 }
@@ -173,20 +173,11 @@ string parenthesizeUserIdentifier(string const& _internal)
 string Type::escapeIdentifier(string const& _identifier)
 {
 	string ret = _identifier;
-	boost::algorithm::replace_all(ret, "$", "_$$$_");
+	// FIXME: should be _$$$_
+	boost::algorithm::replace_all(ret, "$", "$$$");
 	boost::algorithm::replace_all(ret, ",", "_$_");
 	boost::algorithm::replace_all(ret, "(", "$_");
 	boost::algorithm::replace_all(ret, ")", "_$");
-	return ret;
-}
-
-string Type::unescapeIdentifier(string const& _identifier)
-{
-	string ret = _identifier;
-	boost::algorithm::replace_all(ret, "_$_", ",");
-	boost::algorithm::replace_all(ret, "_$$$_", "$");
-	boost::algorithm::replace_all(ret, "$_", "(");
-	boost::algorithm::replace_all(ret, "_$", ")");
 	return ret;
 }
 

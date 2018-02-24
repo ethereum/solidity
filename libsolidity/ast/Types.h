@@ -176,8 +176,6 @@ public:
 	/// appears as part of a user-supplied identifier is escaped as _$$$_.
 	/// @returns an escaped identifier (will not contain any parenthesis or commas)
 	static std::string escapeIdentifier(std::string const& _identifier);
-	/// @returns an unescaped identifier
-	static std::string unescapeIdentifier(std::string const& _identifier);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
