@@ -261,6 +261,17 @@ string Type::escapeIdentifier(string const& _identifier)
 	return ret;
 }
 
+string Type::unescapeIdentifier(string const& _identifier)
+{
+	string ret = _identifier;
+	// FIXME: should be _$$$_
+	boost::algorithm::replace_all(ret, "$$$", "$");
+	boost::algorithm::replace_all(ret, "_$_", ",");
+	boost::algorithm::replace_all(ret, "$_", "(");
+	boost::algorithm::replace_all(ret, "_$", ")");
+	return ret;
+}
+
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	solAssert(Token::isElementaryTypeName(_type.token()),
