@@ -103,6 +103,21 @@ BOOST_AUTO_TEST_CASE(type_escaping)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(type_unescaping)
+{
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("$_"), "(");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("_$"), ")");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("_$_"), ",");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("$$$"), "$");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("$__$"), "()");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("$__$__$"), "(,)");
+	BOOST_CHECK_EQUAL(Type::unescapeIdentifier("$__$_$$$_$__$"), "(,$,)");
+	BOOST_CHECK_EQUAL(
+		Type::unescapeIdentifier("$_$___$__$$$_$$$$$$_$___$_$$$$$$_$__$__$_$$$$$$_$_$_$$$_$__$__$__$_$_$$$$$$$_$_$$$$$$"),
+		"((__(_$_$$,__($$,,,$$),$,,,)))$$,$$"
+	);
+}
+
 BOOST_AUTO_TEST_CASE(type_identifiers)
 {
 	ASTNode::resetID();
