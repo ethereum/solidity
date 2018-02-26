@@ -378,8 +378,8 @@ Functions external to inline assembly can also be accessed: The assembly will
 push their entry label (with virtual function resolution applied). The calling semantics
 in solidity are:
 
- - the caller pushes return label, arg1, arg2, ..., argn
- - the call returns with ret1, ret2, ..., retm
+ - the caller pushes ``return label``, ``arg1``, ``arg2``, ..., ``argn``
+ - the call returns with ``ret1``, ``ret2``, ..., ``retm``
 
 This feature is still a bit cumbersome to use, because the stack offset essentially
 changes during the call, and thus references to local variables will be wrong.
