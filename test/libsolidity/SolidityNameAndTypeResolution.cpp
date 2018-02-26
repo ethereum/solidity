@@ -7087,7 +7087,7 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
 		{Error::Type::DeclarationError, "Unbalanced stack"}
 	});
-	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
 		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }

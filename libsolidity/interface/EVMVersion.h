@@ -23,6 +23,7 @@
 #include <string>
 
 #include <boost/optional.hpp>
+#include <boost/operators.hpp>
 
 namespace dev
 {
@@ -33,28 +34,40 @@ namespace solidity
  * A version specifier of the EVM we want to compile to.
  * Defaults to the latest version.
  */
-class EVMVersion
+class EVMVersion:
+	boost::less_than_comparable<EVMVersion>,
+	boost::equality_comparable<EVMVersion>
 {
 public:
 	EVMVersion() {}
 
 	static EVMVersion homestead() { return {Version::Homestead}; }
+	static EVMVersion tangerineWhistle() { return {Version::TangerineWhistle}; }
+	static EVMVersion spuriousDragon() { return {Version::SpuriousDragon}; }
 	static EVMVersion byzantium() { return {Version::Byzantium}; }
 
 	static boost::optional<EVMVersion> fromString(std::string const& _version)
 	{
-		if (_version == "homestead")
-			return homestead();
-		else if (_version == "byzantium")
-			return byzantium();
-		else
-			return {};
+		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium()})
+			if (_version == v.name())
+				return v;
+		return {};
 	}
 
 	bool operator==(EVMVersion const& _other) const { return m_version == _other.m_version; }
-	bool operator!=(EVMVersion const& _other) const { return !this->operator==(_other); }
+	bool operator<(EVMVersion const& _other) const { return m_version < _other.m_version; }
 
-	std::string name() const { return m_version == Version::Byzantium ? "byzantium" : "homestead"; }
+	std::string name() const
+	{
+		switch (m_version)
+		{
+		case Version::Byzantium: return "byzantium";
+		case Version::TangerineWhistle: return "tangerineWhistle";
+		case Version::SpuriousDragon: return "spuriousDragon";
+		case Version::Homestead: return "homestead";
+		}
+		return "INVALID";
+	}
 
 	/// Has the RETURNDATACOPY and RETURNDATASIZE opcodes.
 	bool supportsReturndata() const { return *this >= byzantium(); }
@@ -62,14 +75,10 @@ public:
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).
-	bool canOverchargeGasForCall() const
-	{
-		// @TODO when exactly was this introduced? Was together with the call stack fix.
-		return m_version == Version::Byzantium;
-	}
+	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
-	enum class Version { Homestead, Byzantium };
+	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium };
 
 	EVMVersion(Version _version): m_version(_version) {}
 

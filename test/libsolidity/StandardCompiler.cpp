@@ -746,6 +746,10 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	Json::Value result;
 	result = compile(inputForVersion("\"evmVersion\": \"homestead\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"homestead\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"tangerineWhistle\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"tangerineWhistle\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"spuriousDragon\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"spuriousDragon\"") != string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"byzantium\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
 	// test default
