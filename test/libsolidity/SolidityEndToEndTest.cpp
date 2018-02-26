@@ -298,10 +298,38 @@ BOOST_AUTO_TEST_CASE(C99_scoping_activation)
 				}
 				return x;
 			}
+			function g() pure public returns (uint x) {
+				x = 7;
+				{
+					x = 3;
+					uint x;
+					return x; // This returns the new variable, i.e. 0
+				}
+			}
+			function h() pure public returns (uint x, uint a, uint b) {
+				x = 7;
+				{
+					x = 3;
+					a = x; // This should read from the outer
+					uint x = 4;
+					b = x;
+				}
+			}
+			function i() pure public returns (uint x, uint a) {
+				x = 7;
+				{
+					x = 3;
+					uint x = x; // This should read from the outer and assign to the inner
+					a = x;
+				}
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(3));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(0));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(3, 3, 4));
+	ABI_CHECK(callContractFunction("i()"), encodeArgs(3, 3));
 }
 
 BOOST_AUTO_TEST_CASE(recursive_calls)

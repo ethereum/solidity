@@ -106,6 +106,67 @@ BOOST_AUTO_TEST_CASE(double_variable_declaration_050)
 	}));
 }
 
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope)
+{
+	string text = R"(
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Experimental features",
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation)
+{
+	string text = R"(
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Experimental features",
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
 BOOST_AUTO_TEST_CASE(scoping_old)
 {
 	char const* text = R"(
@@ -165,9 +226,21 @@ BOOST_AUTO_TEST_CASE(scoping_activation)
 BOOST_AUTO_TEST_CASE(scoping_self_use)
 {
 	char const* text = R"(
+		contract test {
+			function f() pure public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use_050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract test {
-			function f() public {
+			function f() pure public {
 				uint a = a;
 			}
 		}
