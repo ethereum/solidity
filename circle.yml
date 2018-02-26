@@ -93,7 +93,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install ccache cmake libboost-all-dev libz3-dev libleveldb1v5
+            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
       - run:
           name: Init submodules
           command: |
@@ -114,15 +114,34 @@ jobs:
           key: ccache-{{ arch }}-{{ .Branch }}
           paths:
             - ~/.ccache
+      - store_artifacts:
+          path: build/solc/solc
+          destination: solc
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/solfuzzer
+
+  test_x86:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libz3-dev libleveldb1v5
       - run: mkdir -p test_results
       - run:
           name: Tests
           command: scripts/tests.sh --junit_report test_results
       - store_test_results:
           path: test_results/
-      - store_artifacts:
-          path: build/solc/solc
-          destination: solc
 
   docs:
     docker:
@@ -158,4 +177,7 @@ workflows:
           requires:
             - build_emscripten
       - build_x86
+      - test_x86:
+          requires:
+            - build_x86
       - docs
