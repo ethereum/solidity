@@ -263,6 +263,44 @@ string Type::escapeIdentifier(string const& _identifier)
 
 string Type::unescapeIdentifier(string const& _identifier)
 {
+	bool underscore = false;
+	unsigned dollar = 0;
+	string out(_identifier.length);
+
+	for (auto const& c: _identifier)
+	{
+		if (c == '_') {
+			// $_ -> (
+			if (dollar != 0) {
+				out.append('(');
+			} else {
+				underscore = true;
+			}
+		} else if (c == '$') {
+			// _$ -> )
+			if (underscore && dollar == 0) {
+				underscore = false;
+				out.append(')');
+			} else {
+				dollar++;
+				// $$$ -> $
+				if (dollar == 3) {
+					out.append('$');
+					dollar = 0;
+				}
+			}
+		} else {
+			// flush pending underscore
+			if (underscore) {
+				out.append('_');
+				underscore = false;
+			}
+			out.append(c);
+		}
+	}
+	__$$$$$$__ -> __$$$$__ -> __
+	
+	
 	string ret = _identifier;
 	// FIXME: should be _$$$_
 	boost::algorithm::replace_all(ret, "$$$", "$");
