@@ -162,6 +162,8 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 In the grammar, opcodes are represented as pre-defined identifiers.
 
 +-------------------------+------+-----------------------------------------------------------------+
+| Instruction             |      | Explanation                                                     |
++=========================+======+=================================================================+
 | stop                    + `-`  | stop execution, identical to return(0,0)                        |
 +-------------------------+------+-----------------------------------------------------------------+
 | add(x, y)               |      | x + y                                                           |
@@ -228,7 +230,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | mstore(p, v)            | `-`  | mem[p..(p+32)) := v                                             |
 +-------------------------+------+-----------------------------------------------------------------+
-| mstore8(p, v)           | `-`  | mem[p] := v & 0xff    - only modifies a single byte             |
+| mstore8(p, v)           | `-`  | mem[p] := v & 0xff (only modifies a single byte)                |
 +-------------------------+------+-----------------------------------------------------------------+
 | sload(p)                |      | storage[p]                                                      |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -242,7 +244,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+------+-----------------------------------------------------------------+
 | balance(a)              |      | wei balance at address a                                        |
 +-------------------------+------+-----------------------------------------------------------------+
-| caller                  |      | call sender (excluding delegatecall)                            |
+| caller                  |      | call sender (excluding ``delegatecall``)                        |
 +-------------------------+------+-----------------------------------------------------------------+
 | callvalue               |      | wei sent together with the current call                         |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -276,13 +278,13 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 |                         |      | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
 |                         |      | and 1 on success                                                |
 +-------------------------+------+-----------------------------------------------------------------+
-| callcode(g, a, v, in,   |      | identical to `call` but only use the code from a and stay       |
+| callcode(g, a, v, in,   |      | identical to ``call`` but only use the code from a and stay     |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
 +-------------------------+------+-----------------------------------------------------------------+
-| delegatecall(g, a, in,  |      | identical to `callcode` but also keep ``caller``                |
+| delegatecall(g, a, in,  |      | identical to ``callcode`` but also keep ``caller``              |
 | insize, out, outsize)   |      | and ``callvalue``                                               |
 +-------------------------+------+-----------------------------------------------------------------+
-| staticcall(g, a, in,    |      | identical to `call(g, a, 0, in, insize, out, outsize)` but do   |
+| staticcall(g, a, in,    |      | identical to ``call(g, a, 0, in, insize, out, outsize)`` but do |
 | insize, out, outsize)   |      | not allow state modifications                                   |
 +-------------------------+------+-----------------------------------------------------------------+
 | return(p, s)            | `-`  | end execution, return data mem[p..(p+s))                        |
@@ -727,7 +729,7 @@ The following assembly will be generated::
       // function dispatcher
       switch div(calldataload(0), exp(2, 226))
       case 0xb3de648b {
-        let (r) = f(calldataload(4))
+        let r := f(calldataload(4))
         let ret := $allocate(0x20)
         mstore(ret, r)
         return(ret, 0x20)
