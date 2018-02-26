@@ -172,4 +172,4 @@ TMPDIR=$(mktemp -d)
     done
 )
 rm -rf "$TMPDIR"
-echo "Done."
+echo "Commandline tests successful."

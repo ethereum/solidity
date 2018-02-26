@@ -45,54 +45,66 @@ else
 fi
 
 echo "Running commandline tests..."
-"$REPO_ROOT/test/cmdlineTests.sh"
-
-# This conditional is only needed because we don't have a working Homebrew
-# install for `eth` at the time of writing, so we unzip the ZIP file locally
-# instead.  This will go away soon.
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    ETH_PATH="$REPO_ROOT/eth"
-elif [ -z $CI ]; then
-    ETH_PATH="eth"
-else
-    mkdir -p /tmp/test
-    ETH_BINARY=eth_byzantium_artful
-    ETH_HASH="e527dd3e3dc17b983529dd7dcfb74a0d3a5aed4e"
-    if grep -i trusty /etc/lsb-release >/dev/null 2>&1
-    then
-        ETH_BINARY=eth_byzantium2
-        ETH_HASH="4dc3f208475f622be7c8e53bee720e14cd254c6f"
-    fi
-    wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
-    test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
-    sync
-    chmod +x /tmp/test/eth
-    sync # Otherwise we might get a "text file busy" error
-    ETH_PATH="/tmp/test/eth"
+"$REPO_ROOT/test/cmdlineTests.sh" &
+CMDLINE_PID=$!
+# Only run in parallel if this is run on CI infrastructure
+if [ -z "$CI" ]
+then
+    wait $CMDLINE_PID
 fi
 
-# This trailing ampersand directs the shell to run the command in the background,
-# that is, it is forked and run in a separate sub-shell, as a job,
-# asynchronously. The shell will immediately return the return status of 0 for
-# true and continue as normal, either processing further commands in a script
-# or returning the cursor focus back to the user in a Linux terminal.
-$ETH_PATH --test -d /tmp/test &
-ETH_PID=$!
+function download_eth()
+{
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        ETH_PATH="$REPO_ROOT/eth"
+    elif [ -z $CI ]; then
+        ETH_PATH="eth"
+    else
+        mkdir -p /tmp/test
+        ETH_BINARY=eth_byzantium_artful
+        ETH_HASH="e527dd3e3dc17b983529dd7dcfb74a0d3a5aed4e"
+        if grep -i trusty /etc/lsb-release >/dev/null 2>&1
+        then
+            ETH_BINARY=eth_byzantium2
+            ETH_HASH="4dc3f208475f622be7c8e53bee720e14cd254c6f"
+        fi
+        wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
+        test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
+        sync
+        chmod +x /tmp/test/eth
+        sync # Otherwise we might get a "text file busy" error
+        ETH_PATH="/tmp/test/eth"
+    fi
 
-# Wait until the IPC endpoint is available.  That won't be available instantly.
-# The node needs to get a little way into its startup sequence before the IPC
-# is available and is ready for the unit-tests to start talking to it.
-while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-echo "--> IPC available."
-sleep 2
-# And then run the Solidity unit-tests (once without optimization, once with),
-# pointing to that IPC endpoint.
+}
+
+# $1: data directory
+# echos the PID
+function run_eth()
+{
+    $ETH_PATH --test -d "$1" >/dev/null 2>&1 &
+    echo $!
+    # Wait until the IPC endpoint is available.
+    while [ ! -S "$1"/geth.ipc ] ; do sleep 1; done
+    sleep 2
+}
+
+download_eth
+ETH_PID=$(run_eth /tmp/test)
+
+progress="--show-progress"
+if [ "$CI" ]
+then
+    progress=""
+fi
+
 echo "--> Running tests without optimizer..."
-  "$REPO_ROOT"/build/test/soltest --show-progress $testargs_no_opt -- --ipcpath /tmp/test/geth.ipc && \
-  echo "--> Running tests WITH optimizer..." && \
-  "$REPO_ROOT"/build/test/soltest --show-progress $testargs_opt -- --optimize --ipcpath /tmp/test/geth.ipc
-ERROR_CODE=$?
+"$REPO_ROOT"/build/test/soltest $testargs_no_opt $progress -- --ipcpath /tmp/test/geth.ipc
+echo "--> Running tests WITH optimizer..."
+"$REPO_ROOT"/build/test/soltest $testargs_opt $progress -- --optimize --ipcpath /tmp/test/geth.ipc
+
+wait $CMDLINE_PID
+
 pkill "$ETH_PID" || true
 sleep 4
 pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
-exit $ERROR_CODE
