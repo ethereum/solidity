@@ -29,6 +29,8 @@ Further options on this page detail installing commandline Solidity compiler sof
 on your computer. Choose a commandline compiler if you are working on a larger contract
 or if you require more compilation options.
 
+.. _solcjs:
+
 npm / Node.js
 =============
 
