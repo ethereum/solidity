@@ -113,10 +113,7 @@ do
         log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
       fi
     fi
-    set +e
     "$REPO_ROOT"/build/test/soltest $progress $log -- "$optimize" --evm-version "$vm" --ipcpath /tmp/test/geth.ipc
-    set -e
-    if [ $? -ne 0 ]; then exit $?; fi
   done
 done
 
