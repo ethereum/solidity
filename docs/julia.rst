@@ -424,10 +424,6 @@ The following functions must be available:
 | insize:u256, out:u256,                      | but also keep ``caller``                                        |
 | outsize:u256) -> r:u256                     | and ``callvalue``                                               |
 +---------------------------------------------+-----------------------------------------------------------------+
-| stop()                                      | stop execution, identical to return(0,0)                        |
-|                                             | Perhaps it would make sense retiring this as it equals to       |
-|                                             | return(0,0). It can be an optimisation by the EVM backend.      |
-+---------------------------------------------+-----------------------------------------------------------------+
 | abort()                                     | abort (equals to invalid instruction on EVM)                    |
 +---------------------------------------------+-----------------------------------------------------------------+
 | return(p:u256, s:u256)                      | end execution, return data mem[p..(p+s))                        |
