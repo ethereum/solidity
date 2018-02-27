@@ -174,10 +174,18 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 
 bool SyntaxChecker::visit(Throw const& _throwStatement)
 {
-	m_errorReporter.warning(
-		_throwStatement.location(),
-		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
-	);
+	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
+	if (v050)
+		m_errorReporter.syntaxError(
+			_throwStatement.location(),
+			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+		);
+	else
+		m_errorReporter.warning(
+			_throwStatement.location(),
+			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+		);
 
 	return true;
 }
