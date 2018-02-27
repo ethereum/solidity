@@ -6332,7 +6332,16 @@ BOOST_AUTO_TEST_CASE(warn_about_throw)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "\"throw\" is deprecated");
+	CHECK_WARNING(text, "\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"");
+	text = R"(
+                pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				throw;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"");
 }
 
 BOOST_AUTO_TEST_CASE(bare_revert)
