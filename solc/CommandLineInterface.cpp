@@ -539,7 +539,7 @@ Allowed options)",
 		(
 			g_strEVMVersion.c_str(),
 			po::value<string>()->value_name("version"),
-			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon or byzantium (default)."
+			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, byzantium (default) or constantinople."
 		)
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(

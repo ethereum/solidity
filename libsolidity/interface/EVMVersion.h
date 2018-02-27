@@ -45,6 +45,7 @@ public:
 	static EVMVersion tangerineWhistle() { return {Version::TangerineWhistle}; }
 	static EVMVersion spuriousDragon() { return {Version::SpuriousDragon}; }
 	static EVMVersion byzantium() { return {Version::Byzantium}; }
+	static EVMVersion constantinople() { return {Version::Constantinople}; }
 
 	static boost::optional<EVMVersion> fromString(std::string const& _version)
 	{
@@ -61,10 +62,11 @@ public:
 	{
 		switch (m_version)
 		{
-		case Version::Byzantium: return "byzantium";
+		case Version::Homestead: return "homestead";
 		case Version::TangerineWhistle: return "tangerineWhistle";
 		case Version::SpuriousDragon: return "spuriousDragon";
-		case Version::Homestead: return "homestead";
+		case Version::Byzantium: return "byzantium";
+		case Version::Constantinople: return "constantinople";
 		}
 		return "INVALID";
 	}
@@ -78,7 +80,7 @@ public:
 	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
-	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium };
+	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople };
 
 	EVMVersion(Version _version): m_version(_version) {}
 
