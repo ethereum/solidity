@@ -18,6 +18,8 @@ esac
 
 BIN=$PREFIX/bin
 
+PATH=$PREFIX/bin:$PATH
+
 if test -f $BIN/cmake && ($BIN/cmake --version | grep -q "$VERSION"); then
     echo "CMake $VERSION already installed in $BIN"
 else
