@@ -627,6 +627,7 @@ Allowed options)",
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
+		cmdLineParser.style(po::command_line_style::default_style & (~po::command_line_style::allow_guessing));
 		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
