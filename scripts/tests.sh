@@ -96,7 +96,6 @@ then
     progress=""
 fi
 
-ERROR_CODE=0
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
 # and homestead / byzantium VM, # pointing to that IPC endpoint.
 for optimize in "" "--optimize"
@@ -116,9 +115,8 @@ do
     fi
     set +e
     "$REPO_ROOT"/build/test/soltest $progress $log -- "$optimize" --evm-version "$vm" --ipcpath /tmp/test/geth.ipc
-    THIS_ERR=$?
     set -e
-    if [ $? -ne 0 ]; then ERROR_CODE=$?; fi
+    if [ $? -ne 0 ]; then exit $?; fi
   done
 done
 
