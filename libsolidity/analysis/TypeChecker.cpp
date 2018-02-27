@@ -366,6 +366,16 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 	}
 }
 
+namespace {
+
+bool functionIsInInterface(FunctionDefinition const& _function)
+{
+	return dynamic_cast<ContractDefinition const*>(_function.scope()) &&
+		dynamic_cast<ContractDefinition const*>(_function.scope())->contractKind() == ContractDefinition::ContractKind::Interface;
+}
+
+}
+
 void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
 {
 	FunctionType functionType(function);
@@ -378,7 +388,12 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 		function.annotation().superFunction = &super;
 
 	if (function.visibility() != super.visibility())
+	{
+		// visibility is enforced to be external in interfaces, but a contract can override that with public
+		if (functionIsInInterface(super) && !functionIsInInterface(function) && function.visibility() == FunctionDefinition::Visibility::Public)
+			return;
 		overrideError(function, super, "Overriding function visibility differs.");
+	}
 
 	else if (function.stateMutability() != super.stateMutability())
 		overrideError(

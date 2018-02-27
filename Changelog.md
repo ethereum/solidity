@@ -2,6 +2,7 @@
 
 Features:
  * General: Support accessing dynamic return data in post-byzantium EVMs.
+ * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.

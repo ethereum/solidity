@@ -6784,6 +6784,20 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(interface_implement_public_contract)
+{
+	char const* text = R"(
+		interface I {
+			function f() external;
+		}
+		contract C is I {
+			function f() public {
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_about_throw)
 {
 	char const* text = R"(
