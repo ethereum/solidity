@@ -7741,7 +7741,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.balance;
 			}
 		}
@@ -7750,7 +7750,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.transfer;
 			}
 		}
@@ -7759,7 +7759,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.send;
 			}
 		}
@@ -7768,7 +7768,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.call;
 			}
 		}
@@ -7777,7 +7777,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.callcode;
 			}
 		}
@@ -7786,7 +7786,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.delegatecall;
 			}
 		}
@@ -7868,6 +7868,23 @@ BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 		auto const& retType = f.second->returnParameterTypes().at(0);
 		BOOST_CHECK(retType->dataStoredIn(DataLocation::Memory));
 	}
+}
+
+BOOST_AUTO_TEST_CASE(require_visibility_specifiers)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure { }
+		}
+	)";
+	CHECK_WARNING(text, "No visibility specified. Defaulting to");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure { }
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "No visibility specified.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

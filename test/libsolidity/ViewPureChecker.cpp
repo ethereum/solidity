@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 BOOST_AUTO_TEST_CASE(view_error_for_050)
 {
 	CHECK_ERROR(
-		"pragma experimental \"v0.5.0\"; contract C { uint x; function f() view { x = 2; } }",
+		"pragma experimental \"v0.5.0\"; contract C { uint x; function f() view public { x = 2; } }",
 		TypeError,
 		"Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable."
 	);
