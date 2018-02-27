@@ -322,10 +322,10 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint y) { var x = ((((((((y ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); }
+			function f(uint y) { ((((((((y ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); }
 		}
 	)";
-	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}, {"test", "f", "x"}});
+	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 	bytes expectation({byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::PUSH1), 0x2,
 					   byte(Instruction::PUSH1), 0x3,
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 					   byte(Instruction::PUSH1), 0x6,
 					   byte(Instruction::PUSH1), 0x7,
 					   byte(Instruction::PUSH1), 0x8,
-					   byte(Instruction::DUP10),
+					   byte(Instruction::DUP9),
 					   byte(Instruction::XOR),
 					   byte(Instruction::AND),
 					   byte(Instruction::OR),
@@ -364,13 +364,13 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(int y) { var x = !(~+- y == 2); }
+			function f(int y) { !(~+- y == 2); }
 		}
 	)";
-	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}, {"test", "f", "x"}});
+	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
 	bytes expectation({byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::DUP3),
+					   byte(Instruction::DUP2),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::SUB),
 					   byte(Instruction::NOT),
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) { var x = --a ^ (a-- ^ (++a ^ a++)); }
+			function f(uint a) returns (uint x) { x = --a ^ (a-- ^ (++a ^ a++)); }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
@@ -426,7 +426,10 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 					   byte(Instruction::POP), // second ++
 					   // Stack here: a x a^(a+2)^(a+2)
 					   byte(Instruction::DUP3), // will change
-					   byte(Instruction::XOR)});
+					   byte(Instruction::XOR),
+					   byte(Instruction::SWAP1),
+					   byte(Instruction::POP),
+					   byte(Instruction::DUP1)});
 					   // Stack here: a x a^(a+2)^(a+2)^a
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }

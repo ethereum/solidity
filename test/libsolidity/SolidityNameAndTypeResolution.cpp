@@ -76,15 +76,236 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 
 BOOST_AUTO_TEST_CASE(double_variable_declaration)
 {
-	char const* text = R"(
+	string text = R"(
 		contract test {
-			function f() public {
+			function f() pure public {
 				uint256 x;
 				if (true) { uint256 x; }
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				uint256 x;
+				if (true) { uint256 x; }
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"This declaration shadows an existing declaration.",
+		"Experimental features",
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope)
+{
+	string text = R"(
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Experimental features",
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation)
+{
+	string text = R"(
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Experimental features",
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+BOOST_AUTO_TEST_CASE(scoping_old)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				x = 4;
+				uint256 x = 2;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() public {
+				{
+					uint256 x;
+				}
+				x = 2;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_activation_old)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_activation)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use_050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for2)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++)
+					x = 2;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for3)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+				x = 4;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for_decl_in_body)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (;; y++){
+					uint y = 3;
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
 }
 
 BOOST_AUTO_TEST_CASE(name_shadowing)
@@ -1004,7 +1225,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 {
 	char const* text = R"(
 		contract B {
-			function f() mod1(2, true) mod2("0123456") public { }
+			function f() mod1(2, true) mod2("0123456") pure public { }
 			modifier mod1(uint a, bool b) { if (b) _; }
 			modifier mod2(bytes7 a) { while (a == "1234567") _; }
 		}
@@ -1039,11 +1260,23 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 {
 	char const* text = R"(
 		contract B {
-			function f() mod(x) public { uint x = 7; }
+			function f() mod(x) pure public { uint x = 7; }
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	CHECK_SUCCESS(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract B {
+			function f() mod(x) pure public { uint x = 7; }
+			modifier mod(uint a) { if (a > 0) _; }
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)

@@ -96,20 +96,6 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 	return sourceUnits;
 }
 
-SourceUnit const& Declaration::sourceUnit() const
-{
-	solAssert(!!m_scope, "");
-	ASTNode const* scope = m_scope;
-	while (dynamic_cast<Declaration const*>(scope) && dynamic_cast<Declaration const*>(scope)->m_scope)
-		scope = dynamic_cast<Declaration const*>(scope)->m_scope;
-	return dynamic_cast<SourceUnit const&>(*scope);
-}
-
-string Declaration::sourceUnitName() const
-{
-	return sourceUnit().annotation().path;
-}
-
 ImportAnnotation& ImportDirective::annotation() const
 {
 	if (!m_annotation)
@@ -408,10 +394,34 @@ UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
 	return dynamic_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
 }
 
+SourceUnit const& Scopable::sourceUnit() const
+{
+	ASTNode const* s = scope();
+	solAssert(s, "");
+	// will not always be a declaratoion
+	while (dynamic_cast<Scopable const*>(s) && dynamic_cast<Scopable const*>(s)->scope())
+		s = dynamic_cast<Scopable const*>(s)->scope();
+	return dynamic_cast<SourceUnit const&>(*s);
+}
+
+string Scopable::sourceUnitName() const
+{
+	return sourceUnit().annotation().path;
+}
+
 bool VariableDeclaration::isLValue() const
 {
 	// External function parameters and constant declared variables are Read-Only
 	return !isExternalCallableParameter() && !m_isConstant;
+}
+
+bool VariableDeclaration::isLocalVariable() const
+{
+	auto s = scope();
+	return
+		dynamic_cast<CallableDeclaration const*>(s) ||
+		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<ForStatement const*>(s);
 }
 
 bool VariableDeclaration::isCallableParameter() const
@@ -459,8 +469,7 @@ bool VariableDeclaration::isExternalCallableParameter() const
 
 bool VariableDeclaration::canHaveAutoType() const
 {
-	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
-	return (!!callable && !isCallableParameter());
+	return isLocalVariable() && !isCallableParameter();
 }
 
 TypePointer VariableDeclaration::type() const

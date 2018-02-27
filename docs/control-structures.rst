@@ -324,7 +324,8 @@ is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For 
 element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
 and ``string``, the default value is an empty array or string.
 
-A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
+A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared
+(this will change soon, see below).
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
 As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
@@ -366,7 +367,9 @@ As a result, the following code is illegal and cause the compiler to throw an er
     }
 
 In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
-As a result, the following code is legal, despite being poorly written::
+As a result, the following code is legal, despite being poorly written:
+
+::
 
     pragma solidity ^0.4.0;
 
@@ -380,6 +383,60 @@ As a result, the following code is legal, despite being poorly written::
                 uint baz = 10;// never executes
             }
             return bar;// returns 5
+        }
+    }
+
+Scoping starting from Version 0.5.0
+-----------------------------------
+
+Starting from version 0.5.0, Solidity will change to the more widespread scoping rules of C99
+(and many other languages): Variables are visible from the point right after their declaration
+until the end of a ``{ }``-block. As an exception to this rule, variables declared in the
+initialization part of a for-loop are only visible until the end of the for-loop.
+
+Variables and other items declared outside of a code block, for example functions, contracts,
+user-defined types, etc., do not change their scoping behaviour. This means you can
+use state variables before they are declared and call functions recursively.
+
+These rules are already introduced now as an experimental feature.
+
+As a consequence, the following examples will compile without warnings, since
+the two variables have the same name but disjoint scopes. In non-0.5.0-mode,
+they have the same scope (the function ``minimalScoping``) and thus it does
+not compile there.
+
+::
+
+    pragma solidity ^0.4.0;
+    pragma experimental "v0.5.0";
+    contract C {
+        function minimalScoping() pure public {
+            {
+                uint same2 = 0;
+            }
+
+            {
+                uint same2 = 0;
+            }
+        }
+    }
+
+As a special example of the C99 scoping rules, note that in the following,
+the first assignment to ``x`` will actually assign the outer and not the inner variable.
+In any case, you will get a warning about the outer variable being shadowed.
+
+::
+
+    pragma solidity ^0.4.0;
+    pragma experimental "v0.5.0";
+    contract C {
+        function f() pure public returns (uint) {
+            uint x = 1;
+            {
+                x = 2; // this will assign to the outer variable
+                uint x;
+            }
+            return x; // x has value 2
         }
     }
 

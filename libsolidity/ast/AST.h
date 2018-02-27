@@ -140,9 +140,32 @@ private:
 };
 
 /**
+ * Abstract class that is added to each AST node that is stored inside a scope
+ * (including scopes).
+ */
+class Scopable
+{
+public:
+	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
+	/// Available only after name and type resolution step.
+	ASTNode const* scope() const { return m_scope; }
+	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+
+	/// @returns the source unit this scopable is present in.
+	SourceUnit const& sourceUnit() const;
+
+	/// @returns the source name this scopable is present in.
+	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
+	std::string sourceUnitName() const;
+
+protected:
+	ASTNode const* m_scope = nullptr;
+};
+
+/**
  * Abstract AST class for a declaration (contract, function, struct, variable, import directive).
  */
-class Declaration: public ASTNode
+class Declaration: public ASTNode, public Scopable
 {
 public:
 	/// Visibility ordered from restricted to unrestricted.
@@ -171,7 +194,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility = Visibility::Default
 	):
-		ASTNode(_location), m_name(_name), m_visibility(_visibility), m_scope(nullptr) {}
+		ASTNode(_location), m_name(_name), m_visibility(_visibility) {}
 
 	/// @returns the declared name.
 	ASTString const& name() const { return *m_name; }
@@ -181,17 +204,6 @@ public:
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
 
-	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
-	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return m_scope; }
-	void setScope(ASTNode const* _scope) { m_scope = _scope; }
-
-	/// @returns the source unit this declaration is present in.
-	SourceUnit const& sourceUnit() const;
-
-	/// @returns the source name this declaration is present in.
-	/// Can be combined with annotation().canonicalName to form a globally unique name.
-	std::string sourceUnitName() const;
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
@@ -213,7 +225,6 @@ protected:
 private:
 	ASTPointer<ASTString> m_name;
 	Visibility m_visibility;
-	ASTNode const* m_scope;
 };
 
 /**
@@ -289,6 +300,8 @@ private:
 
 /**
  * Abstract class that is added to each AST node that can store local variables.
+ * Local variables in functions are always added to functions, even though they are not
+ * in scope for the whole function.
  */
 class VariableScope
 {
@@ -662,7 +675,7 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
-	bool isLocalVariable() const { return !!dynamic_cast<CallableDeclaration const*>(scope()); }
+	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
 	/// @returns true if this variable is a return parameter of a function.
@@ -1004,7 +1017,7 @@ private:
 /**
  * Brace-enclosed block containing zero or more statements.
  */
-class Block: public Statement
+class Block: public Statement, public Scopable
 {
 public:
 	Block(
@@ -1111,7 +1124,7 @@ private:
 /**
  * For loop statement
  */
-class ForStatement: public BreakableStatement
+class ForStatement: public BreakableStatement, public Scopable
 {
 public:
 	ForStatement(
