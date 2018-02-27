@@ -101,6 +101,7 @@ Input Description
           enabled: true,
           runs: 500
         },
+        evmVersion: "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
         // Metadata settings (optional)
         metadata: {
           // Use only literal content and not URLs (false by default)
