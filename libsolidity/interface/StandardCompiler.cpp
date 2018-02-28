@@ -27,6 +27,8 @@
 #include <libdevcore/JSON.h>
 #include <libdevcore/SHA3.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -337,16 +339,30 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			return formatFatalError("JSONError", "library entry is not a JSON object.");
 		for (auto const& library: jsonSourceName.getMemberNames())
 		{
+			string address = jsonSourceName[library].asString();
+
+			if (!boost::starts_with(address, "0x"))
+				return formatFatalError(
+					"JSONError",
+					"Library address is not prefixed with \"0x\"."
+				);
+
+			if (address.length() != 42)
+				return formatFatalError(
+					"JSONError",
+					"Library address is of invalid length."
+				);
+
 			try
 			{
 				// @TODO use libraries only for the given source
-				libraries[library] = h160(jsonSourceName[library].asString());
+				libraries[library] = h160(address);
 			}
 			catch (dev::BadHexCharacter)
 			{
 				return formatFatalError(
 					"JSONError",
-					"Invalid library address (\"" + jsonSourceName[library].asString() + "\") supplied."
+					"Invalid library address (\"" + address + "\") supplied."
 				);
 			}
 		}
