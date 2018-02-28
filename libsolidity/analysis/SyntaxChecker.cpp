@@ -212,13 +212,20 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
+	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	if (_function.noVisibilitySpecified())
-		m_errorReporter.warning(
-			_function.location(),
-			"No visibility specified. Defaulting to \"" +
-			Declaration::visibilityToString(_function.visibility()) +
-			"\"."
-		);
+	{
+		if (v050)
+			m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
+		else
+			m_errorReporter.warning(
+				_function.location(),
+				"No visibility specified. Defaulting to \"" +
+				Declaration::visibilityToString(_function.visibility()) +
+				"\"."
+			);
+	}
 	return true;
 }
 
