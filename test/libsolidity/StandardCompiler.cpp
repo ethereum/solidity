@@ -570,6 +570,139 @@ BOOST_AUTO_TEST_CASE(library_filename_with_colon)
 	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject());
 }
 
+BOOST_AUTO_TEST_CASE(libraries_invalid_top_level)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": "42"
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"libraries\" is not a JSON object."));
+}
+
+BOOST_AUTO_TEST_CASE(libraries_invalid_entry)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"L": "42"
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "library entry is not a JSON object."));
+}
+
+BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": "0x4200000000000000000000000000000000000xx1"
+				}
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."));
+}
+
+BOOST_AUTO_TEST_CASE(libraries_various_addresses)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": 42,
+					"L3": "42",
+					"L4": "0x42",
+					"L5": "0x4200000000000000000000000000000000000001",
+					"L6": "4200000000000000000000000000000000000001"
+				}
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+}
+
+BOOST_AUTO_TEST_CASE(library_linking)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"A": [
+						"evm.bytecode"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "import \"library.sol\"; import \"library2.sol\"; contract A { function f() returns (uint) { L2.g(); return L.g(); } }"
+			},
+			"library.sol": {
+				"content": "library L { function g() returns (uint) { return 1; } }"
+			},
+			"library2.sol": {
+				"content": "library L2 { function g() { } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
+	BOOST_CHECK(!contract["evm"]["bytecode"]["linkReferences"]["library.sol"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"].isObject());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"]["L2"].isArray());
+	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"]["L2"][0].isObject());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
