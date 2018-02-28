@@ -219,7 +219,7 @@ This means the following source mappings represent the same information:
 
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
-``1:2:1;:9;2::2;;``
+``1:2:1;:9;2:1:2;;``
 
 ***************
 Tips and Tricks
