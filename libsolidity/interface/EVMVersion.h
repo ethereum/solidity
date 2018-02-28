@@ -74,6 +74,7 @@ public:
 	/// Has the RETURNDATACOPY and RETURNDATASIZE opcodes.
 	bool supportsReturndata() const { return *this >= byzantium(); }
 	bool hasStaticCall() const { return *this >= byzantium(); }
+	bool hasBitwiseShifting() const { return *this >= constantinople(); }
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).

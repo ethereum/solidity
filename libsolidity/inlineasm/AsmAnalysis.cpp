@@ -561,19 +561,19 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			m_evmVersion.name() +
 			"\", where it will be interpreted as an invalid instruction."
 		);
-
-	static set<solidity::Instruction> experimentalInstructions{
-		solidity::Instruction::SHL,
-		solidity::Instruction::SHR,
-		solidity::Instruction::SAR
-	};
-	if (experimentalInstructions.count(_instr))
+	else if ((
+		_instr == solidity::Instruction::SHL ||
+		_instr == solidity::Instruction::SHR ||
+		_instr == solidity::Instruction::SAR
+	) && !m_evmVersion.hasBitwiseShifting())
 		m_errorReporter.warning(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available after " +
-			"the Constantinople hard fork. Before that it acts as an invalid instruction."
+			+ "\" instruction is only available for Constantinople-compatible VMs. " +
+			"You are currently compiling for \"" +
+			m_evmVersion.name() +
+			"\", where it will be interpreted as an invalid instruction."
 		);
 
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
