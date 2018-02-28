@@ -40,10 +40,6 @@ public:
 		Declaration const* _decl,
 		smt::SolverInterface& _interface
 	);
-	SymbolicVariable(SymbolicVariable const&) = default;
-	SymbolicVariable(SymbolicVariable&&) = default;
-	SymbolicVariable& operator=(SymbolicVariable const&) = default;
-	SymbolicVariable& operator=(SymbolicVariable&&) = default;
 
 	smt::Expression operator()(int _seq) const
 	{

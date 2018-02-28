@@ -40,10 +40,6 @@ public:
 		Declaration const* _decl,
 		smt::SolverInterface& _interface
 	);
-	SSAVariable(SSAVariable const&) = default;
-	SSAVariable(SSAVariable&&) = default;
-	SSAVariable& operator=(SSAVariable const&) = default;
-	SSAVariable& operator=(SSAVariable&&) = default;
 
 	void resetIndex();
 

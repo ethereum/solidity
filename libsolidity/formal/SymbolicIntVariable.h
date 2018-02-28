@@ -36,10 +36,6 @@ public:
 		Declaration const* _decl,
 		smt::SolverInterface& _interface
 	);
-	SymbolicIntVariable(SymbolicIntVariable const&) = default;
-	SymbolicIntVariable(SymbolicIntVariable&&) = default;
-	SymbolicIntVariable& operator=(SymbolicIntVariable const&) = default;
-	SymbolicIntVariable& operator=(SymbolicIntVariable&&) = default;
 
 	/// Sets the var to 0.
 	void setZeroValue(int _seq);
