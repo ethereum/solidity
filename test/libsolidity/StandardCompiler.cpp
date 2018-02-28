@@ -610,6 +610,29 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_entry)
 	BOOST_CHECK(containsError(result, "JSONError", "library entry is not a JSON object."));
 }
 
+BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": "0x4200000000000000000000000000000000000xx1"
+				}
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."));
+}
+
 BOOST_AUTO_TEST_CASE(libraries_various_addresses)
 {
 	char const* input = R"(

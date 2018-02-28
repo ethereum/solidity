@@ -336,8 +336,20 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		if (!jsonSourceName.isObject())
 			return formatFatalError("JSONError", "library entry is not a JSON object.");
 		for (auto const& library: jsonSourceName.getMemberNames())
-			// @TODO use libraries only for the given source
-			libraries[library] = h160(jsonSourceName[library].asString());
+		{
+			try
+			{
+				// @TODO use libraries only for the given source
+				libraries[library] = h160(jsonSourceName[library].asString());
+			}
+			catch (dev::BadHexCharacter)
+			{
+				return formatFatalError(
+					"JSONError",
+					"Invalid library address (\"" + jsonSourceName[library].asString() + "\") supplied."
+				);
+			}
+		}
 	}
 	m_compilerStack.setLibraries(libraries);
 
