@@ -29,11 +29,13 @@ namespace solidity
 /**
  * Specialization of SymbolicVariable for Integers
  */
-class SymbolicIntVariable : public SymbolicVariable
+class SymbolicIntVariable: public SymbolicVariable
 {
 public:
-	explicit SymbolicIntVariable(Declaration const* _decl,
-		smt::SolverInterface& _interface);
+	SymbolicIntVariable(
+		Declaration const* _decl,
+		smt::SolverInterface& _interface
+	);
 	SymbolicIntVariable(SymbolicIntVariable const&) = default;
 	SymbolicIntVariable(SymbolicIntVariable&&) = default;
 	SymbolicIntVariable& operator=(SymbolicIntVariable const&) = default;
@@ -41,7 +43,7 @@ public:
 
 	/// Sets the var to 0.
 	void setZeroValue(int _seq);
-	/// Sets the valid interval for the var.
+	/// Sets the variable to the full valid value range.
 	void setUnknownValue(int _seq);
 
 	static smt::Expression minValue(IntegerType const& _t);

@@ -36,8 +36,10 @@ class Declaration;
 class SymbolicVariable
 {
 public:
-	explicit SymbolicVariable(Declaration const* _decl,
-		smt::SolverInterface& _interface);
+	SymbolicVariable(
+		Declaration const* _decl,
+		smt::SolverInterface& _interface
+	);
 	SymbolicVariable(SymbolicVariable const&) = default;
 	SymbolicVariable(SymbolicVariable&&) = default;
 	SymbolicVariable& operator=(SymbolicVariable const&) = default;
@@ -52,8 +54,8 @@ public:
 
 	/// Sets the var to the default value of its type.
 	virtual void setZeroValue(int _seq) = 0;
-	/// The unknown value depends on the type. For example, an interval is set for Integers.
-	/// This is decided by the subclasses.
+	/// The unknown value is the full range of valid values,
+	/// and that's sub-type dependent.
 	virtual void setUnknownValue(int _seq) = 0;
 
 protected:

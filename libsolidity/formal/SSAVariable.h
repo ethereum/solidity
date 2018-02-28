@@ -36,8 +36,10 @@ class SSAVariable
 public:
 	/// @param _decl Used to determine the type and forwarded to the symbolic var.
 	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
-	explicit SSAVariable(Declaration const* _decl,
-		smt::SolverInterface& _interface);
+	SSAVariable(
+		Declaration const* _decl,
+		smt::SolverInterface& _interface
+	);
 	SSAVariable(SSAVariable const&) = default;
 	SSAVariable(SSAVariable&&) = default;
 	SSAVariable& operator=(SSAVariable const&) = default;
@@ -45,7 +47,9 @@ public:
 
 	void resetIndex();
 
+	/// This function returns the current index of this SSA variable.
 	int index() const;
+	/// This function returns the next free index of this SSA variable.
 	int next() const;
 
 	int operator++()
@@ -74,10 +78,10 @@ public:
 private:
 	smt::Expression valueAtSequence(int _seq) const
 	{
-		return (*m_symbVar)(_seq);
+		return (*m_symbolicVar)(_seq);
 	}
 
-	std::shared_ptr<SymbolicVariable> m_symbVar = nullptr;
+	std::shared_ptr<SymbolicVariable> m_symbolicVar = nullptr;
 	int m_currentSequenceCounter;
 	/// The next free sequence counter is a shared pointer because we want
 	/// the copy and the copied to share it.

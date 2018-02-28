@@ -25,13 +25,15 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SSAVariable::SSAVariable(Declaration const* _decl,
-	smt::SolverInterface& _interface)
+SSAVariable::SSAVariable(
+	Declaration const* _decl,
+	smt::SolverInterface& _interface
+)
 {
 	resetIndex();
 
 	if (dynamic_cast<IntegerType const*>(_decl->type().get()))
-		m_symbVar = make_shared<SymbolicIntVariable>(_decl, _interface);
+		m_symbolicVar = make_shared<SymbolicIntVariable>(_decl, _interface);
 	else
 	{
 		solAssert(false, "");
@@ -62,10 +64,10 @@ int SSAVariable::next() const
 
 void SSAVariable::setZeroValue()
 {
-	m_symbVar->setZeroValue(index());
+	m_symbolicVar->setZeroValue(index());
 }
 
 void SSAVariable::setUnknownValue()
 {
-	m_symbVar->setUnknownValue(index());
+	m_symbolicVar->setUnknownValue(index());
 }

@@ -23,9 +23,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SymbolicIntVariable::SymbolicIntVariable(Declaration const* _decl,
-	smt::SolverInterface&_interface)
-	: SymbolicVariable(_decl, _interface)
+SymbolicIntVariable::SymbolicIntVariable(
+	Declaration const* _decl,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(_decl, _interface)
 {
 	solAssert(m_declaration->type()->category() == Type::Category::Integer, "");
 	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Int));

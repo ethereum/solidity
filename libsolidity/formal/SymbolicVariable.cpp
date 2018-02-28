@@ -23,9 +23,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SymbolicVariable::SymbolicVariable(Declaration const* _decl,
-	smt::SolverInterface& _interface)
-	: m_declaration(_decl),
+SymbolicVariable::SymbolicVariable(
+	Declaration const* _decl,
+	smt::SolverInterface& _interface
+):
+	m_declaration(_decl),
 	m_interface(_interface)
 {
 }
