@@ -447,13 +447,8 @@ protected:
 	)
 	{
 		if (!s_compiledWallet)
-		{
-			m_compiler.reset(false);
-			m_compiler.addSource("", walletCode);
-			m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
-			BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
-			s_compiledWallet.reset(new bytes(m_compiler.object("Wallet").bytecode));
-		}
+			s_compiledWallet.reset(new bytes(compileContract(walletCode, "Wallet")));
+
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
 		sendMessage(*s_compiledWallet + args, true, _value);
 		BOOST_REQUIRE(!m_output.empty());

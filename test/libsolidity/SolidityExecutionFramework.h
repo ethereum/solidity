@@ -52,6 +52,17 @@ public:
 		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
 	) override
 	{
+		bytes bytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
+		sendMessage(bytecode + _arguments, true, _value);
+		return m_output;
+	}
+
+	bytes compileContract(
+		std::string const& _sourceCode,
+		std::string const& _contractName = "",
+		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
+	)
+	{
 		// Silence compiler version warning
 		std::string sourceCode = "pragma solidity >=0.0;\n" + _sourceCode;
 		m_compiler.reset(false);
@@ -72,8 +83,7 @@ public:
 		}
 		eth::LinkerObject obj = m_compiler.object(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
 		BOOST_REQUIRE(obj.linkReferences.empty());
-		sendMessage(obj.bytecode + _arguments, true, _value);
-		return m_output;
+		return obj.bytecode;
 	}
 
 protected:
