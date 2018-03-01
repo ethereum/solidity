@@ -230,7 +230,10 @@ Tips and Tricks
 * Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you automatically.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
-* Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
+* Initialize storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
+
+.. note::
+    If the storage struct has tightly packed properties, initialize it with separate assignments: ``x.a = 1; x.b = 2;``. In this way it will be easier for the optimizer to update storage in one go, thus making assignment cheaper.
 
 **********
 Cheatsheet
