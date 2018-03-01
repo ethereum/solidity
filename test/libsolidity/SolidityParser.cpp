@@ -491,28 +491,46 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 	auto keywords = {
 		"abstract",
 		"after",
+		"alias",
+		"apply",
+		"auto",
 		"case",
 		"catch",
+		"copyof",
 		"default",
+		"define",
 		"final",
+		"immutable",
+		"implements",
 		"in",
 		"inline",
 		"let",
+		"macro",
 		"match",
+		"mutable",
 		"null",
 		"of",
+		"override",
+		"partial",
+		"promise",
+		"reference",
 		"relocatable",
+		"sealed",
+		"sizeof",
 		"static",
+		"supports",
 		"switch",
 		"try",
 		"type",
-		"typeof"
+		"typedef",
+		"typeof",
+		"unchecked"
 	};
 
 	for (const auto& keyword: keywords)
 	{
 		auto text = std::string("contract ") + keyword + " {}";
-		CHECK_PARSE_ERROR(text.c_str(), "Expected identifier but got reserved keyword");
+		CHECK_PARSE_ERROR(text.c_str(), string("Expected identifier but got reserved keyword '") + keyword + "'");
 	}
 }
 

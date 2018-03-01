@@ -7,6 +7,9 @@ Breaking Changes:
  * Disallow conversions between bytesX and uintY of different size.
  * Commandline interface: Require ``-`` if standard input is used as source.
  * General: New keywords: ``calldata``
+ * General: Add new reserved keywords: ``alias``, ``apply``, ``auto``, ``copyof``, ``define``, ``immutable``,
+   ``implements``, ``macro``, ``mutable``, ``override``, ``partial``, ``promise``, ``reference``, ``sealed``,
+   ``sizeof``, ``supports``, ``typedef`` and ``unchecked``.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
  * General: Signed right shift uses proper arithmetic shift, i.e. rounding towards negative infinity. Warning: this may silently change the semantics of existing code!
  * Introduce ``emit`` as a keyword instead of parsing it as identifier.

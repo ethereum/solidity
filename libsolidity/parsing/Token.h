@@ -223,22 +223,41 @@ namespace solidity
 	/* Keywords reserved for future use. */                            \
 	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
+	K(Alias, "alias", 0)                                               \
+	K(Apply, "apply", 0)                                               \
+	K(Auto, "auto", 0)                                                 \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
+	K(CopyOf, "copyof", 0)                                             \
 	K(Default, "default", 0)                                           \
+	K(Define, "define", 0)                                             \
 	K(Final, "final", 0)                                               \
+	K(Immutable, "immutable", 0)                                       \
+	K(Implements, "implements", 0)                                     \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
 	K(Let, "let", 0)                                                   \
+	K(Macro, "macro", 0)                                               \
 	K(Match, "match", 0)                                               \
+	K(Mutable, "mutable", 0)                                           \
 	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
+	K(Override, "override", 0)                                         \
+	K(Partial, "partial", 0)                                           \
+	K(Promise, "promise", 0)                                           \
+	K(Reference, "reference", 0)                                       \
 	K(Relocatable, "relocatable", 0)                                   \
+	K(Sealed, "sealed", 0)                                             \
+	K(Sizeof, "sizeof", 0)                                             \
 	K(Static, "static", 0)                                             \
+	K(Supports, "supports", 0)                                         \
 	K(Switch, "switch", 0)                                             \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
+	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
+	K(Unchecked, "unchecked", 0)                                       \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -295,7 +314,7 @@ public:
 	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
-	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }
+	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= Unchecked); }
 
 	// @returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
