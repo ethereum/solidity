@@ -233,7 +233,7 @@ Tips and Tricks
 * Initialize storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
 
 .. note::
-    If the storage struct has tightly packed properties, initialize it with separate assignments: ``x.a = 1; x.b = 2;``. In this way it will be easier for optimizer to update storage in one go, thus making assignment cheaper.
+    If the storage struct has tightly packed properties, initialize it with separate assignments: ``x.a = 1; x.b = 2;``. In this way it will be easier for the optimizer to update storage in one go, thus making assignment cheaper.
 
 **********
 Cheatsheet
