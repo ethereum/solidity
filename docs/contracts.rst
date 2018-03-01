@@ -955,6 +955,31 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
+.. index:: ! constructor
+
+Constructors
+============
+A constructor is an optional function with the same name as the contract which is executed upon contract creation. 
+Constructor functions can be either ``public`` or ``internal``.
+
+::
+
+    pragma solidity ^0.4.11;
+
+    contract A {
+        uint public a;
+
+        function A(uint _a) internal {
+            a = _a;
+        }
+    }
+
+    contract B is A(1) {
+        function B() public {}
+    }
+
+A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+
 .. index:: ! base;constructor
 
 Arguments for Base Constructors
@@ -1027,11 +1052,13 @@ As an exception, a state variable getter can override a public function.
 
 .. index:: ! contract;abstract, ! abstract contract
 
+.. _abstract-contract:
+
 ******************
 Abstract Contracts
 ******************
 
-Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
+Contracts are marked as abstract when at least one of their functions lacks an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
 
     pragma solidity ^0.4.0;
 
@@ -1039,9 +1066,7 @@ Contract functions can lack an implementation as in the following example (note 
         function utterance() public returns (bytes32);
     }
 
-Such contracts cannot be compiled (even if they contain
-implemented functions alongside non-implemented functions),
-but they can be used as base contracts::
+Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
     pragma solidity ^0.4.0;
 
@@ -1065,6 +1090,8 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
 
