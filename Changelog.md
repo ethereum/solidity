@@ -15,7 +15,8 @@ Bugfixes:
  * JSON-AST: Add "documentation" property to function, event and modifier definition.
  * Resolver: Properly determine shadowing for imports with aliases.
  * Standalone Assembly: Do not ignore input after closing brace of top level block.
- * Standard JSON: catch errors properly when invalid "sources" are passed
+ * Standard JSON: Catch errors properly when invalid "sources" are passed.
+ * Standard JSON: Ensure that library addresses supplied are of correct length and hex prefixed.
  * Type Checker: Properly warn when using ``_offset`` and ``_slot`` for constants in inline assembly.
  * Commandline interface: throw error if option is unknown
 

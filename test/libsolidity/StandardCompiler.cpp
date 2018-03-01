@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
 	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."));
 }
 
-BOOST_AUTO_TEST_CASE(libraries_various_addresses)
+BOOST_AUTO_TEST_CASE(libraries_invalid_length)
 {
 	char const* input = R"(
 	{
@@ -641,11 +641,8 @@ BOOST_AUTO_TEST_CASE(libraries_various_addresses)
 		"settings": {
 			"libraries": {
 				"library.sol": {
-					"L": 42,
-					"L3": "42",
-					"L4": "0x42",
-					"L5": "0x4200000000000000000000000000000000000001",
-					"L6": "4200000000000000000000000000000000000001"
+					"L1": "0x42",
+					"L2": "0x4200000000000000000000000000000000000001ff"
 				}
 			}
 		},
@@ -657,7 +654,30 @@ BOOST_AUTO_TEST_CASE(libraries_various_addresses)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsAtMostWarnings(result));
+	BOOST_CHECK(containsError(result, "JSONError", "Library address is of invalid length."));
+}
+
+BOOST_AUTO_TEST_CASE(libraries_missing_hex_prefix)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": "4200000000000000000000000000000000000001"
+				}
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Library address is not prefixed with \"0x\"."));
 }
 
 BOOST_AUTO_TEST_CASE(library_linking)
