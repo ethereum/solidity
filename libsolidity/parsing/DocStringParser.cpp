@@ -5,6 +5,7 @@
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace dev;
@@ -78,7 +79,9 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 
 			currPos = parseDocTag(tagNameEndPos + 1, end, string(tagPos + 1, tagNameEndPos));
 		}
-		else if (!!m_lastTag) // continuation of the previous tag
+		else if (!!m_lastTag && (boost::starts_with(m_lastTag->externalName, "external:") || boost::starts_with(m_lastTag->externalName, "ext:"))) // continuation of external tag
+			currPos = appendDocTag(currPos, end, true);
+		else if (!!m_lastTag) // continuation of the previous tag - if not external tag
 			currPos = appendDocTag(currPos, end);
 		else if (currPos != end)
 		{
@@ -97,7 +100,7 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 	return !m_errorsOccurred;
 }
 
-DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending)
+DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending, bool _preserveNewLines /* = false */)
 {
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
@@ -106,6 +109,8 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 	else if (!_appending)
 		_pos = skipWhitespace(_pos, _end);
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
+	if (_preserveNewLines)
+		m_lastTag->content.append("\n");
 	return skipLineOrEOS(nlPos, _end);
 }
 
@@ -144,7 +149,18 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 	// for all cases.
 	if (!m_lastTag || _tag != "")
 	{
-		if (_tag == "param")
+		if (boost::starts_with(_tag, "ext:") || boost::starts_with(_tag, "external:"))
+		{
+			std::string tag(_tag);
+			if (boost::starts_with(_tag, "ext:"))
+				boost::replace_all(tag, "ext:", "external:");
+			if (m_docTags.find(tag) == m_docTags.end())
+				newTag(tag);
+			else
+				m_lastTag = &m_docTags.find(tag)->second;
+			m_lastTag->externalName = tag;
+			return appendDocTag(_pos, _end, true);
+		} else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
 		else
 		{
@@ -156,10 +172,10 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 		return appendDocTag(_pos, _end);
 }
 
-DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end)
+DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end, bool _preserveNewLines /* = false */)
 {
 	solAssert(!!m_lastTag, "");
-	return parseDocTagLine(_pos, _end, true);
+	return parseDocTagLine(_pos, _end, true, _preserveNewLines);
 }
 
 void DocStringParser::newTag(string const& _tagName)

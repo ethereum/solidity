@@ -26,6 +26,7 @@
 #include <libsolidity/interface/Natspec.h>
 #include <boost/range/irange.hpp>
 #include <libsolidity/ast/AST.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace dev;
@@ -92,6 +93,38 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 
 			if (!params.empty())
 				method["params"] = params;
+
+			if (!method.empty())
+				// add the function, only if we have any documentation to add
+				methods[it.second->externalSignature()] = method;
+		}
+	}
+	doc["methods"] = methods;
+
+	return doc;
+}
+
+Json::Value Natspec::externalNatspec(ContractDefinition const& _contractDef)
+{
+	Json::Value doc;
+	Json::Value methods(Json::objectValue);
+
+	for (auto& tag : _contractDef.annotation().docTags)
+		if (boost::starts_with(tag.first, "external:"))
+			doc[tag.first] = tag.second.content;
+
+	for (auto const& it: _contractDef.interfaceFunctions())
+	{
+		if (!it.second->hasDeclaration())
+			continue;
+		Json::Value method;
+		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
+		{
+			for (auto& tag : fun->annotation().docTags)
+			{
+				if (boost::starts_with(tag.first, "external:"))
+					method[tag.first] = tag.second.content;
+			}
 
 			if (!method.empty())
 				// add the function, only if we have any documentation to add

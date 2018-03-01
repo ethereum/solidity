@@ -25,6 +25,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/parsing/DocStringParser.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace dev;
@@ -106,7 +107,7 @@ void DocStringAnalyser::parseDocStrings(
 		_annotation.docTags = parser.tags();
 	}
 	for (auto const& docTag: _annotation.docTags)
-		if (!_validTags.count(docTag.first))
+		if (!_validTags.count(docTag.first) && !boost::starts_with(docTag.first, "external:"))
 			appendError("Doc tag @" + docTag.first + " not valid for " + _nodeName + ".");
 }
 
