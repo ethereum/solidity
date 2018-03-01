@@ -56,6 +56,7 @@ private:
 	/// This struct is shared for parsing a function header and a function type.
 	struct FunctionHeaderParserResult
 	{
+		bool isConstructor;
 		ASTPointer<ASTString> name;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
