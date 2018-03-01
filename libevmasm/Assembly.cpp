@@ -353,7 +353,7 @@ void Assembly::injectStart(AssemblyItem const& _i)
 	m_items.insert(m_items.begin(), _i);
 }
 
-Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
+Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
 {
 	OptimiserSettings settings;
 	settings.isCreation = _isCreation;
@@ -365,6 +365,7 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		settings.runCSE = true;
 		settings.runConstantOptimiser = true;
 	}
+	settings.evmVersion = _evmVersion;
 	settings.expectedExecutionsPerDeployment = _runs;
 	optimise(settings);
 	return *this;
@@ -482,6 +483,7 @@ map<u256, u256> Assembly::optimiseInternal(
 		ConstantOptimisationMethod::optimiseConstants(
 			_settings.isCreation,
 			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
+			_settings.evmVersion,
 			*this,
 			m_items
 		);

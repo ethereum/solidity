@@ -21,10 +21,13 @@
 
 #pragma once
 
+#include <libevmasm/GasMeter.h>
+
+#include <libsolidity/interface/EVMVersion.h>
+
 #include <set>
 #include <vector>
 #include <memory>
-#include <libevmasm/GasMeter.h>
 
 namespace dev
 {
@@ -50,7 +53,7 @@ struct GasPath
 class PathGasMeter
 {
 public:
-	explicit PathGasMeter(AssemblyItems const& _items);
+	explicit PathGasMeter(AssemblyItems const& _items, solidity::EVMVersion _evmVersion);
 
 	GasMeter::GasConsumption estimateMax(size_t _startIndex, std::shared_ptr<KnownState> const& _state);
 
@@ -60,6 +63,7 @@ private:
 	std::vector<std::unique_ptr<GasPath>> m_queue;
 	std::map<u256, size_t> m_tagPositions;
 	AssemblyItems const& m_items;
+	solidity::EVMVersion m_evmVersion;
 };
 
 }

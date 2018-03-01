@@ -209,7 +209,7 @@ public:
 	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
 	/// Run optimisation step.
-	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, true, _runs); }
+	void optimise(bool _fullOptimsation, unsigned _runs = 200) { m_asm->optimise(_fullOptimsation, m_evmVersion, true, _runs); }
 
 	/// @returns the runtime context if in creation mode and runtime context is set, nullptr otherwise.
 	CompilerContext* runtimeContext() { return m_runtimeContext; }

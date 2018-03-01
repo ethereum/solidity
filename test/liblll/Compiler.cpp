@@ -20,11 +20,16 @@
  * Unit tests for the LLL compiler.
  */
 
+#include <test/TestHelper.h>
+
+#include <libdevcore/FixedHash.h>
+
+#include <liblll/Compiler.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include <string>
 #include <memory>
-#include <boost/test/unit_test.hpp>
-#include <liblll/Compiler.h>
-#include <libdevcore/FixedHash.h>
 
 using namespace std;
 
@@ -41,7 +46,7 @@ namespace
 bool successCompile(string const& _sourceCode)
 {
 	vector<string> errors;
-	bytes bytecode = eth::compileLLL(_sourceCode, false, &errors);
+	bytes bytecode = eth::compileLLL(_sourceCode, dev::test::Options::get().evmVersion(), false, &errors);
 	if (!errors.empty())
 		return false;
 	if (bytecode.empty())
@@ -353,7 +358,7 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_functional)
 
 	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
 		vector<string> errors;
-		bytes code = eth::compileLLL(opcodes_lll[i], false, &errors);
+		bytes code = eth::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
 		BOOST_REQUIRE_MESSAGE(errors.empty(), opcodes_lll[i]);
 
@@ -641,7 +646,7 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_asm)
 
 	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
 		vector<string> errors;
-		bytes code = eth::compileLLL(opcodes_lll[i], false, &errors);
+		bytes code = eth::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
 		BOOST_REQUIRE_MESSAGE(errors.empty(), opcodes_lll[i]);
 

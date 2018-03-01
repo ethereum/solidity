@@ -40,7 +40,7 @@ using namespace dev::solidity;
 GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimation(
 	AssemblyItems const& _items,
 	vector<ASTNode const*> const& _ast
-)
+) const
 {
 	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
 	map<SourceLocation, GasConsumption> particularCosts;
@@ -49,7 +49,7 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	for (BasicBlock const& block: cfg.optimisedBlocks())
 	{
 		solAssert(!!block.startState, "");
-		GasMeter meter(block.startState->copy());
+		GasMeter meter(block.startState->copy(), m_evmVersion);
 		auto const end = _items.begin() + block.end;
 		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
 			particularCosts[iter->location()] += meter.estimateMax(*iter);
@@ -127,7 +127,7 @@ map<ASTNode const*, GasMeter::GasConsumption> GasEstimator::breakToStatementLeve
 GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	AssemblyItems const& _items,
 	string const& _signature
-)
+) const
 {
 	auto state = make_shared<KnownState>();
 
@@ -144,7 +144,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		});
 	}
 
-	PathGasMeter meter(_items);
+	PathGasMeter meter(_items, m_evmVersion);
 	return meter.estimateMax(0, state);
 }
 
@@ -152,7 +152,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	AssemblyItems const& _items,
 	size_t const& _offset,
 	FunctionDefinition const& _function
-)
+) const
 {
 	auto state = make_shared<KnownState>();
 
@@ -167,7 +167,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	if (parametersSize > 0)
 		state->feedItem(swapInstruction(parametersSize));
 
-	return PathGasMeter(_items).estimateMax(_offset, state);
+	return PathGasMeter(_items, m_evmVersion).estimateMax(_offset, state);
 }
 
 set<ASTNode const*> GasEstimator::finestNodesAtLocation(

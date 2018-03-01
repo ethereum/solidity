@@ -20,10 +20,13 @@
  * End to end tests for LLL.
  */
 
+#include <test/liblll/ExecutionFramework.h>
+#include <test/TestHelper.h>
+
+#include <boost/test/unit_test.hpp>
+
 #include <string>
 #include <memory>
-#include <boost/test/unit_test.hpp>
-#include <test/liblll/ExecutionFramework.h>
 
 using namespace std;
 
@@ -583,24 +586,34 @@ BOOST_AUTO_TEST_CASE(allgas)
 
 BOOST_AUTO_TEST_CASE(send_two_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(send 0xdead 42))
-	)";
-	compileAndRun(sourceCode);
-	callFallbackWithValue(42);
-	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+	// "send" does not retain enough gas to be able to pay for account creation.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(send 0xdead 42))
+		)";
+		compileAndRun(sourceCode);
+		callFallbackWithValue(42);
+		BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(send_three_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(send allgas 0xdead 42))
-	)";
-	compileAndRun(sourceCode);
-	callFallbackWithValue(42);
-	BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+	// "send" does not retain enough gas to be able to pay for account creation.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(send allgas 0xdead 42))
+		)";
+		compileAndRun(sourceCode);
+		callFallbackWithValue(42);
+		BOOST_CHECK(balanceAt(Address(0xdead)) == 42);
+	}
 }
 
 // Regression test for edge case that previously failed
@@ -708,56 +721,76 @@ BOOST_AUTO_TEST_CASE(msg_four_args)
 
 BOOST_AUTO_TEST_CASE(msg_three_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(when (= 0 (calldatasize))
-					(return (msg (address) 42 0xff)))
-				(return (callvalue))))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+	// "msg" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(when (= 0 (calldatasize))
+						(return (msg (address) 42 0xff)))
+					(return (callvalue))))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(msg_two_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(when (= 0 (calldatasize))
-					(return (msg (address) 0xff)))
-				(return 42)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+	// "msg" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(when (= 0 (calldatasize))
+						(return (msg (address) 0xff)))
+					(return 42)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(create_one_arg)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(call allgas
-					(create (returnlll (return 42)))
-					0 0 0 0x00 0x20)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+	// "call" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(call allgas
+						(create (returnlll (return 42)))
+						0 0 0 0x00 0x20)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(u256(42)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(create_two_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(call allgas
-					(create 42 (returnlll (return (balance (address)))))
-					0 0 0 0x00 0x20)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+	// "call" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(call allgas
+						(create 42 (returnlll (return (balance (address)))))
+						0 0 0 0x00 0x20)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallbackWithValue(42) == encodeArgs(u256(42)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(sha3_two_args)
@@ -822,77 +855,102 @@ BOOST_AUTO_TEST_CASE(makeperm) // Covers makeperm (implicit), permcount and perm
 
 BOOST_AUTO_TEST_CASE(ecrecover)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(return
-				(ecrecover
-					; Hash of 'hello world'
-					0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad
-					; v = 1 + 27
-					0x1c
-					; r
-					0xdebaaa0cddb321b2dcaaf846d39605de7b97e77ba6106587855b9106cb104215
-					; s
-					0x61a22d94fa8b8a687ff9c911c844d1c016d1a685a9166858f9c7c1bc85128aca)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(fromHex("0x8743523d96a1b2cbe0c6909653a56da18ed484af")));
+	// "ecrecover" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(return
+					(ecrecover
+						; Hash of 'hello world'
+						0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad
+						; v = 1 + 27
+						0x1c
+						; r
+						0xdebaaa0cddb321b2dcaaf846d39605de7b97e77ba6106587855b9106cb104215
+						; s
+						0x61a22d94fa8b8a687ff9c911c844d1c016d1a685a9166858f9c7c1bc85128aca)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(fromHex("0x8743523d96a1b2cbe0c6909653a56da18ed484af")));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(sha256_two_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
-				(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
-				(sha256 0x20 0x40)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(
-		fromHex("0xcf25a9fe3d86ae228c226c81d2d8c64c687cd6dc4586d10d8e7e4e5b6706d429")));
+	// "sha256" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
+					(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
+					(sha256 0x20 0x40)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(
+			fromHex("0xcf25a9fe3d86ae228c226c81d2d8c64c687cd6dc4586d10d8e7e4e5b6706d429")));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(ripemd160_two_args)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
-				(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
-				(ripemd160 0x20 0x40)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(
-		fromHex("0x36c6b90a49e17d4c1e1b0e634ec74124d9b207da")));
+	// "ripemd160" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(lit 0x20 "abcdefghijklmnopqrstuvwxyzABCDEF")
+					(lit 0x40 "GHIJKLMNOPQRSTUVWXYZ0123456789?!")
+					(ripemd160 0x20 0x40)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(
+			fromHex("0x36c6b90a49e17d4c1e1b0e634ec74124d9b207da")));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(sha256_one_arg)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(sha256 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(
-		fromHex("0xcfd2f1fad75a1978da0a444883db7251414b139f31f5a04704c291fdb0e175e6")));
+	// "sha256" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(sha256 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(
+			fromHex("0xcfd2f1fad75a1978da0a444883db7251414b139f31f5a04704c291fdb0e175e6")));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(ripemd160_one_arg)
 {
-	char const* sourceCode = R"(
-		(returnlll
-			(seq
-				(ripemd160 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
-				(return 0x00 0x20)))
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(
-		fromHex("0xac5ab22e07b0fb80c69b6207902f725e2507e546")));
+	// "ripemd160" does not retain enough gas.
+	// Disabling for non-tangerineWhistle VMs.
+	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	{
+		char const* sourceCode = R"(
+			(returnlll
+				(seq
+					(ripemd160 0x6162636465666768696a6b6c6d6e6f707172737475767778797a414243444546)
+					(return 0x00 0x20)))
+		)";
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callFallback() == encodeArgs(
+			fromHex("0xac5ab22e07b0fb80c69b6207902f725e2507e546")));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(wei_szabo_finney_ether)

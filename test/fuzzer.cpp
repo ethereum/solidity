@@ -76,6 +76,7 @@ void testConstantOptimizer()
 			ConstantOptimisationMethod::optimiseConstants(
 				isCreation,
 				runs,
+				EVMVersion{},
 				assembly,
 				const_cast<AssemblyItems&>(assembly.items())
 			);

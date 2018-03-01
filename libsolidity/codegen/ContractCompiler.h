@@ -125,7 +125,7 @@ private:
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	/// @returns the runtime assembly for clone contracts.
-	static eth::AssemblyPointer cloneRuntime();
+	eth::AssemblyPointer cloneRuntime() const;
 
 	bool const m_optimise;
 	/// Pointer to the runtime compiler in case this is a creation compiler.

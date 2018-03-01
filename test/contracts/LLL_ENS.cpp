@@ -345,7 +345,7 @@ protected:
 		if (!s_compiledEns)
 		{
 			vector<string> errors;
-			s_compiledEns.reset(new bytes(compileLLL(ensCode, dev::test::Options::get().optimize, &errors)));
+			s_compiledEns.reset(new bytes(compileLLL(ensCode, dev::test::Options::get().evmVersion(), dev::test::Options::get().optimize, &errors)));
 			BOOST_REQUIRE(errors.empty());
 		}
 		sendMessage(*s_compiledEns, true);

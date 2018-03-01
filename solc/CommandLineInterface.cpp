@@ -748,7 +748,6 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
-	EVMVersion evmVersion;
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
@@ -758,7 +757,7 @@ bool CommandLineInterface::processInput()
 			cerr << "Invalid option for --evm-version: " << versionOptionStr << endl;
 			return false;
 		}
-		evmVersion = *versionOption;
+		m_evmVersion = *versionOption;
 	}
 
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
@@ -784,7 +783,7 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
-		return assemble(evmVersion, inputLanguage, targetMachine);
+		return assemble(inputLanguage, targetMachine);
 	}
 	if (m_args.count(g_argLink))
 	{
@@ -808,8 +807,7 @@ bool CommandLineInterface::processInput()
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
-		if (m_args.count(g_strEVMVersion))
-			m_compiler->setEVMVersion(evmVersion);
+		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -968,7 +966,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		// FIXME: shouldn't this be done for every contract?
 		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
 			gasCosts = GasEstimator::breakToStatementLevel(
-				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
+				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
 				asts
 			);
 
@@ -1081,7 +1079,6 @@ void CommandLineInterface::writeLinkedFiles()
 }
 
 bool CommandLineInterface::assemble(
-	EVMVersion _evmVersion,
 	AssemblyStack::Language _language,
 	AssemblyStack::Machine _targetMachine
 )
@@ -1090,7 +1087,7 @@ bool CommandLineInterface::assemble(
 	map<string, AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = AssemblyStack(_evmVersion, _language);
+		auto& stack = assemblyStacks[src.first] = AssemblyStack(m_evmVersion, _language);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))

@@ -959,11 +959,12 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		return Json::Value();
 
 	using Gas = GasEstimator::GasConsumption;
+	GasEstimator gasEstimator(m_evmVersion);
 	Json::Value output(Json::objectValue);
 
 	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
 	{
-		Gas executionGas = GasEstimator::functionalEstimation(*items);
+		Gas executionGas = gasEstimator.functionalEstimation(*items);
 		u256 bytecodeSize(runtimeObject(_contractName).bytecode.size());
 		Gas codeDepositGas = bytecodeSize * eth::GasCosts::createDataGas;
 
@@ -984,14 +985,14 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		for (auto it: contract.interfaceFunctions())
 		{
 			string sig = it.second->externalSignature();
-			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
+			externalFunctions[sig] = gasToJson(gasEstimator.functionalEstimation(*items, sig));
 		}
 
 		if (contract.fallbackFunction())
 			/// This needs to be set to an invalid signature in order to trigger the fallback,
 			/// without the shortcut (of CALLDATSIZE == 0), and therefore to receive the upper bound.
 			/// An empty string ("") would work to trigger the shortcut only.
-			externalFunctions[""] = gasToJson(GasEstimator::functionalEstimation(*items, "INVALID"));
+			externalFunctions[""] = gasToJson(gasEstimator.functionalEstimation(*items, "INVALID"));
 
 		if (!externalFunctions.empty())
 			output["external"] = externalFunctions;
@@ -1007,7 +1008,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 			size_t entry = functionEntryPoint(_contractName, *it);
 			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
 			if (entry > 0)
-				gas = GasEstimator::functionalEstimation(*items, entry, *it);
+				gas = gasEstimator.functionalEstimation(*items, entry, *it);
 
 			/// TODO: This could move into a method shared with externalSignature()
 			FunctionType type(*it);
