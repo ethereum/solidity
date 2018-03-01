@@ -2021,6 +2021,8 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
@@ -2032,6 +2034,19 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"If this is not used as an address, please prepend '00'. " +
 				(!_literal.getChecksummedAddress().empty() ? "Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. " : "") +
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
+			);
+	}
+	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
+	{
+		if (v050)
+			m_errorReporter.fatalTypeError(
+				_literal.location(),
+				"Hexadecimal numbers cannot be used with unit denominations."
+			);
+		else
+			m_errorReporter.warning(
+				_literal.location(),
+				"Hexadecimal numbers with unit denominations are deprecated."
 			);
 	}
 	if (!_literal.annotation().type)
