@@ -1164,6 +1164,36 @@ BOOST_AUTO_TEST_CASE(constant_is_keyword)
 	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
+BOOST_AUTO_TEST_CASE(keyword_is_reserved)
+{
+	auto keywords = {
+		"abstract",
+		"after",
+		"case",
+		"catch",
+		"default",
+		"final",
+		"in",
+		"inline",
+		"let",
+		"match",
+		"null",
+		"of",
+		"relocatable",
+		"static",
+		"switch",
+		"try",
+		"type",
+		"typeof"
+	};
+
+	for (const auto& keyword: keywords)
+	{
+		auto text = std::string("contract ") + keyword + " {}";
+		CHECK_PARSE_ERROR(text.c_str(), "Expected identifier");
+	}
+}
+
 BOOST_AUTO_TEST_CASE(var_array)
 {
 	char const* text = R"(
