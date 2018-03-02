@@ -2041,12 +2041,14 @@ void TypeChecker::endVisit(Literal const& _literal)
 		if (v050)
 			m_errorReporter.fatalTypeError(
 				_literal.location(),
-				"Hexadecimal numbers cannot be used with unit denominations."
+				"Hexadecimal numbers cannot be used with unit denominations. "
+				"You can use an expression of the form '0x1234 * 1 day' instead."
 			);
 		else
 			m_errorReporter.warning(
 				_literal.location(),
-				"Hexadecimal numbers with unit denominations are deprecated."
+				"Hexadecimal numbers with unit denominations are deprecated. "
+				"You can use an expression of the form '0x1234 * 1 day' instead."
 			);
 	}
 	if (!_literal.annotation().type)
