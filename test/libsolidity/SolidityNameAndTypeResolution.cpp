@@ -2717,6 +2717,25 @@ BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(combining_hex_and_denomination)
+{
+	char const* text = R"(
+		contract Foo {
+			uint constant x = 0x01 wei;
+		}
+	)";
+	CHECK_WARNING(text, "Hexadecimal numbers with unit denominations are deprecated.");
+
+	char const* textV050 = R"(
+		pragma experimental "v0.5.0";
+
+		contract Foo {
+			uint constant x = 0x01 wei;
+		}
+	)";
+	CHECK_ERROR(textV050, TypeError, "Hexadecimal numbers cannot be used with unit denominations.");
+}
+
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 {
 	char const* text = R"(
