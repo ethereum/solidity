@@ -523,7 +523,12 @@ Ether (without data). Additionally, in order to receive Ether, the fallback func
 must be marked ``payable``. If no such function exists, the contract cannot receive
 Ether through regular transactions.
 
-It is worth nothing that the "send" or "transfer" function only has a 2300 gas stipend. If the fallback function is called by another contract account using the send/transfer function (eg address.transfer(1 ether)), then the fallback function only has 2300 gas to spend, meaning that it cannot do much other than basic logging.
+In the worst case, the fallback function can only rely on 2300 gas being available (for example when send or transfer is used), leaving not much room to perform other operations except basic logging. The following operations will consume more gas than the 2300 gas stipend:
+
+- Writing to storage
+- Creating a contract
+- Calling an external function which consumes a large amount of gas
+- Sending Ether
 
 Like any function, the fallback function can execute complex operations as long as there is enough gas passed on to it.
 
