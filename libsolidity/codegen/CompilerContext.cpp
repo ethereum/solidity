@@ -264,7 +264,7 @@ CompilerContext& CompilerContext::appendRevert()
 
 CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData)
 {
-	if (_forwardReturnData)
+	if (_forwardReturnData && m_evmVersion.supportsReturndata())
 		appendInlineAssembly(R"({
 			if condition {
 				returndatacopy(0, 0, returndatasize())
