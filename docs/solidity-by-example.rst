@@ -219,7 +219,7 @@ activate themselves.
 
 ::
 
-    pragma solidity ^0.4.20; // should actually be 0.4.21
+    pragma solidity ^0.4.21;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -376,7 +376,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity ^0.4.20; // should actually be 0.4.21
+    pragma solidity ^0.4.21;
 
     contract BlindAuction {
         struct Bid {
@@ -529,7 +529,7 @@ Safe Remote Purchase
 
 ::
 
-    pragma solidity ^0.4.20; // should actually be 0.4.21
+    pragma solidity ^0.4.21;
 
     contract Purchase {
         uint public value;
