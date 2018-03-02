@@ -7409,6 +7409,31 @@ BOOST_AUTO_TEST_CASE(builtin_reject_gas)
 	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
 }
 
+BOOST_AUTO_TEST_CASE(gas_left)
+{
+	char const* text = R"(
+		contract C {
+			function f() public returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_SUCCESS(text);
+
+	text = R"(
+		contract C {
+			function f() public returns (uint256 val) { return gasleft(); }
+		}
+	)";
+	CHECK_SUCCESS(text);
+
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() public returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup in msg");
+}
+
 BOOST_AUTO_TEST_CASE(builtin_reject_value)
 {
 	char const* text = R"(

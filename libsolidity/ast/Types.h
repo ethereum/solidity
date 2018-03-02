@@ -902,7 +902,8 @@ public:
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
-		Require ///< require()
+		Require, ///< require()
+		GasLeft ///< gasleft()
 	};
 
 	virtual Category category() const override { return Category::Function; }

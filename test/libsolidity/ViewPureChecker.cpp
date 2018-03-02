@@ -109,6 +109,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"block.difficulty",
 		"block.number",
 		"block.gaslimit",
+		"gasleft()",
 		"msg.gas",
 		"msg.value",
 		"msg.sender",
