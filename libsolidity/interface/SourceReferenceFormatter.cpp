@@ -79,8 +79,8 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 			scanner.lineAtPosition(_location->start) <<
 			endl <<
 			string(startColumn, ' ') <<
-			"^\n" <<
-			"Spanning multiple lines.\n";
+			"^ (Relevant source part starts here and spans across multiple lines)." <<
+			endl;
 }
 
 void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)

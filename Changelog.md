@@ -10,6 +10,7 @@ Features:
  * Syntax Checker: Mark ``throw`` as an error as experimental 0.5.0 feature.
  * Syntax Checker: Issue error if no visibility is specified on contract functions as experimental 0.5.0 feature.
  * Type Checker: disallow combining hex numbers and unit denominations as experimental 0.5.0 feature.
+ * Improved messaging when error spans multiple lines of a sourcefile 
 
 Bugfixes:
  * Assembly: Raise error on oversized number literals in assembly.
