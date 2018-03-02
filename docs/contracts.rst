@@ -523,16 +523,14 @@ Ether (without data). Additionally, in order to receive Ether, the fallback func
 must be marked ``payable``. If no such function exists, the contract cannot receive
 Ether through regular transactions.
 
-In such a context, there is usually very little gas available to the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as possible. Note that the gas required by a transaction (as opposed to an internal call) that invokes the fallback function is much higher, because each transaction charges an additional amount of 21000 gas or more for things like signature checking.
-
-In particular, the following operations will consume more gas than the stipend provided to a fallback function:
+In the worst case, the fallback function can only rely on 2300 gas being available (for example when send or transfer is used), leaving not much room to perform other operations except basic logging. The following operations will consume more gas than the 2300 gas stipend:
 
 - Writing to storage
 - Creating a contract
 - Calling an external function which consumes a large amount of gas
 - Sending Ether
 
-Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
+Like any function, the fallback function can execute complex operations as long as there is enough gas passed on to it.
 
 .. note::
     Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
