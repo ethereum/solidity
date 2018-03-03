@@ -52,6 +52,13 @@ public:
 	bool actOnInput();
 
 private:
+	enum class NatspecType
+	{
+		DEVELOPER,
+		USER,
+		EXTERNAL
+	};
+
 	bool link();
 	void writeLinkedFiles();
 
@@ -67,7 +74,7 @@ private:
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMetadata(std::string const& _contract);
 	void handleABI(std::string const& _contract);
-	void handleNatspec(bool _natspecDev, std::string const& _contract);
+	void handleNatspec(NatspecType _natspecType, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
 	void handleFormal();
 

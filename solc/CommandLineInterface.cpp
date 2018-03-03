@@ -102,6 +102,7 @@ static string const g_strMetadata = "metadata";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
+static string const g_strNatspecExternal = "extdoc";
 static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
@@ -143,6 +144,7 @@ static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
+static string const g_argNatspecExternal = g_strNatspecExternal;
 static string const g_argOpcodes = g_strOpcodes;
 static string const g_argOptimize = g_strOptimize;
 static string const g_argOptimizeRuns = g_strOptimizeRuns;
@@ -218,6 +220,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argMetadata,
 		g_argNatspecUser,
 		g_argNatspecDev,
+		g_argNatspecExternal,
 		g_argOpcodes,
 		g_argSignatureHashes
 	})
@@ -320,32 +323,46 @@ void CommandLineInterface::handleABI(string const& _contract)
 		cout << "Contract JSON ABI " << endl << data << endl;
 }
 
-void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
+void CommandLineInterface::handleNatspec(NatspecType _natspecType, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
 	std::string title;
 
-	if (_natspecDev)
+	if (_natspecType == NatspecType::DEVELOPER)
 	{
 		argName = g_argNatspecDev;
 		suffix = ".docdev";
 		title = "Developer Documentation";
 	}
-	else
+	else if (_natspecType == NatspecType::USER)
 	{
 		argName = g_argNatspecUser;
 		suffix = ".docuser";
 		title = "User Documentation";
 	}
+	else if (_natspecType == NatspecType::EXTERNAL)
+	{
+		argName = g_argNatspecExternal;
+		suffix = ".docext";
+		title = "External Documentation";
+	}
 
 	if (m_args.count(argName))
 	{
-		std::string output = dev::jsonPrettyPrint(
-			_natspecDev ?
-			m_compiler->natspecDev(_contract) :
-			m_compiler->natspecUser(_contract)
-		);
+		std::string output;
+		if (_natspecType == NatspecType::DEVELOPER)
+		{
+			output = dev::jsonPrettyPrint(m_compiler->natspecDev(_contract));
+		}
+		else if (_natspecType == NatspecType::USER)
+		{
+			output = dev::jsonPrettyPrint(m_compiler->natspecUser(_contract));
+		}
+		else if (_natspecType == NatspecType::EXTERNAL)
+		{
+			output = dev::jsonPrettyPrint(m_compiler->natspecExternal(_contract));
+		}
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -615,6 +632,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
+		(g_argNatspecExternal.c_str(), "Natspec external documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
 		(g_argFormal.c_str(), "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
@@ -1208,8 +1226,9 @@ void CommandLineInterface::outputCompilationResults()
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
-		handleNatspec(true, contract);
-		handleNatspec(false, contract);
+		handleNatspec(NatspecType::DEVELOPER, contract);
+		handleNatspec(NatspecType::USER, contract);
+		handleNatspec(NatspecType::EXTERNAL, contract);
 	} // end of contracts iteration
 
 	if (m_args.count(g_argFormal))

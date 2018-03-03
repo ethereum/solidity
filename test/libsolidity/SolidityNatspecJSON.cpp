@@ -39,10 +39,11 @@ class DocumentationChecker
 public:
 	DocumentationChecker(): m_compilerStack() {}
 
-	enum class NatspecType {
-		USER_DOCUMENTATION,
-		DEVELOPER_DOCUMENTATION,
-		EXTERNAL_DOCUMENTATION
+	enum class NatspecType
+	{
+		DEVELOPER,
+		USER,
+		EXTERNAL
 	};
 
 	void checkNatspec(
@@ -57,11 +58,11 @@ public:
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
 		Json::Value generatedDocumentation;
-		if (_natspecType == NatspecType::USER_DOCUMENTATION)
+		if (_natspecType == NatspecType::USER)
 			generatedDocumentation = m_compilerStack.natspecUser(m_compilerStack.lastContractName());
-		else if (_natspecType == NatspecType::DEVELOPER_DOCUMENTATION)
+		else if (_natspecType == NatspecType::DEVELOPER)
 			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
-		else if (_natspecType == NatspecType::EXTERNAL_DOCUMENTATION)
+		else if (_natspecType == NatspecType::EXTERNAL)
 			generatedDocumentation = m_compilerStack.natspecExternal(m_compilerStack.lastContractName());
 
 		Json::Value expectedDocumentation;
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
@@ -128,8 +129,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER_DOCUMENTATION);
-	checkNatspec(sourceCode, userNatspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER);
+	checkNatspec(sourceCode, userNatspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiline_comment)
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiple_functions)
@@ -180,7 +181,7 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 	"    \"sub(int256)\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_empty_contract)
@@ -191,7 +192,7 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 
 	char const* natspec = "{\"methods\":{} }";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
@@ -210,8 +211,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	char const* devNatspec = "{\"methods\":{}}";
 	char const* userNatspec = "{\"methods\":{}}";
 
-	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER_DOCUMENTATION);
-	checkNatspec(sourceCode, userNatspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER);
+	checkNatspec(sourceCode, userNatspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_functions)
@@ -362,7 +363,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_return)
@@ -390,7 +391,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
@@ -420,7 +421,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 
@@ -452,7 +453,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiline_comment)
@@ -485,7 +486,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
@@ -505,7 +506,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_doc)
@@ -529,7 +530,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_author_at_function)
@@ -555,7 +556,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -578,7 +579,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
@@ -601,7 +602,7 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -617,7 +618,7 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::USER_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
@@ -706,7 +707,7 @@ BOOST_AUTO_TEST_CASE(ext_contract)
 	"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_functions)
@@ -733,7 +734,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_functions)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline)
@@ -766,7 +767,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_multiline)
@@ -792,7 +793,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_multiline)
 	"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_function)
@@ -832,7 +833,7 @@ BOOST_AUTO_TEST_CASE(ext_function)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_function_multiline)
@@ -861,7 +862,7 @@ BOOST_AUTO_TEST_CASE(ext_function_multiline)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_mix)
@@ -882,7 +883,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_mix)
 		"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_function_mix)
@@ -918,7 +919,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_function_mix)
 		}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL_DOCUMENTATION);
+	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
