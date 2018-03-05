@@ -924,7 +924,7 @@ bool ExpressionCompiler::visit(NewExpression const&)
 
 bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 {
-	const bool v050 = m_context.experimentalFeatureActive(ExperimentalFeature::V050);
+	bool const v050 = m_context.experimentalFeatureActive(ExperimentalFeature::V050);
 
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	// Check whether the member is a bound function.
@@ -1140,8 +1140,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::CALLVALUE;
 		else if (member == "origin")
 			m_context << Instruction::ORIGIN;
-		else if (!v050 && member == "gas")
+		else if (member == "gas")
+		{
+			solAssert(!v050, "");
 			m_context << Instruction::GAS;
+		}
 		else if (member == "gasprice")
 			m_context << Instruction::GASPRICE;
 		else if (member == "data")

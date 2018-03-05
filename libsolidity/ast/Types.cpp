@@ -3000,7 +3000,7 @@ bool MagicType::operator==(Type const& _other) const
 	return other.m_kind == m_kind;
 }
 
-MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const *_contract) const
+MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const* _contract) const
 {
 	solAssert(_contract, "");
 	const bool v050 = _contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
@@ -3025,7 +3025,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const *_contra
 		};
 		if (!v050)
 			members.emplace_back("gas", make_shared<IntegerType>(256));
-		return MemberList::MemberMap(members);
+		return members;
 	}
 	case Kind::Transaction:
 		return MemberList::MemberMap({
