@@ -60,7 +60,8 @@ bool isValidMetadata(string const& _metadata)
 		!metadata.isMember("compiler") ||
 		!metadata.isMember("settings") ||
 		!metadata.isMember("sources") ||
-		!metadata.isMember("output")
+		!metadata.isMember("output") ||
+		!metadata["settings"].isMember("evmVersion")
 	)
 		return false;
 

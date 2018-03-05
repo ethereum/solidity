@@ -22,11 +22,14 @@
 
 #pragma once
 
+#include <libsolidity/interface/EVMVersion.h>
+
+#include <libevmasm/GasMeter.h>
+#include <libevmasm/Assembly.h>
+
 #include <vector>
 #include <map>
 #include <array>
-#include <libevmasm/GasMeter.h>
-#include <libevmasm/Assembly.h>
 
 namespace dev
 {
@@ -44,13 +47,15 @@ public:
 	using ASTGasConsumptionSelfAccumulated =
 		std::map<ASTNode const*, std::array<GasConsumption, 2>>;
 
+	explicit GasEstimator(EVMVersion _evmVersion): m_evmVersion(_evmVersion) {}
+
 	/// Estimates the gas consumption for every assembly item in the given assembly and stores
 	/// it by source location.
 	/// @returns a mapping from each AST node to a pair of its particular and syntactically accumulated gas costs.
-	static ASTGasConsumptionSelfAccumulated structuralEstimation(
+	ASTGasConsumptionSelfAccumulated structuralEstimation(
 		eth::AssemblyItems const& _items,
 		std::vector<ASTNode const*> const& _ast
-	);
+	) const;
 	/// @returns a mapping from nodes with non-overlapping source locations to gas consumptions such that
 	/// the following source locations are part of the mapping:
 	/// 1. source locations of statements that do not contain other statements
@@ -62,23 +67,24 @@ public:
 
 	/// @returns the estimated gas consumption by the (public or external) function with the
 	/// given signature. If no signature is given, estimates the maximum gas usage.
-	static GasConsumption functionalEstimation(
+	GasConsumption functionalEstimation(
 		eth::AssemblyItems const& _items,
 		std::string const& _signature = ""
-	);
+	) const;
 
 	/// @returns the estimated gas consumption by the given function which starts at the given
 	/// offset into the list of assembly items.
 	/// @note this does not work correctly for recursive functions.
-	static GasConsumption functionalEstimation(
+	GasConsumption functionalEstimation(
 		eth::AssemblyItems const& _items,
 		size_t const& _offset,
 		FunctionDefinition const& _function
-	);
+	) const;
 
 private:
 	/// @returns the set of AST nodes which are the finest nodes at their location.
 	static std::set<ASTNode const*> finestNodesAtLocation(std::vector<ASTNode const*> const& _roots);
+	EVMVersion m_evmVersion;
 };
 
 }

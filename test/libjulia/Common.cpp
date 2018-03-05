@@ -21,6 +21,8 @@
 
 #include <test/libjulia/Common.h>
 
+#include <test/TestHelper.h>
+
 #include <libjulia/optimiser/Disambiguator.h>
 
 #include <libsolidity/parsing/Scanner.h>
@@ -61,7 +63,12 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
 		auto analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-		assembly::AsmAnalyzer analyzer(*analysisInfo, errorReporter, flavour);
+		assembly::AsmAnalyzer analyzer(
+			*analysisInfo,
+			errorReporter,
+			dev::test::Options::get().evmVersion(),
+			flavour
+		);
 		if (analyzer.analyze(*parserResult))
 		{
 			BOOST_REQUIRE(errorReporter.errors().empty());

@@ -1756,7 +1756,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = eth::GasCosts::callGas + 10;
+		u256 gasNeededByCaller = eth::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (_functionType.valueSet())
 			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
 		if (!existenceChecked)

@@ -19,7 +19,11 @@
 /// @file RPCSession.cpp
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
-#include "RPCSession.h"
+#include <test/RPCSession.h>
+
+#include <test/TestHelper.h>
+
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -215,6 +219,13 @@ string RPCSession::personal_newAccount(string const& _password)
 
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
 {
+	string forks;
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::tangerineWhistle())
+		forks += "\"EIP150ForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::spuriousDragon())
+		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
+		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
@@ -223,9 +234,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"maximumExtraDataSize": "0x1000000",
 			"blockReward": "0x",
 			"allowFutureBlocks": true,
-			"homesteadForkBlock": "0x00",
-			"EIP150ForkBlock": "0x00",
-			"EIP158ForkBlock": "0x00"
+			)" + forks + R"(
+			"homesteadForkBlock": "0x00"
 		},
 		"genesis": {
 			"author": "0000000000000010000000000000000000000000",

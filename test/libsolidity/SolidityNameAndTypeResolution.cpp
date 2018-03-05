@@ -22,6 +22,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/SHA3.h>
@@ -7100,11 +7102,13 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
 	)";
-	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
-		{Error::Type::DeclarationError, "Unbalanced stack"},
-		{Error::Type::Warning, "only available after the Metropolis"}
-	}));
+		{Error::Type::DeclarationError, "Unbalanced stack"}
+	});
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible")));
+	CHECK_ALLOW_MULTI(text, expectations);
 }
 
 BOOST_AUTO_TEST_CASE(create2_as_variable)
@@ -7114,7 +7118,7 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 	)";
 	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
-		{Error::Type::Warning, "only available after the Metropolis"},
+		{Error::Type::Warning, "The \"create2\" instruction is not supported by the VM version"},
 		{Error::Type::DeclarationError, "Unbalanced stack"}
 	}));
 }

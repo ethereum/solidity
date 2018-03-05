@@ -318,6 +318,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
 
+	if (settings.isMember("evmVersion"))
+	{
+		boost::optional<EVMVersion> version = EVMVersion::fromString(settings.get("evmVersion", {}).asString());
+		if (!version)
+			return formatFatalError("JSONError", "Invalid EVM version requested.");
+		m_compilerStack.setEVMVersion(*version);
+	}
+
 	vector<string> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 		remappings.push_back(remapping.asString());

@@ -20,6 +20,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -423,7 +425,10 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "only available after the Metropolis");
+	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+		CHECK_WARNING(text, "\"staticcall\" instruction is only available for Byzantium-compatible");
+	else
+		CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(assembly_jump)

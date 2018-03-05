@@ -875,6 +875,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	assembly::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
+		m_evmVersion,
 		assembly::AsmFlavour::Loose,
 		identifierAccess
 	);
