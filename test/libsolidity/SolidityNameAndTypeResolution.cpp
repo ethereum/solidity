@@ -8555,6 +8555,18 @@ BOOST_AUTO_TEST_CASE(require_visibility_specifiers)
 	CHECK_ERROR(text, SyntaxError, "No visibility specified.");
 }
 
+BOOST_AUTO_TEST_CASE(blockhash_not_available_in_block)
+{
+	char const* text = R"(
+		contract Test {
+			function a() public returns (bytes32) {
+				return block.blockhash(0);
+			}
+		}
+	)";
+ 	CHECK_ERROR(text, TypeError, "Member \"blockhash\" not found or not visible after argument-dependent lookup in block");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

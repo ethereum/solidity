@@ -107,7 +107,6 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	vector<string> view{
 		"block.coinbase",
 		"block.timestamp",
-		"block.blockhash(7)",
 		"block.difficulty",
 		"block.number",
 		"block.gaslimit",
@@ -118,15 +117,16 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"tx.origin",
 		"tx.gasprice",
 		"this",
+		"blockhash(7)",
 		"address(1).balance"
 	};
 	vector<string> pure{
 		"msg.data",
 		"msg.data[0]",
 		"msg.sig",
-		"block.blockhash", // Not evaluating the function
 		"msg",
 		"block",
+		"blockhash", // Not evaluating the function
 		"tx"
 	};
 	for (string const& x: view)
