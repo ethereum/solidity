@@ -3000,8 +3000,10 @@ bool MagicType::operator==(Type const& _other) const
 	return other.m_kind == m_kind;
 }
 
-MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const* _contract) const
 {
+	solAssert(_contract, "");
+	const bool v050 = _contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	switch (m_kind)
 	{
 	case Kind::Block:
@@ -3014,13 +3016,17 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"gaslimit", make_shared<IntegerType>(256)}
 		});
 	case Kind::Message:
-		return MemberList::MemberMap({
+	{
+		std::vector<MemberList::Member> members = {
 			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
-			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
 			{"sig", make_shared<FixedBytesType>(4)}
-		});
+		};
+		if (!v050)
+			members.emplace_back("gas", make_shared<IntegerType>(256));
+		return members;
+	}
 	case Kind::Transaction:
 		return MemberList::MemberMap({
 			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},

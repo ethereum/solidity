@@ -906,6 +906,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << success;
 			break;
 		}
+		case FunctionType::Kind::GasLeft:
+			m_context << Instruction::GAS;
+			break;
 		default:
 			solAssert(false, "Invalid function type.");
 		}
@@ -921,6 +924,8 @@ bool ExpressionCompiler::visit(NewExpression const&)
 
 bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 {
+	bool const v050 = m_context.experimentalFeatureActive(ExperimentalFeature::V050);
+
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	// Check whether the member is a bound function.
 	ASTString const& member = _memberAccess.memberName();
@@ -1136,7 +1141,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "origin")
 			m_context << Instruction::ORIGIN;
 		else if (member == "gas")
+		{
+			solAssert(!v050, "");
 			m_context << Instruction::GAS;
+		}
 		else if (member == "gasprice")
 			m_context << Instruction::GASPRICE;
 		else if (member == "data")

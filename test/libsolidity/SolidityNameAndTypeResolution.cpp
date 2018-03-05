@@ -7410,6 +7410,50 @@ BOOST_AUTO_TEST_CASE(builtin_reject_gas)
 	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
 }
 
+BOOST_AUTO_TEST_CASE(gasleft)
+{
+	char const* text = R"(
+		contract C {
+			function f() public view returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
+	text = R"(
+		contract C {
+			function f() public view returns (uint256 val) { return gasleft(); }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() public returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup in msg");
+}
+
+BOOST_AUTO_TEST_CASE(gasleft_shadowing)
+{
+	char const* text = R"(
+		contract C {
+			function gasleft() public pure returns (bytes32 val) { return "abc"; }
+			function f() public pure returns (bytes32 val) { return gasleft(); }
+		}
+	)";
+	CHECK_WARNING(text, "This declaration shadows a builtin symbol.");
+
+	text = R"(
+		contract C {
+			uint gasleft;
+			function f() public { gasleft = 42; }
+		}
+	)";
+	CHECK_WARNING(text, "This declaration shadows a builtin symbol.");
+}
+
 BOOST_AUTO_TEST_CASE(builtin_reject_value)
 {
 	char const* text = R"(

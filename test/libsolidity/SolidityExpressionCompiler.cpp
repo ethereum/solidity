@@ -515,6 +515,39 @@ BOOST_AUTO_TEST_CASE(blockhash)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
+BOOST_AUTO_TEST_CASE(gas_left)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint256 val) {
+				return msg.gas;
+			}
+		}
+	)";
+	bytes code = compileFirstExpression(
+		sourceCode, {}, {},
+		{make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::Message))}
+	);
+
+	bytes expectation({byte(Instruction::GAS)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+
+	sourceCode = R"(
+		contract test {
+			function f() returns (uint256 val) {
+				return gasleft();
+			}
+		}
+	)";
+	code = compileFirstExpression(
+		sourceCode, {}, {},
+		{make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
+	);
+
+	expectation = bytes({byte(Instruction::GAS)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

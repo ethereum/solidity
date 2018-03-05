@@ -402,7 +402,7 @@ State variables can be declared as ``constant``. In this case, they have to be
 assigned from an expression which is a constant at compile time. Any expression
 that accesses storage, blockchain data (e.g. ``now``, ``this.balance`` or
 ``block.number``) or
-execution data (``msg.gas``) or make calls to external contracts are disallowed. Expressions
+execution data (``msg.value`` or ``gasleft()``) or make calls to external contracts are disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
 might have a side-effect on other memory objects are not. The built-in functions
 ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
