@@ -192,6 +192,11 @@ These are regular array indices into a list of source files usually called
 ``"sourceList"``, which is part of the combined-json and the output of
 the json / npm compiler.
 
+.. note ::
+    In the case of instructions that are not associated with any particular source file,
+    the source mapping assigns an integer identifier of ``-1``. This may happen for
+    bytecode sections stemming from compiler-generated inline assembly statements.
+
 The source mappings inside the AST use the following
 notation:
 
