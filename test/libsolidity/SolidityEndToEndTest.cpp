@@ -5352,6 +5352,18 @@ BOOST_AUTO_TEST_CASE(super_overload)
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(gasleft_shadow_resolution)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function gasleft() returns(uint256) { return 0; }
+			function f() returns(uint256) { return gasleft(); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(bool_conversion)
 {
 	char const* sourceCode = R"(
