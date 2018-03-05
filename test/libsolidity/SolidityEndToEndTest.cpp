@@ -2481,25 +2481,6 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
 }
 
-BOOST_AUTO_TEST_CASE(gas_left)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function getGasLeft() public returns (uint256 val) { return msg.gas; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_REQUIRE(callContractFunction("getGasLeft()") == encodeArgs(99978604));
-
-	sourceCode = R"(
-		contract test {
-			function getGasLeft() public returns (uint256 val) { return gasleft(); }
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_REQUIRE(callContractFunction("getGasLeft()") == encodeArgs(99978604));
-}
-
 BOOST_AUTO_TEST_CASE(value_complex)
 {
 	char const* sourceCode = R"(
