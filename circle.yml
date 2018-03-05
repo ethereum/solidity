@@ -101,8 +101,14 @@ jobs:
           key: ccache-{{ arch }}-develop-
           key: ccache-{{ arch }}-
       - run:
+          name: Configure ccache
+          command: ccache -M 80M && ccache -c && ccache -s && ccache -z
+      - run:
           name: Build
           command: ./scripts/build.sh RelWithDebInfo
+      - run:
+          name: CCache statistics
+          command: ccache -s
       - save_cache:
           key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
           when: always
