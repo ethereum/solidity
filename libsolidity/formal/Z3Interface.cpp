@@ -28,6 +28,7 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	z3::set_param("rewriter.pull_cheap_ite", true);
 }
 
 void Z3Interface::reset()
