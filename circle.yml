@@ -105,7 +105,11 @@ jobs:
           command: ccache -M 80M && ccache -c && ccache -s && ccache -z
       - run:
           name: Build
-          command: ./scripts/build.sh RelWithDebInfo
+          command: |
+            mkdir -p build
+            cd build
+            cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            make -j4
       - run:
           name: CCache statistics
           command: ccache -s
