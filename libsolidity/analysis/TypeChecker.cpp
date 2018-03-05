@@ -1832,13 +1832,17 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (exprType->category() == Type::Category::Contract)
 	{
 		// Warn about using address members on contracts
+		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
 			if (addressMember.name == memberName && *annotation.type == *addressMember.type)
+			{
+				solAssert(!v050, "Address member still present on contract in v0.5.0.");
 				m_errorReporter.warning(
 					_memberAccess.location(),
 					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
 					" Convert the contract to \"address\" type to access the member."
 				);
+			}
 
 		// Warn about using send or transfer with a non-payable fallback function.
 		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
