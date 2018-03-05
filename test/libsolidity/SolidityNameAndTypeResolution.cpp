@@ -7416,7 +7416,7 @@ BOOST_AUTO_TEST_CASE(gasleft)
 			function f() public view returns (uint256 val) { return msg.gas; }
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "\"msg.gas\" has been deprecated in favor of \"gasleft()\"");
 
 	text = R"(
 		contract C {
@@ -7431,7 +7431,7 @@ BOOST_AUTO_TEST_CASE(gasleft)
 			function f() public returns (uint256 val) { return msg.gas; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup in msg");
+	CHECK_ERROR(text, TypeError, "\"msg.gas\" has been deprecated in favor of \"gasleft()\"");
 }
 
 BOOST_AUTO_TEST_CASE(gasleft_shadowing)
