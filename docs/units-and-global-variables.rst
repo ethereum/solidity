@@ -52,7 +52,7 @@ namespace and are mainly used to provide information about the blockchain.
 Block and Transaction Properties
 --------------------------------
 
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks excluding current
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -74,7 +74,7 @@ Block and Transaction Properties
     This includes calls to library functions.
 
 .. note::
-    Do not rely on ``block.timestamp``, ``now`` and ``block.blockhash`` as a source of randomness,
+    Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
     unless you know what you are doing.
 
     Both the timestamp and the block hash can be influenced by miners to some degree.
