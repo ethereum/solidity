@@ -503,7 +503,7 @@ In addition to the list of state modifying statements explained above, the follo
     }
 
 .. warning::
-  Before version 0.4.17 the compiler didn't enforce that ``view`` is not reading the state.
+  Before version 0.4.17 the compiler didn't enforce that ``pure`` is not reading the state.
 
 .. index:: ! fallback function, function;fallback
 
