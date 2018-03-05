@@ -79,7 +79,7 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 
 			currPos = parseDocTag(tagNameEndPos + 1, end, string(tagPos + 1, tagNameEndPos));
 		}
-		else if (!!m_lastTag && (boost::starts_with(m_lastTag->externalName, "external:") || boost::starts_with(m_lastTag->externalName, "ext:"))) // continuation of external tag
+		else if (!!m_lastTag && (boost::starts_with(m_lastTag->external, "external:") || boost::starts_with(m_lastTag->external, "ext:"))) // continuation of external tag
 			currPos = appendDocTag(currPos, end, true);
 		else if (!!m_lastTag) // continuation of the previous tag - if not external tag
 			currPos = appendDocTag(currPos, end);
@@ -158,7 +158,7 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 				newTag(tag);
 			else
 				m_lastTag = &m_docTags.find(tag)->second;
-			m_lastTag->externalName = tag;
+			m_lastTag->external = tag;
 			return appendDocTag(_pos, _end, true);
 		} else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);

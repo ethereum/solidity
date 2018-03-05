@@ -42,8 +42,7 @@ public:
 	enum class NatspecType
 	{
 		DEVELOPER,
-		USER,
-		EXTERNAL
+		USER
 	};
 
 	void checkNatspec(
@@ -62,8 +61,6 @@ public:
 			generatedDocumentation = m_compilerStack.natspecUser(m_compilerStack.lastContractName());
 		else if (_natspecType == NatspecType::DEVELOPER)
 			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
-		else if (_natspecType == NatspecType::EXTERNAL)
-			generatedDocumentation = m_compilerStack.natspecExternal(m_compilerStack.lastContractName());
 
 		Json::Value expectedDocumentation;
 		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
@@ -707,7 +704,7 @@ BOOST_AUTO_TEST_CASE(ext_contract)
 	"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_functions)
@@ -734,7 +731,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_functions)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline)
@@ -767,7 +764,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_multiline)
@@ -793,7 +790,7 @@ BOOST_AUTO_TEST_CASE(ext_contract_multiline)
 	"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_function)
@@ -833,7 +830,7 @@ BOOST_AUTO_TEST_CASE(ext_function)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_function_multiline)
@@ -862,7 +859,7 @@ BOOST_AUTO_TEST_CASE(ext_function_multiline)
 	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_mix)
@@ -879,11 +876,12 @@ BOOST_AUTO_TEST_CASE(ext_contract_mix)
 		}
 	)";
 	char const* natspec = R"ABCDEF({
-		"external:testA" : " testA-LINE-1\n testA-LINE-2\n testA-LINE-3\n testA-LINE-4\n",
-		"methods" : {}
+	"author" : "Alex",
+	"external:testA" : " testA-LINE-1\n testA-LINE-2\n testA-LINE-3\n testA-LINE-4\n",
+	"methods" : {}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(ext_contract_function_mix)
@@ -910,16 +908,22 @@ BOOST_AUTO_TEST_CASE(ext_contract_function_mix)
 		}
 	)";
 	char const* natspec = R"ABCDEF({
+	"author" : "Alex",
 	"external:testA" : " testA-LINE-1\n testA-LINE-2\n testA-LINE-3\n testA-LINE-4\n",
-		"methods" : {
-			"functionName1(bytes32,bytes32,bytes32)" : {
-				"external:testA" : " testA-LINE-1\n testA-LINE-2\n testB-LINE-3\n",
-				"external:testB" : " testB-LINE-1\n testB-LINE-2\n testB-LINE-3\n testB-LINE-4\n"
+	"methods" : {
+		"functionName1(bytes32,bytes32,bytes32)" : {
+			"external:testA" : " testA-LINE-1\n testA-LINE-2\n testB-LINE-3\n",
+			"external:testB" : " testB-LINE-1\n testB-LINE-2\n testB-LINE-3\n testB-LINE-4\n",
+			"params" : {
+				"input1" : "first awesome input",
+				"input2" : "second awesome input",
+				"input3" : "third awesome input"
 			}
 		}
+	}
 	})ABCDEF";
 
-	checkNatspec(sourceCode, natspec, NatspecType::EXTERNAL);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

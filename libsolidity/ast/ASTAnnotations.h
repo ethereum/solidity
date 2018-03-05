@@ -47,7 +47,7 @@ struct DocTag
 {
 	std::string content;	///< The text content of the tag.
 	std::string paramName;	///< Only used for @param, stores the parameter name.
-	std::string externalName;	///< Only used for @external, stores the name of external module.
+	std::string external;	///< Only used for @external, stores external tags.
 };
 
 struct DocumentedAnnotation

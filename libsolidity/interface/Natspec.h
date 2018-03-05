@@ -50,11 +50,6 @@ public:
 	/// @return             A JSON representation
 	///                     of the contract's developer documentation
 	static Json::Value devDocumentation(ContractDefinition const& _contractDef);
-	/// Genereates the external natspecs of the contract
-	/// @param _contractDef The contract definition
-	/// @return             A JSON representation
-	///                     of the contract's external natspecs
-	static Json::Value externalNatspec(ContractDefinition const& _contractDef);
 
 private:
 	/// @returns concatenation of all content under the given tag name.
