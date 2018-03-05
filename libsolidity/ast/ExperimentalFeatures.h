@@ -40,6 +40,7 @@ static const std::map<ExperimentalFeature, bool> ExperimentalFeatureOnlyAnalysis
 {
 	{ ExperimentalFeature::SMTChecker, true },
 	{ ExperimentalFeature::TestOnlyAnalysis, true },
+	{ ExperimentalFeature::V050, true }
 };
 
 static const std::map<std::string, ExperimentalFeature> ExperimentalFeatureNames =
