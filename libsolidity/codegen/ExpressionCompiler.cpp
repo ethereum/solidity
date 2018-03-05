@@ -1679,16 +1679,19 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeFreeMemoryPointer();
 	}
 
-	// Touch the end of the output area so that we do not pay for memory resize during the call
-	// (which we would have to subtract from the gas left)
-	// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
-	// would remove that, so we use MSTORE here.
-	if (!_functionType.gasSet() && retSize > 0)
+	if (!m_context.evmVersion().canOverchargeGasForCall())
 	{
-		m_context << u256(0);
-		utils().fetchFreeMemoryPointer();
-		// This touches too much, but that way we save some rounding arithmetics
-		m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+		// Touch the end of the output area so that we do not pay for memory resize during the call
+		// (which we would have to subtract from the gas left)
+		// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
+		// would remove that, so we use MSTORE here.
+		if (!_functionType.gasSet() && retSize > 0)
+		{
+			m_context << u256(0);
+			utils().fetchFreeMemoryPointer();
+			// This touches too much, but that way we save some rounding arithmetics
+			m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+		}
 	}
 
 	// Copy function identifier to memory.
@@ -1757,7 +1760,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
-	else if (m_context.experimentalFeatureActive(ExperimentalFeature::V050))
+	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
 		m_context << Instruction::GAS;
 	else
