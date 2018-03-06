@@ -54,7 +54,10 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
-	solAssert(m_flavour == AsmFlavour::Loose, "");
+	checkLooseFeature(
+		_label.location,
+		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
+	);
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
 	return true;
@@ -62,7 +65,10 @@ bool AsmAnalyzer::operator()(Label const& _label)
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
-	solAssert(m_flavour == AsmFlavour::Loose, "");
+	checkLooseFeature(
+		_instruction.location,
+		"The use of non-functional instructions is deprecated. Please use functional notation instead."
+	);
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -170,18 +176,31 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 
 bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 {
-	size_t initialStackHeight = m_stackHeight;
+	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_flavour != AsmFlavour::Loose)
-		if (!expectDeposit(0, initialStackHeight, _statement.location))
+	if (m_stackHeight != initialStackHeight && (m_flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	{
+		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
+		string msg =
+			"Top-level expressions are not supposed to return values (this expression returns " +
+			boost::lexical_cast<string>(m_stackHeight - initialStackHeight) +
+			" value" +
+			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
+			"). Use ``pop()`` or assign them.";
+		m_errorReporter.error(errorType, _statement.location, msg);
+		if (errorType != Error::Type::Warning)
 			success = false;
+	}
 	m_info.stackHeightInfo[&_statement] = m_stackHeight;
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
-	solAssert(m_flavour == AsmFlavour::Loose, "");
+	checkLooseFeature(
+		_assignment.location,
+		"The use of stack assignment is deprecated. Please use assignment in functional notation instead."
+	);
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
@@ -577,10 +596,22 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 		);
 
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
-		m_errorReporter.warning(
+	{
+		solAssert(m_flavour == AsmFlavour::Loose, "");
+		m_errorReporter.error(
+			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
 			_location,
 			"Jump instructions and labels are low-level EVM features that can lead to "
 			"incorrect stack access. Because of that they are discouraged. "
 			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
 		);
+	}
+}
+
+void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
+{
+	if (m_flavour != AsmFlavour::Loose)
+		solAssert(false, _description);
+	else if (m_errorTypeForLoose)
+		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);
 }
