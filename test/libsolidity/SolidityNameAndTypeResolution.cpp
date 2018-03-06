@@ -978,6 +978,62 @@ BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_ne
 	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_arrays_new_abi)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			function f() public pure returns (string[][]) {}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function f() public pure returns (string[][]) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_static_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function f() public pure returns (uint[][2]) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
+BOOST_AUTO_TEST_CASE(returning_arrays_in_structs_new_abi)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { string[] s; }
+			function f() public pure returns (S) {}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(returning_arrays_in_structs_arrays)
+{
+	char const* text = R"(
+		contract C {
+			struct S { string[] s; }
+			function f() public pure returns (S x) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
 	char const* text = R"(

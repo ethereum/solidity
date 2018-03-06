@@ -34,6 +34,29 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace
+{
+
+bool typeSupportedByOldABIEncoder(Type const& _type)
+{
+	if (_type.dataStoredIn(DataLocation::Storage))
+		return true;
+	else if (_type.category() == Type::Category::Struct)
+		return false;
+	else if (_type.category() == Type::Category::Array)
+	{
+		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
+		auto base = arrayType.baseType();
+		if (!typeSupportedByOldABIEncoder(*base))
+			return false;
+		else if (base->category() == Type::Category::Array && base->isDynamicallySized())
+			return false;
+	}
+	return true;
+}
+
+}
+
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
@@ -561,13 +584,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
 		if (
 			_function.visibility() > FunctionDefinition::Visibility::Internal &&
-			type(*var)->category() == Type::Category::Struct &&
-			!type(*var)->dataStoredIn(DataLocation::Storage) &&
-			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
+			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+			!typeSupportedByOldABIEncoder(*type(*var))
 		)
 			m_errorReporter.typeError(
 				var->location(),
-				"Structs are only supported in the new experimental ABI encoder. "
+				"This type is only supported in the new experimental ABI encoder. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
 
