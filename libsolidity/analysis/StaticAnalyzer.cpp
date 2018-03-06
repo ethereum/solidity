@@ -139,6 +139,23 @@ bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 
 bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 {
+	bool const v050 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
+	if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
+		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
+		{
+			if (v050)
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
+				);
+			else
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
+				);
+		}
+
 	if (m_nonPayablePublic && !m_library)
 		if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
 			if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "value")
@@ -151,7 +168,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			if (type->kind() == FunctionType::Kind::BareCallCode)
 			{
-				if (m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+				if (v050)
 					m_errorReporter.typeError(
 						_memberAccess.location(),
 						"\"callcode\" has been deprecated in favour of \"delegatecall\"."
