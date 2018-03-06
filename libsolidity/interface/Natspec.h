@@ -28,6 +28,7 @@
 #include <string>
 #include <memory>
 #include <json/json.h>
+#include <boost/algorithm/string.hpp>
 
 namespace dev
 {
@@ -54,6 +55,37 @@ public:
 private:
 	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
+
+	/// Helper-function that will retrieve docTags from fun->annotation().docTags,
+	/// so T need to satisfy the concept for "annotation().docTags".
+	/// @param _json JSON object where parsed annotations will be stored
+	/// @param _fun T const* that is able satisfy annotation().docTags.
+	template<typename T>
+	static void extractDevAnnotations(Json::Value &_json, T const *_fun)
+	{
+		if (_fun)
+		{
+			auto dev = extractDoc(_fun->annotation().docTags, "dev");
+			if (!dev.empty())
+				_json["details"] = Json::Value(dev);
+
+			auto author = extractDoc(_fun->annotation().docTags, "author");
+			if (!author.empty())
+				_json["author"] = author;
+
+			auto ret = extractDoc(_fun->annotation().docTags, "return");
+			if (!ret.empty())
+				_json["return"] = ret;
+
+			Json::Value params(Json::objectValue);
+			auto paramRange = _fun->annotation().docTags.equal_range("param");
+			for (auto i = paramRange.first; i != paramRange.second; ++i)
+				params[i->second.paramName] = Json::Value(i->second.content);
+
+			if (!params.empty())
+				_json["params"] = params;
+		}
+	}
 };
 
 } //solidity NS

@@ -36,6 +36,14 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
+	auto constructorDefinition(_contractDef.constructor());
+	if (constructorDefinition) {
+		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		if (!value.empty())
+			// add the constructor, only if we have any documentation to add
+			methods["constructor"] = Json::Value(value);
+	}
+
 	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
 	if (!notice.empty())
 		doc["notice"] = Json::Value(notice);
@@ -73,6 +81,15 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	if (!dev.empty())
 		doc["details"] = Json::Value(dev);
 
+	auto constructorDefinition(_contractDef.constructor());
+	if (constructorDefinition) {
+		Json::Value method;
+		extractDevAnnotations(method, constructorDefinition);
+		if (!method.empty())
+			// add the constructor, only if we have any documentation to add
+			methods["constructor"] = method;
+	}
+
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		if (!it.second->hasDeclaration())
@@ -80,26 +97,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		Json::Value method;
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
-			auto dev = extractDoc(fun->annotation().docTags, "dev");
-			if (!dev.empty())
-				method["details"] = Json::Value(dev);
-
-			auto author = extractDoc(fun->annotation().docTags, "author");
-			if (!author.empty())
-				method["author"] = author;
-
-			auto ret = extractDoc(fun->annotation().docTags, "return");
-			if (!ret.empty())
-				method["return"] = ret;
-
-			Json::Value params(Json::objectValue);
-			auto paramRange = fun->annotation().docTags.equal_range("param");
-			for (auto i = paramRange.first; i != paramRange.second; ++i)
-				params[i->second.paramName] = Json::Value(i->second.content);
-
-			if (!params.empty())
-				method["params"] = params;
-
+			extractDevAnnotations(method, fun);
 			if (!method.empty())
 				// add the function, only if we have any documentation to add
 				methods[it.second->externalSignature()] = method;
