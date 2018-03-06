@@ -48,6 +48,17 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual bool visit(EventDefinition const& _event) override;
 
+	void checkParameters(
+		CallableDeclaration const& _callable,
+		DocumentedAnnotation& _annotation
+	);
+
+	void handleConstructor(
+		CallableDeclaration const& _callable,
+		Documented const& _node,
+		DocumentedAnnotation& _annotation
+	);
+
 	void handleCallable(
 		CallableDeclaration const& _callable,
 		Documented const& _node,
