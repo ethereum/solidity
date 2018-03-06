@@ -43,27 +43,6 @@ namespace test
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
 
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVariable1;
-			function fun(uint256 arg1) public { uint256 y; y = arg1; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
-{
-	char const* text = R"(
-		contract test {
-			uint256 variable;
-			uint128 variable;
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
-}
 
 BOOST_AUTO_TEST_CASE(double_function_declaration)
 {
@@ -74,37 +53,6 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 		}
 	)";
 	CHECK_ERROR(text, DeclarationError, "Function with same name and arguments defined twice.");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration)
-{
-	string text = R"(
-		contract test {
-			function f() pure public {
-				uint256 x;
-				if (true) { uint256 x; }
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_050)
-{
-	string text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				uint256 x;
-				if (true) { uint256 x; }
-			}
-		}
-	)";
-	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
-		"This declaration shadows an existing declaration.",
-		"Unused local variable",
-		"Unused local variable"
-	}));
 }
 
 BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope)
