@@ -19,7 +19,9 @@ crowdfunding, blind auctions, multi-signature wallets and more.
 .. note::
     The best way to try out Solidity right now is using
     `Remix <https://remix.ethereum.org/>`_
-    (it can take a while to load, please be patient).
+    (it can take a while to load, please be patient). Remix is a web browser
+    based IDE that allows you to write Solidity smart contracts, then deploy 
+    and run the smart contracts. 
 
 .. warning::
     Since software is written by humans, it can have bugs. Thus, also
