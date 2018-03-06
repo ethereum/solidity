@@ -59,12 +59,15 @@ function download_eth()
         ETH_PATH="eth"
     else
         mkdir -p /tmp/test
-        ETH_BINARY=eth_byzantium_artful
-        ETH_HASH="e527dd3e3dc17b983529dd7dcfb74a0d3a5aed4e"
         if grep -i trusty /etc/lsb-release >/dev/null 2>&1
         then
-            ETH_BINARY=eth_byzantium2
-            ETH_HASH="4dc3f208475f622be7c8e53bee720e14cd254c6f"
+            # built from 1ecff3cac12f0fbbeea3e645f331d5ac026b24d3 at 2018-03-06
+            ETH_BINARY=eth_byzantium_trusty
+            ETH_HASH="5432ea81c150e8a3547615bf597cd6dce9e1e27b"
+        else
+            # built from ?? at 2018-02-13 ?
+            ETH_BINARY=eth_byzantium_artful
+            ETH_HASH="e527dd3e3dc17b983529dd7dcfb74a0d3a5aed4e"
         fi
         wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
         test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
