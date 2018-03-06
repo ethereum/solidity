@@ -10452,8 +10452,9 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "test123"));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0xa0, 0, 0x40, 44, "test1234567890123456789012345678901234567890"));
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "test123") : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0xa0, 0, 0x40, 44, "test1234567890123456789012345678901234567890") : bytes());
 }
 
 BOOST_AUTO_TEST_CASE(require_with_message)
@@ -10505,11 +10506,12 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f(uint256)", 8), encodeArgs(1, 0x40, 0));
-	ABI_CHECK(callContractFunction("f(uint256)", 5), encodeArgs(0, 0x40, 0x80, 0, 0x40, 6, "failed"));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(1, 0x40, 0));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 18	, "only on second run"));
-	ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 3, "abc"));
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	ABI_CHECK(callContractFunction("f(uint256)", 8), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
+	ABI_CHECK(callContractFunction("f(uint256)", 5), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 6, "failed") : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 18	, "only on second run") : bytes());
+	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 3, "abc") : bytes());
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
@@ -10545,8 +10547,9 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message") : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message") : bytes());
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
@@ -10579,7 +10582,8 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message") : bytes());
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
@@ -10614,7 +10618,8 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message"));
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x80, 0, 0x40, 7, "message") : bytes());
 }
 
 BOOST_AUTO_TEST_CASE(negative_stack_height)
