@@ -8491,7 +8491,7 @@ BOOST_AUTO_TEST_CASE(no_warning_for_using_members_that_look_like_address_members
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Experimental features");
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(emit_events)
