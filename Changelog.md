@@ -11,7 +11,7 @@ Features:
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
  * Support and recommend using ``emit EventName();`` to call events explicitly.
  * Syntax Analyser: Do not warn about experimental features if they do not concern code generation.
- * Syntax Analyser: Do not warn about ``pragma experimental "v0.5.0"`` since it does not affect code generation.
+ * Syntax Analyser: Do not warn about ``pragma experimental "v0.5.0"`` and do not set the experimental flag in the bytecode for this.
  * Syntax Checker: Mark ``throw`` as an error as experimental 0.5.0 feature.
  * Syntax Checker: Issue error if no visibility is specified on contract functions as experimental 0.5.0 feature.
  * Syntax Checker: Issue warning when using overloads of ``address`` on contract instances.
