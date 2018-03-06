@@ -55,8 +55,8 @@ However, if you are making a larger change, please consult with the `Solidity De
 focused on compiler and language development instead of language use) first.
 
 
-Finally, please make sure you respect the `coding standards
-<https://raw.githubusercontent.com/ethereum/cpp-ethereum/develop/CodingStandards.txt>`_
+Finally, please make sure you respect the `coding style
+<https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
