@@ -1610,6 +1610,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
+	bool useStaticCall =
+		_functionType.stateMutability() <= StateMutability::View &&
+		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
+		m_context.evmVersion().hasStaticCall();
 
 	unsigned retSize = 0;
 	if (returnSuccessCondition)
@@ -1738,6 +1742,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// [value,] addr, gas (stack top)
 	if (isDelegateCall)
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
+	else if (useStaticCall)
+		solAssert(!_functionType.valueSet(), "Value set for staticcall");
 	else if (_functionType.valueSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
@@ -1769,10 +1775,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
+	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
 	else if (isCallCode)
 		m_context << Instruction::CALLCODE;
+	else if (useStaticCall)
+		m_context << Instruction::STATICCALL;
 	else
 		m_context << Instruction::CALL;
 
