@@ -473,7 +473,7 @@ The following statements are considered modifying the state:
   Getter methods are marked ``view``.
 
 .. warning::
-  Before version 0.4.17 the compiler didn't enforce that ``view`` is not modifying the state.
+  The compiler does not enforce yet that a ``view`` method is not modifying state. It raises a warning though.
 
 .. index:: ! pure function, function;pure
 
