@@ -208,5 +208,6 @@ for the two input parameters and two returned values.
         function rectangle(uint w, uint h) returns (uint s, uint p) {
             s = w * h;
             p = 2 * (w + h);
+            return (s, p);
         }
     }
