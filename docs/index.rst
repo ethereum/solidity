@@ -12,7 +12,7 @@ and is designed to target the Ethereum Virtual Machine (EVM).
 
 Solidity is statically typed, supports inheritance, libraries and complex
 user-defined types among other features.
-mix
+
 As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
@@ -21,7 +21,7 @@ crowdfunding, blind auctions, multi-signature wallets and more.
     `Remix <https://remix.ethereum.org/>`_
     (it can take a while to load, please be patient). Remix is a web browser
     based IDE that allows you to write Solidity smart contracts, then deploy 
-    and run the smart contract. 
+    and run the smart contracts. 
 
 .. warning::
     Since software is written by humans, it can have bugs. Thus, also
