@@ -102,7 +102,7 @@ jobs:
           key: ccache-{{ arch }}-
       - run:
           name: Configure ccache
-          command: ccache -M 80M && ccache -c && ccache -s && ccache -z
+          command: ccache -M 200M && ccache -c && ccache -s && ccache -z
       - run:
           name: Build
           command: |
