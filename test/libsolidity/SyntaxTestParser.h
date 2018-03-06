@@ -14,42 +14,44 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TestHelper.h
- */
 
 #pragma once
 
-#include <libsolidity/interface/EVMVersion.h>
-
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/version.hpp>
-
-#include <functional>
+#include <iosfwd>
+#include <string>
+#include <vector>
+#include <utility>
 
 namespace dev
+{
+namespace solidity
 {
 namespace test
 {
 
-struct Options: boost::noncopyable
+struct SyntaxTestExpectation
 {
-	std::string ipcPath;
-	std::string testPath;
-	bool showMessages = false;
-	bool optimize = false;
-	bool disableIPC = false;
-	bool disableSMT = false;
-
-	solidity::EVMVersion evmVersion() const;
-
-	static Options const& get();
-
-private:
-	std::string evmVersionString;
-
-	Options();
+	std::string type;
+	std::string message;
 };
 
+struct SyntaxTest
+{
+	std::string source;
+	std::vector<SyntaxTestExpectation> expectations;
+};
+
+class SyntaxTestParser
+{
+public:
+	SyntaxTestParser() = default;
+
+	SyntaxTest parse(std::string const& _filename);
+private:
+	std::string parseSource(std::istream& _stream);
+	std::vector<SyntaxTestExpectation> parseExpectations(std::istream& _stream);
+};
+
+}
 }
 }

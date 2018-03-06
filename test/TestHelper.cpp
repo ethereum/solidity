@@ -43,6 +43,11 @@ Options::Options()
 			ipcPath = suite.argv[i + 1];
 			i++;
 		}
+		else if (string(suite.argv[i]) == "--testpath" && i + 1 < suite.argc)
+		{
+			testPath = suite.argv[i + 1];
+			i++;
+		}
 		else if (string(suite.argv[i]) == "--optimize")
 			optimize = true;
 		else if (string(suite.argv[i]) == "--evm-version")
@@ -60,6 +65,10 @@ Options::Options()
 	if (!disableIPC && ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;
+
+	if (testPath.empty())
+		if (auto path = getenv("ETH_TEST_PATH"))
+			testPath = path;
 }
 
 dev::solidity::EVMVersion Options::evmVersion() const
