@@ -142,6 +142,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	bool const v050 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
 	if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
+	{
 		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
 		{
 			if (v050)
@@ -155,6 +156,20 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
 				);
 		}
+		if (type->kind() == MagicType::Kind::Block && _memberAccess.memberName() == "blockhash")
+		{
+			if (v050)
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+				);
+			else
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+				);
+		}
+	}
 
 	if (m_nonPayablePublic && !m_library)
 		if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))

@@ -3002,30 +3002,19 @@ bool MagicType::operator==(Type const& _other) const
 	return other.m_kind == m_kind;
 }
 
-MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const* _contract) const
+MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 {
-	const bool v050 = _contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	switch (m_kind)
 	{
 	case Kind::Block:
-		{
-			std::vector<MemberList::Member> members = {
-				{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
-				{"timestamp", make_shared<IntegerType>(256)},
-				{"difficulty", make_shared<IntegerType>(256)},
-				{"number", make_shared<IntegerType>(256)},
-				{"gaslimit", make_shared<IntegerType>(256)}
-			};
-
-			if (!v050)
-			{
-				auto blockhashFun = make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"}, 
-					FunctionType::Kind::BlockHash, false, StateMutability::View);
-				
-				members.emplace_back("blockhash", blockhashFun);
-			}
-			return MemberList::MemberMap(members);
-		}
+		return MemberList::MemberMap({
+			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"timestamp", make_shared<IntegerType>(256)},
+			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
+			{"difficulty", make_shared<IntegerType>(256)},
+			{"number", make_shared<IntegerType>(256)},
+			{"gaslimit", make_shared<IntegerType>(256)}
+		});
 	case Kind::Message:
 		return MemberList::MemberMap({
 			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},

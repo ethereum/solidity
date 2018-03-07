@@ -1805,33 +1805,16 @@ BOOST_AUTO_TEST_CASE(uncalled_blockhash)
 	BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
 }
 
-BOOST_AUTO_TEST_CASE(blockhash_global_level)
+BOOST_AUTO_TEST_CASE(blockhash_shadow_resolution)
 {
-	char const* sourceCode = R"(
-		contract Test {
-			function a() public returns (bytes32) {
-				return blockhash(0);
-			}
+	char const* code = R"(
+		contract C {
+			function blockhash(uint256 blockNumber) public returns(bytes32) { bytes32 x; return x; }
+			function f() public returns(bytes32) { return blockhash(3); }
 		}
 	)";
- 	compileAndRun(sourceCode);
-	BOOST_CHECK(!callContractFunction("a()").empty());
-}
-
-BOOST_AUTO_TEST_CASE(blockhash_shadow)
-{
-	char const* sourceCode = R"(
-		contract Test {
-			function blockhash(uint256 blockNumber) public returns (bytes32) {
-				return "abc";
-			}
-			function f() returns (bytes32) {
-				return blockhash(3);
-			}
-		}
-	)";
- 	compileAndRun(sourceCode);
-	BOOST_REQUIRE(callContractFunction("f()") != encodeArgs("abc"));
+	compileAndRun(code, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
 }
 
 BOOST_AUTO_TEST_CASE(log0)
