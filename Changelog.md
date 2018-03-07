@@ -1,22 +1,22 @@
-### 0.4.21 (unreleased)
+### 0.4.21 (2018-03-07)
 
 Features:
- * C99/C++-style scoping rules (instead of JavaScript function scoping) take effect as experimental v0.5.0 feature.
  * Code Generator: Assert that ``k != 0`` for ``mulmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
  * Code Generator: Do not retain any gas in calls (except if EVM version is set to homestead).
  * Code Generator: Use ``STATICCALL`` opcode for calling ``view`` and ``pure`` functions as experimenal 0.5.0 feature.
+ * General: C99/C++-style scoping rules (instead of JavaScript function scoping) take effect as experimental v0.5.0 feature.
+ * General: Improved messaging when error spans multiple lines of a sourcefile
+ * General: Support and recommend using ``emit EventName();`` to call events explicitly.
  * Inline Assembly: Enforce strict mode as experimental 0.5.0 feature.
  * Interface: Provide ability to select target EVM version (homestead or byzantium, with byzantium being the default).
  * Standard JSON: Reject badly formatted invalid JSON inputs.
  * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
- * Support and recommend using ``emit EventName();`` to call events explicitly.
  * Syntax Analyser: Do not warn about experimental features if they do not concern code generation.
  * Syntax Analyser: Do not warn about ``pragma experimental "v0.5.0"`` and do not set the experimental flag in the bytecode for this.
  * Syntax Checker: Mark ``throw`` as an error as experimental 0.5.0 feature.
  * Syntax Checker: Issue error if no visibility is specified on contract functions as experimental 0.5.0 feature.
  * Syntax Checker: Issue warning when using overloads of ``address`` on contract instances.
  * Type Checker: disallow combining hex numbers and unit denominations as experimental 0.5.0 feature.
- * Improved messaging when error spans multiple lines of a sourcefile 
 
 Bugfixes:
  * Assembly: Raise error on oversized number literals in assembly.
