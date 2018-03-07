@@ -74,7 +74,11 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	StateMutability parseStateMutability(Token::Value _token);
-	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
+	FunctionHeaderParserResult parseFunctionHeader(
+		bool _forceEmptyName,
+		bool _allowModifiers,
+		ASTString const* _contractName = nullptr
+	);
 	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable(ASTString const* _contractName);
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();

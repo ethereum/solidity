@@ -332,14 +332,18 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
+	bool _forceEmptyName,
+	bool _allowModifiers,
+	ASTString const* _contractName
+)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 
 	if (m_scanner->currentToken() == Token::Function)
 		// In case of old style constructors, i.e. functions with the same name as the contract,
-		// this is set to true later in parseFunctionDefinitionOrFunctionTypeStateVariable.
+		// this is set to true below.
 		result.isConstructor = false;
 	else if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
 		result.isConstructor = true;
@@ -351,6 +355,10 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 		result.name = make_shared<ASTString>();
 	else
 		result.name = expectIdentifierToken();
+
+	if (!result.name->empty() && _contractName && *result.name == *_contractName)
+		result.isConstructor = true;
+
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
 	result.parameters = parseParameterList(options);
@@ -420,7 +428,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
+	FunctionHeaderParserResult header = parseFunctionHeader(false, true, _contractName);
 
 	if (
 		!header.modifiers.empty() ||
@@ -439,8 +447,6 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 		}
 		else
 			m_scanner->next(); // just consume the ';'
-		if (_contractName && *header.name == *_contractName)
-			header.isConstructor = true;
 		return nodeFactory.createNode<FunctionDefinition>(
 			header.name,
 			header.visibility,
