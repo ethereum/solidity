@@ -110,7 +110,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 	}
 }
 
-void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory)
+void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory, bool _keepUpdatedMemoryOffset)
 {
 	// We do not check the calldata size, everything is zero-padded
 
@@ -206,7 +206,11 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 		}
 		// stack: v1 v2 ... v(k-1) v(k) base_offset mem_offset
 	}
-	m_context << Instruction::POP << Instruction::POP;
+	if (_keepUpdatedMemoryOffset)
+		// keep mem_offset here
+		m_context << Instruction::SWAP1 << Instruction::POP;
+	else
+		m_context << Instruction::POP << Instruction::POP;
 }
 
 void CompilerUtils::storeInMemory(unsigned _offset)

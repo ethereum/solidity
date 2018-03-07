@@ -78,12 +78,14 @@ public:
 
 	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data.
+	/// The memory pointer is returned if @a _keepUpdatedMemoryOffset is true.
 	/// Stack pre: <memory_offset>
-	/// Stack post: <value0> <value1> ... <valueN-1>
+	/// Stack post: <value0> <value1> ... <valueN-1> [updated_memory_offset]
 	/// Expects source offset on the stack, which is removed.
 	void abiDecode(
 		TypePointers const& _typeParameters,
-		bool _fromMemory = false
+		bool _fromMemory = false,
+		bool _keepUpdatedMemoryOffset = false
 	);
 
 	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,

@@ -1830,7 +1830,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			if (dynamic_cast<ReferenceType const*>(retType.get()))
 				memoryNeeded = true;
 
-		utils().abiDecode(_functionType.returnParameterTypes(), true);
+		utils().abiDecode(_functionType.returnParameterTypes(), true, true);
 
 		if (memoryNeeded)
 			utils().storeFreeMemoryPointer();
