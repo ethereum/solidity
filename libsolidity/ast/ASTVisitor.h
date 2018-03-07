@@ -73,6 +73,7 @@ public:
 	virtual bool visit(Break& _node) { return visitNode(_node); }
 	virtual bool visit(Return& _node) { return visitNode(_node); }
 	virtual bool visit(Throw& _node) { return visitNode(_node); }
+	virtual bool visit(EmitStatement& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclarationStatement& _node) { return visitNode(_node); }
 	virtual bool visit(ExpressionStatement& _node) { return visitNode(_node); }
 	virtual bool visit(Conditional& _node) { return visitNode(_node); }
@@ -118,6 +119,7 @@ public:
 	virtual void endVisit(Break& _node) { endVisitNode(_node); }
 	virtual void endVisit(Return& _node) { endVisitNode(_node); }
 	virtual void endVisit(Throw& _node) { endVisitNode(_node); }
+	virtual void endVisit(EmitStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclarationStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(ExpressionStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(Conditional& _node) { endVisitNode(_node); }
@@ -175,6 +177,7 @@ public:
 	virtual bool visit(Break const& _node) { return visitNode(_node); }
 	virtual bool visit(Return const& _node) { return visitNode(_node); }
 	virtual bool visit(Throw const& _node) { return visitNode(_node); }
+	virtual bool visit(EmitStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclarationStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(ExpressionStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(Conditional const& _node) { return visitNode(_node); }
@@ -220,6 +223,7 @@ public:
 	virtual void endVisit(Break const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Return const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Throw const& _node) { endVisitNode(_node); }
+	virtual void endVisit(EmitStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclarationStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ExpressionStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Conditional const& _node) { endVisitNode(_node); }

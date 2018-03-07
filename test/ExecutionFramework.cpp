@@ -20,12 +20,14 @@
  * Framework for executing contracts and testing them using RPC.
  */
 
-#include <cstdlib>
-#include <boost/test/framework.hpp>
-#include <libdevcore/CommonIO.h>
 #include <test/ExecutionFramework.h>
 
+#include <libdevcore/CommonIO.h>
+
+#include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>
+
+#include <cstdlib>
 
 using namespace std;
 using namespace dev;
@@ -49,6 +51,7 @@ string getIPCSocketPath()
 
 ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
+	m_evmVersion(dev::test::Options::get().evmVersion()),
 	m_optimize(dev::test::Options::get().optimize),
 	m_showMessages(dev::test::Options::get().showMessages),
 	m_sender(m_rpc.account(0))

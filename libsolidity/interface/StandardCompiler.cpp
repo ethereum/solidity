@@ -27,6 +27,8 @@
 #include <libdevcore/JSON.h>
 #include <libdevcore/SHA3.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -236,7 +238,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
 
 	Json::Value const& sources = _input["sources"];
-	if (!sources)
+
+	if (!sources.isObject() && !sources.isNull())
+		return formatFatalError("JSONError", "\"sources\" is not a JSON object.");
+
+	if (sources.empty())
 		return formatFatalError("JSONError", "No input sources specified.");
 
 	Json::Value errors = Json::arrayValue;
@@ -312,6 +318,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
 
+	if (settings.isMember("evmVersion"))
+	{
+		boost::optional<EVMVersion> version = EVMVersion::fromString(settings.get("evmVersion", {}).asString());
+		if (!version)
+			return formatFatalError("JSONError", "Invalid EVM version requested.");
+		m_compilerStack.setEVMVersion(*version);
+	}
+
 	vector<string> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 		remappings.push_back(remapping.asString());
@@ -323,13 +337,43 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
 
 	map<string, h160> libraries;
-	Json::Value jsonLibraries = settings.get("libraries", Json::Value());
+	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));
+	if (!jsonLibraries.isObject())
+		return formatFatalError("JSONError", "\"libraries\" is not a JSON object.");
 	for (auto const& sourceName: jsonLibraries.getMemberNames())
 	{
 		auto const& jsonSourceName = jsonLibraries[sourceName];
+		if (!jsonSourceName.isObject())
+			return formatFatalError("JSONError", "library entry is not a JSON object.");
 		for (auto const& library: jsonSourceName.getMemberNames())
-			// @TODO use libraries only for the given source
-			libraries[library] = h160(jsonSourceName[library].asString());
+		{
+			string address = jsonSourceName[library].asString();
+
+			if (!boost::starts_with(address, "0x"))
+				return formatFatalError(
+					"JSONError",
+					"Library address is not prefixed with \"0x\"."
+				);
+
+			if (address.length() != 42)
+				return formatFatalError(
+					"JSONError",
+					"Library address is of invalid length."
+				);
+
+			try
+			{
+				// @TODO use libraries only for the given source
+				libraries[library] = h160(address);
+			}
+			catch (dev::BadHexCharacter)
+			{
+				return formatFatalError(
+					"JSONError",
+					"Invalid library address (\"" + address + "\") supplied."
+				);
+			}
+		}
 	}
 	m_compilerStack.setLibraries(libraries);
 
@@ -550,12 +594,11 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 string StandardCompiler::compile(string const& _input)
 {
 	Json::Value input;
-	Json::Reader reader;
-
+	string errors;
 	try
 	{
-		if (!reader.parse(_input, input, false))
-			return jsonCompactPrint(formatFatalError("JSONError", reader.getFormattedErrorMessages()));
+		if (!jsonParseStrict(_input, input, &errors))
+			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
 	catch(...)
 	{

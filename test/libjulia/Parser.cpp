@@ -52,11 +52,17 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner);
+		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner, false);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(analysisInfo, errorReporter, assembly::AsmFlavour::IULIA)).analyze(*parserResult);
+			return (assembly::AsmAnalyzer(
+				analysisInfo,
+				errorReporter,
+				dev::test::Options::get().evmVersion(),
+				boost::none,
+				assembly::AsmFlavour::IULIA
+			)).analyze(*parserResult);
 		}
 	}
 	catch (FatalError const&)
@@ -228,6 +234,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_ERROR("{ let x:u256 := .1:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 1e5:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 67.235:u256 }", ParserError, "Invalid number literal.");
+	CHECK_ERROR("{ let x:u256 := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff:u256 }", TypeError, "Number literal too large (> 256 bits)");
 }
 
 BOOST_AUTO_TEST_CASE(builtin_types)

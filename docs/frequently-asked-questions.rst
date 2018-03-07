@@ -9,17 +9,6 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-Example contracts
-=================
-
-There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
-there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
-
-Create and publish the most basic contract possible
-===================================================
-
-A quite simple contract is the `greeter <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
-
 Is it possible to do something on a specific block number? (e.g. publish a contract or execute a transaction)
 =============================================================================================================
 
@@ -40,9 +29,9 @@ Is there a decompiler available?
 ================================
 
 There is no exact decompiler to Solidity, but
-`Porosity <https://github.com/comaeio/porosity>`_ is close. 
-Because some information like variable names, comments, and 
-source code formatting is lost in the compilation process, 
+`Porosity <https://github.com/comaeio/porosity>`_ is close.
+Because some information like variable names, comments, and
+source code formatting is lost in the compilation process,
 it is not possible to completely recover the original source code.
 
 Bytecode can be disassembled to opcodes, a service that is provided by
@@ -73,25 +62,6 @@ has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``kill()`` is taken care of for you. Once a contract is "mortal", then you can
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
-
-Store Ether in a contract
-=========================
-
-The trick is to create the contract with ``{from:someaddress, value: web3.toWei(3,"ether")...}``
-
-See `endowment_retriever.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
-
-Use a non-constant function (req ``sendTransaction``) to increment a variable in a contract
-===========================================================================================
-
-See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/20_value_incrementer.sol>`_.
-
-Get a contract to return its funds to you (not using ``selfdestruct(...)``).
-============================================================================
-
-This example demonstrates how to send funds from a contract to an address.
-
-See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
 Can you return an array or a ``string`` from a solidity function call?
 ======================================================================
@@ -542,12 +512,27 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
-    int8[] memory memArr;        // Case 1
-    memArr.length++;             // illegal
-    int8[5] storageArr;          // Case 2
-    somearray.length++;          // legal
-    int8[5] storage storageArr2; // Explicit case 2
-    somearray2.length++;         // legal
+    // This will not compile
+
+    pragma solidity ^0.4.18;
+
+    contract C {
+        int8[] dynamicStorageArray;
+        int8[5] fixedStorageArray;
+
+        function f() {
+            int8[] memory memArr;        // Case 1
+            memArr.length++;             // illegal
+
+            int8[5] storage storageArr = fixedStorageArray;   // Case 2
+            storageArr.length++;                             // illegal
+
+            int8[] storage storageArr2 = dynamicStorageArray;
+            storageArr2.length++;                     // legal
+
+
+        }
+    }
 
 **Important note:** In Solidity, array dimensions are declared backwards from the way you
 might be used to declaring them in C or Java, but they are access as in

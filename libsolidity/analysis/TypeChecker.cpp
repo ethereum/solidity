@@ -34,6 +34,29 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace
+{
+
+bool typeSupportedByOldABIEncoder(Type const& _type)
+{
+	if (_type.dataStoredIn(DataLocation::Storage))
+		return true;
+	else if (_type.category() == Type::Category::Struct)
+		return false;
+	else if (_type.category() == Type::Category::Array)
+	{
+		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
+		auto base = arrayType.baseType();
+		if (!typeSupportedByOldABIEncoder(*base))
+			return false;
+		else if (base->category() == Type::Category::Array && base->isDynamicallySized())
+			return false;
+	}
+	return true;
+}
+
+}
+
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
@@ -561,13 +584,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
 		if (
 			_function.visibility() > FunctionDefinition::Visibility::Internal &&
-			type(*var)->category() == Type::Category::Struct &&
-			!type(*var)->dataStoredIn(DataLocation::Storage) &&
-			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
+			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+			!typeSupportedByOldABIEncoder(*type(*var))
 		)
 			m_errorReporter.typeError(
 				var->location(),
-				"Structs are only supported in the new experimental ABI encoder. "
+				"This type is only supported in the new experimental ABI encoder. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
 
@@ -804,7 +826,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(!!declaration, "");
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
-			if (ref->second.isSlot || ref->second.isOffset)
+			if (var->isConstant())
+			{
+				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				return size_t(-1);
+			}
+			else if (ref->second.isSlot || ref->second.isOffset)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
@@ -816,11 +843,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "Storage variables cannot be assigned to.");
 					return size_t(-1);
 				}
-			}
-			else if (var->isConstant())
-			{
-				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
-				return size_t(-1);
 			}
 			else if (!var->isLocalVariable())
 			{
@@ -872,9 +894,15 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
 	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+	boost::optional<Error::Type> errorTypeForLoose =
+		m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) ?
+		Error::Type::SyntaxError :
+		Error::Type::Warning;
 	assembly::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
+		m_evmVersion,
+		errorTypeForLoose,
 		assembly::AsmFlavour::Loose,
 		identifierAccess
 	);
@@ -955,6 +983,16 @@ void TypeChecker::endVisit(Return const& _return)
 	}
 }
 
+void TypeChecker::endVisit(EmitStatement const& _emit)
+{
+	if (
+		_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
+		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
+	)
+		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event invocation.");
+	m_insideEmitStatement = false;
+}
+
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
 	if (!_statement.initialValue())
@@ -972,7 +1010,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				string errorText{"Uninitialized storage pointer."};
 				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
-				m_errorReporter.warning(varDecl.location(), errorText);
+				solAssert(m_scope, "");
+				if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+					m_errorReporter.declarationError(varDecl.location(), errorText);
+				else
+					m_errorReporter.warning(varDecl.location(), errorText);
 			}
 		}
 		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))
@@ -1527,6 +1569,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
 	}
+	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
+	{
+		if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+			m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
+		else
+			m_errorReporter.warning(_functionCall.location(), "Invoking events without \"emit\" prefix is deprecated.");
+	}
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 
@@ -1809,6 +1858,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	if (exprType->category() == Type::Category::Contract)
 	{
+		// Warn about using address members on contracts
+		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+		for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
+			if (addressMember.name == memberName && *annotation.type == *addressMember.type)
+			{
+				solAssert(!v050, "Address member still present on contract in v0.5.0.");
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
+					" Convert the contract to \"address\" type to access the member."
+				);
+			}
+
+		// Warn about using send or transfer with a non-payable fallback function.
 		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
 		{
 			auto kind = callType->kind();
@@ -2000,6 +2063,8 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
@@ -2011,6 +2076,21 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"If this is not used as an address, please prepend '00'. " +
 				(!_literal.getChecksummedAddress().empty() ? "Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. " : "") +
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
+			);
+	}
+	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
+	{
+		if (v050)
+			m_errorReporter.fatalTypeError(
+				_literal.location(),
+				"Hexadecimal numbers cannot be used with unit denominations. "
+				"You can use an expression of the form \"0x1234 * 1 day\" instead."
+			);
+		else
+			m_errorReporter.warning(
+				_literal.location(),
+				"Hexadecimal numbers with unit denominations are deprecated. "
+				"You can use an expression of the form \"0x1234 * 1 day\" instead."
 			);
 	}
 	if (!_literal.annotation().type)

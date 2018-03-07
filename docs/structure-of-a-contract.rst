@@ -86,14 +86,14 @@ Events are convenience interfaces with the EVM logging facilities.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.21;
 
     contract SimpleAuction {
         event HighestBidIncreased(address bidder, uint amount); // Event
 
         function bid() public payable {
             // ...
-            HighestBidIncreased(msg.sender, msg.value); // Triggering event
+            emit HighestBidIncreased(msg.sender, msg.value); // Triggering event
         }
     }
 

@@ -20,6 +20,8 @@
  * Tests for the Solidity optimizer.
  */
 
+#include <test/TestHelper.h>
+
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/JumpdestRemover.h>
@@ -916,7 +918,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true);
+	main.optimise(true, dev::test::Options::get().evmVersion());
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),

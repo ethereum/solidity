@@ -168,7 +168,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-        dh_auto_configure -- -DINSTALL_LLLC=Off
+	dh_auto_configure -- -DINSTALL_LLLC=Off
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/

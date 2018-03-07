@@ -168,11 +168,12 @@ case $(uname -s) in
 # Debian
 #------------------------------------------------------------------------------
 
-            Debian)
+            Debian*)
                 #Debian
+                . /etc/os-release
                 install_z3=""
-                case $(lsb_release -cs) in
-                    wheezy)
+                case $VERSION_ID in
+                    7)
                         #wheezy
                         echo "Installing solidity dependencies on Debian Wheezy (7.x)."
                         echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
@@ -182,16 +183,16 @@ case $(uname -s) in
                         echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
                         exit 1
                         ;;
-                    jessie)
+                    8)
                         #jessie
                         echo "Installing solidity dependencies on Debian Jesse (8.x)."
                         ;;
-                    stretch)
+                    9)
                         #stretch
                         echo "Installing solidity dependencies on Debian Stretch (9.x)."
                         install_z3="libz3-dev"
                         ;;
-                    buster)
+                    10)
                         #buster
                         echo "Installing solidity dependencies on Debian Buster (10.x)."
                         install_z3="libz3-dev"

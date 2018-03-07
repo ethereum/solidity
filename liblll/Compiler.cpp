@@ -19,17 +19,16 @@
  * @date 2014
  */
 
-#include "Compiler.h"
-#include "Parser.h"
-#include "CompilerState.h"
-#include "CodeFragment.h"
+#include <liblll/Compiler.h>
+#include <liblll/Parser.h>
+#include <liblll/CompilerState.h>
+#include <liblll/CodeFragment.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-
-bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors, ReadCallback const& _readFile)
+bytes dev::eth::compileLLL(string const& _src, dev::solidity::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, dev::eth::ReadCallback const& _readFile)
 {
 	try
 	{
@@ -37,7 +36,7 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 		cs.populateStandard();
 		auto assembly = CodeFragment::compile(_src, cs, _readFile).assembly(cs);
 		if (_opt)
-			assembly = assembly.optimise(true);
+			assembly = assembly.optimise(true, _evmVersion);
 		bytes ret = assembly.assemble().bytecode;
 		for (auto i: cs.treesToKill)
 			killBigints(i);
@@ -67,7 +66,7 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 	return bytes();
 }
 
-std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+std::string dev::eth::compileLLLToAsm(std::string const& _src, EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
@@ -75,7 +74,7 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 		cs.populateStandard();
 		auto assembly = CodeFragment::compile(_src, cs, _readFile).assembly(cs);
 		if (_opt)
-			assembly = assembly.optimise(true);
+			assembly = assembly.optimise(true, _evmVersion);
 		string ret = assembly.assemblyString();
 		for (auto i: cs.treesToKill)
 			killBigints(i);

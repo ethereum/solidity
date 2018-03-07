@@ -19,12 +19,15 @@
 /// @file RPCSession.cpp
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
-#include "RPCSession.h"
+#include <test/RPCSession.h>
+
+#include <test/TestHelper.h>
+
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libdevcore/CommonData.h>
 
-#include <json/reader.h>
-#include <json/writer.h>
+#include <libdevcore/JSON.h>
 
 #include <string>
 #include <stdio.h>
@@ -216,7 +219,14 @@ string RPCSession::personal_newAccount(string const& _password)
 
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
 {
-	static std::string const c_configString = R"(
+	string forks;
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::tangerineWhistle())
+		forks += "\"EIP150ForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::spuriousDragon())
+		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
+		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
+	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
 		"params": {
@@ -224,9 +234,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"maximumExtraDataSize": "0x1000000",
 			"blockReward": "0x",
 			"allowFutureBlocks": true,
-			"homesteadForkBlock": "0x00",
-			"EIP150ForkBlock": "0x00",
-			"EIP158ForkBlock": "0x00"
+			)" + forks + R"(
+			"homesteadForkBlock": "0x00"
 		},
 		"genesis": {
 			"author": "0000000000000010000000000000000000000000",
@@ -249,10 +258,10 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	)";
 
 	Json::Value config;
-	BOOST_REQUIRE(Json::Reader().parse(c_configString, config));
+	BOOST_REQUIRE(jsonParseStrict(c_configString, config));
 	for (auto const& account: _accounts)
 		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
-	test_setChainParams(Json::FastWriter().write(config));
+	test_setChainParams(jsonCompactPrint(config));
 }
 
 void RPCSession::test_setChainParams(string const& _config)
@@ -328,7 +337,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	BOOST_TEST_MESSAGE("Reply: " + reply);
 
 	Json::Value result;
-	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
+	BOOST_REQUIRE(jsonParseStrict(reply, result));
 
 	if (result.isMember("error"))
 	{
@@ -371,6 +380,5 @@ string RPCSession::TransactionData::toJson() const
 	json["gasprice"] = gasPrice;
 	json["value"] = value;
 	json["data"] = data;
-	return Json::FastWriter().write(json);
-
+	return jsonCompactPrint(json);
 }

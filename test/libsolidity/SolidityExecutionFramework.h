@@ -52,27 +52,39 @@ public:
 		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
 	) override
 	{
+		bytes bytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
+		sendMessage(bytecode + _arguments, true, _value);
+		return m_output;
+	}
+
+	bytes compileContract(
+		std::string const& _sourceCode,
+		std::string const& _contractName = "",
+		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
+	)
+	{
 		// Silence compiler version warning
 		std::string sourceCode = "pragma solidity >=0.0;\n" + _sourceCode;
 		m_compiler.reset(false);
 		m_compiler.addSource("", sourceCode);
 		m_compiler.setLibraries(_libraryAddresses);
+		m_compiler.setEVMVersion(m_evmVersion);
 		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
 		if (!m_compiler.compile())
 		{
+			auto scannerFromSourceName = [&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); };
+			SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
+
 			for (auto const& error: m_compiler.errors())
-				SourceReferenceFormatter::printExceptionInformation(
-					std::cerr,
+				formatter.printExceptionInformation(
 					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-					[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 				);
 			BOOST_ERROR("Compiling contract failed");
 		}
 		eth::LinkerObject obj = m_compiler.object(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
 		BOOST_REQUIRE(obj.linkReferences.empty());
-		sendMessage(obj.bytecode + _arguments, true, _value);
-		return m_output;
+		return obj.bytecode;
 	}
 
 protected:

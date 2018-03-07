@@ -43,6 +43,56 @@ bool ReferencesResolver::resolve(ASTNode const& _root)
 	return !m_errorOccurred;
 }
 
+bool ReferencesResolver::visit(Block const& _block)
+{
+	if (!m_resolveInsideCode)
+		return false;
+	m_experimental050Mode = _block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(&_block);
+	return true;
+}
+
+void ReferencesResolver::endVisit(Block const& _block)
+{
+	if (!m_resolveInsideCode)
+		return;
+
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(_block.scope());
+}
+
+bool ReferencesResolver::visit(ForStatement const& _for)
+{
+	if (!m_resolveInsideCode)
+		return false;
+	m_experimental050Mode = _for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	// C99-scoped variables
+	if (m_experimental050Mode)
+		m_resolver.setScope(&_for);
+	return true;
+}
+
+void ReferencesResolver::endVisit(ForStatement const& _for)
+{
+	if (!m_resolveInsideCode)
+		return;
+	if (m_experimental050Mode)
+		m_resolver.setScope(_for.scope());
+}
+
+void ReferencesResolver::endVisit(VariableDeclarationStatement const& _varDeclStatement)
+{
+	if (!m_resolveInsideCode)
+		return;
+	if (m_experimental050Mode)
+		for (auto const& var: _varDeclStatement.declarations())
+			if (var)
+				m_resolver.activateVariable(var->name());
+}
+
 bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
@@ -228,8 +278,10 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	};
 
 	// Will be re-generated later with correct information
+	// We use the latest EVM version because we will re-run it anyway.
 	assembly::AsmAnalysisInfo analysisInfo;
-	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
+	boost::optional<Error::Type> errorTypeForLoose = m_experimental050Mode ? Error::Type::SyntaxError : Error::Type::Warning;
+	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, EVMVersion(), errorTypeForLoose, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
 

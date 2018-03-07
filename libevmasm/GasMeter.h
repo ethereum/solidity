@@ -21,10 +21,13 @@
 
 #pragma once
 
-#include <ostream>
-#include <tuple>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
+
+#include <libsolidity/interface/EVMVersion.h>
+
+#include <ostream>
+#include <tuple>
 
 namespace dev
 {
@@ -44,13 +47,25 @@ namespace GasCosts
 	static unsigned const tier5Gas = 10;
 	static unsigned const tier6Gas = 20;
 	static unsigned const tier7Gas = 0;
-	static unsigned const extCodeGas = 700;
-	static unsigned const balanceGas = 400;
+	inline unsigned extCodeGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::tangerineWhistle() ? 700 : 20;
+	}
+	inline unsigned balanceGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::tangerineWhistle() ? 400 : 20;
+	}
 	static unsigned const expGas = 10;
-	static unsigned const expByteGas = 50;
+	inline unsigned expByteGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::spuriousDragon() ? 50 : 10;
+	}
 	static unsigned const keccak256Gas = 30;
 	static unsigned const keccak256WordGas = 6;
-	static unsigned const sloadGas = 200;
+	inline unsigned sloadGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::tangerineWhistle() ? 200 : 50;
+	}
 	static unsigned const sstoreSetGas = 20000;
 	static unsigned const sstoreResetGas = 5000;
 	static unsigned const sstoreRefundGas = 15000;
@@ -59,11 +74,17 @@ namespace GasCosts
 	static unsigned const logDataGas = 8;
 	static unsigned const logTopicGas = 375;
 	static unsigned const createGas = 32000;
-	static unsigned const callGas = 700;
+	inline unsigned callGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::tangerineWhistle() ? 700 : 40;
+	}
 	static unsigned const callStipend = 2300;
 	static unsigned const callValueTransferGas = 9000;
 	static unsigned const callNewAccountGas = 25000;
-	static unsigned const selfdestructGas = 5000;
+	inline unsigned selfdestructGas(EVMVersion _evmVersion)
+	{
+		return _evmVersion >= EVMVersion::tangerineWhistle() ? 5000 : 0;
+	}
 	static unsigned const selfdestructRefundGas = 24000;
 	static unsigned const memoryGas = 3;
 	static unsigned const quadCoeffDiv = 512;
@@ -100,8 +121,8 @@ public:
 	};
 
 	/// Constructs a new gas meter given the current state.
-	explicit GasMeter(std::shared_ptr<KnownState> const& _state, u256 const& _largestMemoryAccess = 0):
-		m_state(_state), m_largestMemoryAccess(_largestMemoryAccess) {}
+	GasMeter(std::shared_ptr<KnownState> const& _state, solidity::EVMVersion _evmVersion, u256 const& _largestMemoryAccess = 0):
+		m_state(_state), m_evmVersion(_evmVersion), m_largestMemoryAccess(_largestMemoryAccess) {}
 
 	/// @returns an upper bound on the gas consumed by the given instruction and updates
 	/// the state.
@@ -110,6 +131,8 @@ public:
 
 	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
+	/// @returns gas costs for simple instructions with constant gas costs (that do not
+	/// change with EVM versions)
 	static unsigned runGas(Instruction _instruction);
 
 private:
@@ -123,6 +146,7 @@ private:
 	GasConsumption memoryGas(int _stackPosOffset, int _stackPosSize);
 
 	std::shared_ptr<KnownState> m_state;
+	EVMVersion m_evmVersion;
 	/// Largest point where memory was accessed since the creation of this object.
 	u256 m_largestMemoryAccess;
 };

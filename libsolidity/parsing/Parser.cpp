@@ -897,7 +897,9 @@ ASTPointer<Statement> Parser::parseStatement()
 	case Token::Assembly:
 		return parseInlineAssembly(docString);
 	case Token::Identifier:
-		if (m_insideModifier && m_scanner->currentLiteral() == "_")
+		if (m_scanner->currentLiteral() == "emit")
+			statement = parseEmitStatement(docString);
+		else if (m_insideModifier && m_scanner->currentLiteral() == "_")
 		{
 			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
 			m_scanner->next();
@@ -926,7 +928,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	}
 
 	assembly::Parser asmParser(m_errorReporter);
-	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
+	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner, true);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }
@@ -1013,6 +1015,38 @@ ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& 
 		loopExpression,
 		body
 	);
+}
+
+ASTPointer<EmitStatement> Parser::parseEmitStatement(ASTPointer<ASTString> const& _docString)
+{
+	ASTNodeFactory nodeFactory(*this);
+	m_scanner->next();
+	ASTNodeFactory eventCallNodeFactory(*this);
+
+	if (m_scanner->currentToken() != Token::Identifier)
+		fatalParserError("Expected event name or path.");
+
+	vector<ASTPointer<PrimaryExpression>> path;
+	while (true)
+	{
+		path.push_back(parseIdentifier());
+		if (m_scanner->currentToken() != Token::Period)
+			break;
+		m_scanner->next();
+	};
+
+	auto eventName = expressionFromIndexAccessStructure(path, {});
+	expectToken(Token::LParen);
+
+	vector<ASTPointer<Expression>> arguments;
+	vector<ASTPointer<ASTString>> names;
+	std::tie(arguments, names) = parseFunctionCallArguments();
+	eventCallNodeFactory.markEndPosition();
+	nodeFactory.markEndPosition();
+	expectToken(Token::RParen);
+	auto eventCall = eventCallNodeFactory.createNode<FunctionCall>(eventName, arguments, names);
+	auto statement = nodeFactory.createNode<EmitStatement>(_docString, eventCall);
+	return statement;
 }
 
 ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)

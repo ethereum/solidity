@@ -765,7 +765,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::AddMod:
 		case FunctionType::Kind::MulMod:
 		{
-			for (unsigned i = 0; i < 3; i ++)
+			arguments[2]->accept(*this);
+			utils().convertType(*arguments[2]->annotation().type, IntegerType(256));
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context.appendConditionalInvalid();
+			for (unsigned i = 1; i < 3; i ++)
 			{
 				arguments[2 - i]->accept(*this);
 				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
@@ -902,6 +906,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << success;
 			break;
 		}
+		case FunctionType::Kind::GasLeft:
+			m_context << Instruction::GAS;
+			break;
 		default:
 			solAssert(false, "Invalid function type.");
 		}
@@ -1603,6 +1610,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
+	bool useStaticCall =
+		_functionType.stateMutability() <= StateMutability::View &&
+		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
+		m_context.evmVersion().hasStaticCall();
 
 	unsigned retSize = 0;
 	if (returnSuccessCondition)
@@ -1667,16 +1678,19 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().storeFreeMemoryPointer();
 	}
 
-	// Touch the end of the output area so that we do not pay for memory resize during the call
-	// (which we would have to subtract from the gas left)
-	// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
-	// would remove that, so we use MSTORE here.
-	if (!_functionType.gasSet() && retSize > 0)
+	if (!m_context.evmVersion().canOverchargeGasForCall())
 	{
-		m_context << u256(0);
-		utils().fetchFreeMemoryPointer();
-		// This touches too much, but that way we save some rounding arithmetics
-		m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+		// Touch the end of the output area so that we do not pay for memory resize during the call
+		// (which we would have to subtract from the gas left)
+		// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
+		// would remove that, so we use MSTORE here.
+		if (!_functionType.gasSet() && retSize > 0)
+		{
+			m_context << u256(0);
+			utils().fetchFreeMemoryPointer();
+			// This touches too much, but that way we save some rounding arithmetics
+			m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+		}
 	}
 
 	// Copy function identifier to memory.
@@ -1728,6 +1742,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// [value,] addr, gas (stack top)
 	if (isDelegateCall)
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
+	else if (useStaticCall)
+		solAssert(!_functionType.valueSet(), "Value set for staticcall");
 	else if (_functionType.valueSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
@@ -1745,24 +1761,27 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	if (_functionType.gasSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
-	else if (m_context.experimentalFeatureActive(ExperimentalFeature::V050))
+	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
 		m_context << Instruction::GAS;
 	else
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = eth::GasCosts::callGas + 10;
+		u256 gasNeededByCaller = eth::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (_functionType.valueSet())
 			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
 		if (!existenceChecked)
 			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
+	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
 	else if (isCallCode)
 		m_context << Instruction::CALLCODE;
+	else if (useStaticCall)
+		m_context << Instruction::STATICCALL;
 	else
 		m_context << Instruction::CALL;
 

@@ -57,7 +57,11 @@ public:
 	bool resolve(ASTNode const& _root);
 
 private:
-	virtual bool visit(Block const&) override { return m_resolveInsideCode; }
+	virtual bool visit(Block const& _block) override;
+	virtual void endVisit(Block const& _block) override;
+	virtual bool visit(ForStatement const& _for) override;
+	virtual void endVisit(ForStatement const& _for) override;
+	virtual void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
 	virtual bool visit(Identifier const& _identifier) override;
 	virtual bool visit(ElementaryTypeName const& _typeName) override;
 	virtual bool visit(FunctionDefinition const& _functionDefinition) override;
@@ -90,6 +94,7 @@ private:
 	std::vector<ParameterList const*> m_returnParameters;
 	bool const m_resolveInsideCode;
 	bool m_errorOccurred = false;
+	bool m_experimental050Mode = false;
 };
 
 }

@@ -69,7 +69,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = assembly::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner);
+	m_parserResult = assembly::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
@@ -91,7 +91,7 @@ bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scann
 bool AssemblyStack::analyzeParsed()
 {
 	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, languageToAsmFlavour(m_language));
+	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }

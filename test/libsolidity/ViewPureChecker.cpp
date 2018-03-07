@@ -20,6 +20,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -109,6 +111,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"block.difficulty",
 		"block.number",
 		"block.gaslimit",
+		"gasleft()",
 		"msg.gas",
 		"msg.value",
 		"msg.sender",
@@ -148,7 +151,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 BOOST_AUTO_TEST_CASE(view_error_for_050)
 {
 	CHECK_ERROR(
-		"pragma experimental \"v0.5.0\"; contract C { uint x; function f() view { x = 2; } }",
+		"pragma experimental \"v0.5.0\"; contract C { uint x; function f() view public { x = 2; } }",
 		TypeError,
 		"Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable."
 	);
@@ -277,11 +280,11 @@ BOOST_AUTO_TEST_CASE(builtin_functions)
 	string text = R"(
 		contract C {
 			function f() public {
-				this.transfer(1);
-				require(this.send(2));
-				selfdestruct(this);
-				require(this.delegatecall());
-				require(this.call());
+				address(this).transfer(1);
+				require(address(this).send(2));
+				selfdestruct(address(this));
+				require(address(this).delegatecall());
+				require(address(this).call());
 			}
 			function g() pure public {
 				bytes32 x = keccak256("abc");
@@ -423,7 +426,10 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "only available after the Metropolis");
+	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+		CHECK_WARNING(text, "\"staticcall\" instruction is only available for Byzantium-compatible");
+	else
+		CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(assembly_jump)

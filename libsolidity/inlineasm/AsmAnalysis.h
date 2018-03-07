@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
@@ -29,6 +30,7 @@
 #include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <functional>
 #include <memory>
@@ -54,9 +56,18 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorReporter& _errorReporter,
+		EVMVersion _evmVersion,
+		boost::optional<Error::Type> _errorTypeForLoose,
 		AsmFlavour _flavour = AsmFlavour::Loose,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_flavour(_flavour) {}
+	):
+		m_resolver(_resolver),
+		m_info(_analysisInfo),
+		m_errorReporter(_errorReporter),
+		m_evmVersion(_evmVersion),
+		m_flavour(_flavour),
+		m_errorTypeForLoose(_errorTypeForLoose)
+	{}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -89,6 +100,11 @@ private:
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 	void warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location);
 
+	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
+	/// exception (if the flavour is not Loose), reports an error/warning
+	/// (if m_errorTypeForLoose is set) or does nothing.
+	void checkLooseFeature(SourceLocation const& _location, std::string const& _description);
+
 	int m_stackHeight = 0;
 	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
@@ -97,7 +113,9 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
+	EVMVersion m_evmVersion;
 	AsmFlavour m_flavour = AsmFlavour::Loose;
+	boost::optional<Error::Type> m_errorTypeForLoose;
 };
 
 }

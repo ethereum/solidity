@@ -19,7 +19,9 @@ crowdfunding, blind auctions, multi-signature wallets and more.
 .. note::
     The best way to try out Solidity right now is using
     `Remix <https://remix.ethereum.org/>`_
-    (it can take a while to load, please be patient).
+    (it can take a while to load, please be patient). Remix is a web browser
+    based IDE that allows you to write Solidity smart contracts, then deploy 
+    and run the smart contracts. 
 
 .. warning::
     Since software is written by humans, it can have bugs. Thus, also
@@ -34,6 +36,7 @@ Translations
 
 This documentation is translated into several languages by community volunteers, but the English version stands as a reference.
 
+* `Simplified Chinese <http://solidity-cn.readthedocs.io>`_ (in progress)
 * `Spanish <https://solidity-es.readthedocs.io>`_
 * `Russian <https://github.com/ethereum/wiki/wiki/%5BRussian%5D-%D0%A0%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D1%81%D1%82%D0%B2%D0%BE-%D0%BF%D0%BE-Solidity>`_ (rather outdated)
 

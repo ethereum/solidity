@@ -402,7 +402,7 @@ State variables can be declared as ``constant``. In this case, they have to be
 assigned from an expression which is a constant at compile time. Any expression
 that accesses storage, blockchain data (e.g. ``now``, ``this.balance`` or
 ``block.number``) or
-execution data (``msg.gas``) or make calls to external contracts are disallowed. Expressions
+execution data (``msg.value`` or ``gasleft()``) or make calls to external contracts are disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
 might have a side-effect on other memory objects are not. The built-in functions
 ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
@@ -467,13 +467,20 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` is an alias to ``view``.
+  ``constant`` on functions is an alias to ``view``, but this is deprecated and is planned to be dropped in version 0.5.0.
 
 .. note::
   Getter methods are marked ``view``.
 
+.. note::
+  If invalid explicit type conversions are used, state modifications are possible
+  even though a ``view`` function was called.
+  You can switch the compiler to use ``STATICCALL`` when calling such functions and thus
+  prevent modifications to the state on the level of the EVM by adding
+  ``pragma experimental "v0.5.0";``
+
 .. warning::
-  The compiler does not enforce yet that a ``view`` method is not modifying state.
+  The compiler does not enforce yet that a ``view`` method is not modifying state. It raises a warning though.
 
 .. index:: ! pure function, function;pure
 
@@ -502,8 +509,20 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
+.. note::
+  If invalid explicit type conversions are used, state modifications are possible
+  even though a ``pure`` function was called.
+  You can switch the compiler to use ``STATICCALL`` when calling such functions and thus
+  prevent modifications to the state on the level of the EVM by adding
+  ``pragma experimental "v0.5.0";``
+
 .. warning::
-  The compiler does not enforce yet that a ``pure`` method is not reading from the state.
+  It is not possible to prevent functions from reading the state at the level
+  of the EVM, it is only possible to prevent them from writing to the state
+  (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
+
+.. warning::
+  Before version 0.4.17 the compiler didn't enforce that ``pure`` is not reading the state.
 
 .. index:: ! fallback function, function;fallback
 
@@ -523,16 +542,14 @@ Ether (without data). Additionally, in order to receive Ether, the fallback func
 must be marked ``payable``. If no such function exists, the contract cannot receive
 Ether through regular transactions.
 
-In such a context, there is usually very little gas available to the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as possible. Note that the gas required by a transaction (as opposed to an internal call) that invokes the fallback function is much higher, because each transaction charges an additional amount of 21000 gas or more for things like signature checking.
-
-In particular, the following operations will consume more gas than the stipend provided to a fallback function:
+In the worst case, the fallback function can only rely on 2300 gas being available (for example when send or transfer is used), leaving not much room to perform other operations except basic logging. The following operations will consume more gas than the 2300 gas stipend:
 
 - Writing to storage
 - Creating a contract
 - Calling an external function which consumes a large amount of gas
 - Sending Ether
 
-Please ensure you test your fallback function thoroughly to ensure the execution cost is less than 2300 gas before deploying a contract.
+Like any function, the fallback function can execute complex operations as long as there is enough gas passed on to it.
 
 .. note::
     Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
@@ -724,10 +741,12 @@ All non-indexed arguments will be stored in the data part of the log.
         );
 
         function deposit(bytes32 _id) public payable {
-            // Any call to this function (even deeply nested) can
-            // be detected from the JavaScript API by filtering
-            // for `Deposit` to be called.
-            Deposit(msg.sender, _id, msg.value);
+            // Events are emitted using `emit`, followed by
+            // the name of the event and the arguments
+            // (if any) in parentheses. Any such invocation
+            // (even deeply nested) can be detected from
+            // the JavaScript API by filtering for `Deposit`.
+            emit Deposit(msg.sender, _id, msg.value);
         }
     }
 
@@ -953,6 +972,31 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
+.. index:: ! constructor
+
+Constructors
+============
+A constructor is an optional function with the same name as the contract which is executed upon contract creation. 
+Constructor functions can be either ``public`` or ``internal``.
+
+::
+
+    pragma solidity ^0.4.11;
+
+    contract A {
+        uint public a;
+
+        function A(uint _a) internal {
+            a = _a;
+        }
+    }
+
+    contract B is A(1) {
+        function B() public {}
+    }
+
+A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+
 .. index:: ! base;constructor
 
 Arguments for Base Constructors
@@ -1025,11 +1069,13 @@ As an exception, a state variable getter can override a public function.
 
 .. index:: ! contract;abstract, ! abstract contract
 
+.. _abstract-contract:
+
 ******************
 Abstract Contracts
 ******************
 
-Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
+Contracts are marked as abstract when at least one of their functions lacks an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
 
     pragma solidity ^0.4.0;
 
@@ -1037,9 +1083,7 @@ Contract functions can lack an implementation as in the following example (note 
         function utterance() public returns (bytes32);
     }
 
-Such contracts cannot be compiled (even if they contain
-implemented functions alongside non-implemented functions),
-but they can be used as base contracts::
+Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
     pragma solidity ^0.4.0;
 
@@ -1052,6 +1096,19 @@ but they can be used as base contracts::
     }
 
 If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
+
+Note that a function without implementation is different from a :ref:`Function Type <function_types>` even though their syntax looks very similar.
+
+Example of function without implementation (a function declaration)::
+
+    function foo(address) external returns (address);
+
+Example of a Function Type (a variable declaration, where the variable is of type ``function``)::
+
+    function(address) external returns (address) foo;
+
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
 

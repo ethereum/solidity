@@ -63,7 +63,7 @@ StateMutability = 'pure' | 'constant' | 'view' | 'payable'
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
-              Throw | SimpleStatement ) ';'
+              Throw | EmitStatement | SimpleStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
@@ -77,6 +77,7 @@ Continue = 'continue'
 Break = 'break'
 Return = 'return' Expression?
 Throw = 'throw'
+EmitStatement = 'emit' FunctionCall
 VariableDefinition = ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
 IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 

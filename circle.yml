@@ -5,10 +5,6 @@ jobs:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
       - checkout
-      - run:
-          name: Init submodules
-          command: |
-            git submodule update --init
       - restore_cache:
           name: Restore Boost build
           key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
@@ -83,7 +79,7 @@ jobs:
           name: External tests
           command: |
             . /usr/local/nvm/nvm.sh
-            test/externalTests.sh /tmp/workspace/soljson.js
+            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
   build_x86:
     docker:
       - image: buildpack-deps:artful
@@ -95,40 +91,83 @@ jobs:
             apt-get -qq update
             apt-get -qy install ccache cmake libboost-all-dev libz3-dev
       - run:
-          name: Init submodules
-          command: |
-            git submodule update --init
-      - run:
           name: Store commit hash and prerelease
           command: |
-            date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
             echo -n "$CIRCLE_SHA1" > commit_hash.txt
       - restore_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}
-          key: ccache-{{ arch }}
-          key: ccache
+          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: ccache-{{ arch }}-{{ .Branch }}-
+          key: ccache-{{ arch }}-develop-
+          key: ccache-{{ arch }}-
+      - run:
+          name: Configure ccache
+          command: ccache -M 200M && ccache -c && ccache -s && ccache -z
       - run:
           name: Build
-          command: ./scripts/build.sh RelWithDebInfo
+          command: |
+            mkdir -p build
+            cd build
+            cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            make -j4
+      - run:
+          name: CCache statistics
+          command: ccache -s
       - save_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}
+          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          when: always
           paths:
             - ~/.ccache
-      - run:
-          name: Commandline tests
-          command: test/cmdlineTests.sh
-      - run: mkdir -p test_results
-      - run:
-          name: Test without optimizer (exclude IPC tests)
-          command: build/test/soltest --logger=JUNIT,test_suite,test_results/no_opt.xml  -- --no-ipc
-      - run:
-          name: Test with optimizer (exclude IPC tests)
-          command: build/test/soltest --logger=JUNIT,test_suite,test_results/opt.xml -- --optimize --no-ipc
-      - store_test_results:
-          path: test_results/
       - store_artifacts:
           path: build/solc/solc
           destination: solc
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/solfuzzer
+
+  test_x86:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libz3-dev libleveldb1v5
+      - run: mkdir -p test_results
+      - run:
+          name: Tests
+          command: scripts/tests.sh --junit_report test_results
+      - store_test_results:
+          path: test_results/
+
+  docs:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install python-sphinx
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - run:
+          name: Build documentation
+          command: ./scripts/docs.sh
+      - store_artifacts:
+          path: docs/_build/html/
+          destination: docs-html
 
 workflows:
   version: 2
@@ -142,3 +181,7 @@ workflows:
           requires:
             - build_emscripten
       - build_x86
+      - test_x86:
+          requires:
+            - build_x86
+      - docs

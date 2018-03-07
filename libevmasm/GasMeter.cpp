@@ -61,7 +61,6 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	case Operation:
 	{
 		ExpressionClasses& classes = m_state->expressionClasses();
-		gas = runGas(_item.instruction());
 		switch (_item.instruction())
 		{
 		case Instruction::SSTORE:
@@ -72,26 +71,29 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				m_state->storageContent().count(slot) &&
 				classes.knownNonZero(m_state->storageContent().at(slot))
 			))
-				gas += GasCosts::sstoreResetGas; //@todo take refunds into account
+				gas = GasCosts::sstoreResetGas; //@todo take refunds into account
 			else
-				gas += GasCosts::sstoreSetGas;
+				gas = GasCosts::sstoreSetGas;
 			break;
 		}
 		case Instruction::SLOAD:
-			gas += GasCosts::sloadGas;
+			gas = GasCosts::sloadGas(m_evmVersion);
 			break;
 		case Instruction::RETURN:
 		case Instruction::REVERT:
+			gas = runGas(_item.instruction());
 			gas += memoryGas(0, -1);
 			break;
 		case Instruction::MLOAD:
 		case Instruction::MSTORE:
+			gas = runGas(_item.instruction());
 			gas += memoryGas(classes.find(Instruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(32))
 			}));
 			break;
 		case Instruction::MSTORE8:
+			gas = runGas(_item.instruction());
 			gas += memoryGas(classes.find(Instruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(1))
@@ -105,10 +107,15 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::CALLDATACOPY:
 		case Instruction::CODECOPY:
 		case Instruction::RETURNDATACOPY:
+			gas = runGas(_item.instruction());
 			gas += memoryGas(0, -2);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
 			break;
+		case Instruction::EXTCODESIZE:
+			gas = GasCosts::extCodeGas(m_evmVersion);
+			break;
 		case Instruction::EXTCODECOPY:
+			gas = GasCosts::extCodeGas(m_evmVersion);
 			gas += memoryGas(-1, -3);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-3));
 			break;
@@ -137,7 +144,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				gas = GasConsumption::infinite();
 			else
 			{
-				gas = GasCosts::callGas;
+				gas = GasCosts::callGas(m_evmVersion);
 				if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(0)))
 					gas += (*value);
 				else
@@ -155,7 +162,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			break;
 		}
 		case Instruction::SELFDESTRUCT:
-			gas = GasCosts::selfdestructGas;
+			gas = GasCosts::selfdestructGas(m_evmVersion);
 			gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
 			break;
 		case Instruction::CREATE:
@@ -172,11 +179,15 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::EXP:
 			gas = GasCosts::expGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
-				gas += GasCosts::expByteGas * (32 - (h256(*value).firstBitSet() / 8));
+				gas += GasCosts::expByteGas(m_evmVersion) * (32 - (h256(*value).firstBitSet() / 8));
 			else
-				gas += GasCosts::expByteGas * 32;
+				gas += GasCosts::expByteGas(m_evmVersion) * 32;
+			break;
+		case Instruction::BALANCE:
+			gas = GasCosts::balanceGas(m_evmVersion);
 			break;
 		default:
+			gas = runGas(_item.instruction());
 			break;
 		}
 		break;
@@ -241,12 +252,9 @@ unsigned GasMeter::runGas(Instruction _instruction)
 	case Tier::Mid:     return GasCosts::tier4Gas;
 	case Tier::High:    return GasCosts::tier5Gas;
 	case Tier::Ext:     return GasCosts::tier6Gas;
-	case Tier::Special: return GasCosts::tier7Gas;
-	case Tier::ExtCode: return GasCosts::extCodeGas;
-	case Tier::Balance: return GasCosts::balanceGas;
 	default: break;
 	}
-	assertThrow(false, OptimizerException, "Invalid gas tier.");
+	assertThrow(false, OptimizerException, "Invalid gas tier for instruction " + instructionInfo(_instruction).name);
 	return 0;
 }
 

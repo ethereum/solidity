@@ -319,7 +319,7 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
-	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << assembly::AsmPrinter()(*parserResult) << endl;
 #endif
@@ -329,6 +329,8 @@ void CompilerContext::appendInlineAssembly(
 		analyzerResult = assembly::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
+			m_evmVersion,
+			boost::none,
 			assembly::AsmFlavour::Strict,
 			identifierAccess.resolve
 		).analyze(*parserResult);
