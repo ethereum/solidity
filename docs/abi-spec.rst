@@ -58,7 +58,7 @@ The following elementary types exist:
 
 - ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
-- ``function``: an address (20 bytes) folled by a function selector (4 bytes). Encoded identical to ``bytes24``.
+- ``function``: an address (20 bytes) followed by a function selector (4 bytes). Encoded identical to ``bytes24``.
 
 The following (fixed-size) array type exists:
 
