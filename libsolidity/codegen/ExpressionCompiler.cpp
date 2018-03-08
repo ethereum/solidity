@@ -821,24 +821,27 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				function.kind() == FunctionType::Kind::ArrayPush ?
 				make_shared<ArrayType>(DataLocation::Storage, paramType) :
 				make_shared<ArrayType>(DataLocation::Storage);
-			// get the current length
-			ArrayUtils(m_context).retrieveLength(*arrayType);
-			m_context << Instruction::DUP1;
-			// stack: ArrayReference currentLength currentLength
-			m_context << u256(1) << Instruction::ADD;
-			// stack: ArrayReference currentLength newLength
-			m_context << Instruction::DUP3 << Instruction::DUP2;
-			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
-			m_context << Instruction::SWAP2 << Instruction::SWAP1;
-			// stack: newLength ArrayReference oldLength
-			ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-			// stack: newLength storageSlot slotOffset
+			// stack: ArrayReference
 			arguments[0]->accept(*this);
+			TypePointer const& argType = arguments[0]->annotation().type;
+			// stack: ArrayReference argValue
+			utils().moveToStackTop(argType->sizeOnStack(), 1);
+			// stack: argValue ArrayReference
+			m_context << Instruction::DUP1;
+			ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
+			// stack: argValue ArrayReference newLength
+			m_context << Instruction::SWAP1;
+			// stack: argValue newLength ArrayReference
+			m_context << u256(1) << Instruction::DUP3 << Instruction::SUB;
+			// stack: argValue newLength ArrayReference (newLength-1)
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
+			// stack: argValue newLength storageSlot slotOffset
+			utils().moveToStackTop(3, argType->sizeOnStack());
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
 			solAssert(type, "");
-			utils().convertType(*arguments[0]->annotation().type, *type);
+			utils().convertType(*argType, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset

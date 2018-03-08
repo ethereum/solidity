@@ -774,6 +774,55 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 	);
 }
 
+void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
+		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+
+	if (_type.isByteArray())
+	{
+		// We almost always just add 2 (length of byte arrays is shifted left by one)
+		// except for the case where we transition from a short byte array
+		// to a long byte array, there we have to copy.
+		// This happens if the length is exactly 31, which means that the
+		// lowest-order byte (we actually use a mask with fewer bits) must
+		// be (31*2+0) = 62
+
+		m_context.appendInlineAssembly(R"({
+			let data := sload(ref)
+			let shifted_length := and(data, 63)
+			// We have to copy if length is exactly 31, because that marks
+			// the transition between in-place and out-of-place storage.
+			switch shifted_length
+			case 62
+			{
+				mstore(0, ref)
+				let data_area := keccak256(0, 0x20)
+				sstore(data_area, and(data, not(0xff)))
+				// New length is 32, encoded as (32 * 2 + 1)
+				sstore(ref, 65)
+				// Replace ref variable by new length
+				ref := 32
+			}
+			default
+			{
+				sstore(ref, add(data, 2))
+				// Replace ref variable by new length
+				if iszero(and(data, 1)) { data := shifted_length }
+				ref := add(div(data, 2), 1)
+			}
+		})", {"ref"});
+	}
+	else
+		m_context.appendInlineAssembly(R"({
+			let new_length := add(sload(ref), 1)
+			sstore(ref, new_length)
+			ref := new_length
+		})", {"ref"});
+}
+
 void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
 {
 	m_context.callLowLevelFunction(
