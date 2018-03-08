@@ -5,6 +5,7 @@ Features:
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
+ * Code Generator: Do not include internal functions in the runtime bytecode which are only referenced in the constructor.
  * Code Generator: Properly skip unneeded storage array cleanup when not reducing length.
  * Code Generator: Bugfix in modifier lookup in libraries.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
