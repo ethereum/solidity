@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 			}
 		})";
 	compileBothVersions(sourceCode);
-	compareVersions("f(uint256)");
+	compareVersions("f(uint256)", 7);
 }
 
 BOOST_AUTO_TEST_CASE(storage_access)
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(storage_access)
 		}
 	)";
 	compileBothVersions(sourceCode);
-	compareVersions("f(uint256)");
+	compareVersions("f(uint256)", 7);
 }
 
 BOOST_AUTO_TEST_CASE(array_copy)

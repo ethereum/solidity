@@ -20,11 +20,15 @@
  * Tests for the json ast output.
  */
 
-#include <string>
-#include <boost/test/unit_test.hpp>
+#include <test/TestHelper.h>
+
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <string>
 
 using namespace std;
 
@@ -41,6 +45,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C {}");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -52,6 +57,7 @@ BOOST_AUTO_TEST_CASE(source_location)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { function f() { var x = 2; x++; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -66,6 +72,7 @@ BOOST_AUTO_TEST_CASE(inheritance_specifier)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C1 {} contract C2 is C1 {}");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -81,6 +88,7 @@ BOOST_AUTO_TEST_CASE(using_for_directive)
 {
 	CompilerStack c;
 	c.addSource("a", "library L {} contract C { using L for uint; }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -98,6 +106,7 @@ BOOST_AUTO_TEST_CASE(enum_value)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { enum E { A, B } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -115,6 +124,7 @@ BOOST_AUTO_TEST_CASE(modifier_definition)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -129,6 +139,7 @@ BOOST_AUTO_TEST_CASE(modifier_invocation)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -145,6 +156,7 @@ BOOST_AUTO_TEST_CASE(event_definition)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { event E(); }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -159,6 +171,7 @@ BOOST_AUTO_TEST_CASE(array_type_name)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { uint[] i; }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -172,6 +185,7 @@ BOOST_AUTO_TEST_CASE(placeholder_statement)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { modifier M { _; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -185,6 +199,7 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 {
 	CompilerStack c;
 	c.addSource("a", "contract C { function f() { var x = hex\"ff\"; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -204,6 +219,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 		"contract C { function f(function() external payable returns (uint) x) "
 		"returns (function() external constant returns (uint)) {} }"
 	);
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
@@ -237,16 +253,32 @@ BOOST_AUTO_TEST_CASE(documentation)
 		" and has a line-breaking comment.*/"
 		"contract C {}"
 	);
+	c.addSource("c",
+		"contract C {"
+		"  /** Some comment on Evt.*/ event Evt();"
+		"  /** Some comment on mod.*/ modifier mod() { _; }"
+		"  /** Some comment on fn.*/ function fn() public {}"
+		"}"
+	);
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 0;
 	sourceIndices["b"] = 1;
+	sourceIndices["c"] = 2;
 	Json::Value astJsonA = ASTJsonConverter(true, sourceIndices).toJson(c.ast("a"));
 	Json::Value documentationA = astJsonA["children"][0]["attributes"]["documentation"];
 	BOOST_CHECK_EQUAL(documentationA, "This contract is empty");
 	Json::Value astJsonB = ASTJsonConverter(true, sourceIndices).toJson(c.ast("b"));
 	Json::Value documentationB = astJsonB["children"][0]["attributes"]["documentation"];
 	BOOST_CHECK_EQUAL(documentationB, "This contract is empty and has a line-breaking comment.");
+	Json::Value astJsonC = ASTJsonConverter(true, sourceIndices).toJson(c.ast("c"));
+	Json::Value documentationC0 = astJsonC["children"][0]["children"][0]["attributes"]["documentation"];
+	Json::Value documentationC1 = astJsonC["children"][0]["children"][1]["attributes"]["documentation"];
+	Json::Value documentationC2 = astJsonC["children"][0]["children"][2]["attributes"]["documentation"];
+	BOOST_CHECK_EQUAL(documentationC0, "Some comment on Evt.");
+	BOOST_CHECK_EQUAL(documentationC1, "Some comment on mod.");
+	BOOST_CHECK_EQUAL(documentationC2, "Some comment on fn.");
 	//same tests for non-legacy mode
 	astJsonA = ASTJsonConverter(false, sourceIndices).toJson(c.ast("a"));
 	documentationA = astJsonA["nodes"][0]["documentation"];
@@ -254,7 +286,13 @@ BOOST_AUTO_TEST_CASE(documentation)
 	astJsonB = ASTJsonConverter(false, sourceIndices).toJson(c.ast("b"));
 	documentationB = astJsonB["nodes"][0]["documentation"];
 	BOOST_CHECK_EQUAL(documentationB, "This contract is empty and has a line-breaking comment.");
-
+	astJsonC = ASTJsonConverter(false, sourceIndices).toJson(c.ast("c"));
+	documentationC0 = astJsonC["nodes"][0]["nodes"][0]["documentation"];
+	documentationC1 = astJsonC["nodes"][0]["nodes"][1]["documentation"];
+	documentationC2 = astJsonC["nodes"][0]["nodes"][2]["documentation"];
+	BOOST_CHECK_EQUAL(documentationC0, "Some comment on Evt.");
+	BOOST_CHECK_EQUAL(documentationC1, "Some comment on mod.");
+	BOOST_CHECK_EQUAL(documentationC2, "Some comment on fn.");
 }
 
 

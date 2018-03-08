@@ -22,6 +22,8 @@
 #pragma once
 
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/interface/EVMVersion.h>
+
 #include <libevmasm/LinkerObject.h>
 
 #include <string>
@@ -54,8 +56,8 @@ public:
 	enum class Language { JULIA, Assembly, StrictAssembly };
 	enum class Machine { EVM, EVM15, eWasm };
 
-	explicit AssemblyStack(Language _language = Language::Assembly):
-		m_language(_language), m_errorReporter(m_errors)
+	explicit AssemblyStack(EVMVersion _evmVersion = EVMVersion(), Language _language = Language::Assembly):
+		m_language(_language), m_evmVersion(_evmVersion), m_errorReporter(m_errors)
 	{}
 
 	/// @returns the scanner used during parsing
@@ -82,6 +84,7 @@ private:
 	bool analyzeParsed();
 
 	Language m_language = Language::Assembly;
+	EVMVersion m_evmVersion;
 
 	std::shared_ptr<Scanner> m_scanner;
 

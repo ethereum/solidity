@@ -20,11 +20,11 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
-#include <string>
-#include <iostream>
-#include <boost/test/unit_test.hpp>
+#include <test/TestHelper.h>
+
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -32,6 +32,11 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <string>
+#include <iostream>
 
 using namespace std;
 using namespace dev::eth;
@@ -46,7 +51,7 @@ namespace test
 namespace
 {
 
-eth::AssemblyItems compileContract(const string& _sourceCode)
+eth::AssemblyItems compileContract(string const& _sourceCode)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -69,7 +74,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker(errorReporter);
+			TypeChecker checker(dev::test::Options::get().evmVersion(), errorReporter);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
 			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
@@ -77,7 +82,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler compiler;
+			Compiler compiler(dev::test::Options::get().evmVersion());
 			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();

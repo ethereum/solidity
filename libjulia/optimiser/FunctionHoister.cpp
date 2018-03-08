@@ -21,6 +21,7 @@
  */
 
 #include <libjulia/optimiser/FunctionHoister.h>
+#include <libjulia/optimiser/Utilities.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -28,13 +29,10 @@
 
 #include <libdevcore/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
-
 using namespace std;
 using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
-
 
 void FunctionHoister::operator()(Block& _block)
 {
@@ -49,11 +47,7 @@ void FunctionHoister::operator()(Block& _block)
 			statement = Block{_block.location, {}};
 		}
 	}
-	auto isEmptyBlock = [](Statement const& _st) -> bool {
-		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
-	};
-	// Remove empty blocks
-	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
+	removeEmptyBlocks(_block);
 	if (topLevel)
 		_block.statements += std::move(m_functions);
 }

@@ -35,14 +35,8 @@ namespace test
 
 class SMTCheckerFramework: public AnalysisFramework
 {
-public:
-	SMTCheckerFramework()
-	{
-		m_warningsToFilter.push_back("Experimental features are turned on.");
-	}
-
 protected:
-	virtual std::pair<SourceUnit const*, std::shared_ptr<Error const>>
+	virtual std::pair<SourceUnit const*, ErrorList>
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
@@ -102,8 +96,11 @@ BOOST_AUTO_TEST_CASE(warn_on_struct)
 			}
 		}
 	)";
-	/// Multiple warnings, should check for: Assertion checker does not yet implement this expression.
-	CHECK_WARNING_ALLOW_MULTI(text, "");
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Experimental feature",
+		"Assertion checker does not yet implement this expression.",
+		"Assertion checker does not yet support the type of this variable."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(simple_assert)
@@ -469,7 +466,8 @@ BOOST_AUTO_TEST_CASE(for_loop)
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
-				for (uint y = 2; x < 10; ) {
+				uint y;
+				for (y = 2; x < 10; ) {
 					y = 3;
 				}
 				assert(y == 3);
@@ -480,7 +478,8 @@ BOOST_AUTO_TEST_CASE(for_loop)
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
-				for (uint y = 2; x < 10; ) {
+				uint y;
+				for (y = 2; x < 10; ) {
 					y = 3;
 				}
 				assert(y == 2);

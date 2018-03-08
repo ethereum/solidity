@@ -192,6 +192,11 @@ These are regular array indices into a list of source files usually called
 ``"sourceList"``, which is part of the combined-json and the output of
 the json / npm compiler.
 
+.. note ::
+    In the case of instructions that are not associated with any particular source file,
+    the source mapping assigns an integer identifier of ``-1``. This may happen for
+    bytecode sections stemming from compiler-generated inline assembly statements.
+
 The source mappings inside the AST use the following
 notation:
 
@@ -219,7 +224,7 @@ This means the following source mappings represent the same information:
 
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
-``1:2:1;:9;2::2;;``
+``1:2:1;:9;2:1:2;;``
 
 ***************
 Tips and Tricks
@@ -230,7 +235,10 @@ Tips and Tricks
 * Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you automatically.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
-* Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
+* Initialize storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
+
+.. note::
+    If the storage struct has tightly packed properties, initialize it with separate assignments: ``x.a = 1; x.b = 2;``. In this way it will be easier for the optimizer to update storage in one go, thus making assignment cheaper.
 
 **********
 Cheatsheet
@@ -312,8 +320,9 @@ Global Variables
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
 - ``block.timestamp`` (``uint``): current block timestamp
+- ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
-- ``msg.gas`` (``uint``): remaining gas
+- ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
 - ``msg.sender`` (``address``): sender of the message (current call)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
@@ -327,8 +336,8 @@ Global Variables
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 - ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
-- ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``
-- ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``
+- ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+- ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address

@@ -58,8 +58,9 @@ Block and Transaction Properties
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
 - ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
+- ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
-- ``msg.gas`` (``uint``): remaining gas
+- ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
 - ``msg.sender`` (``address``): sender of the message (current call)
 - ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
 - ``msg.value`` (``uint``): number of wei sent with the message
@@ -107,9 +108,9 @@ Mathematical and Cryptographic Functions
 ----------------------------------------
 
 ``addmod(uint x, uint y, uint k) returns (uint)``:
-    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
+    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
-    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
+    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``keccak256(...) returns (bytes32)``:
     compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 ``sha256(...) returns (bytes32)``:
@@ -149,15 +150,15 @@ Address Related
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
 ``<address>.transfer(uint256 amount)``:
-    send given amount of Wei to :ref:`address`, throws on failure
+    send given amount of Wei to :ref:`address`, throws on failure, forwards 2300 gas stipend, not adjustable
 ``<address>.send(uint256 amount) returns (bool)``:
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
 ``<address>.call(...) returns (bool)``:
-    issue low-level ``CALL``, returns ``false`` on failure
+    issue low-level ``CALL``, returns ``false`` on failure, forwards all available gas, adjustable
 ``<address>.callcode(...) returns (bool)``:
-    issue low-level ``CALLCODE``, returns ``false`` on failure
+    issue low-level ``CALLCODE``, returns ``false`` on failure, forwards all available gas, adjustable
 ``<address>.delegatecall(...) returns (bool)``:
-    issue low-level ``DELEGATECALL``, returns ``false`` on failure
+    issue low-level ``DELEGATECALL``, returns ``false`` on failure, forwards all available gas, adjustable
 
 For more information, see the section on :ref:`address`.
 

@@ -71,7 +71,6 @@ namespace solidity
 
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strAbi = "abi";
-static string const g_strAddStandard = "add-std";
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
@@ -87,6 +86,7 @@ static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
+static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
@@ -118,7 +118,6 @@ static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 
 static string const g_argAbi = g_strAbi;
-static string const g_argAddStandard = g_strAddStandard;
 static string const g_argPrettyJson = g_strPrettyJson;
 static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
@@ -537,13 +536,17 @@ Allowed options)",
 		(g_argHelp.c_str(), "Show help message and exit.")
 		(g_argVersion.c_str(), "Show version and exit.")
 		(g_strLicense.c_str(), "Show licensing information and exit.")
+		(
+			g_strEVMVersion.c_str(),
+			po::value<string>()->value_name("version"),
+			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, byzantium (default) or constantinople."
+		)
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
 			"Estimated number of contract runs for optimizer tuning."
 		)
-		(g_argAddStandard.c_str(), "Add standard contracts.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -627,6 +630,7 @@ Allowed options)",
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
+		cmdLineParser.style(po::command_line_style::default_style & (~po::command_line_style::allow_guessing));
 		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
@@ -744,6 +748,18 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
+	if (m_args.count(g_strEVMVersion))
+	{
+		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
+		boost::optional<EVMVersion> versionOption = EVMVersion::fromString(versionOptionStr);
+		if (!versionOption)
+		{
+			cerr << "Invalid option for --evm-version: " << versionOptionStr << endl;
+			return false;
+		}
+		m_evmVersion = *versionOption;
+	}
+
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
@@ -777,7 +793,10 @@ bool CommandLineInterface::processInput()
 	}
 
 	m_compiler.reset(new CompilerStack(fileReader));
+
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
+	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 	try
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
@@ -788,6 +807,7 @@ bool CommandLineInterface::processInput()
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -796,11 +816,9 @@ bool CommandLineInterface::processInput()
 		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 
 		if (!successful)
@@ -808,7 +826,7 @@ bool CommandLineInterface::processInput()
 	}
 	catch (CompilerError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", scannerFromSourceName);
+		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -828,7 +846,7 @@ bool CommandLineInterface::processInput()
 		if (_error.type() == Error::Type::DocstringParsingError)
 			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
-			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), scannerFromSourceName);
+			formatter.printExceptionInformation(_error, _error.typeName());
 
 		return false;
 	}
@@ -948,7 +966,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		// FIXME: shouldn't this be done for every contract?
 		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
 			gasCosts = GasEstimator::breakToStatementLevel(
-				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
+				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
 				asts
 			);
 
@@ -1069,7 +1087,7 @@ bool CommandLineInterface::assemble(
 	map<string, AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = AssemblyStack(_language);
+		auto& stack = assemblyStacks[src.first] = AssemblyStack(m_evmVersion, _language);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
@@ -1086,15 +1104,17 @@ bool CommandLineInterface::assemble(
 			return false;
 		}
 	}
+
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
+		auto scannerFromSourceName = [&](string const&) -> Scanner const& { return stack.scanner(); };
+		SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 		for (auto const& error: stack.errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				[&](string const&) -> Scanner const& { return stack.scanner(); }
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;

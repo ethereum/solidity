@@ -71,8 +71,8 @@ protected:
 	template <class T>
 	void walkVector(T const& _statements)
 	{
-		for (auto const& st: _statements)
-			visit(st);
+		for (auto const& statement: _statements)
+			visit(statement);
 	}
 };
 

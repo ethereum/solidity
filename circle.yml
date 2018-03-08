@@ -1,29 +1,10 @@
 version: 2
 jobs:
-  build:
+  build_emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
     steps:
       - checkout
-      - run:
-          name: Install external tests deps
-          command: |
-            apt-get -qq update
-            apt-get -qy install netcat curl
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-      - run:
-          name: Test external tests deps
-          command: |
-            export NVM_DIR="/usr/local/nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            nvm --version
-            nvm install 6
-            node --version
-            npm --version
-      - run:
-          name: Init submodules
-          command: |
-            git submodule update --init
       - restore_cache:
           name: Restore Boost build
           key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
@@ -40,11 +21,167 @@ jobs:
           key: *boost-cache-key
           paths:
             - boost_1_57_0
+      - store_artifacts:
+          path: build/libsolc/soljson.js
+          destination: soljson.js
+      - run: mkdir -p workspace
+      - run: cp build/libsolc/soljson.js workspace/soljson.js
+      - run: scripts/get_version.sh > workspace/version.txt
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - soljson.js
+            - version.txt
+  test_emscripten_solcjs:
+    docker:
+      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
-          name: Test
+          name: Install external tests deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install netcat curl
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
+            export NVM_DIR="/usr/local/nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            nvm --version
+            nvm install 6
+            node --version
+            npm --version
+      - run:
+          name: Test solcjs
           command: |
             . /usr/local/nvm/nvm.sh
-            scripts/test_emscripten.sh
+            test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+  test_emscripten_external:
+    docker:
+      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install external tests deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install netcat curl
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
+            export NVM_DIR="/usr/local/nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            nvm --version
+            nvm install 7
+            node --version
+            npm --version
+      - run:
+          name: External tests
+          command: |
+            . /usr/local/nvm/nvm.sh
+            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+  build_x86:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - restore_cache:
+          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: ccache-{{ arch }}-{{ .Branch }}-
+          key: ccache-{{ arch }}-develop-
+          key: ccache-{{ arch }}-
+      - run:
+          name: Configure ccache
+          command: ccache -M 200M && ccache -c && ccache -s && ccache -z
+      - run:
+          name: Build
+          command: |
+            mkdir -p build
+            cd build
+            cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            make -j4
+      - run:
+          name: CCache statistics
+          command: ccache -s
+      - save_cache:
+          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          when: always
+          paths:
+            - ~/.ccache
       - store_artifacts:
-          path: build/solc/soljson.js
-          destination: soljson.js
+          path: build/solc/solc
+          destination: solc
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/solfuzzer
+
+  test_x86:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libz3-dev libleveldb1v5
+      - run: mkdir -p test_results
+      - run:
+          name: Tests
+          command: scripts/tests.sh --junit_report test_results
+      - store_test_results:
+          path: test_results/
+
+  docs:
+    docker:
+      - image: buildpack-deps:artful
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install python-sphinx
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - run:
+          name: Build documentation
+          command: ./scripts/docs.sh
+      - store_artifacts:
+          path: docs/_build/html/
+          destination: docs-html
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - build_emscripten
+      - test_emscripten_solcjs:
+          requires:
+            - build_emscripten
+      - test_emscripten_external:
+          requires:
+            - build_emscripten
+      - build_x86
+      - test_x86:
+          requires:
+            - build_x86
+      - docs

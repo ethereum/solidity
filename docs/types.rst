@@ -470,7 +470,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.21;
 
     contract Oracle {
       struct Request {
@@ -481,7 +481,7 @@ Another example that uses external function types::
       event NewRequest(uint);
       function query(bytes data, function(bytes memory) external callback) public {
         requests.push(Request(data, callback));
-        NewRequest(requests.length - 1);
+        emit NewRequest(requests.length - 1);
       }
       function reply(uint requestID, bytes response) public {
         // Here goes the check that the reply comes from a trusted source
@@ -899,7 +899,7 @@ Operators Involving LValues
 
 If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the following operators are available as shorthands:
 
-``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``, ``a |=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but return the value after the change.
+``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``, ``|=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but return the value after the change.
 
 delete
 ------

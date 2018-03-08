@@ -26,6 +26,10 @@ The first four bytes of the call data for a function call specifies the function
 first (left, high-order in big-endian) four bytes of the Keccak (SHA-3) hash of the signature of the function. The signature is defined as the canonical expression of the basic prototype, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single comma - no spaces are used.
 
+.. note::
+    The return type of a function is not part of this signature. In :ref:`Solidity's function overloading <overload-function>` return types are not considered. The reason is to keep function call resolution context-independent.
+    The JSON description of the ABI however contains both inputs and outputs. See (the :ref:`JSON ABI <abi_json>`)
+
 Argument Encoding
 =================
 
@@ -40,21 +44,21 @@ The following elementary types exist:
 
 - ``int<M>``: two's complement signed integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``.
 
-- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing.
+- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing. For computing the function selector, ``address`` is used.
 
-- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively (this shorthand not to be used for computing the function selector).
+- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively. For computing the function selector, ``uint256`` and ``int256`` have to be used.
 
-- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1
+- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1. For computing the function selector, ``bool`` is used.
 
 - ``fixed<M>x<N>``: signed fixed-point decimal number of ``M`` bits, ``8 <= M <= 256``, ``M % 8 ==0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
 
 - ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
-- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively (this shorthand not to be used for computing the function selector).
+- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively. For computing the function selector, ``fixed128x19`` and ``ufixed128x19`` have to be used.
 
 - ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
-- ``function``: equivalent to ``bytes24``: an address, followed by a function selector
+- ``function``: an address (20 bytes) followed by a function selector (4 bytes). Encoded identical to ``bytes24``.
 
 The following (fixed-size) array type exists:
 
@@ -155,15 +159,15 @@ on the type of ``X`` being
 
   ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is utf-8 encoded and this value is interpreted as of ``bytes`` type and encoded further. Note that the length used in this subsequent encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
 
-- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order (left) side with zero-bytes such that the length is a multiple of 32 bytes.
+- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order (left) side with zero-bytes such that the length is 32 bytes.
 - ``address``: as in the ``uint160`` case
-- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-oder (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is a multiple of 32 bytes.
+- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is 32 bytes.
 - ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
 - ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
 - ``fixed``: as in the ``fixed128x19`` case
 - ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
 - ``ufixed``: as in the ``ufixed128x19`` case
-- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with zero-bytes to a length of 32.
+- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with trailing zero-bytes to a length of 32 bytes.
 
 Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
 
@@ -187,12 +191,12 @@ Given the contract:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract Foo {
-      function bar(bytes3[2] xy) public {}
-      function baz(uint32 x, bool y) public returns (bool r) { r = x > 32 || y; }
-      function sam(bytes name, bool z, uint[] data) public {}
+      function bar(bytes3[2]) public pure {}
+      function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
+      function sam(bytes, bool, uint[]) public pure {}
     }
 
 
@@ -289,6 +293,8 @@ In effect, a log entry using this ABI is described as:
 - ``data``: ``abi_serialise(EVENT_NON_INDEXED_ARGS)`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_serialise`` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
 
 For all fixed-length Solidity types, the ``EVENT_INDEXED_ARGS`` array contains the 32-byte encoded value directly. However, for *types of dynamic length*, which include ``string``, ``bytes``, and arrays, ``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of the encoded value, rather than the encoded value directly. This allows applications to efficiently query for values of dynamic-length types (by setting the hash of the encoded value as the topic), but leaves applications unable to decode indexed values they have not queried for. For dynamic-length types, application developers face a trade-off between fast search for predetermined values (if the argument is indexed) and legibility of arbitrary values (which requires that the arguments not be indexed). Developers may overcome this tradeoff and achieve both efficient search and arbitrary legibility by defining events with two arguments — one indexed, one not — intended to hold the same value.
+
+.. _abi_json:
 
 JSON
 ====

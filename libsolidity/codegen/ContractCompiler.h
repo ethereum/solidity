@@ -43,7 +43,7 @@ public:
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
-		m_context = CompilerContext(_runtimeCompiler ? &_runtimeCompiler->m_context : nullptr);
+		m_context = CompilerContext(_context.evmVersion(), _runtimeCompiler ? &_runtimeCompiler->m_context : nullptr);
 	}
 
 	void compileContract(
@@ -75,10 +75,19 @@ private:
 	/// with a new and initialized context. Adds the constructor code.
 	/// @returns the identifier of the runtime sub assembly
 	size_t packIntoContractCreator(ContractDefinition const& _contract);
+	/// Appends code that deploys the given contract as a library.
+	/// Will also add code that modifies the contract in memory by injecting the current address
+	/// for the call protector.
+	size_t deployLibrary(ContractDefinition const& _contract);
 	/// Appends state variable initialisation and constructor code.
 	void appendInitAndConstructorCode(ContractDefinition const& _contract);
 	void appendBaseConstructor(FunctionDefinition const& _constructor);
 	void appendConstructor(FunctionDefinition const& _constructor);
+	/// Appends code that returns a boolean flag on the stack that tells whether
+	/// the contract has been called via delegatecall (false) or regular call (true).
+	/// This is done by inserting a specific push constant as the first instruction
+	/// whose data will be modified in memory at deploy time.
+	void appendDelegatecallCheck();
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	void appendCallValueCheck();
 	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
@@ -100,6 +109,7 @@ private:
 	virtual bool visit(Break const& _breakStatement) override;
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(Throw const& _throw) override;
+	virtual bool visit(EmitStatement const& _emit) override;
 	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;
@@ -115,7 +125,7 @@ private:
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	/// @returns the runtime assembly for clone contracts.
-	static eth::AssemblyPointer cloneRuntime();
+	eth::AssemblyPointer cloneRuntime() const;
 
 	bool const m_optimise;
 	/// Pointer to the runtime compiler in case this is a creation compiler.

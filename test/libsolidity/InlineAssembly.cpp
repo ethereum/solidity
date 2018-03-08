@@ -55,7 +55,7 @@ boost::optional<Error> parseAndReturnFirstError(
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack(_language);
+	AssemblyStack stack(dev::test::Options::get().evmVersion(), _language);
 	bool success = false;
 	try
 	{
@@ -117,7 +117,7 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack;
+	AssemblyStack stack(dev::test::Options::get().evmVersion());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
 		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
@@ -166,6 +166,11 @@ BOOST_AUTO_TEST_SUITE(Parsing)
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	BOOST_CHECK(successParse("{ }"));
+}
+
+BOOST_AUTO_TEST_CASE(surplus_input)
+{
+	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected token EOS");
 }
 
 BOOST_AUTO_TEST_CASE(simple_instructions)
@@ -385,6 +390,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
+	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits)");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions)
@@ -561,7 +567,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
-	AssemblyStack stack;
+	AssemblyStack stack(dev::test::Options::get().evmVersion());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
@@ -766,6 +772,20 @@ BOOST_AUTO_TEST_CASE(staticcall)
 BOOST_AUTO_TEST_CASE(create2)
 {
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(shift)
+{
+	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
+	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
+	BOOST_CHECK(successAssemble("{ pop(sar(10, 32)) }"));
+}
+
+BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
+{
+	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", Warning, "The \"shl\" instruction is only available for Constantinople-compatible VMs.");
+	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", Warning, "The \"shr\" instruction is only available for Constantinople-compatible VMs.");
+	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", Warning, "The \"sar\" instruction is only available for Constantinople-compatible VMs.");
 }
 
 BOOST_AUTO_TEST_CASE(jump_warning)
