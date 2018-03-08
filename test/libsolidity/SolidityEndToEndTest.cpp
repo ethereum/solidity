@@ -9119,10 +9119,31 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function_in_detail)
 			int mutex;
 			function t() returns (uint) {
 				if (mutex > 0)
-					return 7;
+					{ assembly { mstore(0, 7) return(0, 0x20) } }
 				mutex = 1;
 				// Avoid re-executing this function if we jump somewhere.
 				x();
+				return 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("t()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(calling_uninitialized_function_through_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			int mutex;
+			function t() returns (uint) {
+				if (mutex > 0)
+					{ assembly { mstore(0, 7) return(0, 0x20) } }
+				mutex = 1;
+				// Avoid re-executing this function if we jump somewhere.
+				function() internal returns (uint)[200] x;
+				x[0]();
 				return 2;
 			}
 		}

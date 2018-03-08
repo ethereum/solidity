@@ -38,7 +38,8 @@ class AssemblyItem;
 struct SemanticInformation
 {
 	/// @returns true if the given items starts a new block for common subexpression analysis.
-	static bool breaksCSEAnalysisBlock(AssemblyItem const& _item);
+	/// @param _msizeImportant if false, consider an operation non-breaking if its only side-effect is that it modifies msize.
+	static bool breaksCSEAnalysisBlock(AssemblyItem const& _item, bool _msizeImportant);
 	/// @returns true if the item is a two-argument operation whose value does not depend on the
 	/// order of its arguments.
 	static bool isCommutativeOperation(AssemblyItem const& _item);

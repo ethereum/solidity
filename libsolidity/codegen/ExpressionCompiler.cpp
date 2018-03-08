@@ -850,8 +850,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::ObjectCreation:
 		{
-			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
-			// type is dynamically sized.
 			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
 			_functionCall.expression().accept(*this);
 			solAssert(arguments.size() == 1, "");
@@ -861,15 +859,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().convertType(*arguments[0]->annotation().type, IntegerType(256));
 
 			// Stack: requested_length
-			// Allocate at max(MSIZE, freeMemoryPointer)
 			utils().fetchFreeMemoryPointer();
-			m_context << Instruction::DUP1 << Instruction::MSIZE;
-			m_context << Instruction::LT;
-			auto initialise = m_context.appendConditionalJump();
-			// Free memory pointer does not point to empty memory, use MSIZE.
-			m_context << Instruction::POP;
-			m_context << Instruction::MSIZE;
-			m_context << initialise;
 
 			// Stack: requested_length memptr
 			m_context << Instruction::SWAP1;
@@ -894,13 +884,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Check if length is zero
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			auto skipInit = m_context.appendConditionalJump();
-
-			// We only have to initialise if the base type is a not a value type.
-			if (dynamic_cast<ReferenceType const*>(arrayType.baseType().get()))
-			{
-				m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
-				utils().zeroInitialiseMemoryArray(arrayType);
-			}
+			// Always initialize because the free memory pointer might point at
+			// a dirty memory area.
+			m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
+			utils().zeroInitialiseMemoryArray(arrayType);
 			m_context << skipInit;
 			m_context << Instruction::POP;
 			break;

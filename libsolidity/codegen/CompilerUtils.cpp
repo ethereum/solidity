@@ -495,14 +495,34 @@ void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromM
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 {
-	auto repeat = m_context.newTag();
-	m_context << repeat;
-	pushZeroValue(*_type.baseType());
-	storeInMemoryDynamic(*_type.baseType());
-	m_context << Instruction::SWAP1 << u256(1) << Instruction::SWAP1;
-	m_context << Instruction::SUB << Instruction::SWAP1;
-	m_context << Instruction::DUP2;
-	m_context.appendConditionalJumpTo(repeat);
+	if (_type.baseType()->hasSimpleZeroValueInMemory())
+	{
+		solAssert(_type.baseType()->isValueType(), "");
+		Whiskers templ(R"({
+			let size := mul(length, <element_size>)
+			// cheap way of zero-initializing a memory range
+			codecopy(memptr, codesize(), size)
+			memptr := add(memptr, size)
+		})");
+		templ("element_size", to_string(_type.baseType()->memoryHeadSize()));
+		m_context.appendInlineAssembly(templ.render(), {"length", "memptr"});
+	}
+	else
+	{
+		// TODO: Potential optimization:
+		// When we create a new multi-dimensional dynamic array, each element
+		// is initialized to an empty array. It actually does not hurt
+		// to re-use exactly the same empty array for all elements. Currently,
+		// a new one is created each time.
+		auto repeat = m_context.newTag();
+		m_context << repeat;
+		pushZeroValue(*_type.baseType());
+		storeInMemoryDynamic(*_type.baseType());
+		m_context << Instruction::SWAP1 << u256(1) << Instruction::SWAP1;
+		m_context << Instruction::SUB << Instruction::SWAP1;
+		m_context << Instruction::DUP2;
+		m_context.appendConditionalJumpTo(repeat);
+	}
 	m_context << Instruction::SWAP1 << Instruction::POP;
 }
 

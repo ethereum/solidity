@@ -69,8 +69,9 @@ namespace
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
+		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
 		eth::CommonSubexpressionEliminator cse(_state);
-		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
 		for (AssemblyItem const& item: output)
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
 		Instruction::DIV, u256(0xff), Instruction::AND
 	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.end());
 	AssemblyItems output = cse.getOptimizedItems();
 	BOOST_CHECK(!output.empty());
 }
