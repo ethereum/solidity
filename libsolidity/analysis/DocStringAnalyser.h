@@ -24,6 +24,9 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
+
+#include <utility>
 
 namespace dev
 {
@@ -39,7 +42,9 @@ class ErrorReporter;
 class DocStringAnalyser: private ASTConstVisitor
 {
 public:
-	DocStringAnalyser(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	DocStringAnalyser(ErrorReporter& _errorReporter,
+					  SourceReferenceFormatter::ScannerFromSourceNameFun _scannerFromSourceFunction):
+		m_errorReporter(_errorReporter), m_scannerFromSourceFunction(std::move(_scannerFromSourceFunction)) {}
 	bool analyseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
@@ -51,12 +56,14 @@ private:
 	void handleCallable(
 		CallableDeclaration const& _callable,
 		Documented const& _node,
-		DocumentedAnnotation& _annotation
+		DocumentedAnnotation& _annotation,
+		SourceLocation const& _location
 	);
 
 	void parseDocStrings(
 		Documented const& _node,
 		DocumentedAnnotation& _annotation,
+		SourceLocation const& _location,
 		std::set<std::string> const& _validTags,
 		std::string const& _nodeName
 	);
@@ -65,6 +72,8 @@ private:
 
 	bool m_errorOccured = false;
 	ErrorReporter& m_errorReporter;
+	std::string m_sourceUnitName;
+	SourceReferenceFormatter::ScannerFromSourceNameFun m_scannerFromSourceFunction;
 };
 
 }

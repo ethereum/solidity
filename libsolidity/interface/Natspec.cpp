@@ -28,6 +28,8 @@
 #include <libsolidity/ast/AST.h>
 #include <boost/algorithm/string.hpp>
 
+#include <libsolidity/parsing/Scanner.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -66,9 +68,14 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	auto title = extractDoc(_contractDef.annotation().docTags, "title");
 	if (!title.empty())
 		doc["title"] = title;
+	Json::Value external;
 	for (auto& tag : _contractDef.annotation().docTags)
-		if (boost::starts_with(tag.first, "external:"))
-			doc[tag.first] = tag.second.content;
+		if (boost::starts_with(tag.first, "external:")) {
+			std::string tagName(tag.first.substr(9));
+			external[tagName]["content"] = tag.second.content;
+			external[tagName]["line"] = tag.second.tagLine;
+			doc["external"] = external;
+		}
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
@@ -97,9 +104,15 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			if (!params.empty())
 				method["params"] = params;
 
+			Json::Value external;
 			for (auto& tag : fun->annotation().docTags)
 				if (boost::starts_with(tag.first, "external:"))
-					method[tag.first] = tag.second.content;
+					if (boost::starts_with(tag.first, "external:")) {
+						std::string tagName(tag.first.substr(9));
+						external[tagName]["content"] = tag.second.content;
+						external[tagName]["line"] = tag.second.tagLine;
+						method["external"] = external;
+					}
 
 			if (!method.empty())
 				// add the function, only if we have any documentation to add

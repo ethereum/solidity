@@ -2,10 +2,13 @@
 #include <libsolidity/parsing/DocStringParser.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/parsing/Scanner.h>
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
@@ -53,14 +56,18 @@ string::const_iterator skipWhitespace(
 
 }
 
-bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
+bool DocStringParser::parse(string const& _docString, SourceLocation const& _location, ErrorReporter& _errorReporter)
 {
 	m_errorReporter = &_errorReporter;
 	m_errorsOccurred = false;
 	m_lastTag = nullptr;
+	m_location = _location;
 
 	auto currPos = _docString.begin();
 	auto end = _docString.end();
+
+	m_lines = static_cast<size_t>(std::count(_docString.begin(), _docString.end(), '\n')) + 1;
+	m_currentLine = 0;
 
 	while (currPos != end)
 	{
@@ -108,6 +115,8 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 		m_lastTag->content += " ";
 	else if (!_appending)
 		_pos = skipWhitespace(_pos, _end);
+	if (nlPos != _end)
+		++m_currentLine;
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	if (_preserveNewLines)
 		m_lastTag->content.append("\n");
@@ -135,6 +144,8 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 		return _end;
 	}
 
+	if (nlPos != _end)
+		++m_currentLine;
 	auto paramDesc = string(descStartPos, nlPos);
 	newTag("param");
 	m_lastTag->paramName = paramName;
@@ -153,12 +164,14 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 		{
 			std::string tag(_tag);
 			if (boost::starts_with(_tag, "ext:"))
-				boost::replace_all(tag, "ext:", "external:");
+				boost::replace_first(tag, "ext:", "external:");
 			if (m_docTags.find(tag) == m_docTags.end())
 				newTag(tag);
 			else
 				m_lastTag = &m_docTags.find(tag)->second;
 			m_lastTag->external = tag;
+			if (!m_lastTag->content.empty())
+				appendError("Tag '"+tag+"': need to be defined atomically - appending is not supported.");
 			return appendDocTag(_pos, _end, true);
 		} else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
@@ -180,7 +193,10 @@ DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end, bool _
 
 void DocStringParser::newTag(string const& _tagName)
 {
+	Scanner const& scanner = m_scannerFromSourceFunction(m_sourceUnitName);
+
 	m_lastTag = &m_docTags.insert(make_pair(_tagName, DocTag()))->second;
+	m_lastTag->tagLine = std::get<0>(scanner.translatePositionToLineColumn(m_location.start)) - m_lines + m_currentLine;
 }
 
 void DocStringParser::appendError(string const& _description)

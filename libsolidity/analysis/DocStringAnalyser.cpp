@@ -34,6 +34,7 @@ using namespace dev::solidity;
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 {
 	m_errorOccured = false;
+	m_sourceUnitName = _sourceUnit.annotation().path;
 	_sourceUnit.accept(*this);
 
 	return !m_errorOccured;
@@ -42,27 +43,27 @@ bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 bool DocStringAnalyser::visit(ContractDefinition const& _contract)
 {
 	static const set<string> validTags = set<string>{"author", "title", "dev", "notice"};
-	parseDocStrings(_contract, _contract.annotation(), validTags, "contracts");
+	parseDocStrings(_contract, _contract.annotation(), _contract.location(), validTags, "contracts");
 
 	return true;
 }
 
 bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 {
-	handleCallable(_function, _function, _function.annotation());
+	handleCallable(_function, _function, _function.annotation(), _function.location());
 	return true;
 }
 
 bool DocStringAnalyser::visit(ModifierDefinition const& _modifier)
 {
-	handleCallable(_modifier, _modifier, _modifier.annotation());
+	handleCallable(_modifier, _modifier, _modifier.annotation(), _modifier.location());
 
 	return true;
 }
 
 bool DocStringAnalyser::visit(EventDefinition const& _event)
 {
-	handleCallable(_event, _event, _event.annotation());
+	handleCallable(_event, _event, _event.annotation(), _event.location());
 
 	return true;
 }
@@ -70,11 +71,12 @@ bool DocStringAnalyser::visit(EventDefinition const& _event)
 void DocStringAnalyser::handleCallable(
 	CallableDeclaration const& _callable,
 	Documented const& _node,
-	DocumentedAnnotation& _annotation
+	DocumentedAnnotation& _annotation,
+	SourceLocation const& _location
 )
 {
 	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param"};
-	parseDocStrings(_node, _annotation, validTags, "functions");
+	parseDocStrings(_node, _annotation, _location, validTags, "functions");
 
 	set<string> validParams;
 	for (auto const& p: _callable.parameters())
@@ -95,14 +97,15 @@ void DocStringAnalyser::handleCallable(
 void DocStringAnalyser::parseDocStrings(
 	Documented const& _node,
 	DocumentedAnnotation& _annotation,
+	SourceLocation const& _location,
 	set<string> const& _validTags,
 	string const& _nodeName
 )
 {
-	DocStringParser parser;
+	DocStringParser parser(m_sourceUnitName, m_scannerFromSourceFunction);
 	if (_node.documentation() && !_node.documentation()->empty())
 	{
-		if (!parser.parse(*_node.documentation(), m_errorReporter))
+		if (!parser.parse(*_node.documentation(), _location, m_errorReporter))
 			m_errorOccured = true;
 		_annotation.docTags = parser.tags();
 	}
