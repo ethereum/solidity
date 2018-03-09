@@ -33,7 +33,7 @@ class SymbolicBoolVariable: public SymbolicVariable
 {
 public:
 	SymbolicBoolVariable(
-		Declaration const* _decl,
+		Declaration const& _decl,
 		smt::SolverInterface& _interface
 	);
 

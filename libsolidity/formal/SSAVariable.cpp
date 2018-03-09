@@ -27,15 +27,15 @@ using namespace dev;
 using namespace dev::solidity;
 
 SSAVariable::SSAVariable(
-	Declaration const* _decl,
+	Declaration const& _decl,
 	smt::SolverInterface& _interface
 )
 {
 	resetIndex();
 
-	if (dynamic_cast<IntegerType const*>(_decl->type().get()))
+	if (typeInteger(_decl.type()->category()))
 		m_symbolicVar = make_shared<SymbolicIntVariable>(_decl, _interface);
-	else if (dynamic_cast<BoolType const*>(_decl->type().get()))
+	else if (typeBool(_decl.type()->category()))
 		m_symbolicVar = make_shared<SymbolicBoolVariable>(_decl, _interface);
 	else
 	{
@@ -43,10 +43,19 @@ SSAVariable::SSAVariable(
 	}
 }
 
-bool SSAVariable::supportedType(Type const* _decl)
+bool SSAVariable::supportedType(Type::Category _category)
 {
-	return dynamic_cast<IntegerType const*>(_decl) ||
-		dynamic_cast<BoolType const*>(_decl);
+	return typeInteger(_category) || typeBool(_category);
+}
+
+bool SSAVariable::typeInteger(Type::Category _category)
+{
+	return _category == Type::Category::Integer;
+}
+
+bool SSAVariable::typeBool(Type::Category _category)
+{
+	return _category == Type::Category::Bool;
 }
 
 void SSAVariable::resetIndex()

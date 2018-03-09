@@ -37,7 +37,7 @@ public:
 	/// @param _decl Used to determine the type and forwarded to the symbolic var.
 	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
 	SSAVariable(
-		Declaration const* _decl,
+		Declaration const& _decl,
 		smt::SolverInterface& _interface
 	);
 
@@ -69,7 +69,9 @@ public:
 	void setUnknownValue();
 
 	/// So far Int and Bool are supported.
-	static bool supportedType(Type const* _decl);
+	static bool supportedType(Type::Category _category);
+	static bool typeInteger(Type::Category _category);
+	static bool typeBool(Type::Category _category);
 
 private:
 	smt::Expression valueAtSequence(int _seq) const

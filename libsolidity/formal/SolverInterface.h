@@ -133,12 +133,22 @@ public:
 	Expression operator()(Expression _a) const
 	{
 		solAssert(
-			(sort == Sort::IntIntFun || sort == Sort::IntBoolFun) && arguments.empty(),
+			arguments.empty(),
 			"Attempted function application to non-function."
 		);
-		if (sort == Sort::IntIntFun)
+		switch (sort)
+		{
+		case Sort::IntIntFun:
 			return Expression(name, _a, Sort::Int);
-		return Expression(name, _a, Sort::Bool);
+		case Sort::IntBoolFun:
+			return Expression(name, _a, Sort::Bool);
+		default:
+			solAssert(
+				false,
+				"Attempted function application to invalid type."
+			);
+			break;
+		}
 	}
 
 	std::string const name;
@@ -170,11 +180,18 @@ public:
 
 	virtual Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
 	{
-		solAssert(_domain == Sort::Int && (_codomain == Sort::Int || _codomain == Sort::Bool), "Function sort not supported.");
+		solAssert(_domain == Sort::Int, "Function sort not supported.");
 		// Subclasses should do something here
-		if (_codomain == Sort::Int)
+		switch (_codomain)
+		{
+		case Sort::Int:
 			return Expression(std::move(_name), {}, Sort::IntIntFun);
-		return Expression(std::move(_name), {}, Sort::IntBoolFun);
+		case Sort::Bool:
+			return Expression(std::move(_name), {}, Sort::IntBoolFun);
+		default:
+			solAssert(false, "Function sort not supported.");
+			break;
+		}
 	}
 	virtual Expression newInteger(std::string _name)
 	{

@@ -24,12 +24,12 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicBoolVariable::SymbolicBoolVariable(
-	Declaration const* _decl,
+	Declaration const& _decl,
 	smt::SolverInterface&_interface
 ):
 	SymbolicVariable(_decl, _interface)
 {
-	solAssert(m_declaration->type()->category() == Type::Category::Bool, "");
+	solAssert(m_declaration.type()->category() == Type::Category::Bool, "");
 	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Bool));
 }
 
