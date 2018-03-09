@@ -977,7 +977,9 @@ virtual method lookup.
 Constructors
 ============
 A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
-Constructor functions can be either ``public`` or ``internal``.
+Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
+default constructor: ``contructor() public {}``.
+
 
 ::
 
