@@ -4,6 +4,7 @@ Features:
 
 
 Bugfixes:
+ * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
 
 
 
