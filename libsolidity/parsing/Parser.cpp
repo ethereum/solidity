@@ -341,13 +341,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 
-	if (m_scanner->currentToken() == Token::Function)
-		// In case of old style constructors, i.e. functions with the same name as the contract,
-		// this is set to true below.
-		result.isConstructor = false;
-	else if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
+	result.isConstructor = false;
+
+	if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
 		result.isConstructor = true;
-	else
+	else if (m_scanner->currentToken() != Token::Function)
 		solAssert(false, "Function or constructor expected.");
 	m_scanner->next();
 
