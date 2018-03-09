@@ -27,6 +27,19 @@ using namespace std;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
+#if BOOST_VERSION < 105900
+test_case *make_test_case(
+	function<void()> const& _fn,
+	string const& _name,
+	string const&, // _filename
+	size_t // _line
+)
+{
+	return make_test_case(_fn, _name);
+}
+#endif
+
+
 void SyntaxTester::runTest(SyntaxTest const& _test)
 {
 	vector<string> unexpectedErrors;
