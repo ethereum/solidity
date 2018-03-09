@@ -73,6 +73,11 @@ public:
 	/// Stack pre: reference (excludes byte offset)
 	/// Stack post: new_length
 	void incrementDynamicArraySize(ArrayType const& _type) const;
+	/// Decrements the size of a dynamic array by one if length is nonzero. Returns otherwise.
+	/// Clears the removed data element. In case of a byte array, this might move the data.
+	/// Stack pre: reference
+	/// Stack post:
+	void popStorageArrayElement(ArrayType const& _type) const;
 	/// Appends a loop that clears a sequence of storage slots of the given type (excluding end).
 	/// Stack pre: end_ref start_ref
 	/// Stack post: end_ref

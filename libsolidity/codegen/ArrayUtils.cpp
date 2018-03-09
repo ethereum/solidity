@@ -823,6 +823,39 @@ void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
 		})", {"ref"});
 }
 
+void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
+		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+
+	// stack: ArrayReference
+	retrieveLength(_type);
+	// stack: ArrayReference oldLength
+	m_context << Instruction::DUP1;
+	// stack: ArrayReference oldLength oldLength
+	m_context << Instruction::ISZERO;
+	m_context.appendConditionalInvalid();
+
+	if (_type.isByteArray())
+	{
+	}
+	else
+	{
+		// Stack: ArrayReference oldLength
+		m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+		// Stack ArrayReference newLength
+		m_context << Instruction::DUP2 << Instruction::DUP2;
+		// Stack ArrayReference newLength ArrayReference newLength;
+		accessIndex(_type, false);
+		// Stack: ArrayReference newLength storage_slot byte_offset
+		StorageItem(m_context, _type).setToZero(SourceLocation(), true);
+		// Stack: ArrayReference newLength
+		m_context << Instruction::SSTORE;
+	}
+}
+
 void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
 {
 	m_context.callLowLevelFunction(
