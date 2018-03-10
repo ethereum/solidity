@@ -9,5 +9,5 @@ target_link_libraries(soltest PRIVATE libsolc solidity lll evmasm devcore ${Boos
 add_executable(solfuzzer tools/fuzzer.cpp)
 target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES})
 
-add_executable(syntaxTestTool tools/syntaxTestTool.cpp TestHelper.cpp libsolidity/SyntaxTestParser.cpp libsolidity/AnalysisFramework.cpp)
+add_executable(syntaxTestTool tools/syntaxTestTool.cpp TestHelper.cpp libsolidity/SyntaxTest.cpp libsolidity/AnalysisFramework.cpp)
 target_link_libraries(syntaxTestTool PRIVATE libsolc solidity evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
