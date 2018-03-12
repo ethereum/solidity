@@ -49,7 +49,7 @@ public:
 
 	static boost::optional<EVMVersion> fromString(std::string const& _version)
 	{
-		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium()})
+		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople()})
 			if (_version == v.name())
 				return v;
 		return {};
