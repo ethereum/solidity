@@ -183,7 +183,7 @@ Contract Related
     destroy the current contract, sending its funds to the given :ref:`address`
 
 ``suicide(address recipient)``:
-    alias to ``selfdestruct``
+    deprecated alias to ``selfdestruct``
 
 Furthermore, all functions of the current contract are callable directly including the current function.
 
