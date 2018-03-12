@@ -18,9 +18,15 @@
 #pragma once
 
 #include <test/libsolidity/AnalysisFramework.h>
-#include <test/libsolidity/SyntaxTestParser.h>
-#include <boost/filesystem.hpp>
+#include <libsolidity/interface/Exceptions.h>
+
+#include <boost/noncopyable.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <iosfwd>
+#include <string>
+#include <vector>
+#include <utility>
 
 namespace dev
 {
@@ -29,18 +35,41 @@ namespace solidity
 namespace test
 {
 
-class SyntaxTester: public AnalysisFramework
+struct SyntaxTestExpectation
+{
+	std::string type;
+	std::string message;
+};
+
+
+class SyntaxTest: AnalysisFramework
 {
 public:
-	static void registerTests();
-private:
+	SyntaxTest(std::string const& _filename);
+
+	bool run(std::ostream& _stream, std::string const& _indent);
+
+	void printExpected(std::ostream& _stream, std::string const& _indent) const;
+	void printErrorList(
+		std::ostream& _stream,
+		ErrorList const& _errors,
+		std::string const& _indent
+	) const;
+
 	static int registerTests(
 		boost::unit_test::test_suite& _suite,
 		boost::filesystem::path const& _basepath,
 		boost::filesystem::path const& _path
 	);
+private:
+	bool matchesExpectations(ErrorList const& _errors) const;
 	static std::string errorMessage(Error const& _e);
-	void runTest(SyntaxTest const& _test);
+	static std::string parseSource(std::istream& _stream);
+	static std::vector<SyntaxTestExpectation> parseExpectations(std::istream& _stream);
+
+	std::string m_source;
+	std::vector<SyntaxTestExpectation> m_expectations;
+	ErrorList m_errorList;
 };
 
 }
