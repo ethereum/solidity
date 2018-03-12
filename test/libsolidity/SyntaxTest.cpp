@@ -27,6 +27,7 @@
 using namespace dev;
 using namespace solidity;
 using namespace dev::solidity::test;
+using namespace dev::solidity::test::formatting;
 using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
@@ -56,41 +57,70 @@ SyntaxTest::SyntaxTest(string const& _filename)
 	m_expectations = parseExpectations(file);
 }
 
-bool SyntaxTest::run(ostream& _stream, string const& _indent)
+bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	m_errorList = parseAnalyseAndReturnError(m_source, true, true, true).second;
 	if (!matchesExpectations(m_errorList))
 	{
-		std::string nextIndentLevel = _indent + "\t";
-		_stream << _indent << "Expected result:" << endl;
-		printExpected(_stream, nextIndentLevel);
-		_stream << _indent << "Obtained result:\n";
-		printErrorList(_stream, m_errorList, nextIndentLevel);
+		std::string nextIndentLevel = _linePrefix + "  ";
+		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+		printExpected(_stream, nextIndentLevel, _formatted);
+		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:\n";
+		printErrorList(_stream, m_errorList, nextIndentLevel, false, false, _formatted);
 		return false;
 	}
 	return true;
 }
 
-void SyntaxTest::printExpected(ostream& _stream, string const& _indent) const
+void SyntaxTest::printExpected(ostream& _stream, string const& _linePrefix, bool const _formatted) const
 {
 	if (m_expectations.empty())
-		_stream << _indent << "Success" << endl;
+		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& expectation: m_expectations)
-			_stream << _indent << expectation.type << ": " << expectation.message << endl;
+			FormattedScope(_stream, _formatted, {BOLD, expectation.type == "Warning" ? YELLOW : RED}) <<
+				_linePrefix << expectation.type << ": " << expectation.message << endl;
 }
 
 void SyntaxTest::printErrorList(
 	ostream& _stream,
 	ErrorList const& _errorList,
-	string const& _indent
+	string const& _linePrefix,
+	bool const _ignoreWarnings,
+	bool const _lineNumbers,
+	bool const _formatted
 ) const
 {
 	if (_errorList.empty())
-		_stream << _indent << "Success" << endl;
+		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& error: _errorList)
-			_stream << _indent << error->typeName() << ": " << errorMessage(*error) << endl;
+		{
+			bool isWarning = (error->type() == Error::Type::Warning);
+			if (isWarning && _ignoreWarnings) continue;
+
+			FormattedScope scope(_stream, _formatted, {BOLD, isWarning ? YELLOW : RED});
+			_stream << _linePrefix;
+			if (_lineNumbers)
+			{
+				int line = offsetToLineNumber(
+					boost::get_error_info<errinfo_sourceLocation>(*error)->start
+				);
+				if (line >= 0)
+					_stream << "(" << line << "): ";
+			}
+			_stream << error->typeName() << ": " << errorMessage(*error) << endl;
+		}
+}
+
+int SyntaxTest::offsetToLineNumber(int _location) const
+{
+	// parseAnalyseAndReturnError(...) prepends a version pragma
+	_location -= strlen("pragma solidity >=0.0;\n");
+	if (_location < 0 || static_cast<size_t>(_location) >= m_source.size())
+		return -1;
+	else
+		return 1 + std::count(m_source.begin(), m_source.begin() + _location, '\n');
 }
 
 bool SyntaxTest::matchesExpectations(ErrorList const& _errorList) const
@@ -196,7 +226,7 @@ int SyntaxTest::registerTests(
 			[fullpath]
 			{
 				std::stringstream errorStream;
-				if (!SyntaxTest(fullpath.string()).run(errorStream, ""))
+				if (!SyntaxTest(fullpath.string()).run(errorStream))
 					BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
 			},
 			_path.stem().string(),
