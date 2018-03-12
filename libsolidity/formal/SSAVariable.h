@@ -69,9 +69,9 @@ public:
 	void setUnknownValue();
 
 	/// So far Int and Bool are supported.
-	static bool supportedType(Type::Category _category);
-	static bool typeInteger(Type::Category _category);
-	static bool typeBool(Type::Category _category);
+	static bool isSupportedType(Type::Category _category);
+	static bool isInteger(Type::Category _category);
+	static bool isBool(Type::Category _category);
 
 private:
 	smt::Expression valueAtSequence(int _seq) const

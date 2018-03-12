@@ -33,9 +33,9 @@ SSAVariable::SSAVariable(
 {
 	resetIndex();
 
-	if (typeInteger(_decl.type()->category()))
+	if (isInteger(_decl.type()->category()))
 		m_symbolicVar = make_shared<SymbolicIntVariable>(_decl, _interface);
-	else if (typeBool(_decl.type()->category()))
+	else if (isBool(_decl.type()->category()))
 		m_symbolicVar = make_shared<SymbolicBoolVariable>(_decl, _interface);
 	else
 	{
@@ -43,17 +43,17 @@ SSAVariable::SSAVariable(
 	}
 }
 
-bool SSAVariable::supportedType(Type::Category _category)
+bool SSAVariable::isSupportedType(Type::Category _category)
 {
-	return typeInteger(_category) || typeBool(_category);
+	return isInteger(_category) || isBool(_category);
 }
 
-bool SSAVariable::typeInteger(Type::Category _category)
+bool SSAVariable::isInteger(Type::Category _category)
 {
 	return _category == Type::Category::Integer;
 }
 
-bool SSAVariable::typeBool(Type::Category _category)
+bool SSAVariable::isBool(Type::Category _category)
 {
 	return _category == Type::Category::Bool;
 }

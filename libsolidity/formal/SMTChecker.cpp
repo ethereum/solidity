@@ -205,7 +205,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 			_assignment.location(),
 			"Assertion checker does not yet implement compound assignment."
 		);
-	else if (!SSAVariable::supportedType(_assignment.annotation().type->category()))
+	else if (!SSAVariable::isSupportedType(_assignment.annotation().type->category()))
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
@@ -266,7 +266,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	{
 	case Token::Not: // !
 	{
-		solAssert(SSAVariable::typeBool(_op.annotation().type->category()), "");
+		solAssert(SSAVariable::isBool(_op.annotation().type->category()), "");
 		defineExpr(_op, !expr(_op.subExpression()));
 		break;
 	}
@@ -274,7 +274,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	case Token::Dec: // -- (pre- or postfix)
 	{
 
-		solAssert(SSAVariable::typeInteger(_op.annotation().type->category()), "");
+		solAssert(SSAVariable::isInteger(_op.annotation().type->category()), "");
 		solAssert(_op.subExpression().annotation().lValueRequested, "");
 		if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
@@ -371,7 +371,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (SSAVariable::supportedType(_identifier.annotation().type->category()))
+	else if (SSAVariable::isSupportedType(_identifier.annotation().type->category()))
 		defineExpr(_identifier, currentValue(*decl));
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
@@ -445,13 +445,13 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 void SMTChecker::compareOperation(BinaryOperation const& _op)
 {
 	solAssert(_op.annotation().commonType, "");
-	if (SSAVariable::supportedType(_op.annotation().commonType->category()))
+	if (SSAVariable::isSupportedType(_op.annotation().commonType->category()))
 	{
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
 		Token::Value op = _op.getOperator();
 		shared_ptr<smt::Expression> value;
-		if (SSAVariable::typeInteger(_op.annotation().commonType->category()))
+		if (SSAVariable::isInteger(_op.annotation().commonType->category()))
 		{
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
@@ -464,6 +464,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		}
 		else // Bool
 		{
+			solAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
 				op == Token::NotEqual ? (left != right) :
@@ -744,7 +745,7 @@ void SMTChecker::mergeVariables(vector<Declaration const*> const& _variables, sm
 
 bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
-	if (SSAVariable::supportedType(_varDecl.type()->category()))
+	if (SSAVariable::isSupportedType(_varDecl.type()->category()))
 	{
 		solAssert(m_variables.count(&_varDecl) == 0, "");
 		m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
