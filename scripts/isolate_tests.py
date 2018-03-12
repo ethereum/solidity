@@ -86,10 +86,15 @@ if __name__ == '__main__':
     for root, subdirs, files in os.walk(path):
         if '_build' in subdirs:
           subdirs.remove('_build')
+        if 'compilationTests' in subdirs:
+          subdirs.remove('compilationTests')
         for f in files:
             path = join(root, f)
             if docs:
               cases = extract_docs_cases(path)
             else:
-              cases = extract_test_cases(path)
+              if f.endswith(".sol"):
+                cases = [open(path, "r").read()]
+              else:
+                cases = extract_test_cases(path)
             write_cases(cases)
