@@ -2,11 +2,10 @@
 
 Features:
 
-
 Bugfixes:
  * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
-
-
+ * Commandline interface: Support ``--evm-version constantinople`` properly.
+ * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
 
 ### 0.4.21 (2018-03-07)
 
