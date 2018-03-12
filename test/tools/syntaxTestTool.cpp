@@ -240,7 +240,6 @@ bool SyntaxTestTool::processPath(
 int main(int argc, char *argv[])
 {
 	DisableConsoleBuffering disableConsoleBuffering;
-	(void)disableConsoleBuffering;
 
 	if (getenv("EDITOR"))
 		SyntaxTestTool::editor = getenv("EDITOR");
