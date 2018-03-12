@@ -741,10 +741,10 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			if (_type.isByteArray())
 				// For a "long" byte array, store length as 2*length+1
 				_context << Instruction::DUP1 << Instruction::ADD << u256(1) << Instruction::ADD;
-			_context<< Instruction::DUP4 << Instruction::SSTORE;
+			_context << Instruction::DUP4 << Instruction::SSTORE;
 			// skip if size is not reduced
 			_context << Instruction::DUP2 << Instruction::DUP2
-				<< Instruction::ISZERO << Instruction::GT;
+				<< Instruction::GT << Instruction::ISZERO;
 			_context.appendConditionalJumpTo(resizeEnd);
 
 			// size reduced, clear the end of the array
