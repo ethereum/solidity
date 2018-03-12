@@ -126,7 +126,7 @@ jobs:
           paths:
             - solc/solc
             - test/soltest
-            - test/solfuzzer
+            - test/tools/solfuzzer
 
   test_x86:
     docker:
