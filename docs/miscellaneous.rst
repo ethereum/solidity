@@ -64,12 +64,15 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 Layout in Memory
 ****************
 
-Solidity reserves three 256-bit slots:
+Solidity reserves four 32 byte slots:
 
--  0 - 64: scratch space for hashing methods
-- 64 - 96: currently allocated memory size (aka. free memory pointer)
+- ``0x00`` - ``0x3f``: scratch space for hashing methods
+- ``0x40`` - ``0x5f``: currently allocated memory size (aka. free memory pointer)
+- ``0x60`` - ``0x7f``: zero slot
 
-Scratch space can be used between statements (ie. within inline assembly).
+Scratch space can be used between statements (ie. within inline assembly). The zero slot
+is used as initial value for dynamic memory arrays and should never be written to
+(the free memory pointer points to ``0x80`` initially).
 
 Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
 

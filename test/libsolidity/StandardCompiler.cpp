@@ -261,14 +261,14 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
-		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
+		"60806040523415600e57600080fd5b603580601b6000396000f3006080604052600080fd00"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString().find(
-		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
+		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  jumpi(tag_1, iszero(callvalue))\n"
 		"  0x0\n  dup1\n  revert\ntag_1:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
 		"  return\nstop\n\nsub_0: assembly {\n        /* \"fileA\":0:14  contract A { } */\n"
-		"      mstore(0x40, 0x60)\n      0x0\n      dup1\n      revert\n\n"
+		"      mstore(0x40, 0x80)\n      0x0\n      dup1\n      revert\n\n"
 		"    auxdata: 0xa165627a7a7230582") == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(

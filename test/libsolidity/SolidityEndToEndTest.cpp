@@ -7687,7 +7687,6 @@ BOOST_AUTO_TEST_CASE(create_memory_array_allocation_size)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x40, 0x40, 0x20 + 256));
 }
 
-
 BOOST_AUTO_TEST_CASE(memory_arrays_of_various_sizes)
 {
 	// Computes binomial coefficients the chinese way
@@ -7708,6 +7707,41 @@ BOOST_AUTO_TEST_CASE(memory_arrays_of_various_sizes)
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(uint256,uint256)", encodeArgs(u256(3), u256(1))), encodeArgs(u256(1)));
 	ABI_CHECK(callContractFunction("f(uint256,uint256)", encodeArgs(u256(9), u256(5))), encodeArgs(u256(70)));
+}
+
+BOOST_AUTO_TEST_CASE(create_multiple_dynamic_arrays)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				uint[][] memory x = new uint[][](42);
+				assert(x[0].length == 0);
+				x[0] = new uint[](1);
+				x[0][0] = 1;
+				assert(x[4].length == 0);
+				x[4] = new uint[](1);
+				x[4][0] = 2;
+				assert(x[10].length == 0);
+				x[10] = new uint[](1);
+				x[10][0] = 44;
+				uint[][] memory y = new uint[][](24);
+				assert(y[0].length == 0);
+				y[0] = new uint[](1);
+				y[0][0] = 1;
+				assert(y[4].length == 0);
+				y[4] = new uint[](1);
+				y[4][0] = 2;
+				assert(y[10].length == 0);
+				y[10] = new uint[](1);
+				y[10][0] = 88;
+				if ((x[0][0] == y[0][0]) && (x[4][0] == y[4][0]) && (x[10][0] == 44) && (y[10][0] == 88))
+					return 7;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
 }
 
 BOOST_AUTO_TEST_CASE(memory_overwrite)
