@@ -203,6 +203,7 @@ public:
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
+	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 

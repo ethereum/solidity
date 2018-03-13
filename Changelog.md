@@ -6,6 +6,7 @@ Bugfixes:
  * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
+ * Type System: Make external library functions accessible.
 
 ### 0.4.21 (2018-03-07)
 

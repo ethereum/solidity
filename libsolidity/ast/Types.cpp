@@ -304,7 +304,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 			);
 			for (FunctionDefinition const* function: library.definedFunctions())
 			{
-				if (!function->isVisibleInDerivedContracts() || seenFunctions.count(function))
+				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
 				FunctionType funType(*function, false);
@@ -2875,7 +2875,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		}
 		if (contract.isLibrary())
 			for (FunctionDefinition const* function: contract.definedFunctions())
-				if (function->isVisibleInDerivedContracts())
+				if (function->isVisibleAsLibraryMember())
 					members.push_back(MemberList::Member(
 						function->name(),
 						FunctionType(*function).asMemberFunction(true),
