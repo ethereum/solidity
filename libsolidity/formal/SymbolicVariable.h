@@ -37,7 +37,7 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		Declaration const* _decl,
+		Declaration const& _decl,
 		smt::SolverInterface& _interface
 	);
 
@@ -60,7 +60,7 @@ protected:
 		return (*m_expression)(_seq);
 	}
 
-	Declaration const* m_declaration;
+	Declaration const& m_declaration;
 	std::shared_ptr<smt::Expression> m_expression = nullptr;
 	smt::SolverInterface& m_interface;
 };

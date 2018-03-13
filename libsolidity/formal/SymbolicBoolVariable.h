@@ -15,26 +15,33 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <libsolidity/formal/SymbolicVariable.h>
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 
-using namespace std;
-using namespace dev;
-using namespace dev::solidity;
-
-SymbolicVariable::SymbolicVariable(
-	Declaration const& _decl,
-	smt::SolverInterface& _interface
-):
-	m_declaration(_decl),
-	m_interface(_interface)
+namespace dev
 {
-}
-
-string SymbolicVariable::uniqueSymbol() const
+namespace solidity
 {
-	return m_declaration.name() + "_" + to_string(m_declaration.id());
+
+/**
+ * Specialization of SymbolicVariable for Bool
+ */
+class SymbolicBoolVariable: public SymbolicVariable
+{
+public:
+	SymbolicBoolVariable(
+		Declaration const& _decl,
+		smt::SolverInterface& _interface
+	);
+
+	/// Sets the var to false.
+	void setZeroValue(int _seq);
+	/// Does nothing since the SMT solver already knows the valid values.
+	void setUnknownValue(int _seq);
+};
+
 }
-
-
+}

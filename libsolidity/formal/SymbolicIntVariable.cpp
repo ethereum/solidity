@@ -24,12 +24,12 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicIntVariable::SymbolicIntVariable(
-	Declaration const* _decl,
+	Declaration const& _decl,
 	smt::SolverInterface& _interface
 ):
 	SymbolicVariable(_decl, _interface)
 {
-	solAssert(m_declaration->type()->category() == Type::Category::Integer, "");
+	solAssert(m_declaration.type()->category() == Type::Category::Integer, "");
 	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Int));
 }
 
@@ -40,7 +40,7 @@ void SymbolicIntVariable::setZeroValue(int _seq)
 
 void SymbolicIntVariable::setUnknownValue(int _seq)
 {
-	auto const& intType = dynamic_cast<IntegerType const&>(*m_declaration->type());
+	auto const& intType = dynamic_cast<IntegerType const&>(*m_declaration.type());
 	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(intType));
 	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(intType));
 }

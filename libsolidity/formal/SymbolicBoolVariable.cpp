@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/SymbolicVariable.h>
+#include <libsolidity/formal/SymbolicBoolVariable.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -23,18 +23,21 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SymbolicVariable::SymbolicVariable(
+SymbolicBoolVariable::SymbolicBoolVariable(
 	Declaration const& _decl,
-	smt::SolverInterface& _interface
+	smt::SolverInterface&_interface
 ):
-	m_declaration(_decl),
-	m_interface(_interface)
+	SymbolicVariable(_decl, _interface)
 {
+	solAssert(m_declaration.type()->category() == Type::Category::Bool, "");
+	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Bool));
 }
 
-string SymbolicVariable::uniqueSymbol() const
+void SymbolicBoolVariable::setZeroValue(int _seq)
 {
-	return m_declaration.name() + "_" + to_string(m_declaration.id());
+	m_interface.addAssertion(valueAtSequence(_seq) == smt::Expression(false));
 }
 
-
+void SymbolicBoolVariable::setUnknownValue(int)
+{
+}

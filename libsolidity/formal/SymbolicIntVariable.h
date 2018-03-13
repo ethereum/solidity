@@ -33,7 +33,7 @@ class SymbolicIntVariable: public SymbolicVariable
 {
 public:
 	SymbolicIntVariable(
-		Declaration const* _decl,
+		Declaration const& _decl,
 		smt::SolverInterface& _interface
 	);
 
