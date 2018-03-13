@@ -69,15 +69,22 @@ Solidity includes different types of tests. They are included in the application
 called ``soltest``. Some of them require the ``cpp-ethereum`` client in testing mode,
 some others require ``libz3`` to be installed.
 
-To disable the z3 tests, use ``./build/test/soltest -- --no-smt`` and
-to run a subset of the tests that do not require ``cpp-ethereum``, use ``./build/test/soltest -- --no-ipc``.
+``soltest`` reads test contracts that are annotated with expected results
+stored in ``./test/libsolidity/syntaxTests``. In order for soltest to find these
+tests the root test directory has to be specified using the ``--testpath`` command
+line option, e.g. ``./build/test/soltest -- --testpath ./test``.
+
+To disable the z3 tests, use ``./build/test/soltest -- --no-smt --testpath ./test`` and
+to run a subset of the tests that do not require ``cpp-ethereum``, use
+``./build/test/soltest -- --no-ipc --testpath ./test``.
 
 For all other tests, you need to install `cpp-ethereum <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth>`_ and run it in testing mode: ``eth --test -d /tmp/testeth``.
 
-Then you run the actual tests: ``./build/test/soltest -- --ipcpath /tmp/testeth/geth.ipc``.
+Then you run the actual tests: ``./build/test/soltest -- --ipcpath /tmp/testeth/geth.ipc --testpath ./test``.
 
 To run a subset of tests, filters can be used:
-``soltest -t TestSuite/TestName -- --ipcpath /tmp/testeth/geth.ipc``, where ``TestName`` can be a wildcard ``*``.
+``soltest -t TestSuite/TestName -- --ipcpath /tmp/testeth/geth.ipc --testpath ./test``,
+where ``TestName`` can be a wildcard ``*``.
 
 Alternatively, there is a testing script at ``scripts/test.sh`` which executes all tests and runs
 ``cpp-ethereum`` automatically if it is in the path (but does not download it).
