@@ -18,6 +18,7 @@ Breaking Changes:
  * General: Remove assembly instruction aliases ``sha3`` and ``suicide``
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
  * Parser: Disallow trailing dots that are not followed by a number.
+ * Static Analyzer: Ensure the override specifier is added to all functions overriding parent functions.
  * Type Checker: Disallow arithmetic operations for boolean variables.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.

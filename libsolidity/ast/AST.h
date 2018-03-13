@@ -617,6 +617,7 @@ public:
 	bool isOldStyleConstructor() const { return m_isConstructor && !name().empty(); }
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
+	bool isOverride() const { return m_isOverride; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
@@ -626,6 +627,9 @@ public:
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
 	}
 	virtual bool isPartOfExternalInterface() const override { return isPublic() && !isConstructor() && !isFallback(); }
+
+	// @todo: remove this function and initialize m_isOverride in the constructor for v050
+	void optionallyMarkAsOverride();
 
 	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
@@ -645,6 +649,7 @@ public:
 private:
 	StateMutability m_stateMutability;
 	bool m_isConstructor;
+	bool m_isOverride = false;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };

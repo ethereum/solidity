@@ -232,6 +232,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 				"Use \"constructor(...) { ... }\" instead."
 			);
 	}
+
 	if (!_function.isImplemented() && !_function.modifiers().empty())
 	{
 		if (v050)
@@ -244,6 +245,11 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 			"This function is named \"constructor\" but is not the constructor of the contract. "
 			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."
 		);
+
+
+	if (v050)
+		const_cast<FunctionDefinition &>(_function).optionallyMarkAsOverride();
+
 	return true;
 }
 

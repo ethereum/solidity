@@ -68,6 +68,25 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 	solAssert(m_localVarUseCount.empty(), "");
 	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	m_constructor = _function.isConstructor();
+
+	if (m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+	{
+		auto superFunction = _function.annotation().superFunction;
+
+		if (_function.isOverride() && !superFunction)
+			m_errorReporter.declarationError(
+				_function.location(),
+				"Function signature does not override any function defined in base contracts."
+			);
+
+		else if (!_function.isOverride() && superFunction)
+			m_errorReporter.declarationError(
+				_function.location(),
+				SecondarySourceLocation().append("Overriden function is here:", superFunction->location()),
+				"Function " + _function.fullyQualifiedName() + " overrides function " + superFunction->fullyQualifiedName() + " but is missing an override specifier."
+			);
+	}
+
 	return true;
 }
 

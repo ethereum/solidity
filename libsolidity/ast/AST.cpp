@@ -356,6 +356,23 @@ string FunctionDefinition::fullyQualifiedName() const
 	return sourceUnitName() + ":" + contract->name() + "." + fname;
 }
 
+void FunctionDefinition::optionallyMarkAsOverride()
+{
+	auto pos = find_if(
+		m_functionModifiers.begin(),
+		m_functionModifiers.end(),
+		[](ASTPointer<ModifierInvocation> const& modifier) {
+			return modifier->name()->name() == "override";
+		}
+	);
+
+	if (pos != end(m_functionModifiers))
+	{
+		m_functionModifiers.erase(pos);
+		m_isOverride = true;
+	}
+}
+
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
 	if (!m_annotation)
