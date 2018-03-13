@@ -4,6 +4,7 @@ Features:
 
 Bugfixes:
  * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
+ * Code Generator: Bugfix in modifier lookup in libraries.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
 
