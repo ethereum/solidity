@@ -48,7 +48,7 @@ SyntaxTest::SyntaxTest(string const& _filename)
 {
 	ifstream file(_filename);
 	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("cannot open test contract: \"" + _filename + "\""));
+		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
 	m_source = parseSource(file);
@@ -60,7 +60,7 @@ bool SyntaxTest::run(ostream& _stream, string const& _indent)
 	m_errorList = parseAnalyseAndReturnError(m_source, true, true, true).second;
 	if (!matchesExpectations(m_errorList))
 	{
-		std::string nextIndentLevel = _indent.empty() ? "\t" : _indent + _indent;
+		std::string nextIndentLevel = _indent + "\t";
 		_stream << _indent << "Expected result:" << endl;
 		printExpected(_stream, nextIndentLevel);
 		_stream << _indent << "Obtained result:\n";
@@ -99,8 +99,8 @@ bool SyntaxTest::matchesExpectations(ErrorList const& _errorList) const
 	else
 		for (size_t i = 0; i < _errorList.size(); i++)
 			if (
-				!(_errorList[i]->typeName() == m_expectations[i].type) ||
-				!(errorMessage(*_errorList[i]) == m_expectations[i].message)
+				(_errorList[i]->typeName() != m_expectations[i].type) ||
+				(errorMessage(*_errorList[i]) != m_expectations[i].message)
 			)
 				return false;
 	return true;
