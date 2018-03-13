@@ -2879,6 +2879,58 @@ BOOST_AUTO_TEST_CASE(function_modifier_multiple_times_local_vars)
 	ABI_CHECK(callContractFunction("a()"), encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_library)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint v; }
+			modifier mod(S storage s) { s.v++; _; }
+			function libFun(S storage s) mod(s) internal { s.v += 0x100; }
+		}
+
+		contract Test {
+			using L for *;
+			L.S s;
+
+			function f() public returns (uint) {
+				s.libFun();
+				L.libFun(s);
+				return s.v;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x202));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_library_inheritance)
+{
+	// Tests that virtual lookup for modifiers in libraries does not consider
+	// the current inheritance hierarchy.
+
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint v; }
+			modifier mod(S storage s) { s.v++; _; }
+			function libFun(S storage s) mod(s) internal { s.v += 0x100; }
+		}
+
+		contract Test {
+			using L for *;
+			L.S s;
+			modifier mod(L.S storage) { revert(); _; }
+
+			function f() public returns (uint) {
+				s.libFun();
+				L.libFun(s);
+				return s.v;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x202));
+}
+
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 {
 	char const* sourceCode = R"(
