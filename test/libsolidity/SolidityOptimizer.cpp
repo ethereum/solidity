@@ -74,11 +74,11 @@ public:
 		unsigned const _optimizeRuns = 200
 	)
 	{
-		bytes nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false, _optimizeRuns);
+		m_nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false, _optimizeRuns);
 		m_nonOptimizedContract = m_contractAddress;
-		bytes optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true, _optimizeRuns);
-		size_t nonOptimizedSize = numInstructions(nonOptimizedBytecode);
-		size_t optimizedSize = numInstructions(optimizedBytecode);
+		m_optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true, _optimizeRuns);
+		size_t nonOptimizedSize = numInstructions(m_nonOptimizedBytecode);
+		size_t optimizedSize = numInstructions(m_optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
 			_optimizeRuns < 50 || optimizedSize < nonOptimizedSize,
 			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
@@ -104,7 +104,7 @@ public:
 
 	/// @returns the number of intructions in the given bytecode, not taking the metadata hash
 	/// into account.
-	size_t numInstructions(bytes const& _bytecode)
+	size_t numInstructions(bytes const& _bytecode, boost::optional<Instruction> _which = boost::optional<Instruction>{})
 	{
 		BOOST_REQUIRE(_bytecode.size() > 5);
 		size_t metadataSize = (_bytecode[_bytecode.size() - 2] << 8) + _bytecode[_bytecode.size() - 1];
@@ -112,13 +112,16 @@ public:
 		BOOST_REQUIRE(_bytecode.size() >= metadataSize + 2);
 		bytes realCode = bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
 		size_t instructions = 0;
-		solidity::eachInstruction(realCode, [&](Instruction, u256 const&) {
-			instructions++;
+		solidity::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
+			if (!_which || *_which == _instr)
+				instructions++;
 		});
 		return instructions;
 	}
 
 protected:
+	bytes m_nonOptimizedBytecode;
+	bytes m_optimizedBytecode;
 	Address m_optimizedContract;
 	Address m_nonOptimizedContract;
 };
@@ -579,6 +582,29 @@ BOOST_AUTO_TEST_CASE(invalid_state_at_control_flow_join)
 	)";
 	compileBothVersions(sourceCode);
 	compareVersions("test()");
+}
+
+BOOST_AUTO_TEST_CASE(optimise_multi_stores)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint16 a; uint16 b; uint16[3] c; uint[] dyn; }
+			uint padding;
+			S[] s;
+			function f() public returns (uint16, uint16, uint16[3], uint) {
+				uint16[3] memory c;
+				c[0] = 7;
+				c[1] = 8;
+				c[2] = 9;
+				s.push(S(1, 2, c, new uint[](4)));
+				return (s[0].a, s[0].b, s[0].c, s[0].dyn[2]);
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f()");
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::SSTORE), 13);
+	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, Instruction::SSTORE), 11);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
