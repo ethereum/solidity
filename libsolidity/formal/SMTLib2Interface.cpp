@@ -145,8 +145,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			// TODO they don't have to be ints...
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| Int)\n";
+			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + "\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

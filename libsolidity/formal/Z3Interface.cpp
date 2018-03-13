@@ -28,6 +28,7 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	z3::set_param("rewriter.pull_cheap_ite", true);
 }
 
 void Z3Interface::reset()
@@ -73,28 +74,37 @@ void Z3Interface::addAssertion(Expression const& _expr)
 pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
 	CheckResult result;
-	switch (m_solver.check())
+	vector<string> values;
+	try
 	{
-	case z3::check_result::sat:
-		result = CheckResult::SATISFIABLE;
-		break;
-	case z3::check_result::unsat:
-		result = CheckResult::UNSATISFIABLE;
-		break;
-	case z3::check_result::unknown:
-		result = CheckResult::UNKNOWN;
-		break;
-	default:
-		solAssert(false, "");
+		switch (m_solver.check())
+		{
+		case z3::check_result::sat:
+			result = CheckResult::SATISFIABLE;
+			break;
+		case z3::check_result::unsat:
+			result = CheckResult::UNSATISFIABLE;
+			break;
+		case z3::check_result::unknown:
+			result = CheckResult::UNKNOWN;
+			break;
+		default:
+			solAssert(false, "");
+		}
+
+		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		{
+			z3::model m = m_solver.get_model();
+			for (Expression const& e: _expressionsToEvaluate)
+				values.push_back(toString(m.eval(toZ3Expr(e))));
+		}
+	}
+	catch (z3::exception const&)
+	{
+		result = CheckResult::ERROR;
+		values.clear();
 	}
 
-	vector<string> values;
-	if (result != CheckResult::UNSATISFIABLE)
-	{
-		z3::model m = m_solver.get_model();
-		for (Expression const& e: _expressionsToEvaluate)
-			values.push_back(toString(m.eval(toZ3Expr(e))));
-	}
 	return make_pair(result, values);
 }
 
@@ -119,7 +129,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		{"+", 2},
 		{"-", 2},
 		{"*", 2},
-		{">=", 2}
+		{"/", 2}
 	};
 	string const& n = _expr.name;
 	if (m_functions.count(n))
@@ -131,8 +141,13 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	}
 	else if (arguments.empty())
 	{
-		// We assume it is an integer...
-		return m_context.int_val(n.c_str());
+		if (n == "true")
+			return m_context.bool_val(true);
+		else if (n == "false")
+			return m_context.bool_val(false);
+		else
+			// We assume it is an integer...
+			return m_context.int_val(n.c_str());
 	}
 
 	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
@@ -160,6 +175,8 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		return arguments[0] - arguments[1];
 	else if (n == "*")
 		return arguments[0] * arguments[1];
+	else if (n == "/")
+		return arguments[0] / arguments[1];
 	// Cannot reach here.
 	solAssert(false, "");
 	return arguments[0];

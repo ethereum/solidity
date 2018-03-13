@@ -319,14 +319,21 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
-	auto parserResult = assembly::Parser(errorReporter).parse(scanner);
+	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << assembly::AsmPrinter()(*parserResult) << endl;
 #endif
 	assembly::AsmAnalysisInfo analysisInfo;
 	bool analyzerResult = false;
 	if (parserResult)
-		analyzerResult = assembly::AsmAnalyzer(analysisInfo, errorReporter, false, identifierAccess.resolve).analyze(*parserResult);
+		analyzerResult = assembly::AsmAnalyzer(
+			analysisInfo,
+			errorReporter,
+			m_evmVersion,
+			boost::none,
+			assembly::AsmFlavour::Strict,
+			identifierAccess.resolve
+		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
 	{
 		string message =
@@ -347,6 +354,9 @@ void CompilerContext::appendInlineAssembly(
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
+
+	// Reset the source location to the one of the node (instead of the CODEGEN source location)
+	updateSourceLocation();
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(

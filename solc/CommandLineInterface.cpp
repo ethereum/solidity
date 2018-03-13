@@ -72,7 +72,6 @@ namespace solidity
 
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strAbi = "abi";
-static string const g_strAddStandard = "add-std";
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
@@ -88,6 +87,7 @@ static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
+static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
 static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
@@ -99,6 +99,7 @@ static string const g_strJulia = "julia";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
+static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
@@ -114,11 +115,11 @@ static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
+static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 
 static string const g_argAbi = g_strAbi;
-static string const g_argAddStandard = g_strAddStandard;
 static string const g_argPrettyJson = g_strPrettyJson;
 static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
@@ -137,10 +138,10 @@ static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
-static string const g_argJulia = "julia";
+static string const g_argJulia = g_strJulia;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
-static string const g_argMachine = "machine";
+static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
@@ -151,6 +152,7 @@ static string const g_argOptimizeRuns = g_strOptimizeRuns;
 static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argStandardJSON = g_strStandardJSON;
+static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 
@@ -427,20 +429,13 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.string()] = dev::contentsString(infile.string());
+				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			m_sourceCodes[g_stdinFileName].append(s + '\n');
-		}
-	}
+		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
 }
 
 //read file contents, which either are
@@ -509,7 +504,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	try
 	{
 		if (fs::is_regular_file(_input))
-			data = contentsString(_input);
+			data = readFileAsString(_input);
 	}
 	catch (fs::filesystem_error const&)
 	{
@@ -603,13 +598,17 @@ Allowed options)",
 		(g_argHelp.c_str(), "Show help message and exit.")
 		(g_argVersion.c_str(), "Show version and exit.")
 		(g_strLicense.c_str(), "Show licensing information and exit.")
+		(
+			g_strEVMVersion.c_str(),
+			po::value<string>()->value_name("version"),
+			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, byzantium (default) or constantinople."
+		)
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
 			"Estimated number of contract runs for optimizer tuning."
 		)
-		(g_argAddStandard.c_str(), "Add standard contracts.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -649,6 +648,10 @@ Allowed options)",
 		(
 			g_argJulia.c_str(),
 			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+		)
+		(
+			g_argStrictAssembly.c_str(),
+			"Switch to strict assembly mode, ignoring all options except --machine and assumes input is strict assembly."
 		)
 		(
 			g_argMachine.c_str(),
@@ -696,6 +699,7 @@ Allowed options)",
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
+		cmdLineParser.style(po::command_line_style::default_style & (~po::command_line_style::allow_guessing));
 		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
@@ -767,7 +771,7 @@ bool CommandLineInterface::processInput()
 				return ReadCallback::Result{false, "Not a valid file."};
 			else
 			{
-				auto contents = dev::contentsString(canonicalPath.string());
+				auto contents = dev::readFileAsString(canonicalPath.string());
 				m_sourceCodes[path.string()] = contents;
 				return ReadCallback::Result{true, contents};
 			}
@@ -800,13 +804,7 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argStandardJSON))
 	{
-		string input;
-		while (!cin.eof())
-		{
-			string tmp;
-			getline(cin, tmp);
-			input.append(tmp + "\n");
-		}
+		string input = dev::readStandardInput();
 		StandardCompiler compiler(fileReader);
 		cout << compiler.compile(input) << endl;
 		return true;
@@ -819,13 +817,25 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
-	if (m_args.count(g_argAssemble) || m_args.count(g_argJulia))
+	if (m_args.count(g_strEVMVersion))
+	{
+		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
+		boost::optional<EVMVersion> versionOption = EVMVersion::fromString(versionOptionStr);
+		if (!versionOption)
+		{
+			cerr << "Invalid option for --evm-version: " << versionOptionStr << endl;
+			return false;
+		}
+		m_evmVersion = *versionOption;
+	}
+
+	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = AssemblyStack::Language;
 		using Machine = AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : Input::Assembly;
+		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		if (m_args.count(g_argMachine))
 		{
@@ -852,7 +862,10 @@ bool CommandLineInterface::processInput()
 	}
 
 	m_compiler.reset(new CompilerStack(fileReader));
+
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
+	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 	try
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
@@ -877,6 +890,7 @@ bool CommandLineInterface::processInput()
 		}
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count(g_argOptimize) > 0;
 		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -885,11 +899,9 @@ bool CommandLineInterface::processInput()
 		bool successful = m_compiler->compile();
 
 		for (auto const& error: m_compiler->errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				scannerFromSourceName
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 
 		if (!successful)
@@ -897,7 +909,7 @@ bool CommandLineInterface::processInput()
 	}
 	catch (CompilerError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", scannerFromSourceName);
+		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -917,7 +929,7 @@ bool CommandLineInterface::processInput()
 		if (_error.type() == Error::Type::DocstringParsingError)
 			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
-			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), scannerFromSourceName);
+			formatter.printExceptionInformation(_error, _error.typeName());
 
 		return false;
 	}
@@ -1034,9 +1046,10 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		if (m_compiler->runtimeAssemblyItems())
+		// FIXME: shouldn't this be done for every contract?
+		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
 			gasCosts = GasEstimator::breakToStatementLevel(
-				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(), asts),
+				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
 				asts
 			);
 
@@ -1157,7 +1170,7 @@ bool CommandLineInterface::assemble(
 	map<string, AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = AssemblyStack(_language);
+		auto& stack = assemblyStacks[src.first] = AssemblyStack(m_evmVersion, _language);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
@@ -1174,15 +1187,17 @@ bool CommandLineInterface::assemble(
 			return false;
 		}
 	}
+
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
+		auto scannerFromSourceName = [&](string const&) -> Scanner const& { return stack.scanner(); };
+		SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
+
 		for (auto const& error: stack.errors())
-			SourceReferenceFormatter::printExceptionInformation(
-				cerr,
+			formatter.printExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				[&](string const&) -> Scanner const& { return stack.scanner(); }
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;

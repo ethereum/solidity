@@ -24,6 +24,7 @@
 #include <tuple>
 #include <boost/test/unit_test.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <test/contracts/ContractInterface.h>
 
 using namespace std;
 using namespace dev::test;
@@ -219,18 +220,12 @@ protected:
 	void deployRegistrar()
 	{
 		if (!s_compiledRegistrar)
-		{
-			m_compiler.reset(false);
-			m_compiler.addSource("", registrarCode);
-			m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
-			BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
-			s_compiledRegistrar.reset(new bytes(m_compiler.object("GlobalRegistrar").bytecode));
-		}
+			s_compiledRegistrar.reset(new bytes(compileContract(registrarCode, "GlobalRegistrar")));
+
 		sendMessage(*s_compiledRegistrar, true);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 
-	using ContractInterface = SolidityExecutionFramework::ContractInterface;
 	class RegistrarInterface: public ContractInterface
 	{
 	public:

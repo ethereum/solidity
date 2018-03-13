@@ -31,7 +31,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
+
+using Scope = dev::solidity::assembly::Scope;
 
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
@@ -74,6 +75,13 @@ void CodeTransform::operator()(StackAssignment const& _assignment)
 	m_assembly.setSourceLocation(_assignment.location);
 	generateAssignment(_assignment.variableName);
 	checkStackHeight(&_assignment);
+}
+
+void CodeTransform::operator()(ExpressionStatement const& _statement)
+{
+	m_assembly.setSourceLocation(_statement.location);
+	boost::apply_visitor(*this, _statement.expression);
+	checkStackHeight(&_statement);
 }
 
 void CodeTransform::operator()(Label const& _label)
@@ -124,11 +132,11 @@ void CodeTransform::operator()(FunctionCall const& _call)
 void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 {
 	if (m_evm15 && (
-		_instruction.instruction.instruction == solidity::Instruction::JUMP ||
-		_instruction.instruction.instruction == solidity::Instruction::JUMPI
+		_instruction.instruction == solidity::Instruction::JUMP ||
+		_instruction.instruction == solidity::Instruction::JUMPI
 	))
 	{
-		bool const isJumpI = _instruction.instruction.instruction == solidity::Instruction::JUMPI;
+		bool const isJumpI = _instruction.instruction == solidity::Instruction::JUMPI;
 		if (isJumpI)
 		{
 			solAssert(_instruction.arguments.size() == 2, "");
@@ -149,7 +157,8 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 	{
 		for (auto const& arg: _instruction.arguments | boost::adaptors::reversed)
 			visitExpression(arg);
-		(*this)(_instruction.instruction);
+		m_assembly.setSourceLocation(_instruction.location);
+		m_assembly.appendInstruction(_instruction.instruction);
 	}
 	checkStackHeight(&_instruction);
 }
@@ -217,6 +226,19 @@ void CodeTransform::operator()(assembly::Instruction const& _instruction)
 	checkStackHeight(&_instruction);
 }
 
+void CodeTransform::operator()(If const& _if)
+{
+	visitExpression(*_if.condition);
+	m_assembly.setSourceLocation(_if.location);
+	m_assembly.appendInstruction(solidity::Instruction::ISZERO);
+	AbstractAssembly::LabelID end = m_assembly.newLabelId();
+	m_assembly.appendJumpToIf(end);
+	(*this)(_if.body);
+	m_assembly.setSourceLocation(_if.location);
+	m_assembly.appendLabel(end);
+	checkStackHeight(&_if);
+}
+
 void CodeTransform::operator()(Switch const& _switch)
 {
 	//@TODO use JUMPV in EVM1.5?
@@ -276,7 +298,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	solAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	solAssert(varScope, "");
-	for (auto const& v: _function.arguments | boost::adaptors::reversed)
+	for (auto const& v: _function.parameters | boost::adaptors::reversed)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
@@ -289,7 +311,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (m_evm15)
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
-		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.arguments.size());
+		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.parameters.size());
 	}
 	else
 	{
@@ -298,7 +320,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 	m_stackAdjustment += localStackAdjustment;
 
-	for (auto const& v: _function.returns)
+	for (auto const& v: _function.returnVariables)
 	{
 		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
@@ -328,9 +350,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		// modified parallel to the actual stack.
 		vector<int> stackLayout;
 		if (!m_evm15)
-			stackLayout.push_back(_function.returns.size()); // Move return label to the top
-		stackLayout += vector<int>(_function.arguments.size(), -1); // discard all arguments
-		for (size_t i = 0; i < _function.returns.size(); ++i)
+			stackLayout.push_back(_function.returnVariables.size()); // Move return label to the top
+		stackLayout += vector<int>(_function.parameters.size(), -1); // discard all arguments
+		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
 			stackLayout.push_back(i); // Move return values down, but keep order.
 
 		solAssert(stackLayout.size() <= 17, "Stack too deep");
@@ -350,9 +372,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 
 	if (m_evm15)
-		m_assembly.appendReturnsub(_function.returns.size(), stackHeightBefore);
+		m_assembly.appendReturnsub(_function.returnVariables.size(), stackHeightBefore);
 	else
-		m_assembly.appendJump(stackHeightBefore - _function.returns.size());
+		m_assembly.appendJump(stackHeightBefore - _function.returnVariables.size());
 	m_stackAdjustment -= localStackAdjustment;
 	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);
@@ -445,7 +467,7 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(string const& _name, Sc
 	return m_context->functionEntryIDs[&_function];
 }
 
-void CodeTransform::visitExpression(Statement const& _expression)
+void CodeTransform::visitExpression(Expression const& _expression)
 {
 	int height = m_assembly.stackHeight();
 	boost::apply_visitor(*this, _expression);
@@ -500,7 +522,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap)
+int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap) const
 {
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
@@ -515,12 +537,12 @@ int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const&
 		return heightDiff;
 }
 
-void CodeTransform::expectDeposit(int _deposit, int _oldHeight)
+void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const
 {
 	solAssert(m_assembly.stackHeight() == _oldHeight + _deposit, "Invalid stack deposit.");
 }
 
-void CodeTransform::checkStackHeight(void const* _astElement)
+void CodeTransform::checkStackHeight(void const* _astElement) const
 {
 	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
 	solAssert(

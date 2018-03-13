@@ -155,6 +155,14 @@ inline std::string formatNumber(bigint const& _value)
 		return _value.str();
 }
 
+inline std::string formatNumber(u256 const& _value)
+{
+	if (_value > 0x1000000)
+		return toHex(toCompactBigEndian(_value), 2, HexPrefix::Add);
+	else
+		return _value.str();
+}
+
 inline std::string toCompactHexWithPrefix(u256 val)
 {
 	std::ostringstream ret;
@@ -183,6 +191,12 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U con
 		_a.push_back(i);
 	return _a;
 }
+/// Concatenate the contents of a container onto a vector, move variant.
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _b)
+{
+	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
+	return _a;
+}
 /// Concatenate the contents of a container onto a set
 template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
 {
@@ -197,6 +211,17 @@ inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& 
 	ret += _b;
 	return ret;
 }
+/// Concatenate two vectors of elements, moving them.
+template <class T>
+inline std::vector<T> operator+(std::vector<T>&& _a, std::vector<T>&& _b)
+{
+	std::vector<T> ret(std::move(_a));
+	if (&_a == &_b)
+		ret += ret;
+	else
+		ret += std::move(_b);
+	return ret;
+}
 
 template <class T, class V>
 bool contains(T const& _t, V const& _v)
@@ -208,5 +233,9 @@ bool contains(T const& _t, V const& _v)
 /// @param _strict if false, hex strings with only uppercase or only lowercase letters
 /// are considered valid.
 bool passesAddressChecksum(std::string const& _str, bool _strict);
+
+/// @returns the checksummed version of an address
+/// @param hex strings that look like an address
+std::string getChecksummedAddress(std::string const& _addr);
 
 }

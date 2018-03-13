@@ -47,6 +47,32 @@ void CodeFragment::finalise(CompilerState const& _cs)
 	}
 }
 
+namespace
+{
+/// Returns true iff the instruction is valid in "inline assembly".
+bool validAssemblyInstruction(string us)
+{
+	auto it = c_instructions.find(us);
+	return !(
+		it == c_instructions.end() ||
+		solidity::isPushInstruction(it->second)
+	);
+}
+
+/// Returns true iff the instruction is valid as a function.
+bool validFunctionalInstruction(string us)
+{
+	auto it = c_instructions.find(us);
+	return !(
+		it == c_instructions.end() ||
+		solidity::isPushInstruction(it->second) ||
+		solidity::isDupInstruction(it->second) ||
+		solidity::isSwapInstruction(it->second) ||
+		it->second == solidity::Instruction::JUMPDEST
+	);
+}
+}
+
 CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM):
 	m_readFile(_readFile)
 {
@@ -80,7 +106,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback 
 		auto sr = _t.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
 		string s(sr.begin(), sr.end());
 		string us = boost::algorithm::to_upper_copy(s);
-		if (_allowASM && c_instructions.count(us))
+		if (_allowASM && c_instructions.count(us) && validAssemblyInstruction(us))
 			m_asm.append(c_instructions.at(us));
 		else if (_s.defs.count(s))
 			m_asm.append(_s.defs.at(s).m_asm);
@@ -112,22 +138,6 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback 
 		error<CompilerException>("Unexpected fragment type");
 		break;
 	}
-}
-
-namespace
-{
-/// Returns true iff the instruction is valid as a function.
-bool validFunctionalInstruction(string us)
-{
-	auto it = c_instructions.find(us);
-	return !(
-		it == c_instructions.end() ||
-		solidity::isPushInstruction(it->second) ||
-		solidity::isDupInstruction(it->second) ||
-		solidity::isSwapInstruction(it->second) ||
-		it->second == solidity::Instruction::JUMPDEST
-	);
-}
 }
 
 void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)

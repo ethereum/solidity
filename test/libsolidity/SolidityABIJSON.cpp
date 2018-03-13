@@ -26,7 +26,7 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/SwarmHash.h>
 
-#include <json/json.h>
+#include <libdevcore/JSON.h>
 
 namespace dev
 {
@@ -44,11 +44,13 @@ public:
 	{
 		m_compilerStack.reset(false);
 		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
+		m_compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+		m_compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
-		Json::Value generatedInterface = m_compilerStack.contractABI("");
+		Json::Value generatedInterface = m_compilerStack.contractABI(m_compilerStack.lastContractName());
 		Json::Value expectedInterface;
-		BOOST_REQUIRE(m_reader.parse(_expectedInterfaceString, expectedInterface));
+		BOOST_REQUIRE(jsonParseStrict(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(
 			expectedInterface == generatedInterface,
 			"Expected:\n" << expectedInterface.toStyledString() <<
@@ -58,7 +60,6 @@ public:
 
 protected:
 	CompilerStack m_compilerStack;
-	Json::Reader m_reader;
 };
 
 BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, JSONInterfaceChecker)
@@ -942,6 +943,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 BOOST_AUTO_TEST_CASE(return_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[2] x; }
@@ -991,6 +993,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { C[] x; C y; }
 			function f() returns (S s, C c) {
@@ -1090,6 +1093,7 @@ BOOST_AUTO_TEST_CASE(event_structs)
 BOOST_AUTO_TEST_CASE(structs_in_libraries)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		library L {
 			struct S { uint a; T[] sub; bytes b; }
 			struct T { uint[2] x; }

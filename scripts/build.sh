@@ -7,6 +7,11 @@ else
 fi
 
 cd $(dirname "$0")/.. &&
+
+if [[ "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]; then
+	touch prerelease.txt
+fi
+
 mkdir -p build &&
 cd build &&
 cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" &&

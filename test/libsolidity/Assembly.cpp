@@ -20,11 +20,11 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
-#include <string>
-#include <iostream>
-#include <boost/test/unit_test.hpp>
+#include <test/TestHelper.h>
+
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -32,6 +32,11 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <string>
+#include <iostream>
 
 using namespace std;
 using namespace dev::eth;
@@ -46,7 +51,7 @@ namespace test
 namespace
 {
 
-eth::AssemblyItems compileContract(const string& _sourceCode)
+eth::AssemblyItems compileContract(string const& _sourceCode)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -69,7 +74,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker(errorReporter);
+			TypeChecker checker(dev::test::Options::get().evmVersion(), errorReporter);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
 			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
@@ -77,7 +82,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			Compiler compiler;
+			Compiler compiler(dev::test::Options::get().evmVersion());
 			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();
@@ -86,22 +91,58 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	return AssemblyItems();
 }
 
+void printAssemblyLocations(AssemblyItems const& _items)
+{
+	auto printRepeated = [](SourceLocation const& _loc, size_t _repetitions)
+	{
+		cout <<
+			"\t\tvector<SourceLocation>(" <<
+			_repetitions <<
+			", SourceLocation(" <<
+			_loc.start <<
+			", " <<
+			_loc.end <<
+			", make_shared<string>(\"" <<
+			*_loc.sourceName <<
+			"\"))) +" << endl;
+	};
+
+	vector<SourceLocation> locations;
+	for (auto const& item: _items)
+		locations.push_back(item.location());
+	size_t repetitions = 0;
+	SourceLocation const* previousLoc = nullptr;
+	for (size_t i = 0; i < locations.size(); ++i)
+	{
+		SourceLocation& loc = locations[i];
+		if (previousLoc && *previousLoc == loc)
+			repetitions++;
+		else
+		{
+			if (previousLoc)
+				printRepeated(*previousLoc, repetitions);
+			previousLoc = &loc;
+			repetitions = 1;
+		}
+	}
+	if (previousLoc)
+		printRepeated(*previousLoc, repetitions);
+}
+
 void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> const& _locations)
 {
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
 	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
-		BOOST_CHECK_MESSAGE(
-			_items[i].location() == _locations[i],
-			"Location mismatch for assembly item " + to_string(i) + ". Found: " +
-					(_items[i].location().sourceName ? *_items[i].location().sourceName + ":" : "(null source name)") +
-					to_string(_items[i].location().start) + "-" +
-					to_string(_items[i].location().end) + ", expected: " +
-					(_locations[i].sourceName ? *_locations[i].sourceName + ":" : "(null source name)") +
-					to_string(_locations[i].start) + "-" +
-					to_string(_locations[i].end));
+		if (_items[i].location() != _locations[i])
+		{
+			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
+			printAssemblyLocations(_items);
+			return;
+		}
 	}
 }
+
 
 } // end anonymous namespace
 
@@ -119,7 +160,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(18, SourceLocation(2, 75, n)) +
+		vector<SourceLocation>(24, SourceLocation(2, 75, n)) +
 		vector<SourceLocation>(32, SourceLocation(20, 72, n)) +
 		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
 		vector<SourceLocation>(2, SourceLocation(58, 67, n)) +

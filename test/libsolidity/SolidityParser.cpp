@@ -960,6 +960,16 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(event_with_no_argument_list_fails)
+{
+	char const* text = R"(
+		contract c {
+			event e;
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
+}
+
 BOOST_AUTO_TEST_CASE(visibility_specifiers)
 {
 	char const* text = R"(
@@ -1152,6 +1162,36 @@ BOOST_AUTO_TEST_CASE(constant_is_keyword)
 			uint constant = 4;
 	})";
 	CHECK_PARSE_ERROR(text, "Expected identifier");
+}
+
+BOOST_AUTO_TEST_CASE(keyword_is_reserved)
+{
+	auto keywords = {
+		"abstract",
+		"after",
+		"case",
+		"catch",
+		"default",
+		"final",
+		"in",
+		"inline",
+		"let",
+		"match",
+		"null",
+		"of",
+		"relocatable",
+		"static",
+		"switch",
+		"try",
+		"type",
+		"typeof"
+	};
+
+	for (const auto& keyword: keywords)
+	{
+		auto text = std::string("contract ") + keyword + " {}";
+		CHECK_PARSE_ERROR(text.c_str(), "Expected identifier");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(var_array)
@@ -1696,6 +1736,19 @@ BOOST_AUTO_TEST_CASE(newInvalidTypeName)
 		}
 	)";
 	CHECK_PARSE_ERROR(text, "Expected explicit type name");
+}
+
+BOOST_AUTO_TEST_CASE(emitWithoutEvent)
+{
+	char const* text = R"(
+		contract C {
+			event A();
+			function f() {
+				emit A;
+			}
+		}
+	)";
+	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

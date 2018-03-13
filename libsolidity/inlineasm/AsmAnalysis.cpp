@@ -54,14 +54,21 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
-	solAssert(!m_julia, "");
+	checkLooseFeature(
+		_label.location,
+		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
+	);
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
+	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
 	return true;
 }
 
 bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
-	solAssert(!m_julia, "");
+	checkLooseFeature(
+		_instruction.location,
+		"The use of non-functional instructions is deprecated. Please use functional notation instead."
+	);
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -80,6 +87,19 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
 		);
 		return false;
+	}
+	else if (_literal.kind == assembly::LiteralKind::Number && bigint(_literal.value) > u256(-1))
+	{
+		m_errorReporter.typeError(
+			_literal.location,
+			"Number literal too large (> 256 bits)"
+		);
+		return false;
+	}
+	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	{
+		solAssert(m_flavour == AsmFlavour::IULIA, "");
+		solAssert(_literal.value == "true" || _literal.value == "false", "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
@@ -140,22 +160,47 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(!m_julia, "");
+	solAssert(m_flavour != AsmFlavour::IULIA, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
 	// Parser already checks that the number of arguments is correct.
-	solAssert(instructionInfo(_instr.instruction.instruction).args == int(_instr.arguments.size()), "");
-	if (!(*this)(_instr.instruction))
-		success = false;
+	auto const& info = instructionInfo(_instr.instruction);
+	solAssert(info.args == int(_instr.arguments.size()), "");
+	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instr] = m_stackHeight;
+	warnOnInstructions(_instr.instruction, _instr.location);
+	return success;
+}
+
+bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
+{
+	int initialStackHeight = m_stackHeight;
+	bool success = boost::apply_visitor(*this, _statement.expression);
+	if (m_stackHeight != initialStackHeight && (m_flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	{
+		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
+		string msg =
+			"Top-level expressions are not supposed to return values (this expression returns " +
+			boost::lexical_cast<string>(m_stackHeight - initialStackHeight) +
+			" value" +
+			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
+			"). Use ``pop()`` or assign them.";
+		m_errorReporter.error(errorType, _statement.location, msg);
+		if (errorType != Error::Type::Warning)
+			success = false;
+	}
+	m_info.stackHeightInfo[&_statement] = m_stackHeight;
 	return success;
 }
 
 bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
-	solAssert(!m_julia, "");
+	checkLooseFeature(
+		_assignment.location,
+		"The use of stack assignment is deprecated. Please use assignment in functional notation instead."
+	);
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
@@ -217,14 +262,14 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	solAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
-	for (auto const& var: _funDef.arguments + _funDef.returns)
+	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
 		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	int const stackHeight = m_stackHeight;
-	m_stackHeight = _funDef.arguments.size() + _funDef.returns.size();
+	m_stackHeight = _funDef.parameters.size() + _funDef.returnVariables.size();
 
 	bool success = (*this)(_funDef.body);
 
@@ -283,6 +328,22 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 			success = false;
 	m_stackHeight += int(returns) - int(arguments);
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
+	return success;
+}
+
+bool AsmAnalyzer::operator()(If const& _if)
+{
+	bool success = true;
+
+	if (!expectExpression(*_if.condition))
+		success = false;
+	m_stackHeight--;
+
+	if (!(*this)(_if.body))
+		success = false;
+
+	m_info.stackHeightInfo[&_if] = m_stackHeight;
+
 	return success;
 }
 
@@ -389,13 +450,13 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	return success;
 }
 
-bool AsmAnalyzer::expectExpression(Statement const& _statement)
+bool AsmAnalyzer::expectExpression(Expression const& _expr)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, _statement))
+	if (!boost::apply_visitor(*this, _expr))
 		success = false;
-	if (!expectDeposit(1, initialHeight, locationOf(_statement)))
+	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
 	return success;
 }
@@ -479,7 +540,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (!m_julia)
+	if (m_flavour != AsmFlavour::IULIA)
 		return;
 
 	if (!builtinTypes.count(type))
@@ -491,26 +552,66 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 
 void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location)
 {
-	static set<solidity::Instruction> futureInstructions{
-		solidity::Instruction::CREATE2,
-		solidity::Instruction::RETURNDATACOPY,
-		solidity::Instruction::RETURNDATASIZE,
-		solidity::Instruction::STATICCALL
-	};
-	if (futureInstructions.count(_instr))
+	// We assume that returndatacopy, returndatasize and staticcall are either all available
+	// or all not available.
+	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
+
+	if (_instr == solidity::Instruction::CREATE2)
 		m_errorReporter.warning(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available after " +
-			"the Metropolis hard fork. Before that it acts as an invalid instruction."
+			+ "\" instruction is not supported by the VM version \"" +
+			"" + m_evmVersion.name() +
+			"\" you are currently compiling for. " +
+			"It will be interpreted as an invalid instruction on this VM."
 		);
-
-	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI)
+	else if ((
+		_instr == solidity::Instruction::RETURNDATACOPY ||
+		_instr == solidity::Instruction::RETURNDATASIZE ||
+		_instr == solidity::Instruction::STATICCALL
+	) && !m_evmVersion.supportsReturndata())
 		m_errorReporter.warning(
 			_location,
-			"Jump instructions are low-level EVM features that can lead to "
-			"incorrect stack access. Because of that they are discouraged. "
-			"Please consider using \"switch\" or \"for\" statements instead."
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is only available for Byzantium-compatible VMs. " +
+			"You are currently compiling for \"" +
+			m_evmVersion.name() +
+			"\", where it will be interpreted as an invalid instruction."
 		);
+	else if ((
+		_instr == solidity::Instruction::SHL ||
+		_instr == solidity::Instruction::SHR ||
+		_instr == solidity::Instruction::SAR
+	) && !m_evmVersion.hasBitwiseShifting())
+		m_errorReporter.warning(
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is only available for Constantinople-compatible VMs. " +
+			"You are currently compiling for \"" +
+			m_evmVersion.name() +
+			"\", where it will be interpreted as an invalid instruction."
+		);
+
+	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
+	{
+		solAssert(m_flavour == AsmFlavour::Loose, "");
+		m_errorReporter.error(
+			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
+			_location,
+			"Jump instructions and labels are low-level EVM features that can lead to "
+			"incorrect stack access. Because of that they are discouraged. "
+			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
+		);
+	}
+}
+
+void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
+{
+	if (m_flavour != AsmFlavour::Loose)
+		solAssert(false, _description);
+	else if (m_errorTypeForLoose)
+		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);
 }

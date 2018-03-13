@@ -78,6 +78,13 @@ bool ASTPrinter::visit(InheritanceSpecifier const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(UsingForDirective const& _node)
+{
+	writeLine("UsingForDirective");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(StructDefinition const& _node)
 {
 	writeLine("StructDefinition \"" + _node.name() + "\"");
@@ -251,6 +258,13 @@ bool ASTPrinter::visit(Throw const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(EmitStatement const& _node)
+{
+	writeLine("EmitStatement");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(VariableDeclarationStatement const& _node)
 {
 	writeLine("VariableDeclarationStatement");
@@ -385,6 +399,11 @@ void ASTPrinter::endVisit(InheritanceSpecifier const&)
 	m_indentation--;
 }
 
+void ASTPrinter::endVisit(UsingForDirective const&)
+{
+	m_indentation--;
+}
+
 void ASTPrinter::endVisit(StructDefinition const&)
 {
 	m_indentation--;
@@ -501,6 +520,11 @@ void ASTPrinter::endVisit(Return const&)
 }
 
 void ASTPrinter::endVisit(Throw const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EmitStatement const&)
 {
 	m_indentation--;
 }

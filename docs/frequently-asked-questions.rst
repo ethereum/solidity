@@ -9,17 +9,6 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-Example contracts
-=================
-
-There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
-there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
-
-Create and publish the most basic contract possible
-===================================================
-
-A quite simple contract is the `greeter <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
-
 Is it possible to do something on a specific block number? (e.g. publish a contract or execute a transaction)
 =============================================================================================================
 
@@ -39,12 +28,13 @@ This is just the bytecode "data" sent along with the request.
 Is there a decompiler available?
 ================================
 
-There is no decompiler to Solidity. This is in principle possible
-to some degree, but for example variable names will be lost and
-great effort will be necessary to make it look similar to
-the original source code.
+There is no exact decompiler to Solidity, but
+`Porosity <https://github.com/comaeio/porosity>`_ is close.
+Because some information like variable names, comments, and
+source code formatting is lost in the compilation process,
+it is not possible to completely recover the original source code.
 
-Bytecode can be decompiled to opcodes, a service that is provided by
+Bytecode can be disassembled to opcodes, a service that is provided by
 several blockchain explorers.
 
 Contracts on the blockchain should have their original source
@@ -73,25 +63,6 @@ has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
 
-Store Ether in a contract
-=========================
-
-The trick is to create the contract with ``{from:someaddress, value: web3.toWei(3,"ether")...}``
-
-See `endowment_retriever.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
-
-Use a non-constant function (req ``sendTransaction``) to increment a variable in a contract
-===========================================================================================
-
-See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/20_value_incrementer.sol>`_.
-
-Get a contract to return its funds to you (not using ``selfdestruct(...)``).
-============================================================================
-
-This example demonstrates how to send funds from a contract to an address.
-
-See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
-
 Can you return an array or a ``string`` from a solidity function call?
 ======================================================================
 
@@ -111,10 +82,10 @@ array in the return statement. Pretty cool, huh?
 
 Example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function f() returns (uint8[5]) {
+        function f() public pure returns (uint8[5]) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
             return ([1, 2, 3, 4, 5]);
         }
@@ -190,11 +161,11 @@ you should always convert it to a ``bytes`` first::
     contract C {
         string s;
 
-        function append(byte c) {
+        function append(byte c) public {
             bytes(s).push(c);
         }
 
-        function set(uint i, byte c) {
+        function set(uint i, byte c) public {
             bytes(s)[i] = c;
         }
     }
@@ -232,12 +203,14 @@ situation.
 
 If you do not want to throw, you can return a pair::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         uint[] counters;
 
         function getCounter(uint index)
+            public
+            view
             returns (uint counter, bool error) {
                 if (index >= counters.length)
                     return (0, true);
@@ -245,7 +218,7 @@ If you do not want to throw, you can return a pair::
                     return (counters[index], false);
         }
 
-        function checkCounter(uint index) {
+        function checkCounter(uint index) public view {
             var (counter, error) = getCounter(index);
             if (error) {
                 // ...
@@ -316,11 +289,11 @@ Example::
         uint[] data1;
         uint[] data2;
 
-        function appendOne() {
+        function appendOne() public {
             append(data1);
         }
 
-        function appendTwo() {
+        function appendTwo() public {
             append(data2);
         }
 
@@ -349,7 +322,7 @@ be created in memory, although it will be created in storage::
         uint someVariable;
         uint[] data;
 
-        function f() {
+        function f() public {
             uint[] x;
             x.push(2);
             data = x;
@@ -375,7 +348,7 @@ The correct way to do this is the following::
         uint someVariable;
         uint[] data;
 
-        function f() {
+        function f() public {
             uint[] x = data;
             x.push(2);
         }
@@ -431,14 +404,14 @@ What happens to a ``struct``'s mapping when copying over a ``struct``?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user {
+    struct User {
         mapping(string => string) comments;
     }
 
-    function somefunction {
-       user user1;
+    function somefunction public {
+       User user1;
        user1.comments["Hello"] = "World";
-       user user2 = user1;
+       User user2 = user1;
     }
 
 In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
@@ -456,13 +429,13 @@ In this example::
     pragma solidity ^0.4.0;
 
     contract B {
-        function B() payable {}
+        function B() public payable {}
     }
 
     contract A {
         address child;
 
-        function test() {
+        function test() public {
             child = (new B).value(10)(); //construct a new B with 10 wei
         }
     }
@@ -501,17 +474,17 @@ Can a contract pass an array (static size) or string or ``bytes`` (dynamic size)
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         uint[20] x;
 
-        function f() {
+        function f() public {
             g(x);
             h(x);
         }
 
-        function g(uint[20] y) internal {
+        function g(uint[20] y) internal pure {
             y[2] = 3;
         }
 
@@ -539,12 +512,27 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
-    int8[] memory memArr;        // Case 1
-    memArr.length++;             // illegal
-    int8[5] storageArr;          // Case 2
-    somearray.length++;          // legal
-    int8[5] storage storageArr2; // Explicit case 2
-    somearray2.length++;         // legal
+    // This will not compile
+
+    pragma solidity ^0.4.18;
+
+    contract C {
+        int8[] dynamicStorageArray;
+        int8[5] fixedStorageArray;
+
+        function f() {
+            int8[] memory memArr;        // Case 1
+            memArr.length++;             // illegal
+
+            int8[5] storage storageArr = fixedStorageArray;   // Case 2
+            storageArr.length++;                             // illegal
+
+            int8[] storage storageArr2 = dynamicStorageArray;
+            storageArr2.length++;                     // legal
+
+
+        }
+    }
 
 **Important note:** In Solidity, array dimensions are declared backwards from the way you
 might be used to declaring them in C or Java, but they are access as in

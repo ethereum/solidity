@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
@@ -29,6 +30,7 @@
 #include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <functional>
 #include <memory>
@@ -54,9 +56,18 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		ErrorReporter& _errorReporter,
-		bool _julia = false,
+		EVMVersion _evmVersion,
+		boost::optional<Error::Type> _errorTypeForLoose,
+		AsmFlavour _flavour = AsmFlavour::Loose,
 		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
-	): m_resolver(_resolver), m_info(_analysisInfo), m_errorReporter(_errorReporter), m_julia(_julia) {}
+	):
+		m_resolver(_resolver),
+		m_info(_analysisInfo),
+		m_errorReporter(_errorReporter),
+		m_evmVersion(_evmVersion),
+		m_flavour(_flavour),
+		m_errorTypeForLoose(_errorTypeForLoose)
+	{}
 
 	bool analyze(assembly::Block const& _block);
 
@@ -65,18 +76,20 @@ public:
 	bool operator()(assembly::Identifier const&);
 	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
 	bool operator()(assembly::Label const& _label);
+	bool operator()(assembly::ExpressionStatement const&);
 	bool operator()(assembly::StackAssignment const&);
 	bool operator()(assembly::Assignment const& _assignment);
 	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
 	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
 	bool operator()(assembly::FunctionCall const& _functionCall);
+	bool operator()(assembly::If const& _if);
 	bool operator()(assembly::Switch const& _switch);
 	bool operator()(assembly::ForLoop const& _forLoop);
 	bool operator()(assembly::Block const& _block);
 
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
-	bool expectExpression(Statement const& _statement);
+	bool expectExpression(Expression const& _expr);
 	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists and has the same size
@@ -87,6 +100,11 @@ private:
 	void expectValidType(std::string const& type, SourceLocation const& _location);
 	void warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location);
 
+	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
+	/// exception (if the flavour is not Loose), reports an error/warning
+	/// (if m_errorTypeForLoose is set) or does nothing.
+	void checkLooseFeature(SourceLocation const& _location, std::string const& _description);
+
 	int m_stackHeight = 0;
 	julia::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
@@ -95,7 +113,9 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
-	bool m_julia = false;
+	EVMVersion m_evmVersion;
+	AsmFlavour m_flavour = AsmFlavour::Loose;
+	boost::optional<Error::Type> m_errorTypeForLoose;
 };
 
 }

@@ -50,7 +50,7 @@ string bytecodeSansMetadata(string const& _bytecode)
 bool isValidMetadata(string const& _metadata)
 {
 	Json::Value metadata;
-	if (!Json::Reader().parse(_metadata, metadata, false))
+	if (!jsonParseStrict(_metadata, metadata))
 		return false;
 
 	if (
@@ -60,7 +60,8 @@ bool isValidMetadata(string const& _metadata)
 		!metadata.isMember("compiler") ||
 		!metadata.isMember("settings") ||
 		!metadata.isMember("sources") ||
-		!metadata.isMember("output")
+		!metadata.isMember("output") ||
+		!metadata["settings"].isMember("evmVersion")
 	)
 		return false;
 

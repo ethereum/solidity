@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/Version.h>
-#include <solc/jsonCompiler.h>
+#include <libsolc/libsolc.h>
 
 #include "../Metadata.h"
 #include "../TestHelper.h"
@@ -44,7 +44,7 @@ Json::Value compileSingle(string const& _input)
 {
 	string output(compileJSON(_input.c_str(), dev::test::Options::get().optimize));
 	Json::Value ret;
-	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
+	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
 }
 
@@ -56,7 +56,7 @@ Json::Value compileMulti(string const& _input, bool _callback)
 		compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize)
 	);
 	Json::Value ret;
-	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
+	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
 }
 
@@ -64,7 +64,7 @@ Json::Value compile(string const& _input)
 {
 	string output(compileStandard(_input.c_str(), NULL));
 	Json::Value ret;
-	BOOST_REQUIRE(Json::Reader().parse(output, ret, false));
+	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
 }
 

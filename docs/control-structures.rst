@@ -20,10 +20,10 @@ For example, suppose we want our contract to
 accept one kind of external calls with two integers, we would write
 something like::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract Simple {
-        function taker(uint _a, uint _b) {
+        function taker(uint _a, uint _b) public pure {
             // do something with _a and _b.
         }
     }
@@ -36,10 +36,14 @@ The output parameters can be declared with the same syntax after the
 the sum and the product of the two given integers, then we would
 write::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract Simple {
-        function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
+        function arithmetics(uint _a, uint _b)
+            public
+            pure
+            returns (uint o_sum, uint o_product)
+        {
             o_sum = _a + _b;
             o_product = _a * _b;
         }
@@ -95,11 +99,11 @@ Internal Function Calls
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
-        function g(uint a) returns (uint ret) { return f(); }
-        function f() returns (uint ret) { return g(7) + f(); }
+        function g(uint a) public pure returns (uint ret) { return f(); }
+        function f() internal pure returns (uint ret) { return g(7) + f(); }
     }
 
 These function calls are translated into simple jumps inside the EVM. This has
@@ -125,13 +129,13 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
     pragma solidity ^0.4.0;
 
     contract InfoFeed {
-        function info() payable returns (uint ret) { return 42; }
+        function info() public payable returns (uint ret) { return 42; }
     }
 
     contract Consumer {
         InfoFeed feed;
-        function setFeed(address addr) { feed = InfoFeed(addr); }
-        function callFeed() { feed.info.value(10).gas(800)(); }
+        function setFeed(address addr) public { feed = InfoFeed(addr); }
+        function callFeed() public { feed.info.value(10).gas(800)(); }
     }
 
 The modifier ``payable`` has to be used for ``info``, because otherwise, the `.value()`
@@ -180,11 +184,11 @@ parameters from the function declaration, but can be in arbitrary order.
     pragma solidity ^0.4.0;
 
     contract C {
-        function f(uint key, uint value) {
+        function f(uint key, uint value) public {
             // ...
         }
 
-        function g() {
+        function g() public {
             // named arguments
             f({value: 2, key: 3});
         }
@@ -194,15 +198,15 @@ Omitted Function Parameter Names
 --------------------------------
 
 The names of unused parameters (especially return parameters) can be omitted.
-Those names will still be present on the stack, but they are inaccessible.
+Those parameters will still be present on the stack, but they are inaccessible.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         // omitted name for parameter
-        function func(uint k, uint) returns(uint) {
+        function func(uint k, uint) public pure returns(uint) {
             return k;
         }
     }
@@ -225,7 +229,7 @@ creation-dependencies are not possible.
 
     contract D {
         uint x;
-        function D(uint a) payable {
+        function D(uint a) public payable {
             x = a;
         }
     }
@@ -233,11 +237,11 @@ creation-dependencies are not possible.
     contract C {
         D d = new D(4); // will be executed as part of C's constructor
 
-        function createD(uint arg) {
+        function createD(uint arg) public {
             D newD = new D(arg);
         }
 
-        function createAndEndowD(uint arg, uint amount) payable {
+        function createAndEndowD(uint arg, uint amount) public payable {
             // Send ether along with the creation
             D newD = (new D).value(amount)(arg);
         }
@@ -270,16 +274,16 @@ Destructuring Assignments and Returning Multiple Values
 
 Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract C {
         uint[] data;
 
-        function f() returns (uint, bool, uint) {
+        function f() public pure returns (uint, bool, uint) {
             return (7, true, 2);
         }
 
-        function g() {
+        function g() public {
             // Declares and assigns the variables. Specifying the type explicitly is not possible.
             var (x, b, y) = f();
             // Assigns to a pre-existing variable.
@@ -291,6 +295,7 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
             // the rest of the values are discarded.
             (data.length,) = f(); // Sets the length to 7
             // The same can be done on the left side.
+            // If the tuple begins in an empty component, the beginning values are discarded.
             (,data[3]) = f(); // Sets data[3] to 2
             // Components can only be left out at the left-hand-side of assignments, with
             // one exception:
@@ -319,17 +324,18 @@ is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For 
 element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
 and ``string``, the default value is an empty array or string.
 
-A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
+A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared
+(this will change soon, see below).
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
 As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
 
     // This will not compile
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.16;
 
     contract ScopingErrors {
-        function scoping() {
+        function scoping() public {
             uint i = 0;
 
             while (i++ < 1) {
@@ -341,7 +347,7 @@ As a result, the following code is illegal and cause the compiler to throw an er
             }
         }
 
-        function minimalScoping() {
+        function minimalScoping() public {
             {
                 uint same2 = 0;
             }
@@ -351,7 +357,7 @@ As a result, the following code is illegal and cause the compiler to throw an er
             }
         }
 
-        function forLoopScoping() {
+        function forLoopScoping() public {
             for (uint same3 = 0; same3 < 1; same3++) {
             }
 
@@ -361,17 +367,77 @@ As a result, the following code is illegal and cause the compiler to throw an er
     }
 
 In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
-As a result, the following code is legal, despite being poorly written::
+As a result, the following code is legal, despite being poorly written:
 
-    function foo() returns (uint) {
-        // baz is implicitly initialized as 0
-        uint bar = 5;
-        if (true) {
-            bar += baz;
-        } else {
-            uint baz = 10;// never executes
+::
+
+    pragma solidity ^0.4.0;
+
+    contract C {
+        function foo() public pure returns (uint) {
+            // baz is implicitly initialized as 0
+            uint bar = 5;
+            if (true) {
+                bar += baz;
+            } else {
+                uint baz = 10;// never executes
+            }
+            return bar;// returns 5
         }
-        return bar;// returns 5
+    }
+
+Scoping starting from Version 0.5.0
+-----------------------------------
+
+Starting from version 0.5.0, Solidity will change to the more widespread scoping rules of C99
+(and many other languages): Variables are visible from the point right after their declaration
+until the end of a ``{ }``-block. As an exception to this rule, variables declared in the
+initialization part of a for-loop are only visible until the end of the for-loop.
+
+Variables and other items declared outside of a code block, for example functions, contracts,
+user-defined types, etc., do not change their scoping behaviour. This means you can
+use state variables before they are declared and call functions recursively.
+
+These rules are already introduced now as an experimental feature.
+
+As a consequence, the following examples will compile without warnings, since
+the two variables have the same name but disjoint scopes. In non-0.5.0-mode,
+they have the same scope (the function ``minimalScoping``) and thus it does
+not compile there.
+
+::
+
+    pragma solidity ^0.4.0;
+    pragma experimental "v0.5.0";
+    contract C {
+        function minimalScoping() pure public {
+            {
+                uint same2 = 0;
+            }
+
+            {
+                uint same2 = 0;
+            }
+        }
+    }
+
+As a special example of the C99 scoping rules, note that in the following,
+the first assignment to ``x`` will actually assign the outer and not the inner variable.
+In any case, you will get a warning about the outer variable being shadowed.
+
+::
+
+    pragma solidity ^0.4.0;
+    pragma experimental "v0.5.0";
+    contract C {
+        function f() pure public returns (uint) {
+            uint x = 1;
+            {
+                x = 2; // this will assign to the outer variable
+                uint x;
+            }
+            return x; // x has value 2
+        }
     }
 
 .. index:: ! exception, ! throw, ! assert, ! require, ! revert
@@ -398,7 +464,7 @@ and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level ``call``, ``delegatecall`` and ``callcode`` will return success if the calling account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+    The low-level ``call``, ``delegatecall`` and ``callcode`` will return success if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
 
 Catching exceptions is not yet possible.
 
@@ -408,7 +474,7 @@ and how ``assert`` can be used for internal error checking::
     pragma solidity ^0.4.0;
 
     contract Sharer {
-        function sendHalf(address addr) payable returns (uint balance) {
+        function sendHalf(address addr) public payable returns (uint balance) {
             require(msg.value % 2 == 0); // Only allow even numbers
             uint balanceBeforeTransfer = this.balance;
             addr.transfer(msg.value / 2);

@@ -146,6 +146,13 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
+	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,
+	/// the data is taken from memory instead of from calldata.
+	/// Can allocate memory.
+	/// Stack pre: <source_offset>
+	/// Stack post: <value0> <value1> ... <valuen>
+	void abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory = false);
+
 	/// Zero-initialises (the data part of) an already allocated memory array.
 	/// Length has to be nonzero!
 	/// Stack pre: <length> <memptr>

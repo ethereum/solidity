@@ -22,6 +22,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/TestHelper.h>
+
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/SHA3.h>
@@ -41,27 +43,6 @@ namespace test
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
 
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVariable1;
-			function fun(uint256 arg1) public { uint256 y; y = arg1; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
-{
-	char const* text = R"(
-		contract test {
-			uint256 variable;
-			uint128 variable;
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
-}
 
 BOOST_AUTO_TEST_CASE(double_function_declaration)
 {
@@ -74,17 +55,204 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 	CHECK_ERROR(text, DeclarationError, "Function with same name and arguments defined twice.");
 }
 
-BOOST_AUTO_TEST_CASE(double_variable_declaration)
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope)
 {
-	char const* text = R"(
+	string text = R"(
 		contract test {
-			function f() public {
-				uint256 x;
-				if (true) { uint256 x; }
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
 			}
 		}
 	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				{ uint x; }
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation)
+{
+	string text = R"(
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
+}
+
+BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation_050)
+{
+	string text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				{ uint x; }
+				uint x;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Unused local variable",
+		"Unused local variable"
+	}));
+}
+BOOST_AUTO_TEST_CASE(scoping_old)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				x = 4;
+				uint256 x = 2;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() public {
+				{
+					uint256 x;
+				}
+				x = 2;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_activation_old)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_activation)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				x = 3;
+				uint x;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use)
+{
+	char const* text = R"(
+		contract test {
+			function f() pure public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_self_use_050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				uint a = a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for2)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++)
+					x = 2;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for3)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (uint x = 0; x < 10; x ++){
+					x = 2;
+				}
+				x = 4;
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
+}
+
+BOOST_AUTO_TEST_CASE(scoping_for_decl_in_body)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				for (;; y++){
+					uint y = 3;
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
 }
 
 BOOST_AUTO_TEST_CASE(name_shadowing)
@@ -120,6 +288,20 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 		}
 	)";
 	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
+}
+
+BOOST_AUTO_TEST_CASE(undeclared_name_is_not_fatal)
+{
+	char const* text = R"(
+		contract test {
+			uint256 variable;
+			function f(uint256 arg) public {
+				f(notfound);
+				f(notfound);
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (vector<string>{"Undeclared identifier", "Undeclared identifier"}));
 }
 
 BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
@@ -602,6 +784,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 BOOST_AUTO_TEST_CASE(external_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
@@ -629,6 +812,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Empty {}
@@ -742,6 +926,62 @@ BOOST_AUTO_TEST_CASE(functions_with_stucts_of_non_external_types_in_interface_ne
 	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
 }
 
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_arrays_new_abi)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			function f() public pure returns (string[][]) {}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function f() public pure returns (string[][]) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
+BOOST_AUTO_TEST_CASE(returning_multi_dimensional_static_arrays)
+{
+	char const* text = R"(
+		contract C {
+			function f() public pure returns (uint[][2]) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
+BOOST_AUTO_TEST_CASE(returning_arrays_in_structs_new_abi)
+{
+	char const* text = R"(
+		pragma experimental ABIEncoderV2;
+
+		contract C {
+			struct S { string[] s; }
+			function f() public pure returns (S) {}
+		}
+	)";
+	CHECK_WARNING(text, "Experimental features");
+}
+
+BOOST_AUTO_TEST_CASE(returning_arrays_in_structs_arrays)
+{
+	char const* text = R"(
+		contract C {
+			struct S { string[] s; }
+			function f() public pure returns (S x) {}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "only supported in the new experimental ABI encoder");
+}
+
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
 	char const* text = R"(
@@ -848,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 		contract A is B { }
 		contract B is A { }
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Definition of base has to precede definition of derived contract");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<string>{"Definition of base has to precede definition of derived contract"}));
 }
 
 BOOST_AUTO_TEST_CASE(legal_override_direct)
@@ -988,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 {
 	char const* text = R"(
 		contract B {
-			function f() mod1(2, true) mod2("0123456") public { }
+			function f() mod1(2, true) mod2("0123456") pure public { }
 			modifier mod1(uint a, bool b) { if (b) _; }
 			modifier mod2(bytes7 a) { while (a == "1234567") _; }
 		}
@@ -1023,11 +1263,23 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 {
 	char const* text = R"(
 		contract B {
-			function f() mod(x) public { uint x = 7; }
+			function f() mod(x) pure public { uint x = 7; }
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	CHECK_SUCCESS(text);
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract B {
+			function f() mod(x) pure public { uint x = 7; }
+			modifier mod(uint a) { if (a > 0) _; }
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
@@ -1038,7 +1290,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
 			modifier mod(uint a) { if (a > 0) _; }
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
@@ -1076,9 +1328,10 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) { _; } }
 		contract B is A { function mod(uint a) public { } }
 	)";
-	// Error: Identifier already declared.
-	// Error: Override changes modifier to function.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared.");
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Identifier already declared"},
+		{Error::Type::TypeError, "Override changes modifier to function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -1087,9 +1340,10 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) public { } }
 		contract B is A { modifier mod(uint a) { _; } }
 	)";
-	// Error: Identifier already declared.
-	// Error: Override changes function to modifier.
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Identifier already declared.");
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Identifier already declared"},
+		{Error::Type::TypeError, "Override changes function to modifier"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -1326,7 +1580,10 @@ BOOST_AUTO_TEST_CASE(fallback_function_twice)
 			function() public { x = 3; }
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, "Function with same name and arguments defined twice.");
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (vector<string>{
+		"Function with same name and arguments defined twice.",
+		"Only one fallback function is"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
@@ -1392,7 +1649,7 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 			event A(uint i);
 		}
 	)";
-	BOOST_CHECK(success(text));
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(events_with_same_name_unnamed_arguments)
@@ -1661,7 +1918,11 @@ BOOST_AUTO_TEST_CASE(constant_input_parameter)
 			function f(uint[] constant a) public { }
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Illegal use of \"constant\" specifier.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<string>{
+		"Illegal use of \"constant\" specifier",
+		"Constants of non-value type not yet implemented",
+		"Uninitialized \"constant\" variable"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
@@ -1727,7 +1988,7 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			uint256 a;
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Type int_const 115792089237316195423570985008687907853269984665640564039458000000000000000000 is not implicitly convertible to expected type uint256.");
+	CHECK_ERROR(sourceCode, TypeError, "Type int_const 1157...(70 digits omitted)...0000 is not implicitly convertible to expected type uint256.");
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
@@ -1819,7 +2080,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "uint8, which can hold values between 0 and 255");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint8, which can hold values between 0 and 255",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		contract test {
 			function f() pure public {
@@ -1828,7 +2092,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint256, which can hold values between 0 and 115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		contract test {
 			function f() pure public {
@@ -1837,7 +2104,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			}
 		}
 	)";
-	CHECK_WARNING(sourceCode, "int8, which can hold values between -128 and 127");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"int8, which can hold values between -128 and 127",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 	sourceCode = R"(
 		 contract test {
 			 function f() pure public {
@@ -1845,7 +2115,10 @@ BOOST_AUTO_TEST_CASE(warn_var_from_zero)
 			 }
 		 }
 	)";
-	CHECK_WARNING(sourceCode, "uint8, which can hold");
+	CHECK_WARNING_ALLOW_MULTI(sourceCode, (std::vector<std::string>{
+		"uint8, which can hold",
+		"Use of the \"var\" keyword is deprecated."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -2044,6 +2317,93 @@ BOOST_AUTO_TEST_CASE(external_visibility)
 	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
 }
 
+BOOST_AUTO_TEST_CASE(similar_name_suggestions_expected)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function func() {}
+			function g() public { fun(); }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"func\"?");
+}
+
+BOOST_AUTO_TEST_CASE(no_name_suggestion)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public { fun(); }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_similar_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public {
+				uint var1 = 1;
+				uint var2 = 1;
+				uint var3 = 1;
+				uint var4 = 1;
+				uint var5 = varx;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"var1\", \"var2\", \"var3\", \"var4\" or \"var5\"?");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_scopes_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint log9 = 2;
+			function g() public {
+				uint log8 = 3;
+				uint var1 = lgox;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"log8\", \"log9\", \"log0\", \"log1\", \"log2\", \"log3\" or \"log4\"?");
+}
+
+BOOST_AUTO_TEST_CASE(inheritence_suggestions)
+{
+	char const* sourceCode = R"(
+		contract a { function func() public {} }
+		contract c is a {
+			function g() public {
+				uint var1 = fun();
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier. Did you mean \"func\"?");
+}
+
+BOOST_AUTO_TEST_CASE(no_spurious_suggestions)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function g() public {
+				uint va = 1;
+				uint vb = vaxyz;
+			 }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+
+	sourceCode = R"(
+		contract c {
+			function g() public {
+				uint va = 1;
+				uint vb = x;
+			 }
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Undeclared identifier.");
+}
+
 BOOST_AUTO_TEST_CASE(external_base_visibility)
 {
 	char const* sourceCode = R"(
@@ -2107,7 +2467,7 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 			function f(uint a) public { uint8[a] x; }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(array_with_negative_length)
@@ -2178,6 +2538,16 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Type uint256[] storage ref is not implicitly convertible to expected type uint256[80] storage ref.");
+}
+
+BOOST_AUTO_TEST_CASE(array_of_undeclared_type)
+{
+	char const* text = R"(
+		contract c {
+			a[] public foo;
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
@@ -2348,6 +2718,25 @@ BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(combining_hex_and_denomination)
+{
+	char const* text = R"(
+		contract Foo {
+			uint constant x = 0x01 wei;
+		}
+	)";
+	CHECK_WARNING(text, "Hexadecimal numbers with unit denominations are deprecated.");
+
+	char const* textV050 = R"(
+		pragma experimental "v0.5.0";
+
+		contract Foo {
+			uint constant x = 0x01 wei;
+		}
+	)";
+	CHECK_ERROR(textV050, TypeError, "Hexadecimal numbers cannot be used with unit denominations.");
 }
 
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
@@ -2600,7 +2989,10 @@ BOOST_AUTO_TEST_CASE(equal_overload)
 			function test(uint a) external {}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(sourceCode, DeclarationError, "Function with same name and arguments defined twice.");
+	CHECK_ALLOW_MULTI(sourceCode, (vector<pair<Error::Type, string>>{
+		{Error::Type::DeclarationError, "Function with same name and arguments defined twice."},
+		{Error::Type::TypeError, "Overriding function visibility differs"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_var)
@@ -2884,6 +3276,20 @@ BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable)
 	CHECK_WARNING(sourceCode, "Uninitialized storage pointer");
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_mapping_array_variable_050)
+{
+	char const* sourceCode = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				mapping(uint => uint)[] storage x;
+				x;
+			}
+		}
+	)";
+	CHECK_ERROR(sourceCode, DeclarationError, "Uninitialized storage pointer");
+}
+
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 {
 	char const* sourceCode = R"(
@@ -3102,7 +3508,10 @@ BOOST_AUTO_TEST_CASE(library_constructor)
 			function Lib();
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in libraries.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<std::string>{
+		"Constructor cannot be defined in libraries.",
+		"Constructor must be implemented if declared."
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(valid_library)
@@ -3178,6 +3587,24 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	)";
 
 	CHECK_WARNING(text, "Uninitialized storage pointer");
+}
+
+BOOST_AUTO_TEST_CASE(non_initialized_references_050)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract c
+		{
+			struct s {
+				uint a;
+			}
+			function f() public {
+				s storage x;
+			}
+		}
+	)";
+
+	CHECK_ERROR(text, DeclarationError, "Uninitialized storage pointer");
 }
 
 BOOST_AUTO_TEST_CASE(keccak256_with_large_integer_constant)
@@ -3511,6 +3938,7 @@ BOOST_AUTO_TEST_CASE(using_for_not_used)
 BOOST_AUTO_TEST_CASE(library_memory_struct)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		library c {
 			struct S { uint x; }
 			function f() public returns (S ) {}
@@ -3603,6 +4031,20 @@ BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Wrong argument count for function call: 0 arguments given but expected 1.");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_args_creating_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; }
+
+			function f() public {
+				var s = S({a: 1});
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Wrong argument count for struct constructor: 1 arguments given but expected 2.");
 }
 
 BOOST_AUTO_TEST_CASE(function_overload_array_type)
@@ -3814,7 +4256,10 @@ BOOST_AUTO_TEST_CASE(left_value_in_conditional_expression_not_supported_yet)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Conditional expression as left value is not supported yet.");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"Conditional expression as left value is not supported yet.",
+		"Expression has to be an lvalue"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(conditional_expression_with_different_struct)
@@ -4033,7 +4478,55 @@ BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (std::vector<std::string>{
+		"Identifier not found or not unique.",
+		"Identifier not found or not unique.",
+		"Identifier not found or not unique."
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename)
+{
+	char const* text = R"(
+		contract test {
+			modifier mod() { _; }
+
+			function f() public {
+				mod g;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Name has to refer to a struct, enum or contract.");
+}
+
+BOOST_AUTO_TEST_CASE(modifier_is_not_a_valid_typename_is_not_fatal)
+{
+	char const* text = R"(
+		contract test {
+			modifier mod() { _; }
+
+			function f() public {
+				mod g;
+				g = f;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Name has to refer to a struct, enum or contract."}));
+}
+
+BOOST_AUTO_TEST_CASE(function_is_not_a_valid_typename)
+{
+	char const* text = R"(
+		contract test {
+			function foo() public {
+			}
+
+			function f() public {
+				foo g;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Name has to refer to a struct, enum or contract.");
 }
 
 BOOST_AUTO_TEST_CASE(long_uint_variable_fails)
@@ -4045,7 +4538,7 @@ BOOST_AUTO_TEST_CASE(long_uint_variable_fails)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, DeclarationError, "Identifier not found or not unique.");
 }
 
 BOOST_AUTO_TEST_CASE(bytes10abc_is_identifier)
@@ -4084,7 +4577,7 @@ BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 			}
 		}
 	)";
-	BOOST_CHECK(!success(text));
+	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup in function ()");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_fixed_types_0x7_mxn)
@@ -4366,7 +4859,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_signed_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
@@ -4378,7 +4871,7 @@ BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_unsigned_fixed_type)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
@@ -4467,7 +4960,7 @@ BOOST_AUTO_TEST_CASE(rational_index_access)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "rational_const 1/2 is not implicitly convertible to expected type uint256");
+	CHECK_ERROR(text, TypeError, "rational_const 1 / 2 is not implicitly convertible to expected type uint256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
@@ -4757,7 +5250,10 @@ BOOST_AUTO_TEST_CASE(unused_return_value_callcode)
 			}
 		}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Return value of low-level calls not used");
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"Return value of low-level calls not used",
+		"\"callcode\" has been deprecated"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
@@ -4777,12 +5273,20 @@ BOOST_AUTO_TEST_CASE(warn_about_callcode)
 	char const* text = R"(
 		contract test {
 			function f() pure public {
-				var x = address(0x12).callcode;
-				x;
+				address(0x12).callcode;
 			}
 		}
 	)";
 	CHECK_WARNING(text, "\"callcode\" has been deprecated in favour of \"delegatecall\"");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract test {
+			function f() pure public {
+				address(0x12).callcode;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "\"callcode\" has been deprecated in favour of \"delegatecall\"");
 }
 
 BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
@@ -4927,9 +5431,9 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 {
 	char const* text = "contract C {}";
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
-	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second, "Source file does not specify required compiler version!"));
+	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
 }
 
 BOOST_AUTO_TEST_CASE(unsatisfied_version)
@@ -4938,10 +5442,10 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version)
 		pragma solidity ^99.99.0;
 	)";
 	auto sourceAndError = parseAnalyseAndReturnError(text, false, false, false);
-	BOOST_REQUIRE(!!sourceAndError.second);
+	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(sourceAndError.second->type() == Error::Type::SyntaxError);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second, "Source file requires different compiler version"));
+	BOOST_CHECK(sourceAndError.second.front()->type() == Error::Type::SyntaxError);
+	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file requires different compiler version"));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_constructor_statemutability)
@@ -5074,6 +5578,20 @@ BOOST_AUTO_TEST_CASE(payable_internal_function_type)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Only external function types can be payable.");
+}
+
+BOOST_AUTO_TEST_CASE(payable_internal_function_type_is_not_fatal)
+{
+	char const* text = R"(
+		contract C {
+			function (uint) internal payable returns (uint) x;
+
+			function g() {
+				x = g;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Only external function types can be payable."}));
 }
 
 BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
@@ -5376,10 +5894,11 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_negative_stack)
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract c {
 			uint8 x;
 			function f() public {
-				assembly { x pop }
+				assembly { pop(x) }
 			}
 		}
 	)";
@@ -5389,6 +5908,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_two_stack_load)
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			modifier m {
 				uint a = 1;
@@ -5397,7 +5917,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
 				}
 				_;
 			}
-			function f() m {
+			function f() public m {
 			}
 		}
 	)";
@@ -5407,6 +5927,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_in_modifier)
 BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint x = 1;
 			function f() public {
@@ -5422,6 +5943,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage)
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint x = 1;
 			modifier m {
@@ -5430,7 +5952,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 				}
 				_;
 			}
-			function f() m {
+			function f() public m {
 			}
 		}
 	)";
@@ -5440,6 +5962,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_in_modifiers)
 BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint constant x = 1;
 			function f() public {
@@ -5455,6 +5978,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_assign)
 BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint constant x = 1;
 			function f() public {
@@ -5470,6 +5994,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_constant_access)
 BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			function f() public {
 				uint a;
@@ -5485,6 +6010,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions)
 BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions_storage_ptr)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint[] r;
 			function f() public {
@@ -5501,6 +6027,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_local_variable_access_out_of_functions_stor
 BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract test {
 			uint a;
 			function f() pure public {
@@ -5513,9 +6040,25 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_variable_access_out_of_functions)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_constant_variable_via_offset)
+{
+	char const* text = R"(
+		contract test {
+			uint constant x = 2;
+			function f() pure public {
+				assembly {
+					let r := x_offset
+				}
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Constant variables not supported by inline assembly.");
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)
 {
 	char const* text = R"(
+		pragma experimental "v0.5.0";
 		contract C {
 			function f(bytes bytesAsCalldata) external {
 				assembly {
@@ -5525,6 +6068,182 @@ BOOST_AUTO_TEST_CASE(inline_assembly_calldata_variables)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Call data elements cannot be accessed directly.");
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_050_literals_on_stack)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				assembly {
+					1
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::SyntaxError, "are not supposed to return"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_literals_on_stack)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				assembly {
+					1
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "are not supposed to return"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_050_bare_instructions)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() view public {
+				assembly {
+					address
+					pop
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::SyntaxError, "The use of non-functional"},
+		{Error::Type::SyntaxError, "The use of non-functional"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_bare_instructions)
+{
+	char const* text = R"(
+		contract C {
+			function f() view public {
+				assembly {
+					address
+					pop
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "The use of non-functional"},
+		{Error::Type::Warning, "The use of non-functional"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_050_labels)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				assembly {
+					label:
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::SyntaxError, "Jump instructions and labels are low-level"},
+		{Error::Type::SyntaxError, "The use of labels is deprecated"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_labels)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				assembly {
+					label:
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Jump instructions and labels are low-level"},
+		{Error::Type::Warning, "The use of labels is deprecated"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_050_jump)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				assembly {
+					jump(2)
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::SyntaxError, "Jump instructions and labels are low-level"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_jump)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				assembly {
+					jump(2)
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::TypeError, "Function declared as pure"},
+		{Error::Type::Warning, "Jump instructions and labels are low-level"}
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_050_leave_items_on_stack)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				assembly {
+					mload(0)
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::SyntaxError, "are not supposed to return"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_leave_items_on_stack)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				assembly {
+					mload(0)
+				}
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "are not supposed to return"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_mobile_type)
@@ -5537,7 +6256,7 @@ BOOST_AUTO_TEST_CASE(invalid_mobile_type)
 				}
 			}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid mobile type.");
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
 }
 
 BOOST_AUTO_TEST_CASE(warns_msg_value_in_non_payable_public_function)
@@ -5651,12 +6370,13 @@ BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
 			function D() public { }
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(return_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[] x; }
@@ -5664,7 +6384,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(return_recursive_structs)
@@ -5714,7 +6434,7 @@ BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_address_checksum)
@@ -5727,7 +6447,7 @@ BOOST_AUTO_TEST_CASE(invalid_address_checksum)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
@@ -5740,10 +6460,10 @@ BOOST_AUTO_TEST_CASE(invalid_address_no_checksum)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
 }
 
-BOOST_AUTO_TEST_CASE(invalid_address_length)
+BOOST_AUTO_TEST_CASE(invalid_address_length_short)
 {
 	char const* text = R"(
 		contract C {
@@ -5753,7 +6473,23 @@ BOOST_AUTO_TEST_CASE(invalid_address_length)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "checksum");
+	CHECK_WARNING(text, "This looks like an address but has an invalid checksum.");
+}
+
+BOOST_AUTO_TEST_CASE(invalid_address_length_long)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				address x = 0xFA0bFc97E48458494Ccd857e1A85DC91F7F0046E0;
+				x;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "This looks like an address but has an invalid checksum."},
+		{Error::Type::TypeError, "not implicitly convertible"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
@@ -5826,7 +6562,11 @@ BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
 			uint constant d = 2 + a;
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "a has a cyclic dependency via c");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"a has a cyclic dependency via c",
+		"c has a cyclic dependency via d",
+		"d has a cyclic dependency via a"
+	}));
 	text = R"(
 		contract C {
 			uint constant a = b * c;
@@ -5844,7 +6584,7 @@ BOOST_AUTO_TEST_CASE(interface)
 		interface I {
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_constructor)
@@ -5854,7 +6594,10 @@ BOOST_AUTO_TEST_CASE(interface_constructor)
 			function I();
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "Constructor cannot be defined in interfaces");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"Constructor cannot be defined in interfaces",
+		"Constructor must be implemented if declared.",
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)
@@ -5865,7 +6608,7 @@ BOOST_AUTO_TEST_CASE(interface_functions)
 			function f();
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_function_bodies)
@@ -5887,12 +6630,18 @@ BOOST_AUTO_TEST_CASE(interface_function_external)
 			function f() external;
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_function_public)
 {
 	char const* text = R"(
+		interface I {
+			function f() public;
+		}
+	)";
+	CHECK_WARNING(text, "Functions in interfaces should be declared external.");
+	text = R"(
 		pragma experimental "v0.5.0";
 		interface I {
 			function f() public;
@@ -5928,7 +6677,7 @@ BOOST_AUTO_TEST_CASE(interface_events)
 			event E();
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_inheritance)
@@ -5971,7 +6720,7 @@ BOOST_AUTO_TEST_CASE(interface_function_parameters)
 			function f(uint a) public returns (bool);
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(interface_enums)
@@ -5995,7 +6744,7 @@ BOOST_AUTO_TEST_CASE(using_interface)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(using_interface_complex)
@@ -6012,7 +6761,7 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_about_throw)
@@ -6024,7 +6773,16 @@ BOOST_AUTO_TEST_CASE(warn_about_throw)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "\"throw\" is deprecated");
+	CHECK_WARNING(text, "\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"");
+	text = R"(
+                pragma experimental "v0.5.0";
+		contract C {
+			function f() pure public {
+				throw;
+			}
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"");
 }
 
 BOOST_AUTO_TEST_CASE(bare_revert)
@@ -6071,7 +6829,7 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
@@ -6187,7 +6945,7 @@ BOOST_AUTO_TEST_CASE(warn_unused_function_parameter)
 			}
 		}
 	)";
-	success(text);
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_unused_return_parameter)
@@ -6236,7 +6994,7 @@ BOOST_AUTO_TEST_CASE(no_unused_warning_interface_arguments)
 {
 	char const* text = R"(
 		interface I {
-			function f(uint a) pure public returns (uint b);
+			function f(uint a) pure external returns (uint b);
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -6440,6 +7198,8 @@ BOOST_AUTO_TEST_CASE(callable_crash)
 
 BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 {
+	// This used to be a test for a.transfer to generate a warning
+	// because A's fallback function is not payable.
 	char const* text = R"(
 		contract A {
 			function() public {}
@@ -6453,12 +7213,17 @@ BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 {
-	char const* text = R"(
+	// This used to be a test for a.transfer to generate a warning
+	// because A does not have a payable fallback function.
+	std::string text = R"(
 		contract A {}
 
 		contract B {
@@ -6469,12 +7234,17 @@ BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 {
-	char const* text = R"(
+	// This used to be a test for a.send to generate a warning
+	// because A does not have a payable fallback function.
+	std::string text = R"(
 		contract A {
 			function() public {}
 		}
@@ -6487,11 +7257,16 @@ BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Value transfer to a contract without a payable fallback function.");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 {
+	// This used to be a test for a.transfer to generate a warning
+	// because A does not have a payable fallback function.
 	char const* text = R"(
 		contract A {
 			function() payable public {}
@@ -6505,7 +7280,7 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Using contract member \"transfer\" inherited from the address type is deprecated.");
 }
 
 BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
@@ -6531,15 +7306,27 @@ BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::Warning, "The use of non-functional instructions is deprecated."},
+		{Error::Type::DeclarationError, "Unbalanced stack"}
+	});
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible")));
+	CHECK_ALLOW_MULTI(text, expectations);
 }
 
 BOOST_AUTO_TEST_CASE(create2_as_variable)
 {
 	char const* text = R"(
-		contract c { function f() public { uint create2; assembly { create2(0, 0, 0, 0) }}}
+		contract c { function f() public { uint create2; assembly { create2(0, 0, 0, 0) } }}
 	)";
-	CHECK_WARNING_ALLOW_MULTI(text, "Variable is shadowed in inline assembly by an instruction of the same name");
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::Warning, "The \"create2\" instruction is not supported by the VM version"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+		{Error::Type::Warning, "not supposed to return values"}
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
@@ -6578,6 +7365,28 @@ BOOST_AUTO_TEST_CASE(warn_unspecified_storage)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint storage a) public { }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Storage location can only be given for array or struct types.");
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed_is_not_fatal)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint storage a) public {
+				a = f;
+			}
+		}
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Storage location can only be given for array or struct types."}));
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)
@@ -6700,15 +7509,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 	CHECK_ERROR(text, TypeError, "Member \"selector\" not found");
 	text = R"(
 		contract C {
-			function f() view external returns (bytes4) {
-				return this.f.selector;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f() view external returns (bytes4) {
+			function f() pure external returns (bytes4) {
 				return this.f.selector;
 			}
 		}
@@ -6724,7 +7525,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Use of the \"var\" keyword is deprecated.");
 	text = R"(
 		contract C {
 			function h() pure external {
@@ -6747,7 +7548,7 @@ BOOST_AUTO_TEST_CASE(function_types_sig)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Use of the \"var\" keyword is deprecated.");
 }
 
 BOOST_AUTO_TEST_CASE(using_this_in_constructor)
@@ -6775,7 +7576,11 @@ BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lvalue)
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, "is not callable");
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
+		"is not callable",
+		"Expression has to be an lvalue",
+		"Type int_const 2 is not implicitly"
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(builtin_reject_gas)
@@ -6812,6 +7617,50 @@ BOOST_AUTO_TEST_CASE(builtin_reject_gas)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"gas\" not found or not visible after argument-dependent lookup");
+}
+
+BOOST_AUTO_TEST_CASE(gasleft)
+{
+	char const* text = R"(
+		contract C {
+			function f() public view returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_WARNING(text, "\"msg.gas\" has been deprecated in favor of \"gasleft()\"");
+
+	text = R"(
+		contract C {
+			function f() public view returns (uint256 val) { return gasleft(); }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() public returns (uint256 val) { return msg.gas; }
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "\"msg.gas\" has been deprecated in favor of \"gasleft()\"");
+}
+
+BOOST_AUTO_TEST_CASE(gasleft_shadowing)
+{
+	char const* text = R"(
+		contract C {
+			function gasleft() public pure returns (bytes32 val) { return "abc"; }
+			function f() public pure returns (bytes32 val) { return gasleft(); }
+		}
+	)";
+	CHECK_WARNING(text, "This declaration shadows a builtin symbol.");
+
+	text = R"(
+		contract C {
+			uint gasleft;
+			function f() public { gasleft = 42; }
+		}
+	)";
+	CHECK_WARNING(text, "This declaration shadows a builtin symbol.");
 }
 
 BOOST_AUTO_TEST_CASE(builtin_reject_value)
@@ -6978,11 +7827,11 @@ BOOST_AUTO_TEST_CASE(experimental_pragma)
 		pragma experimental __test;
 	)";
 	CHECK_WARNING(text, "Experimental features are turned on. Do not use experimental features on live deployments.");
-//	text = R"(
-//		pragma experimental __test;
-//		pragma experimental __test;
-//	)";
-//	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, "Duplicate experimental feature name.");
+	text = R"(
+		pragma experimental __test;
+		pragma experimental __test;
+	)";
+	CHECK_ERROR_ALLOW_MULTI(text, SyntaxError, (std::vector<std::string>{"Duplicate experimental feature name."}));
 }
 
 BOOST_AUTO_TEST_CASE(reject_interface_creation)
@@ -7045,7 +7894,10 @@ BOOST_AUTO_TEST_CASE(tight_packing_literals)
 			}
 		}
 	)";
-//	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"The type of \"int_const 1\" was inferred as uint8.",
+		"\"sha3\" has been deprecated in favour of \"keccak256\""
+	}));
 	text = R"(
 		contract C {
 			function f() pure public returns (bytes32) {
@@ -7072,7 +7924,7 @@ BOOST_AUTO_TEST_CASE(non_external_fallback)
 			function () external { }
 		}
 	)";
-	CHECK_WARNING(text, "Experimental features are turned on.");
+	CHECK_SUCCESS_NO_WARNINGS(text);
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
@@ -7096,12 +7948,59 @@ BOOST_AUTO_TEST_CASE(non_external_fallback)
 	CHECK_ERROR(text, TypeError, "Fallback function must be defined as \"external\".");
 }
 
+BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1E111);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type");
+	text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1, 1E111);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				uint x;
+				(x, ) = (1E111, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				(2**270, 1);
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid rational number.");
+	text = R"(
+		contract C {
+			function f() pure public {
+				((2**270) / 2**100, 1);
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_about_sha3)
 {
 	char const* text = R"(
 		contract test {
 			function f() pure public {
-				var x = sha3(uint8(1));
+				bytes32 x = sha3(uint8(1));
 				x;
 			}
 		}
@@ -7151,7 +8050,7 @@ BOOST_AUTO_TEST_CASE(array_length_too_large)
 			uint[8**90] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
@@ -7161,7 +8060,152 @@ BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
 			uint[true] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_constant_var)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_non_integer_constant_var)
+{
+	char const* text = R"(
+		contract C {
+			bool constant LEN = true;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_function)
+{
+	char const* text = R"(
+		contract C {
+			function f() {}
+			uint[f] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_recursive_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant L = 5;
+			uint constant LEN = L + 4 * L;
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_function_call)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint x) {}
+			uint constant LEN = f();
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_const_cannot_be_fractional)
+{
+	char const* text = R"(
+		contract C {
+			fixed constant L = 10.5;
+			uint[L] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Array with fractional length specified");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_struct)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			struct Test {
+				uint[LEN] ids;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_function)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = 10;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(array_length_cannot_be_constant_function_parameter)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint constant LEN) {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_cyclic_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = LEN;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_complex_cyclic_constant)
+{
+	char const* text = R"(
+		contract C {
+			uint constant L2 = LEN - 10;
+			uint constant L1 = L2 / 10;
+			uint constant LEN = 10 + L1 * 5;
+			function f() {
+				uint[LEN] a;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
+}
+
+BOOST_AUTO_TEST_CASE(array_length_with_pure_functions)
+{
+	char const* text = R"(
+		contract C {
+			uint constant LEN = keccak256(ripemd160(33));
+			uint[LEN] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
@@ -7171,25 +8215,159 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
 			uint[-true] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[true/1] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[1/true] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid constant expression.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 	text = R"(
 		contract C {
 			uint[1.111111E1111111111111] ids;
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Invalid literal value.");
+	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
+	text = R"(
+		contract C {
+			uint[3/0] ids;
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator / not compatible with types int_const 3 and int_const 0");
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
+{
+	std::string text = R"(
+		contract C {
+			function f() view public {
+				this.balance;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated.");
+	text = R"(
+		contract C {
+			function f() view public {
+				this.transfer;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.send;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.call;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated.");
+	text = R"(
+		contract C {
+			function f() view public {
+				this.callcode;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"callcode\" inherited from the address type is deprecated"},
+		{Error::Type::Warning, "\"callcode\" has been deprecated in favour of \"delegatecall\""}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				this.delegatecall;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated.");
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
+{
+	std::string text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.balance;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated");
+	text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.transfer;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() view public {
+				C c;
+				c.send;
+			}
+		}
+	)";
+	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
+		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
+	}));
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.call;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated");
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.callcode;
+			}
+		}
+	)";
+	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
+		"Using contract member \"callcode\" inherited from the address type is deprecated",
+		"\"callcode\" has been deprecated in favour of \"delegatecall\""
+	}));
+	text = R"(
+		contract C {
+			function f() pure public {
+				C c;
+				c.delegatecall;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
@@ -7197,7 +8375,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.balance;
 			}
 		}
@@ -7206,7 +8384,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.transfer;
 			}
 		}
@@ -7215,7 +8393,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.send;
 			}
 		}
@@ -7224,7 +8402,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.call;
 			}
 		}
@@ -7233,7 +8411,7 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.callcode;
 			}
 		}
@@ -7242,12 +8420,119 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 	text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
-			function f() {
+			function f() public {
 				this.delegatecall;
 			}
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"delegatecall\" not found or not visible after argument-dependent lookup in contract");
+}
+
+BOOST_AUTO_TEST_CASE(no_warning_for_using_members_that_look_like_address_members)
+{
+	char const* text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function transfer(uint) public;
+			function f() public {
+				this.transfer(10);
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(emit_events)
+{
+	char const* text = R"(
+		contract C {
+			event e();
+			function f() public {
+				emit e();
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			event e(uint a, string b);
+			function f() public {
+				emit e(2, "abc");
+				emit e({b: "abc", a: 8});
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract A { event e(uint a, string b); }
+		contract C is A {
+			function f() public {
+				emit A.e(2, "abc");
+				emit A.e({b: "abc", a: 8});
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(old_style_events_050)
+{
+	char const* text = R"(
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_WARNING(text, "without \"emit\" prefix");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			event e();
+			function f() public {
+				e();
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "have to be prefixed");
+}
+
+BOOST_AUTO_TEST_CASE(getter_is_memory_type)
+{
+	char const* text = R"(
+		contract C {
+			struct S { string m; }
+			string[] public x;
+			S[] public y;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	// Check that the getters return a memory strings, not a storage strings.
+	ContractDefinition const& c = dynamic_cast<ContractDefinition const&>(*m_compiler.ast("").nodes().at(1));
+	BOOST_CHECK(c.interfaceFunctions().size() == 2);
+	for (auto const& f: c.interfaceFunctions())
+	{
+		auto const& retType = f.second->returnParameterTypes().at(0);
+		BOOST_CHECK(retType->dataStoredIn(DataLocation::Memory));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(require_visibility_specifiers)
+{
+	char const* text = R"(
+		contract C {
+			function f() pure { }
+		}
+	)";
+	CHECK_WARNING(text, "No visibility specified. Defaulting to");
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() pure { }
+		}
+	)";
+	CHECK_ERROR(text, SyntaxError, "No visibility specified.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

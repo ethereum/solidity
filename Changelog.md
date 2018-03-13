@@ -1,8 +1,90 @@
-### 0.4.18 (unreleased)
+### 0.4.22 (unreleased)
+
+Features:
+
+Bugfixes:
+ * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
+ * Commandline interface: Support ``--evm-version constantinople`` properly.
+ * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
+
+### 0.4.21 (2018-03-07)
+
+Features:
+ * Code Generator: Assert that ``k != 0`` for ``mulmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
+ * Code Generator: Do not retain any gas in calls (except if EVM version is set to homestead).
+ * Code Generator: Use ``STATICCALL`` opcode for calling ``view`` and ``pure`` functions as experimenal 0.5.0 feature.
+ * General: C99/C++-style scoping rules (instead of JavaScript function scoping) take effect as experimental v0.5.0 feature.
+ * General: Improved messaging when error spans multiple lines of a sourcefile
+ * General: Support and recommend using ``emit EventName();`` to call events explicitly.
+ * Inline Assembly: Enforce strict mode as experimental 0.5.0 feature.
+ * Interface: Provide ability to select target EVM version (homestead or byzantium, with byzantium being the default).
+ * Standard JSON: Reject badly formatted invalid JSON inputs.
+ * Type Checker: Disallow uninitialized storage pointers as experimental 0.5.0 feature.
+ * Syntax Analyser: Do not warn about experimental features if they do not concern code generation.
+ * Syntax Analyser: Do not warn about ``pragma experimental "v0.5.0"`` and do not set the experimental flag in the bytecode for this.
+ * Syntax Checker: Mark ``throw`` as an error as experimental 0.5.0 feature.
+ * Syntax Checker: Issue error if no visibility is specified on contract functions as experimental 0.5.0 feature.
+ * Syntax Checker: Issue warning when using overloads of ``address`` on contract instances.
+ * Type Checker: disallow combining hex numbers and unit denominations as experimental 0.5.0 feature.
+
+Bugfixes:
+ * Assembly: Raise error on oversized number literals in assembly.
+ * JSON-AST: Add "documentation" property to function, event and modifier definition.
+ * Resolver: Properly determine shadowing for imports with aliases.
+ * Standalone Assembly: Do not ignore input after closing brace of top level block.
+ * Standard JSON: Catch errors properly when invalid "sources" are passed.
+ * Standard JSON: Ensure that library addresses supplied are of correct length and hex prefixed.
+ * Type Checker: Properly detect which array and struct types are unsupported by the old ABI encoder.
+ * Type Checker: Properly warn when using ``_offset`` and ``_slot`` for constants in inline assembly.
+ * Commandline interface: throw error if option is unknown
+
+### 0.4.20 (2018-02-14)
+
+Features:
+ * Code Generator: Prevent non-view functions in libraries from being called
+   directly (as opposed to via delegatecall).
+ * Commandline interface: Support strict mode of assembly (disallowing jumps,
+   instructional opcodes, etc) with the ``--strict-assembly`` switch.
+ * Inline Assembly: Issue warning for using jump labels (already existed for jump instructions).
+ * Inline Assembly: Support some restricted tokens (return, byte, address) as identifiers in Iulia mode.
+ * Optimiser: Replace ``x % 2**i`` by ``x & (2**i-1)``.
+ * Resolver: Continue resolving references after the first error.
+ * Resolver: Suggest alternative identifiers if a given identifier is not found.
+ * SMT Checker: Take if-else branch conditions into account in the SMT encoding of the program
+   variables.
+ * Syntax Checker: Deprecate the ``var`` keyword (and mark it an error as experimental 0.5.0 feature).
+ * Type Checker: Allow `this.f.selector` to be a pure expression.
+ * Type Checker: Issue warning for using ``public`` visibility for interface functions.
+ * Type Checker: Limit the number of warnings raised for creating abstract contracts.
+
+Bugfixes:
+ * Error Output: Truncate huge number literals in the middle to avoid output blow-up.
+ * Parser: Disallow event declarations with no parameter list.
+ * Standard JSON: Populate the ``sourceLocation`` field in the error list.
+ * Standard JSON: Properly support contract and library file names containing a colon (such as URLs).
+ * Type Checker: Suggest the experimental ABI encoder if using ``struct``s as function parameters
+   (instead of an internal compiler error).
+ * Type Checker: Improve error message for wrong struct initialization.
+
+### 0.4.19 (2017-11-30)
+
+Features:
+ * Code Generator: New ABI decoder which supports structs and arbitrarily nested
+   arrays and checks input size (activate using ``pragma experimental ABIEncoderV2;``).
+ * General: Allow constant variables to be used as array length.
+ * Inline Assembly: ``if`` statement.
+ * Standard JSON: Support the ``outputSelection`` field for selective compilation of target artifacts.
+ * Syntax Checker: Turn the usage of ``callcode`` into an error as experimental 0.5.0 feature.
+ * Type Checker: Improve address checksum warning.
+ * Type Checker: More detailed errors for invalid array lengths (such as division by zero).
+
+Bugfixes:
+
+### 0.4.18 (2017-10-18)
 
 Features:
  * Code Generator: Always use all available gas for calls as experimental 0.5.0 feature
-   (previously, some amount was retained in order to work in pre-tangerine whistle
+   (previously, some amount was retained in order to work in pre-Tangerine-Whistle
    EVM versions)
  * Parser: Better error message for unexpected trailing comma in parameter lists.
  * Standard JSON: Support the ``outputSelection`` field for selective compilation of supplied sources.
@@ -11,15 +93,21 @@ Features:
  * Type Checker: Do not add members of ``address`` to contracts as experimental 0.5.0 feature.
  * Type Checker: Force interface functions to be external as experimental 0.5.0 feature.
  * Type Checker: Require ``storage`` or ``memory`` keyword for local variables as experimental 0.5.0 feature.
+ * Compiler Interface: Better formatted error message for long source snippets
 
 Bugfixes:
+ * Code Generator: Allocate one byte per memory byte array element instead of 32.
+ * Code Generator: Do not accept data with less than four bytes (truncated function
+   signature) for regular function calls - fallback function is invoked instead.
+ * Optimizer: Remove unused stack computation results.
  * Parser: Fix source location of VariableDeclarationStatement.
+ * Type Checker: Allow ``gas`` in view functions.
+ * Type Checker: Do not mark event parameters as shadowing state variables.
+ * Type Checker: Prevent duplicate event declarations.
  * Type Checker: Properly check array length and don't rely on an assertion in code generation.
  * Type Checker: Properly support overwriting members inherited from ``address`` in a contract
    (such as ``balance``, ``transfer``, etc.)
- * Type Checker: Prevent duplicate event declarations.
- * Type Checker: Do not mark event parameters as shadowing state variables.
- * Type Checker: Allow ``gas`` in view functions.
+ * Type Checker: Validate each number literal in tuple expressions even if they are not assigned from.
 
 ### 0.4.17 (2017-09-21)
 

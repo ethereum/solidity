@@ -181,7 +181,7 @@ string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 	return str.str();
 }
 
-ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, bool _secondRun)
+ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr)
 {
 	static Rules rules;
 
@@ -202,14 +202,7 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 		//cout << "with rule " << match->first.toString() << endl;
 		//ExpressionTemplate t(match->second());
 		//cout << "to " << match->second().toString() << endl;
-		return rebuildExpression(ExpressionTemplate(match->second(), _expr.item->location()));
-	}
-
-	if (!_secondRun && _expr.arguments.size() == 2 && SemanticInformation::isCommutativeOperation(*_expr.item))
-	{
-		Expression expr = _expr;
-		swap(expr.arguments[0], expr.arguments[1]);
-		return tryToSimplify(expr, true);
+		return rebuildExpression(ExpressionTemplate(match->action(), _expr.item->location()));
 	}
 
 	return -1;

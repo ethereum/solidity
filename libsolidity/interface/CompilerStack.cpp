@@ -76,6 +76,12 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 	swap(m_remappings, remappings);
 }
 
+void CompilerStack::setEVMVersion(EVMVersion _version)
+{
+	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	m_evmVersion = _version;
+}
+
 void CompilerStack::reset(bool _keepSources)
 {
 	if (_keepSources)
@@ -90,6 +96,7 @@ void CompilerStack::reset(bool _keepSources)
 		m_sources.clear();
 	}
 	m_libraries.clear();
+	m_evmVersion = EVMVersion();
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();
@@ -200,7 +207,7 @@ bool CompilerStack::analyze()
 					m_contracts[contract->fullyQualifiedName()].contract = contract;
 			}
 
-	TypeChecker typeChecker(m_errorReporter);
+	TypeChecker typeChecker(m_evmVersion, m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -700,7 +707,7 @@ void CompilerStack::compileContract(
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_optimize, m_optimizeRuns);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
 	bytes cborEncodedHash =
@@ -757,9 +764,12 @@ void CompilerStack::compileContract(
 
 	try
 	{
-		Compiler cloneCompiler(m_optimize, m_optimizeRuns);
-		cloneCompiler.compileClone(_contract, _compiledContracts);
-		compiledContract.cloneObject = cloneCompiler.assembledObject();
+		if (!_contract.isLibrary())
+		{
+			Compiler cloneCompiler(m_evmVersion, m_optimize, m_optimizeRuns);
+			cloneCompiler.compileClone(_contract, _compiledContracts);
+			compiledContract.cloneObject = cloneCompiler.assembledObject();
+		}
 	}
 	catch (eth::AssemblyException const&)
 	{
@@ -770,22 +780,32 @@ void CompilerStack::compileContract(
 	}
 }
 
+string const CompilerStack::lastContractName() const
+{
+	if (m_contracts.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	// try to find some user-supplied contract
+	string contractName;
+	for (auto const& it: m_sources)
+		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contractName = contract->fullyQualifiedName();
+	return contractName;
+}
+
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
 {
 	if (m_contracts.empty())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
-	string contractName = _contractName;
-	if (_contractName.empty())
-		// try to find some user-supplied contract
-		for (auto const& it: m_sources)
-			for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
-				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-					contractName = contract->fullyQualifiedName();
-	auto it = m_contracts.find(contractName);
+
+	auto it = m_contracts.find(_contractName);
+	if (it != m_contracts.end())
+		return it->second;
+
 	// To provide a measure of backward-compatibility, if a contract is not located by its
 	// fully-qualified name, a lookup will be attempted purely on the contract's name to see
 	// if anything will satisfy.
-	if (it == m_contracts.end() && contractName.find(":") == string::npos)
+	if (_contractName.find(":") == string::npos)
 	{
 		for (auto const& contractEntry: m_contracts)
 		{
@@ -796,12 +816,13 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 			string foundName;
 			getline(ss, source, ':');
 			getline(ss, foundName, ':');
-			if (foundName == contractName) return contractEntry.second;
+			if (foundName == _contractName)
+				return contractEntry.second;
 		}
-		// If we get here, both lookup methods failed.
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));
 	}
-	return it->second;
+
+	// If we get here, both lookup methods failed.
+	BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract \"" + _contractName + "\" not found."));
 }
 
 CompilerStack::Source const& CompilerStack::source(string const& _sourceName) const
@@ -856,6 +877,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
 	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
+	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
 
@@ -969,11 +991,12 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		return Json::Value();
 
 	using Gas = GasEstimator::GasConsumption;
+	GasEstimator gasEstimator(m_evmVersion);
 	Json::Value output(Json::objectValue);
 
 	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
 	{
-		Gas executionGas = GasEstimator::functionalEstimation(*items);
+		Gas executionGas = gasEstimator.functionalEstimation(*items);
 		u256 bytecodeSize(runtimeObject(_contractName).bytecode.size());
 		Gas codeDepositGas = bytecodeSize * eth::GasCosts::createDataGas;
 
@@ -994,14 +1017,14 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		for (auto it: contract.interfaceFunctions())
 		{
 			string sig = it.second->externalSignature();
-			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
+			externalFunctions[sig] = gasToJson(gasEstimator.functionalEstimation(*items, sig));
 		}
 
 		if (contract.fallbackFunction())
 			/// This needs to be set to an invalid signature in order to trigger the fallback,
 			/// without the shortcut (of CALLDATSIZE == 0), and therefore to receive the upper bound.
 			/// An empty string ("") would work to trigger the shortcut only.
-			externalFunctions[""] = gasToJson(GasEstimator::functionalEstimation(*items, "INVALID"));
+			externalFunctions[""] = gasToJson(gasEstimator.functionalEstimation(*items, "INVALID"));
 
 		if (!externalFunctions.empty())
 			output["external"] = externalFunctions;
@@ -1017,7 +1040,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 			size_t entry = functionEntryPoint(_contractName, *it);
 			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
 			if (entry > 0)
-				gas = GasEstimator::functionalEstimation(*items, entry, *it);
+				gas = gasEstimator.functionalEstimation(*items, entry, *it);
 
 			/// TODO: This could move into a method shared with externalSignature()
 			FunctionType type(*it);

@@ -22,10 +22,13 @@
 
 #pragma once
 
+#include <libsolidity/codegen/CompilerContext.h>
+#include <libsolidity/interface/EVMVersion.h>
+
+#include <libevmasm/Assembly.h>
+
 #include <ostream>
 #include <functional>
-#include <libsolidity/codegen/CompilerContext.h>
-#include <libevmasm/Assembly.h>
 
 namespace dev {
 namespace solidity {
@@ -33,11 +36,11 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
+	explicit Compiler(EVMVersion _evmVersion = EVMVersion{}, bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
 		m_optimizeRuns(_runs),
-		m_runtimeContext(),
-		m_context(&m_runtimeContext)
+		m_runtimeContext(_evmVersion),
+		m_context(_evmVersion, &m_runtimeContext)
 	{ }
 
 	/// Compiles a contract.

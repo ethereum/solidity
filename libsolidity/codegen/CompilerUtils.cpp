@@ -121,7 +121,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 {
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
 	{
-		solUnimplementedAssert(ref->location() == DataLocation::Memory, "");
+		solUnimplementedAssert(ref->location() == DataLocation::Memory, "Only in-memory reference type can be stored.");
 		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
@@ -316,6 +316,23 @@ void CompilerUtils::abiEncodeV2(
 	string encoderName = m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
 	m_context.appendJumpTo(m_context.namedTag(encoderName));
 	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
+	m_context << ret.tag();
+}
+
+void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory)
+{
+	// stack: <source_offset>
+	auto ret = m_context.pushNewTag();
+	m_context << Instruction::SWAP1;
+	if (_fromMemory)
+		// TODO pass correct size for the memory case
+		m_context << (u256(1) << 63);
+	else
+		m_context << Instruction::CALLDATASIZE;
+	m_context << Instruction::SWAP1;
+	string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
+	m_context.appendJumpTo(m_context.namedTag(decoderName));
+	m_context.adjustStackOffset(int(sizeOnStack(_parameterTypes)) - 3);
 	m_context << ret.tag();
 }
 

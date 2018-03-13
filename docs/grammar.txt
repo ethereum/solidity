@@ -27,14 +27,19 @@ ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 FunctionDefinition = 'function' Identifier? ParameterList
                      ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
-EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
+EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
-IndexedParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
-ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
-TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
+ParameterList = '(' ( Parameter (',' Parameter)* )? ')'
+Parameter = TypeName StorageLocation? Identifier?
+
+EventParameterList = '(' ( EventParameter (',' EventParameter )* )? ')'
+EventParameter = TypeName 'indexed'? Identifier?
+
+FunctionTypeParameterList = '(' ( FunctionTypeParameter (',' FunctionTypeParameter )* )? ')'
+FunctionTypeParameter = TypeName StorageLocation?
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
@@ -50,15 +55,15 @@ UserDefinedTypeName = Identifier ( '.' Identifier )*
 
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
-FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | StateMutability )*
-                   ( 'returns' TypeNameList )?
+FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external' | StateMutability )*
+                   ( 'returns' FunctionTypeParameterList )?
 StorageLocation = 'memory' | 'storage'
 StateMutability = 'pure' | 'constant' | 'view' | 'payable'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
-              Throw | SimpleStatement ) ';'
+              Throw | EmitStatement | SimpleStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
@@ -72,6 +77,7 @@ Continue = 'continue'
 Break = 'break'
 Return = 'return' Expression?
 Throw = 'throw'
+EmitStatement = 'emit' FunctionCall
 VariableDefinition = ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
 IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 
@@ -127,10 +133,10 @@ StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
 HexNumber = '0x' [0-9a-fA-F]+
-DecimalNumber = [0-9]+
+DecimalNumber = [0-9]+ ( '.' [0-9]* )? ( [eE] [0-9]+ )?
 
-TupleExpression = '(' ( Expression ( ',' Expression )*  )? ')'
-                | '[' ( Expression ( ',' Expression )*  )? ']'
+TupleExpression = '(' ( Expression? ( ',' Expression? )*  )? ')'
+                | '[' ( Expression  ( ',' Expression  )*  )? ']'
 
 ElementaryTypeNameExpression = ElementaryTypeName
 
@@ -143,9 +149,9 @@ Uint = 'uint' | 'uint8' | 'uint16' | 'uint24' | 'uint32' | 'uint40' | 'uint48' |
 
 Byte = 'byte' | 'bytes' | 'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' | 'bytes6' | 'bytes7' | 'bytes8' | 'bytes9' | 'bytes10' | 'bytes11' | 'bytes12' | 'bytes13' | 'bytes14' | 'bytes15' | 'bytes16' | 'bytes17' | 'bytes18' | 'bytes19' | 'bytes20' | 'bytes21' | 'bytes22' | 'bytes23' | 'bytes24' | 'bytes25' | 'bytes26' | 'bytes27' | 'bytes28' | 'bytes29' | 'bytes30' | 'bytes31' | 'bytes32'
 
-Fixed = 'fixed' | ( 'fixed' DecimalNumber 'x' DecimalNumber )
+Fixed = 'fixed' | ( 'fixed' [0-9]+ 'x' [0-9]+ )
 
-Ufixed = 'ufixed' | ( 'ufixed' DecimalNumber 'x' DecimalNumber )
+Ufixed = 'ufixed' | ( 'ufixed' [0-9]+ 'x' [0-9]+ )
 
 InlineAssemblyBlock = '{' AssemblyItem* '}'
 
