@@ -3,6 +3,7 @@
 Features:
 
 Bugfixes:
+ * Code Generator: Allow ``block.blockhash`` without being called.
  * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
