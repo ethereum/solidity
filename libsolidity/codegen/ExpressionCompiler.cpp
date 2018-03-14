@@ -1147,6 +1147,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "sig")
 			m_context << u256(0) << Instruction::CALLDATALOAD
 				<< (u256(0xffffffff) << (256 - 32)) << Instruction::AND;
+		else if (member == "blockhash")
+		{
+		}
 		else
 			solAssert(false, "Unknown magic member.");
 		break;

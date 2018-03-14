@@ -1788,6 +1788,23 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	ABI_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10), encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(uncalled_blockhash)
+{
+	char const* code = R"(
+		contract C {
+			function f() public view returns (bytes32)
+			{
+				var x = block.blockhash;
+				return x(block.number - 1);
+			}
+		}
+	)";
+	compileAndRun(code, 0, "C");
+	bytes result = callContractFunction("f()");
+	BOOST_REQUIRE_EQUAL(result.size(), 32);
+	BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
+}
+
 BOOST_AUTO_TEST_CASE(log0)
 {
 	char const* sourceCode = R"(
