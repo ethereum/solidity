@@ -30,7 +30,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/interface/ErrorReporter.h>
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 using namespace std;
 

@@ -20,7 +20,7 @@
  * Tests for the json ast output.
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>

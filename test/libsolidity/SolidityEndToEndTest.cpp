@@ -23,7 +23,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/EVMVersion.h>

@@ -21,7 +21,7 @@
 
 #include <libdevcore/JSON.h>
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 using namespace std;
 

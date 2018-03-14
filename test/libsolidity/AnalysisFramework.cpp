@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>

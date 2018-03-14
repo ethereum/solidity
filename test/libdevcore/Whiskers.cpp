@@ -20,7 +20,7 @@
 
 #include <libdevcore/Whiskers.h>
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 using namespace std;
 

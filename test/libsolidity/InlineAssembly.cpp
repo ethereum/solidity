@@ -20,7 +20,7 @@
  * Unit tests for inline assembly.
  */
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 #include <libsolidity/interface/AssemblyStack.h>
 #include <libsolidity/parsing/Scanner.h>
