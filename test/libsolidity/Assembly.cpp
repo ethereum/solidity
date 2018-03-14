@@ -20,7 +20,7 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>

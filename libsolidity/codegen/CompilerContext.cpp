@@ -193,14 +193,22 @@ Declaration const* CompilerContext::nextFunctionToCompile() const
 	return m_functionCompilationQueue.nextFunctionToCompile();
 }
 
-ModifierDefinition const& CompilerContext::functionModifier(string const& _name) const
+ModifierDefinition const& CompilerContext::resolveVirtualFunctionModifier(
+	ModifierDefinition const& _modifier
+) const
 {
+	// Libraries do not allow inheritance and their functions can be inlined, so we should not
+	// search the inheritance hierarchy (which will be the wrong one in case the function
+	// is inlined).
+	if (auto scope = dynamic_cast<ContractDefinition const*>(_modifier.scope()))
+		if (scope->isLibrary())
+			return _modifier;
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
 	for (ContractDefinition const* contract: m_inheritanceHierarchy)
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
-			if (modifier->name() == _name)
+			if (modifier->name() == _modifier.name())
 				return *modifier;
-	solAssert(false, "Function modifier " + _name + " not found.");
+	solAssert(false, "Function modifier " + _modifier.name() + " not found in inheritance hierarchy.");
 }
 
 unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declaration) const

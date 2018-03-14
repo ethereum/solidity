@@ -21,6 +21,7 @@
 #include <boost/throw_exception.hpp>
 #include <cctype>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 
 using namespace dev;
@@ -188,6 +189,9 @@ int SyntaxTest::registerTests(
 	}
 	else
 	{
+		static vector<unique_ptr<string>> filenames;
+
+		filenames.emplace_back(new string(_path.string()));
 		_suite.add(make_test_case(
 			[fullpath]
 			{
@@ -196,7 +200,7 @@ int SyntaxTest::registerTests(
 					BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
 			},
 			_path.stem().string(),
-			_path.string(),
+			*filenames.back(),
 			0
 		));
 		numTestsAdded = 1;

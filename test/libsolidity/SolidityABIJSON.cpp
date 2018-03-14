@@ -20,7 +20,7 @@
  * Unit tests for the solidity compiler JSON Interface output.
  */
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <libdevcore/Exceptions.h>

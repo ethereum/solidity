@@ -23,7 +23,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/EVMVersion.h>
@@ -1788,6 +1788,23 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	ABI_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10), encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(uncalled_blockhash)
+{
+	char const* code = R"(
+		contract C {
+			function f() public view returns (bytes32)
+			{
+				var x = block.blockhash;
+				return x(block.number - 1);
+			}
+		}
+	)";
+	compileAndRun(code, 0, "C");
+	bytes result = callContractFunction("f()");
+	BOOST_REQUIRE_EQUAL(result.size(), 32);
+	BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
+}
+
 BOOST_AUTO_TEST_CASE(log0)
 {
 	char const* sourceCode = R"(
@@ -2877,6 +2894,58 @@ BOOST_AUTO_TEST_CASE(function_modifier_multiple_times_local_vars)
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(uint256)", u256(3)), encodeArgs(2 + 5 + 3));
 	ABI_CHECK(callContractFunction("a()"), encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_library)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint v; }
+			modifier mod(S storage s) { s.v++; _; }
+			function libFun(S storage s) mod(s) internal { s.v += 0x100; }
+		}
+
+		contract Test {
+			using L for *;
+			L.S s;
+
+			function f() public returns (uint) {
+				s.libFun();
+				L.libFun(s);
+				return s.v;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x202));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_library_inheritance)
+{
+	// Tests that virtual lookup for modifiers in libraries does not consider
+	// the current inheritance hierarchy.
+
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint v; }
+			modifier mod(S storage s) { s.v++; _; }
+			function libFun(S storage s) mod(s) internal { s.v += 0x100; }
+		}
+
+		contract Test {
+			using L for *;
+			L.S s;
+			modifier mod(L.S storage) { revert(); _; }
+
+			function f() public returns (uint) {
+				s.libFun();
+				L.libFun(s);
+				return s.v;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x202));
 }
 
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)

@@ -25,8 +25,8 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/interface/ErrorReporter.h>
-#include "../TestHelper.h"
-#include "ErrorCheck.h"
+#include <test/Options.h>
+#include <test/libsolidity/ErrorCheck.h>
 
 using namespace std;
 

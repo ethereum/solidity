@@ -1002,7 +1002,10 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			appendModifierOrFunctionCode();
 		else
 		{
-			ModifierDefinition const& modifier = m_context.functionModifier(modifierInvocation->name()->name());
+			ModifierDefinition const& nonVirtualModifier = dynamic_cast<ModifierDefinition const&>(
+				*modifierInvocation->name()->annotation().referencedDeclaration
+			);
+			ModifierDefinition const& modifier = m_context.resolveVirtualFunctionModifier(nonVirtualModifier);
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
 			solAssert(modifier.parameters().size() == modifierInvocation->arguments().size(), "");
 			for (unsigned i = 0; i < modifier.parameters().size(); ++i)

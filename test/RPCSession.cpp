@@ -21,7 +21,7 @@
 
 #include <test/RPCSession.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/EVMVersion.h>
 
