@@ -35,7 +35,7 @@
 
 #pragma GCC diagnostic pop
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 #include <test/libsolidity/SyntaxTest.h>
 
 using namespace boost::unit_test;
@@ -55,10 +55,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
-	solAssert(
-		!dev::test::Options::get().testPath.empty(),
-		"No test path specified. The --testpath argument is required."
-	);
+	dev::test::Options::get().validate();
 	solAssert(dev::solidity::test::SyntaxTest::registerTests(
 		master,
 		dev::test::Options::get().testPath / "libsolidity",

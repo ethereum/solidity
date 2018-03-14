@@ -22,7 +22,7 @@
 #include <libdevcore/Exceptions.h>
 
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 using namespace std;
 

@@ -41,6 +41,7 @@ struct Options: boost::noncopyable
 	bool disableIPC = false;
 	bool disableSMT = false;
 
+	void validate() const;
 	solidity::EVMVersion evmVersion() const;
 
 	static Options const& get();

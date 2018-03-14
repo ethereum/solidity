@@ -21,7 +21,7 @@
  */
 
 #include <test/libsolidity/ErrorCheck.h>
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>

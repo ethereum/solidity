@@ -20,7 +20,7 @@
  * Tests for the Solidity optimizer.
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>

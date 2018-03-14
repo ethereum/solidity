@@ -22,7 +22,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/ast/AST.h>
 
