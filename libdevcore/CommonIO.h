@@ -37,6 +37,9 @@ std::string readFileAsString(std::string const& _file);
 /// Retrieve and returns the contents of standard input (until EOF).
 std::string readStandardInput();
 
+/// Retrieve and returns a character from standard input (without waiting for EOL).
+int readStandardInputChar();
+
 /// Write the given binary data into the given file, replacing the file if it pre-exists.
 /// Throws exception on error.
 /// @param _writeDeleteRename useful not to lose any data: If set, first writes to another file in
