@@ -55,6 +55,10 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
+	solAssert(
+		!dev::test::Options::get().testPath.empty(),
+		"No test path specified. The --testpath argument is required."
+	);
 	solAssert(dev::solidity::test::SyntaxTest::registerTests(
 		master,
 		dev::test::Options::get().testPath / "libsolidity",
