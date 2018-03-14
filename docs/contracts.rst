@@ -818,9 +818,9 @@ Additional Resources for Understanding Events
 Inheritance
 ***********
 
-Solidity supports multiple inheritance by copying code including polymorphism.
+Solidity supports multiple inheritance including polymorphism.
 
-All function calls are virtual, which means that the most derived function
+All function calls (this includes external and internal calls) are virtual, which means that the most derived function
 is called, except when the contract name is explicitly given.
 
 When a contract inherits from multiple contracts, only a single
@@ -830,6 +830,48 @@ is copied into the created contract.
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
 especially concerning multiple inheritance.
+
+If a function is callable on a contract, it must also be callable in the derived contract.
+This means that visibility and mutability of functions cannot be restricted, but it
+can be extended. The visibility can change from external to public, but not from public
+to external or from external to internal. Functions that are marked ``view`` in the
+super contract, can be marked ``pure`` in the derived contract, but not the other
+way around.
+
+If a function overrides a function from a super contract, it needs the ``override`` specifier,
+everything else is treated as an error.
+
+An external function (but not a function of any other visibility) can be overridden by a public
+state variable. This means that the public state variable also needs the ``override`` keyword.
+
+Any other use of overriding between functions, modifiers, state variable or user-defined types
+(meaning overriding a function with a modifier or a state variable with a function, etc.) is disallowed.
+This means that you cannot declare a struct which has the same name as a function in super contract.
+
+Modifiers are treated in much the same way as functions: They use virtual lookup, require the
+``override`` specifier, can use overloading and can have a missing implementation.
+
+It is an error for two contracts in an inheritance hierarchy to have a member of the same name,
+unless one member (``f_B``) is defined in a class (``B``) that derives (directly or indirectly) from the
+class (``A``) the other member (``f_A``) is defined in; and: ``f_B`` uses the ``override`` keyword, ``f_A`` is a
+function and ``f_B`` is either a function or a public state variable, both are compatible with
+regards to visibility and state mutability as per the above rules and both have exactly the same
+parameter and return types.
+
+This in particular means that `private` members are not hidden from this mechanism and that
+overriding and overloading is incompatible. It also means that it is disallowed to inherit
+members of the same name that come from different base contracts unless they share a common
+base contract that defines the function to be overridden.
+
+As it is often useful to inherit the natspec comments for functions from super contracts.
+This has to be done explicitly using the ``@inherit`` natspec tag. This tag
+will inherit all properties that are not re-defined in the function of the derived contract.
+
+TODO:
+
+ - [ ] shall we make overriding and overloading work at the same time?
+ - [ ] shall we allow name clashes with private members?
+ - [ ] what about functions that have different return types?
 
 Details are given in the following example.
 
@@ -1116,13 +1158,13 @@ facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/T
 Interfaces
 **********
 
-Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
+Interfaces are restrictions of abstract contracts in the following way:
 
-#. Cannot inherit other contracts or interfaces.
-#. Cannot define constructor.
-#. Cannot define variables.
-#. Cannot define structs.
-#. Cannot define enums.
+#. Interfaces cannot have implemented functions (only function declarations).
+#. Interfaces cannot inherit other contracts (but they can inherit interfaces).
+#. Interfaces cannot define a constructor.
+#. Interfaces cannot define variables.
+#. Functions in interfaces have to have ``external`` visibility.
 
 Some of these restrictions might be lifted in the future.
 
@@ -1136,7 +1178,7 @@ Interfaces are denoted by their own keyword:
     pragma solidity ^0.4.11;
 
     interface Token {
-        function transfer(address recipient, uint amount) public;
+        function transfer(address recipient, uint amount) external;
     }
 
 Contracts can inherit interfaces as they would inherit other contracts.
