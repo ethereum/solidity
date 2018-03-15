@@ -263,6 +263,8 @@ int main(int argc, char *argv[])
 {
 	if (getenv("EDITOR"))
 		SyntaxTestTool::editor = getenv("EDITOR");
+	else if (fs::exists("/usr/bin/editor"))
+		SyntaxTestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
 	bool formatted = true;
