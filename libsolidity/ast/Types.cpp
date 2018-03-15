@@ -1972,9 +1972,12 @@ bool StructType::recursive() const
 	if (!m_recursive.is_initialized())
 	{
 		set<StructDefinition const*> structsSeen;
+		set<StructDefinition const*> structsProcessed;
 		function<bool(StructType const*)> check = [&](StructType const* t) -> bool
 		{
 			StructDefinition const* str = &t->structDefinition();
+			if (structsProcessed.count(str))
+				return false;
 			if (structsSeen.count(str))
 				return true;
 			structsSeen.insert(str);
@@ -1987,6 +1990,8 @@ bool StructType::recursive() const
 					if (check(innerStruct))
 						return true;
 			}
+			structsSeen.erase(str);
+			structsProcessed.insert(str);
 			return false;
 		};
 		m_recursive = check(this);
