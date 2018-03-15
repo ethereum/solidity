@@ -116,6 +116,7 @@ static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
+static string const g_strIgnoreMissingFiles = "ignore-missing";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -152,6 +153,7 @@ static string const g_argStandardJSON = g_strStandardJSON;
 static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -416,8 +418,10 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 				auto infile = boost::filesystem::path(path);
 				if (!boost::filesystem::exists(infile))
 				{
-					cerr << "Skipping non-existent input file \"" << infile << "\"" << endl;
-					continue;
+					if(! m_args.count(g_argIgnoreMissingFiles)){
+						cerr << "Non-existent input file " << infile << endl;
+						exit(1);
+					}
 				}
 
 				if (!boost::filesystem::is_regular_file(infile))
@@ -487,20 +491,26 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
+
 	// create directory if not existent
-	fs::path p(m_args.at(g_argOutputDir).as<string>());
+	fs::path path(m_args.at(g_argOutputDir).as<string>());
+
 	// Do not try creating the directory if the first item is . or ..
-	if (p.filename() != "." && p.filename() != "..")
-		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
-	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
-	{
+	if (path.filename() != "." && path.filename() != "..") {
+		fs::create_directories(path);
+	}
+
+	string pathName = (path / _fileName).string();
+
+	if (fs::exists(pathName) && !m_args.count(g_strOverwrite)){
 		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
 		m_error = true;
 		return;
 	}
+
 	ofstream outFile(pathName);
 	outFile << _data;
+
 	if (!outFile)
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
 }
@@ -532,6 +542,7 @@ Allowed options)",
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	);
+
 	desc.add_options()
 		(g_argHelp.c_str(), "Show help message and exit.")
 		(g_argVersion.c_str(), "Show version and exit.")
@@ -599,8 +610,11 @@ Allowed options)",
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
-		);
+		)
+		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
+
 	po::options_description outputComponents("Output Components");
+
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
@@ -694,6 +708,7 @@ bool CommandLineInterface::processInput()
 					break;
 				}
 			}
+
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
 			else if (!boost::filesystem::exists(path))
