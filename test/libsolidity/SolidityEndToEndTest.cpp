@@ -9171,6 +9171,28 @@ BOOST_AUTO_TEST_CASE(return_external_function_type)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(unitialised_function_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public returns (bool) {
+				function () internal _internal;
+				_internal();
+				return true;
+			}
+			function g() public returns (bool) {
+				function () external _external;
+				_external();
+				return true;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(store_function)
 {
 	char const* sourceCode = R"(
