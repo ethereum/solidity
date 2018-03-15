@@ -55,10 +55,7 @@ private:
 
 	virtual bool visit(Identifier const& _identifier) override;
 
-	VariableDeclaration const* findCycle(
-		VariableDeclaration const* _startingFrom,
-		std::set<VariableDeclaration const*> const& _seen = std::set<VariableDeclaration const*>{}
-	);
+	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom);
 
 	ErrorReporter& m_errorReporter;
 

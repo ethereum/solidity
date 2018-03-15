@@ -28,6 +28,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/UTF8.h>
+#include <libdevcore/Algorithms.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -1971,30 +1972,19 @@ bool StructType::recursive() const
 {
 	if (!m_recursive.is_initialized())
 	{
-		set<StructDefinition const*> structsSeen;
-		set<StructDefinition const*> structsProcessed;
-		function<bool(StructType const*)> check = [&](StructType const* t) -> bool
+		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector)
 		{
-			StructDefinition const* str = &t->structDefinition();
-			if (structsProcessed.count(str))
-				return false;
-			if (structsSeen.count(str))
-				return true;
-			structsSeen.insert(str);
-			for (ASTPointer<VariableDeclaration> const& variable: str->members())
+			for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
 			{
 				Type const* memberType = variable->annotation().type.get();
 				while (dynamic_cast<ArrayType const*>(memberType))
 					memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
 				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					if (check(innerStruct))
-						return true;
+					if (_cycleDetector.run(innerStruct->structDefinition()))
+						return;
 			}
-			structsSeen.erase(str);
-			structsProcessed.insert(str);
-			return false;
 		};
-		m_recursive = check(this);
+		m_recursive = (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
 	}
 	return *m_recursive;
 }
