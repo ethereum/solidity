@@ -89,20 +89,12 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
       - run:
           name: Store commit hash and prerelease
           command: |
             if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
             echo -n "$CIRCLE_SHA1" > commit_hash.txt
-      - restore_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          key: ccache-{{ arch }}-{{ .Branch }}-
-          key: ccache-{{ arch }}-develop-
-          key: ccache-{{ arch }}-
-      - run:
-          name: Configure ccache
-          command: ccache -M 200M && ccache -c && ccache -s && ccache -z
       - run:
           name: Build
           command: |
@@ -110,14 +102,6 @@ jobs:
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
             make -j4
-      - run:
-          name: CCache statistics
-          command: ccache -s
-      - save_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          when: always
-          paths:
-            - ~/.ccache
       - store_artifacts:
           path: build/solc/solc
           destination: solc
