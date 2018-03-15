@@ -4,7 +4,7 @@ Features:
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
- * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
+ * Code Generator: Properly skip unneeded storage array cleanup when not reducing length.
  * Code Generator: Bugfix in modifier lookup in libraries.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
