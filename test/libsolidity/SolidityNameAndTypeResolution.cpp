@@ -6260,38 +6260,6 @@ BOOST_AUTO_TEST_CASE(address_methods)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
-{
-	char const* text = R"(
-		contract C {
-			uint constant a = a;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "cyclic dependency via a");
-	text = R"(
-		contract C {
-			uint constant a = b * c;
-			uint constant b = 7;
-			uint constant c = b + uint(keccak256(d));
-			uint constant d = 2 + a;
-		}
-	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
-		"a has a cyclic dependency via c",
-		"c has a cyclic dependency via d",
-		"d has a cyclic dependency via a"
-	}));
-	text = R"(
-		contract C {
-			uint constant a = b * c;
-			uint constant b = 7;
-			uint constant c = 4 + uint(keccak256(d));
-			uint constant d = 2 + b;
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(interface)
 {
 	char const* text = R"(
