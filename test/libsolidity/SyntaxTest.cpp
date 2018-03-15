@@ -78,8 +78,11 @@ void SyntaxTest::printExpected(ostream& _stream, string const& _linePrefix, bool
 		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& expectation: m_expectations)
+		{
 			FormattedScope(_stream, _formatted, {BOLD, expectation.type == "Warning" ? YELLOW : RED}) <<
-				_linePrefix << expectation.type << ": " << expectation.message << endl;
+				_linePrefix << expectation.type << ": ";
+			_stream << expectation.message << endl;
+		}
 }
 
 void SyntaxTest::printErrorList(
@@ -99,17 +102,20 @@ void SyntaxTest::printErrorList(
 			bool isWarning = (error->type() == Error::Type::Warning);
 			if (isWarning && _ignoreWarnings) continue;
 
-			FormattedScope scope(_stream, _formatted, {BOLD, isWarning ? YELLOW : RED});
-			_stream << _linePrefix;
-			if (_lineNumbers)
 			{
-				int line = offsetToLineNumber(
-					boost::get_error_info<errinfo_sourceLocation>(*error)->start
-				);
-				if (line >= 0)
-					_stream << "(" << line << "): ";
+				FormattedScope scope(_stream, _formatted, {BOLD, isWarning ? YELLOW : RED});
+				_stream << _linePrefix;
+				if (_lineNumbers)
+				{
+					int line = offsetToLineNumber(
+						boost::get_error_info<errinfo_sourceLocation>(*error)->start
+					);
+					if (line >= 0)
+						_stream << "(" << line << "): ";
+				}
+				_stream << error->typeName() << ": ";
 			}
-			_stream << error->typeName() << ": " << errorMessage(*error) << endl;
+			_stream << errorMessage(*error) << endl;
 		}
 }
 
