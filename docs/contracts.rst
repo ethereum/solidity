@@ -831,12 +831,45 @@ The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
 especially concerning multiple inheritance.
 
+Declaring two elements (for example functions) of the same name in
+two different contracts that are part of the same inheritance hierarchy,
+is called _overriding_. Declaring two elements of the same name in the
+same contract is called _overloading_.
+
 If a function is callable on a contract, it must also be callable in the derived contract.
-This means that visibility and mutability of functions cannot be restricted, but it
-can be extended. The visibility can change from external to public, but not from public
+This means that visibility of functions cannot be restricted, but it
+can be extended. Mutability in turn, can be restricted, but not extended.
+
+The visibility can change from external to public, but not from public
 to external or from external to internal. Functions that are marked ``view`` in the
 super contract, can be marked ``pure`` in the derived contract, but not the other
-way around.
+way around:
+
++---------------------+------------------------------+
+| A function          | ... can be overridden by a   |
+| with visibility ... | function with visibility ... |
++=====================+==============================+
+| ``external``        | ``external`` or ``public``   |
++---------------------+------------------------------+
+| ``public``          | ``public``                   |
++---------------------+------------------------------+
+| ``internal``        | ``internal`` or ``public``   |
++---------------------+------------------------------+
+| ``private``         | (none)                       |
++---------------------+------------------------------+
+
++---------------------+---------------------------------+
+| A function          | ... can be overridden by a      |
+| with mutability ... | function with mutability ...    |
++=====================+=================================+
+| ``payable``         | ``payable``                     |
++---------------------+---------------------------------+
+| (default)           | (default), ``view`` or ``pure`` |
++---------------------+---------------------------------+
+| ``view``            | ``view`` or ``pure``            |
++---------------------+---------------------------------+
+| ``pure``            | ``pure``                        |
++---------------------+---------------------------------+
 
 If a function overrides a function from a super contract, it needs the ``override`` specifier,
 everything else is treated as an error.
@@ -851,33 +884,37 @@ This means that you cannot declare a struct which has the same name as a functio
 Modifiers are treated in much the same way as functions: They use virtual lookup, require the
 ``override`` specifier, can use overloading and can have a missing implementation.
 
-It is an error for two contracts in an inheritance hierarchy to have a member of the same name,
-unless one member (``f_B``) is defined in a class (``B``) that derives (directly or indirectly) from the
-class (``A``) the other member (``f_A``) is defined in; and: ``f_B`` uses the ``override`` keyword, ``f_A`` is a
-function and ``f_B`` is either a function or a public state variable, both are compatible with
-regards to visibility and state mutability as per the above rules and both have exactly the same
-parameter and return types.
+It is an error for multiple contracts in an inheritance hierarchy to have a member of the same name,
+unless there is a single contract (``C``) which declares the member and all other contracts
+that also declare the member inherit from it (directly or indirectly), all declarations
+of that member except for the one in ``C`` use the ``override`` keyword, the members
+are either all modifiers or all functions and potentially state variables, all inheritance
+relations are compatible with
+regards to visibility and state mutability as per the above rules and all have exactly the same
+parameter and return types or, if there are functions or modifiers of the same name
+declared in ``C`` with different parameters, then all of these functions or modifiers
+have to be re-stated in all derived contracts that declare at least one of these
+functions or modifiers.
 
 This in particular means that `private` members are not hidden from this mechanism and that
 overriding and overloading is incompatible. It also means that it is disallowed to inherit
 members of the same name that come from different base contracts unless they share a common
 base contract that defines the function to be overridden.
 
+The above rule also means that it is illegal to inherit functions of the same name
+from two base contracts who do not derive from the same base contract. It is only allowed
+if there is a common base contract which also defines a function of this name. In that case,
+the most derived contract can even override the function again.
+
 As it is often useful to inherit the natspec comments for functions from super contracts.
 This has to be done explicitly using the ``@inherit`` natspec tag. This tag
 will inherit all properties that are not re-defined in the function of the derived contract.
-
-TODO:
-
- - [ ] shall we make overriding and overloading work at the same time?
- - [ ] shall we allow name clashes with private members?
- - [ ] what about functions that have different return types?
 
 Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity ^0.5.0;
 
     contract owned {
         function owned() { owner = msg.sender; }
@@ -1205,17 +1242,13 @@ the state (i.e. if they are ``view`` or ``pure`` functions),
 because libraries are assumed to be stateless. In particular, it is
 not possible to destroy a library unless Solidity's type system is circumvented.
 
-Libraries can be seen as implicit base contracts of the contracts that use them.
-They will not be explicitly visible in the inheritance hierarchy, but calls
-to library functions look just like calls to functions of explicit base
-contracts (``L.f()`` if ``L`` is the name of the library). Furthermore,
-``internal`` functions of libraries are visible in all contracts, just as
-if the library were a base contract. Of course, calls to internal functions
-use the internal calling convention, which means that all internal types
+Library functions can use the ``inline`` keyword. Calling such functions
+from another contract will not use ``DELEGATECALL``, but instead,
+code of internal library functions and all functions called from therein
+will at compile time be pulled into the calling
+contract, and a regular ``JUMP`` call will be used.
+This means that all internal types
 can be passed and memory types will be passed by reference and not copied.
-To realize this in the EVM, code of internal library functions
-and all functions called from therein will at compile time be pulled into the calling
-contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
 .. index:: using for, set
 
