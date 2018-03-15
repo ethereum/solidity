@@ -92,61 +92,6 @@ BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct MyStructName {
-				address addr;
-				MyStructName x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Recursive struct definition.");
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct MyStructName1 {
-				address addr;
-				uint256 count;
-				MyStructName2 x;
-			}
-			struct MyStructName2 {
-				MyStructName1 x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Recursive struct definition.");
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct s1 { uint a; }
-			struct s2 { s1 x; s1 y; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
-{
-	char const* text = R"(
-		contract test {
-				struct MyStructName1 {
-					address addr;
-					uint256 count;
-					mapping(uint => MyStructName1) x;
-				}
-			}
- )";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
 {
 	char const* text = R"(
@@ -6193,44 +6138,6 @@ BOOST_AUTO_TEST_CASE(read_returned_struct)
 	)";
 	CHECK_WARNING(text, "Experimental features");
 }
-
-BOOST_AUTO_TEST_CASE(return_recursive_structs)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; S[] sub; }
-			function f() returns (uint, S) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(return_recursive_structs2)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; S[2][] sub; }
-			function f() returns (uint, S) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(return_recursive_structs3)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; S[][][] sub; }
-			struct T { S s; }
-			function f() returns (uint x, T t) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
 BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
 {
 	char const* text = R"(
