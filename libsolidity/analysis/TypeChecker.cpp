@@ -1644,9 +1644,20 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			auto const& argType = type(*arguments[i]);
 			if (functionType->takesArbitraryParameters())
 			{
+				bool errored = false;
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
 					if (!t->mobileType())
+					{
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
+						errored = true;
+					}
+				if (!errored && !(
+					argType->mobileType() &&
+					argType->mobileType()->interfaceType(false) &&
+					argType->mobileType()->interfaceType(false)->encodingType() &&
+					!(dynamic_cast<StructType const*>(argType->mobileType()->interfaceType(false)->encodingType().get()))
+				))
+					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(

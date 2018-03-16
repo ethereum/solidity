@@ -2077,6 +2077,31 @@ BOOST_AUTO_TEST_CASE(packed_keccak256)
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
+BOOST_AUTO_TEST_CASE(packed_keccak256_complex_types)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint120[3] x;
+			function f() view returns (bytes32 hash1, bytes32 hash2, bytes32 hash3) {
+				uint120[] memory y = new uint120[](3);
+				x[0] = y[0] = uint120(-2);
+				x[1] = y[1] = uint120(-3);
+				x[2] = y[2] = uint120(-4);
+				hash1 = keccak256(x);
+				hash2 = keccak256(y);
+				hash3 = keccak256(this.f);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	// Strangely, arrays are encoded with intra-element padding.
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(
+		dev::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
+		dev::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
+		dev::keccak256(fromHex(m_contractAddress.hex() + "26121ff0"))
+	));
+}
+
 BOOST_AUTO_TEST_CASE(packed_sha256)
 {
 	char const* sourceCode = R"(

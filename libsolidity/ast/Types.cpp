@@ -1262,6 +1262,8 @@ bool ContractType::isPayable() const
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
+	if (isSuper())
+		return TypePointer{};
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
