@@ -1,5 +1,5 @@
 contract C {
-    function f() public returns (function(uint) external returns (uint) g) {
+    function f() public pure returns (function(uint) pure external returns (uint) g) {
         return g;
     }
 }

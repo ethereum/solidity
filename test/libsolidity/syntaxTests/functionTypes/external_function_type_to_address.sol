@@ -1,5 +1,5 @@
 contract C {
-    function f() public returns (address) {
+    function f() public view returns (address) {
         return address(this.f);
     }
 }
