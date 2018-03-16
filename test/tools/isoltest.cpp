@@ -19,6 +19,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -218,7 +219,8 @@ SyntaxTestStats SyntaxTestTool::processPath(
 				fs::directory_iterator(fullpath),
 				fs::directory_iterator()
 			))
-				paths.push(currentPath / entry.path().filename());
+				if (fs::is_directory(entry.path()) || SyntaxTest::isTestFilename(entry.path().filename()))
+					paths.push(currentPath / entry.path().filename());
 		}
 		else
 		{
