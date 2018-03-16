@@ -205,6 +205,13 @@ test_case *make_test_case(
 }
 #endif
 
+bool SyntaxTest::isTestFilename(boost::filesystem::path const& _filename)
+{
+	return _filename.extension().string() == ".sol" &&
+		!boost::starts_with(_filename.string(), "~") &&
+		!boost::starts_with(_filename.string(), ".");
+}
+
 int SyntaxTest::registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
@@ -220,7 +227,8 @@ int SyntaxTest::registerTests(
 			fs::directory_iterator(fullpath),
 			fs::directory_iterator()
 		))
-			numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename());
+			if (fs::is_directory(entry.path()) || isTestFilename(entry.path().filename()))
+				numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename());
 		_suite.add(sub_suite);
 	}
 	else

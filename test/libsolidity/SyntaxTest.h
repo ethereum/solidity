@@ -71,6 +71,7 @@ public:
 		boost::filesystem::path const& _basepath,
 		boost::filesystem::path const& _path
 	);
+	static bool isTestFilename(boost::filesystem::path const& _filename);
 private:
 	bool matchesExpectations(ErrorList const& _errors) const;
 	static std::string errorMessage(Error const& _e);
