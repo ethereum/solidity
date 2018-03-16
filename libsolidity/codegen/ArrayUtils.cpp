@@ -830,19 +830,74 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 	if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
 		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
 
-	// stack: ArrayReference
-	retrieveLength(_type);
-	// stack: ArrayReference oldLength
-	m_context << Instruction::DUP1;
-	// stack: ArrayReference oldLength oldLength
-	m_context << Instruction::ISZERO;
-	m_context.appendConditionalInvalid();
-
 	if (_type.isByteArray())
 	{
+		m_context.appendInlineAssembly(R"({
+			let slot_value := sload(ref)
+			switch and(slot_value, 1)
+			case 0 {
+				// short byte array
+				let length := and(div(slot_value, 2), 0x3f)
+				if iszero(length) { invalid() }
+
+				// Zero-out the suffix of the byte array by masking it.
+				// Do not zero-out the least significant byte, but mask the
+				// higher bits of the length.
+				// (((1<<(8 * (32 - length))) - 1) << 8) + 128
+				let mask := add(mul(0x100, sub(exp(0x100, sub(32, length)), 1)), 0x80)
+				slot_value := and(not(mask), slot_value)
+
+				// Reduce the length by 1
+				slot_value := sub(slot_value, 2)
+				sstore(ref, slot_value)
+			}
+			case 1 {
+				// long byte array
+				let length := div(slot_value, 2)
+				mstore(0, ref)
+
+				switch length
+				case 32
+				{
+					let slot := keccak256(0, 0x20)
+					let data := sload(slot)
+					sstore(slot, 0)
+					data := and(data, not(0xff))
+					sstore(ref, or(data, 62))
+				}
+				default
+				{
+					let slot := div(sub(length, 1), 32)
+					let offset := and(sub(length, 1), 0x1f)
+					slot := add(keccak256(0, 0x20), slot)
+					let data := sload(slot)
+
+					// Zero-out the suffix of the byte array by masking it.
+					// ((1<<(8 * (32 - offset))) - 1)
+					let mask := sub(exp(0x100, sub(32, offset)), 1)
+					data := and(not(mask), data)
+					sstore(slot, data)
+
+					// Reduce the length by 1
+					slot_value := sub(slot_value, 2)
+					sstore(ref, slot_value)
+				}
+			}
+		})", {"ref"});
+		m_context << Instruction::POP;
 	}
 	else
-	{
+	{		
+
+		// stack: ArrayReference
+		retrieveLength(_type);
+		// stack: ArrayReference oldLength
+		m_context << Instruction::DUP1;
+		// stack: ArrayReference oldLength oldLength
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalInvalid();
+
+
 		// Stack: ArrayReference oldLength
 		m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
 		// Stack ArrayReference newLength
@@ -852,7 +907,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 		// Stack: ArrayReference newLength storage_slot byte_offset
 		StorageItem(m_context, _type).setToZero(SourceLocation(), true);
 		// Stack: ArrayReference newLength
-		m_context << Instruction::SSTORE;
+		m_context << Instruction::SWAP1 << Instruction::SSTORE;
 	}
 }
 
