@@ -116,6 +116,7 @@ static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
+static string const g_strIgnoreMissingFiles = "ignore-missing";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -152,6 +153,7 @@ static string const g_argStandardJSON = g_strStandardJSON;
 static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -398,8 +400,9 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-void CommandLineInterface::readInputFilesAndConfigureRemappings()
+bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
+	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
 	if (!m_args.count(g_argInputFile))
 		addStdin = true;
@@ -416,13 +419,27 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 				auto infile = boost::filesystem::path(path);
 				if (!boost::filesystem::exists(infile))
 				{
-					cerr << "Skipping non-existent input file \"" << infile << "\"" << endl;
+					if (!ignoreMissing)
+					{
+						cerr << "\"" << infile << "\" is not found" << endl;
+						return false;
+					}
+					else
+						cerr << "\"" << infile << "\" is not found. Skipping." << endl;
+
 					continue;
 				}
 
 				if (!boost::filesystem::is_regular_file(infile))
 				{
-					cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
+					if (!ignoreMissing)
+					{
+						cerr << "\"" << infile << "\" is not a valid file" << endl;
+						return false;
+					}
+					else
+						cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
+
 					continue;
 				}
 
@@ -433,6 +450,8 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+
+	return true;
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -599,7 +618,8 @@ Allowed options)",
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
-		);
+		)
+		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -741,7 +761,8 @@ bool CommandLineInterface::processInput()
 		return true;
 	}
 
-	readInputFilesAndConfigureRemappings();
+	if (!readInputFilesAndConfigureRemappings())
+		return false;
 
 	if (m_args.count(g_argLibraries))
 		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
