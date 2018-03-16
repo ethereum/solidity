@@ -380,6 +380,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
+				// There is the special case of a public state variable of function type.
+				// Detect this and return early.
+				if (
+					(result.visibility == Declaration::Visibility::External || result.visibility == Declaration::Visibility::Internal) &&
+					result.modifiers.empty() &&
+					result.name->empty()
+				)
+					break;
 				parserError(string(
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(result.visibility) +
