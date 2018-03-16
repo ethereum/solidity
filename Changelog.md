@@ -1,10 +1,11 @@
 ### 0.4.22 (unreleased)
 
 Features:
-
+ * Commandline interface:  Error when missing file detected. Support to suppress with missing error ``--ignore-missing`` flag.
 
 Bugfixes:
  * Code Generator: Properly skip unneeded storgae array cleanup when not reducing length.
+ 
 
 
 
@@ -28,7 +29,6 @@ Features:
  * Syntax Checker: Issue warning when using overloads of ``address`` on contract instances.
  * Type Checker: disallow combining hex numbers and unit denominations as experimental 0.5.0 feature.
  * Improved messaging when error spans multiple lines of a sourcefile 
- * Commandline interface:  Error when missing file detected. Support to suppress with missing error ``--ignore-missing`` flag.
 
 Bugfixes:
  * Assembly: Raise error on oversized number literals in assembly.

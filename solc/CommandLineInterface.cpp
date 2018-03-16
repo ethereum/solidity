@@ -400,7 +400,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-void CommandLineInterface::readInputFilesAndConfigureRemappings()
+bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
 	bool addStdin = false;
 	if (!m_args.count(g_argInputFile))
@@ -416,18 +416,19 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 			else
 			{
 				auto infile = boost::filesystem::path(path);
+
 				if (!boost::filesystem::exists(infile))
 				{
 					if(! m_args.count(g_argIgnoreMissingFiles)){
-						cerr << "Non-existent input file " << infile << endl;
-						exit(1);
+						cerr << infile << " could not be found." << endl;
+						return false;
 					}
 				}
-
+				
 				if (!boost::filesystem::is_regular_file(infile))
 				{
-					cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
-					continue;
+					cerr << infile << "is not a valid file." << endl;
+					return false;
 				}
 
 				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
@@ -437,6 +438,8 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+
+	return true;
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -491,26 +494,20 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
-
 	// create directory if not existent
-	fs::path path(m_args.at(g_argOutputDir).as<string>());
-
+	fs::path p(m_args.at(g_argOutputDir).as<string>());
 	// Do not try creating the directory if the first item is . or ..
-	if (path.filename() != "." && path.filename() != "..") {
-		fs::create_directories(path);
-	}
-
-	string pathName = (path / _fileName).string();
-
-	if (fs::exists(pathName) && !m_args.count(g_strOverwrite)){
+	if (p.filename() != "." && p.filename() != "..")
+		fs::create_directories(p);
+	string pathName = (p / _fileName).string();
+	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
+	{
 		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
 		m_error = true;
 		return;
 	}
-
 	ofstream outFile(pathName);
 	outFile << _data;
-
 	if (!outFile)
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
 }
@@ -756,7 +753,10 @@ bool CommandLineInterface::processInput()
 		return true;
 	}
 
-	readInputFilesAndConfigureRemappings();
+	//TODO:  Have this in an if statement to return false in the event func call returns false 
+	if(readInputFilesAndConfigureRemappings() == false){
+		return false;
+	}
 
 	if (m_args.count(g_argLibraries))
 		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
