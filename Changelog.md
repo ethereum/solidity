@@ -12,6 +12,7 @@ Bugfixes:
  * Code Generator: Properly skip unneeded storage array cleanup when not reducing length.
  * Code Generator: Bugfix in modifier lookup in libraries.
  * Code Generator: Implement packed encoding of external function types.
+ * Code Generator: Treat empty base constructor argument list as not provided.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.

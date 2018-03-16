@@ -143,8 +143,9 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 			for (auto const& modifier: constructor->modifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->name()->annotation().referencedDeclaration);
-				if (baseContract)
+					modifier->name()->annotation().referencedDeclaration
+				);
+				if (baseContract && !modifier->arguments().empty())
 					if (m_baseArguments.count(baseContract->constructor()) == 0)
 						m_baseArguments[baseContract->constructor()] = &modifier->arguments();
 			}
@@ -156,7 +157,7 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 			);
 			solAssert(baseContract, "");
 
-			if (m_baseArguments.count(baseContract->constructor()) == 0)
+			if (!m_baseArguments.count(baseContract->constructor()) && !base->arguments().empty())
 				m_baseArguments[baseContract->constructor()] = &base->arguments();
 		}
 	}
@@ -238,6 +239,7 @@ void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _construc
 		solAssert(m_baseArguments.count(&_constructor), "");
 		std::vector<ASTPointer<Expression>> const* arguments = m_baseArguments[&_constructor];
 		solAssert(arguments, "");
+		solAssert(arguments->size() == constructorType.parameterTypes().size(), "");
 		for (unsigned i = 0; i < arguments->size(); ++i)
 			compileExpression(*(arguments->at(i)), constructorType.parameterTypes()[i]);
 	}
