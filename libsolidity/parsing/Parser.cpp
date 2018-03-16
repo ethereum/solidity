@@ -365,12 +365,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 		Token::Value token = m_scanner->currentToken();
 		if (_allowModifiers && token == Token::Identifier)
 		{
-			// This can either be a modifier (function declaration) or the name of the
-			// variable (function type name plus variable).
-			if (
+			// If the name is empty, then this can either be a modifier (fallback function declaration)
+			// or the name of the state variable (function type name plus variable).
+			if (result.name->empty() && (
 				m_scanner->peekNextToken() == Token::Semicolon ||
 				m_scanner->peekNextToken() == Token::Assign
-			)
+			))
 				// Variable declaration, break here.
 				break;
 			else

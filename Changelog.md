@@ -14,6 +14,7 @@ Features:
  * Optimizer: Optimize across ``mload`` if ``msize()`` is not used.
  * Static Analyzer: Error on duplicated super constructor calls as experimental 0.5.0 feature.
  * Syntax Checker: Issue warning for empty structs (or error as experimental 0.5.0 feature).
+ * Syntax Checker: Warn about modifiers on functions without implementation (this will turn into an error with version 0.5.0).
  * Syntax Tests: Add source locations to syntax test expectations.
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
  * Inheritance: Error when using empty parentheses for base class constructors that require arguments as experimental 0.5.0 feature.
