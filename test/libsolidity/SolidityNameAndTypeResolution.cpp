@@ -975,139 +975,6 @@ BOOST_AUTO_TEST_CASE(super_excludes_current_contract)
 	CHECK_ERROR(text, TypeError, "Member \"f\" not found or not visible after argument-dependent lookup in contract super B");
 }
 
-BOOST_AUTO_TEST_CASE(function_modifier_invocation)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod1(2, true) mod2("0123456") pure public { }
-			modifier mod1(uint a, bool b) { if (b) _; }
-			modifier mod2(bytes7 a) { while (a == "1234567") _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod1(true) public { }
-			modifier mod1(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid type for argument in modifier invocation. Invalid implicit conversion from bool to uint256 requested.");
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
-{
-	char const* text = R"(
-		contract B {
-			function f(uint8 a) mod1(a, true) mod2(r) public returns (bytes7 r) { }
-			modifier mod1(uint a, bool b) { if (b) _; }
-			modifier mod2(bytes7 a) { while (a == "1234567") _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod(x) pure public { uint x = 7; }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables050)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract B {
-			function f() mod(x) pure public { uint x = 7; }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
-{
-	char const* text = R"(
-		contract B {
-			function f(uint x) mod(x) mod(2) public { }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
-{
-	char const* text = R"(
-		contract C { function C(uint a) public {} }
-		contract B is C {
-			function B() C(2) C(2) public {}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Base constructor already provided");
-}
-
-BOOST_AUTO_TEST_CASE(legal_modifier_override)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { modifier mod(uint a) { _; } }
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(illegal_modifier_override)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { modifier mod(uint8 a) { _; } }
-	)";
-	CHECK_ERROR(text, TypeError, "Override changes modifier signature.");
-}
-
-BOOST_AUTO_TEST_CASE(modifier_overrides_function)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { function mod(uint a) public { } }
-	)";
-	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
-		{Error::Type::DeclarationError, "Identifier already declared"},
-		{Error::Type::TypeError, "Override changes modifier to function"}
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(function_overrides_modifier)
-{
-	char const* text = R"(
-		contract A { function mod(uint a) public { } }
-		contract B is A { modifier mod(uint a) { _; } }
-	)";
-	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
-		{Error::Type::DeclarationError, "Identifier already declared"},
-		{Error::Type::TypeError, "Override changes function to modifier"}
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(modifier_returns_value)
-{
-	char const* text = R"(
-		contract A {
-			function f(uint a) mod(2) public returns (uint r) { }
-			modifier mod(uint a) { _; return 7; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Return arguments not allowed.");
-}
-
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
 {
 	char const* text = R"(
@@ -4176,21 +4043,6 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_call_invalid_arg_count)
-{
-	// This caused a segfault in an earlier version
-	char const* text = R"(
-		contract C {
-			function C(){}
-		}
-		contract D is C {
-			function D() C(5){}
-		}
-	)";
-
-	CHECK_ERROR(text, TypeError, "Wrong argument count for modifier invocation: 1 arguments given but expected 0.");
-}
-
 BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 {
 	char const* text = R"(
@@ -5053,16 +4905,6 @@ BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(modifier_without_underscore)
-{
-	char const* text = R"(
-		contract test {
-			modifier m() {}
-		}
-	)";
-	CHECK_ERROR(text, SyntaxError, "Modifier body does not contain '_'.");
 }
 
 BOOST_AUTO_TEST_CASE(payable_in_library)
