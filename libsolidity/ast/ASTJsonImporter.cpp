@@ -493,12 +493,12 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value con
 {
 	ErrorList tmp_list;
 	ErrorReporter tmp_error(tmp_list);
-	assembly::Parser asmParser(tmp_error);
+        assembly::Parser asmParser(tmp_error);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(
 		CharStream( member(_node, "operations").asString()),
 		m_currentSourceName
 	);
-	std::shared_ptr<assembly::Block> operations = asmParser.parse(scanner);
+        std::shared_ptr<assembly::Block> operations = asmParser.parse(scanner, false);
 	return createASTNode<InlineAssembly>(
 		_node,
 		nullOrASTString(_node, "documentation"),
