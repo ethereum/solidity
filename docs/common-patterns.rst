@@ -194,6 +194,7 @@ restrictions highly readable.
 
         function forceOwnerChange(address _newOwner)
             public
+            payable
             costs(200 ether)
         {
             owner = _newOwner;
