@@ -1165,6 +1165,41 @@ BOOST_AUTO_TEST_CASE(ext_function_multiline)
 	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
+BOOST_AUTO_TEST_CASE(ext_function_multiline_empty_after_ext_tag)
+{
+	char const* sourceCode = R"(contract test {
+			uint256 stateVar;
+			/// @ext:testA
+			/// LINE-4
+			/// LINE-5
+			/// @external:testB
+			/// LINE-7
+			/// LINE-8
+			/// LINE-9
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testA" : {
+					"content" : "\n LINE-4\n LINE-5\n",
+					"line" : 3
+				},
+				"testB" : {
+					"content" : "\n LINE-7\n LINE-8\n LINE-9\n",
+					"line" : 6
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
 BOOST_AUTO_TEST_CASE(ext_contract_multi)
 {
 	char const* sourceCode = R"(/// @ext:testA LINE-1

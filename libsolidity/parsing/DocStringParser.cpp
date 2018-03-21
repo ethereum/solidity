@@ -116,7 +116,14 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 	else if (!_appending)
 		_pos = skipWhitespace(_pos, _end);
 	if (nlPos != _end)
+	{
 		++m_currentLine;
+		if (_preserveNewLines && m_lastTag->content.empty())
+		{
+			++m_currentLine;
+			m_lastTag->content.append("\n");
+		}
+	}
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
 	if (_preserveNewLines)
 		m_lastTag->content.append("\n");
@@ -137,6 +144,8 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	auto descStartPos = skipWhitespace(nameEndPos, _end);
 	auto nlPos = find(descStartPos, _end, '\n');
+	if (nlPos != _end)
+		++m_currentLine;
 
 	if (descStartPos == nlPos)
 	{
@@ -144,8 +153,6 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 		return _end;
 	}
 
-	if (nlPos != _end)
-		++m_currentLine;
 	auto paramDesc = string(descStartPos, nlPos);
 	newTag("param");
 	m_lastTag->paramName = paramName;
