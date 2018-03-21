@@ -2311,6 +2311,18 @@ vector<string> FunctionType::parameterNames() const
 	return vector<string>(m_parameterNames.cbegin() + 1, m_parameterNames.cend());
 }
 
+TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
+{
+	TypePointers returnParameterTypes = m_returnParameterTypes;
+
+	if (m_kind == Kind::External || m_kind == Kind::CallCode || m_kind == Kind::DelegateCall)
+		for (auto& param: returnParameterTypes)
+			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+				param = make_shared<InaccessibleDynamicType>();
+
+	return returnParameterTypes;
+}
+
 TypePointers FunctionType::parameterTypes() const
 {
 	if (!bound())
@@ -2772,18 +2784,9 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			kind = Kind::DelegateCall;
 	}
 
-	TypePointers returnParameterTypes = m_returnParameterTypes;
-	if (kind != Kind::Internal)
-	{
-		// Alter dynamic types to be non-accessible.
-		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized())
-				param = make_shared<InaccessibleDynamicType>();
-	}
-
 	return make_shared<FunctionType>(
 		parameterTypes,
-		returnParameterTypes,
+		m_returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,

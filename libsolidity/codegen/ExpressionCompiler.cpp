@@ -139,8 +139,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
-	solAssert(accessorType.returnParameterTypes().size() >= 1, "");
-	auto const& returnTypes = accessorType.returnParameterTypes();
+	auto returnTypes = accessorType.returnParameterTypes();
+	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		// remove offset
@@ -1618,15 +1618,27 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
 		m_context.evmVersion().hasStaticCall();
 
+	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;
+	TypePointers returnTypes;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
+	else if (haveReturndatacopy)
+		returnTypes = _functionType.returnParameterTypes();
 	else
-		for (auto const& retType: _functionType.returnParameterTypes())
+		returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
+
+	bool dynamicReturnSize = false;
+	for (auto const& retType: returnTypes)
+		if (retType->isDynamicallyEncoded())
 		{
-			solAssert(!retType->isDynamicallySized(), "Unable to return dynamic type from external call.");
-			retSize += retType->calldataEncodedSize();
+			solAssert(haveReturndatacopy, "");
+			dynamicReturnSize = true;
+			retSize = 0;
+			break;
 		}
+		else
+			retSize += retType->calldataEncodedSize();
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1824,20 +1836,42 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().fetchFreeMemoryPointer();
 		m_context << Instruction::SUB << Instruction::MLOAD;
 	}
-	else if (!_functionType.returnParameterTypes().empty())
+	else if (!returnTypes.empty())
 	{
 		utils().fetchFreeMemoryPointer();
-		bool memoryNeeded = false;
-		for (auto const& retType: _functionType.returnParameterTypes())
-		{
-			utils().loadFromMemoryDynamic(*retType, false, true, true);
-			if (dynamic_cast<ReferenceType const*>(retType.get()))
-				memoryNeeded = true;
-		}
-		if (memoryNeeded)
-			utils().storeFreeMemoryPointer();
+		// Stack: return_data_start
+
+		// The old decoder did not allocate any memory (i.e. did not touch the free
+		// memory pointer), but kept references to the return data for
+		// (statically-sized) arrays
+		bool needToUpdateFreeMemoryPtr = false;
+		if (dynamicReturnSize || m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+			needToUpdateFreeMemoryPtr = true;
 		else
-			m_context << Instruction::POP;
+			for (auto const& retType: returnTypes)
+				if (dynamic_cast<ReferenceType const*>(retType.get()))
+					needToUpdateFreeMemoryPtr = true;
+
+		// Stack: return_data_start
+		if (dynamicReturnSize)
+		{
+			solAssert(haveReturndatacopy, "");
+			m_context.appendInlineAssembly("{ returndatacopy(return_data_start, 0, returndatasize()) }", {"return_data_start"});
+		}
+		else
+			solAssert(retSize > 0, "");
+		// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
+		// This ensures it can catch badly formatted input from external calls.
+		m_context << (haveReturndatacopy ? eth::AssemblyItem(Instruction::RETURNDATASIZE) : u256(retSize));
+		// Stack: return_data_start return_data_size
+		if (needToUpdateFreeMemoryPtr)
+			m_context.appendInlineAssembly(R"({
+				// round size to the next multiple of 32
+				let newMem := add(start, and(add(size, 0x1f), not(0x1f)))
+				mstore(0x40, newMem)
+			})", {"start", "size"});
+
+		utils().abiDecode(returnTypes, true, true);
 	}
 }
 

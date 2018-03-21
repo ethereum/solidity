@@ -88,6 +88,15 @@ public:
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true);
 
+	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	/// Calls revert if @a _revertOnOutOfBounds is true and the supplied size is shorter
+	/// than the static data requirements or if dynamic data pointers reach outside of the
+	/// area. Also has a hard cap of 0x100000000 for any given length/offset field.
+	/// Stack pre: <source_offset> <length>
+	/// Stack post: <value0> <value1> ... <valuen>
+	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false, bool _revertOnOutOfBounds = false);
+
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
 	/// Removes the values from the stack and leaves the updated memory pointer.
@@ -149,7 +158,7 @@ public:
 	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,
 	/// the data is taken from memory instead of from calldata.
 	/// Can allocate memory.
-	/// Stack pre: <source_offset>
+	/// Stack pre: <source_offset> <length>
 	/// Stack post: <value0> <value1> ... <valuen>
 	void abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory = false);
 

@@ -1,6 +1,7 @@
 ### 0.4.22 (unreleased)
 
 Features:
+ * General: Support accessing dynamic return data in post-byzantium EVMs.
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.

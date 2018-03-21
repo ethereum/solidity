@@ -1551,16 +1551,22 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().isPure &&
 			functionType->isPure();
 
+	bool allowDynamicTypes = m_evmVersion.supportsReturndata();
 	if (!functionType)
 	{
 		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
 		_functionCall.annotation().type = make_shared<TupleType>();
 		return false;
 	}
-	else if (functionType->returnParameterTypes().size() == 1)
-		_functionCall.annotation().type = functionType->returnParameterTypes().front();
+
+	auto returnTypes =
+		allowDynamicTypes ?
+		functionType->returnParameterTypes() :
+		functionType->returnParameterTypesWithoutDynamicTypes();
+	if (returnTypes.size() == 1)
+		_functionCall.annotation().type = returnTypes.front();
 	else
-		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
+		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
 
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{

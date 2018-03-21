@@ -253,6 +253,9 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			templ("body", w.render());
 			break;
 		}
+		case Type::Category::InaccessibleDynamic:
+			templ("body", "cleaned := 0");
+			break;
 		default:
 			solAssert(false, "Cleanup of type " + _type.identifier() + " requested.");
 		}
