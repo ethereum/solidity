@@ -1688,7 +1688,19 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
-	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
+	if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
+	{
+		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Need at least " +
+			toString(parameterTypes.size()) +
+			" arguments for function call, but provided only " +
+			toString(arguments.size()) +
+			"."
+		);
+	}
+	else if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
 
@@ -1711,11 +1723,10 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
-		// call by positional arguments
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
-			if (functionType->takesArbitraryParameters())
+			if (functionType->takesArbitraryParameters() && i >= parameterTypes.size())
 			{
 				bool errored = false;
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
