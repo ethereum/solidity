@@ -527,9 +527,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						// Do not directly visit the identifier, because this way, we can avoid
 						// the runtime entry label to be created at the creation time context.
 						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
-						m_context << m_context.functionEntryLabel(m_context.resolveVirtualFunction(*functionDef)).pushTag();
-						if (m_context.runtimeContext())
-							utils().leftShiftNumberOnStack(32);
+						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
 						shortcutTaken = true;
 					}
 

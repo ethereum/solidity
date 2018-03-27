@@ -188,7 +188,8 @@ public:
 	/// Appends code that combines the construction-time (if available) and runtime function
 	/// entry label of the given function into a single stack slot.
 	/// Note: This might cause the compilation queue of the runtime context to be extended.
-	void pushCombinedFunctionEntryLabel(Declaration const& _function);
+	/// If @a _runtimeOnly, the entry label will include the runtime assembly tag.
+	void pushCombinedFunctionEntryLabel(Declaration const& _function, bool _runtimeOnly = true);
 
 	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
 	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory
