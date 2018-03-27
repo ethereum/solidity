@@ -91,6 +91,85 @@ Alternatively, there is a testing script at ``scripts/test.sh`` which executes a
 
 Travis CI even runs some additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.
 
+Writing and running syntax tests
+--------------------------------
+
+As mentioned above, syntax tests are stored in individual contracts. These files must contain annotations, stating the expected result(s) of the respective test.
+The test suite will compile and check them against the given expectations.
+
+Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
+
+::
+
+    contract test {
+        uint256 variable;
+        uint128 variable;
+    }
+    // ----
+    // DeclarationError: Identifier already declared.
+
+A syntax test must contain at least the contract under test itself, followed by the seperator ``----``. The additional comments above are used to describe the
+expected compiler errors or warnings. This section can be empty in case that the contract should compile without any errors or warnings.
+
+In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifer was already declared.
+
+The tool that is being used for those tests is called ``isoltest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
+editing of failing contracts using your prefered text editor. Let's try to break this test by removing the second declaration of ``variable``:
+
+::
+
+    contract test {
+        uint256 variable;
+    }
+    // ----
+    // DeclarationError: Identifier already declared.
+
+Running ``./test/isoltest`` again will result in a test failure:
+
+::
+
+    syntaxTests/double_stateVariable_declaration.sol: FAIL
+        Contract:
+            contract test {
+                uint256 variable;
+            }
+
+        Expected result:
+            DeclarationError: Identifier already declared.
+        Obtained result:
+            Success
+
+
+which prints the expected result next to the obtained result, but also provides a way to change edit / update / skip the current contract or to even quit.
+``isoltest`` offers several options for failing tests:
+
+- edit: ``isoltest`` will try to open the editor that was specified before using ``isoltest --editor /path/to/editor``. If no path was set, this will result in a runtime error. In case an editor was specified, this will open it such that the contract can be adjusted.
+- update: Updates the contract under test. This will either remove the annotation which contains the exception not met or will add missing expectations. The test will then be run again.
+- skip: Skips the execution of this particular test.
+- quit: Quits ``isoltest``.
+
+Automatically updating the test above will change it to
+
+::
+
+    contract test {
+        uint256 variable;
+    }
+    // ----
+
+and re-run the test. It will now pass again:
+
+::
+
+    Re-running test case...
+    syntaxTests/double_stateVariable_declaration.sol: OK
+
+
+.. note::
+
+    Please choose a name for the contract file, that is self-explainatory in the sense of what is been tested, e.g. ``double_variable_declaration.sol``.
+    Do not put more than one contract into a single file. ``isoltest`` is currently not able to recognize them individually.
+
 Whiskers
 ========
 
