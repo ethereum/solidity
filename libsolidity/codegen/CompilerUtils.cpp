@@ -585,7 +585,7 @@ void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 		leftShiftNumberOnStack(64);
 }
 
-void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
+void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function, bool _runtimeOnly)
 {
 	m_context << m_context.functionEntryLabel(_function).pushTag();
 	// If there is a runtime context, we have to merge both labels into the same
@@ -593,9 +593,10 @@ void CompilerUtils::pushCombinedFunctionEntryLabel(Declaration const& _function)
 	if (CompilerContext* rtc = m_context.runtimeContext())
 	{
 		leftShiftNumberOnStack(32);
-		m_context <<
-			rtc->functionEntryLabel(_function).toSubAssemblyTag(m_context.runtimeSub()) <<
-			Instruction::OR;
+		if (_runtimeOnly)
+			m_context <<
+				rtc->functionEntryLabel(_function).toSubAssemblyTag(m_context.runtimeSub()) <<
+				Instruction::OR;
 	}
 }
 

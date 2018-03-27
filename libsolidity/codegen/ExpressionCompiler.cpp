@@ -518,7 +518,23 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arguments[i]->accept(*this);
 				utils().convertType(*arguments[i]->annotation().type, *function.parameterTypes()[i]);
 			}
-			_functionCall.expression().accept(*this);
+
+			{
+				bool shortcutTaken = false;
+				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+					{
+						// Do not directly visit the identifier, because this way, we can avoid
+						// the runtime entry label to be created at the creation time context.
+						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
+						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
+						shortcutTaken = true;
+					}
+
+				if (!shortcutTaken)
+					_functionCall.expression().accept(*this);
+			}
+
 			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
 			if (function.bound())
 			{
@@ -1359,6 +1375,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
+		// If the identifier is called right away, this code is executed in visit(FunctionCall...), because
+		// we want to avoid having a reference to the runtime function entry point in the
+		// constructor context, since this would force the compiler to include unreferenced
+		// internal functions in the runtime contex.
 		utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
