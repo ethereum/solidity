@@ -3,6 +3,7 @@
 Features:
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
+ * Syntax Checker: Issue warning for empty structs (or error as experimental 0.5.0 feature).
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
@@ -12,7 +13,6 @@ Bugfixes:
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
- * Syntax Checker: Issue error for empty structs.
  * Type System: Make external library functions accessible.
 
 ### 0.4.21 (2018-03-07)
