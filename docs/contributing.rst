@@ -108,9 +108,10 @@ Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
     // ----
     // DeclarationError: Identifier already declared.
 
+A syntax test must contain at least the contract under test itself, followed by the seperator ``----``. The additional comments above are used to describe the
+expected compiler errors or warnings. This section can be empty in case that the contract should compile without any errors or warnings.
 
-The comments in the contract above are used to describe the expected compiler errors. The state variable ``variable`` was declared twice, which is not allowed.
-This will result in a ``DeclarationError`` stating that the identifer was already declared.
+In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifer was already declared.
 
 The tool that is being used for those tests is called ``isoltest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
 editing of failing contracts using your prefered text editor. Let's try to break this test by removing the second declaration of ``variable``:
@@ -143,9 +144,25 @@ which prints the expected result next to the obtained result, but also provides 
 ``isoltest`` offers several options for failing tests:
 
 - edit: ``isoltest`` will try to open the editor that was specified before using ``isoltest --editor /path/to/editor``. If no path was set, this will result in a runtime error. In case an editor was specified, this will open it such that the contract can be adjusted.
-- update: Updates the contract under test. This will remove the annotation which contains the exception not met and runs this test again.
+- update: Updates the contract under test. This will either remove the annotation which contains the exception not met or will add missing expectations. The test will then be run again.
 - skip: Skips the execution of this particular test.
 - quit: Quits ``isoltest``.
+
+Automatically updating the test above will change it to
+
+::
+
+    contract test {
+        uint256 variable;
+    }
+    // ----
+
+and re-run the test. It will now pass again:
+
+::
+
+    Re-running test case...
+    syntaxTests/double_stateVariable_declaration.sol: OK
 
 
 .. note::
