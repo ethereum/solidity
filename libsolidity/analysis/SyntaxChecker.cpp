@@ -255,3 +255,10 @@ bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
 	}
 	return true;
 }
+
+bool SyntaxChecker::visit(StructDefinition const& _struct)
+{
+	if (_struct.members().empty())
+		m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
+	return true;
+}
