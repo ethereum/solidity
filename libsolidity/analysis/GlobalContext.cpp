@@ -38,6 +38,7 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
 	make_shared<MagicVariableDeclaration>("addmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("assert", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block)),
+	make_shared<MagicVariableDeclaration>("blockhash", make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
 	make_shared<MagicVariableDeclaration>("ecrecover", make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
 	make_shared<MagicVariableDeclaration>("keccak256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),

@@ -8555,6 +8555,33 @@ BOOST_AUTO_TEST_CASE(require_visibility_specifiers)
 	CHECK_ERROR(text, SyntaxError, "No visibility specified.");
 }
 
+BOOST_AUTO_TEST_CASE(blockhash)
+{
+	char const* code = R"(
+		contract C {
+			function f() public view returns (bytes32) {
+				return block.blockhash(3);
+			}
+		}
+	)";
+	CHECK_WARNING(code, "\"block.blockhash()\" has been deprecated in favor of \"blockhash()\"");
+
+	code = R"(
+		contract C {
+			function f() public view returns (bytes32) { return blockhash(3); }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(code);
+
+	code = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() public returns (bytes32) { return block.blockhash(3); }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "\"block.blockhash()\" has been deprecated in favor of \"blockhash()\"");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

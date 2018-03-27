@@ -1805,6 +1805,18 @@ BOOST_AUTO_TEST_CASE(uncalled_blockhash)
 	BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
 }
 
+BOOST_AUTO_TEST_CASE(blockhash_shadow_resolution)
+{
+	char const* code = R"(
+		contract C {
+			function blockhash(uint256 blockNumber) public returns(bytes32) { bytes32 x; return x; }
+			function f() public returns(bytes32) { return blockhash(3); }
+		}
+	)";
+	compileAndRun(code, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(log0)
 {
 	char const* sourceCode = R"(
