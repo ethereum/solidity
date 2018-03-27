@@ -378,7 +378,16 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 		function.annotation().superFunction = &super;
 
 	if (function.visibility() != super.visibility())
+	{
+		// visibility is enforced to be external in interfaces, but a contract can override that with public
+		if (
+			super.inContractKind() == ContractDefinition::ContractKind::Interface &&
+			function.inContractKind() != ContractDefinition::ContractKind::Interface &&
+			function.visibility() == FunctionDefinition::Visibility::Public
+		)
+			return;
 		overrideError(function, super, "Overriding function visibility differs.");
+	}
 
 	else if (function.stateMutability() != super.stateMutability())
 		overrideError(

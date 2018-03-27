@@ -624,6 +624,8 @@ public:
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
 	std::string externalSignature() const;
 
+	ContractDefinition::ContractKind inContractKind() const;
+
 	virtual TypePointer type() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
