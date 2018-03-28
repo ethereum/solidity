@@ -327,7 +327,7 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
 		return !otherInt->isAddress();
 	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
-		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+		return !otherRat->isFractional() && otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else
 		return false;
 }

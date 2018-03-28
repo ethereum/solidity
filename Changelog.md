@@ -12,6 +12,7 @@ Bugfixes:
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
+ * Type System: Improve error message when attempting to shift by a fractional amount.
  * Type System: Make external library functions accessible.
 
 ### 0.4.21 (2018-03-07)

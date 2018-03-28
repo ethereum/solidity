@@ -5643,6 +5643,16 @@ BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
 	CHECK_ERROR(text, TypeError, "Operator >> not compatible with types int_const 66 and int_const 4294967296");
 }
 
+BOOST_AUTO_TEST_CASE(shift_constant_right_fractional)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> (1 / 2);
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator >> not compatible with types int_const 66 and rational_const 1 / 2");
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)
 {
 	char const* text = R"(
