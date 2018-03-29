@@ -1265,13 +1265,19 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 void CompilerUtils::leftShiftNumberOnStack(unsigned _bits)
 {
 	solAssert(_bits < 256, "");
-	m_context << (u256(1) << _bits) << Instruction::MUL;
+	if (m_context.evmVersion().hasBitwiseShifting())
+		m_context << _bits << Instruction::SHL;
+	else
+		m_context << (u256(1) << _bits) << Instruction::MUL;
 }
 
 void CompilerUtils::rightShiftNumberOnStack(unsigned _bits, bool _isSigned)
 {
 	solAssert(_bits < 256, "");
-	m_context << (u256(1) << _bits) << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
+	if (m_context.evmVersion().hasBitwiseShifting())
+		m_context << _bits << (_isSigned ? Instruction::SAR : Instruction::SHR);
+	else
+		m_context << (u256(1) << _bits) << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)

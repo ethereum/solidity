@@ -1706,13 +1706,22 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		m_context.appendConditionalInvalid();
 	}
 
+	m_context << Instruction::SWAP1;
+	// stack: value_to_shift shift_amount
+
 	switch (_operator)
 	{
 	case Token::SHL:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
+		if (m_context.evmVersion().hasBitwiseShifting())
+			m_context << Instruction::SHL;
+		else
+			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
+		if (m_context.evmVersion().hasBitwiseShifting())
+			m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
+		else
+			m_context << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
 	default:
