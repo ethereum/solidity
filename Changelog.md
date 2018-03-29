@@ -1,6 +1,7 @@
 ### 0.4.22 (unreleased)
 
 Features:
+ * Commandline interface: Error when missing or inaccessible file detected. Suppress it with the ``--ignore-missing`` flag.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
 
