@@ -154,6 +154,25 @@ struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush, 2>
 	}
 };
 
+struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap, 2>
+{
+	static bool applySimple(AssemblyItem const& _swap, AssemblyItem const& _op, std::back_insert_iterator<AssemblyItems> _out)
+	{
+		// Remove SWAP1 if following instruction is commutative
+		if (
+			_swap.type() == Operation &&
+			_swap.instruction() == Instruction::SWAP1 &&
+			SemanticInformation::isCommutativeOperation(_op)
+		)
+		{
+			*_out = _op;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
 struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext, 3>
 {
 	static size_t applySimple(
@@ -260,7 +279,7 @@ bool PeepholeOptimiser::optimise()
 {
 	OptimiserState state {m_items, 0, std::back_inserter(m_optimisedItems)};
 	while (state.i < m_items.size())
-		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
+		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
 			eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3) ||

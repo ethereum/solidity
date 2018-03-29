@@ -858,6 +858,57 @@ BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 	BOOST_CHECK(items.empty());
 }
 
+BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
+{
+	AssemblyItems items{
+		u256(1),
+		u256(2),
+		Instruction::SWAP1,
+		Instruction::ADD,
+		u256(4),
+		u256(5)
+	};
+	AssemblyItems expectation{
+		u256(1),
+		u256(2),
+		Instruction::ADD,
+		u256(4),
+		u256(5)
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
+{
+	AssemblyItems items{
+		u256(1),
+		u256(2),
+		Instruction::SWAP1,
+		Instruction::SUB,
+		u256(4),
+		u256(5)
+	};
+	AssemblyItems expectation{
+		u256(1),
+		u256(2),
+		Instruction::SWAP1,
+		Instruction::SUB,
+		u256(4),
+		u256(5)
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(!peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
 {
 	AssemblyItems items{
