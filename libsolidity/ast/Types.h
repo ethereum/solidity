@@ -692,22 +692,27 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded ) const override
 	{
+		solAssert(!isSuper(), "");
 		return encodingType()->calldataEncodedSize(_padded);
 	}
-	virtual unsigned storageBytes() const override { return 20; }
-	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned storageBytes() const override { solAssert(!isSuper(), ""); return 20; }
+	virtual bool canLiveOutsideStorage() const override { return !isSuper(); }
 	virtual unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
-	virtual bool isValueType() const override { return true; }
+	virtual bool isValueType() const override { return !isSuper(); }
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName() const override;
 
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
+		if (isSuper())
+			return TypePointer{};
 		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override
 	{
+		if (isSuper())
+			return TypePointer{};
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
 

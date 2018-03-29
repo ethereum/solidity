@@ -10,11 +10,13 @@ Bugfixes:
  * Code Generator: Do not include internal functions in the runtime bytecode which are only referenced in the constructor.
  * Code Generator: Properly skip unneeded storage array cleanup when not reducing length.
  * Code Generator: Bugfix in modifier lookup in libraries.
+ * Code Generator: Implement packed encoding of external function types.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
  * Type System: Improve error message when attempting to shift by a fractional amount.
  * Type System: Make external library functions accessible.
+ * Type System: Prevent encoding of weird types.
 
 ### 0.4.21 (2018-03-07)
 
