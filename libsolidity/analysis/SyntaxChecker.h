@@ -71,6 +71,8 @@ private:
 
 	virtual bool visit(VariableDeclaration const& _declaration) override;
 
+	virtual bool visit(StructDefinition const& _struct) override;
+
 	ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether a function modifier actually contains '_'.

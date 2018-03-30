@@ -7289,7 +7289,7 @@ BOOST_AUTO_TEST_CASE(modifiers_access_storage_pointer)
 {
 	char const* text = R"(
 		contract C {
-			struct S { }
+			struct S { uint a; }
 			modifier m(S storage x) {
 				x;
 				_;
