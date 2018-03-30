@@ -8756,6 +8756,32 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
+{
+	// Memory arrays are initialized using codecopy past the size of the code.
+	// This test checks that it also works in the constructor context.
+	char const* sourceCode = R"(
+		contract C {
+			bool public success;
+			function C() public {
+				// Make memory dirty.
+				assembly {
+					for { let i := 0 } lt(i, 64) { i := add(i, 1) } {
+						mstore(msize, not(0))
+					}
+				}
+				uint16[3] memory c;
+				require(c[0] == 0 && c[1] == 0 && c[2] == 0);
+				uint16[] memory x = new uint16[](3);
+				require(x[0] == 0 && x[1] == 0 && x[2] == 0);
+				success = true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("success()"), encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(return_does_not_skip_modifier)
 {
 	char const* sourceCode = R"(
