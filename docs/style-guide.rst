@@ -904,7 +904,7 @@ Constants
 =========
 
 Constants should be named with all capital letters with underscores separating
-words. Examples: ``MAX_BLOCKS``, `TOKEN_NAME`, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
+words. Examples: ``MAX_BLOCKS``, ``TOKEN_NAME``, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
 
 
 Modifier Names
