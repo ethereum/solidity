@@ -284,10 +284,12 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
         }
 
         function g() public {
-            // Declares and assigns the variables. Specifying the type explicitly is not possible.
-            var (x, b, y) = f();
-            // Assigns to a pre-existing variable.
-            (x, y) = (2, 7);
+            // Variables declared with type
+            uint x;
+            bool b;
+            uint y;
+            // These pre-existing variables can then be assigned to the tuple values
+            (x, b, y) = f();
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
