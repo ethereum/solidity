@@ -1012,9 +1012,12 @@ the base constructors. This can be done in two ways::
         function Base(uint _x) public { x = _x; }
     }
 
-    contract Derived is Base(7) {
-        function Derived(uint _y) Base(_y * _y) public {
-        }
+    contract Derived1 is Base(7) {
+        function Derived1(uint _y) public {}
+    }
+
+    contract Derived2 is Base {
+        function Derived2(uint _y) Base(_y * _y) public {}
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
