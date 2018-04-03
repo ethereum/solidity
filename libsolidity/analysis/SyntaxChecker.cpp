@@ -214,18 +214,9 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	if (_function.noVisibilitySpecified())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
-		else
-			m_errorReporter.warning(
-				_function.location(),
-				"No visibility specified. Defaulting to \"" +
-				Declaration::visibilityToString(_function.visibility()) +
-				"\"."
-			);
-	}
+	if (v050 && _function.noVisibilitySpecified())
+		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
+			
 	return true;
 }
 
