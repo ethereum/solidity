@@ -208,9 +208,9 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::UInt:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned);
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
