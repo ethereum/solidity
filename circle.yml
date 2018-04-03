@@ -1,3 +1,10 @@
+defaults:
+  # The default for tags is to not run, so we have to explicitly match a filter.
+  - build_on_tags: &build_on_tags
+      filters:
+        tags:
+          only: /.*/
+
 version: 2
 jobs:
   build_emscripten:
@@ -157,15 +164,18 @@ workflows:
   version: 2
   build_all:
     jobs:
-      - build_emscripten
+      - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
+          <<: *build_on_tags
           requires:
             - build_emscripten
       - test_emscripten_external:
+          <<: *build_on_tags
           requires:
             - build_emscripten
-      - build_x86
+      - build_x86: *build_on_tags
       - test_x86:
+          <<: *build_on_tags
           requires:
             - build_x86
-      - docs
+      - docs: *build_on_tags
