@@ -112,26 +112,6 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVariable1;
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
-{
-	char const* text = R"(
-		contract test {
-			uint256 ;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
 BOOST_AUTO_TEST_CASE(empty_function)
 {
 	char const* text = R"(
