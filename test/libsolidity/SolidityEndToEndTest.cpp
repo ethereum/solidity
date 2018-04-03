@@ -8756,6 +8756,32 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
+{
+	// Memory arrays are initialized using codecopy past the size of the code.
+	// This test checks that it also works in the constructor context.
+	char const* sourceCode = R"(
+		contract C {
+			bool public success;
+			function C() public {
+				// Make memory dirty.
+				assembly {
+					for { let i := 0 } lt(i, 64) { i := add(i, 1) } {
+						mstore(msize, not(0))
+					}
+				}
+				uint16[3] memory c;
+				require(c[0] == 0 && c[1] == 0 && c[2] == 0);
+				uint16[] memory x = new uint16[](3);
+				require(x[0] == 0 && x[1] == 0 && x[2] == 0);
+				success = true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("success()"), encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(return_does_not_skip_modifier)
 {
 	char const* sourceCode = R"(
@@ -9119,10 +9145,31 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function_in_detail)
 			int mutex;
 			function t() returns (uint) {
 				if (mutex > 0)
-					return 7;
+					{ assembly { mstore(0, 7) return(0, 0x20) } }
 				mutex = 1;
 				// Avoid re-executing this function if we jump somewhere.
 				x();
+				return 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("t()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(calling_uninitialized_function_through_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			int mutex;
+			function t() returns (uint) {
+				if (mutex > 0)
+					{ assembly { mstore(0, 7) return(0, 0x20) } }
+				mutex = 1;
+				// Avoid re-executing this function if we jump somewhere.
+				function() internal returns (uint)[200] x;
+				x[0]();
 				return 2;
 			}
 		}

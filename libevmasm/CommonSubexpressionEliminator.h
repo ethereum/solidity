@@ -65,8 +65,9 @@ public:
 
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
+	/// @param _msizeImportant if false, do not consider modification of MSIZE a side-effect
 	template <class _AssemblyItemIterator>
-	_AssemblyItemIterator feedItems(_AssemblyItemIterator _iterator, _AssemblyItemIterator _end);
+	_AssemblyItemIterator feedItems(_AssemblyItemIterator _iterator, _AssemblyItemIterator _end, bool _msizeImportant);
 
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
@@ -168,11 +169,12 @@ private:
 template <class _AssemblyItemIterator>
 _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	_AssemblyItemIterator _iterator,
-	_AssemblyItemIterator _end
+	_AssemblyItemIterator _end,
+	bool _msizeImportant
 )
 {
 	assertThrow(!m_breakingItem, OptimizerException, "Invalid use of CommonSubexpressionEliminator.");
-	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator); ++_iterator)
+	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator, _msizeImportant); ++_iterator)
 		feedItem(*_iterator);
 	if (_iterator != _end)
 		m_breakingItem = &(*_iterator++);
