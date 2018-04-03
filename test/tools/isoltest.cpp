@@ -55,8 +55,8 @@ public:
 	{
 		Success,
 		Failure,
-		ParserError,
-		InputOutputError
+		InputOutputError,
+		Exception
 	};
 
 	Result process();
@@ -76,7 +76,7 @@ private:
 		Quit
 	};
 
-	Request handleResponse(bool const _parserError);
+	Request handleResponse(bool const _exception);
 
 	void printContract() const;
 
@@ -100,7 +100,6 @@ void SyntaxTestTool::printContract() const
 SyntaxTestTool::Result SyntaxTestTool::process()
 {
 	bool success;
-	bool parserError = false;
 	std::stringstream outputMessages;
 
 	(FormattedScope(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
@@ -119,10 +118,35 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 	{
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
-	catch (...)
+	catch(CompilerError const& _e)
 	{
-		success = false;
-		parserError = true;
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"Exception: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(InternalCompilerError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"InternalCompilerError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(FatalError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"FatalError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(UnimplementedFeatureError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"UnimplementedFeatureError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(...)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"Unknown Exception" << endl;
+		return Result::Exception;
 	}
 
 	if (success)
@@ -137,25 +161,14 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 		FormattedScope(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
 		printContract();
 
-		if (parserError)
-		{
-			cout << "  ";
-			FormattedScope(cout, m_formatted, {INVERSE, RED}) << "Parsing failed:" << endl;
-			m_test->printErrorList(cout, m_test->compilerErrors(), "    ", true, true, m_formatted);
-			cout << endl;
-			return Result::ParserError;
-		}
-		else
-		{
-			cout << outputMessages.str() << endl;
-			return Result::Failure;
-		}
+		cout << outputMessages.str() << endl;
+		return Result::Failure;
 	}
 }
 
-SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
+SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _exception)
 {
-	if (_parserError)
+	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
 	else
 		cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
@@ -169,7 +182,7 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
 			cout << endl;
 			return Request::Skip;
 		case 'u':
-			if (_parserError)
+			if (_exception)
 				break;
 			else
 			{
@@ -178,7 +191,7 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
 				file << m_test->source();
 				file << "// ----" << endl;
 				if (!m_test->errorList().empty())
-					m_test->printErrorList(file, m_test->errorList(), "// ", false, false, false);
+					m_test->printErrorList(file, m_test->errorList(), "// ", false);
 				return Request::Rerun;
 			}
 		case 'e':
@@ -231,8 +244,8 @@ SyntaxTestStats SyntaxTestTool::processPath(
 			switch(result)
 			{
 			case Result::Failure:
-			case Result::ParserError:
-				switch(testTool.handleResponse(result == Result::ParserError))
+			case Result::Exception:
+				switch(testTool.handleResponse(result == Result::Exception))
 				{
 				case Request::Quit:
 					return { successCount, runCount };
