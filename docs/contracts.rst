@@ -679,7 +679,7 @@ candidate, resolution fails.
         }
     }
 
-Calling ``f(50)`` would create a type error since ``250`` can be implicitly converted both to ``uint8``
+Calling ``f(50)`` would create a type error since ``50`` can be implicitly converted both to ``uint8``
 and ``uint256`` types. On another hand ``f(256)`` would resolve to ``f(uint256)`` overload as ``256`` cannot be implicitly
 converted to ``uint8``.
 
