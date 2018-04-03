@@ -122,7 +122,6 @@ We will re-add the pre-built bottles soon.
     brew upgrade
     brew tap ethereum/ethereum
     brew install solidity
-    brew linkapps solidity
 
 If you need a specific version of Solidity you can install a 
 Homebrew formula directly from Github.
