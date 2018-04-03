@@ -1863,6 +1863,16 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				exprType->toString() + " (expected " + funType->selfType()->toString() + ")"
 			);
 
+	if (
+		exprType->category() == Type::Category::Magic &&
+		annotation.type->category() == Type::Category::Function &&
+		!argumentTypes
+	)
+		m_errorReporter.typeError(
+			_memberAccess.location(),
+			"Magic function \"" + memberName + "\" cannot be used without calling it."
+		);
+
 	if (exprType->category() == Type::Category::Struct)
 		annotation.isLValue = true;
 	else if (exprType->category() == Type::Category::Array)

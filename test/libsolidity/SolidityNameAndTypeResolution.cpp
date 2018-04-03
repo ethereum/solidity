@@ -7520,6 +7520,18 @@ BOOST_AUTO_TEST_CASE(builtin_reject_value)
 	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
 }
 
+BOOST_AUTO_TEST_CASE(blockhash_as_lvalue)
+{
+	char const* text = R"(
+		contract C {
+			function f() public {
+				block.blockhash;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Magic function \"blockhash\" cannot be used without calling it.");
+}
+
 BOOST_AUTO_TEST_CASE(constructor_without_implementation)
 {
 	char const* text = R"(
