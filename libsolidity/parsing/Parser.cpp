@@ -238,7 +238,10 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		Token::Value currentTokenValue = m_scanner->currentToken();
 		if (currentTokenValue == Token::RBrace)
 			break;
-		else if (currentTokenValue == Token::Function)
+		else if (
+			currentTokenValue == Token::Function ||
+			(currentTokenValue == Token::Identifier && m_scanner->currentLiteral() == "constructor")
+		)
 			// This can be a function or a state variable of function type (especially
 			// complicated to distinguish fallback function from function type state variable)
 			subNodes.push_back(parseFunctionDefinitionOrFunctionTypeStateVariable(name.get()));
@@ -329,15 +332,31 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
+	bool _forceEmptyName,
+	bool _allowModifiers,
+	ASTString const* _contractName
+)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
-	expectToken(Token::Function);
-	if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
-		result.name = make_shared<ASTString>(); // anonymous function
+
+	result.isConstructor = false;
+
+	if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
+		result.isConstructor = true;
+	else if (m_scanner->currentToken() != Token::Function)
+		solAssert(false, "Function or constructor expected.");
+	m_scanner->next();
+
+	if (result.isConstructor || _forceEmptyName || m_scanner->currentToken() == Token::LParen)
+		result.name = make_shared<ASTString>();
 	else
 		result.name = expectIdentifierToken();
+
+	if (!result.name->empty() && _contractName && *result.name == *_contractName)
+		result.isConstructor = true;
+
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
 	result.parameters = parseParameterList(options);
@@ -407,7 +426,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
+	FunctionHeaderParserResult header = parseFunctionHeader(false, true, _contractName);
 
 	if (
 		!header.modifiers.empty() ||
@@ -426,12 +445,11 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 		}
 		else
 			m_scanner->next(); // just consume the ';'
-		bool const c_isConstructor = (_contractName && *header.name == *_contractName);
 		return nodeFactory.createNode<FunctionDefinition>(
 			header.name,
 			header.visibility,
 			header.stateMutability,
-			c_isConstructor,
+			header.isConstructor,
 			docstring,
 			header.parameters,
 			header.modifiers,

@@ -40,7 +40,7 @@ This means that cyclic creation dependencies are impossible.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >0.4.21;
 
     contract OwnedToken {
         // TokenCreator is a contract type that is defined below.
@@ -52,7 +52,7 @@ This means that cyclic creation dependencies are impossible.
 
         // This is the constructor which registers the
         // creator and the assigned name.
-        function OwnedToken(bytes32 _name) public {
+        constructor(bytes32 _name) public {
             // State variables are accessed via their name
             // and not via e.g. this.owner. This also applies
             // to functions and especially in the constructors,
@@ -976,8 +976,31 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function with the same name as the contract which is executed upon contract creation. 
-Constructor functions can be either ``public`` or ``internal``.
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
+default constructor: ``contructor() public {}``.
+
+
+::
+
+    pragma solidity >0.4.21;
+
+    contract A {
+        uint public a;
+
+        constructor(uint _a) internal {
+            a = _a;
+        }
+    }
+
+    contract B is A(1) {
+        constructor() public {}
+    }
+
+A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+
+.. note ::
+    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax is now deprecated.
 
 ::
 
@@ -995,7 +1018,6 @@ Constructor functions can be either ``public`` or ``internal``.
         function B() public {}
     }
 
-A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
 
 .. index:: ! base;constructor
 
@@ -1009,11 +1031,11 @@ the base constructors. This can be done in two ways::
 
     contract Base {
         uint x;
-        function Base(uint _x) public { x = _x; }
+        constructor(uint _x) public { x = _x; }
     }
 
     contract Derived is Base(7) {
-        function Derived(uint _y) Base(_y * _y) public {
+        constructor(uint _y) Base(_y * _y) public {
         }
     }
 

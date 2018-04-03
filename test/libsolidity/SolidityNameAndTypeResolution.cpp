@@ -962,6 +962,35 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(new_constructor_syntax)
+{
+	char const* text = R"(
+		contract A { constructor() public {} }
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(old_constructor_syntax)
+{
+	char const* text = R"(
+		contract A { function A() public {} }
+	)";
+	CHECK_WARNING(
+		text,
+		"Defining constructors as functions with the same name as the contract is deprecated."
+	);
+
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract A { function A() public {} }
+	)";
+	CHECK_ERROR(
+		text,
+		SyntaxError,
+		"Functions are not allowed to have the same name as the contract."
+	);
+}
+
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 {
 	char const* text = R"(
@@ -6916,7 +6945,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
 {
 	char const* text = R"(
 		contract C {
-			function C() public {}
+			constructor() public {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -7328,7 +7357,7 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 {
 	char const* text = R"(
 		contract C {
-			function C() public {
+			constructor() public {
 				this.f();
 			}
 			function f() pure public {
