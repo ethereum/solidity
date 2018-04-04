@@ -866,7 +866,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
-		case FunctionType::Kind::ByteArrayPop:
 		case FunctionType::Kind::ArrayPop:
 		{
 			_functionCall.expression().accept(*this);
@@ -1359,22 +1358,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					break;
 				}
 		}
-		else if (member == "push")
+		else if (member == "push" || member == "pop")
 		{
 			solAssert(
 				type.isDynamicallySized() &&
 				type.location() == DataLocation::Storage &&
 				type.category() == Type::Category::Array,
-				"Tried to use .push() on a non-dynamically sized array"
-			);
-		}
-		else if (member == "pop")
-		{
-			solAssert(
-				type.isDynamicallySized() &&
-				type.location() == DataLocation::Storage &&
-				type.category() == Type::Category::Array,
-				"Tried to use .pop() on a non-dynamically sized array"
+				"Tried to use ." + member + "() on a non-dynamically sized array"
 			);
 		}
 		else
