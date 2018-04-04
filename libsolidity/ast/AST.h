@@ -425,19 +425,22 @@ public:
 	InheritanceSpecifier(
 		SourceLocation const& _location,
 		ASTPointer<UserDefinedTypeName> const& _baseName,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_baseName(_baseName), m_arguments(_arguments) {}
+		ASTNode(_location), m_baseName(_baseName), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	UserDefinedTypeName const& name() const { return *m_baseName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``C``).
+	// If an argument list is given (``C(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``C()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<UserDefinedTypeName> m_baseName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**

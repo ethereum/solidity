@@ -268,7 +268,7 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 {
 	setJsonNode(_node, "InheritanceSpecifier", {
 		make_pair("baseName", toJson(_node.name())),
-		make_pair("arguments", toJson(_node.arguments()))
+		make_pair("arguments", _node.arguments() ? toJson(*_node.arguments()) : Json::Value(Json::arrayValue))
 	});
 	return false;
 }

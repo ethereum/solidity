@@ -157,8 +157,8 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 			);
 			solAssert(baseContract, "");
 
-			if (!m_baseArguments.count(baseContract->constructor()) && !base->arguments().empty())
-				m_baseArguments[baseContract->constructor()] = &base->arguments();
+			if (!m_baseArguments.count(baseContract->constructor()) && base->arguments() && !base->arguments()->empty())
+				m_baseArguments[baseContract->constructor()] = base->arguments();
 		}
 	}
 	// Initialization of state variables in base-to-derived order.

@@ -320,7 +320,7 @@ void TypeChecker::checkContractAbstractConstructors(ContractDefinition const& _c
 		{
 			auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(base->name()));
 			solAssert(baseContract, "");
-			if (!base->arguments().empty())
+			if (base->arguments() && !base->arguments()->empty())
 				argumentsNeeded.erase(baseContract);
 		}
 	}
@@ -506,30 +506,46 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 		// Interfaces do not have constructors, so there are zero parameters.
 		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
 
-	if (!arguments.empty() && parameterTypes.size() != arguments.size())
+	if (arguments)
 	{
-		m_errorReporter.typeError(
-			_inheritance.location(),
-			"Wrong argument count for constructor call: " +
-			toString(arguments.size()) +
-			" arguments given but expected " +
-			toString(parameterTypes.size()) +
-			"."
-		);
-		return;
-	}
+		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	for (size_t i = 0; i < arguments.size(); ++i)
-		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			m_errorReporter.typeError(
-				arguments[i]->location(),
-				"Invalid type for argument in constructor call. "
-				"Invalid implicit conversion from " +
-				type(*arguments[i])->toString() +
-				" to " +
-				parameterTypes[i]->toString() +
-				" requested."
-			);
+		if (parameterTypes.size() != arguments->size())
+		{
+			if (arguments->size() == 0 && !v050)
+				m_errorReporter.warning(
+					_inheritance.location(),
+					"Wrong argument count for constructor call: " +
+					toString(arguments->size()) +
+					" arguments given but expected " +
+					toString(parameterTypes.size()) +
+					"."
+				);
+			else
+			{
+				m_errorReporter.typeError(
+					_inheritance.location(),
+					"Wrong argument count for constructor call: " +
+					toString(arguments->size()) +
+					" arguments given but expected " +
+					toString(parameterTypes.size()) +
+					"."
+				);
+				return;
+			}
+		}
+		for (size_t i = 0; i < arguments->size(); ++i)
+			if (!type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
+				m_errorReporter.typeError(
+					(*arguments)[i]->location(),
+					"Invalid type for argument in constructor call. "
+					"Invalid implicit conversion from " +
+					type(*(*arguments)[i])->toString() +
+					" to " +
+					parameterTypes[i]->toString() +
+					" requested."
+				);
+	}
 }
 
 void TypeChecker::endVisit(UsingForDirective const& _usingFor)
