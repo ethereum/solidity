@@ -5,6 +5,7 @@ Features:
  * Commandline interface: Error when missing or inaccessible file detected. Suppress it with the ``--ignore-missing`` flag.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
+ * Optimizer: Remove useless ``SWAP1`` instruction preceding a commutative instruction (such as ``ADD``, ``MUL``, etc).
  * Optimizer: Optimize across ``mload`` if ``msize()`` is not used.
  * Syntax Checker: Issue warning for empty structs (or error as experimental 0.5.0 feature).
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
