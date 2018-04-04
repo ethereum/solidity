@@ -803,7 +803,7 @@ as topics. The event call above can be performed in the same way as
     }
 
 where the long hexadecimal number is equal to
-``keccak256("Deposit(address,hash256,uint256)")``, the signature of the event.
+``keccak256("Deposit(address,bytes32,uint256)")``, the signature of the event.
 
 Additional Resources for Understanding Events
 ==============================================
