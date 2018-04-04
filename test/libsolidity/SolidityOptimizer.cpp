@@ -93,8 +93,10 @@ public:
 	{
 		m_contractAddress = m_nonOptimizedContract;
 		bytes nonOptimizedOutput = callContractFunction(_sig, _arguments...);
+		m_gasUsedNonOptimized = m_gasUsed;
 		m_contractAddress = m_optimizedContract;
 		bytes optimizedOutput = callContractFunction(_sig, _arguments...);
+		m_gasUsedOptimized = m_gasUsed;
 		BOOST_CHECK_MESSAGE(!optimizedOutput.empty(), "No optimized output for " + _sig);
 		BOOST_CHECK_MESSAGE(!nonOptimizedOutput.empty(), "No un-optimized output for " + _sig);
 		BOOST_CHECK_MESSAGE(nonOptimizedOutput == optimizedOutput, "Computed values do not match."
@@ -120,6 +122,8 @@ public:
 	}
 
 protected:
+	u256 m_gasUsedOptimized;
+	u256 m_gasUsedNonOptimized;
 	bytes m_nonOptimizedBytecode;
 	bytes m_optimizedBytecode;
 	Address m_optimizedContract;
@@ -582,6 +586,26 @@ BOOST_AUTO_TEST_CASE(invalid_state_at_control_flow_join)
 	)";
 	compileBothVersions(sourceCode);
 	compareVersions("test()");
+}
+
+BOOST_AUTO_TEST_CASE(init_empty_dynamic_arrays)
+{
+	// This is not so much an optimizer test, but rather a test
+	// that allocating empty arrays is implemented efficiently.
+	// In particular, initializing a dynamic memory array does
+	// not use any memory.
+	char const* sourceCode = R"(
+		contract Test {
+			function f() pure returns (uint r) {
+				uint[][] memory x = new uint[][](20000);
+				return x.length;
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f()");
+	BOOST_CHECK_LE(m_gasUsedNonOptimized, 1900000);
+	BOOST_CHECK_LE(1600000, m_gasUsedNonOptimized);
 }
 
 BOOST_AUTO_TEST_CASE(optimise_multi_stores)

@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/codegen/CompilerUtils.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
@@ -39,11 +40,17 @@ namespace solidity
 
 const unsigned CompilerUtils::dataStartOffset = 4;
 const size_t CompilerUtils::freeMemoryPointer = 64;
+const size_t CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
+const size_t CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
 const unsigned CompilerUtils::identityContractAddress = 4;
+
+static_assert(CompilerUtils::freeMemoryPointer >= 64, "Free memory pointer must not overlap with scratch area.");
+static_assert(CompilerUtils::zeroPointer >= CompilerUtils::freeMemoryPointer + 32, "Zero pointer must not overlap with free memory pointer.");
+static_assert(CompilerUtils::generalPurposeMemoryStart >= CompilerUtils::zeroPointer + 32, "General purpose memory must not overlap with zero area.");
 
 void CompilerUtils::initialiseFreeMemoryPointer()
 {
-	m_context << u256(freeMemoryPointer + 32);
+	m_context << u256(generalPurposeMemoryStart);
 	storeFreeMemoryPointer();
 }
 
@@ -1051,6 +1058,13 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		return;
 	}
 	solAssert(referenceType->location() == DataLocation::Memory, "");
+	if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+		if (arrayType->isDynamicallySized())
+		{
+			// Push a memory location that is (hopefully) always zero.
+			pushZeroPointer();
+			return;
+		}
 
 	TypePointer type = _type.shared_from_this();
 	m_context.callLowLevelFunction(
@@ -1071,13 +1085,8 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 				}
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
 			{
-				if (arrayType->isDynamicallySized())
-				{
-					// zero length
-					_context << u256(0);
-					utils.storeInMemoryDynamic(IntegerType(256));
-				}
-				else if (arrayType->length() > 0)
+				solAssert(!arrayType->isDynamicallySized(), "");
+				if (arrayType->length() > 0)
 				{
 					_context << arrayType->length() << Instruction::SWAP1;
 					// stack: items_to_do memory_pos
@@ -1092,6 +1101,11 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			_context << Instruction::POP;
 		}
 	);
+}
+
+void CompilerUtils::pushZeroPointer()
+{
+	m_context << u256(zeroPointer);
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)

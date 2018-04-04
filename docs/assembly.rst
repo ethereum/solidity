@@ -647,6 +647,11 @@ Solidity manages memory in a very simple way: There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, just use the memory
 from that point on and update the pointer accordingly.
 
+The first 64 bytes of memory can be used as "scratch space" for short-term
+allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
+is meant to be zero permanently and is used as the initial value for
+empty dynamic memory arrays.
+
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
