@@ -22,6 +22,7 @@ Bugfixes:
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
+ * Type Checker: Fix detection of recursive structs.
  * Type System: Improve error message when attempting to shift by a fractional amount.
  * Type System: Make external library functions accessible.
  * Type System: Prevent encoding of weird types.
