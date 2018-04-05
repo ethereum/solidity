@@ -286,17 +286,17 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<UserDefinedTypeName> name(parseUserDefinedTypeName());
-	vector<ASTPointer<Expression>> arguments;
+	unique_ptr<vector<ASTPointer<Expression>>> arguments;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
 		m_scanner->next();
-		arguments = parseFunctionCallListArguments();
+		arguments.reset(new vector<ASTPointer<Expression>>(parseFunctionCallListArguments()));
 		nodeFactory.markEndPosition();
 		expectToken(Token::RParen);
 	}
 	else
 		nodeFactory.setEndPositionFromNode(name);
-	return nodeFactory.createNode<InheritanceSpecifier>(name, arguments);
+	return nodeFactory.createNode<InheritanceSpecifier>(name, std::move(arguments));
 }
 
 Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)

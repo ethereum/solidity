@@ -11,6 +11,7 @@ Features:
  * Optimizer: Optimize across ``mload`` if ``msize()`` is not used.
  * Syntax Checker: Issue warning for empty structs (or error as experimental 0.5.0 feature).
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
+ * Inheritance: Error when using empty parenthesis for base class constructors that require arguments as experimental 0.5.0 feature.
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
