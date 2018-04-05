@@ -102,9 +102,16 @@ private:
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 
-	void abortIfExcessive();
+	// @returns true if error shouldn't be stored
+	bool checkForExcessiveErrors(Error::Type _type);
 
 	ErrorList& m_errorList;
+
+	unsigned m_errorCount = 0;
+	unsigned m_warningCount = 0;
+
+	const unsigned c_maxWarningsAllowed = 256;
+	const unsigned c_maxErrorsAllowed = 256;
 };
 
 
