@@ -51,9 +51,12 @@ string LinkerObject::toHex() const
 	{
 		size_t pos = ref.first * 2;
 		string const& name = ref.second;
+		// truncate the beginning of fully qualified library path, so
+		// we keep the library name
+		size_t from = name.size() > 36 ? name.size() - 36 : 0;
 		hex[pos] = hex[pos + 1] = hex[pos + 38] = hex[pos + 39] = '_';
 		for (size_t i = 0; i < 36; ++i)
-			hex[pos + 2 + i] = i < name.size() ? name[i] : '_';
+			hex[pos + 2 + i] = i < name.size() ? name[i + from] : '_';
 	}
 	return hex;
 }
