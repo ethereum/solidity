@@ -11234,6 +11234,53 @@ BOOST_AUTO_TEST_CASE(abi_encode_with_selector)
 	ABI_CHECK(callContractFunction("f3()"), expectation);
 }
 
+BOOST_AUTO_TEST_CASE(abi_encode_with_selectorv2)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678);
+			}
+			function f1() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678, "abc");
+			}
+			function f2() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, "abc");
+			}
+			function f3() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, uint(-1));
+			}
+			struct S { uint a; string b; uint16 c; }
+			function f4() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				S memory s;
+				s.a = 0x1234567;
+				s.b = "Lorem ipsum dolor sit ethereum........";
+				s.c = 0x1234;
+				return abi.encodeWithSelector(x, uint(-1), s, uint(3));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\x12\x34\x56\x78"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x20) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(u256(-1)) + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f3()"), expectation);
+	expectation =
+		encodeArgs(0x20, 4 + 0x120) +
+		bytes{0x12, 0x34, 0x56, 0x78} +
+		encodeArgs(u256(-1), 0x60, u256(3), 0x1234567, 0x60, 0x1234, 38, "Lorem ipsum dolor sit ethereum........") +
+		bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f4()"), expectation);
+}
+
 BOOST_AUTO_TEST_CASE(abi_encode_with_signature)
 {
 	char const* sourceCode = R"T(
@@ -11275,6 +11322,65 @@ BOOST_AUTO_TEST_CASE(abi_encode_with_signature)
 		(bytes{0xe9, 0xc9, 0x21, 0xcd} + encodeArgs(0x20, 4, u256(-1), u256(-2), u256(-3), u256(-4)) + bytes(0x20 - 4)) +
 		encodeArgs(2, 0, 0);
 	ABI_CHECK(callContractFunction("f2()"), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_with_signaturev2)
+{
+	char const* sourceCode = R"T(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSignature("f(uint256)");
+			}
+			function f1() public pure returns (bytes) {
+				string memory x = "f(uint256)";
+				return abi.encodeWithSignature(x, "abc");
+			}
+			string xstor;
+			function f1s() public returns (bytes) {
+				xstor = "f(uint256)";
+				return abi.encodeWithSignature(xstor, "abc");
+			}
+			function f2() public pure returns (bytes r, uint[] ar) {
+				string memory x = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+				uint[] memory y = new uint[](4);
+				y[0] = uint(-1);
+				y[1] = uint(-2);
+				y[2] = uint(-3);
+				y[3] = uint(-4);
+				r = abi.encodeWithSignature(x, y);
+				// The hash uses temporary memory. This allocation re-uses the memory
+				// and should initialize it properly.
+				ar = new uint[](2);
+			}
+			struct S { uint a; string b; uint16 c; }
+			function f4() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				S memory s;
+				s.a = 0x1234567;
+				s.b = "Lorem ipsum dolor sit ethereum........";
+				s.c = 0x1234;
+				return abi.encodeWithSignature(s.b, uint(-1), s, uint(3));
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\xb3\xde\x64\x8b"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0xb3, 0xde, 0x64, 0x8b} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	ABI_CHECK(callContractFunction("f1s()"), expectation);
+	expectation =
+		encodeArgs(0x40, 0x140, 4 + 0xc0) +
+		(bytes{0xe9, 0xc9, 0x21, 0xcd} + encodeArgs(0x20, 4, u256(-1), u256(-2), u256(-3), u256(-4)) + bytes(0x20 - 4)) +
+		encodeArgs(2, 0, 0);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+	expectation =
+		encodeArgs(0x20, 4 + 0x120) +
+		bytes{0x7c, 0x79, 0x30, 0x02} +
+		encodeArgs(u256(-1), 0x60, u256(3), 0x1234567, 0x60, 0x1234, 38, "Lorem ipsum dolor sit ethereum........") +
+		bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f4()"), expectation);
 }
 
 BOOST_AUTO_TEST_CASE(abi_encode_call)

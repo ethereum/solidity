@@ -1723,6 +1723,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
+		bool const abiEncodeV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
+
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
@@ -1735,13 +1737,22 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 						errored = true;
 					}
-				if (!errored && !(
-					argType->mobileType() &&
-					argType->mobileType()->interfaceType(false) &&
-					argType->mobileType()->interfaceType(false)->encodingType() &&
-					!(dynamic_cast<StructType const*>(argType->mobileType()->interfaceType(false)->encodingType().get()))
-				))
-					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
+				if (!errored)
+				{
+					TypePointer encodingType;
+					if (
+						argType->mobileType() &&
+						argType->mobileType()->interfaceType(false) &&
+						argType->mobileType()->interfaceType(false)->encodingType()
+					)
+						encodingType = argType->mobileType()->interfaceType(false)->encodingType();
+					// Structs are fine as long as ABIV2 is activated and we do not do packed encoding.
+					if (!encodingType || (
+						dynamic_cast<StructType const*>(encodingType.get()) &&
+						!(abiEncodeV2 && functionType->padArguments())
+					))
+						m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
+				}
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(
