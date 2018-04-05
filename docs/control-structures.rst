@@ -288,7 +288,7 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
             uint x;
             bool b;
             uint y;
-            // These pre-existing variables can then be assigned to the tuple values
+            // Tuple values can be assigned to these pre-existing variables
             (x, b, y) = f();
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
