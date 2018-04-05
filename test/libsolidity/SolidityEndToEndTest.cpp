@@ -4884,6 +4884,48 @@ BOOST_AUTO_TEST_CASE(array_push)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(5, 4, 3, 3));
 }
 
+BOOST_AUTO_TEST_CASE(array_push_struct)
+{
+	char const* sourceCode = R"(
+		contract c {
+			struct S { uint16 a; uint16 b; uint16[3] c; uint16[] d; }
+			S[] data;
+			function test() returns (uint16, uint16, uint16, uint16) {
+				S memory s;
+				s.a = 2;
+				s.b = 3;
+				s.c[2] = 4;
+				s.d = new uint16[](4);
+				s.d[2] = 5;
+				data.push(s);
+				return (data[0].a, data[0].b, data[0].c[2], data[0].d[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(2, 3, 4, 5));
+}
+
+BOOST_AUTO_TEST_CASE(array_push_packed_array)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint80[] x;
+			function test() returns (uint80, uint80, uint80, uint80) {
+				x.push(1);
+				x.push(2);
+				x.push(3);
+				x.push(4);
+				x.push(5);
+				x.length = 4;
+				return (x[0], x[1], x[2], x[3]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(1, 2, 3, 4));
+}
+
 BOOST_AUTO_TEST_CASE(byte_array_push)
 {
 	char const* sourceCode = R"(
@@ -4902,6 +4944,29 @@ BOOST_AUTO_TEST_CASE(byte_array_push)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_push_transition)
+{
+	// Tests transition between short and long encoding
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function test() returns (uint) {
+				for (uint i = 1; i < 40; i++)
+				{
+					data.push(byte(i));
+					if (data.length != i) return 0x1000 + i;
+					if (data[data.length - 1] != byte(i)) return i;
+				}
+				for (i = 1; i < 40; i++)
+					if (data[i - 1] != byte(i)) return 0x1000000 + i;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(0));
 }
 
 BOOST_AUTO_TEST_CASE(external_array_args)
