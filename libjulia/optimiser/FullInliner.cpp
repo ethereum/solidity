@@ -92,21 +92,27 @@ void InlineModifier::operator()(ForLoop& _loop)
 
 void InlineModifier::operator()(Block& _block)
 {
-	// TODO: optimize the number of moves here.
+	// This is only used if needed to minimize the number of move operations.
+	vector<Statement> modifiedStatements;
 	for (size_t i = 0; i < _block.statements.size(); ++i)
 	{
 		visit(_block.statements.at(i));
-		if (size_t length = m_statementsToPrefix.size())
+		if (!m_statementsToPrefix.empty())
 		{
-			_block.statements.insert(
-				_block.statements.begin() + i,
-				std::make_move_iterator(m_statementsToPrefix.begin()),
-				std::make_move_iterator(m_statementsToPrefix.end())
-			);
-			i += length;
+			if (modifiedStatements.empty())
+				std::move(
+					_block.statements.begin(),
+					_block.statements.begin() + i,
+					back_inserter(modifiedStatements)
+				);
+			modifiedStatements += std::move(m_statementsToPrefix);
 			m_statementsToPrefix.clear();
 		}
+		if (!modifiedStatements.empty())
+			modifiedStatements.emplace_back(std::move(_block.statements[i]));
 	}
+	if (!modifiedStatements.empty())
+		_block.statements = std::move(modifiedStatements);
 }
 
 void InlineModifier::visit(Expression& _expression)
