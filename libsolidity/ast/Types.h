@@ -150,6 +150,7 @@ public:
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken const& _type);
+	/// Converts a given elementary type name with optional suffix " memory" to a type pointer.
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
