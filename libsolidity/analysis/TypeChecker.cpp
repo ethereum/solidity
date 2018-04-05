@@ -60,17 +60,7 @@ bool typeSupportedByOldABIEncoder(Type const& _type)
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
-	try
-	{
-		_contract.accept(*this);
-	}
-	catch (FatalError const&)
-	{
-		// We got a fatal error which required to stop further type checking, but we can
-		// continue normally from here.
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
-	}
+	_contract.accept(*this);
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 

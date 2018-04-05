@@ -164,6 +164,8 @@ bool CompilerStack::analyze()
 	resolveImports();
 
 	bool noErrors = true;
+
+	try {
 	SyntaxChecker syntaxChecker(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
@@ -243,6 +245,14 @@ bool CompilerStack::analyze()
 		SMTChecker smtChecker(m_errorReporter, m_smtQuery);
 		for (Source const* source: m_sourceOrder)
 			smtChecker.analyze(*source->ast);
+	}
+
+	}
+	catch(FatalError const&)
+	{
+		if (m_errorReporter.errors().empty())
+			throw; // Something is weird here, rather throw again.
+		noErrors = false;
 	}
 
 	if (noErrors)
