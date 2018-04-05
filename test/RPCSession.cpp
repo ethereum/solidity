@@ -226,6 +226,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
 		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::constantinople())
+		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
