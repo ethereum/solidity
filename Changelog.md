@@ -10,6 +10,7 @@ Features:
  * Type Checker: Deprecate the ``years`` unit denomination and raise a warning for it (or an error as experimental 0.5.0 feature).
  * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
  * Type Checker: Warn about wildcard tuple assignments (this will turn into an error with version 0.5.0).
+ * Type System: Allow access to constants via contract name.
 
 Bugfixes:
  * Type Checker: Show proper error when trying to ``emit`` a non-event.

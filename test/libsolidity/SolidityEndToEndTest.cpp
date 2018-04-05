@@ -7235,6 +7235,24 @@ BOOST_AUTO_TEST_CASE(cross_contract_types)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(3)));
 }
 
+BOOST_AUTO_TEST_CASE(cross_contract_constants)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint constant a = 33 * b + 4;
+			uint constant b = 44;
+		}
+		contract Test {
+			uint constant b = 66;
+			function f() returns (uint r) {
+				r = C.a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1456)));
+}
+
 BOOST_AUTO_TEST_CASE(simple_throw)
 {
 	char const* sourceCode = R"(
