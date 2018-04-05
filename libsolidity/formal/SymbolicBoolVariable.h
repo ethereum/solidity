@@ -41,6 +41,9 @@ public:
 	void setZeroValue(int _seq);
 	/// Does nothing since the SMT solver already knows the valid values.
 	void setUnknownValue(int _seq);
+
+protected:
+	smt::Expression valueAtSequence(int _seq) const;
 };
 
 }

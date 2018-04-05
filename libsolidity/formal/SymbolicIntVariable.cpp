@@ -30,7 +30,11 @@ SymbolicIntVariable::SymbolicIntVariable(
 	SymbolicVariable(_decl, _interface)
 {
 	solAssert(m_declaration.type()->category() == Type::Category::Integer, "");
-	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Int));
+}
+
+smt::Expression SymbolicIntVariable::valueAtSequence(int _seq) const
+{
+	return m_interface.newInteger(uniqueSymbol(_seq));
 }
 
 void SymbolicIntVariable::setZeroValue(int _seq)

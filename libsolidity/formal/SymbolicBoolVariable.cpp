@@ -30,7 +30,11 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	SymbolicVariable(_decl, _interface)
 {
 	solAssert(m_declaration.type()->category() == Type::Category::Bool, "");
-	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Bool));
+}
+
+smt::Expression SymbolicBoolVariable::valueAtSequence(int _seq) const
+{
+	return m_interface.newBool(uniqueSymbol(_seq));
 }
 
 void SymbolicBoolVariable::setZeroValue(int _seq)
