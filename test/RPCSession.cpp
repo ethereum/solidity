@@ -339,7 +339,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	BOOST_TEST_MESSAGE("Reply: " + reply);
 
 	Json::Value result;
-	BOOST_REQUIRE(jsonParseStrict(reply, result));
+	string errorMsg;
+	if (!jsonParseStrict(reply, result, &errorMsg))
+		BOOST_REQUIRE_MESSAGE(false, errorMsg);
 
 	if (result.isMember("error"))
 	{
