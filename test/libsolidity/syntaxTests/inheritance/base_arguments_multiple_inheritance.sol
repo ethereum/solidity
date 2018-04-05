@@ -6,4 +6,4 @@ contract Derived is Base, Base1 {
     constructor(uint i) Base(i) public {}
 }
 // ----
-// Warning: Duplicated super constructor calls are deprecated.
+// Warning: Base constructor arguments given twice.

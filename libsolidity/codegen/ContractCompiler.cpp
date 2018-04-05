@@ -135,34 +135,13 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 {
 	solAssert(!_contract.isLibrary(), "Tried to initialize library.");
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
-	// Determine the arguments that are used for the base constructors.
-	std::vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
-	for (ContractDefinition const* contract: bases)
-	{
-		if (FunctionDefinition const* constructor = contract->constructor())
-			for (auto const& modifier: constructor->modifiers())
-			{
-				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->name()->annotation().referencedDeclaration
-				);
-				if (baseContract && !modifier->arguments().empty())
-					if (m_baseArguments.count(baseContract->constructor()) == 0)
-						m_baseArguments[baseContract->constructor()] = &modifier->arguments();
-			}
 
-		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
-		{
-			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
-				base->name().annotation().referencedDeclaration
-			);
-			solAssert(baseContract, "");
+	m_baseArguments = &_contract.annotation().baseConstructorArguments;
 
-			if (!m_baseArguments.count(baseContract->constructor()) && base->arguments() && !base->arguments()->empty())
-				m_baseArguments[baseContract->constructor()] = base->arguments();
-		}
-	}
 	// Initialization of state variables in base-to-derived order.
-	for (ContractDefinition const* contract: boost::adaptors::reverse(bases))
+	for (ContractDefinition const* contract: boost::adaptors::reverse(
+		_contract.annotation().linearizedBaseContracts
+	))
 		initializeStateVariables(*contract);
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
@@ -236,8 +215,14 @@ void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _construc
 	FunctionType constructorType(_constructor);
 	if (!constructorType.parameterTypes().empty())
 	{
-		solAssert(m_baseArguments.count(&_constructor), "");
-		std::vector<ASTPointer<Expression>> const* arguments = m_baseArguments[&_constructor];
+		solAssert(m_baseArguments, "");
+		solAssert(m_baseArguments->count(&_constructor), "");
+		std::vector<ASTPointer<Expression>> const* arguments = nullptr;
+		ASTNode const* baseArgumentNode = m_baseArguments->at(&_constructor);
+		if (auto inheritanceSpecifier = dynamic_cast<InheritanceSpecifier const*>(baseArgumentNode))
+			arguments = inheritanceSpecifier->arguments();
+		else if (auto modifierInvocation = dynamic_cast<ModifierInvocation const*>(baseArgumentNode))
+			arguments = &modifierInvocation->arguments();
 		solAssert(arguments, "");
 		solAssert(arguments->size() == constructorType.parameterTypes().size(), "");
 		for (unsigned i = 0; i < arguments->size(); ++i)

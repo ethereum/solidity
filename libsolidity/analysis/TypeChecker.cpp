@@ -101,7 +101,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
-	checkContractAbstractConstructors(_contract);
+	checkContractBaseConstructorArguments(_contract);
 
 	FunctionDefinition const* function = _contract.constructor();
 	if (function)
@@ -291,42 +291,75 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			}
 }
 
-void TypeChecker::checkContractAbstractConstructors(ContractDefinition const& _contract)
+void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
 {
-	set<ContractDefinition const*> argumentsNeeded;
-	// check that we get arguments for all base constructors that need it.
-	// If not mark the contract as abstract (not fully implemented)
-
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
-	for (ContractDefinition const* contract: bases)
-		if (FunctionDefinition const* constructor = contract->constructor())
-			if (contract != &_contract && !constructor->parameters().empty())
-				argumentsNeeded.insert(contract);
 
+	// Determine the arguments that are used for the base constructors.
 	for (ContractDefinition const* contract: bases)
 	{
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
 			{
-				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					&dereference(*modifier->name())
-				);
-				if (baseContract)
-					argumentsNeeded.erase(baseContract);
+				auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name()));
+				if (baseContract && baseContract->constructor() && !modifier->arguments().empty())
+					annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
 			}
-
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
 		{
 			auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(base->name()));
 			solAssert(baseContract, "");
-			if (base->arguments() && !base->arguments()->empty())
-				argumentsNeeded.erase(baseContract);
+
+			if (baseContract->constructor() && base->arguments() && !base->arguments()->empty())
+				annotateBaseConstructorArguments(_contract, baseContract->constructor(), base.get());
 		}
 	}
-	if (!argumentsNeeded.empty())
-		for (ContractDefinition const* contract: argumentsNeeded)
-			_contract.annotation().unimplementedFunctions.push_back(contract->constructor());
+
+	// check that we get arguments for all base constructors that need it.
+	// If not mark the contract as abstract (not fully implemented)
+	for (ContractDefinition const* contract: bases)
+		if (FunctionDefinition const* constructor = contract->constructor())
+			if (contract != &_contract && !constructor->parameters().empty())
+				if (!_contract.annotation().baseConstructorArguments.count(constructor))
+					_contract.annotation().unimplementedFunctions.push_back(constructor);
+}
+
+void TypeChecker::annotateBaseConstructorArguments(
+	ContractDefinition const& _currentContract,
+	FunctionDefinition const* _baseConstructor,
+	ASTNode const* _argumentNode
+)
+{
+	bool const v050 = _currentContract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
+	solAssert(_baseConstructor, "");
+	solAssert(_argumentNode, "");
+
+	auto insertionResult = _currentContract.annotation().baseConstructorArguments.insert(
+		std::make_pair(_baseConstructor, _argumentNode)
+	);
+	if (!insertionResult.second)
+	{
+		ASTNode const* previousNode = insertionResult.first->second;
+
+		SecondarySourceLocation ssl;
+		ssl.append("Second constructor call is here:", _argumentNode->location());
+
+		if (v050)
+			m_errorReporter.declarationError(
+				previousNode->location(),
+				ssl,
+				"Base constructor arguments given twice."
+			);
+		else
+			m_errorReporter.warning(
+				previousNode->location(),
+				"Base constructor arguments given twice.",
+				ssl
+			);
+	}
+
 }
 
 void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)

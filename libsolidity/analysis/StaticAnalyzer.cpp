@@ -90,48 +90,6 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_localVarUseCount.clear();
 }
 
-bool StaticAnalyzer::visit(ModifierInvocation const& _modifier)
-{
-	if (!m_constructor)
-		return true;
-
-	bool const v050 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
-	if (auto contract = dynamic_cast<ContractDefinition const*>(_modifier.name()->annotation().referencedDeclaration))
-		for (auto const& base: m_currentContract->annotation().linearizedBaseContracts)
-			for (auto const& specifier: base->baseContracts())
-			{
-				Declaration const* parent = specifier->name().annotation().referencedDeclaration;
-				if (contract == parent && !specifier->arguments().empty())
-				{
-					if (v050)
-					{
-						SecondarySourceLocation ssl;
-						ssl.append("Second constructor call is here:", specifier->location());
-
-						m_errorReporter.declarationError(
-							_modifier.location(),
-							ssl,
-							"Duplicated super constructor call."
-						);
-					}
-					else
-					{
-						SecondarySourceLocation ssl;
-						ssl.append("Overridden constructor call is here:", specifier->location());
-
-						m_errorReporter.warning(
-							_modifier.location(),
-							"Duplicated super constructor calls are deprecated.",
-							ssl
-						);
-					}
-				}
-			}
-
-	return true;
-}
-
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
 	if (m_currentFunction)

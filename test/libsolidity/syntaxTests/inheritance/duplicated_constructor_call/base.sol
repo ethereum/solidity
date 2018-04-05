@@ -1,6 +1,4 @@
-pragma experimental "v0.5.0";
-
 contract A { constructor(uint) public { } }
 contract B is A(2) { constructor() A(3) public {  } }
 // ----
-// DeclarationError: Duplicated super constructor call.
+// Warning: Base constructor arguments given twice.
