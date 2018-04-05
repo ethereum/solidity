@@ -89,11 +89,10 @@ of votes.
         function giveRightToVote(address voter) public {
             // If the argument of `require` evaluates to `false`,
             // it terminates and reverts all changes to
-            // the state and to Ether balances. It is often
-            // a good idea to use this if functions are
-            // called incorrectly. But watch out, this
-            // will currently also consume all provided gas
-            // (this is planned to change in the future).
+            // the state and to Ether balances. 
+            // This consumes all gas in old EVM versions, but not anymore.
+            // It is often a good idea to use this if functions are
+            // called incorrectly.
             require(
                 (msg.sender == chairperson) &&
                 !voters[voter].voted &&
