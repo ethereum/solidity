@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libsolidity/interface/EVMVersion.h>
+
 #include <libsolidity/ast/ASTForward.h>
 
 #include <vector>
@@ -48,6 +50,8 @@ using TypePointers = std::vector<TypePointer>;
 class ABIFunctions
 {
 public:
+	explicit ABIFunctions(EVMVersion _evmVersion = EVMVersion{}) : m_evmVersion(_evmVersion) {}
+
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
 	/// Parameters are: <headStart> <value_n> ... <value_1>, i.e.
@@ -225,6 +229,8 @@ private:
 
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;
+
+	EVMVersion m_evmVersion;
 };
 
 }

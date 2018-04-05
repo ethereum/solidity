@@ -1401,37 +1401,74 @@ string ABIFunctions::copyToMemoryFunction(bool _fromCalldata)
 
 string ABIFunctions::shiftLeftFunction(size_t _numBits)
 {
+	solAssert(_numBits < 256, "");
+
 	string functionName = "shift_left_" + to_string(_numBits);
-	return createFunction(functionName, [&]() {
-		solAssert(_numBits < 256, "");
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue := mul(value, <multiplier>)
-			}
-			)")
-			("functionName", functionName)
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	if (m_evmVersion.hasBitwiseShifting())
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := shl(<numBits>, value)
+				}
+				)")
+				("functionName", functionName)
+				("numBits", to_string(_numBits))
+				.render();
+		});
+	}
+	else
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := mul(value, <multiplier>)
+				}
+				)")
+				("functionName", functionName)
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+				.render();
+		});
+	}
 }
 
 string ABIFunctions::shiftRightFunction(size_t _numBits, bool _signed)
 {
+	solAssert(_numBits < 256, "");
+
 	string functionName = "shift_right_" + to_string(_numBits) + (_signed ? "_signed" : "_unsigned");
-	return createFunction(functionName, [&]() {
-		solAssert(_numBits < 256, "");
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue := <div>(value, <multiplier>)
-			}
-			)")
-			("functionName", functionName)
-			("div", _signed ? "sdiv" : "div")
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	if (m_evmVersion.hasBitwiseShifting())
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := <shiftOp>(<numBits>, value)
+				}
+				)")
+				("functionName", functionName)
+				("shiftOp", _signed ? "sar" : "shr")
+				("numBits", to_string(_numBits))
+				.render();
+		});
+	}
+	else
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := <div>(value, <multiplier>)
+				}
+				)")
+				("functionName", functionName)
+				("div", _signed ? "sdiv" : "div")
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+				.render();
+		});
+	}
 }
 
 string ABIFunctions::roundUpFunction()
