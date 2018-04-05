@@ -32,9 +32,9 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
-string SymbolicVariable::uniqueSymbol() const
+string SymbolicVariable::uniqueSymbol(int _seq) const
 {
-	return m_declaration.name() + "_" + to_string(m_declaration.id());
+	return m_declaration.name() + "_" + to_string(m_declaration.id()) + "_" + to_string(_seq);
 }
 
 

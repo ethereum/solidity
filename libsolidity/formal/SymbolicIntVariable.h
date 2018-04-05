@@ -44,6 +44,9 @@ public:
 
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);
+
+protected:
+	smt::Expression valueAtSequence(int _seq) const;
 };
 
 }
