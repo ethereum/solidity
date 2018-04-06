@@ -169,6 +169,13 @@ For more information, see the section on :ref:`address`.
     Use a pattern where the recipient withdraws the money.
 
 .. note::
+   If storage variables are accessed via a low-level delegatecall, the storage layout of the two contracts
+   must align in order for the called contract to correctly access the storage variables of the calling contract by name.
+   This is of course not the case if storage pointers are passed as function arguments as in the case for
+   the high-level libraries.
+   
+    
+.. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
 .. index:: this, selfdestruct
