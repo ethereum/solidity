@@ -27,6 +27,7 @@ Bugfixes:
  * Type System: Improve error message when attempting to shift by a fractional amount.
  * Type System: Make external library functions accessible.
  * Type System: Prevent encoding of weird types.
+ * Static Analyzer: Fix non-deterministic order of unused variable warnings.
 
 ### 0.4.21 (2018-03-07)
 
