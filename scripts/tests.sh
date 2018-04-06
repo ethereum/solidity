@@ -99,11 +99,18 @@ then
     progress=""
 fi
 
+EVM_VERSIONS="homestead byzantium"
+
+if [ "$CIRCLECI" ] || [ -z "$CI" ]
+then
+EVM_VERSIONS+=" constantinople"
+fi
+
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
 # and homestead / byzantium VM, # pointing to that IPC endpoint.
 for optimize in "" "--optimize"
 do
-  for vm in homestead byzantium
+  for vm in $EVM_VERSIONS
   do
     echo "--> Running tests using "$optimize" --evm-version "$vm"..."
     log=""
