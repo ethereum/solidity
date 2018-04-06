@@ -548,7 +548,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			if (m_context.runtimeContext())
 				// We have a runtime context, so we need the creation part.
-				utils().rightShiftNumberOnStack(32, false);
+				utils().rightShiftNumberOnStack(32);
 			else
 				// Extract the runtime part.
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;

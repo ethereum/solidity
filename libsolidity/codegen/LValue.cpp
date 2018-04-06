@@ -267,7 +267,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 			{
 				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
-				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes(), false);
+				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes());
 			}
 			else
 			{
