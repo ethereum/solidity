@@ -78,13 +78,13 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
 		{
-			if (var.first->isCallableParameter())
+			if (var.first.second->isCallableParameter())
 				m_errorReporter.warning(
-					var.first->location(),
+					var.first.second->location(),
 					"Unused function parameter. Remove or comment out the variable name to silence this warning."
 				);
 			else
-				m_errorReporter.warning(var.first->location(), "Unused local variable.");
+				m_errorReporter.warning(var.first.second->location(), "Unused local variable.");
 		}
 
 	m_localVarUseCount.clear();
@@ -97,7 +97,7 @@ bool StaticAnalyzer::visit(Identifier const& _identifier)
 		{
 			solAssert(!var->name().empty(), "");
 			if (var->isLocalVariable())
-				m_localVarUseCount[var] += 1;
+				m_localVarUseCount[make_pair(var->id(), var)] += 1;
 		}
 	return true;
 }
@@ -109,7 +109,7 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 		solAssert(_variable.isLocalVariable(), "");
 		if (_variable.name() != "")
 			// This is not a no-op, the entry might pre-exist.
-			m_localVarUseCount[&_variable] += 0;
+			m_localVarUseCount[make_pair(_variable.id(), &_variable)] += 0;
 	}
 	else if (_variable.isStateVariable())
 	{
@@ -132,7 +132,7 @@ bool StaticAnalyzer::visit(Return const& _return)
 	if (m_currentFunction && _return.expression())
 		for (auto const& var: m_currentFunction->returnParameters())
 			if (!var->name().empty())
-				m_localVarUseCount[var.get()] += 1;
+				m_localVarUseCount[make_pair(var->id(), var.get())] += 1;
 	return true;
 }
 
@@ -224,7 +224,7 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 		{
 			solAssert(!var->name().empty(), "");
 			if (var->isLocalVariable())
-				m_localVarUseCount[var] += 1;
+				m_localVarUseCount[make_pair(var->id(), var)] += 1;
 		}
 	}
 
