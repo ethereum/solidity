@@ -78,6 +78,20 @@ void CompilerUtils::toSizeAfterFreeMemoryPointer()
 	m_context << Instruction::SWAP1;
 }
 
+void CompilerUtils::revertWithStringData(Type const& _argumentType)
+{
+	solAssert(_argumentType.isImplicitlyConvertibleTo(*Type::fromElementaryTypeName("string memory")), "");
+	fetchFreeMemoryPointer();
+	m_context << (u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256("Error(string)")))) << (256 - 32));
+	m_context << Instruction::DUP2 << Instruction::MSTORE;
+	m_context << u256(4) << Instruction::ADD;
+	// Stack: <string data> <mem pos of encoding start>
+	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
+	toSizeAfterFreeMemoryPointer();
+	m_context << Instruction::REVERT;
+	m_context.adjustStackOffset(_argumentType.sizeOnStack());
+}
+
 unsigned CompilerUtils::loadFromMemory(
 	unsigned _offset,
 	Type const& _type,

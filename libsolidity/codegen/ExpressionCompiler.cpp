@@ -685,17 +685,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			if (!arguments.empty())
 			{
+				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
 				solAssert(function.parameterTypes().size() == 1, "");
-				m_context << u256(0);
 				arguments.front()->accept(*this);
-				utils().fetchFreeMemoryPointer();
-				utils().abiEncode(
-					{make_shared<IntegerType>(256), arguments.front()->annotation().type},
-					{make_shared<IntegerType>(256), make_shared<ArrayType>(DataLocation::Memory, true)}
-				);
-				utils().toSizeAfterFreeMemoryPointer();
-				m_context << Instruction::REVERT;
+				utils().revertWithStringData(*arguments.front()->annotation().type);
 			}
 			else
 				m_context.appendRevert();
@@ -937,18 +931,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
 			else if (arguments.size() > 1)
-			{
-				m_context << u256(0);
-				utils().moveIntoStack(arguments.at(1)->annotation().type->sizeOnStack(), 1);
-				utils().fetchFreeMemoryPointer();
-				utils().abiEncode(
-					{make_shared<IntegerType>(256), arguments.at(1)->annotation().type},
-					{make_shared<IntegerType>(256), make_shared<ArrayType>(DataLocation::Memory, true)}
-				);
-				utils().toSizeAfterFreeMemoryPointer();
-				m_context << Instruction::REVERT;
-				m_context.adjustStackOffset(arguments.at(1)->annotation().type->sizeOnStack());
-			}
+				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 			else
 				m_context.appendRevert();
 			// the success branch
