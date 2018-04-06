@@ -40,9 +40,14 @@ struct SyntaxTestError
 {
 	std::string type;
 	std::string message;
+	int locationStart;
+	int locationEnd;
 	bool operator==(SyntaxTestError const& _rhs) const
 	{
-		return type == _rhs.type && message == _rhs.message;
+		return type == _rhs.type &&
+			message == _rhs.message &&
+			locationStart == _rhs.locationStart &&
+			locationEnd == _rhs.locationEnd;
 	}
 };
 

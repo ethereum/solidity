@@ -5,6 +5,6 @@ contract C {
     uint constant d = 2 + a;
 }
 // ----
-// TypeError: The value of the constant a has a cyclic dependency via c.
-// TypeError: The value of the constant c has a cyclic dependency via d.
-// TypeError: The value of the constant d has a cyclic dependency via a.
+// TypeError: (17-40): The value of the constant a has a cyclic dependency via c.
+// TypeError: (71-111): The value of the constant c has a cyclic dependency via d.
+// TypeError: (117-140): The value of the constant d has a cyclic dependency via a.

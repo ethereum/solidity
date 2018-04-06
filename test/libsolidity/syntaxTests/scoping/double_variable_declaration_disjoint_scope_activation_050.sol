@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// Warning: Unused local variable.
-// Warning: Unused local variable.
+// Warning: (87-93): Unused local variable.
+// Warning: (105-111): Unused local variable.

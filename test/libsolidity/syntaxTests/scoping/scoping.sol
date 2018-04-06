@@ -8,4 +8,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: Undeclared identifier.
+// DeclarationError: (123-124): Undeclared identifier.

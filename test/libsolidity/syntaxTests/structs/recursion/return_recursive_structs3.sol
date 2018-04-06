@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: Internal or recursive type is not allowed for public or external functions.
+// TypeError: (119-122): Internal or recursive type is not allowed for public or external functions.

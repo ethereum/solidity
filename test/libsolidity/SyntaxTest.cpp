@@ -34,17 +34,38 @@ namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
 template<typename IteratorType>
-void skipWhitespace(IteratorType& it, IteratorType end)
+void skipWhitespace(IteratorType& _it, IteratorType _end)
 {
-	while (it != end && isspace(*it))
-		++it;
+	while (_it != _end && isspace(*_it))
+		++_it;
 }
 
 template<typename IteratorType>
-void skipSlashes(IteratorType& it, IteratorType end)
+void skipSlashes(IteratorType& _it, IteratorType _end)
 {
-	while (it != end && *it == '/')
-		++it;
+	while (_it != _end && *_it == '/')
+		++_it;
+}
+
+void expect(string::iterator& _it, string::iterator _end, string::value_type _c)
+{
+	if (_it == _end || *_it != _c)
+		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
+	++_it;
+}
+
+int parseUnsignedInteger(string::iterator &_it, string::iterator _end)
+{
+	if (_it == _end || !isdigit(*_it))
+		throw runtime_error("Invalid test expectation. Source location expected.");
+	int result = 0;
+	while (_it != _end && isdigit(*_it))
+	{
+		result *= 10;
+		result += *_it - '0';
+		++_it;
+	}
+	return result;
 }
 
 SyntaxTest::SyntaxTest(string const& _filename)
@@ -60,22 +81,39 @@ SyntaxTest::SyntaxTest(string const& _filename)
 
 bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
+	string const versionPragma = "pragma solidity >=0.0;\n";
 	m_compiler.reset();
-	m_compiler.addSource("", "pragma solidity >=0.0;\n" + m_source);
+	m_compiler.addSource("", versionPragma + m_source);
 	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
 
 	if (m_compiler.parse())
 		m_compiler.analyze();
 
 	for (auto const& currentError: filterErrors(m_compiler.errors(), true))
-		m_errorList.emplace_back(SyntaxTestError{currentError->typeName(), errorMessage(*currentError)});
+	{
+		int locationStart = -1, locationEnd = -1;
+		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
+		{
+			// ignore the version pragma inserted by the testing tool when calculating locations.
+			if (location->start >= static_cast<int>(versionPragma.size()))
+				locationStart = location->start - versionPragma.size();
+			if (location->end >= static_cast<int>(versionPragma.size()))
+				locationEnd = location->end - versionPragma.size();
+		}
+		m_errorList.emplace_back(SyntaxTestError{
+			currentError->typeName(),
+			errorMessage(*currentError),
+			locationStart,
+			locationEnd
+		});
+	}
 
 	if (m_expectations != m_errorList)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
 		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 		printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:\n";
+		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 		return false;
 	}
@@ -98,6 +136,16 @@ void SyntaxTest::printErrorList(
 				FormattedScope scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
 				_stream << _linePrefix;
 				_stream << error.type << ": ";
+			}
+			if (error.locationStart >= 0 || error.locationEnd >= 0)
+			{
+				_stream << "(";
+				if (error.locationStart >= 0)
+					_stream << error.locationStart;
+				_stream << "-";
+				if (error.locationEnd >= 0)
+					_stream << error.locationEnd;
+				_stream << "): ";
 			}
 			_stream << error.message << endl;
 		}
@@ -147,8 +195,28 @@ vector<SyntaxTestError> SyntaxTest::parseExpectations(istream& _stream)
 
 		skipWhitespace(it, line.end());
 
+		int locationStart = -1;
+		int locationEnd = -1;
+
+		if (it != line.end() && *it == '(')
+		{
+			++it;
+			locationStart = parseUnsignedInteger(it, line.end());
+			expect(it, line.end(), '-');
+			locationEnd = parseUnsignedInteger(it, line.end());
+			expect(it, line.end(), ')');
+			expect(it, line.end(), ':');
+		}
+
+		skipWhitespace(it, line.end());
+
 		string errorMessage(it, line.end());
-		expectations.emplace_back(SyntaxTestError{move(errorType), move(errorMessage)});
+		expectations.emplace_back(SyntaxTestError{
+			move(errorType),
+			move(errorMessage),
+			locationStart,
+			locationEnd
+		});
 	}
 	return expectations;
 }
