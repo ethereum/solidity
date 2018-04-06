@@ -473,7 +473,7 @@ Catching exceptions is not yet possible.
 
 In the following example, you can see how ``require`` can be used to easily check conditions on inputs
 and how ``assert`` can be used for internal error checking. Note that you can optionally provide
-a message string for require, but not for assert.
+a message string for ``require``, but not for ``assert``.
 
 ::
 
@@ -539,9 +539,13 @@ The following example shows how an error string can be used together with revert
         }
     }
 
-The provided string will be abi-encoded together with a uint value that will always be zero.
-This means that if a string ``x`` is provided, ``(0, x)`` will be encoded as if a function with arguments
-``(uint256, string)`` was called. This zero is used as a version identifier. Future extensions
-of this feature might provide actual exception payload of dynamic type and this number could be used
-to encode the type or also as a simple numeric error code. Until this is specified, a zero will
-be used in all cases.
+The provided string will be :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
+In the above example, ``revert("Not enough Ether provided.");`` will cause the following hexadecimal data be
+set as error return data:
+
+.. code::
+
+    0x08c379a0                                                         // Function selector for Error(string)
+    0x0000000000000000000000000000000000000000000000000000000000000020 // Data offset
+    0x000000000000000000000000000000000000000000000000000000000000001a // String length
+    0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
