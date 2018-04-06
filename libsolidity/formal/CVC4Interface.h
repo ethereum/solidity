@@ -21,7 +21,7 @@
 
 #include <boost/noncopyable.hpp>
 
-#include <z3++.h>
+#include <cvc4/cvc4.h>
 
 namespace dev
 {
@@ -30,10 +30,10 @@ namespace solidity
 namespace smt
 {
 
-class Z3Interface: public SolverInterface, public boost::noncopyable
+class CVC4Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	Z3Interface();
+	CVC4Interface();
 
 	void reset() override;
 
@@ -48,13 +48,13 @@ public:
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
-	z3::expr toZ3Expr(Expression const& _expr);
-	z3::sort z3Sort(smt::Sort _sort);
+	CVC4::Expr toCVC4Expr(Expression const& _expr);
+	CVC4::Type cvc4Sort(smt::Sort _sort);
 
-	z3::context m_context;
-	z3::solver m_solver;
-	std::map<std::string, z3::expr> m_constants;
-	std::map<std::string, z3::func_decl> m_functions;
+	CVC4::ExprManager m_context;
+	CVC4::SmtEngine m_solver;
+	std::map<std::string, CVC4::Expr> m_constants;
+	std::map<std::string, CVC4::Expr> m_functions;
 };
 
 }

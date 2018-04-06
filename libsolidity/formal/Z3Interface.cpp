@@ -116,21 +116,6 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toZ3Expr(arg));
 
-	static map<string, unsigned> arity{
-		{"ite", 3},
-		{"not", 1},
-		{"and", 2},
-		{"or", 2},
-		{"=", 2},
-		{"<", 2},
-		{"<=", 2},
-		{">", 2},
-		{">=", 2},
-		{"+", 2},
-		{"-", 2},
-		{"*", 2},
-		{"/", 2}
-	};
 	string const& n = _expr.name;
 	if (m_functions.count(n))
 		return m_functions.at(n)(arguments);
@@ -150,7 +135,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return m_context.int_val(n.c_str());
 	}
 
-	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
+	solAssert(_expr.hasCorrectArity(), "");
 	if (n == "ite")
 		return z3::ite(arguments[0], arguments[1], arguments[2]);
 	else if (n == "not")

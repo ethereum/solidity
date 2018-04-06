@@ -65,6 +65,26 @@ public:
 	Expression& operator=(Expression const&) = default;
 	Expression& operator=(Expression&&) = default;
 
+	bool hasCorrectArity() const
+	{
+		static std::map<std::string, unsigned> const operatorsArity{
+			{"ite", 3},
+			{"not", 1},
+			{"and", 2},
+			{"or", 2},
+			{"=", 2},
+			{"<", 2},
+			{"<=", 2},
+			{">", 2},
+			{">=", 2},
+			{"+", 2},
+			{"-", 2},
+			{"*", 2},
+			{"/", 2}
+		};
+		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
+	}
+
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
 		solAssert(_trueValue.sort == _falseValue.sort, "");
