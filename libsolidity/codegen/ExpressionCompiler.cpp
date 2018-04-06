@@ -1718,8 +1718,9 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		if (m_context.evmVersion().hasBitwiseShifting())
-			m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
+		// NOTE: SAR rounds differently than SDIV
+		if (m_context.evmVersion().hasBitwiseShifting() && !c_valueSigned)
+			m_context << Instruction::SHR;
 		else
 			m_context << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
 		break;

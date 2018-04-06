@@ -1439,17 +1439,18 @@ string ABIFunctions::shiftRightFunction(size_t _numBits, bool _signed)
 	solAssert(_numBits < 256, "");
 
 	string functionName = "shift_right_" + to_string(_numBits) + (_signed ? "_signed" : "_unsigned");
-	if (m_evmVersion.hasBitwiseShifting())
+
+	// NOTE: SAR rounds differently than SDIV
+	if (m_evmVersion.hasBitwiseShifting() && !_signed)
 	{
 		return createFunction(functionName, [&]() {
 			return
 				Whiskers(R"(
 				function <functionName>(value) -> newValue {
-					newValue := <shiftOp>(<numBits>, value)
+					newValue := shr(<numBits>, value)
 				}
 				)")
 				("functionName", functionName)
-				("shiftOp", _signed ? "sar" : "shr")
 				("numBits", to_string(_numBits))
 				.render();
 		});

@@ -1274,8 +1274,9 @@ void CompilerUtils::leftShiftNumberOnStack(unsigned _bits)
 void CompilerUtils::rightShiftNumberOnStack(unsigned _bits, bool _isSigned)
 {
 	solAssert(_bits < 256, "");
-	if (m_context.evmVersion().hasBitwiseShifting())
-		m_context << _bits << (_isSigned ? Instruction::SAR : Instruction::SHR);
+	// NOTE: SAR rounds differently than SDIV
+	if (m_context.evmVersion().hasBitwiseShifting() && !_isSigned)
+		m_context << _bits << Instruction::SHR;
 	else
 		m_context << (u256(1) << _bits) << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
 }
