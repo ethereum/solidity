@@ -985,7 +985,8 @@ void CommandLineInterface::handleFtimeReport(string const& _argStr)
                 */
                 //cout << "testtesttest" << '\n';
                 //t_stack.print_flag = true;
-                //t_stack.print();
+                t_stack.print();
+                t_stack.print_flag = true;
                 //TimeNodeStack t_stack;
 		//t_stack.push(string("hello world"));
 		//t_stack.push(string("compileStack"));

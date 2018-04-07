@@ -23,10 +23,11 @@ public:
 	void pop();
 	void print();
 	void print_recursive(const TimeNode& x, const string& arrow);
+        bool print_flag = false;
 private:
 	vector<TimeNode> stack;
+        vector<TimeNode> print_stack;
 	std::chrono::high_resolution_clock::time_point start;
-        bool printed = false;
 };
 
 extern TimeNodeStack t_stack;

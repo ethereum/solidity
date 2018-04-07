@@ -31,12 +31,17 @@ void TimeNodeStack::pop()
 		TimeNode t_node = stack[stack.size() - 1];
 		stack.pop_back();
 		t_node.end = std::chrono::high_resolution_clock::now();
-                //if(stack[stack.size()-1].end
 		stack[stack.size() - 1].children.push_back(t_node);
 	} else if (stack.size() == 1) {
 		stack[0].end = std::chrono::high_resolution_clock::now();
-                //if(print_flag)
-                print();
+                if(print_flag){
+                        print_recursive(stack[0], string(""));
+                        stack.pop_back();
+                } else {
+                        print_stack.push_back(stack[0]);
+                        stack.pop_back();
+                }
+                //print();
                 //stack.pop_back();
 	} else {
 		throw runtime_error("error");
@@ -57,19 +62,20 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 
 void TimeNodeStack::print()
 {
-        if (stack.size() != 1) {
-		throw runtime_error("Error: not finished visiting the call stack.");
-	}
-        if (!printed) {
-                printed = true;
-	        cout << setw(60) << left << "namespace/function name" << setw(20) << 
-                        left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
-                cout << string(100, '-') << '\n';
-        }
+        //User should be allowed to put more than one function at top level of tree, e.g. processInput and actonInput
+        //if (stack.size() != 1) {
+	//	throw runtime_error("Error: not finished visiting the call stack.");
+	//}
+        //if (!printed) {
+        cout << setw(60) << left << "namespace/function name" << setw(20) << 
+                left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
+        cout << string(100, '-') << '\n';
         //cout << "stack size: " << stack.size() << '\n';
-	auto node = stack[0];
-	print_recursive(node, string(""));
-	stack.pop_back();
+	for(TimeNode node: print_stack){
+                //auto node = stack[0];
+	        print_recursive(node, string(""));
+	        //stack.pop_back();
+        }
 }
 
 TimeNodeStack t_stack = TimeNodeStack();
