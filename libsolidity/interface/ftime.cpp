@@ -42,7 +42,7 @@ void TimeNodeStack::pop()
 
 void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 {
-	cout << setw(80) << arrow << x.name << setw(20) << std::chrono::duration_cast<std::chrono::microseconds>(x.begin - start).count() << setw(10) << std::chrono::duration_cast<std::chrono::microseconds>(x.end - x.begin).count() << "\n";
+	cout << setw(60) << left << arrow + x.name << setw(20) << left << std::chrono::duration_cast<std::chrono::microseconds>(x.begin - start).count() << setw(20) << left << std::chrono::duration_cast<std::chrono::microseconds>(x.end - x.begin).count() << '\n';
 
 	for (TimeNode child : x.children) {
 		print_recursive(child, arrow + "-->");
@@ -54,7 +54,8 @@ void TimeNodeStack::print()
 	if (stack.size() != 1) {
 		throw runtime_error("Error: not finished visiting the call stack.");
 	}
-	cout << setw(80) << "namespace/function name" << setw(20) << "unix begin time" << setw(10) << "time elapsed\n";
+	cout << setw(60) << left << "namespace/function name" << setw(20) << left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
+        cout << string(100, '-') << '\n';
 	auto node = stack[0];
 	print_recursive(node, string(""));
 	stack.pop_back();
