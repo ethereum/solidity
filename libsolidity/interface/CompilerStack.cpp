@@ -685,7 +685,8 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 )
 {
-	if (
+	t_stack.push("CompilerStack::compileContract: " + _contract.name());
+        if (
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().unimplementedFunctions.empty() ||
 		!_contract.constructorIsPublic()
@@ -693,9 +694,8 @@ void CompilerStack::compileContract(
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
-
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
-	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+        Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
 	bytes cborEncodedHash =
 		// CBOR-encoding of the key "bzzr0"
@@ -719,7 +719,6 @@ void CompilerStack::compileContract(
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
 	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	compiledContract.compiler = compiler;
-
 	try
 	{
 		compiledContract.object = compiler->assembledObject();
@@ -765,6 +764,7 @@ void CompilerStack::compileContract(
 
 		// TODO: Report error / warning
 	}
+        t_stack.pop();
 }
 
 string const CompilerStack::lastContractName() const
@@ -823,7 +823,8 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 
 string CompilerStack::createMetadata(Contract const& _contract) const
 {
-	Json::Value meta;
+	t_stack.push("CompilerStack::createMetadata");
+        Json::Value meta;
 	meta["version"] = 1;
 	meta["language"] = "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
@@ -873,7 +874,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	meta["output"]["abi"] = contractABI(_contract);
 	meta["output"]["userdoc"] = natspecUser(_contract);
 	meta["output"]["devdoc"] = natspecDev(_contract);
-
+        t_stack.pop();
 	return jsonCompactPrint(meta);
 }
 

@@ -64,7 +64,7 @@ void ContractCompiler::compileContract(
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
-	t_stack.push("Contract Compiler::compileContract: " + _contract.name());
+	t_stack.push("ContractCompiler::compileContract");
         CompilerContext::LocationSetter locationSetter(m_context, _contract);
         
 	if (_contract.isLibrary())
