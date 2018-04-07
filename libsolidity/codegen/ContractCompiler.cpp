@@ -19,6 +19,7 @@
  * @date 2014
  * Solidity compiler.
  */
+#include <libsolidity/interface/ftime.h>
 
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
@@ -63,8 +64,9 @@ void ContractCompiler::compileContract(
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
-	CompilerContext::LocationSetter locationSetter(m_context, _contract);
-
+	t_stack.push("Contract Compiler::compileContract: " + _contract.name());
+        CompilerContext::LocationSetter locationSetter(m_context, _contract);
+        
 	if (_contract.isLibrary())
 		// Check whether this is a call (true) or a delegatecall (false).
 		// This has to be the first code in the contract.
@@ -73,6 +75,7 @@ void ContractCompiler::compileContract(
 	initializeContext(_contract, _contracts);
 	appendFunctionSelector(_contract);
 	appendMissingFunctions();
+        t_stack.pop();
 }
 
 size_t ContractCompiler::compileConstructor(
@@ -116,12 +119,14 @@ void ContractCompiler::initializeContext(
 	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
 )
 {
-	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
+	t_stack.push("ContractCompiler::initializeContext");
+        m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
 	m_context.setCompiledContracts(_compiledContracts);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);
+        t_stack.pop();
 }
 
 void ContractCompiler::appendCallValueCheck()
@@ -300,7 +305,8 @@ void ContractCompiler::appendDelegatecallCheck()
 
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
-	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
+	t_stack.push("ContractCompiler::appendFunctionSelector");
+        map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
 	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
 
 	if (_contract.isLibrary())
@@ -384,6 +390,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		// Consumes the return parameters.
 		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
+        t_stack.pop();
 }
 
 void ContractCompiler::appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary)
@@ -872,7 +879,8 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 
 void ContractCompiler::appendMissingFunctions()
 {
-	while (Declaration const* function = m_context.nextFunctionToCompile())
+	t_stack.push("ContractCompiler::appendMissingFunctions");
+        while (Declaration const* function = m_context.nextFunctionToCompile())
 	{
 		m_context.setStackOffset(0);
 		function->accept(*this);
@@ -882,6 +890,7 @@ void ContractCompiler::appendMissingFunctions()
 	string abiFunctions = m_context.abiFunctions().requestedFunctions();
 	if (!abiFunctions.empty())
 		m_context.appendInlineAssembly("{" + move(abiFunctions) + "}", {}, true);
+        t_stack.pop();
 }
 
 void ContractCompiler::appendModifierOrFunctionCode()
