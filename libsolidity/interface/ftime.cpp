@@ -60,3 +60,5 @@ void TimeNodeStack::print()
 	print_recursive(node, string(""));
 	stack.pop_back();
 }
+
+TimeNodeStack t_stack = TimeNodeStack();

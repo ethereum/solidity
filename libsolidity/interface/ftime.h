@@ -27,3 +27,5 @@ private:
 	vector<TimeNode> stack;
 	std::chrono::high_resolution_clock::time_point start;
 };
+
+extern TimeNodeStack t_stack;

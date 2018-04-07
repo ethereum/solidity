@@ -981,7 +981,7 @@ void CommandLineInterface::handleFtimeReport(string const& _argStr)
 
 	if (m_args.count(_argStr))
 	{
-		TimeNodeStack t_stack;
+		//TimeNodeStack t_stack;
 		t_stack.push(string("hello world"));
 		t_stack.push(string("compileStack"));
 		t_stack.push(string("parseAndAnalyze"));
