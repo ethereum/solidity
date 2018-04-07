@@ -407,7 +407,8 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 
 bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
-	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
+	t_stack.push("CLI::readInputFilesAndConfigureRemappings");
+        bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
 	if (!m_args.count(g_argInputFile))
 		addStdin = true;
@@ -455,7 +456,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
-
+        t_stack.pop();
 	return true;
 }
 
@@ -701,7 +702,8 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadCallback::Callback fileReader = [this](string const& _path)
+	t_stack.push("CommandLineInterface::processInput()");
+        ReadCallback::Callback fileReader = [this](string const& _path)
 	{
 		try
 		{
@@ -742,7 +744,6 @@ bool CommandLineInterface::processInput()
 			return ReadCallback::Result{false, "Unknown exception in read callback."};
 		}
 	};
-
 	if (m_args.count(g_argAllowPaths))
 	{
 		vector<string> paths;
@@ -758,7 +759,6 @@ bool CommandLineInterface::processInput()
 			m_allowedDirectories.push_back(filesystem_path);
 		}
 	}
-
 	if (m_args.count(g_argStandardJSON))
 	{
 		string input = dev::readStandardInput();
@@ -766,15 +766,13 @@ bool CommandLineInterface::processInput()
 		cout << compiler.compile(input) << endl;
 		return true;
 	}
-
+        
 	if (!readInputFilesAndConfigureRemappings())
 		return false;
-
 	if (m_args.count(g_argLibraries))
 		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
 			if (!parseLibraryOption(library))
 				return false;
-
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
@@ -786,7 +784,6 @@ bool CommandLineInterface::processInput()
 		}
 		m_evmVersion = *versionOption;
 	}
-
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
@@ -887,7 +884,7 @@ bool CommandLineInterface::processInput()
 		cerr << "Unknown exception during compilation." << endl;
 		return false;
 	}
-
+        t_stack.pop();
 	return true;
 }
 
@@ -982,12 +979,12 @@ void CommandLineInterface::handleFtimeReport(string const& _argStr)
 	if (m_args.count(_argStr))
 	{
 		//TimeNodeStack t_stack;
-		t_stack.push(string("hello world"));
-		t_stack.push(string("compileStack"));
-		t_stack.push(string("parseAndAnalyze"));
-		t_stack.pop();
-		t_stack.pop();
-		t_stack.pop();
+		//t_stack.push(string("hello world"));
+		//t_stack.push(string("compileStack"));
+		//t_stack.push(string("parseAndAnalyze"));
+		//t_stack.pop();
+		//t_stack.pop();
+		//t_stack.pop();
 	}
 }
 
@@ -1063,13 +1060,15 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
+	t_stack.push("CommandLineInterface::actOnInput");
+        if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
 		// Already done in "processInput" phase.
 		return true;
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
+        t_stack.pop();
 	return !m_error;
 }
 

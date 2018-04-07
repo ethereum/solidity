@@ -20,7 +20,7 @@
  * @date 2014
  * Full-stack compiler that converts a source code string to bytecode.
  */
-
+#include <libsolidity/interface/ftime.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 
@@ -58,7 +58,8 @@ using namespace dev::solidity;
 
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
-	vector<Remapping> remappings;
+	t_stack.push("CompilerStack::setRemappings");
+        vector<Remapping> remappings;
 	for (auto const& remapping: _remappings)
 	{
 		auto eq = find(remapping.begin(), remapping.end(), '=');
@@ -72,12 +73,15 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 		remappings.push_back(r);
 	}
 	swap(m_remappings, remappings);
+        t_stack.pop();
 }
 
 void CompilerStack::setEVMVersion(EVMVersion _version)
 {
-	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	t_stack.push("CompilerStack::setEVMVersion");
+        solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
 	m_evmVersion = _version;
+        t_stack.pop();
 }
 
 void CompilerStack::reset(bool _keepSources)
@@ -117,6 +121,7 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 bool CompilerStack::parse()
 {
 	//reset
+        t_stack.push("CompilerStack::parse");
 	if(m_stackState != SourcesSet)
 		return false;
 	m_errorReporter.clear();
@@ -151,6 +156,7 @@ bool CompilerStack::parse()
 	if (Error::containsOnlyWarnings(m_errorReporter.errors()))
 	{
 		m_stackState = ParsingSuccessful;
+                t_stack.pop();
 		return true;
 	}
 	else
@@ -159,7 +165,8 @@ bool CompilerStack::parse()
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState != ParsingSuccessful)
+	t_stack.push("CompilerStack::analyze");
+        if (m_stackState != ParsingSuccessful)
 		return false;
 	resolveImports();
 
@@ -248,6 +255,7 @@ bool CompilerStack::analyze()
 	if (noErrors)
 	{
 		m_stackState = AnalysisSuccessful;
+                t_stack.pop();
 		return true;
 	}
 	else
@@ -269,7 +277,8 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 
 bool CompilerStack::compile()
 {
-	if (m_stackState < AnalysisSuccessful)
+	t_stack.push("CompilerStack::compile");
+        if (m_stackState < AnalysisSuccessful)
 		if (!parseAndAnalyze())
 			return false;
 
@@ -281,6 +290,7 @@ bool CompilerStack::compile()
 					compileContract(*contract, compiledContracts);
 	this->link();
 	m_stackState = CompilationSuccessful;
+        t_stack.pop();
 	return true;
 }
 
