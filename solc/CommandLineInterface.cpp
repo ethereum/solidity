@@ -25,6 +25,8 @@
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
+#include <libsolidity/interface/ftime.h>
+
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -117,6 +119,7 @@ static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
+static string const g_strFtimeReport = "ftime-report";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -154,6 +157,7 @@ static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
+static string const g_argFtimeReport = g_strFtimeReport;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -227,6 +231,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 			return true;
 	return false;
 }
+
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
@@ -622,6 +627,7 @@ Allowed options)",
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
+		(g_argFtimeReport.c_str(), "Show ftime-report of the program.")
 		(g_argAst.c_str(), "AST of all source files.")
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
 		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
@@ -964,6 +970,27 @@ void CommandLineInterface::handleCombinedJSON()
 		cout << json << endl;
 }
 
+void CommandLineInterface::handleFtimeReport(string const& _argStr)
+{
+	string title;
+
+	if (_argStr == g_argFtimeReport)
+		title = "... Pass execution timing report ...";
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argFtimeReport for ftime report"));
+
+	if (m_args.count(_argStr))
+	{
+		TimeNodeStack t_stack;
+		t_stack.push(string("hello world"));
+		t_stack.push(string("compileStack"));
+		t_stack.push(string("parseAndAnalyze"));
+		t_stack.pop();
+		t_stack.pop();
+		t_stack.pop();
+	}
+}
+
 void CommandLineInterface::handleAst(string const& _argStr)
 {
 	string title;
@@ -1193,6 +1220,7 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
+	handleFtimeReport(g_argFtimeReport);
 	handleAst(g_argAst);
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
