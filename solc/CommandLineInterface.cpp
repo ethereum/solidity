@@ -978,7 +978,15 @@ void CommandLineInterface::handleFtimeReport(string const& _argStr)
 
 	if (m_args.count(_argStr))
 	{
-		//TimeNodeStack t_stack;
+		/*
+                cout << setw(60) << left << "namespace/function name" << setw(20) << 
+                left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
+                cout << string(100, '-') << '\n';
+                */
+                //cout << "testtesttest" << '\n';
+                //t_stack.print_flag = true;
+                //t_stack.print();
+                //TimeNodeStack t_stack;
 		//t_stack.push(string("hello world"));
 		//t_stack.push(string("compileStack"));
 		//t_stack.push(string("parseAndAnalyze"));

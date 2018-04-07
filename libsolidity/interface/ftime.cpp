@@ -31,10 +31,13 @@ void TimeNodeStack::pop()
 		TimeNode t_node = stack[stack.size() - 1];
 		stack.pop_back();
 		t_node.end = std::chrono::high_resolution_clock::now();
+                //if(stack[stack.size()-1].end
 		stack[stack.size() - 1].children.push_back(t_node);
 	} else if (stack.size() == 1) {
 		stack[0].end = std::chrono::high_resolution_clock::now();
-		print();
+                //if(print_flag)
+                print();
+                //stack.pop_back();
 	} else {
 		throw runtime_error("error");
 	}
@@ -42,7 +45,10 @@ void TimeNodeStack::pop()
 
 void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 {
-	cout << setw(60) << left << arrow + x.name << setw(20) << left << std::chrono::duration_cast<std::chrono::microseconds>(x.begin - start).count() << setw(20) << left << std::chrono::duration_cast<std::chrono::microseconds>(x.end - x.begin).count() << '\n';
+	cout << setw(60) << left << arrow + x.name << setw(20) << left << 
+                std::chrono::duration_cast<std::chrono::microseconds>(x.begin - start).count() << 
+                setw(20) << left << std::chrono::duration_cast<std::chrono::microseconds>(x.end - x.begin).count() << 
+                '\n';
 
 	for (TimeNode child : x.children) {
 		print_recursive(child, arrow + "-->");
@@ -51,11 +57,16 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 
 void TimeNodeStack::print()
 {
-	if (stack.size() != 1) {
+        if (stack.size() != 1) {
 		throw runtime_error("Error: not finished visiting the call stack.");
 	}
-	cout << setw(60) << left << "namespace/function name" << setw(20) << left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
-        cout << string(100, '-') << '\n';
+        if (!printed) {
+                printed = true;
+	        cout << setw(60) << left << "namespace/function name" << setw(20) << 
+                        left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
+                cout << string(100, '-') << '\n';
+        }
+        //cout << "stack size: " << stack.size() << '\n';
 	auto node = stack[0];
 	print_recursive(node, string(""));
 	stack.pop_back();
