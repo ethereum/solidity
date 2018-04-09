@@ -339,5 +339,48 @@ BOOST_AUTO_TEST_CASE(pop_result)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(inline_single_use_functions)
+{
+	// Check that a function that is used only once is always inlined, but
+	// not if it is used multiple times.
+	BOOST_CHECK_EQUAL(
+		fullInline(R"({
+			let y := add(f(sload(mload(2))), mload(7))
+			function f(a) -> x { let r := mul(a, a) x := add(r, r) x := add(mload(x), r) sstore(r, sload(add(x, x))) }
+		})", false),
+		format(R"({
+			{
+				let _1 := mload(7)
+				let f_a := sload(mload(2))
+				let f_x
+				{
+					let f_r := mul(f_a, f_a)
+					f_x := add(f_r, f_r)
+					f_x := add(mload(f_x), f_r)
+					sstore(f_r, sload(add(f_x, f_x)))
+				}
+				let y := add(f_x, _1)
+			}
+			function f(a) -> x
+			{
+				let r := mul(a, a)
+				x := add(r, r)
+				x := add(mload(x), r)
+				sstore(r, sload(add(x, x)))
+			}
+		})", false)
+	);
+	BOOST_CHECK_EQUAL(
+		fullInline(R"({
+			let y := add(f(sload(mload(2))), f(mload(7)))
+			function f(a) -> x { let r := mul(a, a) x := add(r, r) x := add(mload(x), r) sstore(r, sload(add(x, x))) }
+		})", false),
+		format(R"({
+			   { let y := add(f(sload(mload(2))), f(mload(7))) }
+			   function f(a) -> x { let r := mul(a, a) x := add(r, r) x := add(mload(x), r) sstore(r, sload(add(x, x))) }
+		})", false)
+	);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

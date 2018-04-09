@@ -86,6 +86,8 @@ private:
 	Block& m_ast;
 	std::map<std::string, FunctionDefinition*> m_functions;
 	std::set<FunctionDefinition*> m_functionsToVisit;
+	/// Names of functions to always inline.
+	std::set<std::string> m_alwaysInline;
 	NameDispenser m_nameDispenser;
 };
 

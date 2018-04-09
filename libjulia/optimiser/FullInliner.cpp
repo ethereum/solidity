@@ -47,12 +47,16 @@ FullInliner::FullInliner(Block& _ast):
 	solAssert(m_ast.statements.front().type() == typeid(Block), "");
 	m_nameDispenser.m_usedNames = NameCollector(m_ast).names();
 
+	map<string, size_t> references = ReferencesCounter::countReferences(m_ast);
+
 	for (auto& statement: m_ast.statements)
 		if (statement.type() == typeid(FunctionDefinition))
 		{
 			FunctionDefinition& fun = boost::get<FunctionDefinition>(statement);
 			m_functions[fun.name] = &fun;
 			m_functionsToVisit.insert(&fun);
+			if (references[fun.name] <= 1)
+				m_alwaysInline.insert(fun.name);
 		}
 }
 
@@ -94,8 +98,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, string const& _callS
 
 	FunctionDefinition& calledFunction = function(_funCall.functionName.name);
 
-	// If the function is only referenced once, always inline it.
-	if (ReferencesCounter::countReferences(m_ast)[calledFunction.name] <= 1)
+	if (m_alwaysInline.count(calledFunction.name))
 		return true;
 
 	// Constant arguments might provide a means for further optimization, so the cause a bonus.
