@@ -446,6 +446,9 @@ public:
 	/// @returns true if the value is negative.
 	bool isNegative() const { return m_value < 0; }
 
+	/// @returns true if the value is zero.
+	bool isZero() const { return m_value == 0; }
+
 private:
 	rational m_value;
 
