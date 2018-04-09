@@ -343,18 +343,33 @@ void TypeChecker::annotateBaseConstructorArguments(
 	{
 		ASTNode const* previousNode = insertionResult.first->second;
 
+		SourceLocation const* mainLocation = nullptr;
 		SecondarySourceLocation ssl;
-		ssl.append("Second constructor call is here:", _argumentNode->location());
+	
+		if (
+			_currentContract.location().contains(previousNode->location()) ||
+			_currentContract.location().contains(_argumentNode->location())
+		)
+		{
+			mainLocation = &previousNode->location();
+			ssl.append("Second constructor call is here:", _argumentNode->location());
+		}
+		else
+		{
+			mainLocation = &_currentContract.location();
+			ssl.append("First constructor call is here: ", _argumentNode->location());
+			ssl.append("Second constructor call is here: ", previousNode->location());
+		}
 
 		if (v050)
 			m_errorReporter.declarationError(
-				previousNode->location(),
+				*mainLocation,
 				ssl,
 				"Base constructor arguments given twice."
 			);
 		else
 			m_errorReporter.warning(
-				previousNode->location(),
+				*mainLocation,
 				"Base constructor arguments given twice.",
 				ssl
 			);
