@@ -23,6 +23,11 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libsolc/libsolc.h>
 
+#include <libsolidity/interface/AssemblyStack.h>
+#include <libjulia/interpreter/Interpreter.h>
+
+#include <libsolidity/inlineasm/AsmData.h>
+
 #include <libdevcore/JSON.h>
 
 #include <boost/program_options.hpp>
@@ -112,6 +117,41 @@ void testStandardCompiler()
 		}
 }
 
+vector<string> runAndGetTrace(assembly::Block const& _ast)
+{
+	julia::InterpreterState state;
+	julia::Interpreter interpreter(state);
+	try
+	{
+		interpreter(_ast);
+	}
+	catch (julia::InterpreterTerminated const&)
+	{
+	}
+	return std::move(state.trace);
+}
+
+void testIuliaOptimizer()
+{
+	if (!quiet)
+		cout << "Testing iulia optimizer." << endl;
+	string input = readStandardInput();
+
+	AssemblyStack s(EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	if (!s.parseAndAnalyze("", input))
+	{
+		cout << "Invalid input." << endl;
+		return;
+	}
+	// TODO: could we run the two interpreters in parallel and stop on the first error?
+	vector<string> unoptimisedTrace = runAndGetTrace(s.parserResult());
+	s.optimise();
+	vector<string> optimisedTrace = runAndGetTrace(s.parserResult());
+	cout << "Trace length: " << unoptimisedTrace.size() << endl;
+	if (unoptimisedTrace != optimisedTrace)
+		abort();
+}
+
 void testCompiler(bool optimize)
 {
 	if (!quiet)
@@ -183,6 +223,11 @@ Allowed options)",
 			"Expects a binary string of up to 32 bytes on stdin."
 		)
 		(
+			"iulia-opt",
+			"Run the optimiser on the given iulia input and compare an "
+			"interpreter run on both versions."
+		)
+		(
 			"without-optimizer",
 			"Run without optimizations. Cannot be used together with standard-json."
 		);
@@ -209,6 +254,8 @@ Allowed options)",
 		testConstantOptimizer();
 	else if (arguments.count("standard-json"))
 		testStandardCompiler();
+	else if (arguments.count("iulia-opt"))
+		testIuliaOptimizer();
 	else
 		testCompiler(!arguments.count("without-optimizer"));
 

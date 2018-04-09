@@ -83,6 +83,8 @@ public:
 	/// Pretty-print the input after having parsed it.
 	std::string print() const;
 
+	assembly::Block const& parserResult() const { return *m_parserResult; }
+
 private:
 	bool analyzeParsed();
 
