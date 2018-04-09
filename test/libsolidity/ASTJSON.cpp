@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE(source_location)
 	BOOST_CHECK_EQUAL(astJson["children"][0]["name"], "ContractDefinition");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["name"], "FunctionDefinition");
 	BOOST_CHECK_EQUAL(astJson["children"][0]["children"][0]["src"], "13:32:1");
+
 }
 
 BOOST_AUTO_TEST_CASE(inheritance_specifier)
@@ -176,6 +177,9 @@ BOOST_AUTO_TEST_CASE(array_type_name)
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(true, sourceIndices).toJson(c.ast("a"));
+	Json::Value arrayDecl = astJson["children"][0]["children"][0]["attributes"];
+	BOOST_CHECK_EQUAL(arrayDecl["storageLocation"], "default");
+	BOOST_CHECK_EQUAL(arrayDecl["type"], "uint256[]");
 	Json::Value array = astJson["children"][0]["children"][0]["children"][0];
 	BOOST_CHECK_EQUAL(array["name"], "ArrayTypeName");
 	BOOST_CHECK_EQUAL(array["src"], "13:6:1");
@@ -234,6 +238,9 @@ BOOST_AUTO_TEST_CASE(non_utf8)
 	map<string, unsigned> sourceIndices;
 	sourceIndices["a"] = 1;
 	Json::Value astJson = ASTJsonConverter(true, sourceIndices).toJson(c.ast("a"));
+	Json::Value varDecl = astJson["children"][0]["children"][0]["children"][2]["children"][0]["children"][0];
+	BOOST_CHECK_EQUAL(varDecl["attributes"]["type"], "string");
+	BOOST_CHECK_EQUAL(varDecl["attributes"]["typeName"], Json::nullValue);
 	Json::Value literal = astJson["children"][0]["children"][0]["children"][2]["children"][0]["children"][1];
 	BOOST_CHECK_EQUAL(literal["name"], "Literal");
 	BOOST_CHECK_EQUAL(literal["attributes"]["hexvalue"], "ff");
