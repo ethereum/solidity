@@ -71,6 +71,34 @@ BOOST_AUTO_TEST_CASE(short_type_name_ref)
 	BOOST_CHECK_EQUAL(varDecl["typeName"]["typeDescriptions"]["typeString"], "uint256[][]");
 }
 
+BOOST_AUTO_TEST_CASE(long_type_name_binary_operation)
+{
+	CompilerStack c;
+	c.addSource("a", "contract c { function f() public { uint a = 2 + 3; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.parseAndAnalyze();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(false, sourceIndices).toJson(c.ast("a"));
+	Json::Value varDecl = astJson["nodes"][0]["nodes"][0]["body"]["statements"][0]["initialValue"]["commonType"];
+	BOOST_CHECK_EQUAL(varDecl["typeIdentifier"], "t_rational_5_by_1");
+	BOOST_CHECK_EQUAL(varDecl["typeString"], "int_const 5");
+}
+
+BOOST_AUTO_TEST_CASE(long_type_name_identifier)
+{
+	CompilerStack c;
+	c.addSource("a", "contract c { uint[] a; function f() public { uint[] b = a; } }");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.parseAndAnalyze();
+	map<string, unsigned> sourceIndices;
+	sourceIndices["a"] = 1;
+	Json::Value astJson = ASTJsonConverter(false, sourceIndices).toJson(c.ast("a"));
+	Json::Value varDecl = astJson["nodes"][0]["nodes"][1]["body"]["statements"][0]["initialValue"];
+	BOOST_CHECK_EQUAL(varDecl["typeDescriptions"]["typeIdentifier"], "t_array$_t_uint256_$dyn_storage");
+	BOOST_CHECK_EQUAL(varDecl["typeDescriptions"]["typeString"], "uint256[] storage ref");
+}
+
 BOOST_AUTO_TEST_CASE(documentation)
 {
 	CompilerStack c;

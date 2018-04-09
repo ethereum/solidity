@@ -39,7 +39,7 @@ namespace solidity
 namespace test
 {
 
-BOOST_AUTO_TEST_SUITE(SolidityASTJSONLegacy)
+BOOST_AUTO_TEST_SUITE(SolidityASTLegacyJSON)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
