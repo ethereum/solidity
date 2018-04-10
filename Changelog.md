@@ -9,6 +9,7 @@ Features:
  * Optimizer: Remove useless ``SWAP1`` instruction preceding a commutative instruction (such as ``ADD``, ``MUL``, etc).
  * Optimizer: Replace comparison operators (``LT``, ``GT``, etc) with opposites if preceded by ``SWAP1``, e.g. ``SWAP1 LT`` is replaced with ``GT``.
  * Optimizer: Optimize across ``mload`` if ``msize()`` is not used.
+ * Static Analyzer: Error on duplicated super constructor calls as experimental 0.5.0 feature.
  * Syntax Checker: Issue warning for empty structs (or error as experimental 0.5.0 feature).
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
  * Inheritance: Error when using empty parenthesis for base class constructors that require arguments as experimental 0.5.0 feature.

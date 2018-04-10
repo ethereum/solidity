@@ -73,7 +73,12 @@ private:
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 	void checkContractAbstractFunctions(ContractDefinition const& _contract);
-	void checkContractAbstractConstructors(ContractDefinition const& _contract);
+	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
+	void annotateBaseConstructorArguments(
+		ContractDefinition const& _currentContract,
+		FunctionDefinition const* _baseConstructor,
+		ASTNode const* _argumentNode
+	);
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
