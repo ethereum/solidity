@@ -403,7 +403,7 @@ private:
 };
 
 /**
- * Integer and fixed point constants either literals or computed. 
+ * Integer and fixed point constants either literals or computed.
  * Example expressions: 2, 3.14, 2+10.2, ~10.
  * There is one distinct type per value.
  */
@@ -415,7 +415,7 @@ public:
 
 	/// @returns true if the literal is a valid integer.
 	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
-	
+
 	explicit RationalNumberType(rational const& _value):
 		m_value(_value)
 	{}
@@ -436,7 +436,7 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss. 
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss.
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
@@ -778,7 +778,7 @@ public:
 	virtual std::string canonicalName() const override;
 	virtual std::string signatureInExternalFunction(bool _structsByName) const override;
 
-	/// @returns a function that peforms the type conversion between a list of struct members
+	/// @returns a function that performs the type conversion between a list of struct members
 	/// and a memory struct of this type.
 	FunctionTypePointer constructorType() const;
 
@@ -1039,7 +1039,7 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	/// @returns true if the the result of this function only depends on its arguments
+	/// @returns true if the result of this function only depends on its arguments
 	/// and it does not modify the state.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
@@ -1056,7 +1056,7 @@ public:
 	bool bound() const { return m_bound; }
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
-	/// of the parameters to fals.
+	/// of the parameters to false.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
 	/// @returns a copy of this function type where all return parameters of dynamic size are
