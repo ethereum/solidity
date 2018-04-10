@@ -701,17 +701,17 @@ ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<Identifier> name(parseIdentifier());
-	vector<ASTPointer<Expression>> arguments;
+	unique_ptr<vector<ASTPointer<Expression>>> arguments;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
 		m_scanner->next();
-		arguments = parseFunctionCallListArguments();
+		arguments.reset(new vector<ASTPointer<Expression>>(parseFunctionCallListArguments()));
 		nodeFactory.markEndPosition();
 		expectToken(Token::RParen);
 	}
 	else
 		nodeFactory.setEndPositionFromNode(name);
-	return nodeFactory.createNode<ModifierInvocation>(name, arguments);
+	return nodeFactory.createNode<ModifierInvocation>(name, move(arguments));
 }
 
 ASTPointer<Identifier> Parser::parseIdentifier()

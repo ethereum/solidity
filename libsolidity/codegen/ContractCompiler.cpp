@@ -222,7 +222,7 @@ void ContractCompiler::appendBaseConstructor(FunctionDefinition const& _construc
 		if (auto inheritanceSpecifier = dynamic_cast<InheritanceSpecifier const*>(baseArgumentNode))
 			arguments = inheritanceSpecifier->arguments();
 		else if (auto modifierInvocation = dynamic_cast<ModifierInvocation const*>(baseArgumentNode))
-			arguments = &modifierInvocation->arguments();
+			arguments = modifierInvocation->arguments();
 		solAssert(arguments, "");
 		solAssert(arguments->size() == constructorType.parameterTypes().size(), "");
 		for (unsigned i = 0; i < arguments->size(); ++i)
@@ -897,13 +897,16 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			);
 			ModifierDefinition const& modifier = m_context.resolveVirtualFunctionModifier(nonVirtualModifier);
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
-			solAssert(modifier.parameters().size() == modifierInvocation->arguments().size(), "");
+			std::vector<ASTPointer<Expression>> const& modifierArguments =
+				modifierInvocation->arguments() ? *modifierInvocation->arguments() : std::vector<ASTPointer<Expression>>();
+
+			solAssert(modifier.parameters().size() == modifierArguments.size(), "");
 			for (unsigned i = 0; i < modifier.parameters().size(); ++i)
 			{
 				m_context.addVariable(*modifier.parameters()[i]);
 				addedVariables.push_back(modifier.parameters()[i].get());
 				compileExpression(
-					*modifierInvocation->arguments()[i],
+					*modifierArguments[i],
 					modifier.parameters()[i]->annotation().type
 				);
 			}
