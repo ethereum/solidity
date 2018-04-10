@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: Recursive struct definition.
+// TypeError: (20-118): Recursive struct definition.

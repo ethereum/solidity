@@ -9,6 +9,6 @@ contract C {
     }
 }
 // ----
-// Warning: Defining empty structs is deprecated.
-// TypeError: This type cannot be encoded.
-// TypeError: This type cannot be encoded.
+// Warning: (51-63): Defining empty structs is deprecated.
+// TypeError: (131-132): This type cannot be encoded.
+// TypeError: (134-135): This type cannot be encoded.

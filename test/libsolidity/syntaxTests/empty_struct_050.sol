@@ -3,4 +3,4 @@ contract test {
 	struct A {}
 }
 // ----
-// SyntaxError: Defining empty structs is disallowed.
+// SyntaxError: (47-58): Defining empty structs is disallowed.

@@ -3,4 +3,4 @@ contract test {
     function fun() public { }
 }
 // ----
-// DeclarationError: Function with same name and arguments defined twice.
+// DeclarationError: (20-45): Function with same name and arguments defined twice.

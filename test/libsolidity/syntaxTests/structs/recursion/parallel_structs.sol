@@ -12,4 +12,4 @@ contract TestContract
     function addTestStruct(TestStruct) public pure {}
 }
 // ----
-// Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+// Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.

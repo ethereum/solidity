@@ -55,7 +55,6 @@ public:
 	{
 		Success,
 		Failure,
-		InputOutputError,
 		Exception
 	};
 
@@ -90,11 +89,53 @@ string SyntaxTestTool::editor;
 
 void SyntaxTestTool::printContract() const
 {
-	stringstream stream(m_test->source());
-	string line;
-	while (getline(stream, line))
-		cout << "    " << line << endl;
-	cout << endl;
+	if (m_formatted)
+	{
+		string const& source = m_test->source();
+		if (source.empty())
+			return;
+
+		std::vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+		for (auto const& error: m_test->errorList())
+			if (error.locationStart >= 0 && error.locationEnd >= 0)
+			{
+				assert(static_cast<size_t>(error.locationStart) < source.length());
+				assert(static_cast<size_t>(error.locationEnd) < source.length());
+				bool isWarning = error.type == "Warning";
+				for (int i = error.locationStart; i < error.locationEnd; i++)
+					if (isWarning)
+					{
+						if (sourceFormatting[i] == formatting::RESET)
+							sourceFormatting[i] = formatting::ORANGE_BACKGROUND;
+					}
+					else
+						sourceFormatting[i] = formatting::RED_BACKGROUND;
+			}
+
+		cout << "    " << sourceFormatting.front() << source.front();
+		for (size_t i = 1; i < source.length(); i++)
+		{
+			if (sourceFormatting[i] != sourceFormatting[i - 1])
+				cout << sourceFormatting[i];
+			if (source[i] != '\n')
+				cout << source[i];
+			else
+			{
+				cout << formatting::RESET << endl;
+				if (i + 1 < source.length())
+					cout << "    " << sourceFormatting[i];
+			}
+		}
+		cout << formatting::RESET << endl;
+	}
+	else
+	{
+		stringstream stream(m_test->source());
+		string line;
+		while (getline(stream, line))
+			cout << "    " << line << endl;
+		cout << endl;
+	}
 }
 
 SyntaxTestTool::Result SyntaxTestTool::process()
@@ -107,15 +148,6 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 	try
 	{
 		m_test = unique_ptr<SyntaxTest>(new SyntaxTest(m_path.string()));
-	}
-	catch (std::exception const& _e)
-	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) << "cannot read test: " << _e.what() << endl;
-		return Result::InputOutputError;
-	}
-
-	try
-	{
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
 	catch(CompilerError const& _e)
@@ -140,6 +172,11 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 	{
 		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
 			"UnimplementedFeatureError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch (std::exception const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) << "Exception: " << _e.what() << endl;
 		return Result::Exception;
 	}
 	catch(...)
@@ -261,10 +298,6 @@ SyntaxTestStats SyntaxTestTool::processPath(
 			case Result::Success:
 				paths.pop();
 				++successCount;
-				break;
-			default:
-				// non-recoverable error; continue with next test case
-				paths.pop();
 				break;
 			}
 		}

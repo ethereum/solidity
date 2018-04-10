@@ -38,6 +38,8 @@ static constexpr char const* GREEN = "\033[1;32m";
 static constexpr char const* YELLOW = "\033[1;33m";
 static constexpr char const* CYAN = "\033[1;36m";
 static constexpr char const* BOLD = "\033[1m";
+static constexpr char const* RED_BACKGROUND  = "\033[48;5;160m";
+static constexpr char const* ORANGE_BACKGROUND  = "\033[48;5;166m";
 static constexpr char const* INVERSE = "\033[7m";
 
 }
