@@ -25,6 +25,8 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 
+#include <libevmasm/SourceLocation.h>
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -45,8 +47,12 @@ struct ASTAnnotation
 
 struct DocTag
 {
+	int tagLine;			///< Stores in what line of source the tag was found.
+
 	std::string content;	///< The text content of the tag.
 	std::string paramName;	///< Only used for @param, stores the parameter name.
+
+	std::string external;	///< Only used for @external, stores external tags.
 };
 
 struct DocumentedAnnotation

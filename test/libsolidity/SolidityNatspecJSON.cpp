@@ -39,22 +39,35 @@ class DocumentationChecker
 public:
 	DocumentationChecker(): m_compilerStack() {}
 
+	enum class NatspecType
+	{
+		DEVELOPER,
+		USER
+	};
+
 	void checkNatspec(
 		std::string const& _code,
 		std::string const& _expectedDocumentationString,
-		bool _userDocumentation
+		NatspecType _natspecType
 	)
 	{
 		m_compilerStack.reset(false);
 		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
 		m_compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
-		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
+		bool parseResult = m_compilerStack.parseAndAnalyze();
+		if (!parseResult) {
+			for (auto &error :  m_compilerStack.errors()) {
+				std::cout << error->what() << std::endl;
+			}
+		}
+		BOOST_REQUIRE_MESSAGE(parseResult, "Parsing contract failed");
 
 		Json::Value generatedDocumentation;
-		if (_userDocumentation)
+		if (_natspecType == NatspecType::USER)
 			generatedDocumentation = m_compilerStack.natspecUser(m_compilerStack.lastContractName());
-		else
+		else if (_natspecType == NatspecType::DEVELOPER)
 			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
+
 		Json::Value expectedDocumentation;
 		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
@@ -93,7 +106,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
@@ -119,8 +132,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER);
+	checkNatspec(sourceCode, userNatspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiline_comment)
@@ -140,7 +153,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiple_functions)
@@ -171,7 +184,7 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 	"    \"sub(int256)\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(user_empty_contract)
@@ -182,7 +195,7 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 
 	char const* natspec = "{\"methods\":{} }";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
@@ -201,8 +214,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	char const* devNatspec = "{\"methods\":{}}";
 	char const* userNatspec = "{\"methods\":{}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, devNatspec, NatspecType::DEVELOPER);
+	checkNatspec(sourceCode, userNatspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -228,7 +241,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
@@ -253,7 +266,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
@@ -276,7 +289,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -302,7 +315,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_functions)
@@ -353,7 +366,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_return)
@@ -381,7 +394,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
@@ -411,7 +424,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 
@@ -443,7 +456,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiline_comment)
@@ -476,7 +489,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
@@ -496,7 +509,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_doc)
@@ -520,7 +533,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_author_at_function)
@@ -546,7 +559,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -569,7 +582,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
@@ -592,7 +605,7 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -608,7 +621,7 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, natspec, NatspecType::USER);
 }
 
 BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
@@ -679,6 +692,695 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 		}
 	)";
 
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract)
+{
+	char const* sourceCode = R"(/// @external:testA LINE-1
+		contract test {
+			uint256 stateVar;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n",
+			"line" : 1
+		}
+	},
+	"methods" : {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_author)
+{
+	char const* sourceCode = R"(/// @author Alex
+		/// @external:testA LINE-2
+		contract test {
+			uint256 stateVar;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"author" : "Alex",
+	"external" : {
+		"testA" : {
+			"content" : " LINE-2\n",
+			"line" : 2
+		}
+	},
+	"methods" : {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_author_notes_author_title)
+{
+	char const* sourceCode = R"(/// hello!
+		/// this is an interesting note
+		/// that uses
+		/// multiple
+		/// lines. we need to check
+		/// whether the line counting still works.
+		/// @author Alex
+		/// @external:testA LINE-8
+		/// @title My Contract
+		/// @external:testB LINE-10
+		contract test {
+			uint256 stateVar;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"author" : "Alex",
+		"external" : {
+		"testA" : {
+			"content" : " LINE-8\n",
+			"line" : 8
+		},
+		"testB" : {
+			"content" : " LINE-10\n",
+			"line" : 10
+		}
+	},
+	"methods" : {},
+	"title" : "My Contract"
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_notes_author_title_dev)
+{
+	char const* sourceCode = R"(/// hello!
+		/// this is an interesting note
+		/// that uses
+		/// multiple
+		/// lines. we need to check
+		/// whether the line counting still works.
+		/// @author Alex
+		/// @external:testA LINE-8
+		/// @title My Contract
+		/// @dev this
+		/// is
+        /// awesome!
+		/// @external:testB LINE-13
+		contract test {
+			uint256 stateVarA;
+			uint256 stateVarB;
+			uint256 stateVarC;
+			uint256 stateVarD;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"author" : "Alex",
+		"external" : {
+		"testA" : {
+			"content" : " LINE-8\n",
+				"line" : 8
+		},
+		"testB" : {
+			"content" : " LINE-13\n",
+				"line" : 13
+		}
+	},
+	"methods" : {},
+	"title" : "My Contract"
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_methods)
+{
+	char const* sourceCode = R"(/// @ext:testA LINE-1
+		contract test {
+			uint256 stateVar;
+			/// @external:testB LINE-4
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			/// @ext:testC LINE-6
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n",
+			"line" : 1
+		}
+	},
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testB" : {
+					"content" : " LINE-4\n",
+					"line" : 4
+				}
+			}
+		},
+		"functionName2(bytes32)" : {
+			"external" : {
+				"testC" : {
+					"content" : " LINE-6\n",
+					"line" : 6
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_methods_notes_params)
+{
+	char const* sourceCode = R"(/// @ext:testA LINE-1
+		/// what is that?
+		/// @ext:testB LINE-3
+		contract test {
+			uint256 stateVar;
+			/// bla bla
+			/// BLAH BLAAH!
+			/// @param input attention! the input is not the input.
+			/// @external:testB LINE-9
+			/// @param p2 is also not the
+			/// input.
+			/// yep.
+			/// @external:testC LINE-13
+			function functionName1(bytes32 input, bytes32 p2) returns (bytes32 out) {}
+			/// @ext:testC LINE-15
+			/// LINE-16
+			/// @param input as the name says.
+			/// @ext:testD LINE-18
+			/// LINE-19
+			/// @dev dev dev
+			/// dev dev dev dev dev
+			/// d d d d d - dev - v!!!
+			/// @ext:testE LINE-23
+			/// LINE-24
+			/// LINE-25
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n what is that?\n",
+			"line" : 1
+		},
+		"testB" : {
+			"content" : " LINE-3\n",
+			"line" : 3
+		}
+	},
+	"methods" : {
+		"functionName1(bytes32,bytes32)" : {
+			"external" : {
+				"testB" : {
+					"content" : " LINE-9\n",
+					"line" : 9
+				},
+				"testC" : {
+					"content" : " LINE-13\n",
+					"line" : 13
+				}
+			},
+			"params" : {
+				"input" : "attention! the input is not the input.",
+				"p2" : "is also not the input. yep."
+			}
+		},
+		"functionName2(bytes32)" : {
+			"details" : "dev dev dev dev dev dev dev d d d d d - dev - v!!!",
+				"external" : {
+				"testC" : {
+					"content" : " LINE-15\n LINE-16\n",
+					"line" : 15
+				},
+				"testD" : {
+					"content" : " LINE-18\n LINE-19\n",
+					"line" : 18
+				},
+				"testE" : {
+					"content" : " LINE-23\n LINE-24\n LINE-25\n",
+					"line" : 23
+				}
+			},
+			"params" : {
+				"input" : "as the name says."
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline)
+{
+	char const* sourceCode = R"(/// @external:testA LINE-1
+		/// LINE-2
+		/// LINE-3
+		contract test {
+			uint256 stateVar;
+			/// @external:testB LINE-6
+			/// LINE-7
+			/// LINE-8
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			/// @ext:testC LINE-10
+			/// LINE-11
+			/// LINE-12
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n LINE-2\n LINE-3\n",
+			"line" : 1
+		}
+	},
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testB" : {
+					"content" : " LINE-6\n LINE-7\n LINE-8\n",
+					"line" : 6
+				}
+			}
+		},
+		"functionName2(bytes32)" : {
+			"external" : {
+				"testC" : {
+					"content" : " LINE-10\n LINE-11\n LINE-12\n",
+					"line" : 10
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_functions_multiline_second)
+{
+	char const* sourceCode = R"(/// @external:ModuleA fancy moduleA annotation
+	/// multiline annotation for moduleA
+	contract Contract {
+		uint256 stateVar;
+		/// @external:ModuleB awesome moduleB annotation
+		/// fancy multiline annotation for moduleB
+		/// @external:ModuleC moduleC
+		function functionName1(bytes32 input) returns (bytes32 out) {}
+		/// @ext:ModuleD fancy annotation for moduleD
+		function functionName2(bytes32 input) returns (bytes32 out) {}
+	}
+	)";
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"ModuleA" : {
+			"content" : " fancy moduleA annotation\n multiline annotation for moduleA\n",
+			"line" : 1
+		}
+	},
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"ModuleB" : {
+					"content" : " awesome moduleB annotation\n fancy multiline annotation for moduleB\n",
+						"line" : 5
+				},
+				"ModuleC" : {
+					"content" : " moduleC\n",
+					"line" : 7
+				}
+			}
+		},
+		"functionName2(bytes32)" : {
+			"external" : {
+				"ModuleD" : {
+					"content" : " fancy annotation for moduleD\n",
+					"line" : 9
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_multiline)
+{
+	char const* sourceCode = R"(/// @external:testA LINE-1
+		/// LINE-2
+		/// LINE-3
+		/// @ext:testB LINE-4
+		/// LINE-5
+		/// LINE-6
+		contract test {
+			uint256 stateVar;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+			function functionName3(bytes32 input) returns (bytes32 out) {}
+			function functionName4(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n LINE-2\n LINE-3\n",
+			"line" : 1
+		},
+		"testB" : {
+			"content" : " LINE-4\n LINE-5\n LINE-6\n",
+			"line" : 4
+		}
+	},
+	"methods" : {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function)
+{
+	char const* sourceCode = R"(contract test {
+			uint256 stateVar;
+			/// @external:testA LINE-3
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+			/// @ext:testB LINE-5
+			function functionName2(bytes32 input) returns (bytes32 out) {}
+			/// @external:testC LINE-7
+			function functionName3(bytes32 input) returns (bytes32 out) {}
+			/// @ext:testD LINE-9
+			function functionName4(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testA" : {
+					"content" : " LINE-3\n",
+					"line" : 3
+				}
+			}
+		},
+		"functionName2(bytes32)" : {
+			"external" : {
+				"testB" : {
+					"content" : " LINE-5\n",
+					"line" : 5
+				}
+			}
+		},
+		"functionName3(bytes32)" : {
+			"external" : {
+				"testC" : {
+					"content" : " LINE-7\n",
+					"line" : 7
+				}
+			}
+		},
+		"functionName4(bytes32)" : {
+			"external" : {
+				"testD" : {
+					"content" : " LINE-9\n",
+					"line" : 9
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function_multiline)
+{
+	char const* sourceCode = R"(contract test {
+			uint256 stateVar;
+			/// @ext:testA LINE-3
+			/// LINE-4
+			/// LINE-5
+			/// @external:testB LINE-6
+			/// LINE-7
+			/// LINE-8
+			/// LINE-9
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testA" : {
+					"content" : " LINE-3\n LINE-4\n LINE-5\n",
+					"line" : 3
+				},
+				"testB" : {
+					"content" : " LINE-6\n LINE-7\n LINE-8\n LINE-9\n",
+					"line" : 6
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function_multiline_empty_after_ext_tag)
+{
+	char const* sourceCode = R"(contract test {
+			uint256 stateVar;
+			/// @ext:testA
+			/// LINE-4
+			/// LINE-5
+			/// @external:testB
+			/// LINE-7
+			/// LINE-8
+			/// LINE-9
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"methods" : {
+		"functionName1(bytes32)" : {
+			"external" : {
+				"testA" : {
+					"content" : "\n LINE-4\n LINE-5\n",
+					"line" : 3
+				},
+				"testB" : {
+					"content" : "\n LINE-7\n LINE-8\n LINE-9\n",
+					"line" : 6
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_multi)
+{
+	char const* sourceCode = R"(/// @ext:testA LINE-1
+		/// LINE-2
+		/// @external:testB LINE-3
+		/// LINE-4
+		contract test {
+			uint256 stateVar;
+			function functionName1(bytes32 input) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n LINE-2\n",
+			"line" : 1
+		},
+		"testB" : {
+			"content" : " LINE-3\n LINE-4\n",
+			"line" : 3
+		}
+	},
+	"methods" : {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_function_multi)
+{
+	char const* sourceCode = R"(/// @ext:testA LINE-1
+		/// LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA LINE-5
+			/// @external:testB LINE-6
+			/// LINE-7
+			/// LINE-8
+			/// LINE-9
+			/// @external:testC LINE-10
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+	"external" : {
+		"testA" : {
+			"content" : " LINE-1\n LINE-2\n",
+			"line" : 1
+		}
+	},
+	"methods" : {
+		"functionName1(bytes32,bytes32,bytes32)" : {
+			"external" : {
+				"testA" : {
+					"content" : " LINE-5\n",
+					"line" : 5
+				},
+				"testB" : {
+					"content" : " LINE-6\n LINE-7\n LINE-8\n LINE-9\n",
+					"line" : 6
+				},
+				"testC" : {
+					"content" : " LINE-10\n",
+					"line" : 10
+				}
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, natspec, NatspecType::DEVELOPER);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_atomicity)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @external:testB testB-LINE-1
+			/// testB-LINE-2
+			/// testB-LINE-4
+			/// testB-LINE-3
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_atomicity_second)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		/// @ext:testB testA-LINE-3
+		/// @ext:testA testA-LINE-4
+		/// testA-LINE-5
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @external:testB testB-LINE-1
+			/// testB-LINE-2
+			/// testB-LINE-4
+			/// testB-LINE-3
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_contract_atomicity_third)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		/// @author Alex
+		/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @external:testB testB-LINE-1
+			/// testB-LINE-2
+			/// testB-LINE-4
+			/// testB-LINE-3
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function_atomicity_first)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @external:testA testA-LINE-2
+			/// testA-LINE-2
+			/// testA-LINE-4
+			/// testA-LINE-3
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function_atomicity_second)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @external:testB testA-LINE-2
+			/// testA-LINE-2
+			/// testA-LINE-4
+			/// testA-LINE-3
+			/// @ext:testA testA-LINE-1
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(ext_function_atomicity_third)
+{
+	char const* sourceCode = R"(/// @ext:testA testA-LINE-1
+		/// testA-LINE-2
+		contract test {
+			uint256 stateVar;
+			/// @ext:testA testA-LINE-1
+			/// @author Alex
+			/// @ext:testA testA-LINE-1
+			function functionName1(bytes32 input1, bytes32 input2, bytes32 input3) returns (bytes32 out) {}
+		}
+	)";
 	expectNatspecError(sourceCode);
 }
 

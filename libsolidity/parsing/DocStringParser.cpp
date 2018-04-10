@@ -2,9 +2,13 @@
 #include <libsolidity/parsing/DocStringParser.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/parsing/Scanner.h>
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/algorithm/string.hpp>
+
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
@@ -52,14 +56,18 @@ string::const_iterator skipWhitespace(
 
 }
 
-bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
+bool DocStringParser::parse(string const& _docString, SourceLocation const& _location, ErrorReporter& _errorReporter)
 {
 	m_errorReporter = &_errorReporter;
 	m_errorsOccurred = false;
 	m_lastTag = nullptr;
+	m_location = _location;
 
 	auto currPos = _docString.begin();
 	auto end = _docString.end();
+
+	m_lines = static_cast<size_t>(std::count(_docString.begin(), _docString.end(), '\n')) + 1;
+	m_currentLine = 0;
 
 	while (currPos != end)
 	{
@@ -78,7 +86,9 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 
 			currPos = parseDocTag(tagNameEndPos + 1, end, string(tagPos + 1, tagNameEndPos));
 		}
-		else if (!!m_lastTag) // continuation of the previous tag
+		else if (!!m_lastTag && (boost::starts_with(m_lastTag->external, "external:") || boost::starts_with(m_lastTag->external, "ext:"))) // continuation of external tag
+			currPos = appendDocTag(currPos, end, true);
+		else if (!!m_lastTag) // continuation of the previous tag - if not external tag
 			currPos = appendDocTag(currPos, end);
 		else if (currPos != end)
 		{
@@ -97,7 +107,7 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 	return !m_errorsOccurred;
 }
 
-DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending)
+DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending, bool _preserveNewLines /* = false */)
 {
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
@@ -105,7 +115,18 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 		m_lastTag->content += " ";
 	else if (!_appending)
 		_pos = skipWhitespace(_pos, _end);
+	if (nlPos != _end)
+	{
+		++m_currentLine;
+		if (_preserveNewLines && m_lastTag->content.empty())
+		{
+			++m_currentLine;
+			m_lastTag->content.append("\n");
+		}
+	}
 	copy(_pos, nlPos, back_inserter(m_lastTag->content));
+	if (_preserveNewLines)
+		m_lastTag->content.append("\n");
 	return skipLineOrEOS(nlPos, _end);
 }
 
@@ -123,6 +144,8 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	auto descStartPos = skipWhitespace(nameEndPos, _end);
 	auto nlPos = find(descStartPos, _end, '\n');
+	if (nlPos != _end)
+		++m_currentLine;
 
 	if (descStartPos == nlPos)
 	{
@@ -144,7 +167,20 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 	// for all cases.
 	if (!m_lastTag || _tag != "")
 	{
-		if (_tag == "param")
+		if (boost::starts_with(_tag, "ext:") || boost::starts_with(_tag, "external:"))
+		{
+			std::string tag(_tag);
+			if (boost::starts_with(_tag, "ext:"))
+				boost::replace_first(tag, "ext:", "external:");
+			if (m_docTags.find(tag) == m_docTags.end())
+				newTag(tag);
+			else
+				m_lastTag = &m_docTags.find(tag)->second;
+			m_lastTag->external = tag;
+			if (!m_lastTag->content.empty())
+				appendError("Tag '"+tag+"': need to be defined atomically - appending is not supported.");
+			return appendDocTag(_pos, _end, true);
+		} else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
 		else
 		{
@@ -156,15 +192,18 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 		return appendDocTag(_pos, _end);
 }
 
-DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end)
+DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end, bool _preserveNewLines /* = false */)
 {
 	solAssert(!!m_lastTag, "");
-	return parseDocTagLine(_pos, _end, true);
+	return parseDocTagLine(_pos, _end, true, _preserveNewLines);
 }
 
 void DocStringParser::newTag(string const& _tagName)
 {
+	Scanner const& scanner = m_scannerFromSourceFunction(m_sourceUnitName);
+
 	m_lastTag = &m_docTags.insert(make_pair(_tagName, DocTag()))->second;
+	m_lastTag->tagLine = std::get<0>(scanner.translatePositionToLineColumn(m_location.start)) - m_lines + m_currentLine;
 }
 
 void DocStringParser::appendError(string const& _description)

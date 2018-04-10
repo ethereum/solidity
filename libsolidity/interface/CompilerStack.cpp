@@ -51,6 +51,7 @@
 #include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
+#include "SourceReferenceFormatter.h"
 
 using namespace std;
 using namespace dev;
@@ -169,7 +170,12 @@ bool CompilerStack::analyze()
 		if (!syntaxChecker.checkSyntax(*source->ast))
 			noErrors = false;
 
-	DocStringAnalyser docStringAnalyser(m_errorReporter);
+	dev::solidity::SourceReferenceFormatter::ScannerFromSourceNameFun scannerFromSourceNameFunction =
+		[this](std::string const& sourceName) -> Scanner const & {
+			return this->scanner(sourceName);
+		};
+
+	DocStringAnalyser docStringAnalyser(m_errorReporter, scannerFromSourceNameFunction);
 	for (Source const* source: m_sourceOrder)
 		if (!docStringAnalyser.analyseDocStrings(*source->ast))
 			noErrors = false;

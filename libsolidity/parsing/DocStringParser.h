@@ -23,7 +23,10 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <libevmasm/SourceLocation.h>
 
 namespace dev
 {
@@ -35,22 +38,24 @@ class ErrorReporter;
 class DocStringParser
 {
 public:
+	explicit DocStringParser(std::string _sourceUnitName,
+							 SourceReferenceFormatter::ScannerFromSourceNameFun _scannerFromSource):
+		m_sourceUnitName(std::move(_sourceUnitName)), m_scannerFromSourceFunction(std::move(_scannerFromSource)),
+		m_lines(0), m_currentLine(0) {}
+
 	/// Parse the given @a _docString and stores the parsed components internally.
 	/// @returns false on error and appends the error to @a _errors.
-	bool parse(std::string const& _docString, ErrorReporter& _errorReporter);
+	bool parse(std::string const& _docString, SourceLocation const& _location, ErrorReporter& _errorReporter);
 
 	std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
 
 private:
 	using iter = std::string::const_iterator;
-	void resetUser();
-	void resetDev();
 
-	iter parseDocTagLine(iter _pos, iter _end, bool _appending);
+	iter parseDocTagLine(iter _pos, iter _end, bool _appending, bool _preserveNewLines = false);
 	iter parseDocTagParam(iter _pos, iter _end);
-	iter appendDocTagParam(iter _pos, iter _end);
-	void parseDocString(std::string const& _string);
-	iter appendDocTag(iter _pos, iter _end);
+
+	iter appendDocTag(iter _pos, iter _end, bool _preserveNewLines = false);
 	/// Parses the doc tag named @a _tag, adds it to m_docTags and returns the position
 	/// after the tag.
 	iter parseDocTag(iter _pos, iter _end, std::string const& _tag);
@@ -65,6 +70,12 @@ private:
 	DocTag* m_lastTag = nullptr;
 	ErrorReporter* m_errorReporter = nullptr;
 	bool m_errorsOccurred = false;
+
+	std::string m_sourceUnitName;
+	SourceReferenceFormatter::ScannerFromSourceNameFun m_scannerFromSourceFunction;
+	SourceLocation m_location;
+	size_t m_lines;
+	size_t m_currentLine;
 };
 
 } //solidity NS
