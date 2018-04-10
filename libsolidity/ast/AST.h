@@ -762,19 +762,22 @@ public:
 	ModifierInvocation(
 		SourceLocation const& _location,
 		ASTPointer<Identifier> const& _name,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_modifierName(_name), m_arguments(_arguments) {}
+		ASTNode(_location), m_modifierName(_name), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTPointer<Identifier> const& name() const { return m_modifierName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``mod``).
+	// If an argument list is given (``mod(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``mod()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<Identifier> m_modifierName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**

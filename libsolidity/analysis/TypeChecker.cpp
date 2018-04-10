@@ -293,6 +293,8 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
 {
+	bool const v050 = _contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 
 	// Determine the arguments that are used for the base constructors.
@@ -302,8 +304,24 @@ void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const
 			for (auto const& modifier: constructor->modifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name()));
-				if (baseContract && baseContract->constructor() && !modifier->arguments().empty())
-					annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+				if (modifier->arguments())
+				{
+					if (baseContract && baseContract->constructor())
+						annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+				}
+				else
+				{
+					if (v050)
+						m_errorReporter.declarationError(
+							modifier->location(),
+							"Modifier-style base constructor call without arguments."
+						);
+					else
+						m_errorReporter.warning(
+							modifier->location(),
+							"Modifier-style base constructor call without arguments."
+						);
+				}
 			}
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
@@ -804,7 +822,8 @@ void TypeChecker::visitManually(
 	vector<ContractDefinition const*> const& _bases
 )
 {
-	std::vector<ASTPointer<Expression>> const& arguments = _modifier.arguments();
+	std::vector<ASTPointer<Expression>> const& arguments =
+		_modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
 	_modifier.name()->accept(*this);
@@ -842,7 +861,7 @@ void TypeChecker::visitManually(
 		);
 		return;
 	}
-	for (size_t i = 0; i < _modifier.arguments().size(); ++i)
+	for (size_t i = 0; i < arguments.size(); ++i)
 		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*type(*(*parameters)[i])))
 			m_errorReporter.typeError(
 				arguments[i]->location(),
