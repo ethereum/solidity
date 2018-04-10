@@ -839,10 +839,10 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		auto mobile = mobileType();
-		if (!mobile)
+		auto commonType = Type::commonType(shared_from_this(), _other);
+		if (!commonType)
 			return TypePointer();
-		return mobile->binaryOperatorResult(_operator, _other);
+		return commonType->binaryOperatorResult(_operator, _other);
 	}
 	else if (_other->category() != category())
 		return TypePointer();
