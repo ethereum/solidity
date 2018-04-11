@@ -365,12 +365,13 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 		Token::Value token = m_scanner->currentToken();
 		if (_allowModifiers && token == Token::Identifier)
 		{
-			// This can either be a modifier (function declaration) or the name of the
-			// variable (function type name plus variable).
-			if (
+			// If the name is empty (and this is not a constructor),
+			// then this can either be a modifier (fallback function declaration)
+			// or the name of the state variable (function type name plus variable).
+			if ((result.name->empty() && !result.isConstructor) && (
 				m_scanner->peekNextToken() == Token::Semicolon ||
 				m_scanner->peekNextToken() == Token::Assign
-			)
+			))
 				// Variable declaration, break here.
 				break;
 			else
@@ -380,6 +381,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
+				// There is the special case of a public state variable of function type.
+				// Detect this and return early.
+				if (
+					(result.visibility == Declaration::Visibility::External || result.visibility == Declaration::Visibility::Internal) &&
+					result.modifiers.empty() &&
+					(result.name->empty() && !result.isConstructor)
+				)
+					break;
 				parserError(string(
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(result.visibility) +
@@ -429,6 +438,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 	FunctionHeaderParserResult header = parseFunctionHeader(false, true, _contractName);
 
 	if (
+		header.isConstructor ||
 		!header.modifiers.empty() ||
 		!header.name->empty() ||
 		m_scanner->currentToken() == Token::Semicolon ||
@@ -794,6 +804,7 @@ ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	FunctionHeaderParserResult header = parseFunctionHeader(true, false);
+	solAssert(!header.isConstructor, "Tried to parse type as constructor.");
 	return nodeFactory.createNode<FunctionTypeName>(
 		header.parameters,
 		header.returnParameters,
