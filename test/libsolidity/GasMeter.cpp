@@ -294,6 +294,19 @@ BOOST_AUTO_TEST_CASE(extcodesize_gas)
 	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
 }
 
+BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
+{
+	// A bug in the estimator caused the costs for a specific function
+	// to always include the costs for the fallback.
+	char const* sourceCode = R"(
+		contract A {
+			uint public x;
+			function() { x = 2; }
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("x()", vector<bytes>{encodeArgs()});
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }

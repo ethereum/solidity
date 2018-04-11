@@ -27,6 +27,7 @@ Bugfixes:
  * Code Generator: Treat empty base constructor argument list as not provided.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
+ * Gas Estimator: Correctly ignore costs of fallback function for other functions.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
  * Type Checker: Fix detection of recursive structs.
  * Type Checker: Fix asymmetry bug when comparing with literal numbers.
