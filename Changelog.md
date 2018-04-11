@@ -4,6 +4,7 @@ Features:
  * Code Generator: Initialize arrays without using ``msize()``.
  * Code Generator: More specialized and thus optimized implementation for ``x.push(...)``
  * Commandline interface: Error when missing or inaccessible file detected. Suppress it with the ``--ignore-missing`` flag.
+ * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
  * Optimizer: Remove useless ``SWAP1`` instruction preceding a commutative instruction (such as ``ADD``, ``MUL``, etc).

@@ -164,85 +164,94 @@ bool CompilerStack::analyze()
 	resolveImports();
 
 	bool noErrors = true;
-	SyntaxChecker syntaxChecker(m_errorReporter);
-	for (Source const* source: m_sourceOrder)
-		if (!syntaxChecker.checkSyntax(*source->ast))
-			noErrors = false;
 
-	DocStringAnalyser docStringAnalyser(m_errorReporter);
-	for (Source const* source: m_sourceOrder)
-		if (!docStringAnalyser.analyseDocStrings(*source->ast))
-			noErrors = false;
+	try {
+		SyntaxChecker syntaxChecker(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (!syntaxChecker.checkSyntax(*source->ast))
+				noErrors = false;
 
-	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
-	for (Source const* source: m_sourceOrder)
-		if (!resolver.registerDeclarations(*source->ast))
-			return false;
+		DocStringAnalyser docStringAnalyser(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (!docStringAnalyser.analyseDocStrings(*source->ast))
+				noErrors = false;
 
-	map<string, SourceUnit const*> sourceUnitsByName;
-	for (auto& source: m_sources)
-		sourceUnitsByName[source.first] = source.second.ast.get();
-	for (Source const* source: m_sourceOrder)
-		if (!resolver.performImports(*source->ast, sourceUnitsByName))
-			return false;
+		m_globalContext = make_shared<GlobalContext>();
+		NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (!resolver.registerDeclarations(*source->ast))
+				return false;
 
-	for (Source const* source: m_sourceOrder)
-		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			{
-				m_globalContext->setCurrentContract(*contract);
-				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
-				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-				if (!resolver.resolveNamesAndTypes(*contract)) return false;
+		map<string, SourceUnit const*> sourceUnitsByName;
+		for (auto& source: m_sources)
+			sourceUnitsByName[source.first] = source.second.ast.get();
+		for (Source const* source: m_sourceOrder)
+			if (!resolver.performImports(*source->ast, sourceUnitsByName))
+				return false;
 
-				// Note that we now reference contracts by their fully qualified names, and
-				// thus contracts can only conflict if declared in the same source file.  This
-				// already causes a double-declaration error elsewhere, so we do not report
-				// an error here and instead silently drop any additional contracts we find.
+		for (Source const* source: m_sourceOrder)
+			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				{
+					m_globalContext->setCurrentContract(*contract);
+					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
+					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
+					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
-				if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
-					m_contracts[contract->fullyQualifiedName()].contract = contract;
-			}
+					// Note that we now reference contracts by their fully qualified names, and
+					// thus contracts can only conflict if declared in the same source file.  This
+					// already causes a double-declaration error elsewhere, so we do not report
+					// an error here and instead silently drop any additional contracts we find.
 
-	TypeChecker typeChecker(m_evmVersion, m_errorReporter);
-	for (Source const* source: m_sourceOrder)
-		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-				if (!typeChecker.checkTypeRequirements(*contract))
+					if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
+						m_contracts[contract->fullyQualifiedName()].contract = contract;
+				}
+
+		TypeChecker typeChecker(m_evmVersion, m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+					if (!typeChecker.checkTypeRequirements(*contract))
+						noErrors = false;
+
+		if (noErrors)
+		{
+			PostTypeChecker postTypeChecker(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (!postTypeChecker.check(*source->ast))
 					noErrors = false;
+		}
 
-	if (noErrors)
-	{
-		PostTypeChecker postTypeChecker(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (!postTypeChecker.check(*source->ast))
+		if (noErrors)
+		{
+			StaticAnalyzer staticAnalyzer(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (!staticAnalyzer.analyze(*source->ast))
+					noErrors = false;
+		}
+
+		if (noErrors)
+		{
+			vector<ASTPointer<ASTNode>> ast;
+			for (Source const* source: m_sourceOrder)
+				ast.push_back(source->ast);
+
+			if (!ViewPureChecker(ast, m_errorReporter).check())
 				noErrors = false;
+		}
+
+		if (noErrors)
+		{
+			SMTChecker smtChecker(m_errorReporter, m_smtQuery);
+			for (Source const* source: m_sourceOrder)
+				smtChecker.analyze(*source->ast);
+		}
 	}
-
-	if (noErrors)
+	catch(FatalError const&)
 	{
-		StaticAnalyzer staticAnalyzer(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (!staticAnalyzer.analyze(*source->ast))
-				noErrors = false;
-	}
-
-	if (noErrors)
-	{
-		vector<ASTPointer<ASTNode>> ast;
-		for (Source const* source: m_sourceOrder)
-			ast.push_back(source->ast);
-
-		if (!ViewPureChecker(ast, m_errorReporter).check())
-			noErrors = false;
-	}
-
-	if (noErrors)
-	{
-		SMTChecker smtChecker(m_errorReporter, m_smtQuery);
-		for (Source const* source: m_sourceOrder)
-			smtChecker.analyze(*source->ast);
+		if (m_errorReporter.errors().empty())
+			throw; // Something is weird here, rather throw again.
+		noErrors = false;
 	}
 
 	if (noErrors)
