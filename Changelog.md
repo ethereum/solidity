@@ -30,6 +30,7 @@ Bugfixes:
  * Code Generator: Bugfix in modifier lookup in libraries.
  * Code Generator: Implement packed encoding of external function types.
  * Code Generator: Treat empty base constructor argument list as not provided.
+ * Code Generator: Properly force-clean bytesXX types for shortening conversions.
  * Commandline interface: Fix error messages for imported files that do not exist.
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
