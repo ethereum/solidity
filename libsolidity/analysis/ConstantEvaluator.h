@@ -56,6 +56,7 @@ private:
 	virtual void endVisit(UnaryOperation const& _operation);
 	virtual void endVisit(Literal const& _literal);
 	virtual void endVisit(Identifier const& _identifier);
+	virtual void endVisit(TupleExpression const& _tuple);
 
 	void setType(ASTNode const& _node, TypePointer const& _type);
 	TypePointer type(ASTNode const& _node);
