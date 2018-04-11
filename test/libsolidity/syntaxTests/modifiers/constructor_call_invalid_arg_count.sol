@@ -1,9 +1,9 @@
 // This caused a segfault in an earlier version
 contract C {
-    function C() public {}
+    constructor() public {}
 }
 contract D is C {
-    function D() C(5) public {}
+    constructor() C(5) public {}
 }
 // ----
-// TypeError: Wrong argument count for modifier invocation: 1 arguments given but expected 0.
+// TypeError: (127-131): Wrong argument count for modifier invocation: 1 arguments given but expected 0.

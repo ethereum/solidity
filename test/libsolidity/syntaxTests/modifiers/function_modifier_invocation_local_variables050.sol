@@ -4,4 +4,4 @@ contract B {
     modifier mod(uint a) { if (a > 0) _; }
 }
 // ----
-// DeclarationError: Undeclared identifier.
+// DeclarationError: (64-65): Undeclared identifier.

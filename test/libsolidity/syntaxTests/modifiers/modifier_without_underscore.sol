@@ -2,4 +2,4 @@ contract test {
     modifier m() {}
 }
 // ----
-// SyntaxError: Modifier body does not contain '_'.
+// SyntaxError: (33-35): Modifier body does not contain '_'.

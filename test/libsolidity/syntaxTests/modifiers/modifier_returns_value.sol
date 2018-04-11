@@ -3,4 +3,4 @@ contract A {
     modifier mod(uint a) { _; return 7; }
 }
 // ----
-// TypeError: Return arguments not allowed.
+// TypeError: (101-109): Return arguments not allowed.
