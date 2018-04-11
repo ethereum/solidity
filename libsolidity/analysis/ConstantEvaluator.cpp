@@ -87,6 +87,12 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	setType(_identifier, type(*value));
 }
 
+void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
+{
+	if (!_tuple.isInlineArray() && _tuple.components().size() == 1)
+		setType(_tuple, type(*_tuple.components().front()));
+}
+
 void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
 {
 	if (_type && _type->category() == Type::Category::RationalNumber)
