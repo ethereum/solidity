@@ -636,7 +636,7 @@ Allowed options)",
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argFormal.c_str(), "Translated source suitable for formal analysis.");
+		(g_argFormal.c_str(), "Translated source suitable for formal analysis. (Deprecated)");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
