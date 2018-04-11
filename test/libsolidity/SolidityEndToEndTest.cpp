@@ -11141,6 +11141,135 @@ BOOST_AUTO_TEST_CASE(swap_peephole_optimisation)
 	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(0), u256(1)) == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+	char const* sourceCode = R"(
+		contract C {
+			function shl(uint a, uint b) returns (uint c) {
+				assembly {
+					a
+					b
+					shl
+					=: c
+				}
+			}
+			function shr(uint a, uint b) returns (uint c) {
+				assembly {
+					a
+					b
+					shr
+					=: c
+				}
+			}
+			function sar(uint a, uint b) returns (uint c) {
+				assembly {
+					a
+					b
+					sar
+					=: c
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("shl(uint256,uint256)", u256(1), u256(2)) == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("shl(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(1)) == encodeArgs(u256("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe")));
+	BOOST_CHECK(callContractFunction("shl(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(256)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("shr(uint256,uint256)", u256(3), u256(1)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shr(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(1)) == encodeArgs(u256("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")));
+	BOOST_CHECK(callContractFunction("shr(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(255)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shr(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(256)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("sar(uint256,uint256)", u256(3), u256(1)) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("sar(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(1)) == encodeArgs(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")));
+	BOOST_CHECK(callContractFunction("sar(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(255)) == encodeArgs(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")));
+	BOOST_CHECK(callContractFunction("sar(uint256,uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), u256(256)) == encodeArgs(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")));
+}
+
+BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+	char const* sourceCode = R"(
+		contract C {
+			function shl_1() returns (bool) {
+				uint c;
+				assembly {
+					1
+					2
+					shl
+					=: c
+				}
+				assert(c == 4);
+				return true;
+			}
+			function shl_2() returns (bool) {
+				uint c;
+				assembly {
+					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+					1
+					shl
+					=: c
+				}
+				assert(c == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe);
+				return true;
+			}
+			function shl_3() returns (bool) {
+				uint c;
+				assembly {
+					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+					256
+					shl
+					=: c
+				}
+				assert(c == 0);
+				return true;
+			}
+			function shr_1() returns (bool) {
+				uint c;
+				assembly {
+					3
+					1
+					shr
+					=: c
+				}
+				assert(c == 1);
+				return true;
+			}
+			function shr_2() returns (bool) {
+				uint c;
+				assembly {
+					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+					1
+					shr
+					=: c
+				}
+				assert(c == 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+				return true;
+			}
+			function shr_3() returns (bool) {
+				uint c;
+				assembly {
+					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+					256
+					shr
+					=: c
+				}
+				assert(c == 0);
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("shl_1()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shl_2()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shl_3()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shr_1()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shr_2()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("shr_3()") == encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
