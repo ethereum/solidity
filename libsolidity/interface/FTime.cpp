@@ -27,7 +27,7 @@
 #include <chrono>
 #include <ctime>
 
-#include "ftime.h"
+#include "FTime.h"
 
 using namespace std;
 

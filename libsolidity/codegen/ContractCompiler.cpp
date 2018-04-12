@@ -26,7 +26,7 @@
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/interface/ftime.h>
+#include <libsolidity/interface/FTime.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>

@@ -41,7 +41,7 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/ftime.h>
+#include <libsolidity/interface/FTime.h>
 
 #include <libevmasm/Exceptions.h>
 

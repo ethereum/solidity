@@ -22,7 +22,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <libsolidity/interface/ftime.h>
+#include <libsolidity/interface/FTime.h>
 
 using namespace std;
 using namespace dev;

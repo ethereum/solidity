@@ -25,8 +25,6 @@
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
-#include <libsolidity/interface/ftime.h>
-
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -39,6 +37,7 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/AssemblyStack.h>
+#include <libsolidity/interface/FTime.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
