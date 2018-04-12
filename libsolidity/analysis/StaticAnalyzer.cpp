@@ -206,10 +206,32 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					);
 			}
 
-	if (m_constructor && m_currentContract)
-		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type.get()))
-			if (type->contractDefinition() == *m_currentContract)
-				m_errorReporter.warning(_memberAccess.location(), "\"this\" used in constructor.");
+	if (m_constructor)
+	{
+		auto const* expr = &_memberAccess.expression();
+		while(expr)
+		{
+			if (auto id = dynamic_cast<Identifier const*>(expr))
+			{
+				if (id->name() == "this")
+					m_errorReporter.warning(
+						id->location(),
+						"\"this\" used in constructor. "
+						"Note that external functions of a contract "
+						"cannot be called while it is being constructed.");
+				break;
+			}
+			else if (auto tuple = dynamic_cast<TupleExpression const*>(expr))
+			{
+				if (tuple->components().size() == 1)
+					expr = tuple->components().front().get();
+				else
+					break;
+			}
+			else
+				break;
+		}
+	}
 
 	return true;
 }
