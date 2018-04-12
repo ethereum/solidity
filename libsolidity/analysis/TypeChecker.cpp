@@ -1688,7 +1688,19 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
-	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
+	if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
+	{
+		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Need at least " +
+			toString(parameterTypes.size()) +
+			" arguments for function call, but provided only " +
+			toString(arguments.size()) +
+			"."
+		);
+	}
+	else if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
 
@@ -1711,11 +1723,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
-		// call by positional arguments
+		bool const abiEncodeV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
+
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
-			if (functionType->takesArbitraryParameters())
+			if (functionType->takesArbitraryParameters() && i >= parameterTypes.size())
 			{
 				bool errored = false;
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
@@ -1724,13 +1737,22 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 						errored = true;
 					}
-				if (!errored && !(
-					argType->mobileType() &&
-					argType->mobileType()->interfaceType(false) &&
-					argType->mobileType()->interfaceType(false)->encodingType() &&
-					!(dynamic_cast<StructType const*>(argType->mobileType()->interfaceType(false)->encodingType().get()))
-				))
-					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
+				if (!errored)
+				{
+					TypePointer encodingType;
+					if (
+						argType->mobileType() &&
+						argType->mobileType()->interfaceType(false) &&
+						argType->mobileType()->interfaceType(false)->encodingType()
+					)
+						encodingType = argType->mobileType()->interfaceType(false)->encodingType();
+					// Structs are fine as long as ABIV2 is activated and we do not do packed encoding.
+					if (!encodingType || (
+						dynamic_cast<StructType const*>(encodingType.get()) &&
+						!(abiEncodeV2 && functionType->padArguments())
+					))
+						m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
+				}
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(

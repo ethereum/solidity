@@ -3557,6 +3557,45 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 	ABI_CHECK(callContractFunction("f(uint256)", 9), encodeArgs(9));
 }
 
+BOOST_AUTO_TEST_CASE(sha256_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return sha256();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+}
+
+BOOST_AUTO_TEST_CASE(ripemd160_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes20) {
+				return ripemd160();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0x9c1185a5c5e9fc54612808977ee8f548b2258d31000000000000000000000000"));
+}
+
+BOOST_AUTO_TEST_CASE(keccak256_empty)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes32) {
+				return keccak256();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+}
+
 BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments)
 {
 	char const* sourceCode = R"(
@@ -11050,6 +11089,324 @@ BOOST_AUTO_TEST_CASE(snark)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("pair()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("verifyTx()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f0() returns (bytes) {
+				return abi.encode();
+			}
+			function f1() returns (bytes) {
+				return abi.encode(1, 2);
+			}
+			function f2() returns (bytes) {
+				string memory x = "abc";
+				return abi.encode(1, x, 2);
+			}
+			function f3() returns (bytes r) {
+				// test that memory is properly allocated
+				string memory x = "abc";
+				r = abi.encode(1, x, 2);
+				bytes memory y = "def";
+				require(y[0] == "d");
+				y[0] = "e";
+				require(y[0] == "e");
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
+	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 0x40, 1, 2));
+	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
+	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_v2)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint a; uint[] b; }
+			function f0() public pure returns (bytes) {
+				return abi.encode();
+			}
+			function f1() public pure returns (bytes) {
+				return abi.encode(1, 2);
+			}
+			function f2() public pure returns (bytes) {
+				string memory x = "abc";
+				return abi.encode(1, x, 2);
+			}
+			function f3() public pure returns (bytes r) {
+				// test that memory is properly allocated
+				string memory x = "abc";
+				r = abi.encode(1, x, 2);
+				bytes memory y = "def";
+				require(y[0] == "d");
+				y[0] = "e";
+				require(y[0] == "e");
+			}
+			S s;
+			function f4() public view returns (bytes r) {
+				string memory x = "abc";
+				s.a = 7;
+				s.b.push(2);
+				s.b.push(3);
+				r = abi.encode(1, x, s, 2);
+				bytes memory y = "def";
+				require(y[0] == "d");
+				y[0] = "e";
+				require(y[0] == "e");
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
+	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 0x40, 1, 2));
+	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
+	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
+	ABI_CHECK(callContractFunction("f4()"), encodeArgs(0x20, 0x160, 1, 0x80, 0xc0, 2, 3, "abc", 7, 0x40, 2, 2, 3));
+}
+
+
+BOOST_AUTO_TEST_CASE(abi_encodePacked)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodePacked();
+			}
+			function f1() public pure returns (bytes) {
+				return abi.encodePacked(uint8(1), uint8(2));
+			}
+			function f2() public pure returns (bytes) {
+				string memory x = "abc";
+				return abi.encodePacked(uint8(1), x, uint8(2));
+			}
+			function f3() public pure returns (bytes r) {
+				// test that memory is properly allocated
+				string memory x = "abc";
+				r = abi.encodePacked(uint8(1), x, uint8(2));
+				bytes memory y = "def";
+				require(y[0] == "d");
+				y[0] = "e";
+				require(y[0] == "e");
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
+	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 2, "\x01\x02"));
+	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_with_selector)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678);
+			}
+			function f1() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678, "abc");
+			}
+			function f2() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, "abc");
+			}
+			function f3() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, uint(-1));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\x12\x34\x56\x78"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x20) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(u256(-1)) + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f3()"), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_with_selectorv2)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678);
+			}
+			function f1() public pure returns (bytes) {
+				return abi.encodeWithSelector(0x12345678, "abc");
+			}
+			function f2() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, "abc");
+			}
+			function f3() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				return abi.encodeWithSelector(x, uint(-1));
+			}
+			struct S { uint a; string b; uint16 c; }
+			function f4() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				S memory s;
+				s.a = 0x1234567;
+				s.b = "Lorem ipsum dolor sit ethereum........";
+				s.c = 0x1234;
+				return abi.encodeWithSelector(x, uint(-1), s, uint(3));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\x12\x34\x56\x78"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+	expectation = encodeArgs(0x20, 4 + 0x20) + bytes{0x12, 0x34, 0x56, 0x78} + encodeArgs(u256(-1)) + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f3()"), expectation);
+	expectation =
+		encodeArgs(0x20, 4 + 0x120) +
+		bytes{0x12, 0x34, 0x56, 0x78} +
+		encodeArgs(u256(-1), 0x60, u256(3), 0x1234567, 0x60, 0x1234, 38, "Lorem ipsum dolor sit ethereum........") +
+		bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f4()"), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_with_signature)
+{
+	char const* sourceCode = R"T(
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSignature("f(uint256)");
+			}
+			function f1() public pure returns (bytes) {
+				string memory x = "f(uint256)";
+				return abi.encodeWithSignature(x, "abc");
+			}
+			string xstor;
+			function f1s() public returns (bytes) {
+				xstor = "f(uint256)";
+				return abi.encodeWithSignature(xstor, "abc");
+			}
+			function f2() public pure returns (bytes r, uint[] ar) {
+				string memory x = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+				uint[] memory y = new uint[](4);
+				y[0] = uint(-1);
+				y[1] = uint(-2);
+				y[2] = uint(-3);
+				y[3] = uint(-4);
+				r = abi.encodeWithSignature(x, y);
+				// The hash uses temporary memory. This allocation re-uses the memory
+				// and should initialize it properly.
+				ar = new uint[](2);
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\xb3\xde\x64\x8b"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0xb3, 0xde, 0x64, 0x8b} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	ABI_CHECK(callContractFunction("f1s()"), expectation);
+	expectation =
+		encodeArgs(0x40, 0x140, 4 + 0xc0) +
+		(bytes{0xe9, 0xc9, 0x21, 0xcd} + encodeArgs(0x20, 4, u256(-1), u256(-2), u256(-3), u256(-4)) + bytes(0x20 - 4)) +
+		encodeArgs(2, 0, 0);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_with_signaturev2)
+{
+	char const* sourceCode = R"T(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f0() public pure returns (bytes) {
+				return abi.encodeWithSignature("f(uint256)");
+			}
+			function f1() public pure returns (bytes) {
+				string memory x = "f(uint256)";
+				return abi.encodeWithSignature(x, "abc");
+			}
+			string xstor;
+			function f1s() public returns (bytes) {
+				xstor = "f(uint256)";
+				return abi.encodeWithSignature(xstor, "abc");
+			}
+			function f2() public pure returns (bytes r, uint[] ar) {
+				string memory x = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+				uint[] memory y = new uint[](4);
+				y[0] = uint(-1);
+				y[1] = uint(-2);
+				y[2] = uint(-3);
+				y[3] = uint(-4);
+				r = abi.encodeWithSignature(x, y);
+				// The hash uses temporary memory. This allocation re-uses the memory
+				// and should initialize it properly.
+				ar = new uint[](2);
+			}
+			struct S { uint a; string b; uint16 c; }
+			function f4() public pure returns (bytes) {
+				bytes4 x = 0x12345678;
+				S memory s;
+				s.a = 0x1234567;
+				s.b = "Lorem ipsum dolor sit ethereum........";
+				s.c = 0x1234;
+				return abi.encodeWithSignature(s.b, uint(-1), s, uint(3));
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 4, "\xb3\xde\x64\x8b"));
+	bytes expectation;
+	expectation = encodeArgs(0x20, 4 + 0x60) + bytes{0xb3, 0xde, 0x64, 0x8b} + encodeArgs(0x20, 3, "abc") + bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f1()"), expectation);
+	ABI_CHECK(callContractFunction("f1s()"), expectation);
+	expectation =
+		encodeArgs(0x40, 0x140, 4 + 0xc0) +
+		(bytes{0xe9, 0xc9, 0x21, 0xcd} + encodeArgs(0x20, 4, u256(-1), u256(-2), u256(-3), u256(-4)) + bytes(0x20 - 4)) +
+		encodeArgs(2, 0, 0);
+	ABI_CHECK(callContractFunction("f2()"), expectation);
+	expectation =
+		encodeArgs(0x20, 4 + 0x120) +
+		bytes{0x7c, 0x79, 0x30, 0x02} +
+		encodeArgs(u256(-1), 0x60, u256(3), 0x1234567, 0x60, 0x1234, 38, "Lorem ipsum dolor sit ethereum........") +
+		bytes(0x20 - 4);
+	ABI_CHECK(callContractFunction("f4()"), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_call)
+{
+	char const* sourceCode = R"T(
+		contract C {
+			bool x;
+			function c(uint a, uint[] b) public {
+				require(a == 5);
+				require(b.length == 2);
+				require(b[0] == 6);
+				require(b[1] == 7);
+				x = true;
+			}
+			function f() public returns (bool) {
+				uint a = 5;
+				uint[] memory b = new uint[](2);
+				b[0] = 6;
+				b[1] = 7;
+				require(this.call(abi.encodeWithSignature("c(uint256,uint256[])", a, b)));
+				return x;
+			}
+		}
+	)T";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
