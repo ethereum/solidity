@@ -23,28 +23,24 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/ftime.h>
 
-/*using namespace std;
-using namespace dev::eth;
-
-namespace dev
-{
-namespace solidity
-{
-namespace test
-{*/
-
 BOOST_AUTO_TEST_SUITE(FTime)
 
-BOOST_AUTO_TEST_CASE(hello_world)
+BOOST_AUTO_TEST_CASE(basic_push)
 {
-	bool f = false;
-	BOOST_CHECK(f);
-	BOOST_REQUIRE(f);
+	BOOST_REQUIRE_NO_THROW(t_stack.push("Basic test"));
 };
+
+BOOST_AUTO_TEST_CASE(basic_push_pop)
+{
+	BOOST_REQUIRE_NO_THROW(t_stack.push("Basic test"));
+	BOOST_REQUIRE_NO_THROW(t_stack.pop());
+};
+
+BOOST_AUTO_TEST_CASE(pop_empty)
+{
+	BOOST_CHECK_THROW(t_stack.pop(), std::exception);
+};
+
 	
+
 BOOST_AUTO_TEST_SUITE_END()
-
-//}
-//}
-//} // end namespaces
-
