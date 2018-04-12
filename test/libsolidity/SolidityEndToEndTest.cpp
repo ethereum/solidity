@@ -7847,12 +7847,12 @@ BOOST_AUTO_TEST_CASE(addmod_mulmod_zero)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() pure returns (uint) {
-				addmod(1, 2, 0);
+			function f(uint d) pure returns (uint) {
+				addmod(1, 2, d);
 				return 2;
 			}
-			function g() pure returns (uint) {
-				mulmod(1, 2, 0);
+			function g(uint d) pure returns (uint) {
+				mulmod(1, 2, d);
 				return 2;
 			}
 			function h() pure returns (uint) {
@@ -7865,8 +7865,8 @@ BOOST_AUTO_TEST_CASE(addmod_mulmod_zero)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs());
-	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+	ABI_CHECK(callContractFunction("f(uint)", 0), encodeArgs());
+	ABI_CHECK(callContractFunction("g(uint)", 0), encodeArgs());
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
 }
 

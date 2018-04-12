@@ -4772,20 +4772,6 @@ BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(signed_rational_modulus)
-{
-	char const* text = R"(
-		contract test {
-			function f() public {
-				fixed a = 0.42578125 % -0.4271087646484375;
-				fixed b = .5 % a;
-				fixed c = a % b;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(one_divided_by_three_integer_conversion)
 {
 	char const* text = R"(
