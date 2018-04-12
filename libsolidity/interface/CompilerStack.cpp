@@ -20,7 +20,6 @@
  * @date 2014
  * Full-stack compiler that converts a source code string to bytecode.
  */
-#include <libsolidity/interface/ftime.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 
@@ -42,6 +41,7 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/ftime.h>
 
 #include <libevmasm/Exceptions.h>
 

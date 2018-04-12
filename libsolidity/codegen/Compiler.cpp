@@ -19,10 +19,10 @@
  * @date 2014
  * Solidity compiler.
  */
-#include <libsolidity/interface/ftime.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/codegen/ContractCompiler.h>
+#include <libsolidity/interface/ftime.h>
 
 using namespace std;
 using namespace dev;
