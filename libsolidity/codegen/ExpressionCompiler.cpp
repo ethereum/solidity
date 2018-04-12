@@ -610,7 +610,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalRevert();
+			// TODO: Can we bubble up here? There might be different reasons for failure, I think.
+			m_context.appendConditionalRevert(true);
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -672,8 +673,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
+				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalRevert();
+				m_context.appendConditionalRevert(true);
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -682,8 +684,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			m_context.appendRevert();
+		{
+			if (!arguments.empty())
+			{
+				// function-sel(Error(string)) + encoding
+				solAssert(arguments.size() == 1, "");
+				solAssert(function.parameterTypes().size() == 1, "");
+				arguments.front()->accept(*this);
+				utils().revertWithStringData(*arguments.front()->annotation().type);
+			}
+			else
+				m_context.appendRevert();
 			break;
+		}
 		case FunctionType::Kind::SHA3:
 		{
 			TypePointers argumentTypes;
@@ -902,16 +915,31 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			if (arguments.size() > 1)
+			{
+				// Users probably expect the second argument to be evaluated
+				// even if the condition is false, as would be the case for an actual
+				// function call.
+				solAssert(arguments.size() == 2, "");
+				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				arguments.at(1)->accept(*this);
+				utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+			}
+			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
+			else if (arguments.size() > 1)
+				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 			else
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
+			if (arguments.size() > 1)
+				utils().popStackElement(*arguments.at(1)->annotation().type);
 			break;
 		}
 		case FunctionType::Kind::ABIEncode:
@@ -1882,6 +1910,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+		// TODO: error message?
 		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
@@ -1924,7 +1953,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(true);
 	}
 
 	utils().popStackSlots(remainsSize);

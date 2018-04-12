@@ -68,7 +68,10 @@ Function modifiers can be used to amend the semantics of functions in a declarat
         address public seller;
 
         modifier onlySeller() { // Modifier
-            require(msg.sender == seller);
+            require(
+                msg.sender == seller,
+                "Only seller can call this."
+            );
             _;
         }
 

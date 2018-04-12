@@ -333,7 +333,9 @@ Global Variables
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
+- ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
 - ``revert()``: abort execution and revert state changes
+- ``revert(string message)``: abort execution and revert state changes providing an explanatory string
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
 - ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 - ``sha3(...) returns (bytes32)``: an alias to ``keccak256``

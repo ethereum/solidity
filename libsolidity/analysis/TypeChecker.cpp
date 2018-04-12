@@ -2146,10 +2146,9 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				TypePointer function = declaration->type();
-				solAssert(!!function, "Requested type not present.");
-				auto const* functionType = dynamic_cast<FunctionType const*>(function.get());
-				if (functionType && functionType->canTakeArguments(*annotation.argumentTypes))
+				FunctionTypePointer functionType = declaration->functionType(true);
+				solAssert(!!functionType, "Requested type not present.");
+				if (functionType->canTakeArguments(*annotation.argumentTypes))
 					candidates.push_back(declaration);
 			}
 			if (candidates.empty())

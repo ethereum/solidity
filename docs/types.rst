@@ -495,7 +495,10 @@ Another example that uses external function types::
         oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) public {
-        require(msg.sender == address(oracle));
+        require(
+            msg.sender == address(oracle),
+            "Only oracle can call this."
+        );
         // Use the data
       }
     }

@@ -315,7 +315,10 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // function is executed and otherwise, an exception is
         // thrown.
         modifier onlyOwner {
-            require(msg.sender == owner);
+            require(
+                msg.sender == owner,
+                "Only owner can call this function."
+            );
             _;
         }
     }
@@ -360,7 +363,10 @@ inheritable properties of contracts and may be overridden by derived contracts.
     contract Mutex {
         bool locked;
         modifier noReentrancy() {
-            require(!locked);
+            require(
+                !locked,
+                "Reentrant call."
+            );
             locked = true;
             _;
             locked = false;

@@ -54,6 +54,13 @@ public:
 	/// Stack post: <size> <mem_start>
 	void toSizeAfterFreeMemoryPointer();
 
+	/// Appends code that performs a revert, providing the given string data.
+	/// Will also append an error signature corresponding to Error(string).
+	/// @param _argumentType the type of the string argument, will be converted to memory string.
+	/// Stack pre: string data
+	/// Stack post:
+	void revertWithStringData(Type const& _argumentType);
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load

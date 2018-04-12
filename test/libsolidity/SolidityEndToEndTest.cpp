@@ -10458,6 +10458,214 @@ BOOST_AUTO_TEST_CASE(revert)
 	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(revert_with_cause)
+{
+	char const* sourceCode = R"(
+		contract D {
+			function f() public {
+				revert("test123");
+			}
+			function g() public {
+				revert("test1234567890123456789012345678901234567890");
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function g() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0) : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
+}
+
+BOOST_AUTO_TEST_CASE(require_with_message)
+{
+	char const* sourceCode = R"(
+		contract D {
+			bool flag = false;
+			string storageError = "abc";
+			function f(uint x) public {
+				require(x > 7, "failed");
+			}
+			function g() public {
+				// As a side-effect of internalFun, the flag will be set to true
+				// (even if the condition is true),
+				// but it will only throw in the next evaluation.
+				bool flagCopy = flag;
+				require(flagCopy == false, internalFun());
+			}
+			function internalFun() returns (string) {
+				flag = true;
+				return "only on second run";
+			}
+			function h() public {
+				require(false, storageError);
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f(uint x) public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function g() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function h() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f(uint256)", 8), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
+	ABI_CHECK(callContractFunction("f(uint256)", 5), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 6, "failed") + bytes(28, 0) : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0) : bytes());
+	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0): bytes());
+}
+
+BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
+{
+	char const* sourceCode = R"(
+		contract D {
+			function f() public {
+				revert("message");
+			}
+			function g() public {
+				this.f();
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function g() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+}
+
+BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
+{
+	char const* sourceCode = R"(
+		contract D {
+			function() public payable {
+				revert("message");
+			}
+			function f() public {
+				this.transfer(0);
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+}
+
+BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
+{
+	char const* sourceCode = R"(
+		contract E {
+			function E() {
+				revert("message");
+			}
+		}
+		contract D {
+			function f() public {
+				var x = new E();
+			}
+		}
+		contract C {
+			D d = new D();
+			function forward(address target, bytes data) internal returns (bool success, bytes retval) {
+				uint retsize;
+				assembly {
+					success := call(not(0), target, 0, add(data, 0x20), mload(data), 0, 0)
+					retsize := returndatasize()
+				}
+				retval = new bytes(retsize);
+				assembly {
+					returndatacopy(add(retval, 0x20), 0, returndatasize())
+				}
+			}
+			function f() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
+	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+}
+
 BOOST_AUTO_TEST_CASE(negative_stack_height)
 {
 	// This code was causing negative stack height during code generation
