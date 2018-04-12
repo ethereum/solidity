@@ -41,6 +41,11 @@ BOOST_AUTO_TEST_CASE(pop_empty)
 	BOOST_CHECK_THROW(t_stack.pop(), std::exception);
 };
 
+BOOST_AUTO_TEST_CASE(defalut_print_false)
+{
+	BOOST_REQUIRE(!t_stack.print_flag);
+};
+
 	
 
 BOOST_AUTO_TEST_SUITE_END()
