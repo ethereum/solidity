@@ -157,7 +157,6 @@ BOOST_AUTO_TEST_CASE(location_test)
 		}
 	}
 	)";
-	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
 	vector<SourceLocation> locations =
 		vector<SourceLocation>(24, SourceLocation(2, 75, make_shared<string>(""))) +

@@ -457,7 +457,7 @@ If used properly, analysis tools can evaluate your contract to identify the cond
 There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
 revert the current call. It is possible to provide a string message containing details about the error
 that will be passed back to the caller.
-The ``throw`` keyword can also be used as an alternative to ``revert()``, but is deprecated.
+The deprecated keyword ``throw`` can also be used as an alternative to ``revert()`` (but only without error message).
 
 .. note::
     From version 0.4.13 the ``throw`` keyword is deprecated and will be phased out in the future.
