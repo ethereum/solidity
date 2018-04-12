@@ -34,19 +34,12 @@ using namespace dev::solidity;
 
 bool PostTypeChecker::check(ASTNode const& _astRoot)
 {
-	_astRoot.accept(*this);
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
-}
-
-bool PostTypeChecker::visit(ContractDefinition const&)
-{
 	solAssert(!m_currentConstVariable, "");
+	solAssert(m_constVariables.empty(), "");
 	solAssert(m_constVariableDependencies.empty(), "");
-	return true;
-}
 
-void PostTypeChecker::endVisit(ContractDefinition const&)
-{
+	_astRoot.accept(*this);
+
 	solAssert(!m_currentConstVariable, "");
 	for (auto declaration: m_constVariables)
 		if (auto identifier = findCycle(*declaration))
@@ -58,6 +51,7 @@ void PostTypeChecker::endVisit(ContractDefinition const&)
 
 	m_constVariables.clear();
 	m_constVariableDependencies.clear();
+	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
 bool PostTypeChecker::visit(VariableDeclaration const& _variable)
@@ -84,6 +78,15 @@ bool PostTypeChecker::visit(Identifier const& _identifier)
 {
 	if (m_currentConstVariable)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+			if (var->isConstant())
+				m_constVariableDependencies[m_currentConstVariable].insert(var);
+	return true;
+}
+
+bool PostTypeChecker::visit(MemberAccess const &_memberAccess)
+{
+	if (m_currentConstVariable)
+		if (auto var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 			if (var->isConstant())
 				m_constVariableDependencies[m_currentConstVariable].insert(var);
 	return true;

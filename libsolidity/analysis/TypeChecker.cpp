@@ -2094,6 +2094,10 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
 
+	if (auto var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+		if (var->isConstant())
+			annotation.isPure = true;
+
 	return false;
 }
 

@@ -5,4 +5,5 @@ contract B {
     uint constant c = A.c;
 }
 // ----
-// Some Error: This should fail with some error!
+// TypeError: (17-38): The value of the constant c has a cyclic dependency via c.
+// TypeError: (59-80): The value of the constant c has a cyclic dependency via c.

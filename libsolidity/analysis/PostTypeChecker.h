@@ -47,13 +47,11 @@ private:
 	/// Adds a new error to the list of errors.
 	void typeError(SourceLocation const& _location, std::string const& _description);
 
-	virtual bool visit(ContractDefinition const& _contract) override;
-	virtual void endVisit(ContractDefinition const& _contract) override;
-
 	virtual bool visit(VariableDeclaration const& _variable) override;
 	virtual void endVisit(VariableDeclaration const& _variable) override;
 
 	virtual bool visit(Identifier const& _identifier) override;
+	virtual bool visit(MemberAccess const& _memberAccess) override;
 
 	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom);
 
