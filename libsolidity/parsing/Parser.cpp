@@ -607,8 +607,10 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	if (_options.allowEmptyName && m_scanner->currentToken() != Token::Identifier)
 	{
 		identifier = make_shared<ASTString>("");
-		solAssert(type != nullptr, "");
-		nodeFactory.setEndPositionFromNode(type);
+		solAssert(!_options.allowVar, ""); // allowEmptyName && allowVar makes no sense
+		if (type)
+			nodeFactory.setEndPositionFromNode(type);
+		// if type is null this has already caused an error
 	}
 	else
 		identifier = expectIdentifierToken();

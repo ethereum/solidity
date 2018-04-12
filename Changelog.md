@@ -31,6 +31,7 @@ Bugfixes:
  * Commandline interface: Support ``--evm-version constantinople`` properly.
  * DocString Parser: Fix error message for empty descriptions.
  * Gas Estimator: Correctly ignore costs of fallback function for other functions.
+ * Parser: Fix internal compiler error when parsing ``var`` declaration without identifier.
  * Parser: Fix parsing of getters for function type variables.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
  * Type Checker: Fix detection of recursive structs.

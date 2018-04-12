@@ -557,16 +557,6 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(variable_definition_in_function_parameter)
-{
-	char const* text = R"(
-		contract test {
-			function fun(var a) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected explicit type name");
-}
-
 BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
 {
 	char const* text = R"(
@@ -577,18 +567,6 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
 		}
 	)";
 	CHECK_PARSE_ERROR(text, "Expected elementary type name for mapping key type");
-}
-
-BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
-{
-	char const* text = R"(
-		contract test {
-			function fun() returns(var d) {
-				return 1;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(operator_expression)
