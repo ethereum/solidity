@@ -40,7 +40,21 @@ TimeNodeStack::TimeNodeStack()
 	start = std::chrono::high_resolution_clock::now();
 }
 
-
+TimeNodeStack::~TimeNodeStack()
+{
+        //TODO: only print to cerr for the moment as we were advised
+        //not to throw error in destructor
+        if (print_flag && stack.size() != 0)
+        {
+                cerr << "Warning: there are still " << stack.size() << 
+                        " elements in the stack: call respective pop function for: " << '\n';
+                for (TimeNode node : stack)
+                {
+                        cerr << node.name << '\n';
+                }
+        }
+}
+                
 void TimeNodeStack::push(string name)
 {
 	TimeNode t_node;
@@ -76,7 +90,7 @@ void TimeNodeStack::pop()
 	}
 	else
 	{
-		throw runtime_error("error");
+		throw runtime_error("error: tried to pop() from empty stack");
 	}
 }
 

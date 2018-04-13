@@ -40,6 +40,7 @@ class TimeNodeStack
 {
 public:
 	TimeNodeStack();
+        ~TimeNodeStack();
 	void push(std::string name);
 	void pop();
 	void print();
