@@ -179,8 +179,8 @@ All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-lev
 The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
-    All contracts inherit the members of address, so it is possible to query the balance of the
-    current contract using ``this.balance``.
+    All contracts can be converted to ``address`` type, so it is possible to query the balance of the
+    current contract using ``address(this).balance``.
 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.

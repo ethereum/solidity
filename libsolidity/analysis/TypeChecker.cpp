@@ -1988,7 +1988,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				m_errorReporter.warning(
 					_memberAccess.location(),
 					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
-					" Convert the contract to \"address\" type to access the member."
+					" Convert the contract to \"address\" type to access the member,"
+					" for example use \"address(contract)." + memberName + "\" instead."
 				);
 			}
 
