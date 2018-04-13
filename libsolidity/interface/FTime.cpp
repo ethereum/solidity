@@ -110,7 +110,7 @@ void TimeNodeStack::print()
 	//}
         //if (!printed) {
         cout << setw(70) << left << "namespace/function name" << setw(20) << 
-                left << "unix begin time" << setw(20) << left << "time elapsed" <<'\n';
+                left << "unix begin time(μs)" << setw(20) << left << "time elapsed(μs)" <<'\n';
         cout << string(102, '-') << '\n';
         //cout << "stack size: " << stack.size() << '\n';
 	for(TimeNode node: print_stack){
