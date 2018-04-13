@@ -8807,6 +8807,24 @@ BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
 	ABI_CHECK(callContractFunction("f(bytes2,uint16)", string("abc"), u256(0x040102)), encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(cleanup_bytes_types_shortening)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() pure returns (bytes32 r) {
+				bytes4 x = 0xffffffff;
+				bytes2 y = bytes2(x);
+				assembly { r := y }
+				// At this point, r and y both store four bytes, but
+				// y is properly cleaned before the equality check
+				require(y == bytes2(0xffff));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs("\xff\xff\xff\xff"));
+}
+
 BOOST_AUTO_TEST_CASE(skip_dynamic_types)
 {
 	// The EVM cannot provide access to dynamically-sized return values, so we have to skip them.
@@ -11322,6 +11340,10 @@ BOOST_AUTO_TEST_CASE(abi_encode)
 				y[0] = "e";
 				require(y[0] == "e");
 			}
+			function f4() returns (bytes) {
+				bytes4 x = "abcd";
+				return abi.encode(bytes2(x));
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
@@ -11329,6 +11351,7 @@ BOOST_AUTO_TEST_CASE(abi_encode)
 	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 0x40, 1, 2));
 	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
 	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 0xa0, 1, 0x60, 2, 3, "abc"));
+	ABI_CHECK(callContractFunction("f4()"), encodeArgs(0x20, 0x20, "ab"));
 }
 
 BOOST_AUTO_TEST_CASE(abi_encode_v2)
