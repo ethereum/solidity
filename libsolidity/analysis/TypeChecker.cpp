@@ -554,6 +554,9 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	if (base->isLibrary())
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
 
+	if (base->isFinal())
+		m_errorReporter.typeError(_inheritance.location(), "Final contracts cannot be inherited from.");
+
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
 	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
