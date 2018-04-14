@@ -363,13 +363,15 @@ public:
 		ASTPointer<ASTString> const& _documentation,
 		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 		std::vector<ASTPointer<ASTNode>> const& _subNodes,
-		ContractKind _contractKind = ContractKind::Contract
+		ContractKind _contractKind = ContractKind::Contract,
+		bool _isFinal = false
 	):
 		Declaration(_location, _name),
 		Documented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_subNodes(_subNodes),
-		m_contractKind(_contractKind)
+		m_contractKind(_contractKind),
+		m_isFinal(_isFinal)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -408,6 +410,8 @@ public:
 
 	ContractKind contractKind() const { return m_contractKind; }
 
+	bool isFinal() const { return m_isFinal; }
+
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
@@ -417,6 +421,8 @@ private:
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
 	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
+
+	bool m_isFinal;
 };
 
 class InheritanceSpecifier: public ASTNode
