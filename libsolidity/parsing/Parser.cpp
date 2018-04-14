@@ -224,6 +224,14 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 	expectToken(_expectedKind);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
+	bool isFinal = false;
+
+	if (m_scanner->currentToken() == Token::Final)
+	{
+		isFinal = true;
+		m_scanner->next();
+	}
+
 	if (m_scanner->currentToken() == Token::Is)
 		do
 		{
@@ -277,7 +285,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		docString,
 		baseContracts,
 		subNodes,
-		tokenToContractKind(_expectedKind)
+		tokenToContractKind(_expectedKind),
+		isFinal
 	);
 }
 
