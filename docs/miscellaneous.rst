@@ -317,6 +317,11 @@ The following is the order of precedence for operators, listed in order of evalu
 Global Variables
 ================
 
+- ``abi.encode(...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
 - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty

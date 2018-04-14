@@ -8,6 +8,7 @@ Features:
  * General: Allow providing reason string for ``revert()`` and ``require()``.
  * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
+ * General: Add encoding routines ``abi.encodePacked``, ``abi.encode``, ``abi.encodeWithSelector`` and ``abi.encodeWithSignature``.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
  * Optimizer: Optimize ``SHL`` and ``SHR`` only involving constants (Constantinople only).
  * Optimizer: Remove useless ``SWAP1`` instruction preceding a commutative instruction (such as ``ADD``, ``MUL``, etc).

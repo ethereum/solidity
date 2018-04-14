@@ -44,9 +44,10 @@ Special Variables and Functions
 ===============================
 
 There are special variables and functions which always exist in the global
-namespace and are mainly used to provide information about the blockchain.
+namespace and are mainly used to provide information about the blockchain
+or are general-use utility functions.
 
-.. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
+.. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
 
 
 Block and Transaction Properties
@@ -89,6 +90,26 @@ Block and Transaction Properties
     The block hashes are not available for all blocks for scalability reasons.
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
+
+.. index:: abi, encoding, packed
+
+ABI Encoding Functions
+----------------------
+
+- ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes packed encoding of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
+
+.. note::
+    These encoding functions can be used to craft data for function calls without actually
+    calling a function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a more
+    explicit way to compute ``keccak256(a, b)``, which will be deprecated in future
+    versions.
+
+See the documentation about the :ref:`ABI <ABI>` and the
+:ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
 
 .. index:: assert, revert, require
 
