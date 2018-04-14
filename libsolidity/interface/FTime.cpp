@@ -16,7 +16,7 @@
 */
 /**
  * @author Killian <>
- * @author Jiayang <>
+ * @author Jiayang <prokingsley@gmail.com>
  * @author Raphael <raphael.s.norwitz@gmail.com>
  * @date 2017
  * A timing utility for debugging compiler performance
@@ -33,6 +33,22 @@ using namespace std;
 
 TimeNode::TimeNode() {
 	children = vector<TimeNode>();
+}
+
+void TimeNode::setBegin() {
+	begin = std::chrono::high_resolution_clock::now();
+}
+
+void TimeNode::setEnd() {
+	end = std::chrono::high_resolution_clock::now();
+}
+
+const std::chrono::high_resolution_clock::time_point TimeNode::getBegin() const {
+	return begin;
+}
+
+const std::chrono::high_resolution_clock::time_point TimeNode::getEnd() const {
+	return end;
 }
 
 TimeNodeStack::TimeNodeStack()
@@ -59,7 +75,7 @@ void TimeNodeStack::push(string name)
 {
 	TimeNode t_node;
 	t_node.name = name;
-	t_node.begin = std::chrono::high_resolution_clock::now();
+	t_node.setBegin();
 	stack.push_back(t_node);
 }
 
@@ -69,12 +85,12 @@ void TimeNodeStack::pop()
 	{
 		TimeNode t_node = stack[stack.size() - 1];
 		stack.pop_back();
-		t_node.end = std::chrono::high_resolution_clock::now();
+		t_node.setEnd();
 		stack[stack.size() - 1].children.push_back(t_node);
 	}
 	else if (stack.size() == 1)
 	{
-		stack[0].end = std::chrono::high_resolution_clock::now();
+		stack[0].setEnd();
                 if(print_flag)
 		{
                         print_recursive(stack[0], string(""));
@@ -98,9 +114,9 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 {
 	cout << setw(70) << left << arrow + x.name << setw(24) << left << 
                 std::chrono::duration_cast<std::chrono::microseconds>(
-		x.begin - start).count() << setw(20) << left << 
-		std::chrono::duration_cast<std::chrono::microseconds>(x.end
-				- x.begin).count() << '\n';
+		x.getBegin() - start).count() << setw(20) << left << 
+		std::chrono::duration_cast<std::chrono::microseconds>(x.getEnd()
+				- x.getBegin()).count() << '\n';
 
 	for (TimeNode child : x.children)
 	{

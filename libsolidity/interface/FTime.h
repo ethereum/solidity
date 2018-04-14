@@ -16,7 +16,7 @@
 */
 /**
  * @author Killian <>
- * @author Jiayang <>
+ * @author Jiayang <prokingsley@gmail.com>
  * @author Raphael <raphael.s.norwitz@gmail.com>
  * @date 2017
  * A timing utility for debugging compiler performance
@@ -31,9 +31,14 @@ class TimeNode
 public:
 	TimeNode();
 	std::string name;
+	std::vector<TimeNode> children;
+	void setBegin();
+	void setEnd();
+	const std::chrono::high_resolution_clock::time_point getBegin() const;
+	const std::chrono::high_resolution_clock::time_point getEnd() const;
+private:
 	std::chrono::high_resolution_clock::time_point begin;
 	std::chrono::high_resolution_clock::time_point end;
-	std::vector<TimeNode> children;
 };
 
 class TimeNodeStack
