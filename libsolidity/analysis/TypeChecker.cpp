@@ -718,14 +718,26 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		}
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
+		if (_function.isFinal())
+			m_errorReporter.typeError(_function.location(), "Interface function cannot be declared final.");
 	}
 	else if (m_scope->contractKind() == ContractDefinition::ContractKind::Library)
+	{
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in libraries.");
+		if (_function.isFinal())
+			m_errorReporter.typeError(_function.location(), "Library function cannot be declared final.");
+	}
+
+	if (_function.isConstructor() && _function.isFinal())
+		m_errorReporter.typeError(_function.location(), "Constructor cannot be declared final.");
+
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
+	else if (m_scope->contractKind() == ContractDefinition::ContractKind ::Contract && _function.isFinal()) // Only warn if final is allowed
+		m_errorReporter.typeError(_function.location(), "Function declared final must be implemented.");
 	else if (isLibraryFunction && _function.visibility() <= FunctionDefinition::Visibility::Internal)
 		m_errorReporter.typeError(_function.location(), "Internal library function must be implemented if declared.");
 	return false;
