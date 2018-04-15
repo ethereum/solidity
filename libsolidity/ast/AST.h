@@ -600,6 +600,7 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
+		bool _isFinal,
 		ASTPointer<Block> const& _body
 	):
 		CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
@@ -608,6 +609,7 @@ public:
 		m_stateMutability(_stateMutability),
 		m_isConstructor(_isConstructor),
 		m_functionModifiers(_modifiers),
+		m_isFinal(_isFinal),
 		m_body(_body)
 	{}
 
@@ -644,10 +646,13 @@ public:
 
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
+	bool isFinal() const { return m_isFinal; }
+
 private:
 	StateMutability m_stateMutability;
 	bool m_isConstructor;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
+	bool m_isFinal;
 	ASTPointer<Block> m_body;
 };
 
