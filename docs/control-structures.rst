@@ -477,7 +477,7 @@ a message string for ``require``, but not for ``assert``.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract Sharer {
         function sendHalf(address addr) public payable returns (uint balance) {
@@ -524,7 +524,7 @@ The following example shows how an error string can be used together with revert
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract VendingMachine {
         function buy(uint amount) payable {

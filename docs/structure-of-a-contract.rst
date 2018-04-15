@@ -62,7 +62,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.22;
 
     contract Purchase {
         address public seller;

@@ -301,7 +301,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.22;
 
     contract owned {
         function owned() public { owner = msg.sender; }
@@ -1215,7 +1215,7 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity ^0.4.22;
 
     library Set {
       // We define a new struct datatype that will be used to
