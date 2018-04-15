@@ -431,7 +431,12 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 	if (!function.annotation().superFunction)
 		function.annotation().superFunction = &super;
 
-	if (function.visibility() != super.visibility())
+	if (super.isFinal())
+	{
+		overrideError(function, super, "Cannot override final function.");
+	}
+
+	else if (function.visibility() != super.visibility())
 	{
 		// visibility is enforced to be external in interfaces, but a contract can override that with public
 		if (
