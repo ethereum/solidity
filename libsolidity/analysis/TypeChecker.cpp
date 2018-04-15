@@ -153,6 +153,9 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	if (_contract.isLibrary())
 		checkLibraryRequirements(_contract);
 
+	if (_contract.contractKind() == ContractDefinition::ContractKind::Interface && _contract.isFinal())
+		m_errorReporter.typeError(_contract.location(), "Interface cannot be declared final.");
+
 	return false;
 }
 
@@ -517,6 +520,9 @@ void TypeChecker::checkLibraryRequirements(ContractDefinition const& _contract)
 	for (auto const& var: _contract.stateVariables())
 		if (!var->isConstant())
 			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
+
+	if (_contract.isFinal())
+		m_errorReporter.typeError(_contract.location(), "Library cannot be declared final.");
 }
 
 void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
