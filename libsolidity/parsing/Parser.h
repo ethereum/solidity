@@ -57,6 +57,7 @@ private:
 	struct FunctionHeaderParserResult
 	{
 		bool isConstructor;
+		bool isFinal;
 		ASTPointer<ASTString> name;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;

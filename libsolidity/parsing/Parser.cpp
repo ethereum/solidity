@@ -228,8 +228,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 
 	if (m_scanner->currentToken() == Token::Final)
 	{
-		isFinal = true;
 		m_scanner->next();
+		isFinal = true;
 	}
 
 	if (m_scanner->currentToken() == Token::Is)
@@ -351,6 +351,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 	FunctionHeaderParserResult result;
 
 	result.isConstructor = false;
+	result.isFinal = false;
 
 	if (m_scanner->currentToken() == Token::Identifier && m_scanner->currentLiteral() == "constructor")
 		result.isConstructor = true;
@@ -422,6 +423,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 			else
 				result.stateMutability = parseStateMutability(token);
 		}
+		else if (token == Token::Final)
+		{
+			result.isFinal = true;
+			m_scanner->next();
+		}
 		else
 			break;
 	}
@@ -473,6 +479,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(A
 			header.parameters,
 			header.modifiers,
 			header.returnParameters,
+			header.isFinal,
 			block
 		);
 	}
