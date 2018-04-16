@@ -1,4 +1,4 @@
-add_executable(solfuzzer fuzzer.cpp)
+add_executable(solfuzzer fuzzer.cpp ../libjulia/RandomCodeGenerator.cpp)
 target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES})
 
 add_executable(isoltest isoltest.cpp ../Options.cpp ../libsolidity/SyntaxTest.cpp ../libsolidity/AnalysisFramework.cpp)

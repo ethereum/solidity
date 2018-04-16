@@ -51,9 +51,9 @@ bool AsmAnalyzer::analyze(Block const& _block)
 		return false;
 
 	AsmPrinter p;
-	cout << "Starting analisis for ----------------------------" << endl;
-	cout << p(_block) << endl;
-	cout << " ----------------------------" << endl;
+//	cout << "Starting analisis for ----------------------------" << endl;
+//	cout << p(_block) << endl;
+//	cout << " ----------------------------" << endl;
 
 	return (*this)(_block);
 }

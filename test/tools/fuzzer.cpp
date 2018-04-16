@@ -18,6 +18,8 @@
  * Executable for use with AFL <http://lcamtuf.coredump.cx/afl>.
  */
 
+#include <test/libjulia/RandomCodeGenerator.h>
+
 #include <libdevcore/CommonIO.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
@@ -117,39 +119,43 @@ void testStandardCompiler()
 		}
 }
 
-vector<string> runAndGetTrace(assembly::Block const& _ast)
-{
-	julia::InterpreterState state;
-	julia::Interpreter interpreter(state);
-	try
-	{
-		interpreter(_ast);
-	}
-	catch (julia::InterpreterTerminated const&)
-	{
-	}
-	return std::move(state.trace);
-}
+//vector<string> runAndGetTrace(assembly::Block const& _ast)
+//{
+//	julia::InterpreterState state;
+//	julia::Interpreter interpreter(state);
+//	try
+//	{
+//		interpreter(_ast);
+//	}
+//	catch (julia::InterpreterTerminated const&)
+//	{
+//	}
+//	return std::move(state.trace);
+//}
 
 void testIuliaOptimizer()
 {
 	if (!quiet)
-		cout << "Testing iulia optimizer." << endl;
-	string input = readStandardInput();
-
-	AssemblyStack s(EVMVersion(), AssemblyStack::Language::StrictAssembly);
-	if (!s.parseAndAnalyze("", input))
+		cout << "Generating random code." << endl;
+	uint64_t seed;
+	cin >> seed;
+	assembly::Block ast = julia::test::RandomCodeGenerator(seed).generate();
+	AssemblyStack stack(EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	if (!stack.analyze(ast) || !stack.errors().empty())
 	{
-		cout << "Invalid input." << endl;
-		return;
-	}
-	// TODO: could we run the two interpreters in parallel and stop on the first error?
-	vector<string> unoptimisedTrace = runAndGetTrace(s.parserResult());
-	s.optimise();
-	vector<string> optimisedTrace = runAndGetTrace(s.parserResult());
-	cout << "Trace length: " << unoptimisedTrace.size() << endl;
-	if (unoptimisedTrace != optimisedTrace)
+		for (auto const& error: stack.errors())
+			if (string const* description = boost::get_error_info<errinfo_comment>(*error))
+				cerr << "Error: " << *description << endl;
 		abort();
+	}
+//	cout << stack.print() << endl;
+
+//	vector<string> unoptimisedTrace = runAndGetTrace(stack.parserResult());
+//	stack.optimise();
+//	vector<string> optimisedTrace = runAndGetTrace(stack.parserResult());
+//	cout << "Trace length: " << unoptimisedTrace.size() << endl;
+//	if (unoptimisedTrace != optimisedTrace)
+//		abort();
 }
 
 void testCompiler(bool optimize)
