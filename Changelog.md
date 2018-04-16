@@ -9,6 +9,7 @@ Features:
  * General: Add global function ``gasleft()`` and deprecate ``msg.gas``.
  * General: Add global function ``blockhash(uint)`` and deprecate ``block.hash(uint)``.
  * General: Allow providing reason string for ``revert()`` and ``require()``.
+ * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
  * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
  * Inheritance: Error when using empty parentheses for base class constructors that require arguments as experimental 0.5.0 feature.
@@ -23,7 +24,6 @@ Features:
  * Syntax Checker: Warn about modifiers on functions without implementation (this will turn into an error with version 0.5.0).
  * Syntax Tests: Add source locations to syntax test expectations.
  * Type Checker: Improve documentation and warnings for accessing contract members inherited from ``address``.
- * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
 
 
 Bugfixes:
