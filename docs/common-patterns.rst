@@ -130,7 +130,7 @@ restrictions highly readable.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.22;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -282,7 +282,7 @@ function finishes.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.22;
 
     contract StateMachine {
         enum Stages {

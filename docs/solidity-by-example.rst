@@ -36,7 +36,7 @@ of votes.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity ^0.4.22;
 
     /// @title Voting with delegation.
     contract Ballot {
@@ -225,7 +225,7 @@ activate themselves.
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.22;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -388,7 +388,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.22;
 
     contract BlindAuction {
         struct Bid {
@@ -541,7 +541,7 @@ Safe Remote Purchase
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.22;
 
     contract Purchase {
         uint public value;
