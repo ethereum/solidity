@@ -690,8 +690,10 @@ void CompilerStack::compileContract(
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().unimplementedFunctions.empty() ||
 		!_contract.constructorIsPublic()
-	)
+	) {
+		t_stack.pop();
 		return;
+	}
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
