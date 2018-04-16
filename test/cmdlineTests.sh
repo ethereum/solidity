@@ -26,7 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -e
+set -ev
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 echo $REPO_ROOT
@@ -39,6 +39,7 @@ echo "Checking that the bug list is up to date..."
 
 echo "Checking that StandardToken.sol, owned.sol and mortal.sol produce bytecode..."
 output=$("$REPO_ROOT"/build/solc/solc --bin "$REPO_ROOT"/std/*.sol 2>/dev/null | grep "ffff" | wc -l)
+echo "Output: $output"
 test "${output//[[:blank:]]/}" = "3"
 
 function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }

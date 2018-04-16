@@ -26,7 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -e
+set -ev
 
 REPO_ROOT="$(dirname "$0")"/..
 
@@ -43,13 +43,13 @@ else
 fi
 
 echo "Running commandline tests..."
-"$REPO_ROOT/test/cmdlineTests.sh" &
-CMDLINE_PID=$!
-# Only run in parallel if this is run on CI infrastructure
-if [ -z "$CI" ]
-then
-    wait $CMDLINE_PID
-fi
+"$REPO_ROOT/test/cmdlineTests.sh"
+#CMDLINE_PID=$!
+## Only run in parallel if this is run on CI infrastructure
+#if [ -z "$CI" ]
+#then
+#    wait $CMDLINE_PID
+#fi
 
 function download_eth()
 {
@@ -127,7 +127,7 @@ do
   done
 done
 
-wait $CMDLINE_PID
+#wait $CMDLINE_PID
 
 pkill "$ETH_PID" || true
 sleep 4
