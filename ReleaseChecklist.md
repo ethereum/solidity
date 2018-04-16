@@ -1,7 +1,8 @@
 Checklist for making a release:
 
- - [ ] Check that all "nextrelease" issues and pull requests are merged to ``develop``.
- - [ ] Create a commit in ``develop`` that updates the ``Changelog`` to include a release date (run the tests locally to update the bug list).
+ - [ ] Ensure that a Github project exists for the release.
+ - [ ] Check that all issues and pull requests from the Github project to be released are merged to ``develop``.
+ - [ ] Create a commit in ``develop`` that updates the ``Changelog`` to include a release date (run ``./scripts/tests.sh`` to update the bug list). Sort the changelog entries alphabetically and correct any errors you notice.
  - [ ] Create a pull request and wait for the tests, merge it.
  - [ ] Create a pull request from ``develop`` to ``release``, wait for the tests, then merge it.
  - [ ] Make a final check that there are no platform-dependency issues in the ``solc-test-bytecode`` repository.
@@ -9,7 +10,7 @@ Checklist for making a release:
  - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e origin/release..origin/develop``).
  - [ ] Wait for the CI runs on the tag itself (they should push artefacts onto the Github release page).
  - [ ] Run ``scripts/release_ppa.sh release`` to create the PPA release (you need the relevant openssl key).
- - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems).
+ - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh release``).
  - [ ] Update the homebrew realease in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb (version and hash)
  - [ ] Update the default version on readthedocs.
  - [ ] Make a release of ``solc-js``: Increment the version number, create a pull request for that, merge it after tests succeeded.
