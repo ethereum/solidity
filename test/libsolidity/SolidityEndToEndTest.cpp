@@ -102,6 +102,29 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
 	ABI_CHECK(callContractFunction("f()", bytes()), toBigEndian(u256(-8)));
 }
 
+BOOST_AUTO_TEST_CASE(exp_zero)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return a ** 0; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	testContractAgainstCppOnRange("f(uint256)", [](u256 const&) -> u256 { return u256(1); }, 0, 16);
+}
+
+BOOST_AUTO_TEST_CASE(exp_zero_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 0 ** 0; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()", bytes()), toBigEndian(u256(1)));
+}
+
+
 BOOST_AUTO_TEST_CASE(conditional_expression_true_literal)
 {
 	char const* sourceCode = R"(
