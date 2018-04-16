@@ -28,6 +28,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/UTF8.h>
+#include <libdevcore/Algorithms.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -42,6 +43,85 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+
+namespace
+{
+
+unsigned int mostSignificantBit(bigint const& _number)
+{
+#if BOOST_VERSION < 105500
+	solAssert(_number > 0, "");
+	bigint number = _number;
+	unsigned int result = 0;
+	while (number != 0)
+	{
+		number >>= 1;
+		++result;
+	}
+	return --result;
+#else
+	return boost::multiprecision::msb(_number);
+#endif
+}
+
+/// Check whether (_base ** _exp) fits into 4096 bits.
+bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
+{
+	if (_base == 0)
+		return true;
+
+	solAssert(_base > 0, "");
+
+	size_t const bitsMax = 4096;
+
+	unsigned mostSignificantBaseBit = mostSignificantBit(_base);
+	if (mostSignificantBaseBit == 0) // _base == 1
+		return true;
+	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
+		return false;
+
+	bigint bitsNeeded = _exp * (mostSignificantBaseBit + 1);
+
+	return bitsNeeded <= bitsMax;
+}
+
+/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
+/// where X is given indirectly via _log2OfBase = log2(X).
+bool fitsPrecisionBaseX(
+	bigint const& _mantissa,
+	double _log2OfBase,
+	uint32_t _exp
+)
+{
+	if (_mantissa == 0)
+		return true;
+
+	solAssert(_mantissa > 0, "");
+
+	size_t const bitsMax = 4096;
+
+	unsigned mostSignificantMantissaBit = mostSignificantBit(_mantissa);
+	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
+		return false;
+
+	bigint bitsNeeded = mostSignificantMantissaBit + bigint(floor(double(_exp) * _log2OfBase)) + 1;
+	return bitsNeeded <= bitsMax;
+}
+
+/// Checks whether _mantissa * (10 ** _expBase10) fits into 4096 bits.
+bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10)
+{
+	double const log2Of10AwayFromZero = 3.3219280948873624;
+	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10);
+}
+
+/// Checks whether _mantissa * (2 ** _expBase10) fits into 4096 bits.
+bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
+{
+	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
+}
+
+}
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
 {
@@ -208,9 +288,9 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::UInt:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned);
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
@@ -232,11 +312,22 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
+	string name = _name;
+	DataLocation location = DataLocation::Storage;
+	if (boost::algorithm::ends_with(name, " memory"))
+	{
+		name = name.substr(0, name.length() - 7);
+		location = DataLocation::Memory;
+	}
 	unsigned short firstNum;
 	unsigned short secondNum;
 	Token::Value token;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(_name);
- 	return fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
+	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
+		return ref->copyForLocation(location, true);
+	else
+		return t;
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -304,7 +395,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 			);
 			for (FunctionDefinition const* function: library.definedFunctions())
 			{
-				if (!function->isVisibleInDerivedContracts() || seenFunctions.count(function))
+				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
 				FunctionType funType(*function, false);
@@ -327,7 +418,7 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
 		return !otherInt->isAddress();
 	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
-		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+		return !otherRat->isFractional() && otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else
 		return false;
 }
@@ -677,31 +768,39 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		}
 		else if (expPoint != _literal.value().end())
 		{
-			// parse the exponent
+			// Parse base and exponent. Checks numeric limit.
 			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
 
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
 
-			// parse the base
+			uint32_t expAbs = bigint(abs(exp)).convert_to<uint32_t>();
+
+
 			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
+
 			if (!get<0>(base))
 				return make_tuple(false, rational(0));
 			value = get<1>(base);
 
 			if (exp < 0)
 			{
-				exp *= -1;
+				if (!fitsPrecisionBase10(abs(value.denominator()), expAbs))
+					return make_tuple(false, rational(0));
 				value /= boost::multiprecision::pow(
 					bigint(10),
-					exp.convert_to<int32_t>()
+					expAbs
 				);
 			}
-			else
+			else if (exp > 0)
+			{
+				if (!fitsPrecisionBase10(abs(value.numerator()), expAbs))
+					return make_tuple(false, rational(0));
 				value *= boost::multiprecision::pow(
 					bigint(10),
-					exp.convert_to<int32_t>()
+					expAbs
 				);
+			}
 		}
 		else
 		{
@@ -827,10 +926,10 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		auto mobile = mobileType();
-		if (!mobile)
+		auto commonType = Type::commonType(shared_from_this(), _other);
+		if (!commonType)
 			return TypePointer();
-		return mobile->binaryOperatorResult(_operator, _other);
+		return commonType->binaryOperatorResult(_operator, _other);
 	}
 	else if (_other->category() != category())
 		return TypePointer();
@@ -900,16 +999,49 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			using boost::multiprecision::pow;
 			if (other.isFractional())
 				return TypePointer();
-			else if (abs(other.m_value) > numeric_limits<uint32_t>::max())
-				return TypePointer(); // This will need too much memory to represent.
-			uint32_t exponent = abs(other.m_value).numerator().convert_to<uint32_t>();
-			bigint numerator = pow(m_value.numerator(), exponent);
-			bigint denominator = pow(m_value.denominator(), exponent);
-			if (other.m_value >= 0)
-				value = rational(numerator, denominator);
+			solAssert(other.m_value.denominator() == 1, "");
+			bigint const& exp = other.m_value.numerator();
+
+			// x ** 0 = 1
+			// for 0, 1 and -1 the size of the exponent doesn't have to be restricted
+			if (exp == 0)
+				value = 1;
+			else if (m_value.numerator() == 0 || m_value == 1)
+				value = m_value;
+			else if (m_value == -1)
+			{
+				bigint isOdd = abs(exp) & bigint(1);
+				value = 1 - 2 * isOdd.convert_to<int>();
+			}
 			else
-				// invert
-				value = rational(denominator, numerator);
+			{
+				if (abs(exp) > numeric_limits<uint32_t>::max())
+					return TypePointer(); // This will need too much memory to represent.
+
+				uint32_t absExp = bigint(abs(exp)).convert_to<uint32_t>();
+
+				// Limit size to 4096 bits
+				if (!fitsPrecisionExp(abs(m_value.numerator()), absExp) || !fitsPrecisionExp(abs(m_value.denominator()), absExp))
+					return TypePointer();
+
+				static auto const optimizedPow = [](bigint const& _base, uint32_t _exponent) -> bigint {
+					if (_base == 1)
+						return 1;
+					else if (_base == -1)
+						return 1 - 2 * int(_exponent & 1);
+					else
+						return pow(_base, _exponent);
+				};
+
+				bigint numerator = optimizedPow(m_value.numerator(), absExp);
+				bigint denominator = optimizedPow(m_value.denominator(), absExp);
+
+				if (exp >= 0)
+					value = rational(numerator, denominator);
+				else
+					// invert
+					value = rational(denominator, numerator);
+			}
 			break;
 		}
 		case Token::SHL:
@@ -921,28 +1053,48 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				return TypePointer();
 			else if (other.m_value > numeric_limits<uint32_t>::max())
 				return TypePointer();
-			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-			value = m_value.numerator() * pow(bigint(2), exponent);
+			if (m_value.numerator() == 0)
+				value = 0;
+			else
+			{
+				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+				if (!fitsPrecisionBase2(abs(m_value.numerator()), exponent))
+					return TypePointer();
+				value = m_value.numerator() * pow(bigint(2), exponent);
+			}
 			break;
 		}
 		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
 		//       determines the resulting type and the type of shift (SAR or SHR).
 		case Token::SAR:
 		{
-			using boost::multiprecision::pow;
+			namespace mp = boost::multiprecision;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
 				return TypePointer();
 			else if (other.m_value > numeric_limits<uint32_t>::max())
 				return TypePointer();
-			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-			value = rational(m_value.numerator() / pow(bigint(2), exponent), 1);
+			if (m_value.numerator() == 0)
+				value = 0;
+			else
+			{
+				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+				if (exponent > mostSignificantBit(mp::abs(m_value.numerator())))
+					value = 0;
+				else
+					value = rational(m_value.numerator() / mp::pow(bigint(2), exponent), 1);
+			}
 			break;
 		}
 		default:
 			return TypePointer();
 		}
+
+		// verify that numerator and denominator fit into 4096 bit after every operation
+		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
+			return TypePointer();
+
 		return make_shared<RationalNumberType>(value);
 	}
 }
@@ -1262,6 +1414,8 @@ bool ContractType::isPayable() const
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
+	if (isSuper())
+		return TypePointer{};
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
@@ -1969,25 +2123,19 @@ bool StructType::recursive() const
 {
 	if (!m_recursive.is_initialized())
 	{
-		set<StructDefinition const*> structsSeen;
-		function<bool(StructType const*)> check = [&](StructType const* t) -> bool
+		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector)
 		{
-			StructDefinition const* str = &t->structDefinition();
-			if (structsSeen.count(str))
-				return true;
-			structsSeen.insert(str);
-			for (ASTPointer<VariableDeclaration> const& variable: str->members())
+			for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
 			{
 				Type const* memberType = variable->annotation().type.get();
 				while (dynamic_cast<ArrayType const*>(memberType))
 					memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
 				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					if (check(innerStruct))
-						return true;
+					if (_cycleDetector.run(innerStruct->structDefinition()))
+						return;
 			}
-			return false;
 		};
-		m_recursive = check(this);
+		m_recursive = (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
 	}
 	return *m_recursive;
 }
@@ -2311,6 +2459,18 @@ vector<string> FunctionType::parameterNames() const
 	return vector<string>(m_parameterNames.cbegin() + 1, m_parameterNames.cend());
 }
 
+TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
+{
+	TypePointers returnParameterTypes = m_returnParameterTypes;
+
+	if (m_kind == Kind::External || m_kind == Kind::CallCode || m_kind == Kind::DelegateCall)
+		for (auto& param: returnParameterTypes)
+			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+				param = make_shared<InaccessibleDynamicType>();
+
+	return returnParameterTypes;
+}
+
 TypePointers FunctionType::parameterTypes() const
 {
 	if (!bound())
@@ -2355,7 +2515,11 @@ string FunctionType::richIdentifier() const
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
-	case Kind::Require: id += "require";break;
+	case Kind::Require: id += "require"; break;
+	case Kind::ABIEncode: id += "abiencode"; break;
+	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
+	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
+	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
@@ -2772,18 +2936,9 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			kind = Kind::DelegateCall;
 	}
 
-	TypePointers returnParameterTypes = m_returnParameterTypes;
-	if (kind != Kind::Internal)
-	{
-		// Alter dynamic types to be non-accessible.
-		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized())
-				param = make_shared<InaccessibleDynamicType>();
-	}
-
 	return make_shared<FunctionType>(
 		parameterTypes,
-		returnParameterTypes,
+		m_returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,
@@ -2875,7 +3030,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		}
 		if (contract.isLibrary())
 			for (FunctionDefinition const* function: contract.definedFunctions())
-				if (function->isVisibleInDerivedContracts())
+				if (function->isVisibleAsLibraryMember())
 					members.push_back(MemberList::Member(
 						function->name(),
 						FunctionType(*function).asMemberFunction(true),
@@ -2985,6 +3140,8 @@ string MagicType::richIdentifier() const
 		return "t_magic_message";
 	case Kind::Transaction:
 		return "t_magic_transaction";
+	case Kind::ABI:
+		return "t_magic_abi";
 	default:
 		solAssert(false, "Unknown kind of magic");
 	}
@@ -3025,6 +3182,45 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
+	case Kind::ABI:
+		return MemberList::MemberMap({
+			{"encode", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncode,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodePacked", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodePacked,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodeWithSelector", make_shared<FunctionType>(
+				TypePointers{make_shared<FixedBytesType>(4)},
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodeWithSelector,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodeWithSignature", make_shared<FunctionType>(
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory, true)},
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodeWithSignature,
+				true,
+				StateMutability::Pure
+			)}
+		});
 	default:
 		solAssert(false, "Unknown kind of magic.");
 	}
@@ -3040,6 +3236,8 @@ string MagicType::toString(bool) const
 		return "msg";
 	case Kind::Transaction:
 		return "tx";
+	case Kind::ABI:
+		return "abi";
 	default:
 		solAssert(false, "Unknown kind of magic.");
 	}

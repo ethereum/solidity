@@ -199,7 +199,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::ADDMOD,		{ "ADDMOD",			0, 3, 1, false, Tier::Mid } },
 	{ Instruction::MULMOD,		{ "MULMOD",			0, 3, 1, false, Tier::Mid } },
 	{ Instruction::SIGNEXTEND,	{ "SIGNEXTEND",		0, 2, 1, false, Tier::Low } },
-	{ Instruction::KECCAK256,	{ "KECCAK256",			0, 2, 1, false, Tier::Special } },
+	{ Instruction::KECCAK256,	{ "KECCAK256",			0, 2, 1, true, Tier::Special } },
 	{ Instruction::ADDRESS,		{ "ADDRESS",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::BALANCE,		{ "BALANCE",		0, 1, 1, false, Tier::Balance } },
 	{ Instruction::ORIGIN,		{ "ORIGIN",			0, 0, 1, false, Tier::Base } },

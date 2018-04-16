@@ -44,15 +44,16 @@ Special Variables and Functions
 ===============================
 
 There are special variables and functions which always exist in the global
-namespace and are mainly used to provide information about the blockchain.
+namespace and are mainly used to provide information about the blockchain
+or are general-use utility functions.
 
-.. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
+.. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
 
 
 Block and Transaction Properties
 --------------------------------
 
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks excluding current
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -74,7 +75,7 @@ Block and Transaction Properties
     This includes calls to library functions.
 
 .. note::
-    Do not rely on ``block.timestamp``, ``now`` and ``block.blockhash`` as a source of randomness,
+    Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
     unless you know what you are doing.
 
     Both the timestamp and the block hash can be influenced by miners to some degree.
@@ -90,6 +91,26 @@ Block and Transaction Properties
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
 
+.. index:: abi, encoding, packed
+
+ABI Encoding Functions
+----------------------
+
+- ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes packed encoding of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
+
+.. note::
+    These encoding functions can be used to craft data for function calls without actually
+    calling a function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a more
+    explicit way to compute ``keccak256(a, b)``, which will be deprecated in future
+    versions.
+
+See the documentation about the :ref:`ABI <ABI>` and the
+:ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
+
 .. index:: assert, revert, require
 
 Error Handling
@@ -99,8 +120,12 @@ Error Handling
     throws if the condition is not met - to be used for internal errors.
 ``require(bool condition)``:
     throws if the condition is not met - to be used for errors in inputs or external components.
+``require(bool condition, string message)``:
+    throws if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
 ``revert()``:
     abort execution and revert state changes
+``revert(string reason)``:
+    abort execution and revert state changes, providing an explanatory string
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
@@ -169,6 +194,13 @@ For more information, see the section on :ref:`address`.
     Use a pattern where the recipient withdraws the money.
 
 .. note::
+   If storage variables are accessed via a low-level delegatecall, the storage layout of the two contracts
+   must align in order for the called contract to correctly access the storage variables of the calling contract by name.
+   This is of course not the case if storage pointers are passed as function arguments as in the case for
+   the high-level libraries.
+   
+    
+.. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
 .. index:: this, selfdestruct
@@ -183,7 +215,7 @@ Contract Related
     destroy the current contract, sending its funds to the given :ref:`address`
 
 ``suicide(address recipient)``:
-    alias to ``selfdestruct``
+    deprecated alias to ``selfdestruct``
 
 Furthermore, all functions of the current contract are callable directly including the current function.
 

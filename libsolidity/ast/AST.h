@@ -203,6 +203,7 @@ public:
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
+	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
@@ -217,7 +218,7 @@ public:
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const { return {}; }
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
 
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
@@ -424,19 +425,22 @@ public:
 	InheritanceSpecifier(
 		SourceLocation const& _location,
 		ASTPointer<UserDefinedTypeName> const& _baseName,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_baseName(_baseName), m_arguments(_arguments) {}
+		ASTNode(_location), m_baseName(_baseName), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	UserDefinedTypeName const& name() const { return *m_baseName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``C``).
+	// If an argument list is given (``C(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``C()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<UserDefinedTypeName> m_baseName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**
@@ -606,7 +610,8 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
-	bool isFallback() const { return name().empty(); }
+	bool isOldStyleConstructor() const { return m_isConstructor && !name().empty(); }
+	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
@@ -623,11 +628,13 @@ public:
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
 	std::string externalSignature() const;
 
+	ContractDefinition::ContractKind inContractKind() const;
+
 	virtual TypePointer type() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
@@ -696,7 +703,7 @@ public:
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual VariableDeclarationAnnotation& annotation() const override;
 
@@ -755,19 +762,22 @@ public:
 	ModifierInvocation(
 		SourceLocation const& _location,
 		ASTPointer<Identifier> const& _name,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_modifierName(_name), m_arguments(_arguments) {}
+		ASTNode(_location), m_modifierName(_name), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTPointer<Identifier> const& name() const { return m_modifierName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``mod``).
+	// If an argument list is given (``mod(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``mod()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<Identifier> m_modifierName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**
@@ -795,7 +805,7 @@ public:
 	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer type() const override;
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual EventDefinitionAnnotation& annotation() const override;
 
@@ -821,6 +831,11 @@ public:
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
+	virtual FunctionTypePointer functionType(bool) const override
+	{
+		solAssert(m_type->category() == Type::Category::Function, "");
+		return std::dynamic_pointer_cast<FunctionType const>(m_type);
+	}
 	virtual TypePointer type() const override { return m_type; }
 
 private:

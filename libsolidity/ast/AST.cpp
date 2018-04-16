@@ -290,7 +290,14 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-shared_ptr<FunctionType> FunctionDefinition::functionType(bool _internal) const
+ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
+{
+	auto contractDef = dynamic_cast<ContractDefinition const*>(scope());
+	solAssert(contractDef, "Enclosing Scope of FunctionDefinition was not set.");
+	return contractDef->contractKind();
+}
+
+FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
 	if (_internal)
 	{
@@ -331,6 +338,7 @@ shared_ptr<FunctionType> FunctionDefinition::functionType(bool _internal) const
 
 TypePointer FunctionDefinition::type() const
 {
+	solAssert(visibility() != Declaration::Visibility::External, "");
 	return make_shared<FunctionType>(*this);
 }
 
@@ -372,7 +380,7 @@ TypePointer EventDefinition::type() const
 	return make_shared<FunctionType>(*this);
 }
 
-std::shared_ptr<FunctionType> EventDefinition::functionType(bool _internal) const
+FunctionTypePointer EventDefinition::functionType(bool _internal) const
 {
 	if (_internal)
 		return make_shared<FunctionType>(*this);
@@ -477,7 +485,7 @@ TypePointer VariableDeclaration::type() const
 	return annotation().type;
 }
 
-shared_ptr<FunctionType> VariableDeclaration::functionType(bool _internal) const
+FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 {
 	if (_internal)
 		return {};

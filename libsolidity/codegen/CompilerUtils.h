@@ -54,6 +54,13 @@ public:
 	/// Stack post: <size> <mem_start>
 	void toSizeAfterFreeMemoryPointer();
 
+	/// Appends code that performs a revert, providing the given string data.
+	/// Will also append an error signature corresponding to Error(string).
+	/// @param _argumentType the type of the string argument, will be converted to memory string.
+	/// Stack pre: string data
+	/// Stack post:
+	void revertWithStringData(Type const& _argumentType);
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load
@@ -87,6 +94,15 @@ public:
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true);
+
+	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	/// Calls revert if @a _revertOnOutOfBounds is true and the supplied size is shorter
+	/// than the static data requirements or if dynamic data pointers reach outside of the
+	/// area. Also has a hard cap of 0x100000000 for any given length/offset field.
+	/// Stack pre: <source_offset> <length>
+	/// Stack post: <value0> <value1> ... <valuen>
+	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false, bool _revertOnOutOfBounds = false);
 
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
@@ -149,7 +165,7 @@ public:
 	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,
 	/// the data is taken from memory instead of from calldata.
 	/// Can allocate memory.
-	/// Stack pre: <source_offset>
+	/// Stack pre: <source_offset> <length>
 	/// Stack post: <value0> <value1> ... <valuen>
 	void abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory = false);
 
@@ -179,7 +195,8 @@ public:
 	/// Appends code that combines the construction-time (if available) and runtime function
 	/// entry label of the given function into a single stack slot.
 	/// Note: This might cause the compilation queue of the runtime context to be extended.
-	void pushCombinedFunctionEntryLabel(Declaration const& _function);
+	/// If @a _runtimeOnly, the entry label will include the runtime assembly tag.
+	void pushCombinedFunctionEntryLabel(Declaration const& _function, bool _runtimeOnly = true);
 
 	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
 	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory
@@ -200,6 +217,9 @@ public:
 	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
 	/// memory for memory references.
 	void pushZeroValue(Type const& _type);
+	/// Pushes a pointer to the stack that points to a (potentially shared) location in memory
+	/// that always contains a zero. It is not allowed to write there.
+	void pushZeroPointer();
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
@@ -245,6 +265,10 @@ public:
 
 	/// Position of the free-memory-pointer in memory;
 	static const size_t freeMemoryPointer;
+	/// Position of the memory slot that is always zero.
+	static const size_t zeroPointer;
+	/// Starting offset for memory available to the user (aka the contract).
+	static const size_t generalPurposeMemoryStart;
 
 private:
 	/// Address of the precompiled identity contract.

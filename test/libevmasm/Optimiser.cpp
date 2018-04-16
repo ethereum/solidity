@@ -20,7 +20,7 @@
  * Tests for the Solidity optimizer.
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
@@ -69,8 +69,9 @@ namespace
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
+		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
 		eth::CommonSubexpressionEliminator cse(_state);
-		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
 		for (AssemblyItem const& item: output)
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
 		Instruction::DIV, u256(0xff), Instruction::AND
 	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.end());
 	AssemblyItems output = cse.getOptimizedItems();
 	BOOST_CHECK(!output.empty());
 }
@@ -855,6 +856,115 @@ BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 	for (size_t i = 0; i < 3; i++)
 		BOOST_CHECK(peepOpt.optimise());
 	BOOST_CHECK(items.empty());
+}
+
+BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
+{
+	vector<Instruction> ops{
+		Instruction::ADD,
+		Instruction::MUL,
+		Instruction::EQ,
+		Instruction::AND,
+		Instruction::OR,
+		Instruction::XOR
+	};
+	for (Instruction const op: ops)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			op,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
+{
+	// NOTE: not comprehensive
+	vector<Instruction> ops{
+		Instruction::SUB,
+		Instruction::DIV,
+		Instruction::SDIV,
+		Instruction::MOD,
+		Instruction::SMOD,
+		Instruction::EXP
+	};
+	for (Instruction const op: ops)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(!peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
+{
+	map<Instruction, Instruction> swappableOps{
+		{ Instruction::LT, Instruction::GT },
+		{ Instruction::GT, Instruction::LT },
+		{ Instruction::SLT, Instruction::SGT },
+		{ Instruction::SGT, Instruction::SLT }
+	};
+
+	for (auto const& op: swappableOps)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op.first,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			op.second,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(jumpdest_removal)

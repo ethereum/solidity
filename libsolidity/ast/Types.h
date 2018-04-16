@@ -150,6 +150,7 @@ public:
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken const& _type);
+	/// Converts a given elementary type name with optional suffix " memory" to a type pointer.
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
@@ -229,6 +230,9 @@ public:
 	/// i.e. it behaves differently in lvalue context and in value context.
 	virtual bool isValueType() const { return false; }
 	virtual unsigned sizeOnStack() const { return 1; }
+	/// If it is possible to initialize such a value in memory by just writing zeros
+	/// of the size memoryHeadSize().
+	virtual bool hasSimpleZeroValueInMemory() const { return true; }
 	/// @returns the mobile (in contrast to static) type corresponding to the given type.
 	/// This returns the corresponding IntegerType or FixedPointType for RationalNumberType
 	/// and the pointer type for storage reference types.
@@ -399,7 +403,7 @@ private:
 };
 
 /**
- * Integer and fixed point constants either literals or computed. 
+ * Integer and fixed point constants either literals or computed.
  * Example expressions: 2, 3.14, 2+10.2, ~10.
  * There is one distinct type per value.
  */
@@ -411,7 +415,7 @@ public:
 
 	/// @returns true if the literal is a valid integer.
 	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
-	
+
 	explicit RationalNumberType(rational const& _value):
 		m_value(_value)
 	{}
@@ -432,7 +436,7 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss. 
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss.
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
@@ -441,6 +445,9 @@ public:
 
 	/// @returns true if the value is negative.
 	bool isNegative() const { return m_value < 0; }
+
+	/// @returns true if the value is zero.
+	bool isZero() const { return m_value == 0; }
 
 private:
 	rational m_value;
@@ -568,6 +575,7 @@ public:
 
 	virtual TypePointer mobileType() const override { return copyForLocation(m_location, true); }
 	virtual bool dataStoredIn(DataLocation _location) const override { return m_location == _location; }
+	virtual bool hasSimpleZeroValueInMemory() const override { return false; }
 
 	/// Storage references can be pointers or bound references. In general, local variables are of
 	/// pointer type, state variables are bound references. Assignments to pointers or deleting
@@ -692,22 +700,27 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded ) const override
 	{
+		solAssert(!isSuper(), "");
 		return encodingType()->calldataEncodedSize(_padded);
 	}
-	virtual unsigned storageBytes() const override { return 20; }
-	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned storageBytes() const override { solAssert(!isSuper(), ""); return 20; }
+	virtual bool canLiveOutsideStorage() const override { return !isSuper(); }
 	virtual unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
-	virtual bool isValueType() const override { return true; }
+	virtual bool isValueType() const override { return !isSuper(); }
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName() const override;
 
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
+		if (isSuper())
+			return TypePointer{};
 		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override
 	{
+		if (isSuper())
+			return TypePointer{};
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
 
@@ -768,7 +781,7 @@ public:
 	virtual std::string canonicalName() const override;
 	virtual std::string signatureInExternalFunction(bool _structsByName) const override;
 
-	/// @returns a function that peforms the type conversion between a list of struct members
+	/// @returns a function that performs the type conversion between a list of struct members
 	/// and a memory struct of this type.
 	FunctionTypePointer constructorType() const;
 
@@ -850,6 +863,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
+	virtual bool hasSimpleZeroValueInMemory() const override { return false; }
 	virtual TypePointer mobileType() const override;
 	/// Converts components to their temporary types and performs some wildcard matching.
 	virtual TypePointer closestTemporaryType(TypePointer const& _targetType) const override;
@@ -903,6 +917,10 @@ public:
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
 		Require, ///< require()
+		ABIEncode,
+		ABIEncodePacked,
+		ABIEncodeWithSelector,
+		ABIEncodeWithSignature,
 		GasLeft ///< gasleft()
 	};
 
@@ -973,6 +991,9 @@ public:
 	TypePointers parameterTypes() const;
 	std::vector<std::string> parameterNames() const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
+	/// @returns the list of return parameter types. All dynamically-sized types (this excludes
+	/// storage pointers) are replaced by InaccessibleDynamicType instances.
+	TypePointers returnParameterTypesWithoutDynamicTypes() const;
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
 	/// @returns the "self" parameter type for a bound function
 	TypePointer const& selfType() const;
@@ -991,6 +1012,7 @@ public:
 	virtual bool isValueType() const override { return true; }
 	virtual bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	virtual unsigned sizeOnStack() const override;
+	virtual bool hasSimpleZeroValueInMemory() const override { return false; }
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
@@ -1024,7 +1046,7 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	/// @returns true if the the result of this function only depends on its arguments
+	/// @returns true if the result of this function only depends on its arguments
 	/// and it does not modify the state.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
@@ -1034,14 +1056,14 @@ public:
 	ASTPointer<ASTString> documentation() const;
 
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
-	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160); }
+	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160 || m_kind == Kind::ABIEncodePacked); }
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 	bool bound() const { return m_bound; }
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
-	/// of the parameters to fals.
+	/// of the parameters to false.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
 	/// @returns a copy of this function type where all return parameters of dynamic size are
@@ -1096,6 +1118,8 @@ public:
 		return _inLibrary ? shared_from_this() : TypePointer();
 	}
 	virtual bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
+	/// Cannot be stored in memory, but just in case.
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 
 	TypePointer const& keyType() const { return m_keyType; }
 	TypePointer const& valueType() const { return m_valueType; }
@@ -1124,6 +1148,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	virtual std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
@@ -1146,6 +1171,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override { return 0; }
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	virtual std::string richIdentifier() const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
@@ -1171,6 +1197,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	virtual unsigned sizeOnStack() const override { return 0; }
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
@@ -1187,7 +1214,7 @@ private:
 class MagicType: public Type
 {
 public:
-	enum class Kind { Block, Message, Transaction };
+	enum class Kind { Block, Message, Transaction, ABI };
 	virtual Category category() const override { return Category::Magic; }
 
 	explicit MagicType(Kind _kind): m_kind(_kind) {}
@@ -1201,6 +1228,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	virtual unsigned sizeOnStack() const override { return 0; }
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
@@ -1230,6 +1258,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual bool isValueType() const override { return true; }
 	virtual unsigned sizeOnStack() const override { return 1; }
+	virtual bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	virtual std::string toString(bool) const override { return "inaccessible dynamic type"; }
 	virtual TypePointer decodingType() const override { return std::make_shared<IntegerType>(256); }
 };

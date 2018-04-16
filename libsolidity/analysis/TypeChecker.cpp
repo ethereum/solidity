@@ -60,17 +60,7 @@ bool typeSupportedByOldABIEncoder(Type const& _type)
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
-	try
-	{
-		_contract.accept(*this);
-	}
-	catch (FatalError const&)
-	{
-		// We got a fatal error which required to stop further type checking, but we can
-		// continue normally from here.
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
-	}
+	_contract.accept(*this);
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
@@ -101,7 +91,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
-	checkContractAbstractConstructors(_contract);
+	checkContractBaseConstructorArguments(_contract);
 
 	FunctionDefinition const* function = _contract.constructor();
 	if (function)
@@ -291,42 +281,108 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			}
 }
 
-void TypeChecker::checkContractAbstractConstructors(ContractDefinition const& _contract)
+void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
 {
-	set<ContractDefinition const*> argumentsNeeded;
-	// check that we get arguments for all base constructors that need it.
-	// If not mark the contract as abstract (not fully implemented)
+	bool const v050 = _contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
-	for (ContractDefinition const* contract: bases)
-		if (FunctionDefinition const* constructor = contract->constructor())
-			if (contract != &_contract && !constructor->parameters().empty())
-				argumentsNeeded.insert(contract);
 
+	// Determine the arguments that are used for the base constructors.
 	for (ContractDefinition const* contract: bases)
 	{
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
 			{
-				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					&dereference(*modifier->name())
-				);
-				if (baseContract)
-					argumentsNeeded.erase(baseContract);
+				auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name()));
+				if (modifier->arguments())
+				{
+					if (baseContract && baseContract->constructor())
+						annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+				}
+				else
+				{
+					if (v050)
+						m_errorReporter.declarationError(
+							modifier->location(),
+							"Modifier-style base constructor call without arguments."
+						);
+					else
+						m_errorReporter.warning(
+							modifier->location(),
+							"Modifier-style base constructor call without arguments."
+						);
+				}
 			}
-
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
 		{
 			auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(base->name()));
 			solAssert(baseContract, "");
-			if (!base->arguments().empty())
-				argumentsNeeded.erase(baseContract);
+
+			if (baseContract->constructor() && base->arguments() && !base->arguments()->empty())
+				annotateBaseConstructorArguments(_contract, baseContract->constructor(), base.get());
 		}
 	}
-	if (!argumentsNeeded.empty())
-		for (ContractDefinition const* contract: argumentsNeeded)
-			_contract.annotation().unimplementedFunctions.push_back(contract->constructor());
+
+	// check that we get arguments for all base constructors that need it.
+	// If not mark the contract as abstract (not fully implemented)
+	for (ContractDefinition const* contract: bases)
+		if (FunctionDefinition const* constructor = contract->constructor())
+			if (contract != &_contract && !constructor->parameters().empty())
+				if (!_contract.annotation().baseConstructorArguments.count(constructor))
+					_contract.annotation().unimplementedFunctions.push_back(constructor);
+}
+
+void TypeChecker::annotateBaseConstructorArguments(
+	ContractDefinition const& _currentContract,
+	FunctionDefinition const* _baseConstructor,
+	ASTNode const* _argumentNode
+)
+{
+	bool const v050 = _currentContract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
+	solAssert(_baseConstructor, "");
+	solAssert(_argumentNode, "");
+
+	auto insertionResult = _currentContract.annotation().baseConstructorArguments.insert(
+		std::make_pair(_baseConstructor, _argumentNode)
+	);
+	if (!insertionResult.second)
+	{
+		ASTNode const* previousNode = insertionResult.first->second;
+
+		SourceLocation const* mainLocation = nullptr;
+		SecondarySourceLocation ssl;
+	
+		if (
+			_currentContract.location().contains(previousNode->location()) ||
+			_currentContract.location().contains(_argumentNode->location())
+		)
+		{
+			mainLocation = &previousNode->location();
+			ssl.append("Second constructor call is here:", _argumentNode->location());
+		}
+		else
+		{
+			mainLocation = &_currentContract.location();
+			ssl.append("First constructor call is here: ", _argumentNode->location());
+			ssl.append("Second constructor call is here: ", previousNode->location());
+		}
+
+		if (v050)
+			m_errorReporter.declarationError(
+				*mainLocation,
+				ssl,
+				"Base constructor arguments given twice."
+			);
+		else
+			m_errorReporter.warning(
+				*mainLocation,
+				"Base constructor arguments given twice.",
+				ssl
+			);
+	}
+
 }
 
 void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)
@@ -378,7 +434,16 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 		function.annotation().superFunction = &super;
 
 	if (function.visibility() != super.visibility())
+	{
+		// visibility is enforced to be external in interfaces, but a contract can override that with public
+		if (
+			super.inContractKind() == ContractDefinition::ContractKind::Interface &&
+			function.inContractKind() != ContractDefinition::ContractKind::Interface &&
+			function.visibility() == FunctionDefinition::Visibility::Public
+		)
+			return;
 		overrideError(function, super, "Overriding function visibility differs.");
+	}
 
 	else if (function.stateMutability() != super.stateMutability())
 		overrideError(
@@ -497,30 +562,46 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 		// Interfaces do not have constructors, so there are zero parameters.
 		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
 
-	if (!arguments.empty() && parameterTypes.size() != arguments.size())
+	if (arguments)
 	{
-		m_errorReporter.typeError(
-			_inheritance.location(),
-			"Wrong argument count for constructor call: " +
-			toString(arguments.size()) +
-			" arguments given but expected " +
-			toString(parameterTypes.size()) +
-			"."
-		);
-		return;
-	}
+		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	for (size_t i = 0; i < arguments.size(); ++i)
-		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			m_errorReporter.typeError(
-				arguments[i]->location(),
-				"Invalid type for argument in constructor call. "
-				"Invalid implicit conversion from " +
-				type(*arguments[i])->toString() +
-				" to " +
-				parameterTypes[i]->toString() +
-				" requested."
-			);
+		if (parameterTypes.size() != arguments->size())
+		{
+			if (arguments->size() == 0 && !v050)
+				m_errorReporter.warning(
+					_inheritance.location(),
+					"Wrong argument count for constructor call: " +
+					toString(arguments->size()) +
+					" arguments given but expected " +
+					toString(parameterTypes.size()) +
+					"."
+				);
+			else
+			{
+				m_errorReporter.typeError(
+					_inheritance.location(),
+					"Wrong argument count for constructor call: " +
+					toString(arguments->size()) +
+					" arguments given but expected " +
+					toString(parameterTypes.size()) +
+					"."
+				);
+				return;
+			}
+		}
+		for (size_t i = 0; i < arguments->size(); ++i)
+			if (!type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
+				m_errorReporter.typeError(
+					(*arguments)[i]->location(),
+					"Invalid type for argument in constructor call. "
+					"Invalid implicit conversion from " +
+					type(*(*arguments)[i])->toString() +
+					" to " +
+					parameterTypes[i]->toString() +
+					" requested."
+				);
+	}
 }
 
 void TypeChecker::endVisit(UsingForDirective const& _usingFor)
@@ -731,7 +812,8 @@ void TypeChecker::visitManually(
 	vector<ContractDefinition const*> const& _bases
 )
 {
-	std::vector<ASTPointer<Expression>> const& arguments = _modifier.arguments();
+	std::vector<ASTPointer<Expression>> const& arguments =
+		_modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
 	_modifier.name()->accept(*this);
@@ -769,7 +851,7 @@ void TypeChecker::visitManually(
 		);
 		return;
 	}
-	for (size_t i = 0; i < _modifier.arguments().size(); ++i)
+	for (size_t i = 0; i < arguments.size(); ++i)
 		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*type(*(*parameters)[i])))
 			m_errorReporter.typeError(
 				arguments[i]->location(),
@@ -1551,16 +1633,22 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().isPure &&
 			functionType->isPure();
 
+	bool allowDynamicTypes = m_evmVersion.supportsReturndata();
 	if (!functionType)
 	{
 		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
 		_functionCall.annotation().type = make_shared<TupleType>();
 		return false;
 	}
-	else if (functionType->returnParameterTypes().size() == 1)
-		_functionCall.annotation().type = functionType->returnParameterTypes().front();
+
+	auto returnTypes =
+		allowDynamicTypes ?
+		functionType->returnParameterTypes() :
+		functionType->returnParameterTypesWithoutDynamicTypes();
+	if (returnTypes.size() == 1)
+		_functionCall.annotation().type = returnTypes.front();
 	else
-		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
+		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
 
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
@@ -1600,7 +1688,19 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
-	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
+	if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
+	{
+		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Need at least " +
+			toString(parameterTypes.size()) +
+			" arguments for function call, but provided only " +
+			toString(arguments.size()) +
+			"."
+		);
+	}
+	else if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
 
@@ -1623,15 +1723,36 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
-		// call by positional arguments
+		bool const abiEncodeV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
+
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
-			if (functionType->takesArbitraryParameters())
+			if (functionType->takesArbitraryParameters() && i >= parameterTypes.size())
 			{
+				bool errored = false;
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
 					if (!t->mobileType())
+					{
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
+						errored = true;
+					}
+				if (!errored)
+				{
+					TypePointer encodingType;
+					if (
+						argType->mobileType() &&
+						argType->mobileType()->interfaceType(false) &&
+						argType->mobileType()->interfaceType(false)->encodingType()
+					)
+						encodingType = argType->mobileType()->interfaceType(false)->encodingType();
+					// Structs are fine as long as ABIV2 is activated and we do not do packed encoding.
+					if (!encodingType || (
+						dynamic_cast<StructType const*>(encodingType.get()) &&
+						!(abiEncodeV2 && functionType->padArguments())
+					))
+						m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
+				}
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(
@@ -1867,7 +1988,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				m_errorReporter.warning(
 					_memberAccess.location(),
 					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
-					" Convert the contract to \"address\" type to access the member."
+					" Convert the contract to \"address\" type to access the member,"
+					" for example use \"address(contract)." + memberName + "\" instead."
 				);
 			}
 
@@ -2025,10 +2147,9 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				TypePointer function = declaration->type();
-				solAssert(!!function, "Requested type not present.");
-				auto const* functionType = dynamic_cast<FunctionType const*>(function.get());
-				if (functionType && functionType->canTakeArguments(*annotation.argumentTypes))
+				FunctionTypePointer functionType = declaration->functionType(true);
+				solAssert(!!functionType, "Requested type not present.");
+				if (functionType->canTakeArguments(*annotation.argumentTypes))
 					candidates.push_back(declaration);
 			}
 			if (candidates.empty())

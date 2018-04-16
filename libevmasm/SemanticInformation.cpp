@@ -28,7 +28,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item)
+bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool _msizeImportant)
 {
 	switch (_item.type())
 	{
@@ -58,6 +58,11 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item)
 		if (_item.instruction() == Instruction::SSTORE)
 			return false;
 		if (_item.instruction() == Instruction::MSTORE)
+			return false;
+		if (!_msizeImportant && (
+			_item.instruction() == Instruction::MLOAD ||
+			_item.instruction() == Instruction::KECCAK256
+		))
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
 		// calldatacopy, codecopy, extcodecopy, mstore8,

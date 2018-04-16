@@ -1,3 +1,10 @@
+defaults:
+  # The default for tags is to not run, so we have to explicitly match a filter.
+  - build_on_tags: &build_on_tags
+      filters:
+        tags:
+          only: /.*/
+
 version: 2
 jobs:
   build_emscripten:
@@ -48,7 +55,7 @@ jobs:
             export NVM_DIR="/usr/local/nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm --version
-            nvm install 6
+            nvm install 8
             node --version
             npm --version
       - run:
@@ -72,7 +79,7 @@ jobs:
             export NVM_DIR="/usr/local/nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm --version
-            nvm install 7
+            nvm install 8
             node --version
             npm --version
       - run:
@@ -89,20 +96,12 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install ccache cmake libboost-all-dev libz3-dev
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
       - run:
           name: Store commit hash and prerelease
           command: |
             if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
             echo -n "$CIRCLE_SHA1" > commit_hash.txt
-      - restore_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          key: ccache-{{ arch }}-{{ .Branch }}-
-          key: ccache-{{ arch }}-develop-
-          key: ccache-{{ arch }}-
-      - run:
-          name: Configure ccache
-          command: ccache -M 200M && ccache -c && ccache -s && ccache -z
       - run:
           name: Build
           command: |
@@ -110,14 +109,6 @@ jobs:
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
             make -j4
-      - run:
-          name: CCache statistics
-          command: ccache -s
-      - save_cache:
-          key: ccache-{{ arch }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-          when: always
-          paths:
-            - ~/.ccache
       - store_artifacts:
           path: build/solc/solc
           destination: solc
@@ -126,7 +117,7 @@ jobs:
           paths:
             - solc/solc
             - test/soltest
-            - test/solfuzzer
+            - test/tools/solfuzzer
 
   test_x86:
     docker:
@@ -173,15 +164,18 @@ workflows:
   version: 2
   build_all:
     jobs:
-      - build_emscripten
+      - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
+          <<: *build_on_tags
           requires:
             - build_emscripten
       - test_emscripten_external:
+          <<: *build_on_tags
           requires:
             - build_emscripten
-      - build_x86
+      - build_x86: *build_on_tags
       - test_x86:
+          <<: *build_on_tags
           requires:
             - build_x86
-      - docs
+      - docs: *build_on_tags

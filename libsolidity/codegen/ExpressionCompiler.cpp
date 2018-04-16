@@ -33,6 +33,8 @@
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/GasMeter.h>
 
+#include <libdevcore/Whiskers.h>
+
 using namespace std;
 
 namespace dev
@@ -139,8 +141,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
-	solAssert(accessorType.returnParameterTypes().size() >= 1, "");
-	auto const& returnTypes = accessorType.returnParameterTypes();
+	auto returnTypes = accessorType.returnParameterTypes();
+	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		// remove offset
@@ -518,7 +520,23 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arguments[i]->accept(*this);
 				utils().convertType(*arguments[i]->annotation().type, *function.parameterTypes()[i]);
 			}
-			_functionCall.expression().accept(*this);
+
+			{
+				bool shortcutTaken = false;
+				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+					{
+						// Do not directly visit the identifier, because this way, we can avoid
+						// the runtime entry label to be created at the creation time context.
+						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
+						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
+						shortcutTaken = true;
+					}
+
+				if (!shortcutTaken)
+					_functionCall.expression().accept(*this);
+			}
+
 			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
 			if (function.bound())
 			{
@@ -592,7 +610,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalRevert();
+			// TODO: Can we bubble up here? There might be different reasons for failure, I think.
+			m_context.appendConditionalRevert(true);
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -654,8 +673,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
+				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalRevert();
+				m_context.appendConditionalRevert(true);
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -664,8 +684,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			m_context.appendRevert();
+		{
+			if (!arguments.empty())
+			{
+				// function-sel(Error(string)) + encoding
+				solAssert(arguments.size() == 1, "");
+				solAssert(function.parameterTypes().size() == 1, "");
+				arguments.front()->accept(*this);
+				utils().revertWithStringData(*arguments.front()->annotation().type);
+			}
+			else
+				m_context.appendRevert();
 			break;
+		}
 		case FunctionType::Kind::SHA3:
 		{
 			TypePointers argumentTypes;
@@ -805,24 +836,27 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				function.kind() == FunctionType::Kind::ArrayPush ?
 				make_shared<ArrayType>(DataLocation::Storage, paramType) :
 				make_shared<ArrayType>(DataLocation::Storage);
-			// get the current length
-			ArrayUtils(m_context).retrieveLength(*arrayType);
-			m_context << Instruction::DUP1;
-			// stack: ArrayReference currentLength currentLength
-			m_context << u256(1) << Instruction::ADD;
-			// stack: ArrayReference currentLength newLength
-			m_context << Instruction::DUP3 << Instruction::DUP2;
-			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
-			m_context << Instruction::SWAP2 << Instruction::SWAP1;
-			// stack: newLength ArrayReference oldLength
-			ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-			// stack: newLength storageSlot slotOffset
+			// stack: ArrayReference
 			arguments[0]->accept(*this);
+			TypePointer const& argType = arguments[0]->annotation().type;
+			// stack: ArrayReference argValue
+			utils().moveToStackTop(argType->sizeOnStack(), 1);
+			// stack: argValue ArrayReference
+			m_context << Instruction::DUP1;
+			ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
+			// stack: argValue ArrayReference newLength
+			m_context << Instruction::SWAP1;
+			// stack: argValue newLength ArrayReference
+			m_context << u256(1) << Instruction::DUP3 << Instruction::SUB;
+			// stack: argValue newLength ArrayReference (newLength-1)
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
+			// stack: argValue newLength storageSlot slotOffset
+			utils().moveToStackTop(3, argType->sizeOnStack());
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
 			solAssert(type, "");
-			utils().convertType(*arguments[0]->annotation().type, *type);
+			utils().convertType(*argType, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset
@@ -834,8 +868,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::ObjectCreation:
 		{
-			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
-			// type is dynamically sized.
 			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
 			_functionCall.expression().accept(*this);
 			solAssert(arguments.size() == 1, "");
@@ -845,15 +877,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().convertType(*arguments[0]->annotation().type, IntegerType(256));
 
 			// Stack: requested_length
-			// Allocate at max(MSIZE, freeMemoryPointer)
 			utils().fetchFreeMemoryPointer();
-			m_context << Instruction::DUP1 << Instruction::MSIZE;
-			m_context << Instruction::LT;
-			auto initialise = m_context.appendConditionalJump();
-			// Free memory pointer does not point to empty memory, use MSIZE.
-			m_context << Instruction::POP;
-			m_context << Instruction::MSIZE;
-			m_context << initialise;
 
 			// Stack: requested_length memptr
 			m_context << Instruction::SWAP1;
@@ -878,13 +902,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Check if length is zero
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			auto skipInit = m_context.appendConditionalJump();
-
-			// We only have to initialise if the base type is a not a value type.
-			if (dynamic_cast<ReferenceType const*>(arrayType.baseType().get()))
-			{
-				m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
-				utils().zeroInitialiseMemoryArray(arrayType);
-			}
+			// Always initialize because the free memory pointer might point at
+			// a dirty memory area.
+			m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
+			utils().zeroInitialiseMemoryArray(arrayType);
 			m_context << skipInit;
 			m_context << Instruction::POP;
 			break;
@@ -894,16 +915,130 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			if (arguments.size() > 1)
+			{
+				// Users probably expect the second argument to be evaluated
+				// even if the condition is false, as would be the case for an actual
+				// function call.
+				solAssert(arguments.size() == 2, "");
+				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				arguments.at(1)->accept(*this);
+				utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+			}
+			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
+			else if (arguments.size() > 1)
+				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 			else
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
+			if (arguments.size() > 1)
+				utils().popStackElement(*arguments.at(1)->annotation().type);
+			break;
+		}
+		case FunctionType::Kind::ABIEncode:
+		case FunctionType::Kind::ABIEncodePacked:
+		case FunctionType::Kind::ABIEncodeWithSelector:
+		case FunctionType::Kind::ABIEncodeWithSignature:
+		{
+			bool const isPacked = function.kind() == FunctionType::Kind::ABIEncodePacked;
+			bool const hasSelectorOrSignature =
+				function.kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
+
+			TypePointers argumentTypes;
+			TypePointers targetTypes;
+			for (unsigned i = 0; i < arguments.size(); ++i)
+			{
+				arguments[i]->accept(*this);
+				// Do not keep the selector as part of the ABI encoded args
+				if (!hasSelectorOrSignature || i > 0)
+					argumentTypes.push_back(arguments[i]->annotation().type);
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack now: [<selector>] <arg1> .. <argN> <free_mem>
+
+			// adjust by 32(+4) bytes to accommodate the length(+selector)
+			m_context << u256(32 + (hasSelectorOrSignature ? 4 : 0)) << Instruction::ADD;
+			// stack now: [<selector>] <arg1> .. <argN> <data_encoding_area_start>
+
+			if (isPacked)
+			{
+				solAssert(!function.padArguments(), "");
+				utils().packedEncode(argumentTypes, TypePointers());
+			}
+			else
+			{
+				solAssert(function.padArguments(), "");
+				utils().abiEncode(argumentTypes, TypePointers());
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack: [<selector>] <data_encoding_area_end> <bytes_memory_ptr>
+
+			// size is end minus start minus length slot
+			m_context.appendInlineAssembly(R"({
+				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
+			})", {"mem_end", "mem_ptr"});
+			m_context << Instruction::SWAP1;
+			utils().storeFreeMemoryPointer();
+			// stack: [<selector>] <memory ptr>
+
+			if (hasSelectorOrSignature)
+			{
+				// stack: <selector> <memory pointer>
+				solAssert(arguments.size() >= 1, "");
+				TypePointer const& selectorType = arguments[0]->annotation().type;
+				utils().moveIntoStack(selectorType->sizeOnStack());
+				TypePointer dataOnStack = selectorType;
+				// stack: <memory pointer> <selector>
+				if (function.kind() == FunctionType::Kind::ABIEncodeWithSignature)
+				{
+					// hash the signature
+					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType.get()))
+					{
+						FixedHash<4> hash(dev::keccak256(stringType->value()));
+						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+						dataOnStack = make_shared<FixedBytesType>(4);
+					}
+					else
+					{
+						utils().fetchFreeMemoryPointer();
+						// stack: <memory pointer> <selector> <free mem ptr>
+						utils().packedEncode(TypePointers{selectorType}, TypePointers());
+						utils().toSizeAfterFreeMemoryPointer();
+						m_context << Instruction::KECCAK256;
+						// stack: <memory pointer> <hash>
+
+						dataOnStack = make_shared<FixedBytesType>(32);
+					}
+				}
+				else
+				{
+					solAssert(function.kind() == FunctionType::Kind::ABIEncodeWithSelector, "");
+				}
+
+				utils().convertType(*dataOnStack, FixedBytesType(4), true);
+
+				// stack: <memory pointer> <selector>
+
+				// load current memory, mask and combine the selector
+				string mask = formatNumber((u256(-1) >> 32));
+				m_context.appendInlineAssembly(R"({
+					let data_start := add(mem_ptr, 0x20)
+					let data := mload(data_start)
+					let mask := )" + mask + R"(
+					mstore(data_start, or(and(data, mask), selector))
+				})", {"mem_ptr", "selector"});
+				m_context << Instruction::POP;
+			}
+
+			// stack now: <memory pointer>
 			break;
 		}
 		case FunctionType::Kind::GasLeft:
@@ -1147,6 +1282,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "sig")
 			m_context << u256(0) << Instruction::CALLDATALOAD
 				<< (u256(0xffffffff) << (256 - 32)) << Instruction::AND;
+		else if (member == "blockhash")
+		{
+		}
 		else
 			solAssert(false, "Unknown magic member.");
 		break;
@@ -1356,6 +1494,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
+		// If the identifier is called right away, this code is executed in visit(FunctionCall...), because
+		// we want to avoid having a reference to the runtime function entry point in the
+		// constructor context, since this would force the compiler to include unreferenced
+		// internal functions in the runtime contex.
 		utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
@@ -1615,15 +1757,27 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
 		m_context.evmVersion().hasStaticCall();
 
+	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;
+	TypePointers returnTypes;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
+	else if (haveReturndatacopy)
+		returnTypes = _functionType.returnParameterTypes();
 	else
-		for (auto const& retType: _functionType.returnParameterTypes())
+		returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
+
+	bool dynamicReturnSize = false;
+	for (auto const& retType: returnTypes)
+		if (retType->isDynamicallyEncoded())
 		{
-			solAssert(!retType->isDynamicallySized(), "Unable to return dynamic type from external call.");
-			retSize += retType->calldataEncodedSize();
+			solAssert(haveReturndatacopy, "");
+			dynamicReturnSize = true;
+			retSize = 0;
+			break;
 		}
+		else
+			retSize += retType->calldataEncodedSize();
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1755,6 +1909,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+		// TODO: error message?
 		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
@@ -1797,7 +1952,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(true);
 	}
 
 	utils().popStackSlots(remainsSize);
@@ -1821,20 +1976,42 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().fetchFreeMemoryPointer();
 		m_context << Instruction::SUB << Instruction::MLOAD;
 	}
-	else if (!_functionType.returnParameterTypes().empty())
+	else if (!returnTypes.empty())
 	{
 		utils().fetchFreeMemoryPointer();
-		bool memoryNeeded = false;
-		for (auto const& retType: _functionType.returnParameterTypes())
-		{
-			utils().loadFromMemoryDynamic(*retType, false, true, true);
-			if (dynamic_cast<ReferenceType const*>(retType.get()))
-				memoryNeeded = true;
-		}
-		if (memoryNeeded)
-			utils().storeFreeMemoryPointer();
+		// Stack: return_data_start
+
+		// The old decoder did not allocate any memory (i.e. did not touch the free
+		// memory pointer), but kept references to the return data for
+		// (statically-sized) arrays
+		bool needToUpdateFreeMemoryPtr = false;
+		if (dynamicReturnSize || m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+			needToUpdateFreeMemoryPtr = true;
 		else
-			m_context << Instruction::POP;
+			for (auto const& retType: returnTypes)
+				if (dynamic_cast<ReferenceType const*>(retType.get()))
+					needToUpdateFreeMemoryPtr = true;
+
+		// Stack: return_data_start
+		if (dynamicReturnSize)
+		{
+			solAssert(haveReturndatacopy, "");
+			m_context.appendInlineAssembly("{ returndatacopy(return_data_start, 0, returndatasize()) }", {"return_data_start"});
+		}
+		else
+			solAssert(retSize > 0, "");
+		// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
+		// This ensures it can catch badly formatted input from external calls.
+		m_context << (haveReturndatacopy ? eth::AssemblyItem(Instruction::RETURNDATASIZE) : u256(retSize));
+		// Stack: return_data_start return_data_size
+		if (needToUpdateFreeMemoryPtr)
+			m_context.appendInlineAssembly(R"({
+				// round size to the next multiple of 32
+				let newMem := add(start, and(add(size, 0x1f), not(0x1f)))
+				mstore(0x40, newMem)
+			})", {"start", "size"});
+
+		utils().abiDecode(returnTypes, true, true);
 	}
 }
 

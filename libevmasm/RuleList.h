@@ -89,6 +89,16 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 			u256 mask = (u256(1) << testBit) - 1;
 			return u256(boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask);
 		}, false},
+		{{Instruction::SHL, {A, B}}, [=]{
+			if (A.d() > 255)
+				return u256(0);
+			return u256(bigint(B.d()) << unsigned(A.d()));
+		}, false},
+		{{Instruction::SHR, {A, B}}, [=]{
+			if (A.d() > 255)
+				return u256(0);
+			return B.d() >> unsigned(A.d());
+		}, false},
 
 		// invariants involving known constants
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }, false},

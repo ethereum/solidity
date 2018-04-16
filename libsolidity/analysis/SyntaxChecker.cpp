@@ -214,17 +214,30 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	if (_function.noVisibilitySpecified())
+	if (v050 && _function.noVisibilitySpecified())
+		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
+
+	if (_function.isOldStyleConstructor())
 	{
 		if (v050)
-			m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
+			m_errorReporter.syntaxError(
+				_function.location(),
+				"Functions are not allowed to have the same name as the contract. "
+				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
+			);
 		else
 			m_errorReporter.warning(
 				_function.location(),
-				"No visibility specified. Defaulting to \"" +
-				Declaration::visibilityToString(_function.visibility()) +
-				"\"."
+				"Defining constructors as functions with the same name as the contract is deprecated. "
+				"Use \"constructor(...) { ... }\" instead."
 			);
+	}
+	if (!_function.isImplemented() && !_function.modifiers().empty())
+	{
+		if (v050)
+			m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
+		else
+			m_errorReporter.warning( _function.location(), "Modifiers of functions without implementation are ignored." );
 	}
 	return true;
 }
@@ -252,6 +265,20 @@ bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
 			m_errorReporter.syntaxError(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
 		else
 			m_errorReporter.warning(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
+	}
+	return true;
+}
+
+bool SyntaxChecker::visit(StructDefinition const& _struct)
+{
+	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
+	if (_struct.members().empty())
+	{
+		if (v050)
+			m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
+		else
+			m_errorReporter.warning(_struct.location(), "Defining empty structs is deprecated.");
 	}
 	return true;
 }

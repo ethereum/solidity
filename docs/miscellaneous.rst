@@ -64,12 +64,15 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 Layout in Memory
 ****************
 
-Solidity reserves three 256-bit slots:
+Solidity reserves four 32 byte slots:
 
--  0 - 64: scratch space for hashing methods
-- 64 - 96: currently allocated memory size (aka. free memory pointer)
+- ``0x00`` - ``0x3f``: scratch space for hashing methods
+- ``0x40`` - ``0x5f``: currently allocated memory size (aka. free memory pointer)
+- ``0x60`` - ``0x7f``: zero slot
 
-Scratch space can be used between statements (ie. within inline assembly).
+Scratch space can be used between statements (ie. within inline assembly). The zero slot
+is used as initial value for dynamic memory arrays and should never be written to
+(the free memory pointer points to ``0x80`` initially).
 
 Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
 
@@ -314,7 +317,12 @@ The following is the order of precedence for operators, listed in order of evalu
 Global Variables
 ================
 
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
+- ``abi.encode(...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -330,7 +338,10 @@ Global Variables
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
+- ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
 - ``revert()``: abort execution and revert state changes
+- ``revert(string message)``: abort execution and revert state changes providing an explanatory string
+- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
 - ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 - ``sha3(...) returns (bytes32)``: an alias to ``keccak256``
 - ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
@@ -341,10 +352,27 @@ Global Variables
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
-- ``suicide(address recipient)``: an alias to ``selfdestruct``
+- ``suicide(address recipient)``: a deprecated alias to ``selfdestruct``
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
+
+.. note::
+    Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
+    unless you know what you are doing.
+
+    Both the timestamp and the block hash can be influenced by miners to some degree.
+    Bad actors in the mining community can for example run a casino payout function on a chosen hash
+    and just retry a different hash if they did not receive any money.
+
+    The current block timestamp must be strictly larger than the timestamp of the last block,
+    but the only guarantee is that it will be somewhere between the timestamps of two
+    consecutive blocks in the canonical chain.
+
+.. note::
+    The block hashes are not available for all blocks for scalability reasons.
+    You can only access the hashes of the most recent 256 blocks, all other
+    values will be zero.
 
 .. index:: visibility, public, private, external, internal
 

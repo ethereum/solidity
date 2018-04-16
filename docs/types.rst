@@ -81,7 +81,7 @@ Fixed Point Numbers
 
 ``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
 the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
-``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
+``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
 
 Operators:
 
@@ -179,8 +179,8 @@ All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-lev
 The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
-    All contracts inherit the members of address, so it is possible to query the balance of the
-    current contract using ``this.balance``.
+    All contracts can be converted to ``address`` type, so it is possible to query the balance of the
+    current contract using ``address(this).balance``.
 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
@@ -470,7 +470,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.22;
 
     contract Oracle {
       struct Request {
@@ -495,7 +495,10 @@ Another example that uses external function types::
         oracle.query("USD", this.oracleResponse);
       }
       function oracleResponse(bytes response) public {
-        require(msg.sender == address(oracle));
+        require(
+            msg.sender == address(oracle),
+            "Only oracle can call this."
+        );
         // Use the data
       }
     }

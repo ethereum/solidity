@@ -64,6 +64,8 @@ private:
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
+	virtual bool visit(BinaryOperation const& _operation) override;
+	virtual bool visit(FunctionCall const& _functionCall) override;
 
 	/// @returns the size of this type in storage, including all sub-types.
 	static bigint structureSizeEstimate(Type const& _type, std::set<StructDefinition const*>& _structsSeen);
@@ -77,7 +79,9 @@ private:
 	bool m_nonPayablePublic = false;
 
 	/// Number of uses of each (named) local variable in a function, counter is initialized with zero.
-	std::map<VariableDeclaration const*, int> m_localVarUseCount;
+	/// Pairs of AST ids and pointers are used as keys to ensure a deterministic order
+	/// when traversing.
+	std::map<std::pair<size_t, VariableDeclaration const*>, int> m_localVarUseCount;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
 

@@ -21,7 +21,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/UTF8.h>
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 using namespace std;
 

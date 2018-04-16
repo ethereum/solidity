@@ -90,6 +90,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 	/// List of contracts this contract creates, i.e. which need to be compiled first.
 	/// Also includes all contracts from @a linearizedBaseContracts.
 	std::set<ContractDefinition const*> contractDependencies;
+	/// Mapping containing the nodes that define the arguments for base constructors.
+	/// These can either be inheritance specifiers or modifier invocations.
+	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 };
 
 struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation

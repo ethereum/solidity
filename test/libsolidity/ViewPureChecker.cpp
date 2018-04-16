@@ -20,11 +20,12 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <tuple>
 
 using namespace std;
 
@@ -111,6 +112,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"block.difficulty",
 		"block.number",
 		"block.gaslimit",
+		"blockhash(7)",
 		"gasleft()",
 		"msg.gas",
 		"msg.value",
@@ -120,11 +122,12 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"this",
 		"address(1).balance"
 	};
+	// ``block.blockhash`` and ``blockhash`` are tested seperately below because their usage will
+	// produce warnings that can't be handled in a generic way.
 	vector<string> pure{
 		"msg.data",
 		"msg.data[0]",
 		"msg.sig",
-		"block.blockhash", // Not evaluating the function
 		"msg",
 		"block",
 		"tx"
@@ -132,20 +135,32 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	for (string const& x: view)
 	{
 		CHECK_ERROR(
-			"contract C { function f() pure public { var x = " + x + "; x; } }",
+			"contract C { function f() pure public { " + x + "; } }",
 			TypeError,
 			"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
 		);
 	}
 	for (string const& x: pure)
 	{
-		CHECK_WARNING_ALLOW_MULTI(
-			"contract C { function f() view public { var x = " + x + "; x; } }",
-			(std::vector<std::string>{
-				"Function state mutability can be restricted to pure",
-				"Use of the \"var\" keyword is deprecated."
-		}));
+		CHECK_WARNING(
+			"contract C { function f() view public { " + x + "; } }",
+			"Function state mutability can be restricted to pure"
+		);
 	}
+
+	CHECK_WARNING_ALLOW_MULTI(
+		"contract C { function f() view public { blockhash; } }",
+		(std::vector<std::string>{
+			"Function state mutability can be restricted to pure",
+			"Statement has no effect."
+	}));
+
+	CHECK_WARNING_ALLOW_MULTI(
+		"contract C { function f() view public { block.blockhash; } }",
+		(std::vector<std::string>{
+			"Function state mutability can be restricted to pure",
+			"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(view_error_for_050)

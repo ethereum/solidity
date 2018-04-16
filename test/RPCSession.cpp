@@ -21,7 +21,7 @@
 
 #include <test/RPCSession.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/interface/EVMVersion.h>
 
@@ -226,6 +226,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
 		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= solidity::EVMVersion::constantinople())
+		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
@@ -337,7 +339,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	BOOST_TEST_MESSAGE("Reply: " + reply);
 
 	Json::Value result;
-	BOOST_REQUIRE(jsonParseStrict(reply, result));
+	string errorMsg;
+	if (!jsonParseStrict(reply, result, &errorMsg))
+		BOOST_REQUIRE_MESSAGE(false, errorMsg);
 
 	if (result.isMember("error"))
 	{

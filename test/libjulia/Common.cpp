@@ -21,7 +21,7 @@
 
 #include <test/libjulia/Common.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libjulia/optimiser/Disambiguator.h>
 

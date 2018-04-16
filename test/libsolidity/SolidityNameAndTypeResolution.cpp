@@ -22,7 +22,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -42,281 +42,6 @@ namespace test
 {
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
-
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVariable1;
-			function fun(uint256 arg1) public { uint256 y; y = arg1; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
-{
-	char const* text = R"(
-		contract test {
-			uint256 variable;
-			uint128 variable;
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
-}
-
-BOOST_AUTO_TEST_CASE(double_function_declaration)
-{
-	char const* text = R"(
-		contract test {
-			function fun() public { }
-			function fun() public { }
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Function with same name and arguments defined twice.");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration)
-{
-	string text = R"(
-		contract test {
-			function f() pure public {
-				uint256 x;
-				if (true) { uint256 x; }
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_050)
-{
-	string text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				uint256 x;
-				if (true) { uint256 x; }
-			}
-		}
-	)";
-	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
-		"This declaration shadows an existing declaration.",
-		"Unused local variable",
-		"Unused local variable"
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope)
-{
-	string text = R"(
-		contract test {
-			function f() pure public {
-				{ uint x; }
-				{ uint x; }
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_050)
-{
-	string text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				{ uint x; }
-				{ uint x; }
-			}
-		}
-	)";
-	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
-		"Unused local variable",
-		"Unused local variable"
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation)
-{
-	string text = R"(
-		contract test {
-			function f() pure public {
-				{ uint x; }
-				uint x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Identifier already declared");
-}
-
-BOOST_AUTO_TEST_CASE(double_variable_declaration_disjoint_scope_activation_050)
-{
-	string text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				{ uint x; }
-				uint x;
-			}
-		}
-	)";
-	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
-		"Unused local variable",
-		"Unused local variable"
-	}));
-}
-BOOST_AUTO_TEST_CASE(scoping_old)
-{
-	char const* text = R"(
-		contract test {
-			function f() pure public {
-				x = 4;
-				uint256 x = 2;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(scoping)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() public {
-				{
-					uint256 x;
-				}
-				x = 2;
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
-}
-
-BOOST_AUTO_TEST_CASE(scoping_activation_old)
-{
-	char const* text = R"(
-		contract test {
-			function f() pure public {
-				x = 3;
-				uint x;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(scoping_activation)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				x = 3;
-				uint x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
-}
-
-BOOST_AUTO_TEST_CASE(scoping_self_use)
-{
-	char const* text = R"(
-		contract test {
-			function f() pure public {
-				uint a = a;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(scoping_self_use_050)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				uint a = a;
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
-}
-
-BOOST_AUTO_TEST_CASE(scoping_for)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				for (uint x = 0; x < 10; x ++){
-					x = 2;
-				}
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(scoping_for2)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				for (uint x = 0; x < 10; x ++)
-					x = 2;
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(scoping_for3)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				for (uint x = 0; x < 10; x ++){
-					x = 2;
-				}
-				x = 4;
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
-}
-
-BOOST_AUTO_TEST_CASE(scoping_for_decl_in_body)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract test {
-			function f() pure public {
-				for (;; y++){
-					uint y = 3;
-				}
-			}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier");
-}
-
-BOOST_AUTO_TEST_CASE(name_shadowing)
-{
-	char const* text = R"(
-		contract test {
-			uint256 variable;
-			function f() public { uint32 variable; variable = 2; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
 
 BOOST_AUTO_TEST_CASE(name_references)
 {
@@ -364,61 +89,6 @@ BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 			function f() public {}
 		}
 	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct MyStructName {
-				address addr;
-				MyStructName x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Recursive struct definition.");
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct MyStructName1 {
-				address addr;
-				uint256 count;
-				MyStructName2 x;
-			}
-			struct MyStructName2 {
-				MyStructName1 x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Recursive struct definition.");
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
-{
-	char const* text = R"(
-		contract test {
-			struct s1 { uint a; }
-			struct s2 { s1 x; s1 y; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
-{
-	char const* text = R"(
-		contract test {
-				struct MyStructName1 {
-					address addr;
-					uint256 count;
-					mapping(uint => MyStructName1) x;
-				}
-			}
- )";
 	CHECK_SUCCESS(text);
 }
 
@@ -1237,6 +907,35 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(new_constructor_syntax)
+{
+	char const* text = R"(
+		contract A { constructor() public {} }
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(old_constructor_syntax)
+{
+	char const* text = R"(
+		contract A { function A() public {} }
+	)";
+	CHECK_WARNING(
+		text,
+		"Defining constructors as functions with the same name as the contract is deprecated."
+	);
+
+	text = R"(
+		pragma experimental "v0.5.0";
+		contract A { function A() public {} }
+	)";
+	CHECK_ERROR(
+		text,
+		SyntaxError,
+		"Functions are not allowed to have the same name as the contract."
+	);
+}
+
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 {
 	char const* text = R"(
@@ -1274,139 +973,6 @@ BOOST_AUTO_TEST_CASE(super_excludes_current_contract)
 	)";
 
 	CHECK_ERROR(text, TypeError, "Member \"f\" not found or not visible after argument-dependent lookup in contract super B");
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod1(2, true) mod2("0123456") pure public { }
-			modifier mod1(uint a, bool b) { if (b) _; }
-			modifier mod2(bytes7 a) { while (a == "1234567") _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod1(true) public { }
-			modifier mod1(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid type for argument in modifier invocation. Invalid implicit conversion from bool to uint256 requested.");
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
-{
-	char const* text = R"(
-		contract B {
-			function f(uint8 a) mod1(a, true) mod2(r) public returns (bytes7 r) { }
-			modifier mod1(uint a, bool b) { if (b) _; }
-			modifier mod2(bytes7 a) { while (a == "1234567") _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
-{
-	char const* text = R"(
-		contract B {
-			function f() mod(x) pure public { uint x = 7; }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables050)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		contract B {
-			function f() mod(x) pure public { uint x = 7; }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Undeclared identifier.");
-}
-
-BOOST_AUTO_TEST_CASE(function_modifier_double_invocation)
-{
-	char const* text = R"(
-		contract B {
-			function f(uint x) mod(x) mod(2) public { }
-			modifier mod(uint a) { if (a > 0) _; }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(base_constructor_double_invocation)
-{
-	char const* text = R"(
-		contract C { function C(uint a) public {} }
-		contract B is C {
-			function B() C(2) C(2) public {}
-		}
-	)";
-	CHECK_ERROR(text, DeclarationError, "Base constructor already provided");
-}
-
-BOOST_AUTO_TEST_CASE(legal_modifier_override)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { modifier mod(uint a) { _; } }
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(illegal_modifier_override)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { modifier mod(uint8 a) { _; } }
-	)";
-	CHECK_ERROR(text, TypeError, "Override changes modifier signature.");
-}
-
-BOOST_AUTO_TEST_CASE(modifier_overrides_function)
-{
-	char const* text = R"(
-		contract A { modifier mod(uint a) { _; } }
-		contract B is A { function mod(uint a) public { } }
-	)";
-	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
-		{Error::Type::DeclarationError, "Identifier already declared"},
-		{Error::Type::TypeError, "Override changes modifier to function"}
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(function_overrides_modifier)
-{
-	char const* text = R"(
-		contract A { function mod(uint a) public { } }
-		contract B is A { modifier mod(uint a) { _; } }
-	)";
-	CHECK_ALLOW_MULTI(text, (vector<pair<Error::Type, string>>{
-		{Error::Type::DeclarationError, "Identifier already declared"},
-		{Error::Type::TypeError, "Override changes function to modifier"}
-	}));
-}
-
-BOOST_AUTO_TEST_CASE(modifier_returns_value)
-{
-	char const* text = R"(
-		contract A {
-			function f(uint a) mod(2) public returns (uint r) { }
-			modifier mod(uint a) { _; return 7; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Return arguments not allowed.");
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
@@ -2727,8 +2293,8 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 31, 0)) == *make_shared<FixedBytesType>(31));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, 32, 0)) == *make_shared<FixedBytesType>(32));
 
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
 }
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
@@ -3424,7 +2990,10 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
+	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
+		CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
+	else
+		CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
 }
 
 BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
@@ -4474,21 +4043,6 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_call_invalid_arg_count)
-{
-	// This caused a segfault in an earlier version
-	char const* text = R"(
-		contract C {
-			function C(){}
-		}
-		contract D is C {
-			function D() C(5){}
-		}
-	)";
-
-	CHECK_ERROR(text, TypeError, "Wrong argument count for modifier invocation: 1 arguments given but expected 0.");
-}
-
 BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 {
 	char const* text = R"(
@@ -4743,7 +4297,7 @@ BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Type fixed128x19 is not implicitly convertible to expected type int256");
+	CHECK_ERROR(text, TypeError, "Type fixed128x18 is not implicitly convertible to expected type int256");
 }
 
 BOOST_AUTO_TEST_CASE(rational_unary_operation)
@@ -4861,7 +4415,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_size)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Type ufixed128x19 is not implicitly convertible to expected type ufixed248x8");
+	CHECK_ERROR(text, TypeError, "Type ufixed128x18 is not implicitly convertible to expected type ufixed248x8");
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
@@ -4948,7 +4502,7 @@ BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "fixed128x19 is not implicitly convertible to expected type bytes32");
+	CHECK_ERROR(text, TypeError, "fixed128x18 is not implicitly convertible to expected type bytes32");
 }
 
 BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
@@ -5218,20 +4772,6 @@ BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(signed_rational_modulus)
-{
-	char const* text = R"(
-		contract test {
-			function f() public {
-				fixed a = 0.42578125 % -0.4271087646484375;
-				fixed b = .5 % a;
-				fixed c = a % b;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(one_divided_by_three_integer_conversion)
 {
 	char const* text = R"(
@@ -5351,16 +4891,6 @@ BOOST_AUTO_TEST_CASE(no_warn_about_callcode_as_function)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(modifier_without_underscore)
-{
-	char const* text = R"(
-		contract test {
-			modifier m() {}
-		}
-	)";
-	CHECK_ERROR(text, SyntaxError, "Modifier body does not contain '_'.");
 }
 
 BOOST_AUTO_TEST_CASE(payable_in_library)
@@ -5562,319 +5092,6 @@ BOOST_AUTO_TEST_CASE(using_directive_for_missing_selftype)
 	CHECK_ERROR(text, TypeError, "Member \"b\" not found or not visible after argument-dependent lookup in bytes memory");
 }
 
-BOOST_AUTO_TEST_CASE(function_type)
-{
-	char const* text = R"(
-		contract C {
-			function f() public {
-				function(uint) returns (uint) x;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_type_parameter)
-{
-	char const* text = R"(
-		contract C {
-			function f(function(uint) external returns (uint) g) public returns (function(uint) external returns (uint)) {
-				return g;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(function_type_returned)
-{
-	char const* text = R"(
-		contract C {
-			function f() public returns (function(uint) external returns (uint) g) {
-				return g;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(private_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function f() public {
-				function(uint) private returns (uint) x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid visibility, can only be \"external\" or \"internal\".");
-}
-
-BOOST_AUTO_TEST_CASE(public_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function f() public {
-				function(uint) public returns (uint) x;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid visibility, can only be \"external\" or \"internal\".");
-}
-
-BOOST_AUTO_TEST_CASE(payable_internal_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function (uint) internal payable returns (uint) x;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Only external function types can be payable.");
-}
-
-BOOST_AUTO_TEST_CASE(payable_internal_function_type_is_not_fatal)
-{
-	char const* text = R"(
-		contract C {
-			function (uint) internal payable returns (uint) x;
-
-			function g() {
-				x = g;
-			}
-		}
-	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Only external function types can be payable."}));
-}
-
-BOOST_AUTO_TEST_CASE(call_value_on_non_payable_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function (uint) external returns (uint) x;
-			function f() public {
-				x.value(2)();
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup in function (uint256) external returns (uint256) - did you forget the \"payable\" modifier?");
-}
-
-BOOST_AUTO_TEST_CASE(external_function_type_returning_internal)
-{
-	char const* text = R"(
-		contract C {
-			function() external returns (function () internal) x;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal type cannot be used for external function type.");
-}
-
-BOOST_AUTO_TEST_CASE(external_function_type_taking_internal)
-{
-	char const* text = R"(
-		contract C {
-			function(function () internal) external x;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal type cannot be used for external function type.");
-}
-
-BOOST_AUTO_TEST_CASE(call_value_on_payable_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function (uint) external payable returns (uint) x;
-			function f() public {
-				x.value(2)(1);
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter)
-{
-	// It should not be possible to give internal functions
-	// as parameters to external functions.
-	char const* text = R"(
-		contract C {
-			function f(function(uint) internal returns (uint) x) public {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(internal_function_returned_from_public_function)
-{
-	// It should not be possible to return internal functions from external functions.
-	char const* text = R"(
-		contract C {
-			function f() public returns (function(uint) internal returns (uint) x) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_internal)
-{
-	char const* text = R"(
-		library L {
-			function f(function(uint) internal returns (uint) x) internal {
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(internal_function_as_external_parameter_in_library_external)
-{
-	char const* text = R"(
-		library L {
-			function f(function(uint) internal returns (uint) x) public {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(function_type_arrays)
-{
-	char const* text = R"(
-		contract C {
-			function(uint) external returns (uint)[] public x;
-			function(uint) internal returns (uint)[10] y;
-			function f() public {
-				function(uint) returns (uint)[10] memory a;
-				function(uint) returns (uint)[10] storage b = y;
-				function(uint) external returns (uint)[] memory c;
-				c = new function(uint) external returns (uint)[](200);
-				a; b;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(delete_function_type)
-{
-	char const* text = R"(
-		contract C {
-			function(uint) external returns (uint) x;
-			function(uint) internal returns (uint) y;
-			function f() public {
-				delete x;
-				var a = y;
-				delete a;
-				delete y;
-				var c = f;
-				delete c;
-				function(uint) internal returns (uint) g;
-				delete g;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(delete_function_type_invalid)
-{
-	char const* text = R"(
-		contract C {
-			function f() public {
-				delete f;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Expression has to be an lvalue.");
-}
-
-BOOST_AUTO_TEST_CASE(delete_external_function_type_invalid)
-{
-	char const* text = R"(
-		contract C {
-			function f() public {
-				delete this.f;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Expression has to be an lvalue.");
-}
-
-BOOST_AUTO_TEST_CASE(external_function_to_function_type_calldata_parameter)
-{
-	// This is a test that checks that the type of the `bytes` parameter is
-	// correctly changed from its own type `bytes calldata` to `bytes memory`
-	// when converting to a function type.
-	char const* text = R"(
-		contract C {
-			function f(function(bytes memory) external g) public { }
-			function callback(bytes) external {}
-			function g() public {
-				f(this.callback);
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(external_function_type_to_address)
-{
-	char const* text = R"(
-		contract C {
-			function f() public returns (address) {
-				return address(this.f);
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(internal_function_type_to_address)
-{
-	char const* text = R"(
-		contract C {
-			function f() public returns (address) {
-				return address(f);
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
-}
-
-BOOST_AUTO_TEST_CASE(external_function_type_to_uint)
-{
-	char const* text = R"(
-		contract C {
-			function f() public returns (uint) {
-				return uint(this.f);
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed");
-}
-
-BOOST_AUTO_TEST_CASE(warn_function_type_parameters_with_names)
-{
-	char const* text = R"(
-		contract C {
-			function(uint a) f;
-		}
-	)";
-	CHECK_WARNING(text, "Naming function type parameters is deprecated.");
-}
-
-BOOST_AUTO_TEST_CASE(warn_function_type_return_parameters_with_names)
-{
-	char const* text = R"(
-		contract C {
-			function(uint) returns (bool ret) f;
-		}
-	)";
-	CHECK_WARNING(text, "Naming function type return parameters is deprecated.");
-}
-
 BOOST_AUTO_TEST_CASE(shift_constant_left_negative_rvalue)
 {
 	char const* text = R"(
@@ -5913,6 +5130,16 @@ BOOST_AUTO_TEST_CASE(shift_constant_right_excessive_rvalue)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Operator >> not compatible with types int_const 66 and int_const 4294967296");
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_fractional)
+{
+	char const* text = R"(
+		contract C {
+			uint public a = 0x42 >> (1 / 2);
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator >> not compatible with types int_const 66 and rational_const 1 / 2");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_unbalanced_positive_stack)
@@ -6439,43 +5666,22 @@ BOOST_AUTO_TEST_CASE(return_structs)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(return_recursive_structs)
+BOOST_AUTO_TEST_CASE(read_returned_struct)
 {
 	char const* text = R"(
-		contract C {
-			struct S { uint a; S[] sub; }
-			function f() returns (uint, S) {
+		pragma experimental ABIEncoderV2;
+		contract A {
+			struct T {
+				int x;
+				int y;
+			}
+			function g() public returns (T) {
+				return this.g();
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
+	CHECK_WARNING(text, "Experimental features");
 }
-
-BOOST_AUTO_TEST_CASE(return_recursive_structs2)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; S[2][] sub; }
-			function f() returns (uint, S) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
-BOOST_AUTO_TEST_CASE(return_recursive_structs3)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; S[][][] sub; }
-			struct T { S s; }
-			function f() returns (uint x, T t) {
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Internal or recursive type is not allowed for public or external functions.");
-}
-
 BOOST_AUTO_TEST_CASE(address_checksum_type_deduction)
 {
 	char const* text = R"(
@@ -6598,38 +5804,6 @@ BOOST_AUTO_TEST_CASE(address_methods)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(cyclic_dependency_for_constants)
-{
-	char const* text = R"(
-		contract C {
-			uint constant a = a;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "cyclic dependency via a");
-	text = R"(
-		contract C {
-			uint constant a = b * c;
-			uint constant b = 7;
-			uint constant c = b + uint(keccak256(d));
-			uint constant d = 2 + a;
-		}
-	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
-		"a has a cyclic dependency via c",
-		"c has a cyclic dependency via d",
-		"d has a cyclic dependency via a"
-	}));
-	text = R"(
-		contract C {
-			uint constant a = b * c;
-			uint constant b = 7;
-			uint constant c = 4 + uint(keccak256(d));
-			uint constant d = 2 + b;
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(interface)
 {
 	char const* text = R"(
@@ -6672,54 +5846,6 @@ BOOST_AUTO_TEST_CASE(interface_function_bodies)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot have an implementation");
-}
-
-BOOST_AUTO_TEST_CASE(interface_function_external)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-		interface I {
-			function f() external;
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(interface_function_public)
-{
-	char const* text = R"(
-		interface I {
-			function f() public;
-		}
-	)";
-	CHECK_WARNING(text, "Functions in interfaces should be declared external.");
-	text = R"(
-		pragma experimental "v0.5.0";
-		interface I {
-			function f() public;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Functions in interfaces must be declared external.");
-}
-
-BOOST_AUTO_TEST_CASE(interface_function_internal)
-{
-	char const* text = R"(
-		interface I {
-			function f() internal;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot be internal or private.");
-}
-
-BOOST_AUTO_TEST_CASE(interface_function_private)
-{
-	char const* text = R"(
-		interface I {
-			function f() private;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Functions in interfaces cannot be internal or private.");
 }
 
 BOOST_AUTO_TEST_CASE(interface_events)
@@ -6816,6 +5942,20 @@ BOOST_AUTO_TEST_CASE(using_interface_complex)
 	CHECK_SUCCESS(text);
 }
 
+BOOST_AUTO_TEST_CASE(interface_implement_public_contract)
+{
+	char const* text = R"(
+		interface I {
+			function f() external;
+		}
+		contract C is I {
+			function f() public {
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(warn_about_throw)
 {
 	char const* text = R"(
@@ -6847,14 +5987,30 @@ BOOST_AUTO_TEST_CASE(bare_revert)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Statement has no effect.");
+	CHECK_ERROR(text, TypeError, "No matching declaration found");
+}
+
+BOOST_AUTO_TEST_CASE(revert_with_reason)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint x) pure public {
+				if (x > 7)
+					revert("abc");
+				else
+					revert();
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(bare_others)
 {
 	CHECK_WARNING("contract C { function f() pure public { selfdestruct; } }", "Statement has no effect.");
 	CHECK_WARNING("contract C { function f() pure public { assert; } }", "Statement has no effect.");
-	CHECK_WARNING("contract C { function f() pure public { require; } }", "Statement has no effect.");
+	// This is different because it does have overloads.
+	CHECK_ERROR("contract C { function f() pure public { require; } }", TypeError, "No matching declaration found after variable lookup.");
 	CHECK_WARNING("contract C { function f() pure public { suicide; } }", "Statement has no effect.");
 }
 
@@ -7195,7 +6351,7 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_ignores_constructor)
 {
 	char const* text = R"(
 		contract C {
-			function C() public {}
+			constructor() public {}
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
@@ -7353,7 +6509,7 @@ BOOST_AUTO_TEST_CASE(does_not_error_transfer_regular_function)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(returndatacopy_as_variable)
+BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 {
 	char const* text = R"(
 		contract c { function f() public { uint returndatasize; assembly { returndatasize }}}
@@ -7520,7 +6676,7 @@ BOOST_AUTO_TEST_CASE(modifiers_access_storage_pointer)
 {
 	char const* text = R"(
 		contract C {
-			struct S { }
+			struct S { uint a; }
 			modifier m(S storage x) {
 				x;
 				_;
@@ -7607,7 +6763,7 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 {
 	char const* text = R"(
 		contract C {
-			function C() public {
+			constructor() public {
 				this.f();
 			}
 			function f() pure public {
@@ -7921,53 +7077,6 @@ BOOST_AUTO_TEST_CASE(reject_interface_constructors)
 	CHECK_ERROR(text, TypeError, "Wrong argument count for constructor call: 1 arguments given but expected 0.");
 }
 
-BOOST_AUTO_TEST_CASE(tight_packing_literals)
-{
-	char const* text = R"(
-		contract C {
-			function f() pure public returns (bytes32) {
-				return keccak256(1);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
-	text = R"(
-		contract C {
-			function f() pure public returns (bytes32) {
-				return keccak256(uint8(1));
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f() pure public returns (bytes32) {
-				return sha3(1);
-			}
-		}
-	)";
-	CHECK_WARNING_ALLOW_MULTI(text, (std::vector<std::string>{
-		"The type of \"int_const 1\" was inferred as uint8.",
-		"\"sha3\" has been deprecated in favour of \"keccak256\""
-	}));
-	text = R"(
-		contract C {
-			function f() pure public returns (bytes32) {
-				return sha256(1);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
-	text = R"(
-		contract C {
-			function f() pure public returns (bytes32) {
-				return ripemd160(1);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "The type of \"int_const 1\" was inferred as uint8.");
-}
-
 BOOST_AUTO_TEST_CASE(non_external_fallback)
 {
 	char const* text = R"(
@@ -8093,171 +7202,6 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(array_length_too_large)
-{
-	char const* text = R"(
-		contract C {
-			uint[8**90] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_not_convertible_to_integer)
-{
-	char const* text = R"(
-		contract C {
-			uint[true] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_constant_var)
-{
-	char const* text = R"(
-		contract C {
-			uint constant LEN = 10;
-			uint[LEN] ids;
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(array_length_non_integer_constant_var)
-{
-	char const* text = R"(
-		contract C {
-			bool constant LEN = true;
-			uint[LEN] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_cannot_be_function)
-{
-	char const* text = R"(
-		contract C {
-			function f() {}
-			uint[f] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_can_be_recursive_constant)
-{
-	char const* text = R"(
-		contract C {
-			uint constant L = 5;
-			uint constant LEN = L + 4 * L;
-			uint[LEN] ids;
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(array_length_cannot_be_function_call)
-{
-	char const* text = R"(
-		contract C {
-			function f(uint x) {}
-			uint constant LEN = f();
-			uint[LEN] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_const_cannot_be_fractional)
-{
-	char const* text = R"(
-		contract C {
-			fixed constant L = 10.5;
-			uint[L] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Array with fractional length specified");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_struct)
-{
-	char const* text = R"(
-		contract C {
-			uint constant LEN = 10;
-			struct Test {
-				uint[LEN] ids;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(array_length_can_be_constant_in_function)
-{
-	char const* text = R"(
-		contract C {
-			uint constant LEN = 10;
-			function f() {
-				uint[LEN] a;
-			}
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(array_length_cannot_be_constant_function_parameter)
-{
-	char const* text = R"(
-		contract C {
-			function f(uint constant LEN) {
-				uint[LEN] a;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_with_cyclic_constant)
-{
-	char const* text = R"(
-		contract C {
-			uint constant LEN = LEN;
-			function f() {
-				uint[LEN] a;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_with_complex_cyclic_constant)
-{
-	char const* text = R"(
-		contract C {
-			uint constant L2 = LEN - 10;
-			uint constant L1 = L2 / 10;
-			uint constant LEN = 10 + L1 * 5;
-			function f() {
-				uint[LEN] a;
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Cyclic constant definition (or maximum recursion depth exhausted).");
-}
-
-BOOST_AUTO_TEST_CASE(array_length_with_pure_functions)
-{
-	char const* text = R"(
-		contract C {
-			uint constant LEN = keccak256(ripemd160(33));
-			uint[LEN] ids;
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Invalid array length, expected integer literal or constant expression.");
 }
 
 BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
@@ -8585,6 +7529,33 @@ BOOST_AUTO_TEST_CASE(require_visibility_specifiers)
 		}
 	)";
 	CHECK_ERROR(text, SyntaxError, "No visibility specified.");
+}
+
+BOOST_AUTO_TEST_CASE(blockhash)
+{
+	char const* code = R"(
+		contract C {
+			function f() public view returns (bytes32) {
+				return block.blockhash(3);
+			}
+		}
+	)";
+	CHECK_WARNING(code, "\"block.blockhash()\" has been deprecated in favor of \"blockhash()\"");
+
+	code = R"(
+		contract C {
+			function f() public view returns (bytes32) { return blockhash(3); }
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(code);
+
+	code = R"(
+		pragma experimental "v0.5.0";
+		contract C {
+			function f() public returns (bytes32) { return block.blockhash(3); }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "\"block.blockhash()\" has been deprecated in favor of \"blockhash()\"");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -25,8 +25,8 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
-#include "../Metadata.h"
-#include "../TestHelper.h"
+#include <test/Metadata.h>
+#include <test/Options.h>
 
 using namespace std;
 
@@ -111,18 +111,18 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["bytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
+		"6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00"
 	);
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"6060604052600080fd00"
+		"6080604052600080fd00"
 	);
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[61,10600],\"external\":{},\"internal\":{}}"
+		"{\"creation\":[66,10600],\"external\":{},\"internal\":{}}"
 	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
@@ -153,18 +153,18 @@ BOOST_AUTO_TEST_CASE(single_compilation)
 	BOOST_CHECK(contract["bytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
+		"6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00"
 	);
 	BOOST_CHECK(contract["runtimeBytecode"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"6060604052600080fd00"
+		"6080604052600080fd00"
 	);
 	BOOST_CHECK(contract["functionHashes"].isObject());
 	BOOST_CHECK(contract["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[61,10600],\"external\":{},\"internal\":{}}"
+		"{\"creation\":[66,10600],\"external\":{},\"internal\":{}}"
 	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));

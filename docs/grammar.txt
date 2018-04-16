@@ -19,7 +19,7 @@ InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* 
 StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
-                     ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+                     ( VariableDeclaration ';' (VariableDeclaration ';')* ) '}'
 
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?

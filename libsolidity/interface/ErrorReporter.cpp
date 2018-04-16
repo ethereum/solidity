@@ -61,6 +61,9 @@ void ErrorReporter::warning(
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, string const& _description)
 {
+	if (checkForExcessiveErrors(_type))
+		return;
+
 	auto err = make_shared<Error>(_type);
 	*err <<
 		errinfo_sourceLocation(_location) <<
@@ -71,6 +74,9 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, st
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
 {
+	if (checkForExcessiveErrors(_type))
+		return;
+
 	auto err = make_shared<Error>(_type);
 	*err <<
 		errinfo_sourceLocation(_location) <<
@@ -80,6 +86,37 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, Se
 	m_errorList.push_back(err);
 }
 
+bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
+{
+	if (_type == Error::Type::Warning)
+	{
+		m_warningCount++;
+
+		if (m_warningCount == c_maxWarningsAllowed)
+		{
+			auto err = make_shared<Error>(Error::Type::Warning);
+			*err << errinfo_comment("There are more than 256 warnings. Ignoring the rest.");
+			m_errorList.push_back(err);
+		}
+
+		if (m_warningCount >= c_maxWarningsAllowed)
+			return true;
+	}
+	else
+	{
+		m_errorCount++;
+
+		if (m_errorCount > c_maxErrorsAllowed)
+		{
+			auto err = make_shared<Error>(Error::Type::Warning);
+			*err << errinfo_comment("There are more than 256 errors. Aborting.");
+			m_errorList.push_back(err);
+			BOOST_THROW_EXCEPTION(FatalError());
+		}
+	}
+
+	return false;
+}
 
 void ErrorReporter::fatalError(Error::Type _type, SourceLocation const& _location, string const& _description)
 {

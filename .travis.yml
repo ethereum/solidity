@@ -84,12 +84,12 @@ matrix:
           sudo: required
           compiler: gcc
           node_js:
-            - "7"
+            - "8"
           services:
               - docker
           before_install:
-              - nvm install 7
-              - nvm use 7
+              - nvm install 8
+              - nvm use 8
               - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
           env:
               - SOLC_EMSCRIPTEN=On
@@ -159,6 +159,8 @@ cache:
 install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
+#    - if [ "$TRAVIS_BRANCH" != release -a -z "$TRAVIS_TAG" ]; then SOLC_TESTS=Off; fi
+    - SOLC_TESTS=Off
     - if [ "$TRAVIS_BRANCH" = release -o -n "$TRAVIS_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
     - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 

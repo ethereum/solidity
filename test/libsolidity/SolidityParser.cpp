@@ -25,8 +25,8 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/interface/ErrorReporter.h>
-#include "../TestHelper.h"
-#include "ErrorCheck.h"
+#include <test/Options.h>
+#include <test/libsolidity/ErrorCheck.h>
 
 using namespace std;
 
@@ -111,26 +111,6 @@ while(0)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
-
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVariable1;
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
-{
-	char const* text = R"(
-		contract test {
-			uint256 ;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
 
 BOOST_AUTO_TEST_CASE(empty_function)
 {
@@ -577,16 +557,6 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(variable_definition_in_function_parameter)
-{
-	char const* text = R"(
-		contract test {
-			function fun(var a) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected explicit type name");
-}
-
 BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
 {
 	char const* text = R"(
@@ -597,18 +567,6 @@ BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
 		}
 	)";
 	CHECK_PARSE_ERROR(text, "Expected elementary type name for mapping key type");
-}
-
-BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
-{
-	char const* text = R"(
-		contract test {
-			function fun() returns(var d) {
-				return 1;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(operator_expression)
