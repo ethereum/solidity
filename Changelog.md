@@ -1,14 +1,18 @@
-### 0.4.22 (unreleased)
+### 0.4.22 (2018-04-16)
 
 Features:
  * Code Generator: Initialize arrays without using ``msize()``.
  * Code Generator: More specialized and thus optimized implementation for ``x.push(...)``
  * Commandline interface: Error when missing or inaccessible file detected. Suppress it with the ``--ignore-missing`` flag.
  * Constant Evaluator: Fix evaluation of single element tuples.
+ * General: Add encoding routines ``abi.encodePacked``, ``abi.encode``, ``abi.encodeWithSelector`` and ``abi.encodeWithSignature``.
+ * General: Add global function ``gasleft()`` and deprecate ``msg.gas``.
+ * General: Add global function ``blockhash(uint)`` and deprecate ``block.hash(uint)``.
  * General: Allow providing reason string for ``revert()`` and ``require()``.
  * General: Limit the number of errors output in a single run to 256.
  * General: Support accessing dynamic return data in post-byzantium EVMs.
- * General: Add encoding routines ``abi.encodePacked``, ``abi.encode``, ``abi.encodeWithSelector`` and ``abi.encodeWithSignature``.
+ * Inheritance: Error when using empty parentheses for base class constructors that require arguments as experimental 0.5.0 feature.
+ * Inheritance: Error when using no parentheses in modifier-style constructor calls as experimental 0.5.0 feature.
  * Interfaces: Allow overriding external functions in interfaces with public in an implementing contract.
  * Optimizer: Optimize ``SHL`` and ``SHR`` only involving constants (Constantinople only).
  * Optimizer: Remove useless ``SWAP1`` instruction preceding a commutative instruction (such as ``ADD``, ``MUL``, etc).
@@ -20,8 +24,7 @@ Features:
  * Syntax Tests: Add source locations to syntax test expectations.
  * Type Checker: Improve documentation and warnings for accessing contract members inherited from ``address``.
  * General: Introduce new constructor syntax using the ``constructor`` keyword as experimental 0.5.0 feature.
- * Inheritance: Error when using empty parentheses for base class constructors that require arguments as experimental 0.5.0 feature.
- * Inheritance: Error when using no parentheses in modifier-style constructor calls as experimental 0.5.0 feature.
+
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
@@ -39,14 +42,14 @@ Bugfixes:
  * Parser: Fix internal compiler error when parsing ``var`` declaration without identifier.
  * Parser: Fix parsing of getters for function type variables.
  * Standard JSON: Support ``constantinople`` as ``evmVersion`` properly.
+ * Static Analyzer: Fix non-deterministic order of unused variable warnings.
+ * Static Analyzer: Invalid arithmetic with constant expressions causes errors.
  * Type Checker: Fix detection of recursive structs.
  * Type Checker: Fix asymmetry bug when comparing with literal numbers.
  * Type System: Improve error message when attempting to shift by a fractional amount.
  * Type System: Make external library functions accessible.
  * Type System: Prevent encoding of weird types.
  * Type System: Restrict rational numbers to 4096 bits.
- * Static Analyzer: Fix non-deterministic order of unused variable warnings.
- * Static Analyzer: Invalid arithmetic with constant expressions causes errors.
 
 ### 0.4.21 (2018-03-07)
 
