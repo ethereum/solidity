@@ -94,7 +94,7 @@ download_eth
 ETH_PID=$(run_eth /tmp/test)
 
 progress="--show-progress"
-if [ "$CI" ]
+if [ "$CIRCLECI" ]
 then
     progress=""
 fi
