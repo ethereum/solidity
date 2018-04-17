@@ -1,10 +1,9 @@
 ### 0.4.23 (unreleased)
 
 Features:
-
+ * SMTChecker: Integration with CVC4 SMT solver
 
 Bugfixes:
-
 
 
 ### 0.4.22 (2018-04-16)
@@ -33,7 +32,6 @@ Features:
  * Syntax Checker: Warn about modifiers on functions without implementation (this will turn into an error with version 0.5.0).
  * Syntax Tests: Add source locations to syntax test expectations.
  * Type Checker: Improve documentation and warnings for accessing contract members inherited from ``address``.
-
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.
