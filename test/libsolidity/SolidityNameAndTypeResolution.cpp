@@ -1140,7 +1140,6 @@ BOOST_AUTO_TEST_CASE(fallback_function_twice)
 		}
 	)";
 	CHECK_ERROR_ALLOW_MULTI(text, DeclarationError, (vector<string>{
-		"Function with same name and arguments defined twice.",
 		"Only one fallback function is"
 	}));
 }

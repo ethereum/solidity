@@ -4,7 +4,8 @@ Features:
  * SMTChecker: Integration with CVC4 SMT solver
 
 Bugfixes:
-
+ * Type Checker: Do not complain about new-style constructor and fallback function to have the same name.
+ * Type Checker: Detect multiple constructor declarations in the new syntax and old syntax.
 
 ### 0.4.22 (2018-04-16)
 
