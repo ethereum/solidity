@@ -95,7 +95,7 @@ void TimeNodeStack::pop()
                 if(print_flag)
 		{
 			stringstream ss;
-                        print_recursive(stack[0], string(""), ss);
+                        print_recursive(stack[0], string(""), ss, tree);
 			cout << ss.str();
                         stack.pop_back();
                 }
@@ -111,7 +111,8 @@ void TimeNodeStack::pop()
 	}
 }
 
-void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow, stringstream& ss)
+void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow,
+		stringstream& ss, bool tree)
 {
 	ss << setw(70) << left << arrow + x.name << setw(24) << left << 
                 std::chrono::duration_cast<std::chrono::microseconds>(
@@ -121,19 +122,19 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow, stri
 
 	for (TimeNode child : x.children)
 	{
-		if (arrow.length() == 0)
+		if (arrow.length() == 0 || !tree)
 		{
-			print_recursive(child, " \\_", ss);
+			print_recursive(child, " \\_", ss, tree);
 		}
 		else
 		{
 			print_recursive(child, arrow.substr(0, arrow.length() - 2) + 
-					"    " + "\\_", ss);
+					"    " + "\\_", ss, tree);
 		}
 	}
 }
 
-string TimeNodeStack::printString()
+string TimeNodeStack::printString(bool tree)
 {
 	stringstream ss;
         // User should be allowed to put more than one function at top level of tree,
@@ -146,12 +147,12 @@ string TimeNodeStack::printString()
         ss << string(110, '-') << '\n';
 	
 	for(TimeNode node: print_stack){
-	        print_recursive(node, string(""), ss);
+	        print_recursive(node, string(""), ss, tree);
         }
 
 	return ss.str();
 }
 
-void TimeNodeStack::print() { cout << printString(); }
+void TimeNodeStack::print() { cout << printString(tree); }
 
 TimeNodeStack t_stack = TimeNodeStack();

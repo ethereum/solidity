@@ -49,11 +49,12 @@ public:
         ~TimeNodeStack();
 	void push(std::string name);
 	void pop();
-	std::string printString();
+	std::string printString(bool tree);
 	void print();
 	void print_recursive(const TimeNode& x, const std::string& arrow, 
-			std::stringstream& ss);
+			std::stringstream& ss, bool tree);
         bool print_flag = false;
+	bool tree = true;
 private:
 	std::vector<TimeNode> stack;
 	std::vector<TimeNode> print_stack;
