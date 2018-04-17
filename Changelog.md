@@ -4,6 +4,7 @@ Features:
  * Build System: Update internal dependency of jsoncpp to 1.8.4, which introduces more strictness and reduces memory usage.
  * Code Generator: Use native shift instructions on target Constantinople.
  * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
+ * Parser: Display nicer error messages by showing the actual tokens and not internal names.
  * Type Checker: Deprecate the ``years`` unit denomination and raise a warning for it (or an error as experimental 0.5.0 feature).
  * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
 

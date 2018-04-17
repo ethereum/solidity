@@ -71,10 +71,10 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 		if (Token::isReservedKeyword(tok))
 		{
 			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got reserved keyword '") +
-				string(Token::name(tok)) +
+				string("Expected '") +
+				string(Token::toString(_value)) +
+				string("' but got reserved keyword '") +
+				string(Token::toString(tok)) +
 				string("'")
 			);
 		}
@@ -82,19 +82,19 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 		{
 			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got '") +
+				string("Expected '") +
+				string(Token::toString(_value)) +
+				string("' but got '") +
 				elemTypeName.toString() +
 				string("'")
 			);
 		}
 		else
 			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got '") +
-				string(Token::name(m_scanner->currentToken())) +
+				string("Expected '") +
+				string(Token::toString(_value)) +
+				string("' but got '") +
+				string(Token::toString(m_scanner->currentToken())) +
 				string("'")
 			);
 	}
