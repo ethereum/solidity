@@ -243,16 +243,6 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(returns_in_constructor)
-{
-	char const* text = R"(
-		contract test {
-			function test() public returns (uint a) { }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Non-empty \"returns\" directive for constructor.");
-}
-
 BOOST_AUTO_TEST_CASE(forward_function_reference)
 {
 	char const* text = R"(
@@ -869,26 +859,6 @@ BOOST_AUTO_TEST_CASE(complex_inheritance)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_visibility)
-{
-	// The constructor of a base class should not be visible in the derived class
-	char const* text = R"(
-		contract A { function A() public { } }
-		contract B is A { function f() public { A x = A(0); } }
-	)";
-	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(overriding_constructor)
-{
-	// It is fine to "override" constructor of a base class since it is invisible
-	char const* text = R"(
-		contract A { function A() public { } }
-		contract B is A { function A() public returns (uint8 r) {} }
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
 {
 	char const* text = R"(
@@ -905,35 +875,6 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 		contract B is A { }
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(new_constructor_syntax)
-{
-	char const* text = R"(
-		contract A { constructor() public {} }
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(old_constructor_syntax)
-{
-	char const* text = R"(
-		contract A { function A() public {} }
-	)";
-	CHECK_WARNING(
-		text,
-		"Defining constructors as functions with the same name as the contract is deprecated."
-	);
-
-	text = R"(
-		pragma experimental "v0.5.0";
-		contract A { function A() public {} }
-	)";
-	CHECK_ERROR(
-		text,
-		SyntaxError,
-		"Functions are not allowed to have the same name as the contract."
-	);
 }
 
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
@@ -2588,17 +2529,6 @@ BOOST_AUTO_TEST_CASE(override_changes_return_types)
 	CHECK_ERROR(sourceCode, TypeError, "Overriding function return types differ");
 }
 
-BOOST_AUTO_TEST_CASE(multiple_constructors)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function test(uint a) public { }
-			function test() public {}
-		}
-	)";
-	CHECK_ERROR(sourceCode, DeclarationError, "More than one constructor defined");
-}
-
 BOOST_AUTO_TEST_CASE(equal_overload)
 {
 	char const* sourceCode = R"(
@@ -3120,19 +3050,6 @@ BOOST_AUTO_TEST_CASE(library_having_variables)
 		library Lib { uint x; }
 	)";
 	CHECK_ERROR(text, TypeError, "Library cannot have non-constant state variables");
-}
-
-BOOST_AUTO_TEST_CASE(library_constructor)
-{
-	char const* text = R"(
-		library Lib {
-			function Lib();
-		}
-	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (vector<std::string>{
-		"Constructor cannot be defined in libraries.",
-		"Constructor must be implemented if declared."
-	}));
 }
 
 BOOST_AUTO_TEST_CASE(valid_library)
@@ -5030,38 +4947,6 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version)
 	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file requires different compiler version"));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_constructor_statemutability)
-{
-	char const* text = R"(
-		contract test {
-			function test() constant {}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Constructor must be payable or non-payable");
-	text = R"(
-		contract test {
-			function test() view {}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Constructor must be payable or non-payable");
-	text = R"(
-		contract test {
-			function test() pure {}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Constructor must be payable or non-payable");
-}
-
-BOOST_AUTO_TEST_CASE(external_constructor)
-{
-	char const* text = R"(
-		contract test {
-			function test() external {}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Constructor must be public or internal.");
-}
-
 BOOST_AUTO_TEST_CASE(invalid_array_as_statement)
 {
 	char const* text = R"(
@@ -5608,50 +5493,6 @@ BOOST_AUTO_TEST_CASE(assignment_to_constant)
 	CHECK_ERROR(text, TypeError, "Cannot assign to a constant variable.");
 }
 
-BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor)
-{
-	char const* text = R"(
-		contract C {
-			function C() internal {}
-		}
-		contract D {
-			function f() public { var x = new C(); }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
-}
-
-BOOST_AUTO_TEST_CASE(inconstructible_internal_constructor_inverted)
-{
-	// Previously, the type information for A was not yet available at the point of
-	// "new A".
-	char const* text = R"(
-		contract B {
-			A a;
-			function B() public {
-				a = new A(this);
-			}
-		}
-		contract A {
-			function A(address a) internal {}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Contract with internal constructor cannot be created directly.");
-}
-
-BOOST_AUTO_TEST_CASE(constructible_internal_constructor)
-{
-	char const* text = R"(
-		contract C {
-			function C() internal {}
-		}
-		contract D is C {
-			function D() public { }
-		}
-	)";
-	CHECK_SUCCESS(text);
-}
-
 BOOST_AUTO_TEST_CASE(return_structs)
 {
 	char const* text = R"(
@@ -5811,19 +5652,6 @@ BOOST_AUTO_TEST_CASE(interface)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(interface_constructor)
-{
-	char const* text = R"(
-		interface I {
-			function I();
-		}
-	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{
-		"Constructor cannot be defined in interfaces",
-		"Constructor must be implemented if declared.",
-	}));
 }
 
 BOOST_AUTO_TEST_CASE(interface_functions)
@@ -6905,16 +6733,6 @@ BOOST_AUTO_TEST_CASE(builtin_reject_value)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
-}
-
-BOOST_AUTO_TEST_CASE(constructor_without_implementation)
-{
-	char const* text = R"(
-		contract C {
-			function C();
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Constructor must be implemented if declared.");
 }
 
 BOOST_AUTO_TEST_CASE(large_storage_array_fine)
