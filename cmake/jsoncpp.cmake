@@ -11,6 +11,10 @@ set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(JSONCPP_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
+if(NOT MSVC)
+    set(JSONCPP_EXTRA_FLAGS "-std=c++11")
+endif()
+
 set(byproducts "")
 if(CMAKE_VERSION VERSION_GREATER 3.1)
     set(byproducts BUILD_BYPRODUCTS "${JSONCPP_LIBRARY}")
@@ -30,7 +34,7 @@ ExternalProject_Add(jsoncpp-project
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                -DJSONCPP_WITH_TESTS=OFF
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
-               -DCMAKE_CXX_FLAGS=${JSONCCP_EXTRA_FLAGS}
+               -DCMAKE_CXX_FLAGS=${JSONCPP_EXTRA_FLAGS}
     # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
     INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
