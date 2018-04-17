@@ -23,6 +23,7 @@
  */
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <chrono>
 #include <ctime>
@@ -93,7 +94,9 @@ void TimeNodeStack::pop()
 		stack[0].setEnd();
                 if(print_flag)
 		{
-                        print_recursive(stack[0], string(""));
+			stringstream ss;
+                        print_recursive(stack[0], string(""), ss);
+			cout << ss.str();
                         stack.pop_back();
                 }
 		else
@@ -101,8 +104,6 @@ void TimeNodeStack::pop()
                         print_stack.push_back(stack[0]);
                         stack.pop_back();
                 }
-                //print();
-                //stack.pop_back();
 	}
 	else
 	{
@@ -110,9 +111,9 @@ void TimeNodeStack::pop()
 	}
 }
 
-void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
+void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow, stringstream& ss)
 {
-	cout << setw(70) << left << arrow + x.name << setw(24) << left << 
+	ss << setw(70) << left << arrow + x.name << setw(24) << left << 
                 std::chrono::duration_cast<std::chrono::microseconds>(
 		x.getBegin() - start).count() << setw(20) << left << 
 		std::chrono::duration_cast<std::chrono::microseconds>(x.getEnd()
@@ -122,32 +123,35 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow)
 	{
 		if (arrow.length() == 0)
 		{
-			print_recursive(child, " \\_");
+			print_recursive(child, " \\_", ss);
 		}
 		else
 		{
 			print_recursive(child, arrow.substr(0, arrow.length() - 2) + 
-					"    " + "\\_");
+					"    " + "\\_", ss);
 		}
 	}
 }
 
-void TimeNodeStack::print()
+string TimeNodeStack::printString()
 {
-        //User should be allowed to put more than one function at top level of tree, e.g. processInput and actonInput
-        //if (stack.size() != 1) {
-	//	throw runtime_error("Error: not finished visiting the call stack.");
-	//}
-        //if (!printed) {
-        cout << setw(70) << left << "namespace/function name" << setw(24) << 
+	stringstream ss;
+        // User should be allowed to put more than one function at top level of tree,
+	// e.g. processInput and actonInput
+        if (stack.size() != 1) {
+		throw runtime_error("Error: not finished visiting the call stack.");
+	}
+        ss << setw(70) << left << "namespace/function name" << setw(24) << 
                 left << "unix begin time(μs)" << setw(20) << left << "time elapsed(μs)" <<'\n';
-        cout << string(110, '-') << '\n';
-        //cout << "stack size: " << stack.size() << '\n';
+        ss << string(110, '-') << '\n';
+	
 	for(TimeNode node: print_stack){
-                //auto node = stack[0];
-	        print_recursive(node, string(""));
-	        //stack.pop_back();
+	        print_recursive(node, string(""), ss);
         }
+
+	return ss.str();
 }
+
+void TimeNodeStack::print() { cout << printString(); }
 
 TimeNodeStack t_stack = TimeNodeStack();

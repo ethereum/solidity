@@ -23,6 +23,7 @@
  */
 #include <chrono>
 #include <string>
+#include <sstream>
 #include <vector>
 
 
@@ -48,8 +49,10 @@ public:
         ~TimeNodeStack();
 	void push(std::string name);
 	void pop();
+	std::string printString();
 	void print();
-	void print_recursive(const TimeNode& x, const std::string& arrow);
+	void print_recursive(const TimeNode& x, const std::string& arrow, 
+			std::stringstream& ss);
         bool print_flag = false;
 private:
 	std::vector<TimeNode> stack;

@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/FTime.h>
 
-BOOST_AUTO_TEST_SUITE(FTime)
+BOOST_AUTO_TEST_SUITE(FTimeCompiler)
 
 BOOST_AUTO_TEST_CASE(basic_push)
 {
@@ -36,10 +36,12 @@ BOOST_AUTO_TEST_CASE(basic_push_pop)
 	BOOST_REQUIRE_NO_THROW(t_stack.pop());
 };
 
-BOOST_AUTO_TEST_CASE(pop_empty)
+/*BOOST_AUTO_TEST_CASE(pop_empty)
 {
-	BOOST_CHECK_THROW(t_stack.pop(), std::exception);
+	t_stack.pop(); // pop off last element before empty pop
+	// BOOST_CHECK_THROW(t_stack.pop(), std::runtime_error);
 };
+*/
 
 BOOST_AUTO_TEST_CASE(defalut_print_false)
 {
@@ -47,5 +49,33 @@ BOOST_AUTO_TEST_CASE(defalut_print_false)
 };
 
 	
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(FTimeFunc)
+
+BOOST_AUTO_TEST_CASE(new_push_pop)
+{
+	TimeNodeStack new_stack;
+
+	BOOST_REQUIRE_NO_THROW(new_stack.push("hello"));
+	
+	BOOST_REQUIRE_NO_THROW(new_stack.pop());
+};
+
+BOOST_AUTO_TEST_CASE(push_pop_error)
+{
+	TimeNodeStack new_stack;
+
+	BOOST_REQUIRE_NO_THROW(new_stack.push("hello"));
+	
+	BOOST_REQUIRE_NO_THROW(new_stack.pop());
+
+	BOOST_CHECK_THROW(new_stack.pop(), std::runtime_error);
+
+};
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
