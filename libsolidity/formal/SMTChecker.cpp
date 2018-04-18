@@ -468,7 +468,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		}
 		else // Bool
 		{
-			solAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "");
+			solUnimplementedAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "Operation not yet supported");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
 				op == Token::NotEqual ? (left != right) :
@@ -839,7 +839,7 @@ void SMTChecker::createExpr(Expression const& _e)
 			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
 			break;
 		default:
-			solAssert(false, "Type not implemented.");
+			solUnimplementedAssert(false, "Type not implemented.");
 		}
 	}
 }
