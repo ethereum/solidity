@@ -43,27 +43,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# TODO - Track down what breaks if we do NOT do this.
 	add_compile_options(-Wno-unknown-pragmas)
 
-	# To get the code building on FreeBSD and Arch Linux we seem to need the following
-	# warning suppression to work around some issues in Boost headers.
-	#
-	# See the following reports:
-	#     https://github.com/ethereum/webthree-umbrella/issues/384
-	#     https://github.com/ethereum/webthree-helpers/pull/170
-	#
-	# The issue manifest as warnings-as-errors like the following:
-	#
-	#     /usr/local/include/boost/multiprecision/cpp_int.hpp:181:4: error:
-	#         right operand of shift expression '(1u << 63u)' is >= than the precision of the left operand
-	#
-	# -fpermissive is a pretty nasty way to address this.   It is described as follows:
-	#
-	#    Downgrade some diagnostics about nonconformant code from errors to warnings.
-	#    Thus, using -fpermissive will allow some nonconforming code to compile.
-	#
-	# NB: Have to use this form for the setting, so that it only applies to C++ builds.
-	# Applying -fpermissive to a C command-line (ie. secp256k1) gives a build error.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
