@@ -11881,6 +11881,26 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 	BOOST_CHECK(callContractFunction("shr_3()") == encodeArgs(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(senders_balance)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public view returns (uint) {
+				return msg.sender.balance;
+			}
+		}
+		contract D {
+			C c = new C();
+			constructor() payable { }
+			function f() public view returns (uint) {
+				return c.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 27, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(27)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

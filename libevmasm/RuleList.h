@@ -174,6 +174,26 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 		});
 	}
 
+	for (auto const& op: std::vector<Instruction>{
+		Instruction::ADDRESS,
+		Instruction::CALLER,
+		Instruction::ORIGIN,
+		Instruction::COINBASE
+	})
+	{
+		u256 const mask = (u256(1) << 160) - 1;
+		rules.push_back({
+			{Instruction::AND, {{op, mask}}},
+			[=]() -> Pattern { return op; },
+			false
+		});
+		rules.push_back({
+			{Instruction::AND, {{mask, op}}},
+			[=]() -> Pattern { return op; },
+			false
+		});
+	}
+
 	// Double negation of opcodes with boolean result
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::EQ,
