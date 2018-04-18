@@ -61,18 +61,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
-		# A couple of extra warnings suppressions which we seemingly
-		# need when building with Clang.
-		#
-		# TODO - Nail down exactly where these warnings are manifesting and
-		# try to suppress them in a more localized way.   Notes in this file
-		# indicate that the first is needed for sepc256k1 and that the
-		# second is needed for the (clog, cwarn) macros.  These will need
-		# testing on at least OS X and Ubuntu.
-		add_compile_options(-Wno-unused-function)
-		add_compile_options(-Wno-dangling-else)
-
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 			# Set stack size to 16MB - by default Apple's clang defines a stack size of 8MB, some tests require more.
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000")
