@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
+ * @author Killian <krr2125@columbia.edu>
+ * @author Jiayang <prokingsley@gmail.com>
  * @author Raphael <raphael.s.norwitz@gmail.com>
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */

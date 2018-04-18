@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Killian <>
+ * @author Killian <krr2125@columbia.edu>
  * @author Jiayang <prokingsley@gmail.com>
  * @author Raphael <raphael.s.norwitz@gmail.com>
  * @date 2017
