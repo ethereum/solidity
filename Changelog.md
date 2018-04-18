@@ -1,8 +1,9 @@
 ### 0.4.23 (unreleased)
 
 Features:
- * SMTChecker: Integration with CVC4 SMT solver
  * Build system: Support Ubuntu Bionic.
+ * SMTChecker: Integration with CVC4 SMT solver
+ * Syntax Checker: Warn about functions named "constructor".
 
 Bugfixes:
  * Type Checker: Do not complain about new-style constructor and fallback function to have the same name.
