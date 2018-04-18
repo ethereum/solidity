@@ -72,9 +72,9 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 		{
 			fatalParserError(
 				string("Expected '") +
-				string(Token::toString(_value)) +
+				Token::friendlyName(_value) +
 				string("' but got reserved keyword '") +
-				string(Token::toString(tok)) +
+				Token::friendlyName(tok) +
 				string("'")
 			);
 		}
@@ -83,7 +83,7 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
 				string("Expected '") +
-				string(Token::toString(_value)) +
+				Token::friendlyName(_value) +
 				string("' but got '") +
 				elemTypeName.toString() +
 				string("'")
@@ -92,9 +92,9 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 		else
 			fatalParserError(
 				string("Expected '") +
-				string(Token::toString(_value)) +
+				Token::friendlyName(_value) +
 				string("' but got '") +
-				string(Token::toString(m_scanner->currentToken())) +
+				Token::friendlyName(tok) +
 				string("'")
 			);
 	}
