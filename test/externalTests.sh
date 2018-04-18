@@ -47,13 +47,6 @@ function test_truffle
       cd "$DIR"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
-      if [ "$name" == "Zeppelin" ]; then
-        # Fix some things that look like bugs (only seemed to fail on Node 6 and not Node 8)
-        # FIXME: report upstream or to web3.js?
-        sed -i -e 's/let token = await ERC827TokenMock.new();//;' test/token/ERC827/ERC827Token.js
-        sed -i -e 's/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0)/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address)/' test/crowdsale/CappedCrowdsale.test.js
-        sed -i -e 's/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, { from: owner })/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address, { from: owner })/' test/crowdsale/RefundableCrowdsale.test.js
-      fi
       if [ "$name" == "Gnosis" ]; then
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
         find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
