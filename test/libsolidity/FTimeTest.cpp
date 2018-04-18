@@ -93,7 +93,6 @@ BOOST_AUTO_TEST_CASE(tree_two_level)
 
 
 	std::string result = new_stack.printString(true);
-	std::cout << result;
 
 	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
 			"(.*)[\\s]+(.*)\n(-*)\n"
@@ -116,7 +115,6 @@ BOOST_AUTO_TEST_CASE(tree_three_level)
 
 
 	std::string result = new_stack.printString(true);
-	std::cout << result;
 
 	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
 			"(.*)[\\s]+(.*)\n(-*)\n"
@@ -138,7 +136,6 @@ BOOST_AUTO_TEST_CASE(notree_two_level)
 
 
 	std::string result = new_stack.printString(false);
-	std::cout << result;
 
 	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
 			"(.*)[\\s]+(.*)\n(-*)\n"
@@ -161,7 +158,6 @@ BOOST_AUTO_TEST_CASE(notree_three_level)
 
 
 	std::string result = new_stack.printString(false);
-	std::cout << result;
 
 	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
 			"(.*)[\\s]+(.*)\n(-*)\n"
