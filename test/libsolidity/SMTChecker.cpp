@@ -467,6 +467,72 @@ BOOST_AUTO_TEST_CASE(bool_int_mixed)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
+BOOST_AUTO_TEST_CASE(storage_value_vars)
+{
+	string text = R"(
+		contract C
+		{
+			address a;
+			bool b;
+			uint c;
+			function f(uint x) public {
+				if (x == 0)
+				{
+					a = 100;
+					b = true;
+				}
+				else
+				{
+					a = 200;
+					b = false;
+				}
+				assert(a > 0 && b);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+	text = R"(
+		contract C
+		{
+			address a;
+			bool b;
+			uint c;
+			function f() public view {
+				assert(c > 0);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+	text = R"(
+		contract C
+		{
+			address a;
+			bool b;
+			uint c;
+			function f(uint x) public {
+				if (x == 0)
+				{
+					a = 100;
+					b = true;
+				}
+				else
+				{
+					a = 200;
+					b = false;
+				}
+				assert(b == (a < 200));
+			}
+
+			function g() public view {
+				require(a < 100);
+				assert(c >= 0);
+			}
+
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 BOOST_AUTO_TEST_CASE(while_loop_simple)
 {
 	// Check that variables are cleared

@@ -25,6 +25,7 @@ Features:
  * Build system: Support Ubuntu Bionic.
  * SMTChecker: Integration with CVC4 SMT solver
  * Syntax Checker: Warn about functions named "constructor".
+ * SMTChecker: Support to integer and Bool state variables
 
 Bugfixes:
  * Type Checker: Improve error message for failed function overload resolution.
