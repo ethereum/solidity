@@ -122,8 +122,10 @@ bool CompilerStack::parse()
 {
 	//reset
         t_stack.push("CompilerStack::parse");
-	if(m_stackState != SourcesSet)
+	if(m_stackState != SourcesSet) {
+		t_stack.pop();
 		return false;
+	}
 	m_errorReporter.clear();
 	ASTNode::resetID();
 
@@ -159,15 +161,19 @@ bool CompilerStack::parse()
                 t_stack.pop();
 		return true;
 	}
-	else
+	else {
+		t_stack.pop();
 		return false;
+	}
 }
 
 bool CompilerStack::analyze()
 {
 	t_stack.push("CompilerStack::analyze");
-        if (m_stackState != ParsingSuccessful)
+        if (m_stackState != ParsingSuccessful) {
+                t_stack.pop();
 		return false;
+	}
 	resolveImports();
 
 	bool noErrors = true;
@@ -186,24 +192,28 @@ bool CompilerStack::analyze()
 		m_globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.registerDeclarations(*source->ast))
+			if (!resolver.registerDeclarations(*source->ast)) {
+				t_stack.pop();
 				return false;
+			}
 
 		map<string, SourceUnit const*> sourceUnitsByName;
 		for (auto& source: m_sources)
 			sourceUnitsByName[source.first] = source.second.ast.get();
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.performImports(*source->ast, sourceUnitsByName))
+			if (!resolver.performImports(*source->ast, sourceUnitsByName)) {
+				t_stack.pop();
 				return false;
+			}
 
 		for (Source const* source: m_sourceOrder)
 			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
 					m_globalContext->setCurrentContract(*contract);
-					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
-					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
+					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) {t_stack.pop(); return false;}
+					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) {t_stack.pop(); return false;}
+					if (!resolver.resolveNamesAndTypes(*contract)) {t_stack.pop(); return false;}
 
 					// Note that we now reference contracts by their fully qualified names, and
 					// thus contracts can only conflict if declared in the same source file.  This
@@ -267,8 +277,10 @@ bool CompilerStack::analyze()
                 t_stack.pop();
 		return true;
 	}
-	else
+	else {
+                t_stack.pop();
 		return false;
+	}
 }
 
 bool CompilerStack::parseAndAnalyze()
@@ -288,8 +300,10 @@ bool CompilerStack::compile()
 {
 	t_stack.push("CompilerStack::compile");
         if (m_stackState < AnalysisSuccessful)
-		if (!parseAndAnalyze())
+		if (!parseAndAnalyze()) {
+			t_stack.pop();
 			return false;
+		}
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)

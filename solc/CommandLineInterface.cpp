@@ -429,6 +429,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					if (!ignoreMissing)
 					{
 						cerr << "\"" << infile << "\" is not found" << endl;
+						t_stack.pop();
 						return false;
 					}
 					else
@@ -442,6 +443,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					if (!ignoreMissing)
 					{
 						cerr << "\"" << infile << "\" is not a valid file" << endl;
+						t_stack.pop();
 						return false;
 					}
 					else
@@ -704,7 +706,6 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	t_stack.push("CommandLineInterface::processInput()");
         ReadCallback::Callback fileReader = [this](string const& _path)
 	{
 		try
@@ -886,7 +887,6 @@ bool CommandLineInterface::processInput()
 		cerr << "Unknown exception during compilation." << endl;
 		return false;
 	}
-        t_stack.pop();
 	return true;
 }
 
@@ -1062,9 +1062,11 @@ void CommandLineInterface::handleAst(string const& _argStr)
 bool CommandLineInterface::actOnInput()
 {
 	t_stack.push("CommandLineInterface::actOnInput");
-        if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
+        if (m_args.count(g_argStandardJSON) || m_onlyAssemble) {
 		// Already done in "processInput" phase.
+		t_stack.pop();
 		return true;
+	}
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
