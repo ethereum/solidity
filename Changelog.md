@@ -2,6 +2,7 @@
 
 Features:
  * SMTChecker: Integration with CVC4 SMT solver
+ * Build system: Support Ubuntu Bionic.
 
 Bugfixes:
 
