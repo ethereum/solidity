@@ -2993,21 +2993,6 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 	CHECK_SUCCESS(text);
 }
 
-BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
-{
-	char const* text = R"(
-		contract Test {
-			struct S { uint8 a; mapping(uint => uint) b; uint8 c; }
-			S s;
-			function f() public {
-				S memory x;
-				x.b[1];
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Member \"b\" is not available in struct Test.S memory outside of storage.");
-}
-
 BOOST_AUTO_TEST_CASE(string_bytes_conversion)
 {
 	char const* text = R"(
