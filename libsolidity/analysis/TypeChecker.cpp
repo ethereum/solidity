@@ -109,39 +109,28 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
 	}
 
-	FunctionDefinition const* fallbackFunction = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
-	{
 		if (function->isFallback())
 		{
-			if (fallbackFunction)
-			{
-				m_errorReporter.declarationError(function->location(), "Only one fallback function is allowed.");
-			}
-			else
-			{
-				fallbackFunction = function;
-				if (_contract.isLibrary())
-					m_errorReporter.typeError(fallbackFunction->location(), "Libraries cannot have fallback functions.");
-				if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
-					m_errorReporter.typeError(
-						function->location(),
-						"Fallback function must be payable or non-payable, but is \"" +
-						stateMutabilityToString(function->stateMutability()) +
-						"\"."
-				);
-				if (!fallbackFunction->parameters().empty())
-					m_errorReporter.typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
-				if (!fallbackFunction->returnParameters().empty())
-					m_errorReporter.typeError(fallbackFunction->returnParameterList()->location(), "Fallback function cannot return values.");
-				if (
-					_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) &&
-					fallbackFunction->visibility() != FunctionDefinition::Visibility::External
-				)
-					m_errorReporter.typeError(fallbackFunction->location(), "Fallback function must be defined as \"external\".");
-			}
+			if (_contract.isLibrary())
+				m_errorReporter.typeError(function->location(), "Libraries cannot have fallback functions.");
+			if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
+				m_errorReporter.typeError(
+					function->location(),
+					"Fallback function must be payable or non-payable, but is \"" +
+					stateMutabilityToString(function->stateMutability()) +
+					"\"."
+			);
+			if (!function->parameters().empty())
+				m_errorReporter.typeError(function->parameterList().location(), "Fallback function cannot take parameters.");
+			if (!function->returnParameters().empty())
+				m_errorReporter.typeError(function->returnParameterList()->location(), "Fallback function cannot return values.");
+			if (
+				_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) &&
+				function->visibility() != FunctionDefinition::Visibility::External
+			)
+				m_errorReporter.typeError(function->location(), "Fallback function must be defined as \"external\".");
 		}
-	}
 
 	for (auto const& n: _contract.subNodes())
 		if (!visited.count(n.get()))
@@ -172,25 +161,34 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 	/// Checks that two functions with the same name defined in this contract have different
 	/// argument types and that there is at most one constructor.
 	map<string, vector<FunctionDefinition const*>> functions;
+	FunctionDefinition const* constructor = nullptr;
+	FunctionDefinition const* fallback = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
-		functions[function->name()].push_back(function);
-
-	// Constructor
-	if (functions[_contract.name()].size() > 1)
-	{
-		SecondarySourceLocation ssl;
-		auto it = ++functions[_contract.name()].begin();
-		for (; it != functions[_contract.name()].end(); ++it)
-			ssl.append("Another declaration is here:", (*it)->location());
-
-		string msg = "More than one constructor defined.";
-		ssl.limitSize(msg);
-		m_errorReporter.declarationError(
-			functions[_contract.name()].front()->location(),
-			ssl,
-			msg
-		);
-	}
+		if (function->isConstructor())
+		{
+			if (constructor)
+				m_errorReporter.declarationError(
+					function->location(),
+					SecondarySourceLocation().append("Another declaration is here:", constructor->location()),
+					"More than one constructor defined."
+				);
+			constructor = function;
+		}
+		else if (function->isFallback())
+		{
+			if (fallback)
+				m_errorReporter.declarationError(
+					function->location(),
+					SecondarySourceLocation().append("Another declaration is here:", fallback->location()),
+					"Only one fallback function is allowed."
+				);
+			fallback = function;
+		}
+		else
+		{
+			solAssert(!function->name().empty(), "");
+			functions[function->name()].push_back(function);
+		}
 
 	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
 }
