@@ -20,6 +20,8 @@
  */
 
 #include <string>
+#include <regex>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/FTime.h>
 
@@ -36,12 +38,6 @@ BOOST_AUTO_TEST_CASE(basic_push_pop)
 	BOOST_REQUIRE_NO_THROW(t_stack.pop());
 };
 
-/*BOOST_AUTO_TEST_CASE(pop_empty)
-{
-	t_stack.pop(); // pop off last element before empty pop
-	// BOOST_CHECK_THROW(t_stack.pop(), std::runtime_error);
-};
-*/
 
 BOOST_AUTO_TEST_CASE(defalut_print_false)
 {
@@ -73,6 +69,104 @@ BOOST_AUTO_TEST_CASE(push_pop_error)
 	BOOST_REQUIRE_NO_THROW(new_stack.pop());
 
 	BOOST_CHECK_THROW(new_stack.pop(), std::runtime_error);
+
+};
+
+BOOST_AUTO_TEST_CASE(pop_empty_error)
+{
+	TimeNodeStack new_stack;
+
+	BOOST_CHECK_THROW(new_stack.pop(), std::runtime_error);
+
+};
+
+BOOST_AUTO_TEST_CASE(tree_two_level)
+{
+	TimeNodeStack new_stack;
+
+	new_stack.push("hello");
+	new_stack.push("world");
+	new_stack.pop();
+	new_stack.pop();
+
+
+	std::string result = new_stack.printString(true);
+	std::cout << result;
+
+	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
+			"(.*)[\\s]+(.*)\n(-*)\n"
+			"(hello)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"( \\\\_world)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n");
+	BOOST_REQUIRE(std::regex_match(result, reg));
+
+};
+
+BOOST_AUTO_TEST_CASE(tree_three_level)
+{
+	TimeNodeStack new_stack;
+
+	new_stack.push("hello");
+	new_stack.push("world");
+	new_stack.push("!!");
+	new_stack.pop();
+	new_stack.pop();
+	new_stack.pop();
+
+
+	std::string result = new_stack.printString(true);
+	std::cout << result;
+
+	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
+			"(.*)[\\s]+(.*)\n(-*)\n"
+			"(hello)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"( \\\\_world)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"(     \\\\_!!)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n");
+	BOOST_REQUIRE(std::regex_match(result, reg));
+
+};
+
+BOOST_AUTO_TEST_CASE(notree_two_level)
+{
+	TimeNodeStack new_stack;
+
+	new_stack.push("hello");
+	new_stack.push("world");
+	new_stack.pop();
+	new_stack.pop();
+
+
+	std::string result = new_stack.printString(false);
+	std::cout << result;
+
+	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
+			"(.*)[\\s]+(.*)\n(-*)\n"
+			"(hello)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"( \\\\_world)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n");
+	BOOST_REQUIRE(std::regex_match(result, reg));
+
+};
+
+BOOST_AUTO_TEST_CASE(notree_three_level)
+{
+	TimeNodeStack new_stack;
+
+	new_stack.push("hello");
+	new_stack.push("world");
+	new_stack.push("!!");
+	new_stack.pop();
+	new_stack.pop();
+	new_stack.pop();
+
+
+	std::string result = new_stack.printString(false);
+	std::cout << result;
+
+	std::regex reg("(namespace/function name)[\\s]+(unix begin time)"
+			"(.*)[\\s]+(.*)\n(-*)\n"
+			"(hello)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"( \\\\_world)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n"
+			"( \\\\_!!)(\\s+)(\\d+)(\\s+)(\\d+)(.*)\n");
+	BOOST_REQUIRE(std::regex_match(result, reg));
 
 };
 

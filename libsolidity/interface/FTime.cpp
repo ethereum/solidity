@@ -137,13 +137,9 @@ void TimeNodeStack::print_recursive(const TimeNode& x, const string& arrow,
 string TimeNodeStack::printString(bool tree)
 {
 	stringstream ss;
-        // User should be allowed to put more than one function at top level of tree,
-	// e.g. processInput and actonInput
-        if (stack.size() != 1) {
-		throw runtime_error("Error: not finished visiting the call stack.");
-	}
         ss << setw(70) << left << "namespace/function name" << setw(24) << 
-                left << "unix begin time(μs)" << setw(20) << left << "time elapsed(μs)" <<'\n';
+                left << "unix begin time(μs)" << setw(20) << left <<
+		"time elapsed(μs)" <<'\n';
         ss << string(110, '-') << '\n';
 	
 	for(TimeNode node: print_stack){
