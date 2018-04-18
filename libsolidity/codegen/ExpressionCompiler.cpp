@@ -33,6 +33,8 @@
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/GasMeter.h>
 
+#include <libdevcore/Whiskers.h>
+
 using namespace std;
 
 namespace dev
@@ -608,7 +610,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::CREATE;
 			// Check if zero (out of stack or not enough balance).
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			m_context.appendConditionalRevert();
+			// TODO: Can we bubble up here? There might be different reasons for failure, I think.
+			m_context.appendConditionalRevert(true);
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
@@ -670,8 +673,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
+				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
-				m_context.appendConditionalRevert();
+				m_context.appendConditionalRevert(true);
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
@@ -680,8 +684,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
-			m_context.appendRevert();
+		{
+			if (!arguments.empty())
+			{
+				// function-sel(Error(string)) + encoding
+				solAssert(arguments.size() == 1, "");
+				solAssert(function.parameterTypes().size() == 1, "");
+				arguments.front()->accept(*this);
+				utils().revertWithStringData(*arguments.front()->annotation().type);
+			}
+			else
+				m_context.appendRevert();
 			break;
+		}
 		case FunctionType::Kind::SHA3:
 		{
 			TypePointers argumentTypes;
@@ -821,24 +836,27 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				function.kind() == FunctionType::Kind::ArrayPush ?
 				make_shared<ArrayType>(DataLocation::Storage, paramType) :
 				make_shared<ArrayType>(DataLocation::Storage);
-			// get the current length
-			ArrayUtils(m_context).retrieveLength(*arrayType);
-			m_context << Instruction::DUP1;
-			// stack: ArrayReference currentLength currentLength
-			m_context << u256(1) << Instruction::ADD;
-			// stack: ArrayReference currentLength newLength
-			m_context << Instruction::DUP3 << Instruction::DUP2;
-			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
-			m_context << Instruction::SWAP2 << Instruction::SWAP1;
-			// stack: newLength ArrayReference oldLength
-			ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-			// stack: newLength storageSlot slotOffset
+			// stack: ArrayReference
 			arguments[0]->accept(*this);
+			TypePointer const& argType = arguments[0]->annotation().type;
+			// stack: ArrayReference argValue
+			utils().moveToStackTop(argType->sizeOnStack(), 1);
+			// stack: argValue ArrayReference
+			m_context << Instruction::DUP1;
+			ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
+			// stack: argValue ArrayReference newLength
+			m_context << Instruction::SWAP1;
+			// stack: argValue newLength ArrayReference
+			m_context << u256(1) << Instruction::DUP3 << Instruction::SUB;
+			// stack: argValue newLength ArrayReference (newLength-1)
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
+			// stack: argValue newLength storageSlot slotOffset
+			utils().moveToStackTop(3, argType->sizeOnStack());
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
 			solAssert(type, "");
-			utils().convertType(*arguments[0]->annotation().type, *type);
+			utils().convertType(*argType, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset
@@ -897,16 +915,130 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			if (arguments.size() > 1)
+			{
+				// Users probably expect the second argument to be evaluated
+				// even if the condition is false, as would be the case for an actual
+				// function call.
+				solAssert(arguments.size() == 2, "");
+				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				arguments.at(1)->accept(*this);
+				utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+			}
+			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
+			else if (arguments.size() > 1)
+				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 			else
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
+			if (arguments.size() > 1)
+				utils().popStackElement(*arguments.at(1)->annotation().type);
+			break;
+		}
+		case FunctionType::Kind::ABIEncode:
+		case FunctionType::Kind::ABIEncodePacked:
+		case FunctionType::Kind::ABIEncodeWithSelector:
+		case FunctionType::Kind::ABIEncodeWithSignature:
+		{
+			bool const isPacked = function.kind() == FunctionType::Kind::ABIEncodePacked;
+			bool const hasSelectorOrSignature =
+				function.kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
+
+			TypePointers argumentTypes;
+			TypePointers targetTypes;
+			for (unsigned i = 0; i < arguments.size(); ++i)
+			{
+				arguments[i]->accept(*this);
+				// Do not keep the selector as part of the ABI encoded args
+				if (!hasSelectorOrSignature || i > 0)
+					argumentTypes.push_back(arguments[i]->annotation().type);
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack now: [<selector>] <arg1> .. <argN> <free_mem>
+
+			// adjust by 32(+4) bytes to accommodate the length(+selector)
+			m_context << u256(32 + (hasSelectorOrSignature ? 4 : 0)) << Instruction::ADD;
+			// stack now: [<selector>] <arg1> .. <argN> <data_encoding_area_start>
+
+			if (isPacked)
+			{
+				solAssert(!function.padArguments(), "");
+				utils().packedEncode(argumentTypes, TypePointers());
+			}
+			else
+			{
+				solAssert(function.padArguments(), "");
+				utils().abiEncode(argumentTypes, TypePointers());
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack: [<selector>] <data_encoding_area_end> <bytes_memory_ptr>
+
+			// size is end minus start minus length slot
+			m_context.appendInlineAssembly(R"({
+				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
+			})", {"mem_end", "mem_ptr"});
+			m_context << Instruction::SWAP1;
+			utils().storeFreeMemoryPointer();
+			// stack: [<selector>] <memory ptr>
+
+			if (hasSelectorOrSignature)
+			{
+				// stack: <selector> <memory pointer>
+				solAssert(arguments.size() >= 1, "");
+				TypePointer const& selectorType = arguments[0]->annotation().type;
+				utils().moveIntoStack(selectorType->sizeOnStack());
+				TypePointer dataOnStack = selectorType;
+				// stack: <memory pointer> <selector>
+				if (function.kind() == FunctionType::Kind::ABIEncodeWithSignature)
+				{
+					// hash the signature
+					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType.get()))
+					{
+						FixedHash<4> hash(dev::keccak256(stringType->value()));
+						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+						dataOnStack = make_shared<FixedBytesType>(4);
+					}
+					else
+					{
+						utils().fetchFreeMemoryPointer();
+						// stack: <memory pointer> <selector> <free mem ptr>
+						utils().packedEncode(TypePointers{selectorType}, TypePointers());
+						utils().toSizeAfterFreeMemoryPointer();
+						m_context << Instruction::KECCAK256;
+						// stack: <memory pointer> <hash>
+
+						dataOnStack = make_shared<FixedBytesType>(32);
+					}
+				}
+				else
+				{
+					solAssert(function.kind() == FunctionType::Kind::ABIEncodeWithSelector, "");
+				}
+
+				utils().convertType(*dataOnStack, FixedBytesType(4), true);
+
+				// stack: <memory pointer> <selector>
+
+				// load current memory, mask and combine the selector
+				string mask = formatNumber((u256(-1) >> 32));
+				m_context.appendInlineAssembly(R"({
+					let data_start := add(mem_ptr, 0x20)
+					let data := mload(data_start)
+					let mask := )" + mask + R"(
+					mstore(data_start, or(and(data, mask), selector))
+				})", {"mem_ptr", "selector"});
+				m_context << Instruction::POP;
+			}
+
+			// stack now: <memory pointer>
 			break;
 		}
 		case FunctionType::Kind::GasLeft:
@@ -1777,6 +1909,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+		// TODO: error message?
 		m_context.appendConditionalRevert();
 		existenceChecked = true;
 	}
@@ -1819,7 +1952,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(true);
 	}
 
 	utils().popStackSlots(remainsSize);

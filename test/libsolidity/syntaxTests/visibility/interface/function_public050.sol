@@ -3,4 +3,4 @@ interface I {
 	function f() public;
 }
 // ----
-// TypeError: Functions in interfaces must be declared external.
+// TypeError: (45-65): Functions in interfaces must be declared external.

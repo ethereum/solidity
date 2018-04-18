@@ -55,8 +55,8 @@ However, if you are making a larger change, please consult with the `Solidity De
 focused on compiler and language development instead of language use) first.
 
 
-Finally, please make sure you respect the `coding standards
-<https://raw.githubusercontent.com/ethereum/cpp-ethereum/develop/CodingStandards.txt>`_
+Finally, please make sure you respect the `coding style
+<https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
@@ -169,6 +169,57 @@ and re-run the test. It will now pass again:
 
     Please choose a name for the contract file, that is self-explainatory in the sense of what is been tested, e.g. ``double_variable_declaration.sol``.
     Do not put more than one contract into a single file. ``isoltest`` is currently not able to recognize them individually.
+
+
+Running the Fuzzer via AFL
+==========================
+
+Fuzzing is a technique that runs programs on more or less random inputs to find exceptional execution
+states (segmentation faults, exceptions, etc). Modern fuzzers are clever and do a directed search
+inside the input. We have a specialized binary called ``solfuzzer`` which takes source code as input
+and fails whenever it encounters an internal compiler error, segmentation fault or similar, but
+does not fail if e.g. the code contains an error. This way, internal problems in the compiler
+can be found by fuzzing tools.
+
+We mainly use `AFL <http://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
+build AFL manually. Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
+
+::
+
+    cd build
+    # if needed
+    make clean
+    cmake .. -DCMAKE_C_COMPILER=path/to/afl-gcc -DCMAKE_CXX_COMPILER=path/to/afl-g++
+    make solfuzzer
+
+Next, you need some example source files. This will make it much easer for the fuzzer
+to find errors. You can either copy some files from the syntax tests or extract test files
+from the documentation or the other tests:
+
+::
+
+    mkdir /tmp/test_cases
+    cd /tmp/test_cases
+    # extract from tests:
+    path/to/solidity/scripts/isolate_tests.py path/to/solidity/test/libsolidity/SolidityEndToEndTest.cpp
+    # extract from documentation:
+    path/to/solidity/scripts/isolate_tests.py path/to/solidity/docs docs
+
+The AFL documentation states that the corpus (the initial input files) should not be
+too large. The files themselves should not be larger than 1 kB and there should be
+at most one input file per functionality, so better start with a small number of
+input files. There is also a tool called ``afl-cmin`` that can trim input files
+that result in similar behaviour of the binary.
+
+Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
+
+::
+
+    afl-fuzz -m 60 -i /tmp/test_cases -o /tmp/fuzzer_reports -- /path/to/solfuzzer
+
+The fuzzer will create source files that lead to failures in ``/tmp/fuzzer_reports``.
+Often it finds many similar source files that produce the same error. You can
+use the tool ``scripts/uniqueErrors.sh`` to filter out the unique errors.
 
 Whiskers
 ========

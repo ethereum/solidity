@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/codegen/CompilerUtils.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
@@ -39,11 +40,17 @@ namespace solidity
 
 const unsigned CompilerUtils::dataStartOffset = 4;
 const size_t CompilerUtils::freeMemoryPointer = 64;
+const size_t CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
+const size_t CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
 const unsigned CompilerUtils::identityContractAddress = 4;
+
+static_assert(CompilerUtils::freeMemoryPointer >= 64, "Free memory pointer must not overlap with scratch area.");
+static_assert(CompilerUtils::zeroPointer >= CompilerUtils::freeMemoryPointer + 32, "Zero pointer must not overlap with free memory pointer.");
+static_assert(CompilerUtils::generalPurposeMemoryStart >= CompilerUtils::zeroPointer + 32, "General purpose memory must not overlap with zero area.");
 
 void CompilerUtils::initialiseFreeMemoryPointer()
 {
-	m_context << u256(freeMemoryPointer + 32);
+	m_context << u256(generalPurposeMemoryStart);
 	storeFreeMemoryPointer();
 }
 
@@ -69,6 +76,20 @@ void CompilerUtils::toSizeAfterFreeMemoryPointer()
 	fetchFreeMemoryPointer();
 	m_context << Instruction::DUP1 << Instruction::SWAP2 << Instruction::SUB;
 	m_context << Instruction::SWAP1;
+}
+
+void CompilerUtils::revertWithStringData(Type const& _argumentType)
+{
+	solAssert(_argumentType.isImplicitlyConvertibleTo(*Type::fromElementaryTypeName("string memory")), "");
+	fetchFreeMemoryPointer();
+	m_context << (u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256("Error(string)")))) << (256 - 32));
+	m_context << Instruction::DUP2 << Instruction::MSTORE;
+	m_context << u256(4) << Instruction::ADD;
+	// Stack: <string data> <mem pos of encoding start>
+	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
+	toSizeAfterFreeMemoryPointer();
+	m_context << Instruction::REVERT;
+	m_context.adjustStackOffset(_argumentType.sizeOnStack());
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -663,19 +684,17 @@ void CompilerUtils::convertType(
 			// clear for conversion to longer bytes
 			solAssert(targetTypeCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
 			FixedBytesType const& targetType = dynamic_cast<FixedBytesType const&>(_targetType);
-			if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
+			if (typeOnStack.numBytes() == 0 || targetType.numBytes() == 0)
+				m_context << Instruction::POP << u256(0);
+			else if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
 			{
-				if (typeOnStack.numBytes() == 0)
-					m_context << Instruction::POP << u256(0);
-				else
-				{
-					m_context << ((u256(1) << (256 - typeOnStack.numBytes() * 8)) - 1);
-					m_context << Instruction::NOT << Instruction::AND;
-				}
+				int bytes = min(typeOnStack.numBytes(), targetType.numBytes());
+				m_context << ((u256(1) << (256 - bytes * 8)) - 1);
+				m_context << Instruction::NOT << Instruction::AND;
 			}
 		}
-	}
 		break;
+	}
 	case Type::Category::Enum:
 		solAssert(_targetType == _typeOnStack || targetTypeCategory == Type::Category::Integer, "");
 		if (enumOverflowCheckPending)
@@ -684,6 +703,7 @@ void CompilerUtils::convertType(
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
 			if (_asPartOfArgumentDecoding)
+				// TODO: error message?
 				m_context.appendConditionalRevert();
 			else
 				m_context.appendConditionalInvalid();
@@ -776,8 +796,9 @@ void CompilerUtils::convertType(
 		bytesConstRef data(value);
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
+			int const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
 			solAssert(data.size() <= 32, "");
-			m_context << h256::Arith(h256(data, h256::AlignLeft));
+			m_context << (h256::Arith(h256(data, h256::AlignLeft)) & (~(u256(-1) >> (8 * numBytes))));
 		}
 		else if (targetTypeCategory == Type::Category::Array)
 		{
@@ -1051,6 +1072,13 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		return;
 	}
 	solAssert(referenceType->location() == DataLocation::Memory, "");
+	if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+		if (arrayType->isDynamicallySized())
+		{
+			// Push a memory location that is (hopefully) always zero.
+			pushZeroPointer();
+			return;
+		}
 
 	TypePointer type = _type.shared_from_this();
 	m_context.callLowLevelFunction(
@@ -1071,13 +1099,8 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 				}
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
 			{
-				if (arrayType->isDynamicallySized())
-				{
-					// zero length
-					_context << u256(0);
-					utils.storeInMemoryDynamic(IntegerType(256));
-				}
-				else if (arrayType->length() > 0)
+				solAssert(!arrayType->isDynamicallySized(), "");
+				if (arrayType->length() > 0)
 				{
 					_context << arrayType->length() << Instruction::SWAP1;
 					// stack: items_to_do memory_pos
@@ -1092,6 +1115,11 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			_context << Instruction::POP;
 		}
 	);
+}
+
+void CompilerUtils::pushZeroPointer()
+{
+	m_context << u256(zeroPointer);
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)

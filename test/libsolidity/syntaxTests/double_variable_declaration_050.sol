@@ -6,6 +6,6 @@ contract test {
 	}
 }
 // ----
-// Warning: This declaration shadows an existing declaration.
-// Warning: Unused local variable.
-// Warning: Unused local variable.
+// Warning: (101-110): This declaration shadows an existing declaration.
+// Warning: (76-85): Unused local variable.
+// Warning: (101-110): Unused local variable.

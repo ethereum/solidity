@@ -645,7 +645,7 @@ Allowed options)",
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argFormal.c_str(), "Translated source suitable for formal analysis.");
+		(g_argFormal.c_str(), "Translated source suitable for formal analysis. (Deprecated)");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -710,7 +710,7 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = boost::filesystem::canonical(path);
+			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -726,16 +726,16 @@ bool CommandLineInterface::processInput()
 			}
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
-			else if (!boost::filesystem::exists(path))
+
+			if (!boost::filesystem::exists(canonicalPath))
 				return ReadCallback::Result{false, "File not found."};
-			else if (!boost::filesystem::is_regular_file(canonicalPath))
+
+			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
-			else
-			{
-				auto contents = dev::readFileAsString(canonicalPath.string());
-				m_sourceCodes[path.string()] = contents;
-				return ReadCallback::Result{true, contents};
-			}
+
+			auto contents = dev::readFileAsString(canonicalPath.string());
+			m_sourceCodes[path.string()] = contents;
+			return ReadCallback::Result{true, contents};
 		}
 		catch (Exception const& _exception)
 		{

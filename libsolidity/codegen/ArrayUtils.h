@@ -67,6 +67,12 @@ public:
 	/// Stack pre: reference (excludes byte offset) new_length
 	/// Stack post:
 	void resizeDynamicArray(ArrayType const& _type) const;
+	/// Increments the size of a dynamic array by one.
+	/// Does not touch the new data element. In case of a byte array, this might move the
+	/// data.
+	/// Stack pre: reference (excludes byte offset)
+	/// Stack post: new_length
+	void incrementDynamicArraySize(ArrayType const& _type) const;
 	/// Appends a loop that clears a sequence of storage slots of the given type (excluding end).
 	/// Stack pre: end_ref start_ref
 	/// Stack post: end_ref

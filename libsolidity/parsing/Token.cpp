@@ -53,7 +53,7 @@ namespace solidity
 
 void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
 {
-	solAssert(Token::isElementaryTypeName(_baseType), "");
+	solAssert(Token::isElementaryTypeName(_baseType), "Expected elementary type name: " + string(Token::toString(_baseType)));
 	if (_baseType == Token::BytesM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");

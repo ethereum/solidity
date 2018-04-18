@@ -64,12 +64,15 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 Layout in Memory
 ****************
 
-Solidity reserves three 256-bit slots:
+Solidity reserves four 32 byte slots:
 
--  0 - 64: scratch space for hashing methods
-- 64 - 96: currently allocated memory size (aka. free memory pointer)
+- ``0x00`` - ``0x3f``: scratch space for hashing methods
+- ``0x40`` - ``0x5f``: currently allocated memory size (aka. free memory pointer)
+- ``0x60`` - ``0x7f``: zero slot
 
-Scratch space can be used between statements (ie. within inline assembly).
+Scratch space can be used between statements (ie. within inline assembly). The zero slot
+is used as initial value for dynamic memory arrays and should never be written to
+(the free memory pointer points to ``0x80`` initially).
 
 Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
 
@@ -314,6 +317,11 @@ The following is the order of precedence for operators, listed in order of evalu
 Global Variables
 ================
 
+- ``abi.encode(...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
 - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
@@ -330,7 +338,9 @@ Global Variables
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
+- ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
 - ``revert()``: abort execution and revert state changes
+- ``revert(string message)``: abort execution and revert state changes providing an explanatory string
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
 - ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
 - ``sha3(...) returns (bytes32)``: an alias to ``keccak256``

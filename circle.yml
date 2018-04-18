@@ -55,7 +55,7 @@ jobs:
             export NVM_DIR="/usr/local/nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm --version
-            nvm install 6
+            nvm install 8
             node --version
             npm --version
       - run:
@@ -79,7 +79,7 @@ jobs:
             export NVM_DIR="/usr/local/nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm --version
-            nvm install 7
+            nvm install 8
             node --version
             npm --version
       - run:

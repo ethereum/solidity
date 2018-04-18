@@ -783,6 +783,8 @@ BOOST_AUTO_TEST_CASE(shift)
 
 BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
+	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
 	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", Warning, "The \"shl\" instruction is only available for Constantinople-compatible VMs.");
 	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", Warning, "The \"shr\" instruction is only available for Constantinople-compatible VMs.");
 	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", Warning, "The \"sar\" instruction is only available for Constantinople-compatible VMs.");

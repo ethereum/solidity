@@ -405,6 +405,16 @@ changes during the call, and thus references to local variables will be wrong.
         }
     }
 
+.. note::
+    If you access variables of a type that spans less than 256 bits
+    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
+    you cannot make any assumptions about bits not part of the
+    encoding of the type. Especially, do not assume them to be zero.
+    To be safe, always clear the data properly before you use it
+    in a context where this is important:
+    ``uint32 x = f(); assembly { x := and(x, 0xffffffff) /* now use x */ }``
+    To clean signed types, you can use the ``signextend`` opcode.
+
 Labels
 ------
 
@@ -646,6 +656,11 @@ first.
 Solidity manages memory in a very simple way: There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, just use the memory
 from that point on and update the pointer accordingly.
+
+The first 64 bytes of memory can be used as "scratch space" for short-term
+allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
+is meant to be zero permanently and is used as the initial value for
+empty dynamic memory arrays.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory

@@ -25,6 +25,7 @@
 
 #include <sstream>
 #include <string>
+#include <boost/filesystem.hpp>
 #include "Common.h"
 
 namespace dev
@@ -56,5 +57,9 @@ std::string toString(_T const& _t)
 	o << _t;
 	return o.str();
 }
+
+/// Partial implementation of boost::filesystem::weakly_canonical (available in boost>=1.60).
+/// Should be replaced by the boost implementation as soon as support for boost<1.60 can be dropped.
+boost::filesystem::path weaklyCanonicalFilesystemPath(boost::filesystem::path const &_path);
 
 }

@@ -34,13 +34,6 @@ endif()
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
 
-find_program(CTEST_COMMAND ctest)
-
-#message(STATUS "CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
-#message(STATUS "CMake Helper Path: ${ETH_CMAKE_DIR}")
-#message(STATUS "CMake Script Path: ${ETH_SCRIPTS_DIR}")
-#message(STATUS "ctest path: ${CTEST_COMMAND}")
-
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 option(Boost_USE_STATIC_LIBS "Link Boost statically" ON)

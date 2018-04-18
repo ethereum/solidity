@@ -55,8 +55,7 @@ public:
 	{
 		Success,
 		Failure,
-		ParserError,
-		InputOutputError
+		Exception
 	};
 
 	Result process();
@@ -76,7 +75,7 @@ private:
 		Quit
 	};
 
-	Request handleResponse(bool const _parserError);
+	Request handleResponse(bool const _exception);
 
 	void printContract() const;
 
@@ -90,17 +89,58 @@ string SyntaxTestTool::editor;
 
 void SyntaxTestTool::printContract() const
 {
-	stringstream stream(m_test->source());
-	string line;
-	while (getline(stream, line))
-		cout << "    " << line << endl;
-	cout << endl;
+	if (m_formatted)
+	{
+		string const& source = m_test->source();
+		if (source.empty())
+			return;
+
+		std::vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+		for (auto const& error: m_test->errorList())
+			if (error.locationStart >= 0 && error.locationEnd >= 0)
+			{
+				assert(static_cast<size_t>(error.locationStart) < source.length());
+				assert(static_cast<size_t>(error.locationEnd) < source.length());
+				bool isWarning = error.type == "Warning";
+				for (int i = error.locationStart; i < error.locationEnd; i++)
+					if (isWarning)
+					{
+						if (sourceFormatting[i] == formatting::RESET)
+							sourceFormatting[i] = formatting::ORANGE_BACKGROUND;
+					}
+					else
+						sourceFormatting[i] = formatting::RED_BACKGROUND;
+			}
+
+		cout << "    " << sourceFormatting.front() << source.front();
+		for (size_t i = 1; i < source.length(); i++)
+		{
+			if (sourceFormatting[i] != sourceFormatting[i - 1])
+				cout << sourceFormatting[i];
+			if (source[i] != '\n')
+				cout << source[i];
+			else
+			{
+				cout << formatting::RESET << endl;
+				if (i + 1 < source.length())
+					cout << "    " << sourceFormatting[i];
+			}
+		}
+		cout << formatting::RESET << endl;
+	}
+	else
+	{
+		stringstream stream(m_test->source());
+		string line;
+		while (getline(stream, line))
+			cout << "    " << line << endl;
+		cout << endl;
+	}
 }
 
 SyntaxTestTool::Result SyntaxTestTool::process()
 {
 	bool success;
-	bool parserError = false;
 	std::stringstream outputMessages;
 
 	(FormattedScope(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
@@ -108,21 +148,42 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 	try
 	{
 		m_test = unique_ptr<SyntaxTest>(new SyntaxTest(m_path.string()));
+		success = m_test->run(outputMessages, "  ", m_formatted);
+	}
+	catch(CompilerError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"Exception: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(InternalCompilerError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"InternalCompilerError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(FatalError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"FatalError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
+	}
+	catch(UnimplementedFeatureError const& _e)
+	{
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"UnimplementedFeatureError: " << SyntaxTest::errorMessage(_e) << endl;
+		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) << "cannot read test: " << _e.what() << endl;
-		return Result::InputOutputError;
+		FormattedScope(cout, m_formatted, {BOLD, RED}) << "Exception: " << _e.what() << endl;
+		return Result::Exception;
 	}
-
-	try
+	catch(...)
 	{
-		success = m_test->run(outputMessages, "  ", m_formatted);
-	}
-	catch (...)
-	{
-		success = false;
-		parserError = true;
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"Unknown Exception" << endl;
+		return Result::Exception;
 	}
 
 	if (success)
@@ -137,25 +198,14 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 		FormattedScope(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
 		printContract();
 
-		if (parserError)
-		{
-			cout << "  ";
-			FormattedScope(cout, m_formatted, {INVERSE, RED}) << "Parsing failed:" << endl;
-			m_test->printErrorList(cout, m_test->compilerErrors(), "    ", true, true, m_formatted);
-			cout << endl;
-			return Result::ParserError;
-		}
-		else
-		{
-			cout << outputMessages.str() << endl;
-			return Result::Failure;
-		}
+		cout << outputMessages.str() << endl;
+		return Result::Failure;
 	}
 }
 
-SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
+SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _exception)
 {
-	if (_parserError)
+	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
 	else
 		cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
@@ -169,7 +219,7 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
 			cout << endl;
 			return Request::Skip;
 		case 'u':
-			if (_parserError)
+			if (_exception)
 				break;
 			else
 			{
@@ -178,7 +228,7 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _parserError)
 				file << m_test->source();
 				file << "// ----" << endl;
 				if (!m_test->errorList().empty())
-					m_test->printErrorList(file, m_test->errorList(), "// ", false, false, false);
+					m_test->printErrorList(file, m_test->errorList(), "// ", false);
 				return Request::Rerun;
 			}
 		case 'e':
@@ -231,8 +281,8 @@ SyntaxTestStats SyntaxTestTool::processPath(
 			switch(result)
 			{
 			case Result::Failure:
-			case Result::ParserError:
-				switch(testTool.handleResponse(result == Result::ParserError))
+			case Result::Exception:
+				switch(testTool.handleResponse(result == Result::Exception))
 				{
 				case Request::Quit:
 					return { successCount, runCount };
@@ -248,10 +298,6 @@ SyntaxTestStats SyntaxTestTool::processPath(
 			case Result::Success:
 				paths.pop();
 				++successCount;
-				break;
-			default:
-				// non-recoverable error; continue with next test case
-				paths.pop();
 				break;
 			}
 		}

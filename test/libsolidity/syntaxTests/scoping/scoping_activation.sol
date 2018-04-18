@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: Undeclared identifier. Did you mean "x"?
+// DeclarationError: (85-86): Undeclared identifier. Did you mean "x"?

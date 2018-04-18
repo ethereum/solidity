@@ -51,9 +51,6 @@ private:
 	z3::expr toZ3Expr(Expression const& _expr);
 	z3::sort z3Sort(smt::Sort _sort);
 
-	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
-
 	z3::context m_context;
 	z3::solver m_solver;
 	std::map<std::string, z3::expr> m_constants;

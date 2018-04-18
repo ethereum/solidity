@@ -16,6 +16,7 @@
 */
 
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/Options.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
@@ -33,17 +34,38 @@ namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
 template<typename IteratorType>
-void skipWhitespace(IteratorType& it, IteratorType end)
+void skipWhitespace(IteratorType& _it, IteratorType _end)
 {
-	while (it != end && isspace(*it))
-		++it;
+	while (_it != _end && isspace(*_it))
+		++_it;
 }
 
 template<typename IteratorType>
-void skipSlashes(IteratorType& it, IteratorType end)
+void skipSlashes(IteratorType& _it, IteratorType _end)
 {
-	while (it != end && *it == '/')
-		++it;
+	while (_it != _end && *_it == '/')
+		++_it;
+}
+
+void expect(string::iterator& _it, string::iterator _end, string::value_type _c)
+{
+	if (_it == _end || *_it != _c)
+		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
+	++_it;
+}
+
+int parseUnsignedInteger(string::iterator &_it, string::iterator _end)
+{
+	if (_it == _end || !isdigit(*_it))
+		throw runtime_error("Invalid test expectation. Source location expected.");
+	int result = 0;
+	while (_it != _end && isdigit(*_it))
+	{
+		result *= 10;
+		result += *_it - '0';
+		++_it;
+	}
+	return result;
 }
 
 SyntaxTest::SyntaxTest(string const& _filename)
@@ -59,93 +81,79 @@ SyntaxTest::SyntaxTest(string const& _filename)
 
 bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	m_errorList = parseAnalyseAndReturnError(m_source, true, true, true).second;
-	if (!matchesExpectations(m_errorList))
+	string const versionPragma = "pragma solidity >=0.0;\n";
+	m_compiler.reset();
+	m_compiler.addSource("", versionPragma + m_source);
+	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
+
+	if (m_compiler.parse())
+		m_compiler.analyze();
+
+	for (auto const& currentError: filterErrors(m_compiler.errors(), true))
 	{
-		std::string nextIndentLevel = _linePrefix + "  ";
+		int locationStart = -1, locationEnd = -1;
+		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
+		{
+			// ignore the version pragma inserted by the testing tool when calculating locations.
+			if (location->start >= static_cast<int>(versionPragma.size()))
+				locationStart = location->start - versionPragma.size();
+			if (location->end >= static_cast<int>(versionPragma.size()))
+				locationEnd = location->end - versionPragma.size();
+		}
+		m_errorList.emplace_back(SyntaxTestError{
+			currentError->typeName(),
+			errorMessage(*currentError),
+			locationStart,
+			locationEnd
+		});
+	}
+
+	if (m_expectations != m_errorList)
+	{
+		string nextIndentLevel = _linePrefix + "  ";
 		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-		printExpected(_stream, nextIndentLevel, _formatted);
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:\n";
-		printErrorList(_stream, m_errorList, nextIndentLevel, false, false, _formatted);
+		printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
+		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+		printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 		return false;
 	}
 	return true;
 }
 
-void SyntaxTest::printExpected(ostream& _stream, string const& _linePrefix, bool const _formatted) const
-{
-	if (m_expectations.empty())
-		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
-	else
-		for (auto const& expectation: m_expectations)
-		{
-			FormattedScope(_stream, _formatted, {BOLD, expectation.type == "Warning" ? YELLOW : RED}) <<
-				_linePrefix << expectation.type << ": ";
-			_stream << expectation.message << endl;
-		}
-}
-
 void SyntaxTest::printErrorList(
 	ostream& _stream,
-	ErrorList const& _errorList,
+	vector<SyntaxTestError> const& _errorList,
 	string const& _linePrefix,
-	bool const _ignoreWarnings,
-	bool const _lineNumbers,
 	bool const _formatted
-) const
+)
 {
 	if (_errorList.empty())
 		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& error: _errorList)
 		{
-			bool isWarning = (error->type() == Error::Type::Warning);
-			if (isWarning && _ignoreWarnings) continue;
-
 			{
-				FormattedScope scope(_stream, _formatted, {BOLD, isWarning ? YELLOW : RED});
+				FormattedScope scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
 				_stream << _linePrefix;
-				if (_lineNumbers)
-				{
-					int line = offsetToLineNumber(
-						boost::get_error_info<errinfo_sourceLocation>(*error)->start
-					);
-					if (line >= 0)
-						_stream << "(" << line << "): ";
-				}
-				_stream << error->typeName() << ": ";
+				_stream << error.type << ": ";
 			}
-			_stream << errorMessage(*error) << endl;
+			if (error.locationStart >= 0 || error.locationEnd >= 0)
+			{
+				_stream << "(";
+				if (error.locationStart >= 0)
+					_stream << error.locationStart;
+				_stream << "-";
+				if (error.locationEnd >= 0)
+					_stream << error.locationEnd;
+				_stream << "): ";
+			}
+			_stream << error.message << endl;
 		}
 }
 
-int SyntaxTest::offsetToLineNumber(int _location) const
+string SyntaxTest::errorMessage(Exception const& _e)
 {
-	// parseAnalyseAndReturnError(...) prepends a version pragma
-	_location -= strlen("pragma solidity >=0.0;\n");
-	if (_location < 0 || static_cast<size_t>(_location) >= m_source.size())
-		return -1;
-	else
-		return 1 + std::count(m_source.begin(), m_source.begin() + _location, '\n');
-}
-
-bool SyntaxTest::matchesExpectations(ErrorList const& _errorList) const
-{
-	if (_errorList.size() != m_expectations.size())
-		return false;
-	else
-		for (size_t i = 0; i < _errorList.size(); i++)
-			if (
-				(_errorList[i]->typeName() != m_expectations[i].type) ||
-				(errorMessage(*_errorList[i]) != m_expectations[i].message)
-			)
-				return false;
-	return true;
-}
-
-string SyntaxTest::errorMessage(Error const& _e)
-{
-	if (_e.comment())
+	if (_e.comment() && !_e.comment()->empty())
 		return boost::replace_all_copy(*_e.comment(), "\n", "\\n");
 	else
 		return "NONE";
@@ -164,9 +172,9 @@ string SyntaxTest::parseSource(istream& _stream)
 	return source;
 }
 
-vector<SyntaxTestExpectation> SyntaxTest::parseExpectations(istream& _stream)
+vector<SyntaxTestError> SyntaxTest::parseExpectations(istream& _stream)
 {
-	vector<SyntaxTestExpectation> expectations;
+	vector<SyntaxTestError> expectations;
 	string line;
 	while (getline(_stream, line))
 	{
@@ -187,8 +195,28 @@ vector<SyntaxTestExpectation> SyntaxTest::parseExpectations(istream& _stream)
 
 		skipWhitespace(it, line.end());
 
+		int locationStart = -1;
+		int locationEnd = -1;
+
+		if (it != line.end() && *it == '(')
+		{
+			++it;
+			locationStart = parseUnsignedInteger(it, line.end());
+			expect(it, line.end(), '-');
+			locationEnd = parseUnsignedInteger(it, line.end());
+			expect(it, line.end(), ')');
+			expect(it, line.end(), ':');
+		}
+
+		skipWhitespace(it, line.end());
+
 		string errorMessage(it, line.end());
-		expectations.emplace_back(SyntaxTestExpectation{move(errorType), move(errorMessage)});
+		expectations.emplace_back(SyntaxTestError{
+			move(errorType),
+			move(errorMessage),
+			locationStart,
+			locationEnd
+		});
 	}
 	return expectations;
 }
@@ -239,9 +267,11 @@ int SyntaxTest::registerTests(
 		_suite.add(make_test_case(
 			[fullpath]
 			{
-				std::stringstream errorStream;
-				if (!SyntaxTest(fullpath.string()).run(errorStream))
-					BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+				BOOST_REQUIRE_NO_THROW({
+					stringstream errorStream;
+					if (!SyntaxTest(fullpath.string()).run(errorStream))
+						BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+				});
 			},
 			_path.stem().string(),
 			*filenames.back(),

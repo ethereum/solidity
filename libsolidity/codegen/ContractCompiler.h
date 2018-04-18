@@ -135,7 +135,7 @@ private:
 	FunctionDefinition const* m_currentFunction = nullptr;
 	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag
 	// arguments for base constructors, filled in derived-to-base order
-	std::map<FunctionDefinition const*, std::vector<ASTPointer<Expression>> const*> m_baseArguments;
+	std::map<FunctionDefinition const*, ASTNode const*> const* m_baseArguments;
 };
 
 }

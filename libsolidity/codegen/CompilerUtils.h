@@ -54,6 +54,13 @@ public:
 	/// Stack post: <size> <mem_start>
 	void toSizeAfterFreeMemoryPointer();
 
+	/// Appends code that performs a revert, providing the given string data.
+	/// Will also append an error signature corresponding to Error(string).
+	/// @param _argumentType the type of the string argument, will be converted to memory string.
+	/// Stack pre: string data
+	/// Stack post:
+	void revertWithStringData(Type const& _argumentType);
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load
@@ -210,6 +217,9 @@ public:
 	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
 	/// memory for memory references.
 	void pushZeroValue(Type const& _type);
+	/// Pushes a pointer to the stack that points to a (potentially shared) location in memory
+	/// that always contains a zero. It is not allowed to write there.
+	void pushZeroPointer();
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
@@ -255,6 +265,10 @@ public:
 
 	/// Position of the free-memory-pointer in memory;
 	static const size_t freeMemoryPointer;
+	/// Position of the memory slot that is always zero.
+	static const size_t zeroPointer;
+	/// Starting offset for memory available to the user (aka the contract).
+	static const size_t generalPurposeMemoryStart;
 
 private:
 	/// Address of the precompiled identity contract.

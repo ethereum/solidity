@@ -3,5 +3,5 @@ interface I {
 	function f();
 }
 // ----
-// SyntaxError: No visibility specified.
-// TypeError: Functions in interfaces must be declared external.
+// SyntaxError: (45-58): No visibility specified.
+// TypeError: (45-58): Functions in interfaces must be declared external.
