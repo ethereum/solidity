@@ -17,7 +17,8 @@ GOLDEN RULE: Follow the style of the existing code when you make changes.
 9. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
 10. If lines are broken, a list of elements enclosed with parentheses (of any kind) and separated by a separator (of any kind) are formatted such that there is exactly one element per line, followed by the separator, the opening parenthesis is on the first line, followed by a line break and the closing parenthesis is on a line of its own unindented). See example below.
 
-(WRONG)
+No:
+```cpp
 if( a==b[ i ] ) { printf ("Hello\n"); }
 foo->bar(someLongVariableName,
          anotherLongVariableName,
@@ -25,8 +26,10 @@ foo->bar(someLongVariableName,
          anotherLongVariableName,
          anotherLongVariableName);
 cout << "some very long string that contains completely irrelevant text that talks about this and that and contains the words \"lorem\" and \"ipsum\"" << endl;
+```
 
-(RIGHT)
+Yes:
+```cpp
 if (a == b[i])
     printf("Hello\n");	// NOTE spaces used instead of tab here for clarity - first byte should be '\t'.
 foo->bar(
@@ -41,8 +44,7 @@ cout <<
     "text that talks about this and that and contains the words " <<
     "\"lorem\" and \"ipsum\"" <<
     endl;
-
-
+```
 
 ## 1. Namespaces;
 
@@ -51,28 +53,28 @@ cout <<
 3. Use anonymous namespaces for helpers whose scope is a cpp file only.
 4. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
-(WRONG)
+No:
+```cpp
 #include <cassert>
 using namespace std;
 tuple<float, float> meanAndSigma(vector<float> const& _v);
+```
 
-(CORRECT)
+Yes:
+```cpp
 #include <cassert>
 std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
-
-
+```
 
 ## 2. Preprocessor;
 
 1. File comment is always at top, and includes:
    - Copyright.
    - License (e.g. see COPYING).
-2. Never use #ifdef/#define/#endif file guards. Prefer #pragma once as first line below file comment.
+2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer `#pragma` once as first line below file comment.
 3. Prefer static const variable to value macros.
 4. Prefer inline constexpr functions to function macros.
-5. Split complex macro on multiple lines with '\'.
-
-
+5. Split complex macro on multiple lines with `\`.
 
 ## 3. Capitalization;
 
@@ -86,10 +88,7 @@ GOLDEN RULE: Preprocessor: ALL_CAPS; C++: camelCase.
    - static const variables that form an external API.
 3. All preprocessor symbols (macros, macro arguments) in full uppercase with underscore word separation.
 
-
 All other entities' first alpha is lower case.
-
-
 
 ## 4. Variable prefixes:
 
@@ -99,12 +98,9 @@ All other entities' first alpha is lower case.
 2. Leading "g_" to global (non-const) variables.
 3. Leading "s_" to static (non-const, non-global) variables.
 
-
-
 ## 5. Assertions:
 
 - use `solAssert` and `solUnimplementedAssert` generously to check assumptions that span across different parts of the code base, for example before dereferencing a pointer.
-
 
 ## 6. Declarations:
 
@@ -121,17 +117,18 @@ j. Do not pass bools: prefer enumerations instead.
 k. Prefer enum class to straight enum.
 l. Always initialize POD variables, even if their value is overwritten later.
 
-
-(WRONG)
+No:
+```cp
 const double d = 0;
 int i, j;
 char *s;
 float meanAndSigma(std::vector<float> _v, float* _sigma, bool _approximate);
 Derived* x(dynamic_cast<Derived*>(base));
 for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); ++l) {}
+```
 
-
-(CORRECT)
+Yes:
+```cpp
 enum class Accuracy
 {
 	Approximate,
@@ -149,15 +146,13 @@ char* s;
 MeanAndSigma ms meanAndSigma(std::vector<float> const& _v, Accuracy _a);
 Derived* x = dynamic_cast<Derived*>(base);
 for (auto i = x->begin(); i != x->end(); ++i) {}
-
+```
 
 ## 7. Structs & classes
 
 a. Structs to be used when all members public and no virtual functions.
 - In this case, members should be named naturally and not prefixed with 'm_'
 b. Classes to be used in all other circumstances.
-
-
 
 ## 8. Members:
 
@@ -173,8 +168,6 @@ f. For a property 'foo'
 - Getter: foo() [ also: for booleans, isFoo() ];
 - Setter: setFoo();
 
-
-
 ## 9. Naming
 
 a. Avoid unpronouncable names
@@ -187,8 +180,6 @@ c. Find short, memorable & (at least semi-) descriptive names for commonly used 
 - Imagine it as an isolated component to try to decontextualise it when considering its name.
 - Don't be trapped into naming it (purely) in terms of its implementation.
 
-
-
 ## 10. Type-definitions
 
 a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
@@ -198,8 +189,6 @@ c. Where there are exceptions to this (due to excessive use and clear meaning), 
 - e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
 d. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 e. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
-
-
 
 ## 11. Commenting
 
@@ -211,7 +200,6 @@ b. Document the interface, not the implementation.
 - Reject documentation that is simply an English transaction of the implementation.
 c. Avoid in-code comments. Instead, try to extract blocks of functionality into functions. This often already eliminates the need for an in-code comment.
 
-
 ## 12. Include Headers
 
 Includes should go in increasing order of generality (libsolidity -> libevmasm -> libdevcore -> boost -> STL).
@@ -220,7 +208,7 @@ Insert empty lines between blocks of include files.
 
 Example:
 
-```
+```cpp
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
 #include <libsolidity/ast/AST.h>
@@ -241,7 +229,6 @@ Example:
 ```
 
 See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for the reason: this makes it easier to find missing includes in header files.
-
 
 ## 13. Recommended reading
 
