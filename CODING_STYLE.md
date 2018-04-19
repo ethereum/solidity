@@ -12,7 +12,7 @@ GOLDEN RULE: Follow the style of the existing code when you make changes.
 4. Never place condition bodies on same line as condition.
 5. Space between keyword and opening parenthesis, but not following opening parenthesis or before final parenthesis.
 6. No spaces for unary operators, `->` or `.`.
-7. No space before ':' but one after it, except in the ternary operator: one on both sides.
+7. No space before `:` but one after it, except in the ternary operator: one on both sides.
 8. Add spaces around all other operators.
 9. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
 10. If lines are broken, a list of elements enclosed with parentheses (of any kind) and separated by a separator (of any kind) are formatted such that there is exactly one element per line, followed by the separator, the opening parenthesis is on the first line, followed by a line break and the closing parenthesis is on a line of its own unindented). See example below.
@@ -48,7 +48,7 @@ cout <<
 
 ## 1. Namespaces
 
-1. No "using namespace" declarations in header files.
+1. No `using namespace` declarations in header files.
 2. All symbols should be declared in a namespace except for final applications.
 3. Use anonymous namespaces for helpers whose scope is a cpp file only.
 4. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
@@ -78,7 +78,7 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 
 ## 3. Capitalization
 
-GOLDEN RULE: Preprocessor: ALL_CAPS; C++: camelCase.
+GOLDEN RULE: Preprocessor: `ALL_CAPS`; C++: `camelCase`.
 
 1. Use camelCase for splitting words in names, except where obviously extending STL/boost functionality in which case follow those naming conventions.
 2. The following entities' first alpha is upper case:
@@ -151,28 +151,28 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 ## 7. Structs & classes
 
 a. Structs to be used when all members public and no virtual functions.
-- In this case, members should be named naturally and not prefixed with 'm_'
+- In this case, members should be named naturally and not prefixed with `m_`
 b. Classes to be used in all other circumstances.
 
 ## 8. Members
 
 a. One member per line only.
-b. Private, non-static, non-const fields prefixed with m_.
+b. Private, non-static, non-const fields prefixed with `m_`.
 c. Avoid public fields, except in structs.
 d. Use override, final and const as much as possible.
 e. No implementations with the class declaration, except:
 - template or force-inline method (though prefer implementation at bottom of header file).
 - one-line implementation (in which case include it in same line as declaration).
-f. For a property 'foo'
-- Member: m_foo;
-- Getter: foo() [ also: for booleans, isFoo() ];
-- Setter: setFoo();
+f. For a property `foo`
+- Member: `m_foo`
+- Getter: `foo()` [ also: for booleans, `isFoo()` ]
+- Setter: `setFoo()`
 
 ## 9. Naming
 
 a. Avoid unpronouncable names
 b. Names should be shortened only if they are extremely common, but shortening should be generally avoided
-c. Avoid prefixes of initials (e.g. do not use IMyInterface, CMyImplementation)
+c. Avoid prefixes of initials (e.g. do not use `IMyInterface`, `CMyImplementation`)
 c. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
 - A dictionary and thesaurus are your friends.
 - Spell correctly.
@@ -182,11 +182,11 @@ c. Find short, memorable & (at least semi-) descriptive names for commonly used 
 
 ## 10. Type definitions
 
-a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
+a. Prefer `using` to `typedef`. e.g. `using ints = std::vector<int>;` rather than typedef `std::vector<int> ints;`
 b. Generally avoid shortening a standard form that already includes all important information:
-- e.g. stick to shared_ptr<X> rather than shortening to ptr<X>.
+- e.g. stick to `shared_ptr<X>` rather than shortening to `ptr<X>`.
 c. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
-- e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
+- e.g. `using Guard = std::lock_guard<std::mutex>;` ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
 d. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 e. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
 
@@ -202,8 +202,8 @@ c. Avoid in-code comments. Instead, try to extract blocks of functionality into 
 
 ## 12. Include Headers
 
-Includes should go in increasing order of generality (libsolidity -> libevmasm -> libdevcore -> boost -> STL).
-The corresponding .h file should be the first include in the respective .cpp file.
+Includes should go in increasing order of generality (`libsolidity` -> `libevmasm` -> `libdevcore` -> `boost` -> `STL`).
+The corresponding `.h` file should be the first include in the respective `.cpp` file.
 Insert empty lines between blocks of include files.
 
 Example:
