@@ -1,6 +1,6 @@
 ## 0. Formatting
 
-GOLDEN RULE: Follow the style of the existing code when you make changes.
+**GOLDEN RULE**: Follow the style of the existing code when you make changes.
 
 1. Use tabs for leading indentation:
    - tab stops are every 4 characters (only relevant for line length).
@@ -16,17 +16,6 @@ GOLDEN RULE: Follow the style of the existing code when you make changes.
 8. Add spaces around all other operators.
 9. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
 10. If lines are broken, a list of elements enclosed with parentheses (of any kind) and separated by a separator (of any kind) are formatted such that there is exactly one element per line, followed by the separator, the opening parenthesis is on the first line, followed by a line break and the closing parenthesis is on a line of its own unindented). See example below.
-
-No:
-```cpp
-if( a==b[ i ] ) { printf ("Hello\n"); }
-foo->bar(someLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName);
-cout << "some very long string that contains completely irrelevant text that talks about this and that and contains the words \"lorem\" and \"ipsum\"" << endl;
-```
 
 Yes:
 ```cpp
@@ -46,6 +35,17 @@ cout <<
     endl;
 ```
 
+No:
+```cpp
+if( a==b[ i ] ) { printf ("Hello\n"); }
+foo->bar(someLongVariableName,
+         anotherLongVariableName,
+         anotherLongVariableName,
+         anotherLongVariableName,
+         anotherLongVariableName);
+cout << "some very long string that contains completely irrelevant text that talks about this and that and contains the words \"lorem\" and \"ipsum\"" << endl;
+```
+
 ## 1. Namespaces
 
 1. No `using namespace` declarations in header files.
@@ -53,17 +53,17 @@ cout <<
 3. Use anonymous namespaces for helpers whose scope is a cpp file only.
 4. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
+Yes:
+```cpp
+#include <cassert>
+std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
+```
+
 No:
 ```cpp
 #include <cassert>
 using namespace std;
 tuple<float, float> meanAndSigma(vector<float> const& _v);
-```
-
-Yes:
-```cpp
-#include <cassert>
-std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 ```
 
 ## 2. Preprocessor
@@ -78,7 +78,7 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 
 ## 3. Capitalization
 
-GOLDEN RULE: Preprocessor: `ALL_CAPS`; C++: `camelCase`.
+**GOLDEN RULE**: Preprocessor: `ALL_CAPS`; C++: `camelCase`.
 
 1. Use camelCase for splitting words in names, except where obviously extending STL/boost functionality in which case follow those naming conventions.
 2. The following entities' first alpha is upper case:
@@ -117,19 +117,7 @@ Use `solAssert` and `solUnimplementedAssert` generously to check assumptions tha
 11. Prefer enum class to straight enum.
 12. Always initialize POD variables, even if their value is overwritten later.
 
-No:
-
-```cp
-const double d = 0;
-int i, j;
-char *s;
-float meanAndSigma(std::vector<float> _v, float* _sigma, bool _approximate);
-Derived* x(dynamic_cast<Derived*>(base));
-for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); ++l) {}
-```
-
 Yes:
-
 ```cpp
 enum class Accuracy
 {
@@ -148,6 +136,16 @@ char* s;
 MeanAndSigma ms meanAndSigma(std::vector<float> const& _v, Accuracy _a);
 Derived* x = dynamic_cast<Derived*>(base);
 for (auto i = x->begin(); i != x->end(); ++i) {}
+```
+
+No:
+```cp
+const double d = 0;
+int i, j;
+char *s;
+float meanAndSigma(std::vector<float> _v, float* _sigma, bool _approximate);
+Derived* x(dynamic_cast<Derived*>(base));
+for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); ++l) {}
 ```
 
 ## 7. Structs & classes
@@ -209,7 +207,6 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 3. Insert empty lines between blocks of include files.
 
 Example:
-
 ```cpp
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
