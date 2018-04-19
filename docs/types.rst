@@ -983,8 +983,8 @@ fixed-size byte arrays of different size, they first have to be explicitly
 converted to a matching size. This makes alignment and padding explicit::
 
     uint16 x = 0xffff;
-    bytes32(uint256(x)); // pad on the left
-    bytes32(bytes2(x)); // pad on the right
+    bytes32(uint256(x)); // pad on the left, keeps least significant bits (old behavior)
+    bytes32(bytes2(x)); // pad on the right, keeps most significant bits
 
 .. index:: ! type;deduction, ! var
 
