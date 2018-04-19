@@ -43,27 +43,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# TODO - Track down what breaks if we do NOT do this.
 	add_compile_options(-Wno-unknown-pragmas)
 
-	# To get the code building on FreeBSD and Arch Linux we seem to need the following
-	# warning suppression to work around some issues in Boost headers.
-	#
-	# See the following reports:
-	#     https://github.com/ethereum/webthree-umbrella/issues/384
-	#     https://github.com/ethereum/webthree-helpers/pull/170
-	#
-	# The issue manifest as warnings-as-errors like the following:
-	#
-	#     /usr/local/include/boost/multiprecision/cpp_int.hpp:181:4: error:
-	#         right operand of shift expression '(1u << 63u)' is >= than the precision of the left operand
-	#
-	# -fpermissive is a pretty nasty way to address this.   It is described as follows:
-	#
-	#    Downgrade some diagnostics about nonconformant code from errors to warnings.
-	#    Thus, using -fpermissive will allow some nonconforming code to compile.
-	#
-	# NB: Have to use this form for the setting, so that it only applies to C++ builds.
-	# Applying -fpermissive to a C command-line (ie. secp256k1) gives a build error.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
@@ -82,18 +61,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
-		# A couple of extra warnings suppressions which we seemingly
-		# need when building with Clang.
-		#
-		# TODO - Nail down exactly where these warnings are manifesting and
-		# try to suppress them in a more localized way.   Notes in this file
-		# indicate that the first is needed for sepc256k1 and that the
-		# second is needed for the (clog, cwarn) macros.  These will need
-		# testing on at least OS X and Ubuntu.
-		add_compile_options(-Wno-unused-function)
-		add_compile_options(-Wno-dangling-else)
-
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 			# Set stack size to 16MB - by default Apple's clang defines a stack size of 8MB, some tests require more.
 			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000")
