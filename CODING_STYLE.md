@@ -2,9 +2,9 @@
 
 GOLDEN RULE: Follow the style of the existing code when you make changes.
 
-1. Use tabs for leading indentation
+1. Use tabs for leading indentation:
    - tab stops are every 4 characters (only relevant for line length).
-   - One indentation level -> exactly one byte (i.e. a tab character) in the source file.
+   - one indentation level -> exactly one byte (i.e. a tab character) in the source file.
 2. Line widths:
    - Lines should be at most 99 characters wide to make diff views readable and reduce merge conflicts.
    - Lines of comments should be formatted according to ease of viewing, but simplicity is to be preferred over beauty.
@@ -69,8 +69,8 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 ## 2. Preprocessor
 
 1. File comment is always at top, and includes:
-   - Copyright.
-   - License (e.g. see COPYING).
+   - Copyright
+   - License (e.g. see COPYING)
 2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer `#pragma` once as first line below file comment.
 3. Prefer static const variable to value macros.
 4. Prefer inline constexpr functions to function macros.
@@ -82,9 +82,9 @@ GOLDEN RULE: Preprocessor: `ALL_CAPS`; C++: `camelCase`.
 
 1. Use camelCase for splitting words in names, except where obviously extending STL/boost functionality in which case follow those naming conventions.
 2. The following entities' first alpha is upper case:
-   - Type names.
-   - Template parameters.
-   - Enum members.
+   - Type names
+   - Template parameters
+   - Enum members
    - static const variables that form an external API.
 3. All preprocessor symbols (macros, macro arguments) in full uppercase with underscore word separation.
 
@@ -92,7 +92,7 @@ All other entities' first alpha is lower case.
 
 ## 4. Variable prefixes
 
-1. Leading underscore "_" to parameter names.
+1. Leading underscore "_" to parameter names:
    - Exception: "o_parameterName" when it is used exclusively for output. See 6(f).
    - Exception: "io_parameterName" when it is used for both input and output. See 6(f).
 2. Leading "g_" to global (non-const) variables.
@@ -100,7 +100,7 @@ All other entities' first alpha is lower case.
 
 ## 5. Assertions
 
-- use `solAssert` and `solUnimplementedAssert` generously to check assumptions that span across different parts of the code base, for example before dereferencing a pointer.
+Use `solAssert` and `solUnimplementedAssert` generously to check assumptions that span across different parts of the code base, for example before dereferencing a pointer.
 
 ## 6. Declarations
 
@@ -152,8 +152,8 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 
 ## 7. Structs & classes
 
-1. Structs to be used when all members public and no virtual functions.
-   - In this case, members should be named naturally and not prefixed with `m_`
+1. Structs to be used when all members public and no virtual functions:
+   - In this case, members should be named naturally and not prefixed with `m_`.
 2. Classes to be used in all other circumstances.
 
 ## 8. Members
@@ -172,14 +172,14 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 
 ## 9. Naming
 
-1. Avoid unpronouncable names
+1. Avoid unpronouncable names.
 2. Names should be shortened only if they are extremely common, but shortening should be generally avoided
 3. Avoid prefixes of initials (e.g. do not use `IMyInterface`, `CMyImplementation`)
-4. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
-   - A dictionary and thesaurus are your friends.
-   - Spell correctly.
-   - Think carefully about the class's purpose.
-   - Imagine it as an isolated component to try to decontextualise it when considering its name.
+4. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments:
+   - A dictionary and thesaurus are your friends;
+   - Spell correctly;
+   - Think carefully about the class's purpose;
+   - Imagine it as an isolated component to try to decontextualise it when considering its name;
    - Don't be trapped into naming it (purely) in terms of its implementation.
 
 ## 10. Type definitions
@@ -187,7 +187,7 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 1. Prefer `using` to `typedef`. e.g. `using ints = std::vector<int>;` rather than typedef `std::vector<int> ints;`
 2. Generally avoid shortening a standard form that already includes all important information:
    - e.g. stick to `shared_ptr<X>` rather than shortening to `ptr<X>`.
-3. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
+3. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently:
    - e.g. `using Guard = std::lock_guard<std::mutex>;` ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
 4. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 5. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
@@ -195,20 +195,21 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 ## 11. Commenting
 
 1. Comments should be doxygen-compilable, using @notation rather than \notation.
-2. Document the interface, not the implementation.
-   - Documentation should be able to remain completely unchanged, even if the method is reimplemented.
-   - Comment in terms of the method properties and intended alteration to class state (or what aspects of the state it reports).
-   - Be careful to scrutinise documentation that extends only to intended purpose and usage.
+2. Document the interface, not the implementation:
+   - Documentation should be able to remain completely unchanged, even if the method is reimplemented;
+   - Comment in terms of the method properties and intended alteration to class state (or what aspects of the state it reports);
+   - Be careful to scrutinise documentation that extends only to intended purpose and usage;
    - Reject documentation that is simply an English transaction of the implementation.
 3. Avoid in-code comments. Instead, try to extract blocks of functionality into functions. This often already eliminates the need for an in-code comment.
 
 ## 12. Include Headers
 
-Includes should go in increasing order of generality (`libsolidity` -> `libevmasm` -> `libdevcore` -> `boost` -> `STL`).  
-The corresponding `.h` file should be the first include in the respective `.cpp` file.  
-Insert empty lines between blocks of include files.
+1. Includes should go in increasing order of generality (`libsolidity` -> `libevmasm` -> `libdevcore` -> `boost` -> `STL`).
+2. The corresponding `.h` file should be the first include in the respective `.cpp` file.
+3. Insert empty lines between blocks of include files.
 
 Example:
+
 ```cpp
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
@@ -233,13 +234,13 @@ See [this issue](http://stackoverflow.com/questions/614302/c-header-order/614333
 
 ## 13. Recommended reading
 
-- Herb Sutter and Bjarne Stroustrup
+- Herb Sutter and Bjarne Stroustrup:
   - [C++ Core Guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 
-- Herb Sutter and Andrei Alexandrescu
+- Herb Sutter and Andrei Alexandrescu:
   - "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices"
 
-- Scott Meyers
+- Scott Meyers:
   - "Effective C++: 55 Specific Ways to Improve Your Programs and Designs (3rd Edition)"
   - "More Effective C++: 35 New Ways to Improve Your Programs and Designs"
   - "Effective Modern C++: 42 Specific Ways to Improve Your Use of C++11 and C++14"
