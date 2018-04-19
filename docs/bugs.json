@@ -1,5 +1,13 @@
 [
     {
+        "name": "OneOfTwoConstructorsSkipped",
+        "summary": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored.",
+        "description": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored. There will be a compiler warning about the old-style constructor, so contracts only using new-style constructors are fine.",
+        "introduced": "0.4.22",
+        "fixed": "0.4.23",
+        "severity": "very low"
+    },
+    {
         "name": "ZeroFunctionSelector",
         "summary": "It is possible to craft the name of a function such that it is executed instead of the fallback function in very specific circumstances.",
         "description": "If a function has a selector consisting only of zeros, is payable and part of a contract that does not have a fallback function and at most five external functions in total, this function is called instead of the fallback function if Ether is sent to the contract without data.",
