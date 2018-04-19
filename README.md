@@ -14,6 +14,6 @@ Solidity is still under development. So please do not hesitate and open an [issu
 See the [Solidity documentation](https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source) for build instructions.
 
 ## How to Contribute
-Please see our contribution guidelines in [the Solidity documentation](https://solidity.readthedocs.io/en/latest/contributing.html).
+Please see our [contribution guidelines](https://solidity.readthedocs.io/en/latest/contributing.html) in the Solidity documentation.
 
 Any contributions are welcome!

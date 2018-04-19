@@ -1299,7 +1299,6 @@ bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == Category::Integer ||
 		_convertTo.category() == Category::FixedPoint ||
-		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == category();
 }
 

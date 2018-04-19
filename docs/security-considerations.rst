@@ -225,9 +225,6 @@ Minor Details
 =============
 
 - In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
-- The ``constant`` keyword for functions is currently not enforced by the compiler.
-  Furthermore, it is not enforced by the EVM, so a contract function that "claims"
-  to be constant might still cause changes to the state.
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
   You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument
@@ -238,6 +235,22 @@ Minor Details
 ***************
 Recommendations
 ***************
+
+Take Warnings Seriously
+=======================
+
+If the compiler warns you about something, you should better change it.
+Even if you do not think that this particular warning has security
+implications, there might be another issue buried beneath it.
+Any compiler warning we issue can be silenced by slight changes to the
+code.
+
+Also try to enable the "0.5.0" safety features as early as possible
+by adding ``pragma experimental "v0.5.0";``. Note that in this case,
+the word ``experimental`` does not mean that the safety features are in any
+way risky, it is just a way to enable some features that are
+not yet part of the latest version of Solidity due to backwards
+compatibility.
 
 Restrict the Amount of Ether
 ============================

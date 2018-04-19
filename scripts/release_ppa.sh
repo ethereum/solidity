@@ -54,7 +54,7 @@ keyid=703F83D0
 email=builds@ethereum.org
 packagename=solc
 
-for distribution in trusty vivid xenial zesty artful
+for distribution in trusty vivid xenial zesty artful bionic
 do
 cd /tmp/
 rm -rf $distribution

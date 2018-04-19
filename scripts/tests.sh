@@ -42,13 +42,21 @@ else
     log_directory=""
 fi
 
-echo "Running commandline tests..."
+function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
+function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+
+
+printTask "Running commandline tests..."
 "$REPO_ROOT/test/cmdlineTests.sh" &
 CMDLINE_PID=$!
 # Only run in parallel if this is run on CI infrastructure
 if [ -z "$CI" ]
 then
-    wait $CMDLINE_PID
+    if ! wait $CMDLINE_PID
+    then
+        printError "Commandline tests FAILED"
+        exit 1
+    fi
 fi
 
 function download_eth()
@@ -112,7 +120,7 @@ for optimize in "" "--optimize"
 do
   for vm in $EVM_VERSIONS
   do
-    echo "--> Running tests using "$optimize" --evm-version "$vm"..."
+    printTask "--> Running tests using "$optimize" --evm-version "$vm"..."
     log=""
     if [ -n "$log_directory" ]
     then
@@ -127,7 +135,11 @@ do
   done
 done
 
-wait $CMDLINE_PID
+if ! wait $CMDLINE_PID
+then
+    printError "Commandline tests FAILED"
+    exit 1
+fi
 
 pkill "$ETH_PID" || true
 sleep 4

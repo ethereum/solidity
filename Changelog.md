@@ -1,3 +1,16 @@
+### 0.4.23 (2018-04-19)
+
+Features:
+ * Build system: Support Ubuntu Bionic.
+ * SMTChecker: Integration with CVC4 SMT solver
+ * Syntax Checker: Warn about functions named "constructor".
+
+Bugfixes:
+ * Type Checker: Improve error message for failed function overload resolution.
+ * Type Checker: Do not complain about new-style constructor and fallback function to have the same name.
+ * Type Checker: Detect multiple constructor declarations in the new syntax and old syntax.
+ * Type Checker: Explicit conversion of ``bytesXX`` to ``contract`` is properly disallowed.
+
 ### 0.4.22 (2018-04-16)
 
 Features:
@@ -24,7 +37,6 @@ Features:
  * Syntax Checker: Warn about modifiers on functions without implementation (this will turn into an error with version 0.5.0).
  * Syntax Tests: Add source locations to syntax test expectations.
  * Type Checker: Improve documentation and warnings for accessing contract members inherited from ``address``.
-
 
 Bugfixes:
  * Code Generator: Allow ``block.blockhash`` without being called.

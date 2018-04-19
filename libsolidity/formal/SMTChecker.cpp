@@ -19,6 +19,8 @@
 
 #ifdef HAVE_Z3
 #include <libsolidity/formal/Z3Interface.h>
+#elif HAVE_CVC4
+#include <libsolidity/formal/CVC4Interface.h>
 #else
 #include <libsolidity/formal/SMTLib2Interface.h>
 #endif
@@ -39,6 +41,8 @@ using namespace dev::solidity;
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback):
 #ifdef HAVE_Z3
 	m_interface(make_shared<smt::Z3Interface>()),
+#elif HAVE_CVC4
+	m_interface(make_shared<smt::CVC4Interface>()),
 #else
 	m_interface(make_shared<smt::SMTLib2Interface>(_readFileCallback)),
 #endif
@@ -464,7 +468,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		}
 		else // Bool
 		{
-			solAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "");
+			solUnimplementedAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "Operation not yet supported");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
 				op == Token::NotEqual ? (left != right) :
@@ -835,7 +839,7 @@ void SMTChecker::createExpr(Expression const& _e)
 			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
 			break;
 		default:
-			solAssert(false, "Type not implemented.");
+			solUnimplementedAssert(false, "Type not implemented.");
 		}
 	}
 }
