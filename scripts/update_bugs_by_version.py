@@ -35,9 +35,9 @@ for v in versions:
             continue
         versions[v]['bugs'] += [bug['name']]
 
-with open(path + '/../docs/bugs_by_version.json', 'r+') as bugs_by_version:
+new_contents = json.dumps(versions, sort_keys=True, indent=4)
+with open(path + '/../docs/bugs_by_version.json', 'r') as bugs_by_version:
     old_contents = bugs_by_version.read()
-    new_contents = json.dumps(versions, sort_keys=True, indent=4)
-    bugs_by_version.seek(0)
+with open(path + '/../docs/bugs_by_version.json', 'w') as bugs_by_version:
     bugs_by_version.write(new_contents)
-    sys.exit(old_contents != new_contents)
+sys.exit(old_contents != new_contents)

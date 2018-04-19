@@ -1,4 +1,4 @@
-### 0.4.23 (unreleased)
+### 0.4.23 (2018-04-19)
 
 Features:
  * Build system: Support Ubuntu Bionic.
