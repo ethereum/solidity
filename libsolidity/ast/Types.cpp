@@ -627,8 +627,7 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == category() ||
-		_convertTo.category() == Category::Integer ||
-		_convertTo.category() == Category::FixedBytes;
+		(_convertTo.category() == Category::Integer && !dynamic_cast<IntegerType const&>(_convertTo).isAddress());
 }
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
@@ -688,7 +687,12 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 		_other->category() != Category::Integer
 	)
 		return TypePointer();
-	auto commonType = Type::commonType(shared_from_this(), _other); //might be fixed point or integer
+
+	if (auto integerType = dynamic_pointer_cast<IntegerType const>(_other))
+		if (integerType->isAddress())
+			return TypePointer();
+
+	auto commonType = Type::commonType(shared_from_this(), _other);
 
 	if (!commonType)
 		return TypePointer();
@@ -696,17 +700,14 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	// All fixed types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
-	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator))
+	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator) || _operator == Token::Exp)
 		return TypePointer();
-	if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
-	{
-		if (Token::Exp == _operator)
-			return TypePointer();
-	}
-	else if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
-		if (intType->isAddress())
-			return TypePointer();
 	return commonType;
+}
+
+std::shared_ptr<IntegerType> FixedPointType::asIntegerType() const
+{
+	return std::make_shared<IntegerType>(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
 }
 
 tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
@@ -1148,7 +1149,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		auto fixed = fixedPointType();
 		solAssert(fixed, "");
 		int fractionalDigits = fixed->fractionalDigits();
-		shiftedValue = (m_value.numerator() / m_value.denominator()) * pow(bigint(10), fractionalDigits);
+		shiftedValue = m_value.numerator() * pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
