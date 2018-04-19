@@ -396,6 +396,9 @@ public:
 	/// smallest value in general.
 	bigint minIntegerValue() const;
 
+	/// @returns the smallest integer type that can hold this type with fractional parts shifted to integers.
+	std::shared_ptr<IntegerType> asIntegerType() const;
+
 private:
 	int m_totalBits;
 	int m_fractionalDigits;
