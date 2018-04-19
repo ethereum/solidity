@@ -104,20 +104,21 @@ All other entities' first alpha is lower case.
 
 ## 6. Declarations:
 
-a. {Typename} + {qualifiers} + {name}.
-b. Only one per line.
-c. Associate */& with type, not variable (at ends with parser, but more readable, and safe if in conjunction with (b)).
-d. Favour declarations close to use; don't habitually declare at top of scope ala C.
-e. Pass non-trivial parameters as const reference, unless the data is to be copied into the function, then either pass by const reference or by value and use std::move.
-f. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
-g. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``boost::optional`` is better suited than a raw pointer.
-h. Never use a macro where adequate non-preprocessor C++ can be written.
-i. Only use ``auto`` if the type is very long and rather irrelevant.
-j. Do not pass bools: prefer enumerations instead.
-k. Prefer enum class to straight enum.
-l. Always initialize POD variables, even if their value is overwritten later.
+1. {Typename} + {qualifiers} + {name}.
+2. Only one per line.
+3. Associate */& with type, not variable (at ends with parser, but more readable, and safe if in conjunction with (b)).
+4. Favour declarations close to use; don't habitually declare at top of scope ala C.
+5. Pass non-trivial parameters as const reference, unless the data is to be copied into the function, then either pass by const reference or by value and use std::move.
+6. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
+7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``boost::optional`` is better suited than a raw pointer.
+8. Never use a macro where adequate non-preprocessor C++ can be written.
+9. Only use ``auto`` if the type is very long and rather irrelevant.
+10. Do not pass bools: prefer enumerations instead.
+11. Prefer enum class to straight enum.
+12. Always initialize POD variables, even if their value is overwritten later.
 
 No:
+
 ```cp
 const double d = 0;
 int i, j;
@@ -128,6 +129,7 @@ for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); 
 ```
 
 Yes:
+
 ```cpp
 enum class Accuracy
 {
@@ -150,61 +152,61 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 
 ## 7. Structs & classes
 
-a. Structs to be used when all members public and no virtual functions.
-- In this case, members should be named naturally and not prefixed with 'm_'
-b. Classes to be used in all other circumstances.
+1. Structs to be used when all members public and no virtual functions.
+   - In this case, members should be named naturally and not prefixed with 'm_'
+2. Classes to be used in all other circumstances.
 
 ## 8. Members:
 
-a. One member per line only.
-b. Private, non-static, non-const fields prefixed with m_.
-c. Avoid public fields, except in structs.
-d. Use override, final and const as much as possible.
-e. No implementations with the class declaration, except:
-- template or force-inline method (though prefer implementation at bottom of header file).
-- one-line implementation (in which case include it in same line as declaration).
-f. For a property 'foo'
-- Member: m_foo;
-- Getter: foo() [ also: for booleans, isFoo() ];
-- Setter: setFoo();
+1. One member per line only.
+2. Private, non-static, non-const fields prefixed with m_.
+3. Avoid public fields, except in structs.
+4. Use override, final and const as much as possible.
+5. No implementations with the class declaration, except:
+   - template or force-inline method (though prefer implementation at bottom of header file).
+   - one-line implementation (in which case include it in same line as declaration).
+6. For a property 'foo'
+   - Member: m_foo;
+   - Getter: foo() [ also: for booleans, isFoo() ];
+   - Setter: setFoo();
 
 ## 9. Naming
 
-a. Avoid unpronouncable names
-b. Names should be shortened only if they are extremely common, but shortening should be generally avoided
-c. Avoid prefixes of initials (e.g. do not use IMyInterface, CMyImplementation)
-c. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
-- A dictionary and thesaurus are your friends.
-- Spell correctly.
-- Think carefully about the class's purpose.
-- Imagine it as an isolated component to try to decontextualise it when considering its name.
-- Don't be trapped into naming it (purely) in terms of its implementation.
+1. Avoid unpronouncable names
+2. Names should be shortened only if they are extremely common, but shortening should be generally avoided
+3. Avoid prefixes of initials (e.g. do not use IMyInterface, CMyImplementation)
+4. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
+   - A dictionary and thesaurus are your friends.
+   - Spell correctly.
+   - Think carefully about the class's purpose.
+   - Imagine it as an isolated component to try to decontextualise it when considering its name.
+   - Don't be trapped into naming it (purely) in terms of its implementation.
 
 ## 10. Type-definitions
 
-a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
-b. Generally avoid shortening a standard form that already includes all important information:
-- e.g. stick to shared_ptr<X> rather than shortening to ptr<X>.
-c. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
-- e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
-d. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
-e. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
+1. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
+2. Generally avoid shortening a standard form that already includes all important information:
+   - e.g. stick to shared_ptr<X> rather than shortening to ptr<X>.
+3. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
+   - e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
+4. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
+5. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
 
 ## 11. Commenting
 
-a. Comments should be doxygen-compilable, using @notation rather than \notation.
-b. Document the interface, not the implementation.
-- Documentation should be able to remain completely unchanged, even if the method is reimplemented.
-- Comment in terms of the method properties and intended alteration to class state (or what aspects of the state it reports).
-- Be careful to scrutinise documentation that extends only to intended purpose and usage.
-- Reject documentation that is simply an English transaction of the implementation.
-c. Avoid in-code comments. Instead, try to extract blocks of functionality into functions. This often already eliminates the need for an in-code comment.
+1. Comments should be doxygen-compilable, using @notation rather than \notation.
+2. Document the interface, not the implementation.
+   - Documentation should be able to remain completely unchanged, even if the method is reimplemented.
+   - Comment in terms of the method properties and intended alteration to class state (or what aspects of the state it reports).
+   - Be careful to scrutinise documentation that extends only to intended purpose and usage.
+   - Reject documentation that is simply an English transaction of the implementation.
+3. Avoid in-code comments. Instead, try to extract blocks of functionality into functions. This often already eliminates the need for an in-code comment.
 
 ## 12. Include Headers
 
-Includes should go in increasing order of generality (libsolidity -> libevmasm -> libdevcore -> boost -> STL).
-The corresponding .h file should be the first include in the respective .cpp file.
-Insert empty lines between blocks of include files.
+Includes should go in increasing order of generality (libsolidity -> libevmasm -> libdevcore -> boost -> STL).  
+The corresponding .h file should be the first include in the respective .cpp file.  
+Insert empty lines between blocks of include files.  
 
 Example:
 
@@ -228,17 +230,17 @@ Example:
 #include <numeric>
 ```
 
-See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for the reason: this makes it easier to find missing includes in header files.
+See [this issue](http://stackoverflow.com/questions/614302/c-header-order/614333#614333 "C header order") for the reason: this makes it easier to find missing includes in header files.
 
 ## 13. Recommended reading
 
-Herb Sutter and Bjarne Stroustrup
-- "C++ Core Guidelines" (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
+- Herb Sutter and Bjarne Stroustrup
+  - "C++ Core Guidelines" (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 
-Herb Sutter and Andrei Alexandrescu
-- "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices"
+- Herb Sutter and Andrei Alexandrescu
+  - "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices"
 
-Scott Meyers
-- "Effective C++: 55 Specific Ways to Improve Your Programs and Designs (3rd Edition)"
-- "More Effective C++: 35 New Ways to Improve Your Programs and Designs"
-- "Effective Modern C++: 42 Specific Ways to Improve Your Use of C++11 and C++14"
+- Scott Meyers
+  - "Effective C++: 55 Specific Ways to Improve Your Programs and Designs (3rd Edition)"
+  - "More Effective C++: 35 New Ways to Improve Your Programs and Designs"
+  - "Effective Modern C++: 42 Specific Ways to Improve Your Use of C++11 and C++14"
