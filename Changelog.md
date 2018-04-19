@@ -9,6 +9,7 @@ Bugfixes:
  * Type Checker: Improve error message for failed function overload resolution.
  * Type Checker: Do not complain about new-style constructor and fallback function to have the same name.
  * Type Checker: Detect multiple constructor declarations in the new syntax and old syntax.
+ * Type Checker: Explicit conversion of ``bytesXX`` to ``contract`` is properly disallowed.
 
 ### 0.4.22 (2018-04-16)
 
