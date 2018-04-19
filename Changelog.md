@@ -6,6 +6,7 @@ Features:
  * Syntax Checker: Warn about functions named "constructor".
 
 Bugfixes:
+ * Type Checker: Improve error message for failed function overload resolution.
  * Type Checker: Do not complain about new-style constructor and fallback function to have the same name.
  * Type Checker: Detect multiple constructor declarations in the new syntax and old syntax.
 

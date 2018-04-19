@@ -1904,7 +1904,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& argumentTypes = _memberAccess.annotation().argumentTypes;
 	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
-	if (possibleMembers.size() > 1 && argumentTypes)
+	size_t const initialMemberCount = possibleMembers.size();
+	if (initialMemberCount > 1 && argumentTypes)
 	{
 		// do overload resolution
 		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
@@ -1918,17 +1919,21 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	}
 	if (possibleMembers.size() == 0)
 	{
-		auto storageType = ReferenceType::copyForLocationIfReference(
-			DataLocation::Storage,
-			exprType
-		);
-		if (!storageType->members(m_scope).membersByName(memberName).empty())
-			m_errorReporter.fatalTypeError(
-				_memberAccess.location(),
-				"Member \"" + memberName + "\" is not available in " +
-				exprType->toString() +
-				" outside of storage."
+		if (initialMemberCount == 0)
+		{
+			// Try to see if the member was removed because it is only available for storage types.
+			auto storageType = ReferenceType::copyForLocationIfReference(
+				DataLocation::Storage,
+				exprType
 			);
+			if (!storageType->members(m_scope).membersByName(memberName).empty())
+				m_errorReporter.fatalTypeError(
+					_memberAccess.location(),
+					"Member \"" + memberName + "\" is not available in " +
+					exprType->toString() +
+					" outside of storage."
+				);
+		}
 		m_errorReporter.fatalTypeError(
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not found or not visible "
