@@ -22,6 +22,7 @@
 #include <test/Metadata.h>
 #include <test/Options.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/Version.h>
 #include <libdevcore/SwarmHash.h>
 #include <libdevcore/JSON.h>
 
@@ -69,7 +70,12 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
 	auto const cborMetadata = requireParsedCBORMetadata(bytecode);
-	BOOST_CHECK(cborMetadata.size() == 1);
+	BOOST_CHECK(cborMetadata.size() == 2);
+	BOOST_CHECK(cborMetadata.count("solc") == 1);
+	if (VersionIsRelease)
+		BOOST_CHECK(cborMetadata.at("solc") == toHex(VersionCompactBytes));
+	else
+		BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
 	BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
 	BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
 }
@@ -95,7 +101,12 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
 	auto const cborMetadata = requireParsedCBORMetadata(bytecode);
-	BOOST_CHECK(cborMetadata.size() == 2);
+	BOOST_CHECK(cborMetadata.size() == 3);
+	BOOST_CHECK(cborMetadata.count("solc") == 1);
+	if (VersionIsRelease)
+		BOOST_CHECK(cborMetadata.at("solc") == toHex(VersionCompactBytes));
+	else
+		BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
 	BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
 	BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
 	BOOST_CHECK(cborMetadata.count("experimental") == 1);
