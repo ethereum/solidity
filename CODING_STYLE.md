@@ -1,24 +1,21 @@
-0. Formatting
+## 0. Formatting
 
 GOLDEN RULE: Follow the style of the existing code when you make changes.
 
-a. Use tabs for leading indentation
-- tab stops are every 4 characters (only relevant for line length).
-- One indentation level -> exactly one byte (i.e. a tab character) in the source file.
-b. Line widths:
-- Lines should be at most 99 characters wide to make diff views readable and reduce merge conflicts.
-- Lines of comments should be formatted according to ease of viewing, but simplicity is to be preferred over beauty.
-c. Single-statement blocks should not have braces, unless required for clarity.
-d. Never place condition bodies on same line as condition.
-e. Space between keyword and opening parenthesis, but not following opening parenthesis or before final parenthesis.
-f. No spaces for unary operators, `->` or `.`.
-g. No space before ':' but one after it, except in the ternary operator: one on both sides.
-h. Add spaces around all other operators.
-i. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
-j. If lines are broken, a list of elements enclosed with parentheses (of any kind) and separated by a
-   separator (of any kind) are formatted such that there is exactly one element per line, followed by
-   the separator, the opening parenthesis is on the first line, followed by a line break and the closing
-   parenthesis is on a line of its own (unindented). See example below.
+1. Use tabs for leading indentation
+   - tab stops are every 4 characters (only relevant for line length).
+   - One indentation level -> exactly one byte (i.e. a tab character) in the source file.
+2. Line widths:
+   - Lines should be at most 99 characters wide to make diff views readable and reduce merge conflicts.
+   - Lines of comments should be formatted according to ease of viewing, but simplicity is to be preferred over beauty.
+3. Single-statement blocks should not have braces, unless required for clarity.
+4. Never place condition bodies on same line as condition.
+5. Space between keyword and opening parenthesis, but not following opening parenthesis or before final parenthesis.
+6. No spaces for unary operators, `->` or `.`.
+7. No space before ':' but one after it, except in the ternary operator: one on both sides.
+8. Add spaces around all other operators.
+9. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
+10. If lines are broken, a list of elements enclosed with parentheses (of any kind) and separated by a separator (of any kind) are formatted such that there is exactly one element per line, followed by the separator, the opening parenthesis is on the first line, followed by a line break and the closing parenthesis is on a line of its own unindented). See example below.
 
 (WRONG)
 if( a==b[ i ] ) { printf ("Hello\n"); }
@@ -47,12 +44,12 @@ cout <<
 
 
 
-1. Namespaces;
+## 1. Namespaces;
 
-a. No "using namespace" declarations in header files.
-b. All symbols should be declared in a namespace except for final applications.
-c. Use anonymous namespaces for helpers whose scope is a cpp file only.
-d. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
+1. No "using namespace" declarations in header files.
+2. All symbols should be declared in a namespace except for final applications.
+3. Use anonymous namespaces for helpers whose scope is a cpp file only.
+4. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
 (WRONG)
 #include <cassert>
@@ -65,53 +62,51 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 
 
 
-2. Preprocessor;
+## 2. Preprocessor;
 
-a. File comment is always at top, and includes:
-- Copyright.
-- License (e.g. see COPYING).
-b. Never use #ifdef/#define/#endif file guards. Prefer #pragma once as first line below file comment.
-c. Prefer static const variable to value macros.
-d. Prefer inline constexpr functions to function macros.
-e. Split complex macro on multiple lines with '\'.
+1. File comment is always at top, and includes:
+   - Copyright.
+   - License (e.g. see COPYING).
+2. Never use #ifdef/#define/#endif file guards. Prefer #pragma once as first line below file comment.
+3. Prefer static const variable to value macros.
+4. Prefer inline constexpr functions to function macros.
+5. Split complex macro on multiple lines with '\'.
 
 
 
-3. Capitalization;
+## 3. Capitalization;
 
 GOLDEN RULE: Preprocessor: ALL_CAPS; C++: camelCase.
 
-a. Use camelCase for splitting words in names, except where obviously extending STL/boost functionality in which case follow those naming conventions.
-b. The following entities' first alpha is upper case:
-- Type names.
-- Template parameters.
-- Enum members.
-- static const variables that form an external API.
-c. All preprocessor symbols (macros, macro arguments) in full uppercase with underscore word separation.
+1. Use camelCase for splitting words in names, except where obviously extending STL/boost functionality in which case follow those naming conventions.
+2. The following entities' first alpha is upper case:
+   - Type names.
+   - Template parameters.
+   - Enum members.
+   - static const variables that form an external API.
+3. All preprocessor symbols (macros, macro arguments) in full uppercase with underscore word separation.
 
 
 All other entities' first alpha is lower case.
 
 
 
-4. Variable prefixes:
+## 4. Variable prefixes:
 
-a. Leading underscore "_" to parameter names.
-- Exception: "o_parameterName" when it is used exclusively for output. See 6(f).
-- Exception: "io_parameterName" when it is used for both input and output. See 6(f).
-b. Leading "g_" to global (non-const) variables.
-c. Leading "s_" to static (non-const, non-global) variables.
-
-
-
-5. Assertions:
-
-- use `solAssert` and `solUnimplementedAssert` generously to check assumptions
-  that span across different parts of the code base, for example before dereferencing
-  a pointer.
+1. Leading underscore "_" to parameter names.
+   - Exception: "o_parameterName" when it is used exclusively for output. See 6(f).
+   - Exception: "io_parameterName" when it is used for both input and output. See 6(f).
+2. Leading "g_" to global (non-const) variables.
+3. Leading "s_" to static (non-const, non-global) variables.
 
 
-6. Declarations:
+
+## 5. Assertions:
+
+- use `solAssert` and `solUnimplementedAssert` generously to check assumptions that span across different parts of the code base, for example before dereferencing a pointer.
+
+
+## 6. Declarations:
 
 a. {Typename} + {qualifiers} + {name}.
 b. Only one per line.
@@ -156,7 +151,7 @@ Derived* x = dynamic_cast<Derived*>(base);
 for (auto i = x->begin(); i != x->end(); ++i) {}
 
 
-7. Structs & classes
+## 7. Structs & classes
 
 a. Structs to be used when all members public and no virtual functions.
 - In this case, members should be named naturally and not prefixed with 'm_'
@@ -164,7 +159,7 @@ b. Classes to be used in all other circumstances.
 
 
 
-8. Members:
+## 8. Members:
 
 a. One member per line only.
 b. Private, non-static, non-const fields prefixed with m_.
@@ -180,7 +175,7 @@ f. For a property 'foo'
 
 
 
-9. Naming
+## 9. Naming
 
 a. Avoid unpronouncable names
 b. Names should be shortened only if they are extremely common, but shortening should be generally avoided
@@ -194,7 +189,7 @@ c. Find short, memorable & (at least semi-) descriptive names for commonly used 
 
 
 
-10. Type-definitions
+## 10. Type-definitions
 
 a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
 b. Generally avoid shortening a standard form that already includes all important information:
@@ -206,7 +201,7 @@ e. Avoid introducing aliases for types unless they are very complicated. Conside
 
 
 
-11. Commenting
+## 11. Commenting
 
 a. Comments should be doxygen-compilable, using @notation rather than \notation.
 b. Document the interface, not the implementation.
@@ -217,7 +212,7 @@ b. Document the interface, not the implementation.
 c. Avoid in-code comments. Instead, try to extract blocks of functionality into functions. This often already eliminates the need for an in-code comment.
 
 
-12. Include Headers
+## 12. Include Headers
 
 Includes should go in increasing order of generality (libsolidity -> libevmasm -> libdevcore -> boost -> STL).
 The corresponding .h file should be the first include in the respective .cpp file.
@@ -248,7 +243,7 @@ Example:
 See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for the reason: this makes it easier to find missing includes in header files.
 
 
-13. Recommended reading
+## 13. Recommended reading
 
 Herb Sutter and Bjarne Stroustrup
 - "C++ Core Guidelines" (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
