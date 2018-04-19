@@ -46,7 +46,7 @@ cout <<
     endl;
 ```
 
-## 1. Namespaces;
+## 1. Namespaces
 
 1. No "using namespace" declarations in header files.
 2. All symbols should be declared in a namespace except for final applications.
@@ -66,7 +66,7 @@ Yes:
 std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 ```
 
-## 2. Preprocessor;
+## 2. Preprocessor
 
 1. File comment is always at top, and includes:
    - Copyright.
@@ -76,7 +76,7 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 4. Prefer inline constexpr functions to function macros.
 5. Split complex macro on multiple lines with `\`.
 
-## 3. Capitalization;
+## 3. Capitalization
 
 GOLDEN RULE: Preprocessor: ALL_CAPS; C++: camelCase.
 
@@ -90,7 +90,7 @@ GOLDEN RULE: Preprocessor: ALL_CAPS; C++: camelCase.
 
 All other entities' first alpha is lower case.
 
-## 4. Variable prefixes:
+## 4. Variable prefixes
 
 1. Leading underscore "_" to parameter names.
    - Exception: "o_parameterName" when it is used exclusively for output. See 6(f).
@@ -98,11 +98,11 @@ All other entities' first alpha is lower case.
 2. Leading "g_" to global (non-const) variables.
 3. Leading "s_" to static (non-const, non-global) variables.
 
-## 5. Assertions:
+## 5. Assertions
 
 - use `solAssert` and `solUnimplementedAssert` generously to check assumptions that span across different parts of the code base, for example before dereferencing a pointer.
 
-## 6. Declarations:
+## 6. Declarations
 
 a. {Typename} + {qualifiers} + {name}.
 b. Only one per line.
@@ -154,7 +154,7 @@ a. Structs to be used when all members public and no virtual functions.
 - In this case, members should be named naturally and not prefixed with 'm_'
 b. Classes to be used in all other circumstances.
 
-## 8. Members:
+## 8. Members
 
 a. One member per line only.
 b. Private, non-static, non-const fields prefixed with m_.
@@ -180,7 +180,7 @@ c. Find short, memorable & (at least semi-) descriptive names for commonly used 
 - Imagine it as an isolated component to try to decontextualise it when considering its name.
 - Don't be trapped into naming it (purely) in terms of its implementation.
 
-## 10. Type-definitions
+## 10. Type definitions
 
 a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than typedef std::vector<int> ints;
 b. Generally avoid shortening a standard form that already includes all important information:
@@ -207,7 +207,6 @@ The corresponding .h file should be the first include in the respective .cpp fil
 Insert empty lines between blocks of include files.
 
 Example:
-
 ```cpp
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
@@ -233,7 +232,7 @@ See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for t
 ## 13. Recommended reading
 
 Herb Sutter and Bjarne Stroustrup
-- "C++ Core Guidelines" (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
+- [C++ Core Guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 
 Herb Sutter and Andrei Alexandrescu
 - "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices"
