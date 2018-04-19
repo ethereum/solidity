@@ -482,7 +482,7 @@ high or low invalid bids.
                 }
                 // Make it impossible for the sender to re-claim
                 // the same deposit.
-                bid.blindedBid = bytes32(0);
+                bid.blindedBid = 0x00;
             }
             msg.sender.transfer(refund);
         }
