@@ -27,6 +27,7 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 #include <libjulia/interpreter/Interpreter.h>
+#include <libjulia/optimiser/Metrics.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -153,11 +154,14 @@ void testIuliaOptimizer()
 
 	vector<string> unoptimisedTrace = runAndGetTrace(stack.parserResult());
 	cout << "Optimizing..." << endl;
+	size_t oldSize = julia::CodeSize::codeSize(ast);
 	stack.optimise();
+	cout << "Sizes: " << oldSize << " -> " << julia::CodeSize::codeSize(stack.parserResult()) << endl;
 	vector<string> optimisedTrace = runAndGetTrace(stack.parserResult());
 	cout << "Trace length: " << unoptimisedTrace.size() << endl;
 	if (unoptimisedTrace != optimisedTrace)
 		abort();
+	cout << "Everythin fine!" << endl;
 }
 
 void testCompiler(bool optimize)
