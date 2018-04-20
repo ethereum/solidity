@@ -844,7 +844,7 @@ Details are given in the following example.
     pragma solidity ^0.4.16;
 
     contract owned {
-        function owned() { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address owner;
     }
 
@@ -875,7 +875,7 @@ Details are given in the following example.
     // also a base class of `mortal`, yet there is only a single
     // instance of `owned` (as for virtual inheritance in C++).
     contract named is owned, mortal {
-        function named(bytes32 name) {
+        constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
@@ -916,7 +916,7 @@ seen in the following example::
     pragma solidity ^0.4.0;
 
     contract owned {
-        function owned() public { owner = msg.sender; }
+        constructor() public { owner = msg.sender; }
         address owner;
     }
 
@@ -945,7 +945,7 @@ derived override, but this function will bypass
     pragma solidity ^0.4.0;
 
     contract owned {
-        function owned() public { owner = msg.sender; }
+        constructor() public { owner = msg.sender; }
         address owner;
     }
 
