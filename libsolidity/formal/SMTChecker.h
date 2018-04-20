@@ -160,7 +160,7 @@ private:
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
-	bool m_conditionalExecutionHappened = false;
+	bool m_loopExecutionHappened = false;
 	std::map<Expression const*, smt::Expression> m_expressions;
 	std::map<Declaration const*, SSAVariable> m_variables;
 	std::vector<smt::Expression> m_pathConditions;

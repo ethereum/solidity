@@ -77,7 +77,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	m_interface->reset();
 	m_variables.clear();
 	m_pathConditions.clear();
-	m_conditionalExecutionHappened = false;
+	m_loopExecutionHappened = false;
 	initializeLocalVariables(_function);
 	return true;
 }
@@ -132,6 +132,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 
 		visitBranch(_node.body(), expr(_node.condition()));
 	}
+	m_loopExecutionHappened = true;
 	resetVariables(touchedVariables);
 
 	return false;
@@ -171,7 +172,7 @@ bool SMTChecker::visit(ForStatement const& _node)
 
 	m_interface->pop();
 
-	m_conditionalExecutionHappened = true;
+	m_loopExecutionHappened = true;
 	std::swap(sequenceCountersStart, m_variables);
 
 	resetVariables(touchedVariables);
@@ -548,7 +549,6 @@ SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _s
 	if (_condition)
 		popPathCondition();
 
-	m_conditionalExecutionHappened = true;
 	std::swap(m_variables, beforeVars);
 
 	return beforeVars;
@@ -591,10 +591,10 @@ void SMTChecker::checkCondition(
 	vector<string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string conditionalComment;
-	if (m_conditionalExecutionHappened)
-		conditionalComment =
-			"\nNote that some information is erased after conditional execution of parts of the code.\n"
+	string loopComment;
+	if (m_loopExecutionHappened)
+		loopComment =
+			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	switch (result)
 	{
@@ -611,13 +611,13 @@ void SMTChecker::checkCondition(
 		}
 		else
 			message << ".";
-		m_errorReporter.warning(_location, message.str() + conditionalComment);
+		m_errorReporter.warning(_location, message.str() + loopComment);
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here." + conditionalComment);
+		m_errorReporter.warning(_location, _description + " might happen here." + loopComment);
 		break;
 	case smt::CheckResult::ERROR:
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
