@@ -75,9 +75,9 @@ void copyZeroExtended(
 	size_t _targetOffset, size_t _sourceOffset, size_t _size
 )
 {
-	solAssert(_targetOffset + _size <= _target.size(), "");
+	solAssert(_targetOffset + _size < _target.size(), "");
 	for (size_t i = 0; i < _size; ++i)
-		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? 0 : _source[_sourceOffset + i];
+		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
 }
 
 }
