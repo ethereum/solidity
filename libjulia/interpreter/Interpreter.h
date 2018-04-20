@@ -65,6 +65,8 @@ struct InterpreterState
 	u256 gaslimit = 4000000;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
+	/// This is actually an input parameter that more or less limits the runtime.
+	size_t maxTraceSize = 0;
 };
 
 /**

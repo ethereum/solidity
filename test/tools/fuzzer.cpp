@@ -122,6 +122,7 @@ void testStandardCompiler()
 vector<string> runAndGetTrace(assembly::Block const& _ast)
 {
 	julia::InterpreterState state;
+	state.maxTraceSize = 1000;
 	julia::Interpreter interpreter(state);
 	try
 	{

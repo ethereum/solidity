@@ -482,4 +482,6 @@ void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, 
 	if (!_data.empty())
 		message += " [" + toHex(_data) + "]";
 	m_state.trace.emplace_back(std::move(message));
+	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
+		throw InterpreterTerminated();
 }
