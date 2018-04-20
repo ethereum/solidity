@@ -196,6 +196,11 @@ private:
 
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);
+
+	/// @returns a function that scales a fixed point type from one amount of fractional digits to another
+	/// Expects the inputted fixed type to be clean
+	std::string scaleFixedFunction(int _fromFractionalDigits, int _toFractionalDigits, bool _signed);
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();

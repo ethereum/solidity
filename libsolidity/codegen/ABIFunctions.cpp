@@ -218,8 +218,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			templ("body", "cleaned := iszero(iszero(value))");
 			break;
 		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
-			break;
+			return cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType());
 		case Type::Category::Array:
 		case Type::Category::Struct:
 			solAssert(_type.dataStoredIn(DataLocation::Storage), "Cleanup requested for non-storage reference type.");
@@ -303,8 +302,6 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 		case Type::Category::RationalNumber:
 		case Type::Category::Contract:
 		{
-			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
-				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
 			if (toCategory == Type::Category::FixedBytes)
 			{
 				solAssert(
@@ -329,12 +326,39 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 					.render();
 			}
 			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
+			{
+				FixedPointType const& toFixedPointType = dynamic_cast<FixedPointType const&>(_to);
+				if (fromCategory == Type::Category::Integer)
+				{
+					body =
+							Whiskers("converted := <toFixed>(<cleanInt>(value))")
+									("toFixed", scaleFixedFunction(0, toFixedPointType.fractionalDigits(), dynamic_cast<IntegerType const &>(_from).isSigned()))
+									("cleanInt", cleanupFunction(_from, false))
+									.render();
+				}
+				else if (fromCategory == Type::Category::RationalNumber)
+				{
+					RationalNumberType const& fromRationalType = dynamic_cast<RationalNumberType const&>(_from);
+					shared_ptr<FixedPointType const> fromFixedType = fromRationalType.fixedPointType();
+					solAssert(fromFixedType, "");
+					const int fromFractionalDigits = fromFixedType->fractionalDigits();
+					const int toFractionalDigits = toFixedPointType.fractionalDigits();
+					body =
+							Whiskers("converted := <scale>(value)")
+									("scale",
+									 scaleFixedFunction(fromFractionalDigits, toFractionalDigits, fromRationalType.isNegative()))
+									.render();
+				}
+				else
+				{
+					solAssert(false, "Invalid conversion to FixedMxN requested.");
+				}
+			}
 			else if (toCategory == Type::Category::Address)
 				body =
-					Whiskers("converted := <convert>(value)")
-						("convert", conversionFunction(_from, IntegerType(160)))
-						.render();
+						Whiskers("converted := <convert>(value)")
+								("convert", conversionFunction(_from, IntegerType(160)))
+								.render();
 			else
 			{
 				solAssert(
@@ -376,8 +400,31 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		}
 		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
+		{
+			FixedPointType const& fromFixedType = dynamic_cast<FixedPointType const &>(_from);
+			if (toCategory == Type::Category::Integer)
+			{
+				body =
+					Whiskers("converted := <toInt>(<cleanFixed>(value))")
+					("cleanFixed", cleanupFunction(_from, false))
+					("toInt", scaleFixedFunction(fromFixedType.fractionalDigits(), 0, fromFixedType.isSigned()))
+					.render();
+			}
+			else if (toCategory == Type::Category::FixedPoint)
+			{
+				FixedPointType const& toFixedType = dynamic_cast<FixedPointType const &>(_to);
+				body =
+					Whiskers("converted := <scale>(<cleanFixed>(value))")
+					("scale", scaleFixedFunction(fromFixedType.fractionalDigits(), toFixedType.fractionalDigits(), fromFixedType.isSigned()))
+					("cleanFixed", cleanupFunction(_from, false))
+					.render();
+			}
+			else
+			{
+				solAssert(false, "Invalid conversion from FixedMxN requested.");
+			}
 			break;
+		}
 		case Type::Category::Array:
 			solUnimplementedAssert(false, "Array conversion not implemented.");
 			break;
@@ -1485,6 +1532,25 @@ string ABIFunctions::shiftRightFunction(size_t _numBits)
 				.render();
 		});
 	}
+}
+
+std::string ABIFunctions::scaleFixedFunction(int _fromFractionalDigits, int _toFractionalDigits, bool _signed)
+{
+	string functionName = "scale_fixed_" + to_string(_fromFractionalDigits) + "_to_" + to_string(_toFractionalDigits) + (_signed ? "_signed" : "_unsigned");
+	return createFunction(functionName, [&]() {
+		bigint const& changeFactor = pow(bigint(10), abs(_fromFractionalDigits - _toFractionalDigits));
+		solAssert(changeFactor < bigint(1) << 128, "");
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> scaled {
+				scaled := <scaleFunc>(value, <factor>);
+			}
+			)")
+			("functionName", functionName)
+			("scaleFunc", _toFractionalDigits >= _fromFractionalDigits ? "mul" : _signed ? "sdiv" : "div")
+			("factor", toString(changeFactor))
+			.render();
+	});
 }
 
 string ABIFunctions::roundUpFunction()
