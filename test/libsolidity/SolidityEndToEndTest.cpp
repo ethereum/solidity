@@ -13985,6 +13985,537 @@ BOOST_AUTO_TEST_CASE(test_underscore_in_hex)
 	ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(u256(0x1234abcd1234)));
 }
 
+BOOST_AUTO_TEST_CASE(ufixed_retrieval)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.14;
+
+			function f() returns (ufixed) {
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(314, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_retrieval)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = -3.14;
+
+			function f() returns (fixed) {
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	bytes const &result = callContractFunction("f()");
+	ABI_CHECK(result, encodeArgs(createFixed(-314, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_echo)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(ufixed a) returns (ufixed) {
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(ufixed128x18)", [](u256 const &a) -> u256 { return a; }, 0, 100);
+}
+
+
+BOOST_AUTO_TEST_CASE(fixed_echo)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(fixed a) returns (fixed) {
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(fixed128x18)", [](u256 const &a) -> u256 { return a; }, -50, -1);
+	testContractAgainstCppOnRange("f(fixed128x18)", [](u256 const &a) -> u256 { return a; }, 0, 50);
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_addition)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 1.0;
+			ufixed b = 2.5;
+			ufixed c = 1.25;
+
+			function f() returns (ufixed) {
+				return a + b + c;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(475, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_addition)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = -1.0;
+			fixed b = -2.5;
+			fixed c = -1.25;
+
+			function f() returns (fixed) {
+				return a + b + c;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-475, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_subtraction)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 1.25;
+
+			function f() returns (ufixed) {
+				return a - b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(225, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_subtraction)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = 3.5;
+			fixed b = 1.25;
+
+			function f() returns (fixed) {
+				return b - a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-225, 100, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_multiplication)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 1.25;
+
+			function f() returns (ufixed) {
+				return a * b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(4375, 1000, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_multiplication)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = 3.5;
+			fixed b = -1.25;
+
+			function f() returns (fixed) {
+				return a * b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-4375, 1000, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_division_large_divisor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 1.25;
+
+			function f() returns (ufixed) {
+				return a / b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(28, 10, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_division_large_divisor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = 3.5;
+			fixed b = -1.25;
+
+			function f() returns (fixed) {
+				return a / b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-28, 10, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_division_small_divisor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 0.125;
+
+			function f() returns (ufixed) {
+				return a / b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(28, 1, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_division_small_divisor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = 3.5;
+			fixed b = -0.125;
+
+			function f() returns (fixed) {
+				return a / b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-28, 1, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_modulo)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 5.7;
+			ufixed b = 2.5;
+
+			function f() returns (ufixed) {
+				return a % b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(7, 10, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_modulo)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = 5.7;
+			fixed b = -2.5;
+
+			function f() returns (fixed) {
+				return a % b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(7, 10, 18)));
+}
+
+/*
+BOOST_AUTO_TEST_CASE(ufixed_exponentiation)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 3;
+
+			function f() returns (ufixed) {
+				return a ** b;
+			}
+		}
+    )";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(42875, 1000, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_exponentiation)
+{
+	char const* sourceCode = R"(
+    contract test {
+		fixed a = -3.5;
+		fixed b = 3;
+
+        function f() returns (fixed) {
+            return a ** b;
+        }
+    }
+    )";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-42875, 1000, 18)));
+}*/
+
+BOOST_AUTO_TEST_CASE(ufixed_comparison)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed a = 3.5;
+			ufixed b = 1.25;
+
+			function f() returns (bool) {
+				return a > b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_comparison)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed a = -3.5;
+			fixed b = -1.25;
+
+			function f() returns (bool) {
+				return a > b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(ufixed x) returns (ufixed256x30) {
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(ufixed128x18)", [](u256 const &a) -> u256 { return a * pow(u256(10), 30 - 18); }, 0, 100);
+}
+
+BOOST_AUTO_TEST_CASE(fixed_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(fixed128x18 x) returns (fixed256x30) {
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(fixed128x18)", [](u256 const &a) -> u256 { return a * pow(u256(10), 30 - 18); }, -50, -1);
+	testContractAgainstCppOnRange("f(fixed128x18)", [](u256 const &a) -> u256 { return a * pow(u256(10), 30 - 18); }, 0, 50);
+}
+
+BOOST_AUTO_TEST_CASE(uint_ufixed_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint8 x) returns (ufixed256x18) {
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(uint8)", [](u256 const &a) -> u256 { return a * pow(u256(10), 18); }, 0, 100);
+}
+
+BOOST_AUTO_TEST_CASE(int_fixed_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(int8 x) returns (fixed256x18) {
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(int8)", [](u256 const &a) -> u256 { return a * pow(u256(10), 18); }, -50, -1);
+	testContractAgainstCppOnRange("f(int8)", [](u256 const &a) -> u256 { return a * pow(u256(10), 18); }, 0, 50);
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_uint_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(ufixed256x18 x) returns (uint256) {
+				return uint256(x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(ufixed256x18)", [](u256 const &a) -> u256 { return 0 + 0 * a; }, pow(u256(10), 18) - 10, pow(u256(10), 18));
+	testContractAgainstCppOnRange("f(ufixed256x18)", [](u256 const &a) -> u256 { return 1 + 0 * a; }, pow(u256(10), 18), pow(u256(10), 18) + 10);
+	testContractAgainstCppOnRange("f(ufixed256x18)", [](u256 const &a) -> u256 { return 2 + 0 * a; }, 2 * pow(u256(10), 18), 2 * pow(u256(10), 18) + 10);
+}
+
+BOOST_AUTO_TEST_CASE(fixed_int_conversion)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(fixed256x18 x) returns (int256) {
+				return int256(x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return createFixed(0) + 0 * a; }, createFixed(-1, 1, 18) + 1, createFixed(-1, 1, 18) + 10);
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return createFixed(-1) + 0 * a; }, createFixed(-1, 1, 18) - 10, createFixed(-1, 1, 18));
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return createFixed(-2) + 0 * a; }, createFixed(-2, 1, 18) - 10, createFixed(-2, 1, 18));
+
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return 0 + 0 * a; }, pow(u256(10), 18) - 10, pow(u256(10), 18));
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return 1 + 0 * a; }, pow(u256(10), 18), pow(u256(10), 18) + 10);
+	testContractAgainstCppOnRange("f(fixed256x18)", [](u256 const &a) -> u256 { return 2 + 0 * a; }, 2 * pow(u256(10), 18), 2 * pow(u256(10), 18) + 10);
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_addition_overflow)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed256x18 a = (2**256-1)/(10**18);
+
+			function f() returns (ufixed256x18) {
+				return a + 1e-18;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_addition_overflow)
+{
+	char const* sourceCode = R"(
+		contract test {
+			fixed256x18 a = fixed256x18(ufixed256x18((2**255-1)/(10**18)));
+
+			function f() returns (fixed256x18) {
+				return a + 1e-18;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(pow(u256(2), 255)));
+}
+
+BOOST_AUTO_TEST_CASE(short_ufixed_addition_overflow)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed128x18 a = (2**128-1)/(10**18);
+
+			function f() returns (ufixed128x18) {
+				return a + 1e-18;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(short_fixed_addition_overflow)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed128x18 a = (2**127-1)/(10**18);
+
+			function f() returns (ufixed128x18) {
+				return a + 1e-18;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(pow(u256(2), 127)));
+}
+
+// Disabled because we can't multiply over 256 bytes yet.
+// Before disable, was returning 0, but because of overflow with extra fixed factor, not because of multiplication
+
+//BOOST_AUTO_TEST_CASE(ufixed_multiplication_overflow)
+//{
+//	char const* sourceCode = R"(
+//		contract test {
+//			ufixed256x18 a = (2**255)/(10**18);
+//
+//			function f() returns (ufixed256x18) {
+//				return a * 2;
+//			}
+//		}
+//	)";
+//	compileAndRun(sourceCode, 0, "test");
+//	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+//}
+
+BOOST_AUTO_TEST_CASE(short_ufixed_multiplication_overflow)
+{
+	char const* sourceCode = R"(
+		contract test {
+			ufixed128x18 a = (2**127)/(10**18);
+
+			function f() returns (ufixed128x18) {
+				return a * 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_nonterminating_division)
+{
+	char const* sourceCode = R"(
+	contract test {
+		ufixed a = 1;
+		ufixed b = 3;
+
+		function f() returns (ufixed) {
+			return a / b;
+		}
+	}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(1, 3, 18)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_nonterminating_division)
+{
+	char const* sourceCode = R"(
+	contract test {
+		fixed a = -1;
+		fixed b = 3;
+
+		function f() returns (fixed) {
+			return a / b;
+		}
+	}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(createFixed(-1, 3, 18)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -87,6 +87,14 @@ public:
 		return obj.bytecode;
 	}
 
+	using rational = boost::rational<dev::bigint>;
+
+	static u256 createFixed(s256 _numerator, s256 _denominator = 1, unsigned int _decimalDigits = 0)
+	{
+		rational rawFraction = rational(_numerator, _denominator);
+		rational scaledFraction = rawFraction * pow(bigint(10), _decimalDigits);
+		return u256(scaledFraction.numerator() / scaledFraction.denominator());
+	}
 protected:
 	dev::solidity::CompilerStack m_compiler;
 };
