@@ -681,17 +681,6 @@ bigint FixedPointType::minIntegerValue() const
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (
-		_other->category() != Category::RationalNumber &&
-		_other->category() != category() &&
-		_other->category() != Category::Integer
-	)
-		return TypePointer();
-
-	if (auto integerType = dynamic_pointer_cast<IntegerType const>(_other))
-		if (integerType->isAddress())
-			return TypePointer();
-
 	auto commonType = Type::commonType(shared_from_this(), _other);
 
 	if (!commonType)
