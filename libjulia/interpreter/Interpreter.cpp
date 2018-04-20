@@ -65,6 +65,7 @@ void Interpreter::operator()(VariableDeclaration const& _declaration)
 		string const& varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
+		m_scopes.back().insert(varName);
 	}
 }
 
@@ -116,6 +117,7 @@ void Interpreter::operator()(Block const& _block)
 		{
 			FunctionDefinition const& funDef = boost::get<FunctionDefinition>(statement);
 			m_functions[funDef.name] = &funDef;
+			m_scopes.back().insert(funDef.name);
 		}
 	ASTWalker::operator()(_block);
 	closeScope();
@@ -139,8 +141,10 @@ void Interpreter::closeScope()
 {
 	for (auto const& var: m_scopes.back())
 	{
-		solAssert(m_variables.erase(var) + m_functions.erase(var) == 1, "");
+		size_t erased = m_variables.erase(var) + m_functions.erase(var);
+		solAssert(erased == 1, "");
 	}
+	m_scopes.pop_back();
 }
 
 void ExpressionEvaluator::operator()(Literal const& _literal)
