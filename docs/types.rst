@@ -128,18 +128,35 @@ you are using are large enough to hold the result and prepare for potential wrap
 Fixed Point Numbers
 -------------------
 
-.. warning::
-    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
-    cannot be assigned to or from.
-
 ``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
-the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+the type and ``N`` represents how many decimal places are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
 ``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
 
 Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo)
+* No other operators are permitted (bitwise, boolean, exponentiation)
+
+All of the applicable operators work as expected.
+
+.. note::
+Multiplication and division are only implemented for fixed point types such that ``10^N < 2^(256-M)``, where ``N`` and ``M``
+    are defined as above. This is because, if the inequality did not hold, an intermediate state would overflow the size
+    of a stack slot.
+
+.. warning::
+After every computation of multiplication and division, the value of the fixed point type is truncated to the length
+    of the type (in both total bit length and decimal digits). This means that the expression ``(x * 0.1) * 10 == x`` is
+    **false** in general. In this case, it will truncate the least significant possible decimal place. For instance, on
+    the default `fixed` or `ufixed` types, this will truncate the 18th decimal place.
+
+Conversions:
+
+Fixed point numbers can be implicitly converted only to other fixed point types. This is permitted only when all values of the original type can be stored in the target type.
+
+Fixed point numbers can be explicitly converted to all fixed point types and all integer types. If the target type has fewer decimal digits than the original type, those
+will be truncated (rounding towards 0). Bits that are of higher order than the target type will then be truncated.
 
 .. note::
     The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
