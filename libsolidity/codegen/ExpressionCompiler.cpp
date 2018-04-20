@@ -2174,9 +2174,13 @@ bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _
 {
 	if (Token::isCompareOp(_op) || Token::isShiftOp(_op))
 		return true;
+	else if (_op == Token::Div || _op == Token::Mod)
+		return true;
 	else if (_type == Type::Category::Integer && (_op == Token::Div || _op == Token::Mod || _op == Token::Exp))
 		// We need cleanup for EXP because 0**0 == 1, but 0**0x100 == 0
 		// It would suffice to clean the exponent, though.
+		return true;
+	else if (_type == Type::Category::FixedPoint && (_op == Token::Div || _op == Token::Mul || _op == Token::Mod || _op == Token::Exp))
 		return true;
 	else
 		return false;
