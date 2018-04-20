@@ -1690,6 +1690,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	u256 fixedFactor = fixedType ? pow(u256(10), fixedType->fractionalDigits()) : u256(1);
 
 	bool isSigned = intType ? intType->isSigned() : fixedType->isSigned();
+	bool isLargeFixedOp = fixedType && fixedFactor >= pow(bigint(2), 256 - fixedType->numBits());
 
 	switch (_operator)
 	{
@@ -1703,7 +1704,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::MUL;
 		if (fixedType)
 		{
-			solUnimplementedAssert(fixedFactor < (u256(1) << (fixedType->numBits() / 2)), "Not yet implemented - large FixedPointType multiplication");
+			solUnimplementedAssert(!isLargeFixedOp, "Not yet implemented - large FixedPointType multiplication");
 			m_context << fixedFactor
 					  << Instruction::SWAP1
 					  << (isSigned ? Instruction::SDIV : Instruction::DIV);
@@ -1720,7 +1721,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		{
 			if (fixedType)
 			{
-				solUnimplementedAssert(fixedFactor < (u256(1) << (fixedType->numBits() / 2)), "Not yet implemented - large FixedPointType division");
+				solUnimplementedAssert(!isLargeFixedOp, "Not yet implemented - large FixedPointType division");
 				// Division would cancel out factor, this gives the numerator an extra factor so it remains in result
 				m_context << fixedFactor
 						  << Instruction::MUL;
@@ -1732,12 +1733,12 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		break;
 	}
 	case Token::Exp:
-		if (intType)
-			m_context << Instruction::EXP;
-		else
+		if (fixedType)
 		{
-			solUnimplemented("Not yet implemented - FixedPointType exponentiation");
+			solAssert(false, "Not yet implemented - FixedPointType exponentiation");
 		}
+		else
+			m_context << Instruction::EXP;
 		break;
 	default:
 		solAssert(false, "Unknown arithmetic operator.");
