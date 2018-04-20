@@ -2,7 +2,7 @@
 
 Features:
  * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
-
+ * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
 
 Bugfixes:
 
