@@ -841,7 +841,7 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity ^0.4.22;
 
     contract owned {
         constructor() { owner = msg.sender; }
@@ -913,7 +913,7 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -942,7 +942,7 @@ derived override, but this function will bypass
 ``Base1.kill``, basically because it does not even know about
 ``Base1``.  The way around this is to use ``super``::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -1033,7 +1033,7 @@ Arguments for Base Constructors
 Derived contracts need to provide all arguments needed for
 the base constructors. This can be done in two ways::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract Base {
         uint x;
