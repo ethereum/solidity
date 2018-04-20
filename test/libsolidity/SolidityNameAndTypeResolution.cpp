@@ -5823,7 +5823,7 @@ BOOST_AUTO_TEST_CASE(bare_others)
 	CHECK_WARNING("contract C { function f() pure public { assert; } }", "Statement has no effect.");
 	// This is different because it does have overloads.
 	CHECK_ERROR("contract C { function f() pure public { require; } }", TypeError, "No matching declaration found after variable lookup.");
-	CHECK_WARNING("contract C { function f() pure public { suicide; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure public { selfdestruct; } }", "Statement has no effect.");
 }
 
 BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
@@ -6956,31 +6956,6 @@ BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(warn_about_sha3)
-{
-	char const* text = R"(
-		contract test {
-			function f() pure public {
-				bytes32 x = sha3(uint8(1));
-				x;
-			}
-		}
-	)";
-	CHECK_WARNING(text, "\"sha3\" has been deprecated in favour of \"keccak256\"");
-}
-
-BOOST_AUTO_TEST_CASE(warn_about_suicide)
-{
-	char const* text = R"(
-		contract test {
-			function f() public {
-				suicide(1);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
 }
 
 BOOST_AUTO_TEST_CASE(address_overload_resolution)
