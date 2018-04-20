@@ -1,6 +1,7 @@
 ### 0.4.24 (unreleased)
 
 Features:
+ * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
 
 
 Bugfixes:
