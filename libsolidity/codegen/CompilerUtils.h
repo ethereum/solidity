@@ -286,6 +286,12 @@ private:
 	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
+	/// Appends code that cleans higher-order bits for fixed point types.
+	void cleanHigherOrderBits(FixedPointType const& _typeOnStack)
+	{
+		cleanHigherOrderBits(*_typeOnStack.asIntegerType());
+	}
+
 	/// Prepares the given type for storing in memory by shifting it if necessary.
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWords);
 	/// Loads type from memory assuming memory offset is on stack top.

@@ -694,7 +694,6 @@ void CompilerUtils::convertType(
 		}
 		break;
 	case Type::Category::FixedPoint:
-		solUnimplemented("Not yet implemented - FixedPointType.");
 	case Type::Category::Address:
 	case Type::Category::Integer:
 	case Type::Category::Contract:
@@ -739,12 +738,38 @@ void CompilerUtils::convertType(
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
 			);
-			//shift all integer bits onto the left side of the fixed type
+
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
-			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetFixedPointType.numBits() > typeOnStack->numBits())
-					cleanHigherOrderBits(*typeOnStack);
-			solUnimplemented("Not yet implemented - FixedPointType.");
+			if (stackTypeCategory == Type::Category::Integer)
+			{
+				IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
+				cleanHigherOrderBits(typeOnStack);
+				m_context << u256(pow(bigint(10), targetFixedPointType.fractionalDigits()))
+						  << Instruction::MUL;
+				if (_cleanupNeeded) {
+					cleanHigherOrderBits(targetFixedPointType);
+				}
+			}
+			else if (stackTypeCategory == Type::Category::RationalNumber)
+			{
+				auto typeOnStack = dynamic_cast<RationalNumberType const*>(&_typeOnStack);
+				convertType(*typeOnStack->fixedPointType(), targetFixedPointType);
+			}
+			else
+			{
+				solAssert(stackTypeCategory == Type::Category::FixedPoint, "");
+				auto typeOnStack = dynamic_cast<FixedPointType const*>(&_typeOnStack);
+				cleanHigherOrderBits(*typeOnStack);
+
+				if (typeOnStack->fractionalDigits() > targetFixedPointType.fractionalDigits())
+					m_context << u256(pow(bigint(10), typeOnStack->fractionalDigits() - targetFixedPointType.fractionalDigits()))
+							  << Instruction::SWAP1
+							  << (typeOnStack->isSigned() ? Instruction::SDIV : Instruction::DIV);
+				else if (typeOnStack->fractionalDigits() < targetFixedPointType.fractionalDigits())
+					m_context << u256(pow(bigint(10), targetFixedPointType.fractionalDigits() - typeOnStack->fractionalDigits()))
+							  << Instruction::MUL;
+
+			}
 		}
 		else
 		{
@@ -757,9 +782,17 @@ void CompilerUtils::convertType(
 				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
-				solUnimplementedAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
+				solAssert(!constType.isFractional(), "Cannot convert from non-integral rational type to integer.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
 					cleanHigherOrderBits(targetType);
+			}
+			else if (stackTypeCategory == Type::Category::FixedPoint)
+			{
+				FixedPointType const& typeOnStack = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				cleanHigherOrderBits(typeOnStack);
+				m_context << u256(pow(bigint(10), typeOnStack.fractionalDigits()))
+						  << Instruction::SWAP1
+						  << (typeOnStack.isSigned() ? Instruction::SDIV : Instruction::DIV);
 			}
 			else
 			{
