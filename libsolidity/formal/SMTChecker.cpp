@@ -17,13 +17,7 @@
 
 #include <libsolidity/formal/SMTChecker.h>
 
-#ifdef HAVE_Z3
-#include <libsolidity/formal/Z3Interface.h>
-#elif HAVE_CVC4
-#include <libsolidity/formal/CVC4Interface.h>
-#else
-#include <libsolidity/formal/SMTLib2Interface.h>
-#endif
+#include <libsolidity/formal/SMTPortfolio.h>
 
 #include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/formal/SymbolicIntVariable.h>
@@ -39,16 +33,9 @@ using namespace dev;
 using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback):
-#ifdef HAVE_Z3
-	m_interface(make_shared<smt::Z3Interface>()),
-#elif HAVE_CVC4
-	m_interface(make_shared<smt::CVC4Interface>()),
-#else
-	m_interface(make_shared<smt::SMTLib2Interface>(_readFileCallback)),
-#endif
+	m_interface(make_shared<smt::SMTPortfolio>(_readFileCallback)),
 	m_errorReporter(_errorReporter)
 {
-	(void)_readFileCallback;
 }
 
 void SMTChecker::analyze(SourceUnit const& _source)

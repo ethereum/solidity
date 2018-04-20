@@ -62,7 +62,7 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
 	write(
 		"(declare-fun |" +
@@ -73,19 +73,16 @@ Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codom
 		(_codomain == Sort::Int ? "Int" : "Bool") +
 		")"
 	);
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
 }
 
-Expression SMTLib2Interface::newInteger(string _name)
+void SMTLib2Interface::declareInteger(string _name)
 {
 	write("(declare-const |" + _name + "| Int)");
-	return SolverInterface::newInteger(move(_name));
 }
 
-Expression SMTLib2Interface::newBool(string _name)
+void SMTLib2Interface::declareBool(string _name)
 {
 	write("(declare-const |" + _name + "| Bool)");
-	return SolverInterface::newBool(std::move(_name));
 }
 
 void SMTLib2Interface::addAssertion(Expression const& _expr)

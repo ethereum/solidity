@@ -17,19 +17,14 @@
 
 #pragma once
 
+
 #include <libsolidity/formal/SolverInterface.h>
 
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
-
-#include <libdevcore/Common.h>
 
 #include <boost/noncopyable.hpp>
 
-#include <map>
-#include <string>
 #include <vector>
-#include <cstdio>
 
 namespace dev
 {
@@ -38,10 +33,16 @@ namespace solidity
 namespace smt
 {
 
-class SMTLib2Interface: public SolverInterface, public boost::noncopyable
+/**
+ * The SMTPortfolio wraps all available solvers within a single interface,
+ * propagating the functionalities to all solvers.
+ * It also checks whether different solvers give conflicting answers
+ * to SMT queries.
+ */
+class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
-	explicit SMTLib2Interface(ReadCallback::Callback const& _queryCallback);
+	SMTPortfolio(ReadCallback::Callback const& _readCallback);
 
 	void reset() override;
 
@@ -56,18 +57,9 @@ public:
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
-	std::string toSExpr(Expression const& _expr);
+	static bool solverAnswered(CheckResult result);
 
-	void write(std::string _data);
-
-	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
-
-	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
-	std::string querySolver(std::string const& _input);
-
-	ReadCallback::Callback m_queryCallback;
-	std::vector<std::string> m_accumulatedOutput;
+	std::vector<std::shared_ptr<smt::SolverInterface>> m_solvers;
 };
 
 }
