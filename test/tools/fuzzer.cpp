@@ -119,19 +119,19 @@ void testStandardCompiler()
 		}
 }
 
-//vector<string> runAndGetTrace(assembly::Block const& _ast)
-//{
-//	julia::InterpreterState state;
-//	julia::Interpreter interpreter(state);
-//	try
-//	{
-//		interpreter(_ast);
-//	}
-//	catch (julia::InterpreterTerminated const&)
-//	{
-//	}
-//	return std::move(state.trace);
-//}
+vector<string> runAndGetTrace(assembly::Block const& _ast)
+{
+	julia::InterpreterState state;
+	julia::Interpreter interpreter(state);
+	try
+	{
+		interpreter(_ast);
+	}
+	catch (julia::InterpreterTerminated const&)
+	{
+	}
+	return std::move(state.trace);
+}
 
 void testIuliaOptimizer()
 {
@@ -148,14 +148,15 @@ void testIuliaOptimizer()
 				cerr << "Error: " << *description << endl;
 		abort();
 	}
-//	cout << stack.print() << endl;
+	cout << stack.print() << endl;
 
-//	vector<string> unoptimisedTrace = runAndGetTrace(stack.parserResult());
-//	stack.optimise();
-//	vector<string> optimisedTrace = runAndGetTrace(stack.parserResult());
-//	cout << "Trace length: " << unoptimisedTrace.size() << endl;
-//	if (unoptimisedTrace != optimisedTrace)
-//		abort();
+	vector<string> unoptimisedTrace = runAndGetTrace(stack.parserResult());
+	cout << "Optimizing..." << endl;
+	stack.optimise();
+	vector<string> optimisedTrace = runAndGetTrace(stack.parserResult());
+	cout << "Trace length: " << unoptimisedTrace.size() << endl;
+	if (unoptimisedTrace != optimisedTrace)
+		abort();
 }
 
 void testCompiler(bool optimize)
