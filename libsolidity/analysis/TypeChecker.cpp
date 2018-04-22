@@ -1652,10 +1652,18 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
+		string msg;
 		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
-			m_errorReporter.warning(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
+			msg = "\"sha3\" has been deprecated in favour of \"keccak256\"";
 		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
-			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+			msg = "\"suicide\" has been deprecated in favour of \"selfdestruct\"";
+		if (!msg.empty())
+		{
+			if (v050)
+				m_errorReporter.typeError(_functionCall.location(), msg);
+			else
+				m_errorReporter.warning(_functionCall.location(), msg);
+		}
 	}
 	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
 	{
