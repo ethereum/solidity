@@ -1418,6 +1418,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
 
+				if (types[i]->category() == Type::Category::Tuple)
+					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
+						m_errorReporter.fatalTypeError(components[i]->location(), "Type of tuple component cannot be null.");
+
 				// Note: code generation will visit each of the expression even if they are not assigned from.
 				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
 					if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
