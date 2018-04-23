@@ -7,4 +7,4 @@ contract C {
 }
 // ----
 // Warning: (95-106): Invoking events without "emit" prefix is deprecated.
-// TypeError: (95-106): Type of tuple component cannot be null.
+// Warning: (95-106): Tuple component cannot be empty.

@@ -1406,8 +1406,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
+		bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		bool isPure = true;
 		TypePointer inlineArrayType;
+
 		for (size_t i = 0; i < components.size(); ++i)
 		{
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
@@ -1420,7 +1422,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 
 				if (types[i]->category() == Type::Category::Tuple)
 					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
-						m_errorReporter.fatalTypeError(components[i]->location(), "Type of tuple component cannot be null.");
+					{
+						if (v050)
+							m_errorReporter.fatalTypeError(components[i]->location(), "Tuple component cannot be empty.");
+						else
+							m_errorReporter.warning(components[i]->location(), "Tuple component cannot be empty.");
+					}
 
 				// Note: code generation will visit each of the expression even if they are not assigned from.
 				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)

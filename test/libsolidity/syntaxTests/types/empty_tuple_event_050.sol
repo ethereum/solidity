@@ -7,4 +7,4 @@ contract C {
 }
 // ----
 // TypeError: (101-112): Event invocations have to be prefixed by "emit".
-// TypeError: (101-112): Type of tuple component cannot be null.
+// TypeError: (101-112): Tuple component cannot be empty.
