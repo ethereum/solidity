@@ -6,16 +6,14 @@ else()
     set(JSONCPP_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-# Disable implicit fallthrough warning in jsoncpp for gcc >= 7 until the upstream handles it properly
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-    set(JSONCCP_EXTRA_FLAGS -Wno-implicit-fallthrough)
-else()
-    set(JSONCCP_EXTRA_FLAGS "")
-endif()
-
+include(GNUInstallDirs)
 set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(JSONCPP_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
+
+if(NOT MSVC)
+    set(JSONCPP_EXTRA_FLAGS "-std=c++11")
+endif()
 
 set(byproducts "")
 if(CMAKE_VERSION VERSION_GREATER 3.1)
@@ -25,9 +23,9 @@ endif()
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
-    DOWNLOAD_NAME jsoncpp-1.7.7.tar.gz
-    URL https://github.com/open-source-parsers/jsoncpp/archive/1.7.7.tar.gz
-    URL_HASH SHA256=087640ebcf7fbcfe8e2717a0b9528fff89c52fcf69fa2a18cc2b538008098f97
+    DOWNLOAD_NAME jsoncpp-1.8.4.tar.gz
+    URL https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz
+    URL_HASH SHA256=c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6
     CMAKE_COMMAND ${JSONCPP_CMAKE_COMMAND}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -36,7 +34,7 @@ ExternalProject_Add(jsoncpp-project
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                -DJSONCPP_WITH_TESTS=OFF
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
-               -DCMAKE_CXX_FLAGS=${JSONCCP_EXTRA_FLAGS}
+               -DCMAKE_CXX_FLAGS=${JSONCPP_EXTRA_FLAGS}
     # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
     INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
