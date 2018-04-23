@@ -1423,6 +1423,8 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				if (types[i]->category() == Type::Category::Tuple)
 					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
 					{
+						if (_tuple.isInlineArray())
+							m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
 						if (v050)
 							m_errorReporter.fatalTypeError(components[i]->location(), "Tuple component cannot be empty.");
 						else
