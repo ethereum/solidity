@@ -109,7 +109,7 @@ Struct Types
 =============
 
 Structs are custom defined types that can group several variables (see
-:ref:`structs` in types section).
+:ref:`structs` in types section) and can be accessed by single name
 
 ::
 
@@ -123,6 +123,16 @@ Structs are custom defined types that can group several variables (see
             uint vote;
         }
     }
+    
+If you want to create a new struct variable inside a function, 
+and then add push it to an array, then you should create it in 
+the storage space not memory space ::
+
+    MyStruct memory newStruct;
+    ... // modifiying newStruct variables
+    myStructsArray.push(newStruct);
+    
+ 
 
 .. _structure-enum-types:
 
