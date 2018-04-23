@@ -40,12 +40,6 @@ if ! type git &>/dev/null; then
     apt-get -y install git-core
 fi
 
-if ! type wget &>/dev/null; then
-    # We need wget to install cmake
-    apt-get update
-    apt-get -y install wget
-fi
-
 WORKSPACE=/root/project
 
 # Increase nodejs stack size
