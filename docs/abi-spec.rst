@@ -77,7 +77,7 @@ of them inside parentheses, separated by commas:
 
 - ``(T1,T2,...,Tn)``: tuple consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
 
-It is possible to form tuples of tuples, arrays of tuples and so on.
+It is possible to form tuples of tuples, arrays of tuples and so on.  It is also possible to form zero-tuples (where ``n == 0``).
 
 .. note::
     Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
