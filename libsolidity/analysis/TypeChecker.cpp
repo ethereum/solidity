@@ -2233,6 +2233,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}
+
 	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
 	{
 		if (v050)
@@ -2248,6 +2249,21 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"You can use an expression of the form \"0x1234 * 1 day\" instead."
 			);
 	}
+
+	if (_literal.subDenomination() == Literal::SubDenomination::Year)
+	{
+		if (v050)
+			m_errorReporter.typeError(
+				_literal.location(),
+				"Using \"years\" as a unit denomination is deprecated."
+			);
+		else
+			m_errorReporter.warning(
+				_literal.location(),
+				"Using \"years\" as a unit denomination is deprecated."
+			);
+	}
+
 	if (!_literal.annotation().type)
 		_literal.annotation().type = Type::forLiteral(_literal);
 
