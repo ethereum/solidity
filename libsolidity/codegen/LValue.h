@@ -49,6 +49,7 @@ protected:
 		m_context(_compilerContext), m_dataType(_dataType) {}
 
 public:
+	virtual ~LValue() {}
 	/// @returns the number of stack slots occupied by the lvalue reference
 	virtual unsigned sizeOnStack() const { return 1; }
 	/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
