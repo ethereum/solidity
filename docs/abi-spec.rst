@@ -117,7 +117,7 @@ on the type of ``X`` being
 
 - ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
 
-  ``enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))``
+  ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
   where ``X(i)`` is the ``ith`` component of the value, and
   ``head`` and ``tail`` are defined for ``Ti`` being a static type as
@@ -126,7 +126,7 @@ on the type of ``X`` being
 
   and as
 
-    ``head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))``
+    ``head(X(i)) = enc(len( head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
   otherwise, i.e. if ``Ti`` is a dynamic type.
@@ -137,7 +137,7 @@ on the type of ``X`` being
 
 - ``T[k]`` for any ``T`` and ``k``:
 
-  ``enc(X) = enc((X[0], ..., X[k-1]))``
+  ``enc(X) = enc((X[1], ..., X[k]))``
 
   i.e. it is encoded as if it were a tuple with ``k`` elements
   of the same type.
