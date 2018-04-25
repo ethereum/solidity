@@ -193,6 +193,7 @@ DEV_SIMPLE_EXCEPTION(SolverError);
 class SolverInterface
 {
 public:
+	virtual ~SolverInterface() {}
 	virtual void reset() = 0;
 
 	virtual void push() = 0;

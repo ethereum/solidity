@@ -53,6 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
+	virtual ~ExecutionFramework() {};
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
