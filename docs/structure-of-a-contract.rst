@@ -129,7 +129,7 @@ Structs are custom defined types that can group several variables (see
 Enum Types
 ==========
 
-Enums can be used to create custom types with a finite set of values (see
+Enums can be used to create custom types with a finite set of 'constant values' (see
 :ref:`enums` in types section).
 
 ::
