@@ -30,6 +30,17 @@ set -e
 
 REPO_ROOT="$(dirname "$0")"/..
 
+IPC_ENABLED=true
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    SMT_FLAGS="--no-smt"
+    if [ "$CIRCLECI" ]
+    then
+        IPC_ENABLED=false
+        IPC_FLAGS="--no-ipc"
+    fi
+fi
+
 if [ "$1" = --junit_report ]
 then
     if [ -z "$2" ]
@@ -98,8 +109,11 @@ function run_eth()
     sleep 2
 }
 
-download_eth
-ETH_PID=$(run_eth /tmp/test)
+if [ "$IPC_ENABLED" = true ];
+then
+    download_eth
+    ETH_PID=$(run_eth /tmp/test)
+fi
 
 progress="--show-progress"
 if [ "$CIRCLECI" ]
@@ -131,7 +145,7 @@ do
         log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
       fi
     fi
-    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" --ipcpath /tmp/test/geth.ipc
+    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS  --ipcpath /tmp/test/geth.ipc
   done
 done
 
@@ -141,6 +155,9 @@ then
     exit 1
 fi
 
-pkill "$ETH_PID" || true
-sleep 4
-pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
+if [ "$IPC_ENABLED" = true ]
+then
+    pkill "$ETH_PID" || true
+    sleep 4
+    pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
+fi
