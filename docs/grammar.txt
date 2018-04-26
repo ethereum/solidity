@@ -8,7 +8,7 @@ ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
         | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral ';'
 
 ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
-                     ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+                     'final' ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 
 ContractPart = StateVariableDeclaration | UsingForDeclaration
@@ -25,7 +25,7 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' | 'final' )*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 

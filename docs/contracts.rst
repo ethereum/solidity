@@ -117,6 +117,18 @@ This means that cyclic creation dependencies are impossible.
         }
     }
 
+.. index:: ! final, finality
+
+.. _finality:
+
+********
+Finality
+********
+
+Contracts can be declared ``final``. This means that they cannot
+be inherited from. Libraries and interfaces cannot be declared
+final.
+
 .. index:: ! visibility, external, public, private, internal
 
 .. _visibility-and-getters:
@@ -441,6 +453,17 @@ value types and strings.
 *********
 Functions
 *********
+
+.. index:: ! final function, function;final, final, finality
+
+.. _final-functions:
+
+Final Functions
+===============
+
+Functions can be declared ``final`` in which case they cannot be inherited from.
+A function declared final must be implemented.
+Functions in libraries or interfaces cannot be declared final.
 
 .. index:: ! view function, function;view
 
@@ -982,7 +1005,7 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
 default constructor: ``contructor() public {}``.
 
@@ -1139,7 +1162,7 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
