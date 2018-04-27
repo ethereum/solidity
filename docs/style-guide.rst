@@ -933,8 +933,8 @@ General Recommendations
 
 * Function parameter variable names
 
-It's convention to start function parameter variable names with an underscore (`_`) in order to differentiate them from global variables. e.g. `function myFunction(_foo, _bar) {  }`
+It's convention to start function parameter variable names with an underscore (``_``) in order to differentiate them from global variables. e.g. ``function myFunction(_foo, _bar) {  }``
 
 * Private functions
 
-It's convention to start private function names with an underscore (`_`). e.g. `_myPrivateFunction`
+It's convention to start private function names with an underscore (``_``). e.g. ``_myPrivateFunction``
