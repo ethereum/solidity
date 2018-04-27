@@ -118,19 +118,19 @@ private:
 	);
 	ASTPointer<ExpressionStatement> parseExpressionStatement(
 		ASTPointer<ASTString> const& _docString,
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4,
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseUnaryExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseLeftHandSideExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
