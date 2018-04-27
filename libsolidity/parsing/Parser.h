@@ -143,16 +143,18 @@ private:
 	/// Used as return value of @see peekStatementType.
 	enum class LookAheadInfo
 	{
-		IndexAccessStructure, VariableDeclarationStatement, ExpressionStatement
+		IndexAccessStructure, VariableDeclaration, Expression
 	};
 	/// Structure that represents a.b.c[x][y][z]. Can be converted either to an expression
-	/// or to a type name. Path cannot be empty, but indices can be empty.
+	/// or to a type name. For this to be valid, path cannot be empty, but indices can be empty.
 	struct IndexAccessedPath
 	{
 		std::vector<ASTPointer<PrimaryExpression>> path;
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> indices;
+		bool empty() const { return path.empty() && indices.empty(); }
 	};
 
+	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
 	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
 	/// decide with constant look-ahead.
@@ -160,9 +162,11 @@ private:
 	/// @returns an IndexAccessedPath as a prestage to parsing a variable declaration (type name)
 	/// or an expression;
 	IndexAccessedPath parseIndexAccessedPath();
-	/// @returns a typename parsed in look-ahead fashion from something like "a.b[8][2**70]".
+	/// @returns a typename parsed in look-ahead fashion from something like "a.b[8][2**70]",
+	/// or an empty pointer if an empty @a _pathAndIncides has been supplied.
 	ASTPointer<TypeName> typeNameFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
-	/// @returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]".
+	/// @returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]",
+	/// or an empty pointer if an empty @a _pathAndIncides has been supplied.
 	ASTPointer<Expression> expressionFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
 
 	ASTPointer<ASTString> expectIdentifierToken();
