@@ -1,7 +1,9 @@
 ### 0.5.0 (unreleased)
 
-Features:
+Breaking Changes:
+ * Type Checker: Disallow arithmetic operations for Boolean variables.
 
+Features:
 
 Bugfixes:
 
