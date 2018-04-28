@@ -216,6 +216,9 @@ void ControlFlowGraph::setPrevLinks()
 
 void ControlFlowGraph::gatherKnowledge()
 {
+	// This prevents us from unbounded growth of state space.
+	static constexpr size_t maximumWorkQueueSize = 5000;
+
 	// @todo actually we know that memory is filled with zeros at the beginning,
 	// we could make use of that.
 	KnownStatePointer emptyState = make_shared<KnownState>();
@@ -238,7 +241,7 @@ void ControlFlowGraph::gatherKnowledge()
 		workQueue.push_back(move(item));
 	};
 
-	while (!workQueue.empty())
+	while (!workQueue.empty() && workQueue.size() < maximumWorkQueueSize)
 	{
 		WorkQueueItem item = move(workQueue.back());
 		workQueue.pop_back();
