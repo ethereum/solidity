@@ -527,7 +527,7 @@ public:
 	int numBytes() const { return m_bytes; }
 
 private:
-	int m_bytes;
+	unsigned int m_bytes;
 };
 
 /**
