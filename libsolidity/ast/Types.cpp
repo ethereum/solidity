@@ -1283,7 +1283,7 @@ shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& 
 
 FixedBytesType::FixedBytesType(unsigned int _bytes): m_bytes(_bytes)
 {
-	solAssert(m_bytes >= 0 && m_bytes <= 32,
+	solAssert(m_bytes > 0 && m_bytes <= 32,
 			  "Invalid byte number for fixed bytes type: " + dev::toString(m_bytes));
 }
 
