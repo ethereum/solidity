@@ -312,13 +312,16 @@ void ControlFlowGraph::gatherKnowledge()
 	// never used for a JUMP.
 	// Note that this invalidates some contents of pushedTags
 	for (auto it = m_blocks.begin(); it != m_blocks.end();)
-		if (!it->second.startState) {
-			if (it->second.next != BlockId::invalid()) {
+		if (!it->second.startState)
+		{
+			if (it->second.next != BlockId::invalid())
+			{
 				BasicBlock& nextBlock = m_blocks.at(it->second.next);
 				nextBlock.prev = BlockId::invalid();
 			}
 			it = m_blocks.erase(it);
-		} else
+		}
+		else
 			it++;
 }
 
