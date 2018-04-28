@@ -524,7 +524,7 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBytes() const { return m_bytes; }
+	unsigned int numBytes() const { return m_bytes; }
 
 private:
 	unsigned int m_bytes;
