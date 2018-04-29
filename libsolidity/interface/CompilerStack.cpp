@@ -492,7 +492,7 @@ Json::Value const& CompilerStack::storageInfo(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.storageInfo)
-		_contract.storageInfo.reset(new Json::Value(StorageInfo::generate(*_contract.compiler)));
+		_contract.storageInfo.reset(new Json::Value(StorageInfo::generate(_contract.compiler.get())));
 	return *_contract.storageInfo;
 }
 

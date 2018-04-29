@@ -267,6 +267,21 @@ BOOST_AUTO_TEST_CASE(multiple_inheritance_test)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(abstract_contract_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint a;
+			function f() internal;
+		}
+	)";
+
+	char const* interface = R"([
+	])";
+
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

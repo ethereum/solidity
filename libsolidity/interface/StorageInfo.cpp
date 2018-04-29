@@ -28,11 +28,15 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-Json::Value StorageInfo::generate(Compiler const& _compiler)
+Json::Value StorageInfo::generate(Compiler const* _compiler)
 {
 	Json::Value storage(Json::arrayValue);
+	
+	if(_compiler == NULL) {
+		return storage;
+	}
 
-	for (auto it: _compiler.stateVariables())
+	for (auto it: _compiler->stateVariables())
 	{
 		if (auto decl = dynamic_cast<VariableDeclaration const*>(it.first)) 
 		{

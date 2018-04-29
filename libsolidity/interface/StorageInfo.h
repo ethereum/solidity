@@ -41,7 +41,7 @@ public:
 	/// Get the storage layout of a contract
 	/// @param _compiler The compiler used for the contract
 	/// @return          A JSON representation of the contract's storage layout
-	static Json::Value generate(Compiler const& _compiler);
+	static Json::Value generate(Compiler const* _compiler);
 };
 }
 }
