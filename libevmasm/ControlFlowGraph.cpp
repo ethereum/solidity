@@ -284,7 +284,7 @@ private:
 		return !m_exceededMaximumWorkSpace || !m_visited.count(blockId);
 	}
 
-	void ensureWorkSpace()
+	void ensureWorkSpace() noexcept
 	{
 		if (maximumSize < size() || maximumItemsProcessed < m_itemsProcessed)
 			m_exceededMaximumWorkSpace = true;
