@@ -57,8 +57,8 @@ private:
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
-	std::map<unsigned, Expression const*> m_matchGroups;
-	std::vector<SimplificationRule<Pattern>> m_rules[256];
+	std::map<unsigned, Expression const*> m_matchGroups{};
+	std::vector<SimplificationRule<Pattern>> m_rules[256]{};
 };
 
 enum class PatternKind
@@ -106,9 +106,9 @@ private:
 	Expression const& matchGroupValue() const;
 
 	PatternKind m_kind = PatternKind::Any;
-	solidity::Instruction m_instruction; ///< Only valid if m_kind is Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_kind is Constant
-	std::vector<Pattern> m_arguments;
+	solidity::Instruction m_instruction{}; ///< Only valid if m_kind is Operation
+	std::shared_ptr<u256> m_data{}; ///< Only valid if m_kind is Constant
+	std::vector<Pattern> m_arguments{};
 	unsigned m_matchGroup = 0;
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
 };

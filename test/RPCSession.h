@@ -63,12 +63,12 @@ public:
 
 private:
 
-	std::string m_path;
-	int m_socket;
+	std::string m_path{};
+	int m_socket{};
 	/// Socket read timeout in milliseconds. Needs to be large because the key generation routine
 	/// might take long.
 	unsigned static constexpr m_readTimeOutMS = 300000;
-	char m_readBuf[512000];
+	char m_readBuf[512000]{};
 };
 #endif
 
@@ -77,28 +77,28 @@ class RPCSession: public boost::noncopyable
 public:
 	struct TransactionData
 	{
-		std::string from;
-		std::string to;
-		std::string gas;
-		std::string gasPrice;
-		std::string value;
-		std::string data;
+		std::string from{};
+		std::string to{};
+		std::string gas{};
+		std::string gasPrice{};
+		std::string value{};
+		std::string data{};
 
 		std::string toJson() const;
 	};
 
 	struct LogEntry {
-		std::string address;
-		std::vector<std::string> topics;
-		std::string data;
+		std::string address{};
+		std::vector<std::string> topics{};
+		std::string data{};
 	};
 
 	struct TransactionReceipt
 	{
-		std::string gasUsed;
-		std::string contractAddress;
-		std::vector<LogEntry> logEntries;
-		std::string blockNumber;
+		std::string gasUsed{};
+		std::string contractAddress{};
+		std::vector<LogEntry> logEntries{};
+		std::string blockNumber{};
 	};
 
 	static RPCSession& instance(std::string const& _path);
@@ -137,6 +137,6 @@ private:
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 
-	std::vector<std::string> m_accounts;
+	std::vector<std::string> m_accounts{};
 };
 

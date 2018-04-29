@@ -48,7 +48,7 @@ public:
 
 private:
 	AssemblyItems& m_items;
-	AssemblyItems m_optimisedItems;
+	AssemblyItems m_optimisedItems{};
 };
 
 }

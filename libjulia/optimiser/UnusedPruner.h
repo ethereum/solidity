@@ -60,7 +60,7 @@ private:
 	void subtractReferences(std::map<std::string, size_t> const& _subtrahend);
 
 	bool m_shouldRunAgain = false;
-	std::map<std::string, size_t> m_references;
+	std::map<std::string, size_t> m_references{};
 };
 
 }

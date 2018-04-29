@@ -80,10 +80,10 @@ private:
 	}
 
 	std::shared_ptr<SymbolicVariable> m_symbolicVar = nullptr;
-	int m_currentSequenceCounter;
+	int m_currentSequenceCounter{};
 	/// The next free sequence counter is a shared pointer because we want
 	/// the copy and the copied to share it.
-	std::shared_ptr<int> m_nextFreeSequenceCounter;
+	std::shared_ptr<int> m_nextFreeSequenceCounter{};
 };
 
 }

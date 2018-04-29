@@ -79,9 +79,9 @@ private:
 	/// Joins the two maps throwing an exception if two keys are equal.
 	static StringMap joinMaps(StringMap const& _a, StringMap const& _b);
 
-	std::string m_template;
-	StringMap m_parameters;
-	StringListMap m_listParameters;
+	std::string m_template{};
+	StringMap m_parameters{};
+	StringListMap m_listParameters{};
 };
 
 }

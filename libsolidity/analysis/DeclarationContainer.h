@@ -69,8 +69,8 @@ public:
 private:
 	ASTNode const* m_enclosingNode;
 	DeclarationContainer const* m_enclosingContainer;
-	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
-	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
+	std::map<ASTString, std::vector<Declaration const*>> m_declarations{};
+	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations{};
 };
 
 }

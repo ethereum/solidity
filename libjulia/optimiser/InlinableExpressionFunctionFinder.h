@@ -63,8 +63,8 @@ private:
 	}
 
 	bool m_foundDisallowedIdentifier = false;
-	std::set<std::string> m_disallowedIdentifiers;
-	std::map<std::string, FunctionDefinition const*> m_inlinableFunctions;
+	std::set<std::string> m_disallowedIdentifiers{};
+	std::map<std::string, FunctionDefinition const*> m_inlinableFunctions{};
 };
 
 }

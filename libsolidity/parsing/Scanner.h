@@ -91,8 +91,8 @@ public:
 	///@}
 
 private:
-	std::string m_source;
-	size_t m_position;
+	std::string m_source{};
+	size_t m_position{};
 };
 
 
@@ -222,17 +222,17 @@ private:
 	int sourcePos() const { return m_source.position(); }
 	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
-	TokenDesc m_skippedComment;  // desc for current skipped comment
-	TokenDesc m_nextSkippedComment; // desc for next skiped comment
+	TokenDesc m_skippedComment{};  // desc for current skipped comment
+	TokenDesc m_nextSkippedComment{}; // desc for next skiped comment
 
-	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
-	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
+	TokenDesc m_currentToken{};  // desc for current token (as returned by Next())
+	TokenDesc m_nextToken{};     // desc for next token (one token look-ahead)
 
-	CharStream m_source;
-	std::shared_ptr<std::string const> m_sourceName;
+	CharStream m_source{};
+	std::shared_ptr<std::string const> m_sourceName{};
 
 	/// one character look-ahead, equals 0 at end of input
-	char m_char;
+	char m_char{};
 };
 
 }

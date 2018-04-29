@@ -33,8 +33,12 @@ public:
 	/// File reading or generic query result.
 	struct Result
 	{
-		bool success;
-		std::string responseOrErrorMessage;
+		Result() {}
+		Result(bool success, std::string const& responseOrErrorMessage):
+				success(success), responseOrErrorMessage(responseOrErrorMessage) {}
+
+		bool success{};
+		std::string responseOrErrorMessage{};
 	};
 
 	/// File reading or generic query callback.

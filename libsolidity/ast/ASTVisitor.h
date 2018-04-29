@@ -307,7 +307,7 @@ protected:
 	}
 
 private:
-	std::vector<ASTNode const*> m_parents;
+	std::vector<ASTNode const*> m_parents{};
 	std::function<bool(ASTNode const&)> m_onNode;
 	std::function<void(ASTNode const&, ASTNode const&)> m_onEdge;
 };

@@ -171,9 +171,9 @@ public:
 		}
 	}
 
-	std::string const name;
-	std::vector<Expression> const arguments;
-	Sort sort;
+	std::string const name{};
+	std::vector<Expression> const arguments{};
+	Sort sort{};
 
 private:
 	/// Manual constructor, should only be used by SolverInterface and this class itself.

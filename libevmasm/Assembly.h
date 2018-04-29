@@ -109,7 +109,7 @@ public:
 		bool runDeduplicate = false;
 		bool runCSE = false;
 		bool runConstantOptimiser = false;
-		solidity::EVMVersion evmVersion;
+		solidity::EVMVersion evmVersion{};
 		/// This specifies an estimate on how often each opcode in this assembly will be executed,
 		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
 		size_t expectedExecutionsPerDeployment = 200;
@@ -155,21 +155,21 @@ private:
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
-	std::map<std::string, size_t> m_namedTags;
-	AssemblyItems m_items;
-	std::map<h256, bytes> m_data;
+	std::map<std::string, size_t> m_namedTags{};
+	AssemblyItems m_items{};
+	std::map<h256, bytes> m_data{};
 	/// Data that is appended to the very end of the contract.
-	bytes m_auxiliaryData;
-	std::vector<std::shared_ptr<Assembly>> m_subs;
-	std::map<h256, std::string> m_strings;
-	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
+	bytes m_auxiliaryData{};
+	std::vector<std::shared_ptr<Assembly>> m_subs{};
+	std::map<h256, std::string> m_strings{};
+	std::map<h256, std::string> m_libraries{}; ///< Identifiers of libraries to be linked.
 
-	mutable LinkerObject m_assembledObject;
-	mutable std::vector<size_t> m_tagPositionsInBytecode;
+	mutable LinkerObject m_assembledObject{};
+	mutable std::vector<size_t> m_tagPositionsInBytecode{};
 
 	int m_deposit = 0;
 
-	SourceLocation m_currentSourceLocation;
+	SourceLocation m_currentSourceLocation{};
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)

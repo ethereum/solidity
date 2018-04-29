@@ -59,10 +59,10 @@ private:
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
-	std::map<unsigned, Expression const*> m_matchGroups;
+	std::map<unsigned, Expression const*> m_matchGroups{};
 	/// Pattern to match, replacement to be applied and flag indicating whether
 	/// the replacement might remove some elements (except constants).
-	std::vector<SimplificationRule<Pattern>> m_rules[256];
+	std::vector<SimplificationRule<Pattern>> m_rules[256]{};
 };
 
 /**
@@ -113,11 +113,11 @@ private:
 	Expression const& matchGroupValue() const;
 	u256 const& data() const;
 
-	AssemblyItemType m_type;
+	AssemblyItemType m_type{};
 	bool m_requireDataMatch = false;
-	Instruction m_instruction; ///< Only valid if m_type is Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_type is not Operation
-	std::vector<Pattern> m_arguments;
+	Instruction m_instruction{}; ///< Only valid if m_type is Operation
+	std::shared_ptr<u256> m_data{}; ///< Only valid if m_type is not Operation
+	std::vector<Pattern> m_arguments{};
 	unsigned m_matchGroup = 0;
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
 };
@@ -136,7 +136,7 @@ struct ExpressionTemplate
 	Id id = Id(-1);
 	// Otherwise, assembly item.
 	AssemblyItem item = UndefinedItem;
-	std::vector<ExpressionTemplate> arguments;
+	std::vector<ExpressionTemplate> arguments{};
 };
 
 }

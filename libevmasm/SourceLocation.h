@@ -67,9 +67,9 @@ struct SourceLocation
 
 	bool isEmpty() const { return start == -1 && end == -1; }
 
-	int start;
-	int end;
-	std::shared_ptr<std::string const> sourceName;
+	int start{};
+	int end{};
+	std::shared_ptr<std::string const> sourceName{};
 };
 
 /// Stream output for Location (used e.g. in boost exceptions).

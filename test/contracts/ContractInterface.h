@@ -90,7 +90,7 @@ protected:
 	}
 
 private:
-	u256 m_nextValue;
+	u256 m_nextValue{};
 	ExecutionFramework& m_framework;
 };
 

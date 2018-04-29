@@ -44,8 +44,8 @@ public:
 	std::set<std::string> const& names() const { return m_names; }
 	std::map<std::string, FunctionDefinition const*> const& functions() const { return m_functions; }
 private:
-	std::set<std::string> m_names;
-	std::map<std::string, FunctionDefinition const*> m_functions;
+	std::set<std::string> m_names{};
+	std::map<std::string, FunctionDefinition const*> m_functions{};
 };
 
 /**
@@ -63,7 +63,7 @@ public:
 
 	std::map<std::string, size_t> const& references() const { return m_references; }
 private:
-	std::map<std::string, size_t> m_references;
+	std::map<std::string, size_t> m_references{};
 };
 
 /**
@@ -77,7 +77,7 @@ public:
 
 	std::set<std::string> const& names() const { return m_names; }
 private:
-	std::set<std::string> m_names;
+	std::set<std::string> m_names{};
 };
 
 }

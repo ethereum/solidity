@@ -79,11 +79,11 @@ private:
 	/// Tries to optimize the item that breaks the basic block at the end.
 	void optimizeBreakingItem();
 
-	KnownState m_initialState;
-	KnownState m_state;
+	KnownState m_initialState{};
+	KnownState m_state{};
 	/// Keeps information about which storage or memory slots were written to at which sequence
 	/// number with what instruction.
-	std::vector<StoreOperation> m_storeOperations;
+	std::vector<StoreOperation> m_storeOperations{};
 
 	/// The item that breaks the basic block, can be nullptr.
 	/// It is usually appended to the block but can be optimized in some cases.
@@ -146,24 +146,24 @@ private:
 
 	static const int c_invalidPosition = -0x7fffffff;
 
-	AssemblyItems m_generatedItems;
+	AssemblyItems m_generatedItems{};
 	/// Current height of the stack relative to the start.
 	int m_stackHeight = 0;
 	/// If (b, a) is in m_requests then b is needed to compute a.
-	std::multimap<Id, Id> m_neededBy;
+	std::multimap<Id, Id> m_neededBy{};
 	/// Current content of the stack.
-	std::map<int, Id> m_stack;
+	std::map<int, Id> m_stack{};
 	/// Current positions of equivalence classes, equal to the empty set if already deleted.
-	std::map<Id, std::set<int>> m_classPositions;
+	std::map<Id, std::set<int>> m_classPositions{};
 
 	/// The actual eqivalence class items and how to compute them.
 	ExpressionClasses& m_expressionClasses;
 	/// Keeps information about which storage or memory slots were written to by which operations.
 	/// The operations are sorted ascendingly by sequence number.
-	std::map<std::pair<StoreOperation::Target, Id>, StoreOperations> m_storeOperations;
+	std::map<std::pair<StoreOperation::Target, Id>, StoreOperations> m_storeOperations{};
 	/// The set of equivalence classes that should be present on the stack at the end.
-	std::set<Id> m_finalClasses;
-	std::map<int, Id> m_targetStack;
+	std::set<Id> m_finalClasses{};
+	std::map<int, Id> m_targetStack{};
 };
 
 template <class _AssemblyItemIterator>

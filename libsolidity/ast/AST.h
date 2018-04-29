@@ -104,7 +104,7 @@ protected:
 	mutable ASTAnnotation* m_annotation = nullptr;
 
 private:
-	SourceLocation m_location;
+	SourceLocation m_location{};
 };
 
 template <class _T>
@@ -313,7 +313,7 @@ public:
 	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
 private:
-	std::vector<VariableDeclaration const*> m_localVariables;
+	std::vector<VariableDeclaration const*> m_localVariables{};
 };
 
 /**
@@ -413,14 +413,14 @@ public:
 	ContractKind contractKind() const { return m_contractKind; }
 
 private:
-	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
-	std::vector<ASTPointer<ASTNode>> m_subNodes;
-	ContractKind m_contractKind;
+	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts{};
+	std::vector<ASTPointer<ASTNode>> m_subNodes{};
+	ContractKind m_contractKind{};
 
-	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
-	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
-	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
+	std::vector<ContractDefinition const*> m_linearizedBaseContracts{};
+	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList{};
+	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents{};
+	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers{};
 };
 
 class InheritanceSpecifier: public ASTNode

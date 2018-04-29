@@ -1070,9 +1070,9 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 			return true;
 		}
 	private:
-		map<u160, bool> m_canVote;
-		map<u160, u256> m_voteCount;
-		map<u160, bool> m_voted;
+		map<u160, bool> m_canVote{};
+		map<u160, u256> m_voteCount{};
+		map<u160, bool> m_voted{};
 	} ballot;
 
 	auto getVoteCount = bind(&Ballot::getVoteCount, &ballot, _1);

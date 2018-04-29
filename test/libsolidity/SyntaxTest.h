@@ -81,9 +81,9 @@ private:
 	static std::string parseSource(std::istream& _stream);
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	std::string m_source;
-	std::vector<SyntaxTestError> m_expectations;
-	std::vector<SyntaxTestError> m_errorList;
+	std::string m_source{};
+	std::vector<SyntaxTestError> m_expectations{};
+	std::vector<SyntaxTestError> m_errorList{};
 };
 
 }

@@ -69,8 +69,8 @@ public:
 	u256 const& storageSize() const { return m_storageSize; }
 
 private:
-	u256 m_storageSize;
-	std::map<size_t, std::pair<u256, unsigned>> m_offsets;
+	u256 m_storageSize{};
+	std::map<size_t, std::pair<u256, unsigned>> m_offsets{};
 };
 
 /**
@@ -88,8 +88,8 @@ public:
 		{
 		}
 
-		std::string name;
-		TypePointer type;
+		std::string name{};
+		TypePointer type{};
 		Declaration const* declaration = nullptr;
 	};
 
@@ -128,8 +128,8 @@ public:
 	MemberMap::const_iterator end() const { return m_memberTypes.end(); }
 
 private:
-	MemberMap m_memberTypes;
-	mutable std::unique_ptr<StorageOffsets> m_storageOffsets;
+	MemberMap m_memberTypes{};
+	mutable std::unique_ptr<StorageOffsets> m_storageOffsets{};
 };
 
 /**
@@ -304,7 +304,7 @@ protected:
 	}
 
 	/// List of member types (parameterised by scape), will be lazy-initialized.
-	mutable std::map<ContractDefinition const*, std::unique_ptr<MemberList>> m_members;
+	mutable std::map<ContractDefinition const*, std::unique_ptr<MemberList>> m_members{};
 };
 
 /**
@@ -451,7 +451,7 @@ public:
 	bool isZero() const { return m_value == 0; }
 
 private:
-	rational m_value;
+	rational m_value{};
 
 	/// @returns true if the literal is a valid rational number.
 	static std::tuple<bool, rational> parseRational(std::string const& _value);
@@ -678,9 +678,9 @@ private:
 
 	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
 	ArrayKind m_arrayKind = ArrayKind::Ordinary;
-	TypePointer m_baseType;
+	TypePointer m_baseType{};
 	bool m_hasDynamicLength = true;
-	u256 m_length;
+	u256 m_length{};
 };
 
 /**
@@ -747,7 +747,7 @@ private:
 	/// members.
 	bool m_super = false;
 	/// Type of the constructor, @see constructorType. Lazily initialized.
-	mutable FunctionTypePointer m_constructorType;
+	mutable FunctionTypePointer m_constructorType{};
 };
 
 /**
@@ -803,7 +803,7 @@ public:
 private:
 	StructDefinition const& m_struct;
 	/// Cache for the recursive() function.
-	mutable boost::optional<bool> m_recursive;
+	mutable boost::optional<bool> m_recursive{};
 };
 
 /**
@@ -1079,10 +1079,10 @@ public:
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
 
-	TypePointers m_parameterTypes;
-	TypePointers m_returnParameterTypes;
-	std::vector<std::string> m_parameterNames;
-	std::vector<std::string> m_returnParameterNames;
+	TypePointers m_parameterTypes{};
+	TypePointers m_returnParameterTypes{};
+	std::vector<std::string> m_parameterNames{};
+	std::vector<std::string> m_returnParameterNames{};
 	Kind const m_kind;
 	StateMutability m_stateMutability = StateMutability::NonPayable;
 	/// true if the function takes an arbitrary number of arguments of arbitrary types
@@ -1154,7 +1154,7 @@ public:
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
 private:
-	TypePointer m_actualType;
+	TypePointer m_actualType{};
 };
 
 
@@ -1178,7 +1178,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 
 private:
-	TypePointers m_parameterTypes;
+	TypePointers m_parameterTypes{};
 };
 
 
@@ -1238,7 +1238,7 @@ public:
 	Kind kind() const { return m_kind; }
 
 private:
-	Kind m_kind;
+	Kind m_kind{};
 };
 
 /**

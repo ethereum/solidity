@@ -42,8 +42,8 @@ struct Block;
 
 struct MachineAssemblyObject
 {
-	std::shared_ptr<eth::LinkerObject> bytecode;
-	std::string assembly;
+	std::shared_ptr<eth::LinkerObject> bytecode{};
+	std::string assembly{};
 };
 
 /*
@@ -84,14 +84,14 @@ private:
 	bool analyzeParsed();
 
 	Language m_language = Language::Assembly;
-	EVMVersion m_evmVersion;
+	EVMVersion m_evmVersion{};
 
-	std::shared_ptr<Scanner> m_scanner;
+	std::shared_ptr<Scanner> m_scanner{};
 
 	bool m_analysisSuccessful = false;
-	std::shared_ptr<assembly::Block> m_parserResult;
-	std::shared_ptr<assembly::AsmAnalysisInfo> m_analysisInfo;
-	ErrorList m_errors;
+	std::shared_ptr<assembly::Block> m_parserResult{};
+	std::shared_ptr<assembly::AsmAnalysisInfo> m_analysisInfo{};
+	ErrorList m_errors{};
 	ErrorReporter m_errorReporter;
 };
 

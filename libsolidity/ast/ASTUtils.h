@@ -45,8 +45,8 @@ public:
 private:
 	bool visitNode(ASTNode const& _node);
 
-	std::vector<ASTNode const*> m_rootNodes;
-	SourceLocation m_location;
+	std::vector<ASTNode const*> m_rootNodes{};
+	SourceLocation m_location{};
 	ASTNode const* m_bestMatch = nullptr;
 };
 

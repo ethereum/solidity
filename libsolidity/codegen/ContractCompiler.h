@@ -123,19 +123,19 @@ private:
 	/// @returns the runtime assembly for clone contracts.
 	eth::AssemblyPointer cloneRuntime() const;
 
-	bool const m_optimise;
+	bool const m_optimise{};
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
-	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
-	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
+	std::vector<eth::AssemblyItem> m_breakTags{}; ///< tag to jump to for a "break" statement
+	std::vector<eth::AssemblyItem> m_continueTags{}; ///< tag to jump to for a "continue" statement
 	/// Tag to jump to for a "return" statement, needs to be stacked because of modifiers.
-	std::vector<eth::AssemblyItem> m_returnTags;
+	std::vector<eth::AssemblyItem> m_returnTags{};
 	unsigned m_modifierDepth = 0;
 	FunctionDefinition const* m_currentFunction = nullptr;
 	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag
 	// arguments for base constructors, filled in derived-to-base order
-	std::map<FunctionDefinition const*, ASTNode const*> const* m_baseArguments;
+	std::map<FunctionDefinition const*, ASTNode const*> const* m_baseArguments{};
 };
 
 }

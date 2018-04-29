@@ -40,8 +40,8 @@ class SemVerError: dev::Exception
 struct SemVerVersion
 {
 	unsigned numbers[3];
-	std::string prerelease;
-	std::string build;
+	std::string prerelease{};
+	std::string build{};
 
 	unsigned major() const { return numbers[0]; }
 	unsigned minor() const { return numbers[1]; }
@@ -63,7 +63,7 @@ struct SemVerMatchExpression
 		/// Prefix from < > <= >= ~ ^
 		Token::Value prefix = Token::Illegal;
 		/// Version, where unsigned(-1) in major, minor or patch denotes '*', 'x' or 'X'
-		SemVerVersion version;
+		SemVerVersion version{};
 		/// Whether we have 1, 1.2 or 1.2.4
 		unsigned levelsPresent = 1;
 		bool matches(SemVerVersion const& _version) const;
@@ -71,11 +71,11 @@ struct SemVerMatchExpression
 
 	struct Conjunction
 	{
-		std::vector<MatchComponent> components;
+		std::vector<MatchComponent> components{};
 		bool matches(SemVerVersion const& _version) const;
 	};
 
-	std::vector<Conjunction> m_disjunction;
+	std::vector<Conjunction> m_disjunction{};
 };
 
 class SemVerMatchExpressionParser
@@ -98,13 +98,13 @@ private:
 	Token::Value currentToken() const;
 	void nextToken();
 
-	std::vector<Token::Value> m_tokens;
-	std::vector<std::string> m_literals;
+	std::vector<Token::Value> m_tokens{};
+	std::vector<std::string> m_literals{};
 
 	unsigned m_pos = 0;
 	unsigned m_posInside = 0;
 
-	SemVerMatchExpression m_expression;
+	SemVerMatchExpression m_expression{};
 };
 
 }

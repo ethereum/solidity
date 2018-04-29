@@ -58,9 +58,9 @@ protected:
 
 	solidity::assembly::AsmAnalysisInfo const& m_info;
 
-	std::vector<solidity::assembly::Scope*> m_scopes;
-	std::map<void const*, std::string> m_translations;
-	std::set<std::string> m_usedNames;
+	std::vector<solidity::assembly::Scope*> m_scopes{};
+	std::map<void const*, std::string> m_translations{};
+	std::set<std::string> m_usedNames{};
 };
 
 }
