@@ -510,7 +510,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		string file = contractName.substr(0, colon);
 		string name = contractName.substr(colon + 1);
 
-		// ABI, documentation and metadata
+		// ABI, documentation, storage and metadata
 		Json::Value contractData(Json::objectValue);
 		if (isArtifactRequested(outputSelection, file, name, "abi"))
 			contractData["abi"] = m_compilerStack.contractABI(contractName);
@@ -520,6 +520,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
 		if (isArtifactRequested(outputSelection, file, name, "devdoc"))
 			contractData["devdoc"] = m_compilerStack.natspecDev(contractName);
+		if (isArtifactRequested(outputSelection, file, name, "storage"))
+			contractData["storage"] = m_compilerStack.storageInfo(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);

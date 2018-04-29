@@ -112,6 +112,7 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strStorageInfo = "storage-layout";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
@@ -172,7 +173,8 @@ static set<string> const g_combinedJsonArgs
 	g_strOpcodes,
 	g_strSignatureHashes,
 	g_strSrcMap,
-	g_strSrcMapRuntime
+	g_strSrcMapRuntime,
+	g_strStorageInfo
 };
 
 /// Possible arguments to for --machine
@@ -932,6 +934,8 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspecDev(contractName));
 		if (requests.count(g_strNatspecUser))
 			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspecUser(contractName));
+		if (requests.count(g_strStorageInfo))
+			contractData[g_strStorageInfo] = dev::jsonCompactPrint(m_compiler->storageInfo(contractName));
 	}
 
 	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
