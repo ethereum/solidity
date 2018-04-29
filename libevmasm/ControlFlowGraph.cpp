@@ -250,7 +250,7 @@ public:
 		if (!registerBlock(blockId))
 			return;
 
-		m_queue.emplace_back(Item{blockId, createEmptyState(), set<BlockId>()});
+		m_queue.emplace_back(Item{blockId, emptyState->copy(), set<BlockId>()});
 		ensureWorkSpace();
 	}
 
@@ -290,13 +290,9 @@ private:
 			m_exceededMaximumWorkSpace = true;
 	}
 
-	KnownStatePointer createEmptyState() const
-	{
-		return make_shared<KnownState>();
-	}
-
 	vector<Item> m_queue;
 	set<BlockId> m_visited, m_discovered;
+	KnownStatePointer emptyState = make_shared<KnownState>();
 	size_t m_itemsProcessed = 0;
 	bool m_exceededMaximumWorkSpace = false;
 };
