@@ -34,28 +34,30 @@ Json::Value StorageInfo::generate(Compiler const& _compiler)
 
 	for (auto it: _compiler.stateVariables())
 	{
-		auto decl = (VariableDeclaration*)it.first;
-		auto location = it.second;
-		
-		Json::Value variable;
-		variable["name"] = decl->name();
-		variable["slot"] = location.first.str();
-		variable["offset"] = to_string(location.second);
-		variable["type"] = decl->type()->canonicalName();
-		variable["size"] = decl->type()->storageSize().str();
+		if (auto decl = dynamic_cast<VariableDeclaration const*>(it.first)) 
+		{
+			auto location = it.second;	
+			
+			Json::Value variable;
+			variable["name"] = decl->name();
+			variable["slot"] = location.first.str();
+			variable["offset"] = to_string(location.second);
+			variable["type"] = decl->type()->canonicalName();
+			variable["size"] = decl->type()->storageSize().str();
 
-		// Only include storageBytes if storageSize is 1, otherwise it always returns 32
-		if (decl->type()->storageSize() == 1) {
-			variable["bytes"] = to_string(decl->type()->storageBytes());
+			// Only include storageBytes if storageSize is 1, otherwise it always returns 32
+			if (decl->type()->storageSize() == 1) {
+				variable["bytes"] = to_string(decl->type()->storageBytes());
+			}
+			
+			// Assume that the parent scope of a state variable is a contract
+			auto parent = ((Declaration*)decl->scope());
+			if (parent != NULL) {
+				variable["contract"] = parent->name();
+			}
+			
+			storage.append(variable);
 		}
-		
-		// Assume that the parent scope of a state variable is a contract
-		auto parent = ((Declaration*)decl->scope());
-		if (parent != NULL) {
-			variable["contract"] = parent->name();
-		}
-		
-		storage.append(variable);
 	}
 
 	return storage;
