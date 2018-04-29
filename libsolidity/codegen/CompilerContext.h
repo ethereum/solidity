@@ -141,6 +141,8 @@ public:
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
 	/// @returns pair of slot and byte offset of the value inside this slot.
 	std::pair<u256, unsigned> storageLocationOfVariable(Declaration const& _declaration) const;
+	/// @returns all state variables along with their storage slot and byte offset of the value inside the slot.
+	std::map<Declaration const*, std::pair<u256, unsigned>> const& stateVariables() const { return m_stateVariables; }
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }

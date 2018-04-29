@@ -81,6 +81,9 @@ public:
 	/// UndefinedItem if it does not exist yet.
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
+	/// @returns all state variables along with their storage slot and byte offset of the value inside the slot.
+	std::map<Declaration const*, std::pair<u256, unsigned>> const& stateVariables() const { return m_context.stateVariables(); }
+
 private:
 	bool const m_optimize;
 	unsigned const m_optimizeRuns;

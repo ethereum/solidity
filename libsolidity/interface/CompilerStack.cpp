@@ -40,6 +40,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
+#include <libsolidity/interface/StorageInfo.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 
@@ -475,6 +476,24 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 		_contract.devDocumentation.reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
 
 	return *_contract.devDocumentation;
+}
+
+Json::Value const& CompilerStack::storageInfo(string const& _contractName) const
+{
+	return storageInfo(contract(_contractName));
+}
+
+Json::Value const& CompilerStack::storageInfo(Contract const& _contract) const
+{
+	if (m_stackState < CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.storageInfo)
+		_contract.storageInfo.reset(new Json::Value(StorageInfo::generate(*_contract.compiler)));
+	return *_contract.storageInfo;
 }
 
 Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
