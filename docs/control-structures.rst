@@ -272,9 +272,12 @@ Assignment
 Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------
 
-Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
+Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time.
+These can then either be assigned to newly declared variables or to pre-existing variables (or LValues in general):
 
-    pragma solidity ^0.4.16;
+::
+
+    pragma solidity >0.4.23 <0.5.0;
 
     contract C {
         uint[] data;
@@ -284,12 +287,8 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
         }
 
         function g() public {
-            // Variables declared with type
-            uint x;
-            bool b;
-            uint y;
-            // Tuple values can be assigned to these pre-existing variables
-            (x, b, y) = f();
+            // Variables declared with type and assigned from the returned tuple.
+            (uint x, bool b, uint y) = f();
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
@@ -330,7 +329,9 @@ A variable declared anywhere within a function will be in scope for the *entire 
 (this will change soon, see below).
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
-As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
+As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``:
+
+::
 
     // This will not compile
 
