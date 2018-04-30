@@ -366,7 +366,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -386,9 +386,9 @@ public:
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	/// Number of bits used for this type in total.
-	int numBits() const { return m_totalBits; }
+	unsigned numBits() const { return m_totalBits; }
 	/// Number of decimal digits after the radix point.
-	int fractionalDigits() const { return m_fractionalDigits; }
+	unsigned fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 	/// @returns the largest integer value this type con hold. Note that this is not the
 	/// largest value in general.
@@ -401,8 +401,8 @@ public:
 	std::shared_ptr<IntegerType> asIntegerType() const;
 
 private:
-	int m_totalBits;
-	int m_fractionalDigits;
+	unsigned m_totalBits;
+	unsigned m_fractionalDigits;
 	Modifier m_modifier;
 };
 
