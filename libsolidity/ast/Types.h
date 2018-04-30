@@ -509,7 +509,7 @@ public:
 	/// if no type fits.
 	static std::shared_ptr<FixedBytesType> smallestTypeForLiteral(std::string const& _literal);
 
-	explicit FixedBytesType(int _bytes);
+	explicit FixedBytesType(unsigned int _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
