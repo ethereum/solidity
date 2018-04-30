@@ -319,7 +319,7 @@ public:
 	};
 	virtual Category category() const override { return Category::Integer; }
 
-	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
+	explicit IntegerType(unsigned _bits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -342,7 +342,7 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_bits; }
+	unsigned numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
@@ -350,7 +350,7 @@ public:
 	bigint maxValue() const;
 
 private:
-	int m_bits;
+	unsigned m_bits;
 	Modifier m_modifier;
 };
 
