@@ -505,10 +505,6 @@ class FixedBytesType: public Type
 public:
 	virtual Category category() const override { return Category::FixedBytes; }
 
-	/// @returns the smallest bytes type for the given literal or an empty pointer
-	/// if no type fits.
-	static std::shared_ptr<FixedBytesType> smallestTypeForLiteral(std::string const& _literal);
-
 	explicit FixedBytesType(int _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
