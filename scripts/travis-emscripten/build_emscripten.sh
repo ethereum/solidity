@@ -47,10 +47,10 @@ WORKSPACE=/root/project
 if [ -e ~/.emscripten ]
 then
     cat ~/.emscripten
-    sed -i -e 's/NODE_JS="nodejs"/NODE_JS=["nodejs", "--stack_size=8192"]/' ~/.emscripten
+    sed -i -e 's/NODE_JS="nodejs"/NODE_JS=["nodejs", "--stack_size=16384"]/' ~/.emscripten
 else
     nodejs --version
-    echo 'NODE_JS=["nodejs", "--stack_size=8192"]' > ~/.emscripten
+    echo 'NODE_JS=["nodejs", "--stack_size=16384"]' > ~/.emscripten
 fi
 
 
