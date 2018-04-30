@@ -595,13 +595,13 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 		return MemberList::MemberMap();
 }
 
-FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPointType::Modifier _modifier):
+FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, FixedPointType::Modifier _modifier):
 	m_totalBits(_totalBits), m_fractionalDigits(_fractionalDigits), m_modifier(_modifier)
 {
 	solAssert(
 		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
-		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
-		"Invalid bit number(s) for fixed type: " + 
+		0 <= m_fractionalDigits && m_fractionalDigits <= 80,
+		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 }
