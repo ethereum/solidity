@@ -158,7 +158,7 @@ public:
 		tcsetattr(0, TCSADRAIN, &m_termios);
 	}
 private:
-	struct termios m_termios;
+	struct termios m_termios{};
 };
 #endif
 

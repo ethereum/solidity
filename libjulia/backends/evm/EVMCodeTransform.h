@@ -70,9 +70,9 @@ protected:
 	struct Context
 	{
 		using Scope = solidity::assembly::Scope;
-		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
-		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
-		std::map<Scope::Variable const*, int> variableStackHeights;
+		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs{};
+		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs{};
+		std::map<Scope::Variable const*, int> variableStackHeights{};
 	};
 
 	CodeTransform(
@@ -145,13 +145,13 @@ private:
 	bool m_julia = false;
 	bool m_evm15 = false;
 	bool m_useNamedLabelsForFunctions = false;
-	ExternalIdentifierAccess m_identifierAccess;
+	ExternalIdentifierAccess m_identifierAccess{};
 	/// Adjustment between the stack height as determined during the analysis phase
 	/// and the stack height in the assembly. This is caused by an initial stack being present
 	/// for inline assembly and different stack heights depending on the EVM backend used
 	/// (EVM 1.0 or 1.5).
 	int m_stackAdjustment = 0;
-	std::shared_ptr<Context> m_context;
+	std::shared_ptr<Context> m_context{};
 };
 
 }

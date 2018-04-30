@@ -59,14 +59,15 @@ public:
 
 	struct Params
 	{
-		bool isCreation; ///< Whether this is called during contract creation or runtime.
-		size_t runs; ///< Estimated number of calls per opcode oven the lifetime of the contract.
-		size_t multiplicity; ///< Number of times the constant appears in the code.
-		solidity::EVMVersion evmVersion; ///< Version of the EVM
+		bool isCreation{}; ///< Whether this is called during contract creation or runtime.
+		size_t runs{}; ///< Estimated number of calls per opcode oven the lifetime of the contract.
+		size_t multiplicity{}; ///< Number of times the constant appears in the code.
+		solidity::EVMVersion evmVersion{}; ///< Version of the EVM
 	};
 
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
 		m_params(_params), m_value(_value) {}
+	virtual ~ConstantOptimisationMethod() {}
 	virtual bigint gasNeeded() const = 0;
 	/// Executes the method, potentially appending to the assembly and returns a vector of
 	/// assembly items the constant should be relpaced with in one sweep.
@@ -160,7 +161,7 @@ protected:
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
-	AssemblyItems m_routine;
+	AssemblyItems m_routine{};
 };
 
 }

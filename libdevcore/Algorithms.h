@@ -67,8 +67,8 @@ public:
 
 private:
 	std::function<void(V const&, CycleDetector&)> m_visit;
-	std::set<V const*> m_processing;
-	std::set<V const*> m_processed;
+	std::set<V const*> m_processing{};
+	std::set<V const*> m_processed{};
 	size_t m_depth = 0;
 	V const* m_firstCycleVertex = nullptr;
 };

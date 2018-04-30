@@ -34,6 +34,7 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class PeepholeOptimisationMethod
 {
 public:
+	virtual ~PeepholeOptimisationMethod() {}
 	virtual size_t windowSize() const;
 	virtual bool apply(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out);
 };
@@ -47,7 +48,7 @@ public:
 
 private:
 	AssemblyItems& m_items;
-	AssemblyItems m_optimisedItems;
+	AssemblyItems m_optimisedItems{};
 };
 
 }

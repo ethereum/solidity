@@ -66,8 +66,8 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
-	ReadCallback::Callback m_queryCallback;
-	std::vector<std::string> m_accumulatedOutput;
+	ReadCallback::Callback m_queryCallback{};
+	std::vector<std::string> m_accumulatedOutput{};
 };
 
 }

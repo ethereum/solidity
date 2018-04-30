@@ -85,7 +85,7 @@ private:
 		AssemblyItem const* replaceWith;
 	};
 
-	std::map<u256, u256> m_replacedTags;
+	std::map<u256, u256> m_replacedTags{};
 	AssemblyItems& m_items;
 };
 

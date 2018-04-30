@@ -94,17 +94,17 @@ private:
 	bool m_onlyLink = false;
 
 	/// Compiler arguments variable map
-	boost::program_options::variables_map m_args;
+	boost::program_options::variables_map m_args{};
 	/// map of input files to source code strings
-	std::map<std::string, std::string> m_sourceCodes;
+	std::map<std::string, std::string> m_sourceCodes{};
 	/// list of allowed directories to read files from
-	std::vector<boost::filesystem::path> m_allowedDirectories;
+	std::vector<boost::filesystem::path> m_allowedDirectories{};
 	/// map of library names to addresses
-	std::map<std::string, h160> m_libraries;
+	std::map<std::string, h160> m_libraries{};
 	/// Solidity compiler stack
-	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+	std::unique_ptr<dev::solidity::CompilerStack> m_compiler{};
 	/// EVM version to use
-	EVMVersion m_evmVersion;
+	EVMVersion m_evmVersion{};
 };
 
 }

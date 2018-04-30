@@ -79,10 +79,10 @@ private:
 
 	void printContract() const;
 
-	bool const m_formatted;
-	string const m_name;
-	fs::path const m_path;
-	unique_ptr<SyntaxTest> m_test;
+	bool const m_formatted{};
+	string const m_name{};
+	fs::path const m_path{};
+	unique_ptr<SyntaxTest> m_test{};
 };
 
 string SyntaxTestTool::editor;

@@ -144,10 +144,10 @@ private:
 	void writeLine(std::string const& _line);
 	bool goDeeper() { m_indentation++; return true; }
 
-	int m_indentation;
-	std::string m_source;
+	int m_indentation{};
+	std::string m_source{};
 	ASTNode const* m_ast;
-	GasEstimator::ASTGasConsumption m_gasCosts;
+	GasEstimator::ASTGasConsumption m_gasCosts{};
 	std::ostream* m_ostream = nullptr;
 };
 

@@ -137,14 +137,14 @@ public:
 	std::string toAssemblyText() const;
 
 private:
-	AssemblyItemType m_type;
-	Instruction m_instruction; ///< Only valid if m_type == Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
-	SourceLocation m_location;
+	AssemblyItemType m_type{};
+	Instruction m_instruction{}; ///< Only valid if m_type == Operation
+	std::shared_ptr<u256> m_data{}; ///< Only valid if m_type != Operation
+	SourceLocation m_location{};
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
-	mutable std::shared_ptr<u256> m_pushedValue;
+	mutable std::shared_ptr<u256> m_pushedValue{};
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;

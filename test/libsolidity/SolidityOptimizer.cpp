@@ -122,12 +122,12 @@ public:
 	}
 
 protected:
-	u256 m_gasUsedOptimized;
-	u256 m_gasUsedNonOptimized;
-	bytes m_nonOptimizedBytecode;
-	bytes m_optimizedBytecode;
-	Address m_optimizedContract;
-	Address m_nonOptimizedContract;
+	u256 m_gasUsedOptimized{};
+	u256 m_gasUsedNonOptimized{};
+	bytes m_nonOptimizedBytecode{};
+	bytes m_optimizedBytecode{};
+	Address m_optimizedContract{};
+	Address m_nonOptimizedContract{};
 };
 
 BOOST_FIXTURE_TEST_SUITE(SolidityOptimizer, OptimizerTestFramework)

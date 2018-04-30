@@ -222,12 +222,15 @@ void ControlFlowGraph::gatherKnowledge()
 	bool unknownJumpEncountered = false;
 
 	struct WorkQueueItem {
-		BlockId blockId;
-		KnownStatePointer state;
-		set<BlockId> blocksSeen;
+		WorkQueueItem() {}
+		WorkQueueItem(BlockId const& blockId, KnownStatePointer const& state, set<BlockId> const& blocksSeen):
+				blockId(blockId), state(state), blocksSeen(blocksSeen) {}
+		BlockId blockId{};
+		KnownStatePointer state{};
+		set<BlockId> blocksSeen{};
 	};
 
-	vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
+	vector<WorkQueueItem> workQueue{WorkQueueItem(BlockId::initial(), emptyState->copy(), set<BlockId>())};
 	auto addWorkQueueItem = [&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
 	{
 		WorkQueueItem item;

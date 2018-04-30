@@ -166,8 +166,8 @@ private:
 
 	bool m_legacy = false; ///< if true, use legacy format
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
-	Json::Value m_currentValue;
-	std::map<std::string, unsigned> m_sourceIndices;
+	Json::Value m_currentValue{};
+	std::map<std::string, unsigned> m_sourceIndices{};
 };
 
 }

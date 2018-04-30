@@ -88,7 +88,7 @@ public:
 	}
 
 protected:
-	dev::solidity::CompilerStack m_compiler;
+	dev::solidity::CompilerStack m_compiler{};
 };
 
 }

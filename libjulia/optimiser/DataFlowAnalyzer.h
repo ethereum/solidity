@@ -64,20 +64,20 @@ protected:
 	bool inScope(std::string const& _variableName) const;
 
 	/// Current values of variables, always movable.
-	std::map<std::string, Expression const*> m_value;
+	std::map<std::string, Expression const*> m_value{};
 	/// m_references[a].contains(b) <=> the current expression assigned to a references b
-	std::map<std::string, std::set<std::string>> m_references;
+	std::map<std::string, std::set<std::string>> m_references{};
 	/// m_referencedBy[b].contains(a) <=> the current expression assigned to a references b
-	std::map<std::string, std::set<std::string>> m_referencedBy;
+	std::map<std::string, std::set<std::string>> m_referencedBy{};
 
 	struct Scope
 	{
 		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<std::string> variables;
-		bool isFunction;
+		std::set<std::string> variables{};
+		bool isFunction{};
 	};
 	/// List of scopes.
-	std::vector<Scope> m_variableScopes;
+	std::vector<Scope> m_variableScopes{};
 };
 
 }

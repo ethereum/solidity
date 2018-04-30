@@ -35,10 +35,10 @@ namespace eth
  */
 struct LinkerObject
 {
-	bytes bytecode;
+	bytes bytecode{};
 	/// Map from offsets in bytecode to library identifiers. The addresses starting at those offsets
 	/// need to be replaced by the actual addresses by the linker.
-	std::map<size_t, std::string> linkReferences;
+	std::map<size_t, std::string> linkReferences{};
 
 	/// Appends the bytecode of @a _other and incorporates its link references.
 	void append(LinkerObject const& _other);

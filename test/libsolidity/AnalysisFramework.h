@@ -52,6 +52,7 @@ protected:
 		bool _insertVersionPragma = true,
 		bool _allowMultipleErrors = false
 	);
+	virtual ~AnalysisFramework() {}
 
 	SourceUnit const* parseAndAnalyse(std::string const& _source);
 	bool success(std::string const& _source);
@@ -70,7 +71,7 @@ protected:
 	ErrorList filterErrors(ErrorList const& _errorList, bool _includeWarnings) const;
 
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
-	dev::solidity::CompilerStack m_compiler;
+	dev::solidity::CompilerStack m_compiler{};
 };
 
 // Asserts that the compilation down to typechecking

@@ -224,7 +224,7 @@ private:
 	static size_t headSize(TypePointers const& _targetTypes);
 
 	/// Map from function name to code for a multi-use function.
-	std::map<std::string, std::string> m_requestedFunctions;
+	std::map<std::string, std::string> m_requestedFunctions{};
 };
 
 }

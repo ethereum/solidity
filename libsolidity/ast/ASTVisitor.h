@@ -43,6 +43,7 @@ namespace solidity
 class ASTVisitor
 {
 public:
+	virtual ~ASTVisitor() {}
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
@@ -147,6 +148,7 @@ protected:
 class ASTConstVisitor
 {
 public:
+	virtual ~ASTConstVisitor() {}
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }
@@ -305,7 +307,7 @@ protected:
 	}
 
 private:
-	std::vector<ASTNode const*> m_parents;
+	std::vector<ASTNode const*> m_parents{};
 	std::function<bool(ASTNode const&)> m_onNode;
 	std::function<void(ASTNode const&, ASTNode const&)> m_onEdge;
 };

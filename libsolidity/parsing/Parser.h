@@ -56,13 +56,13 @@ private:
 	/// This struct is shared for parsing a function header and a function type.
 	struct FunctionHeaderParserResult
 	{
-		bool isConstructor;
-		ASTPointer<ASTString> name;
-		ASTPointer<ParameterList> parameters;
-		ASTPointer<ParameterList> returnParameters;
+		bool isConstructor{};
+		ASTPointer<ASTString> name{};
+		ASTPointer<ParameterList> parameters{};
+		ASTPointer<ParameterList> returnParameters{};
 		Declaration::Visibility visibility = Declaration::Visibility::Default;
 		StateMutability stateMutability = StateMutability::NonPayable;
-		std::vector<ASTPointer<ModifierInvocation>> modifiers;
+		std::vector<ASTPointer<ModifierInvocation>> modifiers{};
 	};
 
 	///@{

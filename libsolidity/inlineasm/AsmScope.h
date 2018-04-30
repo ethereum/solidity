@@ -65,12 +65,18 @@ struct Scope
 	using JuliaType = std::string;
 	using LabelID = size_t;
 
-	struct Variable { JuliaType type; };
+	struct Variable
+	{
+		JuliaType type{};
+	};
 	struct Label { };
 	struct Function
 	{
-		std::vector<JuliaType> arguments;
-		std::vector<JuliaType> returns;
+		Function() {}
+		Function(std::vector<JuliaType> const& arguments, std::vector<JuliaType> const& returns):
+				arguments(arguments), returns(returns) {}
+		std::vector<JuliaType> arguments{};
+		std::vector<JuliaType> returns{};
 	};
 
 	using Identifier = boost::variant<Variable, Label, Function>;
@@ -118,7 +124,7 @@ struct Scope
 	/// If true, variables from the super scope are not visible here (other identifiers are),
 	/// but they are still taken into account to prevent shadowing.
 	bool functionScope = false;
-	std::map<std::string, Identifier> identifiers;
+	std::map<std::string, Identifier> identifiers{};
 };
 
 }

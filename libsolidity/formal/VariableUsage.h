@@ -42,8 +42,8 @@ public:
 
 private:
 	// Variable touched by a specific AST node.
-	std::map<ASTNode const*, Declaration const*> m_touchedVariable;
-	std::map<ASTNode const*, std::vector<ASTNode const*>> m_children;
+	std::map<ASTNode const*, Declaration const*> m_touchedVariable{};
+	std::map<ASTNode const*, std::vector<ASTNode const*>> m_children{};
 };
 
 }

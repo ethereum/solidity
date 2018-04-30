@@ -71,10 +71,10 @@ public:
 			Id _expression
 		): target(_target), slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
 		bool isValid() const { return target != Invalid; }
-		Target target;
-		Id slot;
-		unsigned sequenceNumber;
-		Id expression;
+		Target target{};
+		Id slot{};
+		unsigned sequenceNumber{};
+		Id expression{};
 	};
 
 	explicit KnownState(
@@ -159,20 +159,20 @@ private:
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
 	/// Current stack layout, mapping stack height -> equivalence class
-	std::map<int, Id> m_stackElements;
+	std::map<int, Id> m_stackElements{};
 	/// Current sequence number, this is incremented with each modification to storage or memory.
 	unsigned m_sequenceNumber = 1;
 	/// Knowledge about storage content.
-	std::map<Id, Id> m_storageContent;
+	std::map<Id, Id> m_storageContent{};
 	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
 	/// and are not contained here if they are not completely known.
-	std::map<Id, Id> m_memoryContent;
+	std::map<Id, Id> m_memoryContent{};
 	/// Keeps record of all Keccak-256 hashes that are computed.
-	std::map<std::vector<Id>, Id> m_knownKeccak256Hashes;
+	std::map<std::vector<Id>, Id> m_knownKeccak256Hashes{};
 	/// Structure containing the classes of equivalent expressions.
-	std::shared_ptr<ExpressionClasses> m_expressionClasses;
+	std::shared_ptr<ExpressionClasses> m_expressionClasses{};
 	/// Container for unions of tags stored on the stack.
-	boost::bimap<Id, std::set<u256>> m_tagUnions;
+	boost::bimap<Id, std::set<u256>> m_tagUnions{};
 };
 
 }

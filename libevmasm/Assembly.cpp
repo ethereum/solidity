@@ -173,8 +173,8 @@ public:
 	}
 
 private:
-	strings m_pending;
-	SourceLocation m_location;
+	strings m_pending{};
+	SourceLocation m_location{};
 
 	ostream& m_out;
 	string const& m_prefix;

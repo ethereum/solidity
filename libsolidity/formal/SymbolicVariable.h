@@ -40,6 +40,7 @@ public:
 		Declaration const& _decl,
 		smt::SolverInterface& _interface
 	);
+	virtual ~SymbolicVariable() {}
 
 	smt::Expression operator()(int _seq) const
 	{

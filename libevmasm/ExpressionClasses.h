@@ -51,9 +51,9 @@ public:
 
 	struct Expression
 	{
-		Id id;
+		Id id{};
 		AssemblyItem const* item = nullptr;
-		Ids arguments;
+		Ids arguments{};
 		/// Storage modification sequence, only used for storage and memory operations.
 		unsigned sequenceNumber = 0;
 		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
@@ -116,10 +116,10 @@ private:
 	std::vector<std::pair<Pattern, std::function<Pattern()>>> createRules() const;
 
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
-	std::vector<Expression> m_representatives;
+	std::vector<Expression> m_representatives{};
 	/// All expression ever encountered.
-	std::set<Expression> m_expressions;
-	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItems;
+	std::set<Expression> m_expressions{};
+	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItems{};
 };
 
 }

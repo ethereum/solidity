@@ -61,8 +61,8 @@ private:
 	void constructOperation(sp::utree const& _t, CompilerState& _s);
 
 	bool m_finalised = false;
-	Assembly m_asm;
-	ReadCallback m_readFile;
+	Assembly m_asm{};
+	ReadCallback m_readFile{};
 };
 
 static const CodeFragment NullCodeFragment;

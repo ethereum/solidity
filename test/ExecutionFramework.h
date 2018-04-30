@@ -53,6 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
+	virtual ~ExecutionFramework() {};
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -224,23 +225,23 @@ protected:
 
 	struct LogEntry
 	{
-		Address address;
-		std::vector<h256> topics;
-		bytes data;
+		Address address{};
+		std::vector<h256> topics{};
+		bytes data{};
 	};
 
-	solidity::EVMVersion m_evmVersion;
+	solidity::EVMVersion m_evmVersion{};
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_showMessages = false;
-	Address m_sender;
-	Address m_contractAddress;
-	u256 m_blockNumber;
+	Address m_sender{};
+	Address m_contractAddress{};
+	u256 m_blockNumber{};
 	u256 const m_gasPrice = 100 * szabo;
 	u256 const m_gas = 100000000;
-	bytes m_output;
-	std::vector<LogEntry> m_logs;
-	u256 m_gasUsed;
+	bytes m_output{};
+	std::vector<LogEntry> m_logs{};
+	u256 m_gasUsed{};
 };
 
 #define ABI_CHECK(result, expectation) do { \

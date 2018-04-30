@@ -106,16 +106,16 @@ private:
 	void checkLooseFeature(SourceLocation const& _location, std::string const& _description);
 
 	int m_stackHeight = 0;
-	julia::ExternalIdentifierAccess::Resolver m_resolver;
+	julia::ExternalIdentifierAccess::Resolver m_resolver{};
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to
 	/// "part of the scope but not yet declared")
-	std::set<Scope::Variable const*> m_activeVariables;
+	std::set<Scope::Variable const*> m_activeVariables{};
 	AsmAnalysisInfo& m_info;
 	ErrorReporter& m_errorReporter;
-	EVMVersion m_evmVersion;
+	EVMVersion m_evmVersion{};
 	AsmFlavour m_flavour = AsmFlavour::Loose;
-	boost::optional<Error::Type> m_errorTypeForLoose;
+	boost::optional<Error::Type> m_errorTypeForLoose{};
 };
 
 }

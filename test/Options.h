@@ -34,8 +34,8 @@ namespace test
 
 struct Options: boost::noncopyable
 {
-	std::string ipcPath;
-	boost::filesystem::path testPath;
+	std::string ipcPath{};
+	boost::filesystem::path testPath{};
 	bool showMessages = false;
 	bool optimize = false;
 	bool disableIPC = false;
@@ -47,7 +47,7 @@ struct Options: boost::noncopyable
 	static Options const& get();
 
 private:
-	std::string evmVersionString;
+	std::string evmVersionString{};
 
 	Options();
 };

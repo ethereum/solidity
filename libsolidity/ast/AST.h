@@ -104,7 +104,7 @@ protected:
 	mutable ASTAnnotation* m_annotation = nullptr;
 
 private:
-	SourceLocation m_location;
+	SourceLocation m_location{};
 };
 
 template <class _T>
@@ -146,6 +146,7 @@ private:
 class Scopable
 {
 public:
+	virtual ~Scopable() {}
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope() const { return m_scope; }
@@ -307,11 +308,12 @@ private:
 class VariableScope
 {
 public:
+	virtual ~VariableScope() {}
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
 private:
-	std::vector<VariableDeclaration const*> m_localVariables;
+	std::vector<VariableDeclaration const*> m_localVariables{};
 };
 
 /**
@@ -321,6 +323,7 @@ class Documented
 {
 public:
 	explicit Documented(ASTPointer<ASTString> const& _documentation): m_documentation(_documentation) {}
+	virtual ~Documented() {}
 
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
@@ -337,6 +340,7 @@ class ImplementationOptional
 {
 public:
 	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
+	virtual ~ImplementationOptional() {}
 
 	/// @return whether this node is fully implemented or not
 	bool isImplemented() const { return m_implemented; }
@@ -409,14 +413,14 @@ public:
 	ContractKind contractKind() const { return m_contractKind; }
 
 private:
-	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
-	std::vector<ASTPointer<ASTNode>> m_subNodes;
-	ContractKind m_contractKind;
+	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts{};
+	std::vector<ASTPointer<ASTNode>> m_subNodes{};
+	ContractKind m_contractKind{};
 
-	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
-	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
-	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
+	std::vector<ContractDefinition const*> m_linearizedBaseContracts{};
+	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList{};
+	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents{};
+	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers{};
 };
 
 class InheritanceSpecifier: public ASTNode

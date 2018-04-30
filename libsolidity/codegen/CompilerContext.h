@@ -285,43 +285,43 @@ private:
 		void startFunction(const Declaration &_function);
 
 		/// Labels pointing to the entry points of functions.
-		std::map<Declaration const*, eth::AssemblyItem> m_entryLabels;
+		std::map<Declaration const*, eth::AssemblyItem> m_entryLabels{};
 		/// Set of functions for which we did not yet generate code.
-		std::set<Declaration const*> m_alreadyCompiledFunctions;
+		std::set<Declaration const*> m_alreadyCompiledFunctions{};
 		/// Queue of functions that still need to be compiled (important to be a queue to maintain
 		/// determinism even in the presence of a non-deterministic allocator).
 		/// Mutable because we will throw out some functions earlier than needed.
-		mutable std::queue<Declaration const*> m_functionsToCompile;
-	} m_functionCompilationQueue;
+		mutable std::queue<Declaration const*> m_functionsToCompile{};
+	} m_functionCompilationQueue{};
 
-	eth::AssemblyPointer m_asm;
+	eth::AssemblyPointer m_asm{};
 	/// Version of the EVM to compile against.
-	EVMVersion m_evmVersion;
+	EVMVersion m_evmVersion{};
 	/// Activated experimental features.
-	std::set<ExperimentalFeature> m_experimentalFeatures;
+	std::set<ExperimentalFeature> m_experimentalFeatures{};
 	/// Other already compiled contracts to be used in contract creation calls.
-	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
+	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts{};
 	/// Storage offsets of state variables
-	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
+	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables{};
 	/// Offsets of local variables on the stack (relative to stack base).
 	/// This needs to be a stack because if a modifier contains a local variable and this
 	/// modifier is applied twice, the position of the variable needs to be restored
 	/// after the nested modifier is left.
-	std::map<Declaration const*, std::vector<unsigned>> m_localVariables;
+	std::map<Declaration const*, std::vector<unsigned>> m_localVariables{};
 	/// List of current inheritance hierarchy from derived to base.
-	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	std::vector<ContractDefinition const*> m_inheritanceHierarchy{};
 	/// Stack of current visited AST nodes, used for location attachment
-	std::stack<ASTNode const*> m_visitedNodes;
+	std::stack<ASTNode const*> m_visitedNodes{};
 	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.
 	CompilerContext *m_runtimeContext;
 	/// The index of the runtime subroutine.
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
-	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
+	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions{};
 	/// Container for ABI functions to be generated.
-	ABIFunctions m_abiFunctions;
+	ABIFunctions m_abiFunctions{};
 	/// The queue of low-level functions to generate.
-	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
+	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue{};
 };
 
 }

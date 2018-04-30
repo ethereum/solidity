@@ -350,9 +350,9 @@ public:
 	}
 
 private:
-	Token::Value m_token;
-	unsigned int m_firstNumber;
-	unsigned int m_secondNumber;
+	Token::Value m_token{};
+	unsigned int m_firstNumber{};
+	unsigned int m_secondNumber{};
 	/// throws if type is not properly sized
 	void assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
 };

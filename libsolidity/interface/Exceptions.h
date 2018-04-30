@@ -94,8 +94,8 @@ public:
 		return true;
 	}
 private:
-	Type m_type;
-	std::string m_typeName;
+	Type m_type{};
+	std::string m_typeName{};
 };
 
 
@@ -121,7 +121,7 @@ public:
 		}
 	}
 
-	std::vector<errorSourceLocationInfo> infos;
+	std::vector<errorSourceLocationInfo> infos{};
 };
 
 

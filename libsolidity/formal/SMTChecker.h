@@ -158,12 +158,12 @@ private:
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
-	std::shared_ptr<smt::SolverInterface> m_interface;
-	std::shared_ptr<VariableUsage> m_variableUsage;
+	std::shared_ptr<smt::SolverInterface> m_interface{};
+	std::shared_ptr<VariableUsage> m_variableUsage{};
 	bool m_loopExecutionHappened = false;
-	std::map<Expression const*, smt::Expression> m_expressions;
-	std::map<Declaration const*, SSAVariable> m_variables;
-	std::vector<smt::Expression> m_pathConditions;
+	std::map<Expression const*, smt::Expression> m_expressions{};
+	std::map<Declaration const*, SSAVariable> m_variables{};
+	std::vector<smt::Expression> m_pathConditions{};
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;

@@ -53,7 +53,7 @@ public:
 
 private:
 	/// Which variables the current expression references.
-	std::set<std::string> m_variableReferences;
+	std::set<std::string> m_variableReferences{};
 	/// Is the current expression movable or not.
 	bool m_movable = true;
 };

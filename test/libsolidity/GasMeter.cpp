@@ -108,7 +108,7 @@ public:
 	}
 
 protected:
-	map<ASTNode const*, eth::GasMeter::GasConsumption> m_gasCosts;
+	map<ASTNode const*, eth::GasMeter::GasConsumption> m_gasCosts{};
 };
 
 BOOST_FIXTURE_TEST_SUITE(GasMeterTests, GasMeterTestFramework)

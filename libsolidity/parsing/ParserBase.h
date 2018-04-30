@@ -82,7 +82,7 @@ protected:
 	/// given @a _description. Throws the FatalError.
 	void fatalParserError(std::string const& _description);
 
-	std::shared_ptr<Scanner> m_scanner;
+	std::shared_ptr<Scanner> m_scanner{};
 	/// The reference to the list of errors and warning to add errors/warnings during parsing
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.

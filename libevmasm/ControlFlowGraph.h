@@ -56,7 +56,7 @@ public:
 	explicit operator bool() const { return *this != invalid(); }
 
 private:
-	unsigned m_id;
+	unsigned m_id{};
 };
 
 /**
@@ -70,7 +70,7 @@ struct BasicBlock
 	/// End index (excluded) inte assembly item list.
 	unsigned end = 0;
 	/// Tags pushed inside this block, with multiplicity.
-	std::vector<BlockId> pushedTags;
+	std::vector<BlockId> pushedTags{};
 	/// ID of the block that always follows this one (either non-branching part of JUMPI or flow
 	/// into new block), or BlockId::invalid() otherwise
 	BlockId next = BlockId::invalid();
@@ -82,9 +82,9 @@ struct BasicBlock
 
 	/// Knowledge about the state when this block is entered. Intersection of all possible ways
 	/// to enter this block.
-	KnownStatePointer startState;
+	KnownStatePointer startState{};
 	/// Knowledge about the state at the end of this block.
-	KnownStatePointer endState;
+	KnownStatePointer endState{};
 };
 
 using BasicBlocks = std::vector<BasicBlock>;
@@ -122,7 +122,7 @@ private:
 	unsigned m_lastUsedId = 0;
 	AssemblyItems const& m_items;
 	bool m_joinKnowledge = true;
-	std::map<BlockId, BasicBlock> m_blocks;
+	std::map<BlockId, BasicBlock> m_blocks{};
 };
 
 

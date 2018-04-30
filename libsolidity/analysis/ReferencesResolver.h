@@ -91,8 +91,8 @@ private:
 	ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	/// Stack of return parameters.
-	std::vector<ParameterList const*> m_returnParameters;
-	bool const m_resolveInsideCode;
+	std::vector<ParameterList const*> m_returnParameters{};
+	bool const m_resolveInsideCode{};
 	bool m_errorOccurred = false;
 	bool m_experimental050Mode = false;
 };

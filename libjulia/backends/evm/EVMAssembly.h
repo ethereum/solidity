@@ -86,11 +86,11 @@ private:
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
-	bytes m_bytecode;
-	std::map<std::string, LabelID> m_namedLabels;
-	std::map<LabelID, size_t> m_labelPositions;
-	std::map<size_t, LabelID> m_labelReferences;
-	std::vector<size_t> m_assemblySizePositions;
+	bytes m_bytecode{};
+	std::map<std::string, LabelID> m_namedLabels{};
+	std::map<LabelID, size_t> m_labelPositions{};
+	std::map<size_t, LabelID> m_labelReferences{};
+	std::vector<size_t> m_assemblySizePositions{};
 };
 
 }

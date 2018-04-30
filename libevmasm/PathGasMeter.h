@@ -39,10 +39,10 @@ class KnownState;
 struct GasPath
 {
 	size_t index = 0;
-	std::shared_ptr<KnownState> state;
-	u256 largestMemoryAccess;
-	GasMeter::GasConsumption gas;
-	std::set<size_t> visitedJumpdests;
+	std::shared_ptr<KnownState> state{};
+	u256 largestMemoryAccess{};
+	GasMeter::GasConsumption gas{};
+	std::set<size_t> visitedJumpdests{};
 };
 
 /**
@@ -60,10 +60,10 @@ public:
 private:
 	GasMeter::GasConsumption handleQueueItem();
 
-	std::vector<std::unique_ptr<GasPath>> m_queue;
-	std::map<u256, size_t> m_tagPositions;
+	std::vector<std::unique_ptr<GasPath>> m_queue{};
+	std::map<u256, size_t> m_tagPositions{};
 	AssemblyItems const& m_items;
-	solidity::EVMVersion m_evmVersion;
+	solidity::EVMVersion m_evmVersion{};
 };
 
 }

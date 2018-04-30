@@ -60,8 +60,8 @@ private:
 	ErrorReporter& m_errorReporter;
 
 	VariableDeclaration const* m_currentConstVariable = nullptr;
-	std::vector<VariableDeclaration const*> m_constVariables; ///< Required for determinism.
-	std::map<VariableDeclaration const*, std::set<VariableDeclaration const*>> m_constVariableDependencies;
+	std::vector<VariableDeclaration const*> m_constVariables{}; ///< Required for determinism.
+	std::map<VariableDeclaration const*, std::set<VariableDeclaration const*>> m_constVariableDependencies{};
 };
 
 }

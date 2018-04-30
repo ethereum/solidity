@@ -10,6 +10,7 @@ include(GNUInstallDirs)
 set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(JSONCPP_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
+add_compile_options(-isystem ${JSONCPP_INCLUDE_DIR})
 
 if(NOT MSVC)
     set(JSONCPP_EXTRA_FLAGS "-std=c++11")

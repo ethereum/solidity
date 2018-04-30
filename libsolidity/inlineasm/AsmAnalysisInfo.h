@@ -41,10 +41,10 @@ struct AsmAnalysisInfo
 {
 	using StackHeightInfo = std::map<void const*, int>;
 	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	StackHeightInfo stackHeightInfo;
+	Scopes scopes{};
+	StackHeightInfo stackHeightInfo{};
 	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks;
+	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks{};
 };
 
 }

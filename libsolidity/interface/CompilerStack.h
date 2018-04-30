@@ -245,8 +245,8 @@ private:
 	 */
 	struct Source
 	{
-		std::shared_ptr<Scanner> scanner;
-		std::shared_ptr<SourceUnit> ast;
+		std::shared_ptr<Scanner> scanner{};
+		std::shared_ptr<SourceUnit> ast{};
 		bool isLibrary = false;
 		void reset() { scanner.reset(); ast.reset(); }
 	};
@@ -254,16 +254,16 @@ private:
 	struct Contract
 	{
 		ContractDefinition const* contract = nullptr;
-		std::shared_ptr<Compiler> compiler;
-		eth::LinkerObject object;
-		eth::LinkerObject runtimeObject;
-		eth::LinkerObject cloneObject;
-		std::string metadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> abi;
-		mutable std::unique_ptr<Json::Value const> userDocumentation;
-		mutable std::unique_ptr<Json::Value const> devDocumentation;
-		mutable std::unique_ptr<std::string const> sourceMapping;
-		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
+		std::shared_ptr<Compiler> compiler{};
+		eth::LinkerObject object{};
+		eth::LinkerObject runtimeObject{};
+		eth::LinkerObject cloneObject{};
+		std::string metadata{}; ///< The metadata json that will be hashed into the chain.
+		mutable std::unique_ptr<Json::Value const> abi{};
+		mutable std::unique_ptr<Json::Value const> userDocumentation{};
+		mutable std::unique_ptr<Json::Value const> devDocumentation{};
+		mutable std::unique_ptr<std::string const> sourceMapping{};
+		mutable std::unique_ptr<std::string const> runtimeSourceMapping{};
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
@@ -309,26 +309,26 @@ private:
 
 	struct Remapping
 	{
-		std::string context;
-		std::string prefix;
-		std::string target;
+		std::string context{};
+		std::string prefix{};
+		std::string target{};
 	};
 
-	ReadCallback::Callback m_readFile;
-	ReadCallback::Callback m_smtQuery;
+	ReadCallback::Callback m_readFile{};
+	ReadCallback::Callback m_smtQuery{};
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
-	EVMVersion m_evmVersion;
-	std::set<std::string> m_requestedContractNames;
-	std::map<std::string, h160> m_libraries;
+	EVMVersion m_evmVersion{};
+	std::set<std::string> m_requestedContractNames{};
+	std::map<std::string, h160> m_libraries{};
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
-	std::vector<Remapping> m_remappings;
-	std::map<std::string const, Source> m_sources;
-	std::shared_ptr<GlobalContext> m_globalContext;
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
-	std::vector<Source const*> m_sourceOrder;
-	std::map<std::string const, Contract> m_contracts;
+	std::vector<Remapping> m_remappings{};
+	std::map<std::string const, Source> m_sources{};
+	std::shared_ptr<GlobalContext> m_globalContext{};
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes{};
+	std::vector<Source const*> m_sourceOrder{};
+	std::map<std::string const, Contract> m_contracts{};
 	ErrorList m_errorList;
 	ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;

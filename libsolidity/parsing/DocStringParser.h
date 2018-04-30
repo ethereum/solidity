@@ -61,7 +61,7 @@ private:
 	void appendError(std::string const& _description);
 
 	/// Mapping tag name -> content.
-	std::multimap<std::string, DocTag> m_docTags;
+	std::multimap<std::string, DocTag> m_docTags{};
 	DocTag* m_lastTag = nullptr;
 	ErrorReporter* m_errorReporter = nullptr;
 	bool m_errorsOccurred = false;
