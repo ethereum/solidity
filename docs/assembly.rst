@@ -418,6 +418,9 @@ changes during the call, and thus references to local variables will be wrong.
 Labels
 ------
 
+.. note::
+    Labels are deprecated. Please use functions, loops, if or switch statements instead.
+
 Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
 which can change easily. Solidity inline assembly provides labels to make the use of
 jumps easier. Note that labels are a low-level feature and it is possible to write
@@ -518,6 +521,10 @@ is performed by replacing the variable's value on the stack by the new value.
         sload(10)
         =: v // instruction style assignment, puts the result of sload(10) into v
     }
+
+.. note::
+    Instruction-style assignment is deprecated.
+
 
 If
 --
@@ -693,9 +700,9 @@ the form ``mul(add(x, y), 7)`` are preferred over pure opcode statements like
 ``7 y x add mul`` because in the first form, it is much easier to see which
 operand is used for which opcode.
 
-The second goal is achieved by introducing a desugaring phase that only removes
-the higher level constructs in a very regular way and still allows inspecting
-the generated low-level assembly code. The only non-local operation performed
+The second goal is achieved by compiling the
+higher level constructs to bytecode in a very regular way.
+The only non-local operation performed
 by the assembler is name lookup of user-defined identifiers (functions, variables, ...),
 which follow very simple and regular scoping rules and cleanup of local variables from the stack.
 
@@ -716,8 +723,6 @@ keep track of the current so-called stack height. Since all local variables
 are removed at the end of a block, the stack height before and after the block
 should be the same. If this is not the case, a warning is issued.
 
-Why do we use higher-level constructs like ``switch``, ``for`` and functions:
-
 Using ``switch``, ``for`` and functions, it should be possible to write
 complex code without using ``jump`` or ``jumpi`` manually. This makes it much
 easier to analyze the control flow, which allows for improved formal
@@ -726,13 +731,11 @@ verification and optimization.
 Furthermore, if manual jumps are allowed, computing the stack height is rather complicated.
 The position of all local variables on the stack needs to be known, otherwise
 neither references to local variables nor removing local variables automatically
-from the stack at the end of a block will work properly. The desugaring
-mechanism correctly inserts operations at unreachable blocks that adjust the
-stack height properly in case of jumps that do not have a continuing control flow.
+from the stack at the end of a block will work properly.
 
 Example:
 
-We will follow an example compilation from Solidity to desugared assembly.
+We will follow an example compilation from Solidity to assembly.
 We consider the runtime bytecode of the following Solidity program::
 
     pragma solidity ^0.4.16;
@@ -772,99 +775,9 @@ The following assembly will be generated::
       }
     }
 
-After the desugaring phase it looks as follows::
 
-    {
-      mstore(0x40, 0x60)
-      {
-        let $0 := div(calldataload(0), exp(2, 226))
-        jumpi($case1, eq($0, 0xb3de648b))
-        jump($caseDefault)
-        $case1:
-        {
-          // the function call - we put return label and arguments on the stack
-          $ret1 calldataload(4) jump(f)
-          // This is unreachable code. Opcodes are added that mirror the
-          // effect of the function on the stack height: Arguments are
-          // removed and return values are introduced.
-          pop pop
-          let r := 0
-          $ret1: // the actual return point
-          $ret2 0x20 jump($allocate)
-          pop pop let ret := 0
-          $ret2:
-          mstore(ret, r)
-          return(ret, 0x20)
-          // although it is useless, the jump is automatically inserted,
-          // since the desugaring process is a purely syntactic operation that
-          // does not analyze control-flow
-          jump($endswitch)
-        }
-        $caseDefault:
-        {
-          revert(0, 0)
-          jump($endswitch)
-        }
-        $endswitch:
-      }
-      jump($afterFunction)
-      allocate:
-      {
-        // we jump over the unreachable code that introduces the function arguments
-        jump($start)
-        let $retpos := 0 let size := 0
-        $start:
-        // output variables live in the same scope as the arguments and is
-        // actually allocated.
-        let pos := 0
-        {
-          pos := mload(0x40)
-          mstore(0x40, add(pos, size))
-        }
-        // This code replaces the arguments by the return values and jumps back.
-        swap1 pop swap1 jump
-        // Again unreachable code that corrects stack height.
-        0 0
-      }
-      f:
-      {
-        jump($start)
-        let $retpos := 0 let x := 0
-        $start:
-        let y := 0
-        {
-          let i := 0
-          $for_begin:
-          jumpi($for_end, iszero(lt(i, x)))
-          {
-            y := mul(2, y)
-          }
-          $for_continue:
-          { i := add(i, 1) }
-          jump($for_begin)
-          $for_end:
-        } // Here, a pop instruction will be inserted for i
-        swap1 pop swap1 jump
-        0 0
-      }
-      $afterFunction:
-      stop
-    }
-
-
-Assembly happens in four stages:
-
-1. Parsing
-2. Desugaring (removes switch, for and functions)
-3. Opcode stream generation
-4. Bytecode generation
-
-We will specify steps one to three in a pseudo-formal way. More formal
-specifications will follow.
-
-
-Parsing / Grammar
------------------
+Assembly Grammar
+----------------
 
 The tasks of the parser are the following:
 
@@ -922,160 +835,3 @@ Grammar::
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
     HexNumber = '0x' [0-9a-fA-F]+
     DecimalNumber = [0-9]+
-
-
-Desugaring
-----------
-
-An AST transformation removes for, switch and function constructs. The result
-is still parseable by the same parser, but it will not use certain constructs.
-If jumpdests are added that are only jumped to and not continued at, information
-about the stack content is added, unless no local variables of outer scopes are
-accessed or the stack height is the same as for the previous instruction.
-
-Pseudocode::
-
-    desugar item: AST -> AST =
-    match item {
-    AssemblyFunctionDefinition('function' name '(' arg1, ..., argn ')' '->' ( '(' ret1, ..., retm ')' body) ->
-      <name>:
-      {
-        jump($<name>_start)
-        let $retPC := 0 let argn := 0 ... let arg1 := 0
-        $<name>_start:
-        let ret1 := 0 ... let retm := 0
-        { desugar(body) }
-        swap and pop items so that only ret1, ... retm, $retPC are left on the stack
-        jump
-        0 (1 + n times) to compensate removal of arg1, ..., argn and $retPC
-      }
-    AssemblyFor('for' { init } condition post body) ->
-      {
-        init // cannot be its own block because we want variable scope to extend into the body
-        // find I such that there are no labels $forI_*
-        $forI_begin:
-        jumpi($forI_end, iszero(condition))
-        { body }
-        $forI_continue:
-        { post }
-        jump($forI_begin)
-        $forI_end:
-      }
-    'break' ->
-      {
-        // find nearest enclosing scope with label $forI_end
-        pop all local variables that are defined at the current point
-        but not at $forI_end
-        jump($forI_end)
-        0 (as many as variables were removed above)
-      }
-    'continue' ->
-      {
-        // find nearest enclosing scope with label $forI_continue
-        pop all local variables that are defined at the current point
-        but not at $forI_continue
-        jump($forI_continue)
-        0 (as many as variables were removed above)
-      }
-    AssemblySwitch(switch condition cases ( default: defaultBlock )? ) ->
-      {
-        // find I such that there is no $switchI* label or variable
-        let $switchI_value := condition
-        for each of cases match {
-          case val: -> jumpi($switchI_caseJ, eq($switchI_value, val))
-        }
-        if default block present: ->
-          { defaultBlock jump($switchI_end) }
-        for each of cases match {
-          case val: { body } -> $switchI_caseJ: { body jump($switchI_end) }
-        }
-        $switchI_end:
-      }
-    FunctionalAssemblyExpression( identifier(arg1, arg2, ..., argn) ) ->
-      {
-        if identifier is function <name> with n args and m ret values ->
-          {
-            // find I such that $funcallI_* does not exist
-            $funcallI_return argn  ... arg2 arg1 jump(<name>)
-            pop (n + 1 times)
-            if the current context is `let (id1, ..., idm) := f(...)` ->
-              let id1 := 0 ... let idm := 0
-              $funcallI_return:
-            else ->
-              0 (m times)
-              $funcallI_return:
-              turn the functional expression that leads to the function call
-              into a statement stream
-          }
-        else -> desugar(children of node)
-      }
-    default node ->
-      desugar(children of node)
-    }
-
-Opcode Stream Generation
-------------------------
-
-During opcode stream generation, we keep track of the current stack height
-in a counter,
-so that accessing stack variables by name is possible. The stack height is modified with every opcode
-that modifies the stack and with every label that is annotated with a stack
-adjustment. Every time a new
-local variable is introduced, it is registered together with the current
-stack height. If a variable is accessed (either for copying its value or for
-assignment), the appropriate ``DUP`` or ``SWAP`` instruction is selected depending
-on the difference between the current stack height and the
-stack height at the point the variable was introduced.
-
-Pseudocode::
-
-    codegen item: AST -> opcode_stream =
-    match item {
-    AssemblyBlock({ items }) ->
-      join(codegen(item) for item in items)
-      if last generated opcode has continuing control flow:
-        POP for all local variables registered at the block (including variables
-        introduced by labels)
-        warn if the stack height at this point is not the same as at the start of the block
-    Identifier(id) ->
-      lookup id in the syntactic stack of blocks
-      match type of id
-        Local Variable ->
-          DUPi where i = 1 + stack_height - stack_height_of_identifier(id)
-        Label ->
-          // reference to be resolved during bytecode generation
-          PUSH<bytecode position of label>
-        SubAssembly ->
-          PUSH<bytecode position of subassembly data>
-    FunctionalAssemblyExpression(id ( arguments ) ) ->
-      join(codegen(arg) for arg in arguments.reversed())
-      id (which has to be an opcode, might be a function name later)
-    AssemblyLocalDefinition(let (id1, ..., idn) := expr) ->
-      register identifiers id1, ..., idn as locals in current block at current stack height
-      codegen(expr) - assert that expr returns n items to the stack
-    FunctionalAssemblyAssignment((id1, ..., idn) := expr) ->
-      lookup id1, ..., idn in the syntactic stack of blocks, assert that they are variables
-      codegen(expr)
-      for j = n, ..., i:
-      SWAPi where i = 1 + stack_height - stack_height_of_identifier(idj)
-      POP
-    AssemblyAssignment(=: id) ->
-      look up id in the syntactic stack of blocks, assert that it is a variable
-      SWAPi where i = 1 + stack_height - stack_height_of_identifier(id)
-      POP
-    LabelDefinition(name:) ->
-      JUMPDEST
-    NumberLiteral(num) ->
-      PUSH<num interpreted as decimal and right-aligned>
-    HexLiteral(lit) ->
-      PUSH32<lit interpreted as hex and left-aligned>
-    StringLiteral(lit) ->
-      PUSH32<lit utf-8 encoded and left-aligned>
-    SubAssembly(assembly <name> block) ->
-      append codegen(block) at the end of the code
-    dataSize(<name>) ->
-      assert that <name> is a subassembly ->
-      PUSH32<size of code generated from subassembly <name>>
-    linkerSymbol(<lit>) ->
-      PUSH32<zeros> and append position to linker table
-    }
