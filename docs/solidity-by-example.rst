@@ -110,7 +110,7 @@ of votes.
         }
 
         /// Delegate your vote to the voter `to`.
-        function delegate(address to) public {
+        function delegate(address to, uint proposalChoice) public {
             // assigns reference
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "You already voted.");
@@ -137,6 +137,14 @@ of votes.
             sender.voted = true;
             sender.delegate = to;
             Voter storage delegate_ = voters[to];
+
+            //Check if the delegate will vote for the 'same proposal' 
+            //as requested by the sender - otherwise, the number of votes
+            //will be added to the delegate's choice of proposal, 
+            //instead of the sender's choice of proposal.
+            
+            require(delegate_.vote == proposalChoice, "Delegate is voting for a 'different proposal'");
+
             if (delegate_.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
