@@ -1283,8 +1283,10 @@ shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& 
 
 FixedBytesType::FixedBytesType(int _bytes): m_bytes(_bytes)
 {
-	solAssert(m_bytes >= 0 && m_bytes <= 32,
-			  "Invalid byte number for fixed bytes type: " + dev::toString(m_bytes));
+	solAssert(
+		m_bytes > 0 && m_bytes <= 32,
+		"Invalid byte number for fixed bytes type: " + dev::toString(m_bytes)
+	);
 }
 
 bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
