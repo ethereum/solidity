@@ -425,14 +425,14 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 
 }
 
-IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
+IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
 	if (isAddress())
 		solAssert(m_bits == 160, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
-		"Invalid bit number for integer type: " + dev::toString(_bits)
+		"Invalid bit number for integer type: " + dev::toString(m_bits)
 	);
 }
 
@@ -584,7 +584,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 {
 	if (isAddress())
 		return {
-			{"balance", make_shared<IntegerType >(256)},
+			{"balance", make_shared<IntegerType>(256)},
 			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
@@ -696,7 +696,7 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 
 std::shared_ptr<IntegerType> FixedPointType::asIntegerType() const
 {
-	return std::make_shared<IntegerType>(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
+	return make_shared<IntegerType>(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
 }
 
 tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
@@ -850,7 +850,7 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		if (isFractional())
 			return false;
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
-		int forSignBit = (targetType.isSigned() ? 1 : 0);
+		unsigned forSignBit = (targetType.isSigned() ? 1 : 0);
 		if (m_value > rational(0))
 		{
 			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
