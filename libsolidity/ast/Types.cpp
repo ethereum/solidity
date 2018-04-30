@@ -1264,13 +1264,6 @@ bool StringLiteralType::isValidUTF8() const
 	return dev::validateUTF8(m_value);
 }
 
-shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
-{
-	if (_literal.length() <= 32)
-		return make_shared<FixedBytesType>(_literal.length());
-	return shared_ptr<FixedBytesType>();
-}
-
 FixedBytesType::FixedBytesType(unsigned int _bytes): m_bytes(_bytes)
 {
 	solAssert(
