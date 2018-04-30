@@ -58,12 +58,23 @@ void SMTChecker::analyze(SourceUnit const& _source)
 		_source.accept(*this);
 }
 
+bool SMTChecker::visit(ContractDefinition const& _contract)
+{
+	for (auto _var : _contract.stateVariables())
+		if (_var->type()->isValueType())
+			createVariable(*_var);
+	return true;
+}
+
+void SMTChecker::endVisit(ContractDefinition const&)
+{
+	m_stateVariables.clear();
+}
+
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
 		assignment(_varDecl, *_varDecl.value(), _varDecl.location());
-	else if (_varDecl.isStateVariable() && _varDecl.type()->isValueType())
-		createVariable(_varDecl);
 }
 
 bool SMTChecker::visit(FunctionDefinition const& _function)

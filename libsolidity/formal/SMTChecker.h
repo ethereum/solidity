@@ -50,6 +50,8 @@ private:
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
 
+	virtual bool visit(ContractDefinition const& _node) override;
+	virtual void endVisit(ContractDefinition const& _node) override;
 	virtual void endVisit(VariableDeclaration const& _node) override;
 	virtual bool visit(FunctionDefinition const& _node) override;
 	virtual void endVisit(FunctionDefinition const& _node) override;

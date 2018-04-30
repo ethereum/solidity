@@ -531,6 +531,17 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C
+		{
+			function f() public view {
+				assert(c > 0);
+			}
+			uint c;
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+
 }
 
 BOOST_AUTO_TEST_CASE(while_loop_simple)
