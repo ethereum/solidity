@@ -505,7 +505,7 @@ class FixedBytesType: public Type
 public:
 	virtual Category category() const override { return Category::FixedBytes; }
 
-	explicit FixedBytesType(unsigned int _bytes);
+	explicit FixedBytesType(unsigned _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
