@@ -1264,7 +1264,7 @@ bool StringLiteralType::isValidUTF8() const
 	return dev::validateUTF8(m_value);
 }
 
-FixedBytesType::FixedBytesType(int _bytes): m_bytes(_bytes)
+FixedBytesType::FixedBytesType(unsigned _bytes): m_bytes(_bytes)
 {
 	solAssert(
 		m_bytes > 0 && m_bytes <= 32,
