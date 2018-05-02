@@ -844,6 +844,11 @@ Of course, you can also directly access the members of the struct without
 assigning it to a local variable, as in
 ``campaigns[campaignID].amount = 0``.
 
+Also, if you want to add a new element to a struct array then conventional way of doing is ::
+    MyStruct memory newStruct;
+        ... // modifiying newStruct variables
+    myStructsArray.push(newStruct);
+
 .. index:: !mapping
 
 Mappings
