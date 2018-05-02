@@ -744,31 +744,25 @@ void CompilerUtils::convertType(
 			{
 				IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
 				cleanHigherOrderBits(typeOnStack);
-				m_context << u256(pow(bigint(10), targetFixedPointType.fractionalDigits()))
-						  << Instruction::MUL;
-				if (_cleanupNeeded) {
+				convertFixedPointType(0, targetFixedPointType.fractionalDigits(), false); // Signed doesn't matter, only multiplying
+				if (_cleanupNeeded)
 					cleanHigherOrderBits(targetFixedPointType);
-				}
 			}
 			else if (stackTypeCategory == Type::Category::RationalNumber)
 			{
 				auto typeOnStack = dynamic_cast<RationalNumberType const*>(&_typeOnStack);
+				solAssert(typeOnStack, "");
 				convertType(*typeOnStack->fixedPointType(), targetFixedPointType);
 			}
 			else
 			{
 				solAssert(stackTypeCategory == Type::Category::FixedPoint, "");
 				auto typeOnStack = dynamic_cast<FixedPointType const*>(&_typeOnStack);
+				solAssert(typeOnStack, "");
 				cleanHigherOrderBits(*typeOnStack);
-
-				if (typeOnStack->fractionalDigits() > targetFixedPointType.fractionalDigits())
-					m_context << u256(pow(bigint(10), typeOnStack->fractionalDigits() - targetFixedPointType.fractionalDigits()))
-							  << Instruction::SWAP1
-							  << (typeOnStack->isSigned() ? Instruction::SDIV : Instruction::DIV);
-				else if (typeOnStack->fractionalDigits() < targetFixedPointType.fractionalDigits())
-					m_context << u256(pow(bigint(10), targetFixedPointType.fractionalDigits() - typeOnStack->fractionalDigits()))
-							  << Instruction::MUL;
-
+				convertFixedPointType(typeOnStack->fractionalDigits(), targetFixedPointType.fractionalDigits(), typeOnStack->isSigned());
+				if (_cleanupNeeded)
+					cleanHigherOrderBits(targetFixedPointType);
 			}
 		}
 		else
@@ -1321,6 +1315,19 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 			leftShiftNumberOnStack((32 - numBytes) * 8);
 	}
 	return numBytes;
+}
+
+void CompilerUtils::convertFixedPointType(unsigned int _from, unsigned int _to, bool _signed)
+{
+	if (_from > _to)
+		m_context
+				<< u256(pow(bigint(10), _from - _to))
+				<< Instruction::SWAP1
+				<< (_signed ? Instruction::SDIV : Instruction::DIV);
+	else if (_from < _to)
+		m_context
+				<< u256(pow(bigint(10), _to - _from))
+				<< Instruction::MUL;
 }
 
 }

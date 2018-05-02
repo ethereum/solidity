@@ -297,6 +297,10 @@ private:
 	/// Loads type from memory assuming memory offset is on stack top.
 	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords);
 
+	/// Converts a fixed or integral type on stack of _from decimal digits to a fixed type of _to decimal digits.
+	/// The type on stack MUST be cleaned before calling this method.
+	void convertFixedPointType(unsigned int _from, unsigned int _to, bool _signed);
+
 	CompilerContext& m_context;
 };
 
