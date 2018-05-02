@@ -138,6 +138,7 @@ private:
 class Type: private boost::noncopyable, public std::enable_shared_from_this<Type>
 {
 public:
+	virtual ~Type() = default;
 	enum class Category
 	{
 		Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
