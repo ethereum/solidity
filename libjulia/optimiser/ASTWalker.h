@@ -42,6 +42,7 @@ namespace julia
 class ASTWalker: public boost::static_visitor<>
 {
 public:
+	virtual ~ASTWalker() = default;
 	virtual void operator()(Literal const&) {}
 	virtual void operator()(Instruction const&) { solAssert(false, ""); }
 	virtual void operator()(Identifier const&) {}
@@ -82,6 +83,7 @@ protected:
 class ASTModifier: public boost::static_visitor<>
 {
 public:
+	virtual ~ASTModifier() = default;
 	virtual void operator()(Literal&) {}
 	virtual void operator()(Instruction&) { solAssert(false, ""); }
 	virtual void operator()(Identifier&) {}
