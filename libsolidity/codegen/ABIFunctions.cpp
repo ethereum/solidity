@@ -332,7 +332,7 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 				{
 					body =
 							Whiskers("converted := <toFixed>(<cleanInt>(value))")
-									("toFixed", scaleFixedFunction(0, toFixedPointType.fractionalDigits(), dynamic_cast<IntegerType const &>(_from).isSigned()))
+									("toFixed", scaleFixedFunction(0, toFixedPointType.fractionalDigits(), dynamic_cast<IntegerType const&>(_from).isSigned()))
 									("cleanInt", cleanupFunction(_from, false))
 									.render();
 				}
