@@ -45,6 +45,7 @@ public:
 
 private:
 	static Json::Value processStructMembers(StructType const& structType);
+	static Json::Value processMember(MemberList::Member const& member, std::pair<u256, unsigned> const& location);
 };
 }
 }

@@ -40,34 +40,17 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 	{
 		if (auto decl = dynamic_cast<VariableDeclaration const*>(it.first)) 
 		{
-			auto location = it.second;	
-			
-			Json::Value variable;
-			variable["name"] = decl->name();
-			variable["slot"] = location.first.str();
-			variable["offset"] = to_string(location.second);
-			variable["type"] = decl->type()->canonicalName();
-			variable["size"] = decl->type()->storageSize().str();
-
-			// Only include storageBytes if storageSize is 1, otherwise it always returns 32
-			if (decl->type()->storageSize() == 1) {
-				variable["bytes"] = to_string(decl->type()->storageBytes());
-			}
+			auto location = it.second;
+			auto member = MemberList::Member(decl->name(), decl->type(), decl);
+			auto memberData = processMember(member, location);
 			
 			// Assume that the parent scope of a state variable is a contract
 			auto parent = ((Declaration*)decl->scope());
 			if (parent != NULL) {
-				variable["contract"] = parent->name();
+				memberData["contract"] = parent->name();
 			}
 
-			// If this is a struct, visit its members
-			if (decl->type()->category() == Type::Category::Struct) 
-			{
-				auto structType = static_pointer_cast<const StructType>(decl->type());
-				variable["storage"] = processStructMembers(*structType);
-			}
-			
-			storage.append(variable);
+			storage.append(memberData);
 		}
 	}
 
@@ -79,24 +62,34 @@ Json::Value StorageInfo::processStructMembers(StructType const& structType)
 	Json::Value members(Json::arrayValue);
 	for(auto member: structType.members(nullptr)) 
 	{
-		Json::Value memberData;
-		
 		auto offsets = structType.storageOffsetsOfMember(member.name);
-		memberData["name"] = member.name;
-		memberData["slot"] = offsets.first.str();
-		memberData["offset"] = to_string(offsets.second);
-		memberData["type"] = member.type->canonicalName();
-		memberData["size"] = member.type->storageSize().str();
-		if (member.type->storageSize() == 1) {
-			memberData["bytes"] = to_string(member.type->storageBytes());
-		}
-		if (member.type->category() == Type::Category::Struct) {
-			auto childStruct = static_pointer_cast<const StructType>(member.type);
-			memberData["storage"] = processStructMembers(*childStruct);
-		}
-
+		auto memberData = processMember(member, offsets);
 		members.append(memberData);
 	}
 
 	return members;
+}
+
+Json::Value StorageInfo::processMember(MemberList::Member const& member, pair<u256, unsigned> const& location) 
+{
+	Json::Value memberData;
+		
+	memberData["name"] = member.name;
+	memberData["slot"] = location.first.str();
+	memberData["offset"] = to_string(location.second);
+	memberData["type"] = member.type->canonicalName();
+	memberData["size"] = member.type->storageSize().str();
+
+	// Only include storageBytes if storageSize is 1, otherwise it always returns 32
+	if (member.type->storageSize() == 1) {
+		memberData["bytes"] = to_string(member.type->storageBytes());
+	}
+
+	// If this is a struct, visit its members
+	if (member.type->category() == Type::Category::Struct) {
+		auto childStruct = static_pointer_cast<const StructType>(member.type);
+		memberData["storage"] = processStructMembers(*childStruct);
+	}
+
+	return memberData;
 }
