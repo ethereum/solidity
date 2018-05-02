@@ -4,6 +4,32 @@ defaults:
       filters:
         tags:
           only: /.*/
+  - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
+      name: Store commit hash and prerelease
+      command: |
+        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+        echo -n "$CIRCLE_SHA1" > commit_hash.txt
+  - run_build: &run_build
+      name: Build
+      command: |
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        make -j4
+  - run_tests: &run_tests
+      name: Tests
+      command: scripts/tests.sh --junit_report test_results
+      environment:
+        TERM: dumb
+  - solc_artifact: &solc_artifact
+      path: build/solc/solc
+      destination: solc
+  - all_artifacts: &all_artifacts
+      root: build
+      paths:
+        - solc/solc
+        - test/soltest
+        - test/tools/solfuzzer
 
 version: 2
 jobs:
@@ -87,7 +113,7 @@ jobs:
           command: |
             . /usr/local/nvm/nvm.sh
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
-  build_x86:
+  build_x86_linux:
     docker:
       - image: buildpack-deps:artful
     steps:
@@ -97,29 +123,31 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
-      - run:
-          name: Store commit hash and prerelease
-          command: |
-            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-            echo -n "$CIRCLE_SHA1" > commit_hash.txt
-      - run:
-          name: Build
-          command: |
-            mkdir -p build
-            cd build
-            cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-            make -j4
-      - store_artifacts:
-          path: build/solc/solc
-          destination: solc
-      - persist_to_workspace:
-          root: build
-          paths:
-            - solc/solc
-            - test/soltest
-            - test/tools/solfuzzer
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace: *all_artifacts
 
-  test_x86:
+  build_x86_mac:
+    macos:
+      xcode: "9.0"
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            brew update
+            brew upgrade
+            brew unlink python
+            brew install z3
+            brew install boost
+            brew install cmake
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace: *all_artifacts
+
+  test_x86_linux:
     docker:
       - image: buildpack-deps:artful
     steps:
@@ -132,9 +160,26 @@ jobs:
             apt-get -qq update
             apt-get -qy install libz3-dev libleveldb1v5
       - run: mkdir -p test_results
+      - run: *run_tests
+      - store_test_results:
+          path: test_results/
+
+  test_x86_mac:
+    macos:
+      xcode: "9.0"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
       - run:
-          name: Tests
-          command: scripts/tests.sh --junit_report test_results
+          name: Install dependencies
+          command: |
+            brew update
+            brew upgrade
+            brew unlink python
+            brew install z3
+      - run: mkdir -p test_results
+      - run: *run_tests
       - store_test_results:
           path: test_results/
 
@@ -148,11 +193,7 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install python-sphinx
-      - run:
-          name: Store commit hash and prerelease
-          command: |
-            if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+      - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
           command: ./scripts/docs.sh
@@ -173,9 +214,14 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
-      - build_x86: *build_on_tags
-      - test_x86:
+      - build_x86_linux: *build_on_tags
+      - build_x86_mac: *build_on_tags
+      - test_x86_linux:
           <<: *build_on_tags
           requires:
-            - build_x86
+            - build_x86_linux
+      - test_x86_mac:
+          <<: *build_on_tags
+          requires:
+            - build_x86_mac
       - docs: *build_on_tags
