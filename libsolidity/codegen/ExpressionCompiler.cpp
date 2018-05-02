@@ -548,7 +548,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			if (m_context.runtimeContext())
 				// We have a runtime context, so we need the creation part.
-				utils().rightShiftNumberOnStack(32, false);
+				utils().rightShiftNumberOnStack(32);
 			else
 				// Extract the runtime part.
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
@@ -1706,13 +1706,23 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		m_context.appendConditionalInvalid();
 	}
 
+	m_context << Instruction::SWAP1;
+	// stack: value_to_shift shift_amount
+
 	switch (_operator)
 	{
 	case Token::SHL:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
+		if (m_context.evmVersion().hasBitwiseShifting())
+			m_context << Instruction::SHL;
+		else
+			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
+		// NOTE: SAR rounds differently than SDIV
+		if (m_context.evmVersion().hasBitwiseShifting() && !c_valueSigned)
+			m_context << Instruction::SHR;
+		else
+			m_context << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
 	default:
