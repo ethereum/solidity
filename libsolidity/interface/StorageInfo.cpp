@@ -59,6 +59,32 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 			if (parent != NULL) {
 				variable["contract"] = parent->name();
 			}
+
+			// If this is a struct, visit its members
+			if (decl->type()->category() == Type::Category::Struct) 
+			{
+				auto structType = static_pointer_cast<const StructType>(decl->type());
+				Json::Value members(Json::arrayValue);
+				
+				for(auto member: structType->members(nullptr)) 
+				{
+					Json::Value memberData;
+					
+					auto offsets = structType->storageOffsetsOfMember(member.name);
+					memberData["name"] = member.name;
+					memberData["slot"] = offsets.first.str();
+					memberData["offset"] = to_string(offsets.second);
+					memberData["type"] = member.type->canonicalName();
+					memberData["size"] = member.type->storageSize().str();
+					if (member.type->storageSize() == 1) {
+						memberData["bytes"] = to_string(member.type->storageBytes());
+					}
+
+					members.append(memberData);
+				}
+
+				variable["storage"] = members;
+			}
 			
 			storage.append(variable);
 		}

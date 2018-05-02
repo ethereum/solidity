@@ -211,7 +211,13 @@ BOOST_AUTO_TEST_CASE(struct_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ "name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "2" }
+		{ 
+			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "2",
+			"storage": [
+				{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
+				{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }
+			]
+		}
 	])JSON";
 
 	checkInterface(sourceCode, interface);
