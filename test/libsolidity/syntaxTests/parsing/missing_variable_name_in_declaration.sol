@@ -2,4 +2,4 @@ contract test {
     uint256 ;
 }
 // ----
-// ParserError: (28-28): Expected identifier, got 'Semicolon'
+// ParserError: (28-28): Expected token Identifier got 'Semicolon'

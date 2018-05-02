@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 	for (const auto& keyword: keywords)
 	{
 		auto text = std::string("contract ") + keyword + " {}";
-		CHECK_PARSE_ERROR(text.c_str(), "Expected identifier");
+		CHECK_PARSE_ERROR(text.c_str(), "Expected token Identifier got reserved keyword");
 	}
 }
 

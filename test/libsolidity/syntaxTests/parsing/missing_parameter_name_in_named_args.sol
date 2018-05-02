@@ -3,4 +3,4 @@ contract test {
 	function b() returns (uint r) { r = a({: 1, : 2, : 3}); }
 }
 // ----
-// ParserError: (143-143): Expected identifier, got 'Colon'
+// ParserError: (143-143): Expected token Identifier got 'Colon'
