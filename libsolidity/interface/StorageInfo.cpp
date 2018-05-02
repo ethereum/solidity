@@ -64,26 +64,7 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 			if (decl->type()->category() == Type::Category::Struct) 
 			{
 				auto structType = static_pointer_cast<const StructType>(decl->type());
-				Json::Value members(Json::arrayValue);
-				
-				for(auto member: structType->members(nullptr)) 
-				{
-					Json::Value memberData;
-					
-					auto offsets = structType->storageOffsetsOfMember(member.name);
-					memberData["name"] = member.name;
-					memberData["slot"] = offsets.first.str();
-					memberData["offset"] = to_string(offsets.second);
-					memberData["type"] = member.type->canonicalName();
-					memberData["size"] = member.type->storageSize().str();
-					if (member.type->storageSize() == 1) {
-						memberData["bytes"] = to_string(member.type->storageBytes());
-					}
-
-					members.append(memberData);
-				}
-
-				variable["storage"] = members;
+				variable["storage"] = processStructMembers(*structType);
 			}
 			
 			storage.append(variable);
@@ -91,4 +72,31 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 	}
 
 	return storage;
+}
+
+Json::Value StorageInfo::processStructMembers(StructType const& structType) 
+{
+	Json::Value members(Json::arrayValue);
+	for(auto member: structType.members(nullptr)) 
+	{
+		Json::Value memberData;
+		
+		auto offsets = structType.storageOffsetsOfMember(member.name);
+		memberData["name"] = member.name;
+		memberData["slot"] = offsets.first.str();
+		memberData["offset"] = to_string(offsets.second);
+		memberData["type"] = member.type->canonicalName();
+		memberData["size"] = member.type->storageSize().str();
+		if (member.type->storageSize() == 1) {
+			memberData["bytes"] = to_string(member.type->storageBytes());
+		}
+		if (member.type->category() == Type::Category::Struct) {
+			auto childStruct = static_pointer_cast<const StructType>(member.type);
+			memberData["storage"] = processStructMembers(*childStruct);
+		}
+
+		members.append(memberData);
+	}
+
+	return members;
 }

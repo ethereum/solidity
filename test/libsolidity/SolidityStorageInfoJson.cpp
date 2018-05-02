@@ -212,10 +212,78 @@ BOOST_AUTO_TEST_CASE(struct_test)
 
 	char const* interface = R"JSON([
 		{ 
-			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "2",
-			"storage": [
+			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "2", "storage": [
 				{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
 				{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }
+			]
+		}
+	])JSON";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(nested_struct_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct bar {
+				uint a;
+				uint b;
+			}
+			struct foo {
+				bar a;
+				uint b;
+			}
+			foo f;
+		}
+	)";
+
+	char const* interface = R"JSON([
+		{ 
+			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "3", "storage": [
+				{ "name": "a", "offset": "0", "slot": "0", "type": "test.bar", "size": "2", "storage": [
+					{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
+					{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }	
+				] },
+				{ "name": "b", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" }
+			]
+		}
+	])JSON";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(deeply_nested_struct_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct grandchild {
+				uint a;
+				uint b;
+			}
+			struct child {
+				grandchild a;
+				uint b;
+			}
+			struct foo {
+				child a;
+				uint b;
+			}
+			foo f;
+		}
+	)";
+
+	char const* interface = R"JSON([
+		{ 
+			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "4", "storage": [
+				{ "name": "a", "offset": "0", "slot": "0", "type": "test.child", "size": "3", "storage": [
+					{ "name": "a", "offset": "0", "slot": "0", "type": "test.grandchild", "size": "2", "storage": [
+						{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
+						{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }	
+					]},
+					{ "name": "b", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" }
+				] },
+				{ "name": "b", "offset": "0", "slot": "3", "type": "uint256", "size": "1", "bytes": "32" }
 			]
 		}
 	])JSON";
