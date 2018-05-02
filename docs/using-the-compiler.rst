@@ -14,7 +14,9 @@ Using the Commandline Compiler
 
 One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
+If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
+
+Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. By default, the optimizer will optimize the contract for 200 runs. If you want to optimize for initial contract deployment and get the smallest output, set it to ``--runs=1``. If you expect many transactions and don't care for higher deployment cost and output size, set ``--runs`` to a high number.
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
@@ -96,10 +98,13 @@ Input Description
       {
         // Optional: Sorted list of remappings
         remappings: [ ":g/dir" ],
-        // Optional: Optimizer settings (enabled defaults to false)
+        // Optional: Optimizer settings
         optimizer: {
+          // disabled by default
           enabled: true,
-          runs: 500
+          // Optimize for how many times you intend to run the code.
+          // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
+          runs: 200
         },
         evmVersion: "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
         // Metadata settings (optional)
