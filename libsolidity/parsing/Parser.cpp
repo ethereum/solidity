@@ -1194,7 +1194,8 @@ ASTPointer<Expression> Parser::parseExpression(
 	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
 	if (Token::isAssignmentOp(m_scanner->currentToken()))
 	{
-		Token::Value assignmentOperator = expectAssignmentOperator();
+		Token::Value assignmentOperator = m_scanner->currentToken();
+		m_scanner->next();
 		ASTPointer<Expression> rightHandSide = parseExpression();
 		ASTNodeFactory nodeFactory(*this, expression);
 		nodeFactory.setEndPositionFromNode(rightHandSide);
@@ -1611,19 +1612,6 @@ string Parser::currentTokenName()
 	}
 	else
 		return Token::name(token);
-}
-
-Token::Value Parser::expectAssignmentOperator()
-{
-	Token::Value op = m_scanner->currentToken();
-	if (!Token::isAssignmentOp(op))
-		fatalParserError(
-			string("Expected assignment operator,  got '") +
-			currentTokenName() +
-			string("'")
-		);
-	m_scanner->next();
-	return op;
 }
 
 ASTPointer<ASTString> Parser::expectIdentifierToken()
