@@ -31,10 +31,16 @@ branches:
   only:
     - release
     - develop
-os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
 environment:
+  matrix:
+    #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    #  VS_VERSION: 2015
+    #  CMAKE_G_ARG: "Visual Studio 14 2015 Win64"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      VS_VERSION: 2017
+      CMAKE_G_ARG: "Visual Studio 15 2017 Win64"
   # This is used for pushing to solidity-test-bytecodes
   priv_key:
     secure: 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
@@ -62,11 +68,11 @@ install:
 before_build:
     - if not exist build mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=On
+    - cmake -G "%CMAKE_G_ARG%" .. -DTESTS=On
 build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
-    - scripts\release.bat %CONFIGURATION%
+    - scripts\release.bat %CONFIGURATION% %VS_VERSION%
     - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
 
 test_script:
