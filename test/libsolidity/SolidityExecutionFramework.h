@@ -89,11 +89,14 @@ public:
 
 	using rational = boost::rational<dev::bigint>;
 
-	static u256 createFixed(s256 _numerator, s256 _denominator = 1, unsigned int _decimalDigits = 0)
+	static u256 createFixed(s256 _numerator, s256 _denominator = 1, unsigned int _decimalDigits = 0, unsigned int _totalBits = 256)
 	{
+		BOOST_REQUIRE(_totalBits <= 256);
 		rational rawFraction = rational(_numerator, _denominator);
 		rational scaledFraction = rawFraction * pow(bigint(10), _decimalDigits);
-		return u256(scaledFraction.numerator() / scaledFraction.denominator());
+		u256 result = u256(scaledFraction.numerator() / scaledFraction.denominator());
+		u256 truncatedResult = (result << (256 - _totalBits)) >> (256 - _totalBits);
+		return truncatedResult;
 	}
 protected:
 	dev::solidity::CompilerStack m_compiler;
