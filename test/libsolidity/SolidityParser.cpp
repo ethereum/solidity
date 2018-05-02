@@ -112,61 +112,6 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
-BOOST_AUTO_TEST_CASE(empty_function)
-{
-	char const* text = R"(
-		contract test {
-		uint256 stateVar;
-			function functionName(bytes20 arg1, address addr) constant
-				returns (int id)
-			{ }
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(no_function_params)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVar;
-			function functionName() {}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(single_function_param)
-{
-	char const* text = R"(
-		contract test {
-			uint256 stateVar;
-			function functionName(bytes32 input) returns (bytes32 out) {}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(single_function_param_trailing_comma)
-{
-	char const* text = R"(
-		contract test {
-			function(uint a,) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
-}
-
-BOOST_AUTO_TEST_CASE(single_return_param_trailing_comma)
-{
-	char const* text = R"(
-		contract test {
-			function() returns (uint a,) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
-}
-
 BOOST_AUTO_TEST_CASE(single_modifier_arg_trailing_comma)
 {
 	char const* text = R"(
@@ -239,39 +184,6 @@ BOOST_AUTO_TEST_CASE(function_no_body)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
-{
-	char const* text = R"(
-		contract test {
-			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
-			function b() returns (uint r) { r = a({: 1, : 2, : 3}); }
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
-BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
-{
-	char const* text = R"(
-		contract test {
-			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
-			function b() returns (uint r) { r = a({a: , b: , c: }); }
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected primary expression");
-}
-
-BOOST_AUTO_TEST_CASE(trailing_comma_in_named_args)
-{
-	char const* text = R"(
-		contract test {
-			function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }
-			function b() returns (uint r) { r = a({a: 1, b: 2, c: 3, }); }
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma");
 }
 
 BOOST_AUTO_TEST_CASE(two_exact_functions)
@@ -557,18 +469,6 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
-{
-	char const* text = R"(
-		contract test {
-			function fun() {
-				mapping(var=>bytes32) d;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected elementary type name for mapping key type");
-}
-
 BOOST_AUTO_TEST_CASE(operator_expression)
 {
 	char const* text = R"(
@@ -849,16 +749,6 @@ BOOST_AUTO_TEST_CASE(modifier)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(modifier_without_semicolon)
-{
-	char const* text = R"(
-		contract c {
-			modifier mod { if (msg.sender == 0) _ }
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token Semicolon got");
-}
-
 BOOST_AUTO_TEST_CASE(modifier_arguments)
 {
 	char const* text = R"(
@@ -916,16 +806,6 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 			event e(uint a, bytes32 indexed s, bool indexed b);
 		})";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(event_with_no_argument_list_fails)
-{
-	char const* text = R"(
-		contract c {
-			event e;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
 }
 
 BOOST_AUTO_TEST_CASE(visibility_specifiers)
@@ -1038,24 +918,6 @@ BOOST_AUTO_TEST_CASE(enum_valid_declaration)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(empty_enum_declaration)
-{
-	char const* text = R"(
-		contract c {
-			enum foo { }
-		})";
-	CHECK_PARSE_ERROR(text, "enum with no members is not allowed");
-}
-
-BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
-{
-	char const* text = R"(
-		contract c {
-			enum foo { WARNING,}
-		})";
-	CHECK_PARSE_ERROR(text, "Expected Identifier after");
-}
-
 BOOST_AUTO_TEST_CASE(external_function)
 {
 	char const* text = R"(
@@ -1063,15 +925,6 @@ BOOST_AUTO_TEST_CASE(external_function)
 			function x() external {}
 		})";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(external_variable)
-{
-	char const* text = R"(
-		contract c {
-			uint external x;
-		})";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
 }
 
 BOOST_AUTO_TEST_CASE(arrays_in_storage)
@@ -1113,15 +966,6 @@ BOOST_AUTO_TEST_CASE(multi_arrays)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(constant_is_keyword)
-{
-	char const* text = R"(
-		contract Foo {
-			uint constant = 4;
-	})";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
 BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 {
 	auto keywords = {
@@ -1152,15 +996,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(var_array)
-{
-	char const* text = R"(
-		contract Foo {
-			function f() { var[] a; }
-	})";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
 BOOST_AUTO_TEST_CASE(location_specifiers_for_params)
 {
 	char const* text = R"(
@@ -1182,24 +1017,6 @@ BOOST_AUTO_TEST_CASE(location_specifiers_for_locals)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(location_specifiers_for_state)
-{
-	char const* text = R"(
-		contract Foo {
-			uint[] memory x;
-	})";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
-BOOST_AUTO_TEST_CASE(location_specifiers_with_var)
-{
-	char const* text = R"(
-		contract Foo {
-			function f() { var memory x; }
-	})";
-	CHECK_PARSE_ERROR(text, "Location specifier needs explicit type name");
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -1224,7 +1041,6 @@ BOOST_AUTO_TEST_CASE(comment_end_with_double_star)
 	BOOST_CHECK(successParse(text));
 }
 
-
 BOOST_AUTO_TEST_CASE(library_simple)
 {
 	char const* text = R"(
@@ -1233,20 +1049,6 @@ BOOST_AUTO_TEST_CASE(library_simple)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-
-BOOST_AUTO_TEST_CASE(local_const_variable)
-{
-	char const* text = R"(
-		contract Foo {
-			function localConst() returns (uint ret)
-			{
-				uint constant local = 4;
-				return local;
-			}
-	})";
-	CHECK_PARSE_ERROR(text, "Expected token Semicolon");
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration)
@@ -1283,18 +1085,6 @@ BOOST_AUTO_TEST_CASE(tuples)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(tuples_without_commas)
-{
-	char const* text = R"(
-		contract C {
-			function f() {
-				var a = (2 2);
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token Comma");
 }
 
 BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
@@ -1363,34 +1153,6 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-
-BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_lvalue)
-{
-	char const* text = R"(
-		contract c {
-			uint[] a;
-			function f() returns (uint) {
-				a = [,2,3];
-				return (a[0]);
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected expression");
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
-{
-	char const* text = R"(
-		contract c {
-			uint[] a;
-			function f() returns (uint, uint) {
-				return ([3, ,4][0]);
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected expression");
 }
 
 BOOST_AUTO_TEST_CASE(conditional_true_false_literal)
@@ -1520,38 +1282,6 @@ BOOST_AUTO_TEST_CASE(declaring_fixed_literal_variables)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(no_double_radix_in_fixed_literal)
-{
-	char const* text = R"(
-		contract A {
-			fixed40x40 pi = 3.14.15;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token Semicolon");
-}
-
-BOOST_AUTO_TEST_CASE(invalid_fixed_conversion_leading_zeroes_check)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed a = 1.0x2;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected primary expression");
-}
-
-BOOST_AUTO_TEST_CASE(payable_accessor)
-{
-	char const* text = R"(
-		contract test {
-			uint payable x;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected identifier");
-}
-
 BOOST_AUTO_TEST_CASE(function_type_in_expression)
 {
 	char const* text = R"(
@@ -1573,16 +1303,6 @@ BOOST_AUTO_TEST_CASE(function_type_as_storage_variable)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_modifiers)
-{
-	char const* text = R"(
-		contract test {
-			function (uint, uint) modifier1() returns (uint) f1;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token LBrace");
 }
 
 BOOST_AUTO_TEST_CASE(function_type_as_storage_variable_with_assignment)
@@ -1660,20 +1380,6 @@ BOOST_AUTO_TEST_CASE(function_type_state_variable)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(scientific_notation)
-{
-	char const* text = R"(
-		contract test {
-			uint256 a = 2e10;
-			uint256 b = 2E10;
-			uint256 c = 200e-2;
-			uint256 d = 2E10 wei;
-			uint256 e = 2.5e10;
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
 BOOST_AUTO_TEST_CASE(interface)
 {
 	char const* text = R"(
@@ -1682,31 +1388,6 @@ BOOST_AUTO_TEST_CASE(interface)
 		}
 	)";
 	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(newInvalidTypeName)
-{
-	char const* text = R"(
-		contract C {
-			function f() {
-				new var;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected explicit type name");
-}
-
-BOOST_AUTO_TEST_CASE(emitWithoutEvent)
-{
-	char const* text = R"(
-		contract C {
-			event A();
-			function f() {
-				emit A;
-			}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Expected token LParen got 'Semicolon'");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
