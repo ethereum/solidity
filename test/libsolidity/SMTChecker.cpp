@@ -506,9 +506,6 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 	text = R"(
 		contract C
 		{
-			address a;
-			bool b;
-			uint c;
 			function f(uint x) public {
 				if (x == 0)
 				{
@@ -527,7 +524,9 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 				require(a < 100);
 				assert(c >= 0);
 			}
-
+			address a;
+			bool b;
+			uint c;
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
