@@ -169,21 +169,20 @@ FunctionDefinition const& CompilerContext::resolveVirtualFunction(FunctionDefini
 		if (scope->isLibrary())
 			return _function;
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	return resolveVirtualFunction(_function, m_inheritanceHierarchy.begin());
+	return resolveVirtualFunction(_function, {m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end()});
 }
 
 FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition const& _function, ContractDefinition const& _base)
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	return resolveVirtualFunction(_function, superContract(_base));
+	return resolveVirtualFunction(_function, superContractRange(_base));
 }
 
 FunctionDefinition const* CompilerContext::nextConstructor(ContractDefinition const& _contract) const
 {
-	vector<ContractDefinition const*>::const_iterator it = superContract(_contract);
-	for (; it != m_inheritanceHierarchy.end(); ++it)
-		if ((*it)->constructor())
-			return (*it)->constructor();
+	for (auto const& base: superContractRange(_contract))
+		if (base->constructor())
+			return base->constructor();
 
 	return nullptr;
 }
@@ -377,14 +376,13 @@ void CompilerContext::appendInlineAssembly(
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 	FunctionDefinition const& _function,
-	vector<ContractDefinition const*>::const_iterator _searchStart
+	boost::iterator_range<vector<ContractDefinition const*>::const_iterator> _searchRange
 )
 {
 	string name = _function.name();
 	FunctionType functionType(_function);
-	auto it = _searchStart;
-	for (; it != m_inheritanceHierarchy.end(); ++it)
-		for (FunctionDefinition const* function: (*it)->definedFunctions())
+	for (auto contract: _searchRange)
+		for (FunctionDefinition const* function: contract->definedFunctions())
 			if (
 				function->name() == name &&
 				!function->isConstructor() &&
@@ -395,12 +393,17 @@ FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 	return _function; // not reached
 }
 
-vector<ContractDefinition const*>::const_iterator CompilerContext::superContract(ContractDefinition const& _contract) const
+boost::iterator_range<vector<ContractDefinition const*>::const_iterator> CompilerContext::superContractRange(ContractDefinition const &_contract) const
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
 	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
-	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
-	return ++it;
+	if (it != m_inheritanceHierarchy.end())
+		return {++it, m_inheritanceHierarchy.end()};
+
+	auto const& baseContracts = _contract.annotation().linearizedBaseContracts;
+	it = find(baseContracts.begin(), baseContracts.end(), &_contract);
+	solAssert(it != baseContracts.end(), "Base not found in base contracts.");
+	return {++it, baseContracts.end()};
 }
 
 void CompilerContext::updateSourceLocation()

@@ -35,6 +35,8 @@
 
 #include <libdevcore/Common.h>
 
+#include <boost/range/iterator_range.hpp>
+
 #include <ostream>
 #include <stack>
 #include <queue>
@@ -252,14 +254,14 @@ public:
 	};
 
 private:
-	/// Searches the inheritance hierarchy towards the base starting from @a _searchStart and returns
+	/// Searches the inheritance hierarchy towards the base within @a _searchRange and returns
 	/// the first function definition that is overwritten by _function.
 	FunctionDefinition const& resolveVirtualFunction(
 		FunctionDefinition const& _function,
-		std::vector<ContractDefinition const*>::const_iterator _searchStart
+		boost::iterator_range<std::vector<ContractDefinition const*>::const_iterator> _searchRange
 	);
-	/// @returns an iterator to the contract directly above the given contract.
-	std::vector<ContractDefinition const*>::const_iterator superContract(const ContractDefinition &_contract) const;
+	/// @returns an iterator range from the contract directly above the given contract to the end of the inheritance hierarchy.
+	boost::iterator_range<std::vector<ContractDefinition const*>::const_iterator> superContractRange(const ContractDefinition &_contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
