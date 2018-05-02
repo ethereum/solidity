@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 
 BOOST_AUTO_TEST_CASE(surplus_input)
 {
-	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected token EOS");
+	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected end of source but got '{'");
 }
 
 BOOST_AUTO_TEST_CASE(simple_instructions)
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(functional)
 
 BOOST_AUTO_TEST_CASE(functional_partial)
 {
-	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected token \"(\"");
+	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected '(' (instruction \"byte\" expects 2 arguments)");
 }
 
 BOOST_AUTO_TEST_CASE(functional_partial_success)
@@ -290,10 +290,10 @@ BOOST_AUTO_TEST_CASE(if_statement_scope)
 
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
-	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected token \"(\"");
+	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
 	BOOST_CHECK("{ if calldatasize() {}");
 	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
-	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected token LBrace");
+	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 }
 
 BOOST_AUTO_TEST_CASE(switch_statement)
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected token \"(\"");
+	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_case)
 
 BOOST_AUTO_TEST_CASE(switch_invalid_body)
 {
-	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected token LBrace got 'Identifier'");
+	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected '{' but got identifier");
 }
 
 BOOST_AUTO_TEST_CASE(for_statement)
@@ -353,10 +353,10 @@ BOOST_AUTO_TEST_CASE(for_statement)
 BOOST_AUTO_TEST_CASE(for_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected token LBrace got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected token LBrace got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected token LBrace got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected token \"(\"");
+	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected '{' but got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
+	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
 	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
 }
 
@@ -437,13 +437,13 @@ BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (\"mul\" expects 2 arguments)");
-	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected comma (\"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (instruction \"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected ',' (instruction \"mul\" expects 2 arguments)");
 }
 
 BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (\"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (instruction \"mul\" expects 2 arguments)");
 }
 
 BOOST_AUTO_TEST_CASE(recursion_depth)

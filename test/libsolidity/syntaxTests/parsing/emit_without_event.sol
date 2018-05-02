@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// ParserError: (49-49): Expected token LParen got 'Semicolon'
+// ParserError: (49-49): Expected '(' but got ';'
