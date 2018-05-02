@@ -1679,9 +1679,6 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	if (_type.category() == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
-
 	auto const* intType = dynamic_cast<IntegerType const*>(&_type);
 	auto const* fixedType = dynamic_cast<FixedPointType const*>(&_type);
 
@@ -1734,9 +1731,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	}
 	case Token::Exp:
 		if (fixedType)
-		{
 			solAssert(false, "Not yet implemented - FixedPointType exponentiation");
-		}
 		else
 			m_context << Instruction::EXP;
 		break;
