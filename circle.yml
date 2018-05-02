@@ -4,7 +4,7 @@ defaults:
       filters:
         tags:
           only: /.*/
-  - run_prerelease: &run_prerelease
+  - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
       name: Store commit hash and prerelease
       command: |
         if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
@@ -21,10 +21,10 @@ defaults:
       command: scripts/tests.sh --junit_report test_results
       environment:
         TERM: dumb
-  - build_artifacts: &build_artifacts
+  - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
-  - test_artifacts: &test_artifacts
+  - all_artifacts: &all_artifacts
       root: build
       paths:
         - solc/solc
@@ -123,14 +123,10 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
-      - run:
-          <<: *run_prerelease
-      - run:
-          <<: *run_build
-      - store_artifacts:
-          <<: *build_artifacts
-      - persist_to_workspace:
-          <<: *test_artifacts
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace: *all_artifacts
 
   build_x86_mac:
     macos:
@@ -146,14 +142,10 @@ jobs:
             brew install z3
             brew install boost
             brew install cmake
-      - run:
-          <<: *run_prerelease
-      - run:
-          <<: *run_build
-      - store_artifacts:
-          <<: *build_artifacts
-      - persist_to_workspace:
-          <<: *test_artifacts
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace: *all_artifacts
 
   test_x86_linux:
     docker:
@@ -168,8 +160,7 @@ jobs:
             apt-get -qq update
             apt-get -qy install libz3-dev libleveldb1v5
       - run: mkdir -p test_results
-      - run:
-          <<: *run_tests
+      - run: *run_tests
       - store_test_results:
           path: test_results/
 
@@ -188,8 +179,7 @@ jobs:
             brew unlink python
             brew install z3
       - run: mkdir -p test_results
-      - run:
-          <<: *run_tests
+      - run: *run_tests
       - store_test_results:
           path: test_results/
 
@@ -203,8 +193,7 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install python-sphinx
-      - run:
-          <<: *run_prerelease
+      - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
           command: ./scripts/docs.sh
