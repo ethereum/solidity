@@ -7253,6 +7253,28 @@ BOOST_AUTO_TEST_CASE(cross_contract_constants)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1456)));
 }
 
+BOOST_AUTO_TEST_CASE(cross_contract_constants_super_call)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() pure returns (uint) { return 1; }
+		}
+		contract B is A {
+			uint constant x = super.f();
+		}
+		contract Y {
+			function f() pure returns (uint) { return 2; }
+
+		}
+		contract X is Y {
+			uint constant a = B.x;
+			function g() pure returns (uint) { return a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "X");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(simple_throw)
 {
 	char const* sourceCode = R"(
