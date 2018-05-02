@@ -564,7 +564,8 @@ Allowed options)",
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Estimated number of contract runs for optimizer tuning."
+			"Set for how many contract runs to optimize."
+			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
