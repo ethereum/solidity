@@ -427,7 +427,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	m_context.startFunction(_function);
 
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
-	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
+	// reserve additional slots: [retarg0] ... [retargm]
 
 	unsigned parametersSize = CompilerUtils::sizeOnStack(_function.parameters());
 	if (!_function.isConstructor())
@@ -441,22 +441,18 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.returnParameters())
 		appendStackVariableInitialisation(*variable);
-	for (VariableDeclaration const* localVariable: _function.localVariables())
-		appendStackVariableInitialisation(*localVariable);
 
 	if (_function.isConstructor())
 		if (auto c = m_context.nextConstructor(dynamic_cast<ContractDefinition const&>(*_function.scope())))
 			appendBaseConstructor(*c);
 
-	solAssert(m_returnTags.empty(), "");
 	m_breakTags.clear();
 	m_continueTags.clear();
-	m_stackCleanupForReturn = 0;
 	m_currentFunction = &_function;
 	m_modifierDepth = -1;
+	m_scopeStackHeight.clear();
 
 	appendModifierOrFunctionCode();
-
 	solAssert(m_returnTags.empty(), "");
 
 	// Now we need to re-shuffle the stack. For this we keep a record of the stack layout
@@ -467,14 +463,12 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 
 	unsigned const c_argumentsSize = CompilerUtils::sizeOnStack(_function.parameters());
 	unsigned const c_returnValuesSize = CompilerUtils::sizeOnStack(_function.returnParameters());
-	unsigned const c_localVariablesSize = CompilerUtils::sizeOnStack(_function.localVariables());
 
 	vector<int> stackLayout;
 	stackLayout.push_back(c_returnValuesSize); // target of return address
 	stackLayout += vector<int>(c_argumentsSize, -1); // discard all arguments
 	for (unsigned i = 0; i < c_returnValuesSize; ++i)
 		stackLayout.push_back(i);
-	stackLayout += vector<int>(c_localVariablesSize, -1);
 
 	if (stackLayout.size() > 17)
 		BOOST_THROW_EXCEPTION(
@@ -493,18 +487,19 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 			m_context << swapInstruction(stackLayout.size() - stackLayout.back() - 1);
 			swap(stackLayout[stackLayout.back()], stackLayout.back());
 		}
-	//@todo assert that everything is in place now
+	for (int i = 0; i < int(stackLayout.size()); ++i)
+		if (stackLayout[i] != i)
+			solAssert(false, "Invalid stack layout on cleanup.");
 
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters() + _function.returnParameters())
 		m_context.removeVariable(*variable);
-	for (VariableDeclaration const* localVariable: _function.localVariables())
-		m_context.removeVariable(*localVariable);
 
 	m_context.adjustStackOffset(-(int)c_returnValuesSize);
 
 	/// The constructor and the fallback function doesn't to jump out.
 	if (!_function.isConstructor() && !_function.isFallback())
 		m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+
 	return false;
 }
 
@@ -669,14 +664,16 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
-	m_breakTags.push_back(loopEnd);
+	m_breakTags.push_back({loopEnd, m_context.stackHeight()});
+
+	visitLoop(&_whileStatement);
 
 	m_context << loopStart;
 
 	if (_whileStatement.isDoWhile())
 	{
 		eth::AssemblyItem condition = m_context.newTag();
-		m_continueTags.push_back(condition);
+		m_continueTags.push_back({condition, m_context.stackHeight()});
 
 		_whileStatement.body().accept(*this);
 
@@ -687,7 +684,7 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	}
 	else
 	{
-		m_continueTags.push_back(loopStart);
+		m_continueTags.push_back({loopStart, m_context.stackHeight()});
 		compileExpression(_whileStatement.condition());
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
@@ -712,12 +709,14 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
 	eth::AssemblyItem loopNext = m_context.newTag();
-	m_continueTags.push_back(loopNext);
-	m_breakTags.push_back(loopEnd);
+
+	visitLoop(&_forStatement);
 
 	if (_forStatement.initializationExpression())
 		_forStatement.initializationExpression()->accept(*this);
 
+	m_breakTags.push_back({loopEnd, m_context.stackHeight()});
+	m_continueTags.push_back({loopNext, m_context.stackHeight()});
 	m_context << loopStart;
 
 	// if there is no terminating condition in for, default is to always be true
@@ -737,10 +736,15 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 		_forStatement.loopExpression()->accept(*this);
 
 	m_context.appendJumpTo(loopStart);
+
 	m_context << loopEnd;
 
 	m_continueTags.pop_back();
 	m_breakTags.pop_back();
+
+	// For the case where no break/return is executed:
+	// loop initialization variables have to be freed
+	popScopedVariables(&_forStatement);
 
 	checker.check();
 	return false;
@@ -750,7 +754,7 @@ bool ContractCompiler::visit(Continue const& _continueStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _continueStatement);
 	solAssert(!m_continueTags.empty(), "");
-	m_context.appendJumpTo(m_continueTags.back());
+	popAndJump(m_context.stackHeight() - m_continueTags.back().second, m_continueTags.back().first);
 	return false;
 }
 
@@ -758,7 +762,7 @@ bool ContractCompiler::visit(Break const& _breakStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _breakStatement);
 	solAssert(!m_breakTags.empty(), "");
-	m_context.appendJumpTo(m_breakTags.back());
+	popAndJump(m_context.stackHeight() - m_breakTags.back().second, m_breakTags.back().first);
 	return false;
 }
 
@@ -784,10 +788,8 @@ bool ContractCompiler::visit(Return const& _return)
 		for (auto const& retVariable: boost::adaptors::reverse(returnParameters))
 			CompilerUtils(m_context).moveToStackVariable(*retVariable);
 	}
-	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
-		m_context << Instruction::POP;
-	m_context.appendJumpTo(m_returnTags.back());
-	m_context.adjustStackOffset(m_stackCleanupForReturn);
+
+	popAndJump(m_context.stackHeight() - m_returnTags.back().second, m_returnTags.back().first);
 	return false;
 }
 
@@ -810,8 +812,15 @@ bool ContractCompiler::visit(EmitStatement const& _emit)
 
 bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
-	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _variableDeclarationStatement);
+
+	// Local variable slots are reserved when their declaration is visited,
+	// and freed in the end of their scope.
+	for (auto _decl: _variableDeclarationStatement.declarations())
+		if (_decl)
+			appendStackVariableInitialisation(*_decl);
+
+	StackHeightChecker checker(m_context);
 	if (Expression const* expression = _variableDeclarationStatement.initialValue())
 	{
 		CompilerUtils utils(m_context);
@@ -859,6 +868,18 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 	appendModifierOrFunctionCode();
 	checker.check();
 	return true;
+}
+
+bool ContractCompiler::visit(Block const& _block)
+{
+	m_scopeStackHeight[m_modifierDepth][&_block] = m_context.stackHeight();
+	return true;
+}
+
+void ContractCompiler::endVisit(Block const& _block)
+{
+	// Frees local variables declared in the scope of this block.
+	popScopedVariables(&_block);
 }
 
 void ContractCompiler::appendMissingFunctions()
@@ -916,27 +937,19 @@ void ContractCompiler::appendModifierOrFunctionCode()
 					modifier.parameters()[i]->annotation().type
 				);
 			}
-			for (VariableDeclaration const* localVariable: modifier.localVariables())
-			{
-				addedVariables.push_back(localVariable);
-				appendStackVariableInitialisation(*localVariable);
-			}
 
-			stackSurplus =
-				CompilerUtils::sizeOnStack(modifier.parameters()) +
-				CompilerUtils::sizeOnStack(modifier.localVariables());
+			stackSurplus = CompilerUtils::sizeOnStack(modifier.parameters());
 			codeBlock = &modifier.body();
 		}
 	}
 
 	if (codeBlock)
 	{
-		m_returnTags.push_back(m_context.newTag());
-
+		m_returnTags.push_back({m_context.newTag(), m_context.stackHeight()});
 		codeBlock->accept(*this);
 
 		solAssert(!m_returnTags.empty(), "");
-		m_context << m_returnTags.back();
+		m_context << m_returnTags.back().first;
 		m_returnTags.pop_back();
 
 		CompilerUtils(m_context).popStackSlots(stackSurplus);
@@ -982,4 +995,27 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime() const
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << Instruction::RETURN;
 	return make_shared<eth::Assembly>(a);
+}
+
+void ContractCompiler::popScopedVariables(ASTNode const* _node)
+{
+	unsigned blockHeight = m_scopeStackHeight[m_modifierDepth][_node];
+	unsigned stackDiff = m_context.stackHeight() - blockHeight;
+	CompilerUtils(m_context).popStackSlots(stackDiff);
+	m_context.removeVariablesAboveStackHeight(blockHeight);
+	m_scopeStackHeight[m_modifierDepth].erase(_node);
+	if (m_scopeStackHeight[m_modifierDepth].size() == 0)
+		m_scopeStackHeight.erase(m_modifierDepth);
+}
+
+void ContractCompiler::visitLoop(BreakableStatement const* _loop)
+{
+	m_scopeStackHeight[m_modifierDepth][_loop] = m_context.stackHeight();
+}
+
+void ContractCompiler::popAndJump(unsigned _amount, eth::AssemblyItem const& _jumpTo)
+{
+	CompilerUtils(m_context).popStackSlots(_amount);
+	m_context.appendJumpTo(_jumpTo);
+	m_context.adjustStackOffset(_amount);
 }

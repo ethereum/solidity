@@ -130,12 +130,25 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 	m_localVariables[&_declaration].push_back(unsigned(m_asm->deposit()) - _offsetToCurrent);
 }
 
-void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
+void CompilerContext::removeVariable(Declaration const& _declaration)
 {
 	solAssert(m_localVariables.count(&_declaration) && !m_localVariables[&_declaration].empty(), "");
 	m_localVariables[&_declaration].pop_back();
 	if (m_localVariables[&_declaration].empty())
 		m_localVariables.erase(&_declaration);
+}
+
+void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
+{
+	vector<Declaration const*> toRemove;
+	for (auto _var: m_localVariables)
+	{
+		solAssert(!_var.second.empty(), "");
+		if (_var.second.back() >= _stackHeight)
+			toRemove.push_back(_var.first);
+	}
+	for (auto _var: toRemove)
+		removeVariable(*_var);
 }
 
 eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const

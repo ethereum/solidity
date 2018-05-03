@@ -71,7 +71,9 @@ public:
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
-	void removeVariable(VariableDeclaration const& _declaration);
+	void removeVariable(Declaration const& _declaration);
+	/// Removes all local variables currently allocated above _stackHeight.
+	void removeVariablesAboveStackHeight(unsigned _stackHeight);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
 	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
