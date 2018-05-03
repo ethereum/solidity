@@ -25,7 +25,6 @@
 #include <functional>
 #include <memory>
 #include <libdevcore/SHA3.h>
-#include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
 #include <libsolidity/ast/AST.h>
@@ -45,15 +44,9 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
 	map<SourceLocation, GasConsumption> particularCosts;
 
-	ControlFlowGraph cfg(_items);
-	for (BasicBlock const& block: cfg.optimisedBlocks())
-	{
-		solAssert(!!block.startState, "");
-		GasMeter meter(block.startState->copy(), m_evmVersion);
-		auto const end = _items.begin() + block.end;
-		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
-			particularCosts[iter->location()] += meter.estimateMax(*iter);
-	}
+	GasMeter meter(make_shared<KnownState>(), m_evmVersion);
+	for (AssemblyItem const& item : _items)
+		particularCosts[item.location()] += meter.estimateMax(item);
 
 	set<ASTNode const*> finestNodes = finestNodesAtLocation(_ast);
 	ASTGasConsumptionSelfAccumulated gasCosts;

@@ -22,7 +22,6 @@
 #include "Assembly.h"
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
-#include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>

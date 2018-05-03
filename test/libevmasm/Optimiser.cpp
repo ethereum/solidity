@@ -25,7 +25,6 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/JumpdestRemover.h>
-#include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/Assembly.h>
 
@@ -88,28 +87,6 @@ namespace
 	)
 	{
 		AssemblyItems output = CSE(_input, _state);
-		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
-	}
-
-	AssemblyItems CFG(AssemblyItems const& _input)
-	{
-		AssemblyItems output = _input;
-		// Running it four times should be enough for these tests.
-		for (unsigned i = 0; i < 4; ++i)
-		{
-			ControlFlowGraph cfg(output);
-			AssemblyItems optItems;
-			for (BasicBlock const& block: cfg.optimisedBlocks())
-				copy(output.begin() + block.begin, output.begin() + block.end,
-					 back_inserter(optItems));
-			output = move(optItems);
-		}
-		return output;
-	}
-
-	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
-	{
-		AssemblyItems output = CFG(_input);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 }
@@ -654,73 +631,6 @@ BOOST_AUTO_TEST_CASE(cse_optimise_return)
 		AssemblyItems{u256(0), u256(7), Instruction::RETURN},
 		AssemblyItems{Instruction::STOP}
 	);
-}
-
-BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused)
-{
-	// remove parts of the code that are unused
-	AssemblyItems input{
-		AssemblyItem(PushTag, 1),
-		Instruction::JUMP,
-		u256(7),
-		AssemblyItem(Tag, 1),
-	};
-	checkCFG(input, {});
-}
-
-BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused_loop)
-{
-	AssemblyItems input{
-		AssemblyItem(PushTag, 3),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 1),
-		u256(7),
-		AssemblyItem(PushTag, 2),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 2),
-		u256(8),
-		AssemblyItem(PushTag, 1),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 3),
-		u256(11)
-	};
-	checkCFG(input, {u256(11)});
-}
-
-BOOST_AUTO_TEST_CASE(control_flow_graph_reconnect_single_jump_source)
-{
-	// move code that has only one unconditional jump source
-	AssemblyItems input{
-		u256(1),
-		AssemblyItem(PushTag, 1),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 2),
-		u256(2),
-		AssemblyItem(PushTag, 3),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 1),
-		u256(3),
-		AssemblyItem(PushTag, 2),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 3),
-		u256(4),
-	};
-	checkCFG(input, {u256(1), u256(3), u256(2), u256(4)});
-}
-
-BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
-{
-	// do not remove parts that are "returned to"
-	AssemblyItems input{
-		AssemblyItem(PushTag, 1),
-		AssemblyItem(PushTag, 2),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 2),
-		Instruction::JUMP,
-		AssemblyItem(Tag, 1),
-		u256(2)
-	};
-	checkCFG(input, {u256(2)});
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator)
