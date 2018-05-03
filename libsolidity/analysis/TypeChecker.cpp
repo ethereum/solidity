@@ -1200,8 +1200,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				string extension;
 				if (auto type = dynamic_cast<IntegerType const*>(var.annotation().type.get()))
 				{
-					int numBits = type->numBits();
+					unsigned numBits = type->numBits();
 					bool isSigned = type->isSigned();
+					solAssert(numBits > 0, "");
 					string minValue;
 					string maxValue;
 					if (isSigned)
