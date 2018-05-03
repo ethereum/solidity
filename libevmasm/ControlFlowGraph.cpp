@@ -214,34 +214,102 @@ void ControlFlowGraph::setPrevLinks()
 	}
 }
 
-void ControlFlowGraph::gatherKnowledge()
-{
-	// @todo actually we know that memory is filled with zeros at the beginning,
-	// we could make use of that.
-	KnownStatePointer emptyState = make_shared<KnownState>();
-	bool unknownJumpEncountered = false;
+namespace {
 
-	struct WorkQueueItem {
+class WorkQueue
+{
+public:
+	struct Item
+	{
 		BlockId blockId;
 		KnownStatePointer state;
 		set<BlockId> blocksSeen;
 	};
 
-	vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
-	auto addWorkQueueItem = [&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
+	WorkQueue()
 	{
-		WorkQueueItem item;
+		pushEmpty(BlockId::initial());
+	}
+
+	void push(Item const& _currentItem, BlockId _to, KnownStatePointer const& _state)
+	{
+		if (!registerBlock(_to))
+			return;
+
+		Item item;
 		item.blockId = _to;
 		item.state = _state->copy();
 		item.blocksSeen = _currentItem.blocksSeen;
 		item.blocksSeen.insert(_currentItem.blockId);
-		workQueue.push_back(move(item));
-	};
+		m_queue.push_back(move(item));
+		ensureWorkSpace();
+	}
 
+	void pushEmpty(BlockId blockId)
+	{
+		if (!registerBlock(blockId))
+			return;
+
+		m_queue.emplace_back(Item{blockId, emptyState->copy(), set<BlockId>()});
+		ensureWorkSpace();
+	}
+
+	Item pop()
+	{
+		++m_itemsProcessed;
+		Item item = move(m_queue.back());
+		m_queue.pop_back();
+		m_visited.emplace(item.blockId);
+		ensureWorkSpace();
+		return item;
+	}
+
+	size_t size() const noexcept
+	{
+		return m_queue.size();
+	}
+
+	bool empty() const noexcept
+	{
+		return m_queue.empty();
+	}
+
+private:
+	static constexpr size_t maximumSize = 1000;
+	static constexpr size_t maximumItemsProcessed = 5000;
+
+	bool registerBlock(BlockId blockId)
+	{
+		m_discovered.emplace(blockId);
+		return !m_exceededMaximumWorkSpace || !m_visited.count(blockId);
+	}
+
+	void ensureWorkSpace() noexcept
+	{
+		if (maximumSize < size() || maximumItemsProcessed < m_itemsProcessed)
+			m_exceededMaximumWorkSpace = true;
+	}
+
+	vector<Item> m_queue;
+	set<BlockId> m_visited, m_discovered;
+	KnownStatePointer emptyState = make_shared<KnownState>();
+	size_t m_itemsProcessed = 0;
+	bool m_exceededMaximumWorkSpace = false;
+};
+
+}
+
+void ControlFlowGraph::gatherKnowledge()
+{
+	// @todo actually we know that memory is filled with zeros at the beginning,
+	// we could make use of that.
+	bool unknownJumpEncountered = false;
+
+	WorkQueue workQueue;
 	while (!workQueue.empty())
 	{
-		WorkQueueItem item = move(workQueue.back());
-		workQueue.pop_back();
+		auto item = workQueue.pop();
+
 		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
 		assertThrow(!!item.blockId, OptimizerException, "");
 		if (!m_blocks.count(item.blockId))
@@ -288,12 +356,12 @@ void ControlFlowGraph::gatherKnowledge()
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
 						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
+							workQueue.pushEmpty(it.first);
 				}
 			}
 			else
 				for (auto tag: tags)
-					addWorkQueueItem(item, BlockId(tag), state);
+					workQueue.push(item, BlockId(tag), state);
 		}
 		else if (block.begin <= pc && pc < block.end)
 			state->feedItem(m_items.at(pc++));
@@ -305,7 +373,7 @@ void ControlFlowGraph::gatherKnowledge()
 			block.endType == BasicBlock::EndType::HANDOVER ||
 			block.endType == BasicBlock::EndType::JUMPI
 		)
-			addWorkQueueItem(item, block.next, state);
+			workQueue.push(item, block.next, state);
 	}
 
 	// Remove all blocks we never visited here. This might happen because a tag is pushed but
