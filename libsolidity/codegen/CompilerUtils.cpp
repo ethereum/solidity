@@ -688,7 +688,7 @@ void CompilerUtils::convertType(
 				m_context << Instruction::POP << u256(0);
 			else if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
 			{
-				int bytes = min(typeOnStack.numBytes(), targetType.numBytes());
+				unsigned bytes = min(typeOnStack.numBytes(), targetType.numBytes());
 				m_context << ((u256(1) << (256 - bytes * 8)) - 1);
 				m_context << Instruction::NOT << Instruction::AND;
 			}
@@ -796,7 +796,7 @@ void CompilerUtils::convertType(
 		bytesConstRef data(value);
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
-			int const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
+			unsigned const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
 			solAssert(data.size() <= 32, "");
 			m_context << (h256::Arith(h256(data, h256::AlignLeft)) & (~(u256(-1) >> (8 * numBytes))));
 		}

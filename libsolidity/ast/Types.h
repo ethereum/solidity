@@ -319,7 +319,7 @@ public:
 	};
 	virtual Category category() const override { return Category::Integer; }
 
-	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
+	explicit IntegerType(unsigned _bits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -342,7 +342,7 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_bits; }
+	unsigned numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
@@ -350,7 +350,7 @@ public:
 	bigint maxValue() const;
 
 private:
-	int m_bits;
+	unsigned m_bits;
 	Modifier m_modifier;
 };
 
@@ -366,7 +366,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -386,9 +386,9 @@ public:
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	/// Number of bits used for this type in total.
-	int numBits() const { return m_totalBits; }
+	unsigned numBits() const { return m_totalBits; }
 	/// Number of decimal digits after the radix point.
-	int fractionalDigits() const { return m_fractionalDigits; }
+	unsigned fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 	/// @returns the largest integer value this type con hold. Note that this is not the
 	/// largest value in general.
@@ -401,8 +401,8 @@ public:
 	std::shared_ptr<IntegerType> asIntegerType() const;
 
 private:
-	int m_totalBits;
-	int m_fractionalDigits;
+	unsigned m_totalBits;
+	unsigned m_fractionalDigits;
 	Modifier m_modifier;
 };
 
@@ -506,7 +506,7 @@ class FixedBytesType: public Type
 public:
 	virtual Category category() const override { return Category::FixedBytes; }
 
-	explicit FixedBytesType(int _bytes);
+	explicit FixedBytesType(unsigned _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -524,10 +524,10 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBytes() const { return m_bytes; }
+	unsigned numBytes() const { return m_bytes; }
 
 private:
-	int m_bytes;
+	unsigned m_bytes;
 };
 
 /**
