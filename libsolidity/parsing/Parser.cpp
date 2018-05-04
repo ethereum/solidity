@@ -1194,7 +1194,8 @@ ASTPointer<Expression> Parser::parseExpression(
 	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
 	if (Token::isAssignmentOp(m_scanner->currentToken()))
 	{
-		Token::Value assignmentOperator = expectAssignmentOperator();
+		Token::Value assignmentOperator = m_scanner->currentToken();
+		m_scanner->next();
 		ASTPointer<Expression> rightHandSide = parseExpression();
 		ASTNodeFactory nodeFactory(*this, expression);
 		nodeFactory.setEndPositionFromNode(rightHandSide);
@@ -1601,40 +1602,10 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
 }
 
-string Parser::currentTokenName()
-{
-	Token::Value token = m_scanner->currentToken();
-	if (Token::isElementaryTypeName(token)) //for the sake of accuracy in reporting
-	{
-		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-		return elemTypeName.toString();
-	}
-	else
-		return Token::name(token);
-}
-
-Token::Value Parser::expectAssignmentOperator()
-{
-	Token::Value op = m_scanner->currentToken();
-	if (!Token::isAssignmentOp(op))
-		fatalParserError(
-			string("Expected assignment operator,  got '") +
-			currentTokenName() +
-			string("'")
-		);
-	m_scanner->next();
-	return op;
-}
-
 ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
-	Token::Value id = m_scanner->currentToken();
-	if (id != Token::Identifier)
-		fatalParserError(
-			string("Expected identifier, got '") +
-			currentTokenName() +
-			string("'")
-		);
+	// do not advance on success
+	expectToken(Token::Identifier, false);
 	return getLiteralAndAdvance();
 }
 

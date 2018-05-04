@@ -165,8 +165,6 @@ private:
 	/// @returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
 
-	std::string currentTokenName();
-	Token::Value expectAssignmentOperator();
 	ASTPointer<ASTString> expectIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}

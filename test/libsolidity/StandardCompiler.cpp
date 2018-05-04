@@ -326,8 +326,8 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 		{
 			BOOST_CHECK_EQUAL(
 				dev::jsonCompactPrint(error),
-				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier, got 'RBrace'\\n"
-				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier, got 'RBrace'\","
+				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected token Identifier got 'RBrace'\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected token Identifier got 'RBrace'\","
 				"\"severity\":\"error\",\"sourceLocation\":{\"end\":22,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
 			);
 		}

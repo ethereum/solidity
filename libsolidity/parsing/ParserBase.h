@@ -63,7 +63,7 @@ protected:
 	///@{
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
-	void expectToken(Token::Value _value);
+	void expectToken(Token::Value _value, bool _advance = true);
 	Token::Value currentToken() const;
 	Token::Value peekNextToken() const;
 	std::string currentLiteral() const;

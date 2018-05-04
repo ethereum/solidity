@@ -63,7 +63,7 @@ Token::Value ParserBase::advance()
 	return m_scanner->next();
 }
 
-void ParserBase::expectToken(Token::Value _value)
+void ParserBase::expectToken(Token::Value _value, bool _advance)
 {
 	Token::Value tok = m_scanner->currentToken();
 	if (tok != _value)
@@ -98,7 +98,8 @@ void ParserBase::expectToken(Token::Value _value)
 				string("'")
 			);
 	}
-	m_scanner->next();
+	if (_advance)
+		m_scanner->next();
 }
 
 void ParserBase::increaseRecursionDepth()
