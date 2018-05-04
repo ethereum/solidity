@@ -29,6 +29,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -229,6 +230,14 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (!cfg.constructFlow(*source->ast))
 					noErrors = false;
+
+			if (noErrors)
+			{
+				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
+				for (Source const* source: m_sourceOrder)
+					if (!controlFlowAnalyzer.analyze(*source->ast))
+						noErrors = false;
+			}
 		}
 
 		if (noErrors)
