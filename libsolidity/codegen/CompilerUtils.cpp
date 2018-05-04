@@ -784,9 +784,7 @@ void CompilerUtils::convertType(
 			{
 				FixedPointType const& typeOnStack = dynamic_cast<FixedPointType const&>(_typeOnStack);
 				cleanHigherOrderBits(typeOnStack);
-				m_context << u256(pow(bigint(10), typeOnStack.fractionalDigits()))
-						  << Instruction::SWAP1
-						  << (typeOnStack.isSigned() ? Instruction::SDIV : Instruction::DIV);
+				convertFixedPointType(typeOnStack.fractionalDigits(), 0, typeOnStack.isSigned());
 			}
 			else
 			{
