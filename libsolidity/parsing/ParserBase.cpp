@@ -68,35 +68,23 @@ void ParserBase::expectToken(Token::Value _value, bool _advance)
 	Token::Value tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
+		string got;
 		if (Token::isReservedKeyword(tok))
-		{
-			fatalParserError(
-				string("Expected '") +
-				Token::friendlyName(_value) +
-				string("' but got reserved keyword '") +
-				Token::friendlyName(tok) +
-				string("'")
-			);
-		}
+			got = "reserved keyword '" + Token::friendlyName(tok) + "'";
 		else if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
 		{
 			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected '") +
-				Token::friendlyName(_value) +
-				string("' but got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
+			got = "'" + elemTypeName.toString() + "'";
 		}
 		else
-			fatalParserError(
-				string("Expected '") +
-				Token::friendlyName(_value) +
-				string("' but got '") +
-				Token::friendlyName(tok) +
-				string("'")
-			);
+			got = "'" + Token::friendlyName(tok) + "'";
+
+		fatalParserError(
+			string("Expected '") +
+			Token::friendlyName(_value) +
+			string("' but got ") +
+			got
+		);
 	}
 	if (_advance)
 		m_scanner->next();
