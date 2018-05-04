@@ -8,6 +8,7 @@ Features:
  * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
 
 Bugfixes:
+ * Type Checker: Show proper error when trying to ``emit`` a non-event.
  * Type Checker: Warn about empty tuple components (this will turn into an error with version 0.5.0).
 
 
