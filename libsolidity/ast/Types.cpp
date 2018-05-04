@@ -678,7 +678,7 @@ string FixedPointType::toString(bool) const
 bigint FixedPointType::maxIntegerValue() const
 {
 	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
-	return maxValue / pow(bigint(10), m_fractionalDigits);
+	return maxValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 }
 
 bigint FixedPointType::minIntegerValue() const
@@ -686,7 +686,7 @@ bigint FixedPointType::minIntegerValue() const
 	if (isSigned())
 	{
 		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
-		return minValue / pow(bigint(10), m_fractionalDigits);
+		return minValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 	}
 	else
 		return bigint(0);
@@ -1002,7 +1002,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			break;
 		case Token::Exp:
 		{
-			using boost::multiprecision::pow;
 			if (other.isFractional())
 				return TypePointer();
 			solAssert(other.m_value.denominator() == 1, "");
@@ -1036,7 +1035,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 					else if (_base == -1)
 						return 1 - 2 * int(_exponent & 1);
 					else
-						return pow(_base, _exponent);
+						return boost::multiprecision::pow(_base, _exponent);
 				};
 
 				bigint numerator = optimizedPow(m_value.numerator(), absExp);
@@ -1052,7 +1051,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		}
 		case Token::SHL:
 		{
-			using boost::multiprecision::pow;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
@@ -1066,7 +1064,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
 				if (!fitsPrecisionBase2(abs(m_value.numerator()), exponent))
 					return TypePointer();
-				value = m_value.numerator() * pow(bigint(2), exponent);
+				value = m_value.numerator() * boost::multiprecision::pow(bigint(2), exponent);
 			}
 			break;
 		}
@@ -1074,7 +1072,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		//       determines the resulting type and the type of shift (SAR or SHR).
 		case Token::SAR:
 		{
-			namespace mp = boost::multiprecision;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
@@ -1086,10 +1083,10 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			else
 			{
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (exponent > mostSignificantBit(mp::abs(m_value.numerator())))
+				if (exponent > mostSignificantBit(boost::multiprecision::abs(m_value.numerator())))
 					value = 0;
 				else
-					value = rational(m_value.numerator() / mp::pow(bigint(2), exponent), 1);
+					value = rational(m_value.numerator() / boost::multiprecision::pow(bigint(2), exponent), 1);
 			}
 			break;
 		}
@@ -1154,7 +1151,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		auto fixed = fixedPointType();
 		solAssert(fixed, "");
 		int fractionalDigits = fixed->fractionalDigits();
-		shiftedValue = m_value.numerator() * pow(bigint(10), fractionalDigits) / m_value.denominator();
+		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
