@@ -69,8 +69,7 @@ before_build:
 build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
-    - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" ( scripts\release.bat %CONFIGURATION% 2015 )
-      else ( scripts\release.bat %CONFIGURATION% 2017 )
+    - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2017" ( scripts\release.bat %CONFIGURATION% 2017 )
     - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
 
 test_script:
