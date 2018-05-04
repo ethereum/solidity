@@ -293,12 +293,7 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
-            // If the tuple ends in an empty component,
-            // the rest of the values are discarded.
-            (data.length,) = f(); // Sets the length to 7
-            // The same can be done on the left side.
-            // If the tuple begins in an empty component, the beginning values are discarded.
-            (,data[3]) = f(); // Sets data[3] to 2
+            (data.length,,) = f(); // Sets the length to 7
             // Components can only be left out at the left-hand-side of assignments, with
             // one exception:
             (x,) = (1,);
@@ -306,6 +301,11 @@ Solidity internally allows tuple types, i.e. a list of objects of potentially di
             // equivalent to 1.
         }
     }
+
+.. note::
+    Prior to version 0.4.24 it was possible to assign to tuples of smaller size, either
+    filling up on the left or on the right side (which ever was empty). This is
+    now deprecated, both sides have to have the same number of components.
 
 Complications for Arrays and Structs
 ------------------------------------
