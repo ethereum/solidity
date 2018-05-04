@@ -1,6 +1,6 @@
 name: solc
-version: develop
-version-script: git describe --exact-match --tags 2> /dev/null || echo "develop"
+version: latest
+version-script: git describe --exact-match --tags 2> /dev/null
 summary: The Solidity Contract-Oriented Programming Language
 description: |
   Solidity is a contract-oriented, high-level language whose syntax is similar
@@ -25,6 +25,7 @@ parts:
   solidity:
     source: .
     source-type: git
+    source-branch: release
     plugin: cmake
     build-packages: [build-essential, libboost-all-dev, libz3-dev]
     stage-packages: [libicu55]
