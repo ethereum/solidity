@@ -10660,11 +10660,23 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 {
 	char const* sourceCode = R"(
 		contract D {
+			string constant msg1 = "test1234567890123456789012345678901234567890";
+			string msg2 = "test1234567890123456789012345678901234567890";
 			function f() public {
 				revert("test123");
 			}
 			function g() public {
 				revert("test1234567890123456789012345678901234567890");
+			}
+			function h() public {
+				revert(msg1);
+			}
+			function i() public {
+				revert(msg2);
+			}
+			function j() public {
+				string memory msg3 = "test1234567890123456789012345678901234567890";
+				revert(msg3);
 			}
 		}
 		contract C {
@@ -10686,6 +10698,15 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 			function g() public returns (bool, bytes) {
 				return forward(address(d), msg.data);
 			}
+			function h() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function i() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function j() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
@@ -10693,6 +10714,9 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
 	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0) : bytes());
 	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
+	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
+	ABI_CHECK(callContractFunction("i()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
+	ABI_CHECK(callContractFunction("j()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
 }
 
 BOOST_AUTO_TEST_CASE(require_with_message)
@@ -10701,6 +10725,7 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 		contract D {
 			bool flag = false;
 			string storageError = "abc";
+			string constant constantError = "abc";
 			function f(uint x) public {
 				require(x > 7, "failed");
 			}
@@ -10717,6 +10742,13 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 			}
 			function h() public {
 				require(false, storageError);
+			}
+			function i() public {
+				require(false, constantError);
+			}
+			function j() public {
+				string memory errMsg = "msg";
+				require(false, errMsg);
 			}
 		}
 		contract C {
@@ -10741,6 +10773,12 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 			function h() public returns (bool, bytes) {
 				return forward(address(d), msg.data);
 			}
+			function i() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
+			function j() public returns (bool, bytes) {
+				return forward(address(d), msg.data);
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
@@ -10751,6 +10789,8 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
 	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0) : bytes());
 	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0): bytes());
+	ABI_CHECK(callContractFunction("i()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0): bytes());
+	ABI_CHECK(callContractFunction("j()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "msg") + bytes(28, 0): bytes());
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages)

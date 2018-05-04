@@ -12,9 +12,9 @@ Features:
  * Type Checker: Warn about wildcard tuple assignments (this will turn into an error with version 0.5.0).
 
 Bugfixes:
+ * Code Generator: Fix ``revert`` with reason coming from a state or local string variable.
  * Type Checker: Show proper error when trying to ``emit`` a non-event.
  * Type Checker: Warn about empty tuple components (this will turn into an error with version 0.5.0).
-
 
 ### 0.4.23 (2018-04-19)
 

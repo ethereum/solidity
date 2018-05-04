@@ -89,7 +89,6 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
 	toSizeAfterFreeMemoryPointer();
 	m_context << Instruction::REVERT;
-	m_context.adjustStackOffset(_argumentType.sizeOnStack());
 }
 
 unsigned CompilerUtils::loadFromMemory(
