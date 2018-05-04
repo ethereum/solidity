@@ -617,6 +617,12 @@ FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, 
 		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
+
+	unsigned const bitsAvailable = m_totalBits - (isSigned() ? 1 : 0);
+	solAssert(
+		boost::multiprecision::pow(bigint(10), m_fractionalDigits) <= (bigint(1) << bitsAvailable),
+		"Number of fractional digits do not fit the specified bit width"
+	);
 }
 
 string FixedPointType::richIdentifier() const
