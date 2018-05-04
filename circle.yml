@@ -213,7 +213,7 @@ workflows:
   version: 2
   build_all:
     jobs:
-      - merge_blocker:
+      - merge_blocker
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
