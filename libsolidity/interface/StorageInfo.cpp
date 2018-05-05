@@ -32,7 +32,8 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 {
 	Json::Value storage(Json::arrayValue);
 	
-	if(_compiler == NULL) {
+	if(_compiler == NULL) 
+	{
 		return storage;
 	}
 
@@ -46,7 +47,8 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 			
 			// Assume that the parent scope of a state variable is a contract
 			auto parent = ((Declaration*)decl->scope());
-			if (parent != NULL) {
+			if (parent != NULL) 
+			{
 				memberData["contract"] = parent->name();
 			}
 
@@ -57,39 +59,62 @@ Json::Value StorageInfo::generate(Compiler const* _compiler)
 	return storage;
 }
 
-Json::Value StorageInfo::processStructMembers(StructType const& structType) 
-{
-	Json::Value members(Json::arrayValue);
-	for(auto member: structType.members(nullptr)) 
-	{
-		auto offsets = structType.storageOffsetsOfMember(member.name);
-		auto memberData = processMember(member, offsets);
-		members.append(memberData);
-	}
-
-	return members;
-}
 
 Json::Value StorageInfo::processMember(MemberList::Member const& member, pair<u256, unsigned> const& location) 
 {
-	Json::Value memberData;
+	Json::Value data;
 		
-	memberData["name"] = member.name;
-	memberData["slot"] = location.first.str();
-	memberData["offset"] = to_string(location.second);
-	memberData["type"] = member.type->canonicalName();
-	memberData["size"] = member.type->storageSize().str();
+	data["name"] = member.name;
+	data["slot"] = location.first.str();
+	data["offset"] = to_string(location.second);
+	data["type"] = processType(member.type);
+	
+	return data;
+}
+
+
+Json::Value StorageInfo::processType(TypePointer const& type) 
+{
+	Json::Value data;
+
+	// Common type info
+	data["name"] = type->canonicalName();
+	data["size"] = type->storageSize().str();
 
 	// Only include storageBytes if storageSize is 1, otherwise it always returns 32
-	if (member.type->storageSize() == 1) {
-		memberData["bytes"] = to_string(member.type->storageBytes());
+	if (type->storageSize() == 1) 
+	{
+		data["bytes"] = to_string(type->storageBytes());
 	}
 
-	// If this is a struct, visit its members
-	if (member.type->category() == Type::Category::Struct) {
-		auto childStruct = static_pointer_cast<const StructType>(member.type);
-		memberData["storage"] = processStructMembers(*childStruct);
+	// Recursively visit complex types (structs, mappings, and arrays)
+	if (type->category() == Type::Category::Struct) 
+	{
+		auto childStruct = static_pointer_cast<const StructType>(type);
+		if (!childStruct->recursive())
+		{
+			Json::Value members(Json::arrayValue);
+			for(auto member: childStruct->members(nullptr)) 
+			{
+				auto offsets = childStruct->storageOffsetsOfMember(member.name);
+				auto memberData = processMember(member, offsets);
+				members.append(memberData);
+			}
+			data["members"] = members;
+		}
+	} 
+	else if (type->category() == Type::Category::Mapping) {
+		auto map = static_pointer_cast<const MappingType>(type);
+		data["key"] = processType(map->keyType());
+		data["value"] = processType(map->valueType());
+	}
+	else if (type->category() == Type::Category::Array) {
+		auto array = static_pointer_cast<const ArrayType>(type);
+		if (!array->isByteArray())
+		{
+			data["base"] = processType(array->baseType());
+		}
 	}
 
-	return memberData;
+	return data;
 }

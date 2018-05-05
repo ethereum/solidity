@@ -72,7 +72,9 @@ BOOST_AUTO_TEST_CASE(single_var_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "test", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" }
+		{ "name": "a", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "uint256", "size": "1", "bytes": "32" }
+		}
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -89,9 +91,12 @@ BOOST_AUTO_TEST_CASE(multiple_var_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "test", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "b", "contract": "test", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "c", "contract": "test", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" }
+		{ "name": "a", "contract": "test", "offset": "0", "slot": "0",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "b", "contract": "test", "offset": "0", "slot": "1",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "c", "contract": "test", "offset": "0", "slot": "2",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } }
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -109,10 +114,14 @@ BOOST_AUTO_TEST_CASE(packing_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "test", "offset": "0",  "slot": "0", "type": "uint64",  "size": "1", "bytes": "8" },
-		{ "name": "b", "contract": "test", "offset": "8",  "slot": "0", "type": "uint64",  "size": "1", "bytes": "8" },
-		{ "name": "c", "contract": "test", "offset": "16", "slot": "0", "type": "uint128", "size": "1", "bytes": "16" },
-		{ "name": "d", "contract": "test", "offset": "0",  "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }
+		{ "name": "a", "contract": "test", "offset": "0",  "slot": "0",
+			"type": { "name": "uint64",  "size": "1", "bytes": "8"  } },
+		{ "name": "b", "contract": "test", "offset": "8",  "slot": "0",
+			"type": { "name": "uint64",  "size": "1", "bytes": "8"  } },
+		{ "name": "c", "contract": "test", "offset": "16", "slot": "0",
+			"type": { "name": "uint128", "size": "1", "bytes": "16" } },
+		{ "name": "d", "contract": "test", "offset": "0",  "slot": "1",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } }
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -128,8 +137,10 @@ BOOST_AUTO_TEST_CASE(bool_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "test", "offset": "0",  "slot": "0", "type": "bool", "size": "1", "bytes": "1" },
-		{ "name": "b", "contract": "test", "offset": "1",  "slot": "0", "type": "bool", "size": "1", "bytes": "1" }
+		{ "name": "a", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "bool", "size": "1", "bytes": "1" } },
+		{ "name": "b", "contract": "test", "offset": "1", "slot": "0", 
+			"type": { "name": "bool", "size": "1", "bytes": "1" } }
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -145,8 +156,10 @@ BOOST_AUTO_TEST_CASE(string_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "test", "offset": "0",  "slot": "0", "type": "string", "size": "1", "bytes": "32" },
-		{ "name": "b", "contract": "test", "offset": "0",  "slot": "1", "type": "string", "size": "1", "bytes": "32" }
+		{ "name": "a", "contract": "test", "offset": "0",  "slot": "0", 
+			"type": { "name": "string", "size": "1", "bytes": "32" } },
+		{ "name": "b", "contract": "test", "offset": "0",  "slot": "1", 
+			"type": { "name": "string", "size": "1", "bytes": "32" } }
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -161,7 +174,9 @@ BOOST_AUTO_TEST_CASE(array_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ "name": "arr", "contract": "test", "offset": "0", "slot": "0", "type": "uint256[10]", "size": "10" }
+		{ "name": "arr", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "uint256[10]", "size": "10",
+								"base": { "name": "uint256", "size": "1", "bytes": "32" } } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -176,7 +191,9 @@ BOOST_AUTO_TEST_CASE(dynamic_array_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ "name": "arr", "contract": "test", "offset": "0", "slot": "0", "type": "uint256[]", "size": "1", "bytes": "32" }
+		{ "name": "arr", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "uint256[]", "size": "1", "bytes": "32",
+								"base": { "name": "uint256", "size": "1", "bytes": "32" } } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -187,12 +204,15 @@ BOOST_AUTO_TEST_CASE(mapping_test)
 {
 	char const* sourceCode = R"(
 		contract test {
-			mapping(uint => uint) m;
+			mapping(uint => uint128) m;
 		}
 	)";
 
 	char const* interface = R"JSON([
-		{ "name": "m", "contract": "test", "offset": "0", "slot": "0", "type": "mapping(uint256 => uint256)", "size": "1", "bytes": "32" }
+		{ "name": "m", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "mapping(uint256 => uint128)", "size": "1", "bytes": "32",
+								"key":   { "name": "uint256", "size": "1", "bytes": "32" },
+								"value": { "name": "uint128", "size": "1", "bytes": "16" } } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -211,12 +231,13 @@ BOOST_AUTO_TEST_CASE(struct_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ 
-			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "2", "storage": [
-				{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-				{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }
-			]
-		}
+		{ "name": "f", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "test.foo", "size": "2", 
+								"members": [
+									{ "name": "a", "offset": "0", "slot": "0", 
+										"type": {"name": "uint256", "size": "1", "bytes": "32" } },
+									{ "name": "b", "offset": "0", "slot": "1",
+										"type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -239,15 +260,18 @@ BOOST_AUTO_TEST_CASE(nested_struct_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ 
-			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "3", "storage": [
-				{ "name": "a", "offset": "0", "slot": "0", "type": "test.bar", "size": "2", "storage": [
-					{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-					{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }	
-				] },
-				{ "name": "b", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" }
-			]
-		}
+		{ "name": "f", "contract": "test", "offset": "0", "slot": "0",
+			"type": { "name": "test.foo", "size": "3",
+								"members": [
+									{ "name": "a", "offset": "0", "slot": "0", 
+										"type": {"name": "test.bar", "size": "2", 
+										"members": [
+											{ "name": "a", "offset": "0", "slot": "0", 
+												"type": {"name": "uint256", "size": "1", "bytes": "32" } },
+											{ "name": "b", "offset": "0", "slot": "1", 
+												"type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } },
+									{ "name": "b", "offset": "0", "slot": "2", 
+										"type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -274,18 +298,99 @@ BOOST_AUTO_TEST_CASE(deeply_nested_struct_test)
 	)";
 
 	char const* interface = R"JSON([
-		{ 
-			"name": "f", "contract": "test", "offset": "0", "slot": "0", "type": "test.foo", "size": "4", "storage": [
-				{ "name": "a", "offset": "0", "slot": "0", "type": "test.child", "size": "3", "storage": [
-					{ "name": "a", "offset": "0", "slot": "0", "type": "test.grandchild", "size": "2", "storage": [
-						{ "name": "a", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-						{ "name": "b", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }	
-					]},
-					{ "name": "b", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" }
-				] },
-				{ "name": "b", "offset": "0", "slot": "3", "type": "uint256", "size": "1", "bytes": "32" }
-			]
+    { "name": "f", "contract": "test", "offset": "0", "slot": "0",
+			"type": { "name": "test.foo", "size": "4",
+								"members": [
+									{ "name": "a", "offset": "0", "slot": "0", 
+										"type": { "name": "test.child", "size": "3", 
+                              "members": [
+                                { "name": "a", "offset": "0", "slot": "0", 
+                                  "type": { "name": "test.grandchild", "size": "2",
+                                            "members": [
+                                              { "name": "a", "offset": "0", "slot": "0", 
+                                                "type": {"name": "uint256", "size": "1", "bytes": "32" } },
+                                              { "name": "b", "offset": "0", "slot": "1", 
+                                                "type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } },
+                                { "name": "b", "offset": "0", "slot": "2", 
+                                  "type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } },
+                  { "name": "b", "offset": "0", "slot": "3", 
+                    "type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } }
+	])JSON";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(recursive_struct_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct Foo {
+				Bar[] bars;
+			}
+			struct Bar {
+				Foo foo;
+			}
+			Bar b;
 		}
+	)";
+
+	// Recursive structs are not visited
+	char const* interface = R"JSON([
+		{ "name": "b", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "test.Bar", "size": "1", "bytes": "32" } }
+	])JSON";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(dynamic_array_of_struct_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct foo {
+				uint a;
+				uint b;
+			}
+			foo[] foos;
+		}
+	)";
+
+	char const* interface = R"JSON([
+		{ "name": "foos", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "test.foo[]", "size": "1", "bytes": "32",
+								"base": { "name": "test.foo", "size": "2",
+													"members": [
+														{ "name": "a", "offset": "0", "slot": "0", 
+															"type": {"name": "uint256", "size": "1", "bytes": "32" } },
+														{ "name": "b", "offset": "0", "slot": "1",
+															"type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } } }
+	])JSON";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(mapping_of_struct_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct foo {
+				uint a;
+				uint b;
+			}
+			mapping(string => foo) foos;
+		}
+	)";
+
+	char const* interface = R"JSON([
+		{ "name": "foos", "contract": "test", "offset": "0", "slot": "0", 
+			"type": { "name": "mapping(string => test.foo)", "size": "1", "bytes": "32",
+								"key":   { "name": "string", "size": "1", "bytes": "32" },
+								"value": { "name": "test.foo", "size": "2",
+													 "members": [
+														{ "name": "a", "offset": "0", "slot": "0", 
+															"type": {"name": "uint256", "size": "1", "bytes": "32" } },
+														{ "name": "b", "offset": "0", "slot": "1",
+															"type": {"name": "uint256", "size": "1", "bytes": "32" } } ] } } }
 	])JSON";
 
 	checkInterface(sourceCode, interface);
@@ -304,8 +409,10 @@ BOOST_AUTO_TEST_CASE(inheritance_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "a", "contract": "base", "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "b", "contract": "test", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" }
+		{ "name": "a", "contract": "base", "offset": "0", "slot": "0",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "b", "contract": "test", "offset": "0", "slot": "1",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } }
 	])";
 
 	checkInterface(sourceCode, interface);
@@ -332,10 +439,14 @@ BOOST_AUTO_TEST_CASE(multiple_inheritance_test)
 	)";
 
 	char const* interface = R"([
-		{ "name": "b",  "contract": "base",   "offset": "0", "slot": "0", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "c1", "contract": "child1", "offset": "0", "slot": "1", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "c2", "contract": "child2", "offset": "0", "slot": "2", "type": "uint256", "size": "1", "bytes": "32" },
-		{ "name": "t",  "contract": "test",   "offset": "0", "slot": "3", "type": "uint256", "size": "1", "bytes": "32" }
+		{ "name": "b",  "contract": "base",   "offset": "0", "slot": "0",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "c1", "contract": "child1", "offset": "0", "slot": "1",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "c2", "contract": "child2", "offset": "0", "slot": "2",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } },
+		{ "name": "t",  "contract": "test",   "offset": "0", "slot": "3",
+			"type": { "name": "uint256", "size": "1", "bytes": "32" } }
 	])";
 
 	checkInterface(sourceCode, interface);

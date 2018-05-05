@@ -26,6 +26,7 @@
 #include <memory>
 #include <json/json.h>
 #include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/ast/Types.h>
 
 namespace dev
 {
@@ -44,7 +45,7 @@ public:
 	static Json::Value generate(Compiler const* _compiler);
 
 private:
-	static Json::Value processStructMembers(StructType const& structType);
+	static Json::Value processType(TypePointer const& type);
 	static Json::Value processMember(MemberList::Member const& member, std::pair<u256, unsigned> const& location);
 };
 }
