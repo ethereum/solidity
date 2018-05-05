@@ -982,7 +982,7 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
 default constructor: ``contructor() public {}``.
 
@@ -1058,6 +1058,9 @@ constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the
 inheritance list or in modifier-style in the derived constuctor.
 Specifying arguments in both places is an error.
+
+If the constructor of a base contract has no arguments, it will be implicitly
+executed upon contract creation.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
@@ -1139,7 +1142,7 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
