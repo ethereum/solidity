@@ -24,8 +24,8 @@ Creating contracts programatically on Ethereum is best done via using the JavaSc
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its constructor (a function with the same
-name as the contract) is executed once.
+When a contract is created, its constructor (a function declared with the
+``constructor`` keyword) is executed once.
 A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
 
@@ -982,7 +982,7 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
 default constructor: ``contructor() public {}``.
 
@@ -1139,7 +1139,7 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
 
 .. index:: ! contract;interface, ! interface contract
