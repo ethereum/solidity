@@ -1737,11 +1737,28 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
-		// NOTE: SAR rounds differently than SDIV
-		if (m_context.evmVersion().hasBitwiseShifting() && !c_valueSigned)
-			m_context << Instruction::SHR;
+		if (m_context.evmVersion().hasBitwiseShifting())
+			m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
 		else
-			m_context << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_valueSigned ? Instruction::SDIV : Instruction::DIV);
+		{
+			if (c_valueSigned)
+				// For negative values xor_mask has all bits set and xor(value_to_shift, xor_mask) will be
+				// the bitwise complement of value_to_shift, i.e. abs(value_to_shift) - 1. Dividing this by
+				// exp(2, shift_amount) results in a value that is positive and strictly smaller than the
+				// absolute value of the desired result. Taking the complement again changes the sign
+				// back to negative and subtracts one, resulting in rounding towards negative infinity.
+				// For positive values xor_mask is zero and xor(value_to_shift, xor_mask) is again value_to_shift.
+				m_context.appendInlineAssembly(R"({
+					let xor_mask := sub(0, slt(value_to_shift, 0))
+					value_to_shift := xor(div(xor(value_to_shift, xor_mask), exp(2, shift_amount)), xor_mask)
+				})", {"value_to_shift", "shift_amount"});
+			else
+				m_context.appendInlineAssembly(R"({
+					value_to_shift := div(value_to_shift, exp(2, shift_amount))
+				})", {"value_to_shift", "shift_amount"});
+			m_context << Instruction::POP;
+
+		}
 		break;
 	case Token::SHR:
 	default:
