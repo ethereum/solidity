@@ -1802,13 +1802,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (_functionType.bound())
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
+	bool const v050 = m_context.experimentalFeatureActive(ExperimentalFeature::V050);
 	auto funKind = _functionType.kind();
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall =
 		_functionType.stateMutability() <= StateMutability::View &&
-		m_context.experimentalFeatureActive(ExperimentalFeature::V050) &&
+		v050 &&
 		m_context.evmVersion().hasStaticCall();
 
 	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
@@ -1836,6 +1837,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Evaluate arguments.
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
+	// This can be removed (will always be false) with 0.5.0
 	bool manualFunctionId = false;
 	if (
 		(funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
@@ -1908,16 +1910,31 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << dupInstruction(2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
 		utils().storeInMemoryDynamic(IntegerType(8 * CompilerUtils::dataStartOffset), false);
 	}
-	// If the function takes arbitrary parameters, copy dynamic length data in place.
-	// Move arguments to memory, will not update the free memory pointer (but will update the memory
-	// pointer on the stack).
-	utils().encodeToMemory(
-		argumentTypes,
-		parameterTypes,
-		_functionType.padArguments(),
-		_functionType.takesArbitraryParameters(),
-		isCallCode || isDelegateCall
-	);
+
+	// This is a function that takes a single bytes parameter which is supposed to be passed
+	// on inline and without padding.
+	if (_functionType.takesSinglePackedBytesParameter() && v050 && argumentTypes.size() == 1)
+	{
+		utils().encodeToMemory(
+			argumentTypes,
+			TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+			false,
+			true
+		);
+	}
+	else
+	{
+		// If the function takes arbitrary parameters, copy dynamic length data in place.
+		// Move arguments to memory, will not update the free memory pointer (but will update the memory
+		// pointer on the stack).
+		utils().encodeToMemory(
+			argumentTypes,
+			parameterTypes,
+			_functionType.padArguments(),
+			_functionType.takesArbitraryParameters(),
+			isCallCode || isDelegateCall
+		);
+	}
 
 	// Stack now:
 	// <stack top>
