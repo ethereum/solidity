@@ -303,12 +303,17 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context << _sourceType.length();
 		if (baseSize > 1)
 			m_context << u256(baseSize) << Instruction::MUL;
-		// stack: target source_offset source_len
-		m_context << Instruction::DUP1 << Instruction::DUP3 << Instruction::DUP5;
-		// stack: target source_offset source_len source_len source_offset target
-		m_context << Instruction::CALLDATACOPY;
-		m_context << Instruction::DUP3 << Instruction::ADD;
-		m_context << Instruction::SWAP2 << Instruction::POP << Instruction::POP;
+
+		string routine = "calldatacopy(target, source, len)\n";
+		if (_padToWordBoundaries)
+			routine += R"(
+				// Set padding suffix to zero
+				mstore(add(target, len), 0)
+				len := and(add(len, 0x1f), not(0x1f))
+			)";
+		routine += "target := add(target, len)\n";
+		m_context.appendInlineAssembly("{" + routine + "}", {"target", "source", "len"});
+		m_context << Instruction::POP << Instruction::POP;
 	}
 	else if (_sourceType.location() == DataLocation::Memory)
 	{
