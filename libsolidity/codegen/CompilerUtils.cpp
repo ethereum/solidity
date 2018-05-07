@@ -110,7 +110,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 	bool _padToWordBoundaries,
 	bool _keepUpdatedMemoryOffset
 )
-{		
+{
 	if (_keepUpdatedMemoryOffset)
 		m_context << Instruction::DUP1;
 
@@ -396,7 +396,7 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
-			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using less variables.");
+			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using fewer variables.");
 		}
 		else
 		{
@@ -741,7 +741,7 @@ void CompilerUtils::convertType(
 		else if (targetTypeCategory == Type::Category::FixedPoint)
 		{
 			solAssert(
-				stackTypeCategory == Type::Category::Integer || 
+				stackTypeCategory == Type::Category::Integer ||
 				stackTypeCategory == Type::Category::RationalNumber ||
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
