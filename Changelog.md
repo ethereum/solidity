@@ -4,6 +4,8 @@ Features:
  * Remove deprecated ``constant`` as function state modifier from documentation and tests (but still leave it as a valid feature).
  * Build System: Update internal dependency of jsoncpp to 1.8.4, which introduces more strictness and reduces memory usage.
  * Code Generator: Use native shift instructions on target Constantinople.
+ * Control Flow Graph: Add Control Flow Graph as analysis structure.
+ * Control Flow Graph: Warn about returning uninitialized storage pointers.
  * Gas Estimator: Only explore paths with higher gas costs. This reduces accuracy but greatly improves the speed of gas estimation.
  * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
  * Parser: Display nicer error messages by showing the actual tokens and not internal names.
