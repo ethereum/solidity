@@ -25,7 +25,7 @@ Storage
             storedData = x;
         }
 
-        function get() public constant returns (uint) {
+        function get() public view returns (uint) {
             return storedData;
         }
     }

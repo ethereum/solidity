@@ -269,7 +269,7 @@ Functions should be grouped according to their visibility and ordered:
 - internal
 - private
 
-Within a grouping, place the ``constant`` functions last.
+Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
@@ -285,7 +285,10 @@ Yes::
         // External functions
         // ...
 
-        // External functions that are constant
+        // External functions that are view
+        // ...
+
+        // External functions that are pure
         // ...
 
         // Public functions
