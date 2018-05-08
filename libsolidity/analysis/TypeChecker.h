@@ -96,7 +96,6 @@ private:
 	virtual bool visit(StructDefinition const& _struct) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(VariableDeclaration const& _variable) override;
-	virtual bool visit(EnumDefinition const& _enum) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
