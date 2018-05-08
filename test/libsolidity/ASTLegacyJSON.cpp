@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(function_type)
 	CompilerStack c;
 	c.addSource("a",
 		"contract C { function f(function() external payable returns (uint) x) "
-		"returns (function() external constant returns (uint)) {} }"
+		"returns (function() external view returns (uint)) {} }"
 	);
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
