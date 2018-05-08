@@ -322,11 +322,18 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	StateMutability stateMutability(StateMutability::NonPayable);
 	if (_token == Token::Payable)
 		stateMutability = StateMutability::Payable;
-	// FIXME: constant should be removed at the next breaking release
-	else if (_token == Token::View || _token == Token::Constant)
+	else if (_token == Token::View)
 		stateMutability = StateMutability::View;
 	else if (_token == Token::Pure)
 		stateMutability = StateMutability::Pure;
+	else if (_token == Token::Constant)
+	{
+		stateMutability = StateMutability::View;
+		parserError(
+			"The state mutability modifier \"constant\" was removed in version 0.5.0. "
+			"Use \"view\" or \"pure\" instead."
+		);
+	}
 	else
 		solAssert(false, "Invalid state mutability specifier.");
 	m_scanner->next();
