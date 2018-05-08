@@ -38,17 +38,7 @@ string Disambiguator::translateIdentifier(string const& _originalName)
 	Scope::Identifier const* id = m_scopes.back()->lookup(_originalName);
 	solAssert(id, "");
 	if (!m_translations.count(id))
-	{
-		string translated = _originalName;
-		size_t suffix = 0;
-		while (m_usedNames.count(translated))
-		{
-			suffix++;
-			translated = _originalName + "_" + std::to_string(suffix);
-		}
-		m_usedNames.insert(translated);
-		m_translations[id] = translated;
-	}
+		m_translations[id] = m_nameDispenser.newName(_originalName);
 	return m_translations.at(id);
 }
 

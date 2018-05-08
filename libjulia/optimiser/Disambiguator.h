@@ -23,6 +23,7 @@
 #include <libjulia/ASTDataForward.h>
 
 #include <libjulia/optimiser/ASTCopier.h>
+#include <libjulia/optimiser/NameDispenser.h>
 
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
@@ -60,7 +61,7 @@ protected:
 
 	std::vector<solidity::assembly::Scope*> m_scopes;
 	std::map<void const*, std::string> m_translations;
-	std::set<std::string> m_usedNames;
+	NameDispenser m_nameDispenser;
 };
 
 }
