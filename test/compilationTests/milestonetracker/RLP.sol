@@ -263,7 +263,7 @@ library RLP {
      var (rStartPos, len) = _decode(self);
      if (len != 1)
          throw;
-     uint temp;
+     uint8 temp;
      assembly {
          temp := byte(0, mload(rStartPos))
      }
