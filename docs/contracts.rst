@@ -1030,8 +1030,9 @@ A constructor set as ``internal`` causes the contract to be marked as :ref:`abst
 Arguments for Base Constructors
 ===============================
 
-Derived contracts need to provide all arguments needed for
-the base constructors. This can be done in two ways::
+The constructors of all the base contracts will be called following the
+linearization rules explained below. If the base constructors have arguments,
+derived contracts need to specify all of them. This can be done in two ways::
 
     pragma solidity ^0.4.22;
 
@@ -1059,8 +1060,8 @@ derived contract. Arguments have to be given either in the
 inheritance list or in modifier-style in the derived constuctor.
 Specifying arguments in both places is an error.
 
-If the constructor of a base contract has no arguments, it will be implicitly
-executed upon contract creation.
+If a derived contract doesn't specify the arguments to all of its base
+contracts' constructors, it will be abstract.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
