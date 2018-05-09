@@ -20,10 +20,10 @@
 
 #include <libjulia/optimiser/Disambiguator.h>
 
+#include <libjulia/Exceptions.h>
+
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmScope.h>
-
-#include <libsolidity/interface/Exceptions.h>
 
 using namespace std;
 using namespace dev;
@@ -34,9 +34,9 @@ using Scope = dev::solidity::assembly::Scope;
 
 string Disambiguator::translateIdentifier(string const& _originalName)
 {
-	solAssert(!m_scopes.empty() && m_scopes.back(), "");
+	assertThrow(!m_scopes.empty() && m_scopes.back(), OptimizerException, "");
 	Scope::Identifier const* id = m_scopes.back()->lookup(_originalName);
-	solAssert(id, "");
+	assertThrow(id, OptimizerException, "");
 	if (!m_translations.count(id))
 		m_translations[id] = m_nameDispenser.newName(_originalName);
 	return m_translations.at(id);
@@ -69,7 +69,7 @@ void Disambiguator::enterScopeInternal(Scope& _scope)
 
 void Disambiguator::leaveScopeInternal(Scope& _scope)
 {
-	solAssert(!m_scopes.empty(), "");
-	solAssert(m_scopes.back() == &_scope, "");
+	assertThrow(!m_scopes.empty(), OptimizerException, "");
+	assertThrow(m_scopes.back() == &_scope, OptimizerException, "");
 	m_scopes.pop_back();
 }

@@ -23,8 +23,6 @@
 
 #include <libsolidity/inlineasm/AsmData.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;

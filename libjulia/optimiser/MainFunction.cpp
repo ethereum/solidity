@@ -22,10 +22,9 @@
 #include <libjulia/optimiser/MainFunction.h>
 
 #include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
-
-#include <libsolidity/interface/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -36,12 +35,12 @@ using namespace dev::solidity;
 
 void MainFunction::operator()(Block& _block)
 {
-	solAssert(_block.statements.size() >= 1, "");
-	solAssert(_block.statements[0].type() == typeid(Block), "");
+	assertThrow(_block.statements.size() >= 1, OptimizerException, "");
+	assertThrow(_block.statements[0].type() == typeid(Block), OptimizerException, "");
 	for (size_t i = 1; i < _block.statements.size(); ++i)
-		solAssert(_block.statements.at(i).type() == typeid(FunctionDefinition), "");
+		assertThrow(_block.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 	/// @todo this should handle scopes properly and instead of an assertion it should rename the conflicting function
-	solAssert(NameCollector(_block).names().count("main") == 0, "");
+	assertThrow(NameCollector(_block).names().count("main") == 0, OptimizerException, "");
 
 	Block& block = boost::get<Block>(_block.statements[0]);
 	FunctionDefinition main{

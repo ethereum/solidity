@@ -15,20 +15,21 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Small useful snippets for the optimiser.
+ * Exceptions in Julia.
  */
 
 #pragma once
 
-#include <libjulia/ASTDataForward.h>
+#include <libdevcore/Exceptions.h>
+#include <libdevcore/Assertions.h>
 
 namespace dev
 {
 namespace julia
 {
 
-/// Removes statements that are just empty blocks (non-recursive).
-void removeEmptyBlocks(Block& _block);
+struct IuliaException: virtual Exception {};
+struct OptimizerException: virtual IuliaException {};
 
 }
 }

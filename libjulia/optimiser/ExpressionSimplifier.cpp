@@ -25,8 +25,6 @@
 
 #include <libsolidity/inlineasm/AsmData.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <libdevcore/CommonData.h>
 
 using namespace std;
