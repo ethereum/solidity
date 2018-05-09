@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError: (44-44): Expected elementary type name for mapping key type
+// ParserError: (44-47): Expected elementary type name for mapping key type
