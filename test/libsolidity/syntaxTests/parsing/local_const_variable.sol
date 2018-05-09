@@ -6,4 +6,4 @@ contract Foo {
 	}
 }
 // ----
-// ParserError: (67-67): Expected token Semicolon got 'Constant'
+// ParserError: (67-67): Expected ';' but got 'constant'

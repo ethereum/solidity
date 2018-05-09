@@ -276,7 +276,7 @@ assembly::Expression Parser::parseExpression()
 		int args = instructionInfo(instr.instruction).args;
 		if (args > 0 && currentToken() != Token::LParen)
 			fatalParserError(string(
-				"Expected token \"(\" (\"" +
+				"Expected '(' (instruction \"" +
 				instructionNames().at(instr.instruction) +
 				"\" expects " +
 				boost::lexical_cast<string>(args) +
@@ -504,7 +504,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 			/// check for premature closing parentheses
 			if (currentToken() == Token::RParen)
 				fatalParserError(string(
-					"Expected expression (\"" +
+					"Expected expression (instruction \"" +
 					instructionNames().at(instr) +
 					"\" expects " +
 					boost::lexical_cast<string>(args) +
@@ -516,7 +516,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 			{
 				if (currentToken() != Token::Comma)
 					fatalParserError(string(
-						"Expected comma (\"" +
+						"Expected ',' (instruction \"" +
 						instructionNames().at(instr) +
 						"\" expects " +
 						boost::lexical_cast<string>(args) +
@@ -529,7 +529,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 		ret.location.end = endPosition();
 		if (currentToken() == Token::Comma)
 			fatalParserError(string(
-				"Expected ')' (\"" +
+				"Expected ')' (instruction \"" +
 				instructionNames().at(instr) +
 				"\" expects " +
 				boost::lexical_cast<string>(args) +
