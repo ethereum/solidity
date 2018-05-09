@@ -120,11 +120,11 @@ Error Handling
 --------------
 
 ``assert(bool condition)``:
-    throws if the condition is not met - to be used for internal errors.
+    invalidates the transaction if the condition is not met - to be used for internal errors.
 ``require(bool condition)``:
-    throws if the condition is not met - to be used for errors in inputs or external components.
+    reverts if the condition is not met - to be used for errors in inputs or external components.
 ``require(bool condition, string message)``:
-    throws if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
+    reverts if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
 ``revert()``:
     abort execution and revert state changes
 ``revert(string reason)``:
