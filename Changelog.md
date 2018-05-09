@@ -6,6 +6,7 @@ Features:
  * Gas Estimator: Only explore paths with higher gas costs. This reduces accuracy but greatly improves the speed of gas estimation.
  * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
  * Parser: Display nicer error messages by showing the actual tokens and not internal names.
+ * Parser: Use the entire location of the token instead of only its starting position as source location for parser errors.
  * Type Checker: Deprecate the ``years`` unit denomination and raise a warning for it (or an error as experimental 0.5.0 feature).
  * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
  * Type Checker: Warn about wildcard tuple assignments (this will turn into an error with version 0.5.0).
