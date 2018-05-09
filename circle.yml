@@ -20,7 +20,7 @@ defaults:
       name: Tests
       command: scripts/tests.sh --junit_report test_results
       environment:
-        TERM: dumb
+        TERM: xterm
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
