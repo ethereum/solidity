@@ -22,8 +22,6 @@
 
 #include <libsolidity/inlineasm/AsmData.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;

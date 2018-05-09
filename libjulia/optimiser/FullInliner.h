@@ -24,8 +24,9 @@
 #include <libjulia/optimiser/ASTCopier.h>
 #include <libjulia/optimiser/ASTWalker.h>
 #include <libjulia/optimiser/NameDispenser.h>
+#include <libjulia/Exceptions.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libevmasm/SourceLocation.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -100,7 +101,7 @@ public:
 	{ }
 	~InlineModifier()
 	{
-		solAssert(m_statementsToPrefix.empty(), "");
+		assertThrow(m_statementsToPrefix.empty(), OptimizerException, "");
 	}
 
 	virtual void operator()(FunctionalInstruction&) override;

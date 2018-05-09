@@ -22,6 +22,7 @@
 
 #include <libjulia/optimiser/Metrics.h>
 #include <libjulia/optimiser/ASTCopier.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -44,7 +45,7 @@ void Rematerialiser::visit(Expression& _e)
 					expressionValid = false;
 					break;
 				}
-			solAssert(m_value.at(name), "");
+			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
 			if (expressionValid && CodeSize::codeSize(value) <= 7)
 				_e = (ASTCopier{}).translate(value);

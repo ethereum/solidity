@@ -23,10 +23,10 @@
 #include <libjulia/optimiser/DataFlowAnalyzer.h>
 
 #include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/optimiser/Semantics.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
-
-#include <libjulia/optimiser/Semantics.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -41,7 +41,7 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	set<string> names;
 	for (auto const& var: _assignment.variableNames)
 		names.insert(var.name);
-	solAssert(_assignment.value, "");
+	assertThrow(_assignment.value, OptimizerException, "");
 	visit(*_assignment.value);
 	handleAssignment(names, _assignment.value.get());
 }
@@ -120,7 +120,7 @@ void DataFlowAnalyzer::operator()(Block& _block)
 	m_variableScopes.emplace_back(false);
 	ASTModifier::operator()(_block);
 	m_variableScopes.pop_back();
-	solAssert(numScopes == m_variableScopes.size(), "");
+	assertThrow(numScopes == m_variableScopes.size(), OptimizerException, "");
 }
 
 void DataFlowAnalyzer::handleAssignment(set<string> const& _variables, Expression* _value)

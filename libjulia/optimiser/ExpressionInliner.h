@@ -23,8 +23,6 @@
 
 #include <libjulia/ASTDataForward.h>
 
-#include <libsolidity/interface/Exceptions.h>
-
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 

@@ -24,10 +24,9 @@
 #include <libjulia/optimiser/ASTWalker.h>
 #include <libjulia/optimiser/NameCollector.h>
 #include <libjulia/optimiser/Semantics.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
-
-#include <libsolidity/interface/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -38,18 +37,16 @@ using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
 
-
-
 FullInliner::FullInliner(Block& _ast):
 	m_ast(_ast)
 {
-	solAssert(m_ast.statements.size() >= 1, "");
-	solAssert(m_ast.statements.front().type() == typeid(Block), "");
+	assertThrow(m_ast.statements.size() >= 1, OptimizerException, "");
+	assertThrow(m_ast.statements.front().type() == typeid(Block), OptimizerException, "");
 	m_nameDispenser.m_usedNames = NameCollector(m_ast).names();
 
 	for (size_t i = 1; i < m_ast.statements.size(); ++i)
 	{
-		solAssert(m_ast.statements.at(i).type() == typeid(FunctionDefinition), "");
+		assertThrow(m_ast.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
 		m_functions[fun.name] = &fun;
 		m_functionsToVisit.insert(&fun);
@@ -58,7 +55,7 @@ FullInliner::FullInliner(Block& _ast):
 
 void FullInliner::run()
 {
-	solAssert(m_ast.statements[0].type() == typeid(Block), "");
+	assertThrow(m_ast.statements[0].type() == typeid(Block), OptimizerException, "");
 	InlineModifier(*this, m_nameDispenser, "").visit(m_ast.statements[0]);
 	while (!m_functionsToVisit.empty())
 		handleFunction(**m_functionsToVisit.begin());
@@ -79,7 +76,7 @@ void InlineModifier::operator()(FunctionalInstruction& _instruction)
 
 void InlineModifier::operator()(FunctionCall&)
 {
-	solAssert(false, "Should be handled in visit() instead.");
+	assertThrow(false, OptimizerException, "Should be handled in visit() instead.");
 }
 
 void InlineModifier::operator()(ForLoop& _loop)
@@ -249,7 +246,7 @@ Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 
 Statement BodyCopier::operator()(FunctionDefinition const& _funDef)
 {
-	solAssert(false, "Function hoisting has to be done before function inlining.");
+	assertThrow(false, OptimizerException, "Function hoisting has to be done before function inlining.");
 	return _funDef;
 }
 
