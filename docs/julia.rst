@@ -306,12 +306,15 @@ Type Conversion Functions
 JULIA has no support for implicit type conversion and therefore functions exists to provide explicit conversion.
 When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
 
-The following type conversion functions must be available:
- - ``u32tobool(x:u32) -> y:bool``
- - ``booltou32(x:bool) -> y:u32``
- - ``u32tou64(x:u32) -> y:u64``
- - ``u64tou32(x:u64) -> y:u32``
- - etc. (TBD)
+Truncating conversions are supported between the following types:
+ - ``bool``
+ - ``u32``
+ - ``u64``
+ - ``u256``
+ - ``s256``
+
+For each of these a type conversion function exists having the prototype in the form of ``<input_type>to<output_type>(x:<input_type>) -> y:<output_type>``,
+such as ``u32tobool(x:u32) -> y:bool``, ``u256tou32(x:u256) -> y:u32`` or ``s256tou256(x:s256) -> y:u256``.
 
 .. note::
 
