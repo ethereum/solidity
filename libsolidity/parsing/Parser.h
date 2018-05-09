@@ -151,7 +151,7 @@ private:
 	{
 		std::vector<ASTPointer<PrimaryExpression>> path;
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> indices;
-		bool empty() const { return path.empty() && indices.empty(); }
+		bool empty() const;
 	};
 
 	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();

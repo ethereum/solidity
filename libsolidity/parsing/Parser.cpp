@@ -1098,6 +1098,16 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	}
 }
 
+bool Parser::IndexAccessedPath::empty() const
+{
+	if (!indices.empty())
+	{
+		solAssert(!path.empty(), "");
+	}
+	return path.empty() && indices.empty();
+}
+
+
 pair<Parser::LookAheadInfo, Parser::IndexAccessedPath> Parser::tryParseIndexAccessedPath()
 {
 	// These two cases are very hard to distinguish:
