@@ -3,4 +3,4 @@ contract test {
 	function b() returns (uint r) { r = a({a: 1, b: 2, c: 3, }); }
 }
 // ----
-// ParserError: (159-159): Unexpected trailing comma.
+// ParserError: (159-160): Unexpected trailing comma.

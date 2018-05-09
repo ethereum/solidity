@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (118-118): Expected ';' but got identifier
+// ParserError: (118-119): Expected ';' but got identifier

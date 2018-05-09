@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// ParserError: (35-35): Expected explicit type name.
+// ParserError: (35-38): Expected explicit type name.

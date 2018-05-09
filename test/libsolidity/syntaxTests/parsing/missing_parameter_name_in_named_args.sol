@@ -3,4 +3,4 @@ contract test {
 	function b() returns (uint r) { r = a({: 1, : 2, : 3}); }
 }
 // ----
-// ParserError: (143-143): Expected identifier but got ':'
+// ParserError: (143-144): Expected identifier but got ':'
