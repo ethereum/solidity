@@ -19,8 +19,6 @@ defaults:
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
-      environment:
-        TERM: xterm
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -36,6 +34,8 @@ jobs:
   build_emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - restore_cache:
@@ -68,6 +68,8 @@ jobs:
   test_emscripten_solcjs:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -92,6 +94,8 @@ jobs:
   test_emscripten_external:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -116,6 +120,8 @@ jobs:
   build_x86_linux:
     docker:
       - image: buildpack-deps:artful
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - run:
@@ -131,6 +137,8 @@ jobs:
   build_x86_mac:
     macos:
       xcode: "9.0"
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - run:
@@ -150,6 +158,8 @@ jobs:
   test_x86_linux:
     docker:
       - image: buildpack-deps:artful
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -167,6 +177,8 @@ jobs:
   test_x86_mac:
     macos:
       xcode: "9.0"
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
