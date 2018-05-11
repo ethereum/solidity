@@ -71,7 +71,6 @@ private:
 	ErrorReporter& m_errorReporter;
 
 	bool m_errors = false;
-	bool m_enforceViewWithError = false;
 	StateMutability m_currentBestMutability = StateMutability::Payable;
 	FunctionDefinition const* m_currentFunction = nullptr;
 	std::map<ModifierDefinition const*, StateMutability> m_inferredMutability;
