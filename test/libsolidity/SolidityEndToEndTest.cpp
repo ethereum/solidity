@@ -1667,7 +1667,7 @@ BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_smaller_size)
 	char const* sourceCode = R"(
 		contract Test {
 			function bytesToUint(bytes4 s) returns (uint16 h) {
-				return uint16(s);
+				return uint16(uint32(s));
 			}
 		}
 	)";
@@ -1683,7 +1683,7 @@ BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_greater_size)
 	char const* sourceCode = R"(
 		contract Test {
 			function bytesToUint(bytes4 s) returns (uint64 h) {
-				return uint64(s);
+				return uint64(uint32(s));
 			}
 		}
 	)";
@@ -1730,7 +1730,7 @@ BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_smaller_size)
 	char const* sourceCode = R"(
 		contract Test {
 			function uintToBytes(uint32 h) returns (bytes2 s) {
-				return bytes2(h);
+				return bytes2(uint16(h));
 			}
 		}
 	)";
@@ -1746,7 +1746,7 @@ BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_greater_size)
 	char const* sourceCode = R"(
 		contract Test {
 			function UintToBytes(uint16 h) returns (bytes8 s) {
-				return bytes8(h);
+				return bytes8(uint64(h));
 			}
 		}
 	)";
@@ -3128,7 +3128,7 @@ BOOST_AUTO_TEST_CASE(event)
 			function deposit(bytes32 _id, bool _manually) payable {
 				if (_manually) {
 					bytes32 s = 0x19dacbf83c5de6658e14cbf7bcae5c15eca2eedecf1c66fbca928e4d351bea0f;
-					log3(bytes32(msg.value), s, bytes32(msg.sender), _id);
+					log3(bytes32(msg.value), s, bytes32(uint256(msg.sender)), _id);
 				} else {
 					Deposit(msg.sender, _id, msg.value);
 				}
@@ -3525,7 +3525,7 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 			event E(string indexed r, uint[4] indexed t);
 			function deposit() {
 				bytes(x).length = 90;
-				for (uint i = 0; i < 90; i++)
+				for (uint8 i = 0; i < 90; i++)
 					bytes(x)[i] = byte(i);
 				y[0] = 4;
 				y[1] = 5;
@@ -4753,7 +4753,7 @@ BOOST_AUTO_TEST_CASE(array_copy_different_packing)
 			function test() returns (bytes10 a, bytes10 b, bytes10 c, bytes10 d, bytes10 e) {
 				data1.length = 9;
 				for (uint i = 0; i < data1.length; ++i)
-					data1[i] = bytes8(i);
+					data1[i] = bytes8(uint64(i));
 				data2 = data1;
 				a = data2[1];
 				b = data2[2];
@@ -4781,7 +4781,7 @@ BOOST_AUTO_TEST_CASE(array_copy_target_simple)
 			bytes17[10] data2; // 1 per slot, no offset counter
 			function test() returns (bytes17 a, bytes17 b, bytes17 c, bytes17 d, bytes17 e) {
 				for (uint i = 0; i < data1.length; ++i)
-					data1[i] = bytes8(i);
+					data1[i] = bytes8(uint64(i));
 				data2[8] = data2[9] = 2;
 				data2 = data1;
 				a = data2[1];
@@ -4813,14 +4813,14 @@ BOOST_AUTO_TEST_CASE(array_copy_target_leftover)
 				uint i;
 				for (i = 0; i < data2.length; ++i)
 					data2[i] = 0xffff;
-				check = uint(data2[31]) * 0x10000 | uint(data2[14]);
+				check = uint(uint16(data2[31])) * 0x10000 | uint(uint16(data2[14]));
 				for (i = 0; i < data1.length; ++i)
 					data1[i] = byte(uint8(1 + i));
 				data2 = data1;
 				for (i = 0; i < 16; ++i)
-					res1 |= uint(data2[i]) * 0x10000**i;
+					res1 |= uint(uint16(data2[i])) * 0x10000**i;
 				for (i = 0; i < 16; ++i)
-					res2 |= uint(data2[16 + i]) * 0x10000**i;
+					res2 |= uint(uint16(data2[16 + i])) * 0x10000**i;
 			}
 		}
 	)";
@@ -4846,7 +4846,7 @@ BOOST_AUTO_TEST_CASE(array_copy_target_leftover2)
 				data1[2] = 3;
 				data1[3] = 4;
 				for (uint i = 0; i < data2.length; ++i)
-					data2[i] = bytes10(0xffff00 | (1 + i));
+					data2[i] = bytes10(uint80(0xffff00 | (1 + i)));
 				data2 = data1;
 				r1 = data2[3];
 				r2 = data2[4];
@@ -5060,7 +5060,7 @@ BOOST_AUTO_TEST_CASE(byte_array_push_transition)
 		contract c {
 			bytes data;
 			function test() returns (uint) {
-				for (uint i = 1; i < 40; i++)
+				for (uint8 i = 1; i < 40; i++)
 				{
 					data.push(byte(i));
 					if (data.length != i) return 0x1000 + i;
@@ -5106,11 +5106,11 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 		contract c {
 			bytes data;
 			function direct(bytes arg, uint index) external returns (uint) {
-				return uint(arg[index]);
+				return uint(uint8(arg[index]));
 			}
 			function storageCopyRead(bytes arg, uint index) external returns (uint) {
 				data = arg;
-				return uint(data[index]);
+				return uint(uint8(data[index]));
 			}
 			function storageWrite() external returns (uint) {
 				data.length = 35;
@@ -5121,7 +5121,7 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 				data[31] |= 8;
 				data[30] = 1;
 				data[32] = 3;
-				return uint(data[30]) * 0x100 | uint(data[31]) * 0x10 | uint(data[32]);
+				return uint(uint8(data[30])) * 0x100 | uint(uint8(data[31])) * 0x10 | uint(uint8(data[32]));
 			}
 		}
 	)";
@@ -5144,7 +5144,7 @@ BOOST_AUTO_TEST_CASE(bytes_delete_element)
 			function test1() external returns (bool) {
 				data.length = 100;
 				for (uint i = 0; i < data.length; i++)
-					data[i] = byte(i);
+					data[i] = byte(uint8(i));
 				delete data[94];
 				delete data[96];
 				delete data[98];
@@ -7498,7 +7498,7 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (data1[0] != "1") return 10;
 				if (data1[4] != "4") return 11;
 				for (uint i = 0; i < data1.length; i ++)
-					data1[i] = byte(i * 3);
+					data1[i] = byte(uint8(i * 3));
 				if (data1[4] != 4 * 3) return 12;
 				if (data1[67] != 67 * 3) return 13;
 				// change length: long -> short
@@ -8314,7 +8314,7 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_index_access)
 			function g(bytes32 x) returns (uint) {
 				data = [x[0], x[1], x[2]];
 				data[0] = "12345";
-				return uint(data[0][4]);
+				return uint(uint8(data[0][4]));
 			}
 		}
 	)";
@@ -8372,7 +8372,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_memory_access)
 			function test() returns (bytes) {
 				bytes memory x = new bytes(5);
 				for (uint i = 0; i < x.length; ++i)
-					x[i] = byte(i + 1);
+					x[i] = byte(uint8(i + 1));
 				assembly { mstore(add(x, 32), "12345678901234567890123456789012") }
 				return x;
 			}
@@ -8892,7 +8892,7 @@ BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
 			function f(bytes2 a, uint16 x) returns (uint) {
 				if (a != "ab") return 1;
 				if (x != 0x0102) return 2;
-				if (bytes3(x) != 0x0102) return 3;
+				if (bytes3(uint24(x)) != 0x0102) return 3;
 				return 0;
 			}
 		}
