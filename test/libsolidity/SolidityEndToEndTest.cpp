@@ -2105,7 +2105,7 @@ BOOST_AUTO_TEST_CASE(packed_keccak256_complex_types)
 	char const* sourceCode = R"(
 		contract test {
 			uint120[3] x;
-			function f() view returns (bytes32 hash1, bytes32 hash2, bytes32 hash3) {
+			function f() returns (bytes32 hash1, bytes32 hash2, bytes32 hash3) {
 				uint120[] memory y = new uint120[](3);
 				x[0] = y[0] = uint120(-2);
 				x[1] = y[1] = uint120(-3);
@@ -11065,13 +11065,13 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	char const* sourceCode = R"(
 		contract C {
 			/// Calling into non-existant account is successful (creates the account)
-			function f() external view returns (bool) {
+			function f() external returns (bool) {
 				return address(0x4242).call();
 			}
-			function g() external view returns (bool) {
+			function g() external returns (bool) {
 				return address(0x4242).callcode();
 			}
-			function h() external view returns (bool) {
+			function h() external returns (bool) {
 				return address(0x4242).delegatecall();
 			}
 		}
@@ -11093,13 +11093,13 @@ BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 			function get() external view returns (uint) {
 				return value;
 			}
-			function get_delegated() external view returns (bool) {
+			function get_delegated() external returns (bool) {
 				return this.delegatecall(bytes4(sha3("get()")));
 			}
 			function assert0() external view {
 				assert(value == 0);
 			}
-			function assert0_delegated() external view returns (bool) {
+			function assert0_delegated() external returns (bool) {
 				return this.delegatecall(bytes4(sha3("assert0()")));
 			}
 		}
@@ -11560,7 +11560,7 @@ BOOST_AUTO_TEST_CASE(abi_encode_v2)
 				require(y[0] == "e");
 			}
 			S s;
-			function f4() public view returns (bytes r) {
+			function f4() public returns (bytes r) {
 				string memory x = "abc";
 				s.a = 7;
 				s.b.push(2);
