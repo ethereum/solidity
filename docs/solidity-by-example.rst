@@ -34,7 +34,7 @@ At the end of the voting time, ``winningProposal()``
 will return the proposal with the largest number
 of votes.
 
-::
+.. code-block:: solidity
 
     pragma solidity ^0.4.22;
 
@@ -223,7 +223,7 @@ contract has to be called manually for the
 beneficiary to receive his money - contracts cannot
 activate themselves.
 
-::
+.. code-block:: solidity
 
     pragma solidity ^0.4.22;
 
@@ -386,7 +386,7 @@ Bidders can confuse competition by placing several
 high or low invalid bids.
 
 
-::
+.. code-block:: solidity
 
     pragma solidity ^0.4.22;
 
@@ -539,7 +539,7 @@ high or low invalid bids.
 Safe Remote Purchase
 ********************
 
-::
+.. code-block:: solidity
 
     pragma solidity ^0.4.22;
 
