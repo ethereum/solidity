@@ -306,12 +306,20 @@ Type Conversion Functions
 JULIA has no support for implicit type conversion and therefore functions exists to provide explicit conversion.
 When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
 
-The following type conversion functions must be available:
-- ``u32tobool(x:u32) -> y:bool``
-- ``booltou32(x:bool) -> y:u32``
-- ``u32tou64(x:u32) -> y:u64``
-- ``u64tou32(x:u64) -> y:u32``
-- etc. (TBD)
+Truncating conversions are supported between the following types:
+ - ``bool``
+ - ``u32``
+ - ``u64``
+ - ``u256``
+ - ``s256``
+
+For each of these a type conversion function exists having the prototype in the form of ``<input_type>to<output_type>(x:<input_type>) -> y:<output_type>``,
+such as ``u32tobool(x:u32) -> y:bool``, ``u256tou32(x:u256) -> y:u32`` or ``s256tou256(x:s256) -> y:u256``.
+
+.. note::
+
+    ``u32tobool(x:u32) -> y:bool`` can be implemented as ``y := not(iszerou256(x))`` and
+    ``booltou32(x:bool) -> y:u32`` can be implemented as ``switch x case true:bool { y := 1:u32 } case false:bool { y := 0:u32 }``
 
 Low-level Functions
 -------------------
@@ -319,6 +327,16 @@ Low-level Functions
 The following functions must be available:
 
 +---------------------------------------------------------------------------------------------------------------+
+| *Logic*                                                                                                       |
++---------------------------------------------+-----------------------------------------------------------------+
+| not(x:bool) -> z:bool                       | logical not                                                     |
++---------------------------------------------+-----------------------------------------------------------------+
+| and(x:bool, y:bool) -> z:bool               | logical and                                                     |
++---------------------------------------------+-----------------------------------------------------------------+
+| or(x:bool, y:bool) -> z:bool                | logical or                                                      |
++---------------------------------------------+-----------------------------------------------------------------+
+| xor(x:bool, y:bool) -> z:bool               | xor                                                             |
++---------------------------------------------+-----------------------------------------------------------------+
 | *Arithmetics*                                                                                                 |
 +---------------------------------------------+-----------------------------------------------------------------+
 | addu256(x:u256, y:u256) -> z:u256           | x + y                                                           |
@@ -343,15 +361,19 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | mulmodu256(x:u256, y:u256, m:u256) -> z:u256| (x * y) % m with arbitrary precision arithmetics                |
 +---------------------------------------------+-----------------------------------------------------------------+
-| ltu256(x:u256, y:u256) -> z:bool            | 1 if x < y, 0 otherwise                                         |
+| ltu256(x:u256, y:u256) -> z:bool            | true if x < y, false otherwise                                  |
 +---------------------------------------------+-----------------------------------------------------------------+
-| gtu256(x:u256, y:u256) -> z:bool            | 1 if x > y, 0 otherwise                                         |
+| gtu256(x:u256, y:u256) -> z:bool            | true if x > y, false otherwise                                  |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sltu256(x:s256, y:s256) -> z:bool           | 1 if x < y, 0 otherwise, for signed numbers in two's complement |
+| sltu256(x:s256, y:s256) -> z:bool           | true if x < y, false otherwise                                  |
+|                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sgtu256(x:s256, y:s256) -> z:bool           | 1 if x > y, 0 otherwise, for signed numbers in two's complement |
+| sgtu256(x:s256, y:s256) -> z:bool           | true if x > y, false otherwise                                  |
+|                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
-| equ256(x:u256, y:u256) -> z:bool            | 1 if x == y, 0 otherwise                                        |
+| equ256(x:u256, y:u256) -> z:bool            | true if x == y, false otherwise                                 |
++---------------------------------------------+-----------------------------------------------------------------+
+| iszerou256(x:u256) -> z:bool                | true if x == 0, false otherwise                                 |
 +---------------------------------------------+-----------------------------------------------------------------+
 | notu256(x:u256) -> z:u256                   | ~x, every bit of x is negated                                   |
 +---------------------------------------------+-----------------------------------------------------------------+
@@ -404,10 +426,6 @@ The following functions must be available:
 | delegatecall(g:u256, a:u256, in:u256,       | identical to ``callcode``,                                      |
 | insize:u256, out:u256,                      | but also keep ``caller``                                        |
 | outsize:u256) -> r:u256                     | and ``callvalue``                                               |
-+---------------------------------------------+-----------------------------------------------------------------+
-| stop()                                      | stop execution, identical to return(0,0)                        |
-|                                             | Perhaps it would make sense retiring this as it equals to       |
-|                                             | return(0,0). It can be an optimisation by the EVM backend.      |
 +---------------------------------------------+-----------------------------------------------------------------+
 | abort()                                     | abort (equals to invalid instruction on EVM)                    |
 +---------------------------------------------+-----------------------------------------------------------------+
@@ -473,6 +491,8 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | *Others*                                                                                                      |
 +---------------------------------------------+-----------------------------------------------------------------+
+| discard(unused:bool)                        | discard value                                                   |
++---------------------------------------------+-----------------------------------------------------------------+
 | discardu256(unused:u256)                    | discard value                                                   |
 +---------------------------------------------+-----------------------------------------------------------------+
 | splitu256tou64(x:u256) -> (x1:u64, x2:u64,  | split u256 to four u64's                                        |
@@ -481,7 +501,7 @@ The following functions must be available:
 | combineu64tou256(x1:u64, x2:u64, x3:u64,    | combine four u64's into a single u256                           |
 |                  x4:u64) -> (x:u256)        |                                                                 |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sha3(p:u256, s:u256) -> v:u256              | keccak(mem[p...(p+s)))                                          |
+| keccak256(p:u256, s:u256) -> v:u256         | keccak(mem[p...(p+s)))                                          |
 +---------------------------------------------+-----------------------------------------------------------------+
 
 Backends
