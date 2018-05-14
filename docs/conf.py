@@ -22,7 +22,8 @@ import re
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 def setup(sphinx):
-    sys.path.insert(0, os.path.abspath('./utils'))
+    thisdir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, thisdir + '/utils')
     from SolidityLexer import SolidityLexer
     sphinx.add_lexer('Solidity', SolidityLexer())
 
