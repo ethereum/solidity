@@ -404,9 +404,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
-	if (!m_args.count(g_argInputFile))
-		addStdin = true;
-	else
+	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
 			auto eq = find(path.begin(), path.end(), '=');
@@ -450,6 +448,11 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+	if (m_sourceCodes.size() == 0)
+	{
+		cerr << "No input files given. If you wish to use the standard input please specify \"-\" explicity." << endl;
+		return false;
+	}
 
 	return true;
 }
