@@ -1358,7 +1358,7 @@ TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer c
 {
 	if (category() != _other->category())
 		return TypePointer();
-	if (Token::isCompareOp(_operator) || _operator == Token::And || _operator == Token::Or)
+	if (_operator == Token::Equal || _operator == Token::NotEqual || _operator == Token::And || _operator == Token::Or)
 		return _other;
 	else
 		return TypePointer();
