@@ -485,11 +485,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 			solUnimplementedAssert(SSAVariable::isBool(_op.annotation().commonType->category()), "Operation not yet supported");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
-				op == Token::NotEqual ? (left != right) :
-				op == Token::LessThan ? (!left && right) :
-				op == Token::LessThanOrEqual ? (!left || right) :
-				op == Token::GreaterThan ? (left && !right) :
-				/*op == Token::GreaterThanOrEqual*/ (left || !right)
+				/*op == Token::NotEqual*/ (left != right)
 			);
 		}
 		// TODO: check that other values for op are not possible.

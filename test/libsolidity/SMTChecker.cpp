@@ -388,35 +388,6 @@ BOOST_AUTO_TEST_CASE(bool_simple)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				bool y;
-				assert(x <= y);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				bool y;
-				assert(x >= y);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				require(x);
-				bool y;
-				assert(x > y);
-				assert(y < x);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(bool_int_mixed)
