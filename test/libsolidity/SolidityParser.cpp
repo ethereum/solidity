@@ -838,40 +838,6 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
 }
 
-BOOST_AUTO_TEST_CASE(multiple_statemutability_specifiers)
-{
-	char const* text = R"(
-		contract c {
-			function f() payable payable {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");
-	text = R"(
-		contract c {
-			function f() constant constant {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
-	text = R"(
-		contract c {
-			function f() constant view {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"view\".");
-	text = R"(
-		contract c {
-			function f() payable constant {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"payable\".");
-	text = R"(
-		contract c {
-			function f() pure payable {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
-	text = R"(
-		contract c {
-			function f() pure constant {}
-		})";
-	CHECK_PARSE_ERROR(text, "State mutability already specified as \"pure\".");
-}
-
 BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
 {
 	char const* text = R"(

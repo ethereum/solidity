@@ -1,6 +1,7 @@
 ### 0.4.24 (unreleased)
 
 Features:
+ * Remove deprecated ``constant`` as function state modifier from documentation and tests (but still leave it as a valid feature).
  * Build System: Update internal dependency of jsoncpp to 1.8.4, which introduces more strictness and reduces memory usage.
  * Code Generator: Use native shift instructions on target Constantinople.
  * Gas Estimator: Only explore paths with higher gas costs. This reduces accuracy but greatly improves the speed of gas estimation.

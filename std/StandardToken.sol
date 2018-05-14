@@ -13,11 +13,11 @@ contract StandardToken is Token {
 		balance[_initialOwner] = _supply;
 	}
 
-	function balanceOf(address _account) constant public returns (uint) {
+	function balanceOf(address _account) view public returns (uint) {
 		return balance[_account];
 	}
 
-	function totalSupply() constant public returns (uint) {
+	function totalSupply() view public returns (uint) {
 		return supply;
 	}
 
@@ -53,7 +53,7 @@ contract StandardToken is Token {
 		return true;
 	}
 
-	function allowance(address _owner, address _spender) constant public returns (uint256) {
+	function allowance(address _owner, address _spender) view public returns (uint256) {
 		return m_allowance[_owner][_spender];
 	}
 }

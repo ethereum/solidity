@@ -120,7 +120,7 @@ Gas Limit and Loops
 Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully:
 Due to the block gas limit, transactions can only consume a certain amount of gas. Either explicitly or just due to
 normal operation, the number of iterations in a loop can grow beyond the block gas limit which can cause the complete
-contract to be stalled at a certain point. This may not apply to ``constant`` functions that are only executed
+contract to be stalled at a certain point. This may not apply to ``view`` functions that are only executed
 to read data from the blockchain. Still, such functions may be called by other contracts as part of on-chain operations
 and stall those. Please be explicit about such cases in the documentation of your contracts.
 

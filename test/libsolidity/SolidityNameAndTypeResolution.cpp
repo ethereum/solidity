@@ -831,24 +831,6 @@ BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 	CHECK_ERROR(text, TypeError, "Overriding function visibility differs");
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_remove_constness)
-{
-	char const* text = R"(
-		contract B { function f() constant {} }
-		contract C is B { function f() public {} }
-	)";
-	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"view\" to \"nonpayable\".");
-}
-
-BOOST_AUTO_TEST_CASE(illegal_override_add_constness)
-{
-	char const* text = R"(
-		contract B { function f() public {} }
-		contract C is B { function f() constant {} }
-	)";
-	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"nonpayable\" to \"view\".");
-}
-
 BOOST_AUTO_TEST_CASE(complex_inheritance)
 {
 	char const* text = R"(
@@ -993,19 +975,6 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
-BOOST_AUTO_TEST_CASE(missing_state_variable)
-{
-	char const* text = R"(
-		contract Scope {
-			function getStateVar() constant public returns (uint stateVar) {
-				stateVar = Scope.stateVar; // should fail.
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Member \"stateVar\" not found or not visible after argument-dependent lookup in type(contract Scope)");
-}
-
-
 BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 {
 	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
@@ -1117,17 +1086,6 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_return_parameters)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Fallback function cannot return values.");
-}
-
-BOOST_AUTO_TEST_CASE(fallback_function_with_constant_modifier)
-{
-	char const* text = R"(
-		contract C {
-			uint x;
-			function() constant { x = 2; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Fallback function must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
@@ -2325,30 +2283,6 @@ BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
 	// Even if this is made possible in the future, we should not allow assignment
 	// to elements of constant arrays.
 	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
-}
-
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant_0_4_x)
-{
-	char const* text = R"(
-		contract C {
-			function () constant returns (uint) x;
-			uint constant y = x();
-		}
-	)";
-	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
-}
-
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-
-		contract C {
-			function () constant returns (uint) x;
-			uint constant y = x();
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)

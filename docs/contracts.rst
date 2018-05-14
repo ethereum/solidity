@@ -473,7 +473,7 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` on functions is an alias to ``view``, but this is deprecated and is planned to be dropped in version 0.5.0.
+  ``constant`` on functions is an alias to ``view``, but this is deprecated and will be dropped in version 0.5.0.
 
 .. note::
   Getter methods are marked ``view``.
