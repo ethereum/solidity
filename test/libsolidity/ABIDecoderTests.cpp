@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(struct_simple)
 				a = s.a;
 				b = s.b;
 				c = s.c;
-				d = uint(s.d);
+				d = uint16(s.d);
 			}
 		}
 	)";

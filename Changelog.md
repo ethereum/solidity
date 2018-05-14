@@ -1,6 +1,7 @@
 ### 0.5.0 (unreleased)
 
 Breaking Changes:
+ * Disallow conversions between bytesX and uintY of different size.
  * Type Checker: Disallow arithmetic operations for Boolean variables.
 
 Features:
