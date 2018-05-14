@@ -762,7 +762,7 @@ Members
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
-                b[i] = byte(i);
+                b[i] = byte(uint8(i));
             return b;
         }
     }
@@ -974,6 +974,15 @@ cut off::
 
     uint32 a = 0x12345678;
     uint16 b = uint16(a); // b will be 0x5678 now
+
+Since 0.5.0 explicit conversions between integers and fixed-size byte arrays
+are only allowed, if both have the same size. To convert between integers and
+fixed-size byte arrays of different size, they first have to be explicitly
+converted to a matching size. This makes alignment and padding explicit::
+
+    uint16 x = 0xffff;
+    bytes32(uint256(x)); // pad on the left
+    bytes32(bytes2(x)); // pad on the right
 
 .. index:: ! type;deduction, ! var
 

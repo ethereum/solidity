@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 					data1[i] = msg.data[i];
 				data2 = data1;
 				l = data2.length;
-				y = uint(data2[x]);
+				y = uint(uint40(data2[x]));
 			}
 		}
 	)";
