@@ -168,10 +168,10 @@ void InlineModifier::visit(Statement& _statement)
 	// Replace pop(0) expression statemets (and others) by empty blocks.
 	if (_statement.type() == typeid(ExpressionStatement))
 	{
-		ExpressionStatement& expSt = boost::get<ExpressionStatement&>(_statement);
+		ExpressionStatement& expSt = boost::get<ExpressionStatement>(_statement);
 		if (expSt.expression.type() == typeid(FunctionalInstruction))
 		{
-			FunctionalInstruction& funInstr = boost::get<FunctionalInstruction&>(expSt.expression);
+			FunctionalInstruction& funInstr = boost::get<FunctionalInstruction>(expSt.expression);
 			if (funInstr.instruction == solidity::Instruction::POP)
 				if (MovableChecker(funInstr.arguments.at(0)).movable())
 					_statement = Block{expSt.location, {}};
