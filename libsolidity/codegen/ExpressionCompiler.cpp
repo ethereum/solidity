@@ -933,7 +933,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
 			else if (arguments.size() > 1)
+			{
 				utils().revertWithStringData(*arguments.at(1)->annotation().type);
+				// Here, the argument is consumed, but in the other branch, it is still there.
+				m_context.adjustStackOffset(arguments.at(1)->annotation().type->sizeOnStack());
+			}
 			else
 				m_context.appendRevert();
 			// the success branch
