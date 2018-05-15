@@ -10,4 +10,5 @@ contract test {
 }
 // ----
 // TypeError: (88-102): "sha3" has been deprecated in favour of "keccak256"
+// TypeError: (88-102): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data. The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
 // TypeError: (137-147): "suicide" has been deprecated in favour of "selfdestruct"
