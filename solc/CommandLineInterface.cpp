@@ -37,6 +37,7 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/AssemblyStack.h>
+#include <libsolidity/interface/FTime.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
@@ -117,6 +118,8 @@ static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
+static string const g_strFtimeReport = "ftime-report";
+static string const g_strFtimeReportTree = "ftime-report-no-tree";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -154,6 +157,8 @@ static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
+static string const g_argFtimeReport = g_strFtimeReport;
+static string const g_argFtimeReportTree = g_strFtimeReportTree;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -227,6 +232,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 			return true;
 	return false;
 }
+
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
@@ -402,7 +408,8 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 
 bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
-	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
+	t_stack.push("CLI::readInputFilesAndConfigureRemappings");
+        bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
 	if (!m_args.count(g_argInputFile))
 		addStdin = true;
@@ -422,6 +429,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					if (!ignoreMissing)
 					{
 						cerr << "\"" << infile << "\" is not found" << endl;
+						t_stack.pop();
 						return false;
 					}
 					else
@@ -435,6 +443,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					if (!ignoreMissing)
 					{
 						cerr << "\"" << infile << "\" is not a valid file" << endl;
+						t_stack.pop();
 						return false;
 					}
 					else
@@ -450,7 +459,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
-
+        t_stack.pop();
 	return true;
 }
 
@@ -620,6 +629,8 @@ Allowed options)",
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
 		)
+		(g_argFtimeReport.c_str(), "Makes the compiler print some of high level functions called and the time consumed by each")
+		(g_argFtimeReportTree.c_str(), "Same as --ftime-report except it won't print as a tree")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
@@ -696,7 +707,7 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadCallback::Callback fileReader = [this](string const& _path)
+        ReadCallback::Callback fileReader = [this](string const& _path)
 	{
 		try
 		{
@@ -737,7 +748,6 @@ bool CommandLineInterface::processInput()
 			return ReadCallback::Result{false, "Unknown exception in read callback."};
 		}
 	};
-
 	if (m_args.count(g_argAllowPaths))
 	{
 		vector<string> paths;
@@ -753,7 +763,6 @@ bool CommandLineInterface::processInput()
 			m_allowedDirectories.push_back(filesystem_path);
 		}
 	}
-
 	if (m_args.count(g_argStandardJSON))
 	{
 		string input = dev::readStandardInput();
@@ -761,15 +770,13 @@ bool CommandLineInterface::processInput()
 		cout << compiler.compile(input) << endl;
 		return true;
 	}
-
+        
 	if (!readInputFilesAndConfigureRemappings())
 		return false;
-
 	if (m_args.count(g_argLibraries))
 		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
 			if (!parseLibraryOption(library))
 				return false;
-
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
@@ -781,7 +788,6 @@ bool CommandLineInterface::processInput()
 		}
 		m_evmVersion = *versionOption;
 	}
-
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
 	{
 		// switch to assembly mode
@@ -882,7 +888,6 @@ bool CommandLineInterface::processInput()
 		cerr << "Unknown exception during compilation." << endl;
 		return false;
 	}
-
 	return true;
 }
 
@@ -965,6 +970,26 @@ void CommandLineInterface::handleCombinedJSON()
 		cout << json << endl;
 }
 
+void CommandLineInterface::handleFtimeReport(string const& _argStr,
+		string const& _argTree)
+{
+	string title;
+
+	if (_argStr == g_argFtimeReport)
+		title = "... Pass execution timing report ...";
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argFtimeReport for ftime report"));
+
+	if (m_args.count(_argStr) || m_args.count(_argTree))
+	{
+
+		if (m_args.count(_argTree))
+			t_stack.tree = false;
+                t_stack.print_flag = true;
+                t_stack.print();
+	}
+}
+
 void CommandLineInterface::handleAst(string const& _argStr)
 {
 	string title;
@@ -1037,13 +1062,17 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 bool CommandLineInterface::actOnInput()
 {
-	if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
+	t_stack.push("CommandLineInterface::actOnInput");
+        if (m_args.count(g_argStandardJSON) || m_onlyAssemble) {
 		// Already done in "processInput" phase.
+		t_stack.pop();
 		return true;
+	}
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
+        t_stack.pop();
 	return !m_error;
 }
 
@@ -1197,6 +1226,7 @@ void CommandLineInterface::outputCompilationResults()
 	handleAst(g_argAst);
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
+	handleFtimeReport(g_argFtimeReport, g_argFtimeReportTree);
 
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)

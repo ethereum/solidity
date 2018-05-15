@@ -19,10 +19,10 @@
  * @date 2014
  * Solidity compiler.
  */
-
 #include <libsolidity/codegen/Compiler.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/codegen/ContractCompiler.h>
+#include <libsolidity/interface/FTime.h>
 
 using namespace std;
 using namespace dev;
@@ -34,7 +34,8 @@ void Compiler::compileContract(
 	bytes const& _metadata
 )
 {
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
+	t_stack.push("Compiler::compileContract");
+        ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
 	runtimeCompiler.compileContract(_contract, _contracts);
 	m_runtimeContext.appendAuxiliaryData(_metadata);
 
@@ -42,8 +43,10 @@ void Compiler::compileContract(
 	// creation time.
 	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
-
+        t_stack.push("CompilerContext::optimse");
 	m_context.optimise(m_optimize, m_optimizeRuns);
+        t_stack.pop();
+        t_stack.pop();
 }
 
 void Compiler::compileClone(

@@ -21,7 +21,6 @@
  * Full-stack compiler that converts a source code string to bytecode.
  */
 
-
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <libsolidity/interface/Version.h>
@@ -44,6 +43,7 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/FTime.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -60,7 +60,8 @@ using namespace dev::solidity;
 
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
-	vector<Remapping> remappings;
+	t_stack.push("CompilerStack::setRemappings");
+        vector<Remapping> remappings;
 	for (auto const& remapping: _remappings)
 	{
 		auto eq = find(remapping.begin(), remapping.end(), '=');
@@ -74,12 +75,15 @@ void CompilerStack::setRemappings(vector<string> const& _remappings)
 		remappings.push_back(r);
 	}
 	swap(m_remappings, remappings);
+        t_stack.pop();
 }
 
 void CompilerStack::setEVMVersion(EVMVersion _version)
 {
-	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	t_stack.push("CompilerStack::setEVMVersion");
+        solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
 	m_evmVersion = _version;
+        t_stack.pop();
 }
 
 void CompilerStack::reset(bool _keepSources)
@@ -119,8 +123,11 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 bool CompilerStack::parse()
 {
 	//reset
-	if(m_stackState != SourcesSet)
+        t_stack.push("CompilerStack::parse");
+	if(m_stackState != SourcesSet) {
+		t_stack.pop();
 		return false;
+	}
 	m_errorReporter.clear();
 	ASTNode::resetID();
 
@@ -153,16 +160,22 @@ bool CompilerStack::parse()
 	if (Error::containsOnlyWarnings(m_errorReporter.errors()))
 	{
 		m_stackState = ParsingSuccessful;
+                t_stack.pop();
 		return true;
 	}
-	else
+	else {
+		t_stack.pop();
 		return false;
+	}
 }
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState != ParsingSuccessful)
+	t_stack.push("CompilerStack::analyze");
+        if (m_stackState != ParsingSuccessful) {
+                t_stack.pop();
 		return false;
+	}
 	resolveImports();
 
 	bool noErrors = true;
@@ -181,24 +194,28 @@ bool CompilerStack::analyze()
 		m_globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.registerDeclarations(*source->ast))
+			if (!resolver.registerDeclarations(*source->ast)) {
+				t_stack.pop();
 				return false;
+			}
 
 		map<string, SourceUnit const*> sourceUnitsByName;
 		for (auto& source: m_sources)
 			sourceUnitsByName[source.first] = source.second.ast.get();
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.performImports(*source->ast, sourceUnitsByName))
+			if (!resolver.performImports(*source->ast, sourceUnitsByName)) {
+				t_stack.pop();
 				return false;
+			}
 
 		for (Source const* source: m_sourceOrder)
 			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
 					m_globalContext->setCurrentContract(*contract);
-					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
-					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
+					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) {t_stack.pop(); return false;}
+					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) {t_stack.pop(); return false;}
+					if (!resolver.resolveNamesAndTypes(*contract)) {t_stack.pop(); return false;}
 
 					// Note that we now reference contracts by their fully qualified names, and
 					// thus contracts can only conflict if declared in the same source file.  This
@@ -275,10 +292,13 @@ bool CompilerStack::analyze()
 	if (noErrors)
 	{
 		m_stackState = AnalysisSuccessful;
+                t_stack.pop();
 		return true;
 	}
-	else
+	else {
+                t_stack.pop();
 		return false;
+	}
 }
 
 bool CompilerStack::parseAndAnalyze()
@@ -296,9 +316,12 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 
 bool CompilerStack::compile()
 {
-	if (m_stackState < AnalysisSuccessful)
-		if (!parseAndAnalyze())
+	t_stack.push("CompilerStack::compile");
+        if (m_stackState < AnalysisSuccessful)
+		if (!parseAndAnalyze()) {
+			t_stack.pop();
 			return false;
+		}
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
@@ -308,6 +331,7 @@ bool CompilerStack::compile()
 					compileContract(*contract, compiledContracts);
 	this->link();
 	m_stackState = CompilationSuccessful;
+        t_stack.pop();
 	return true;
 }
 
@@ -702,17 +726,19 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 )
 {
-	if (
+	t_stack.push("CompilerStack::compileContract: " + _contract.name());
+        if (
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().unimplementedFunctions.empty() ||
 		!_contract.constructorIsPublic()
-	)
+	) {
+		t_stack.pop();
 		return;
+	}
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
-
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
-	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+        Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	string metadata = createMetadata(compiledContract);
 	bytes cborEncodedHash =
 		// CBOR-encoding of the key "bzzr0"
@@ -736,7 +762,6 @@ void CompilerStack::compileContract(
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
 	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	compiledContract.compiler = compiler;
-
 	try
 	{
 		compiledContract.object = compiler->assembledObject();
@@ -782,6 +807,7 @@ void CompilerStack::compileContract(
 
 		// TODO: Report error / warning
 	}
+        t_stack.pop();
 }
 
 string const CompilerStack::lastContractName() const
@@ -840,7 +866,8 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 
 string CompilerStack::createMetadata(Contract const& _contract) const
 {
-	Json::Value meta;
+	t_stack.push("CompilerStack::createMetadata");
+        Json::Value meta;
 	meta["version"] = 1;
 	meta["language"] = "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
@@ -890,7 +917,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	meta["output"]["abi"] = contractABI(_contract);
 	meta["output"]["userdoc"] = natspecUser(_contract);
 	meta["output"]["devdoc"] = natspecDev(_contract);
-
+        t_stack.pop();
 	return jsonCompactPrint(meta);
 }
 
