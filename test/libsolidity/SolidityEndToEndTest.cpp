@@ -482,6 +482,27 @@ BOOST_AUTO_TEST_CASE(do_while_loop)
 	testContractAgainstCppOnRange("f(uint256)", do_while_loop_cpp, 0, 5);
 }
 
+BOOST_AUTO_TEST_CASE(do_while_loop_continue)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() public pure returns(uint r) {
+				uint i = 0;
+				do
+				{
+					if (i > 0) return 0;
+					i++;
+					continue;
+				} while (false);
+				return 42;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(42));
+}
+
 BOOST_AUTO_TEST_CASE(nested_loops)
 {
 	// tests that break and continue statements in nested loops jump to the correct place
