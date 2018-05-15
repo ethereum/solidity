@@ -2865,7 +2865,11 @@ bool FunctionType::isPure() const
 		m_kind == Kind::RIPEMD160 ||
 		m_kind == Kind::AddMod ||
 		m_kind == Kind::MulMod ||
-		m_kind == Kind::ObjectCreation;
+		m_kind == Kind::ObjectCreation ||
+		m_kind == Kind::ABIEncode ||
+		m_kind == Kind::ABIEncodePacked ||
+		m_kind == Kind::ABIEncodeWithSelector ||
+		m_kind == Kind::ABIEncodeWithSignature;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)

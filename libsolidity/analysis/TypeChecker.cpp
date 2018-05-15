@@ -2093,6 +2093,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto tt = dynamic_cast<TypeType const*>(exprType.get()))
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
+	if (auto magicType = dynamic_cast<MagicType const*>(exprType.get()))
+		if (magicType->kind() == MagicType::Kind::ABI)
+			annotation.isPure = true;
 
 	return false;
 }
