@@ -50,6 +50,8 @@ private:
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
 
+	virtual bool visit(ContractDefinition const& _node) override;
+	virtual void endVisit(ContractDefinition const& _node) override;
 	virtual void endVisit(VariableDeclaration const& _node) override;
 	virtual bool visit(FunctionDefinition const& _node) override;
 	virtual void endVisit(FunctionDefinition const& _node) override;
@@ -111,6 +113,7 @@ private:
 	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
+	void resetStateVariables();
 	void resetVariables(std::vector<Declaration const*> _variables);
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
@@ -163,6 +166,7 @@ private:
 	bool m_loopExecutionHappened = false;
 	std::map<Expression const*, smt::Expression> m_expressions;
 	std::map<Declaration const*, SSAVariable> m_variables;
+	std::map<Declaration const*, SSAVariable> m_stateVariables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
