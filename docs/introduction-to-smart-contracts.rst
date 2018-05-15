@@ -372,6 +372,14 @@ accessing (either reading or writing) a previously untouched memory word (ie. an
 within a word). At the time of expansion, the cost in gas must be paid. Memory is more
 costly the larger it grows (it scales quadratically).
 
+Also, if you want to create a new struct variable inside a function, 
+and then add push it to an array, then you should create it in 
+the storage space ::
+
+    MyStruct memory newStruct;
+     ... // modifiying newStruct variables
+    myStructsArray.push(newStruct);
+
 The EVM is not a register machine but a stack machine, so all
 computations are performed on an area called the **stack**. It has a maximum size of
 1024 elements and contains words of 256 bits. Access to the stack is

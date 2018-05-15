@@ -1,0 +1,11 @@
+We have long list of updated work for our most awaited Solidity v0.5.0.
+
+Some of the ideas are,
+
+**Unary + will be disallowed**
+
+**callcode will be disallowed **
+
+**view keyword will be enforced**
+
+**Fallback function must be declared as external**
