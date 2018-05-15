@@ -21,7 +21,7 @@ include(EthCcache)
 # Let's find our dependencies
 include(EthDependencies)
 include(jsoncpp)
-include_directories(${JSONCPP_INCLUDE_DIR})
+include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
 
 find_package(Threads)
 
