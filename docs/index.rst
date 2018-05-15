@@ -24,9 +24,11 @@ crowdfunding, blind auctions, multi-signature wallets and more.
     and run the smart contracts. 
 
 .. warning::
-    Since software is written by humans, it can have bugs. Thus, also
-    smart contracts should be created following well-known best-practices in
-    software development. This includes code review, testing, audits and correctness proofs.
+    Since software is written by humans, and may contain bugs.
+    Since smart contracts are a special case of software,
+    any guidelines for writing software also apply to smart contracts,
+    and should be created following well-known best-practices in software development.
+    This includes code review, testing, audits and correctness proofs.
     Also note that users are sometimes more confident in code than its authors.
     Finally, blockchains have their own things to watch out for, so please take
     a look at the section :ref:`security_considerations`.
