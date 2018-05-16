@@ -213,19 +213,10 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
-  merge_blocker:
-    docker:
-      - image: buildpack-deps:artful
-    steps:
-      - run:
-          name: This blocks the merge. Remove when 0.5.0 is to be released.
-          command: false
-
 workflows:
   version: 2
   build_all:
     jobs:
-      - merge_blocker
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
