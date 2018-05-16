@@ -112,38 +112,6 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
-BOOST_AUTO_TEST_CASE(single_modifier_arg_trailing_comma)
-{
-	char const* text = R"(
-		contract test {
-			modifier modTest(uint a,) { _; }
-			function(uint a) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
-}
-
-BOOST_AUTO_TEST_CASE(single_event_arg_trailing_comma)
-{
-	char const* text = R"(
-		contract test {
-			event Test(uint a,);
-			function(uint a) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
-}
-
-BOOST_AUTO_TEST_CASE(multiple_function_param_trailing_comma)
-{
-	char const* text = R"(
-		contract test {
-			function(uint a, uint b,) {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
-}
-
 BOOST_AUTO_TEST_CASE(multiple_return_param_trailing_comma)
 {
 	char const* text = R"(
@@ -176,16 +144,6 @@ BOOST_AUTO_TEST_CASE(multiple_event_arg_trailing_comma)
 	CHECK_PARSE_ERROR(text, "Unexpected trailing comma in parameter list.");
 }
 
-BOOST_AUTO_TEST_CASE(function_no_body)
-{
-	char const* text = R"(
-		contract test {
-			function functionName(bytes32 input) returns (bytes32 out);
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
 BOOST_AUTO_TEST_CASE(two_exact_functions)
 {
 	char const* text = R"(
@@ -197,17 +155,6 @@ BOOST_AUTO_TEST_CASE(two_exact_functions)
 	// with support of overloaded functions, during parsing,
 	// we can't determine whether they match exactly, however
 	// it will throw DeclarationError in following stage.
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(overloaded_functions)
-{
-	char const* text = R"(
-		contract test {
-			function fun(uint a) returns(uint r) { return a; }
-			function fun(uint a, uint b) returns(uint r) { return a + b; }
-		}
-	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -985,69 +932,11 @@ BOOST_AUTO_TEST_CASE(location_specifiers_for_locals)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(empty_comment)
-{
-	char const* text = R"(
-		//
-		contract test
-		{}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(comment_end_with_double_star)
-{
-	char const* text = R"(
-		contract C1 {
-		/**
-		 **/
-		}
-		contract C2 {}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
 BOOST_AUTO_TEST_CASE(library_simple)
 {
 	char const* text = R"(
 		library Lib {
 			function f() { }
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(multi_variable_declaration)
-{
-	char const* text = R"(
-		contract C {
-			function f() {
-				var (a,b,c) = g();
-				var (d) = 2;
-				var (,e) = 3;
-				var (f,) = 4;
-				var (x,,) = g();
-				var (,y,) = g();
-				var () = g();
-				var (,,) = g();
-			}
-			function g() returns (uint, uint, uint) {}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(tuples)
-{
-	char const* text = R"(
-		contract C {
-			function f() {
-				uint a = (1);
-				var (b,) = (1,);
-				var (c,d) = (1, 2 + a);
-				var (e,) = (1, 2, b);
-				(a) = 3;
-			}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -1330,27 +1219,6 @@ BOOST_AUTO_TEST_CASE(mapping_and_array_of_functions)
 			mapping (address => function() external) b;
 			mapping (address => function() external[]) c;
 			function() external[] d;
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(function_type_state_variable)
-{
-	char const* text = R"(
-		contract test {
-			function() x;
-			function() y = x;
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(interface)
-{
-	char const* text = R"(
-		interface Interface {
-			function f();
 		}
 	)";
 	BOOST_CHECK(successParse(text));
