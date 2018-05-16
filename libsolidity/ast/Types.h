@@ -1058,6 +1058,22 @@ public:
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
 	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160 || m_kind == Kind::ABIEncodePacked); }
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
+	/// true iff the function takes a single bytes parameter and it is passed on without padding.
+	/// @todo until 0.5.0, this is just a "recommendation".
+	bool takesSinglePackedBytesParameter() const
+	{
+		// @todo add the call kinds here with 0.5.0 and perhaps also log0.
+		switch (m_kind)
+		{
+		case FunctionType::Kind::SHA3:
+		case FunctionType::Kind::SHA256:
+		case FunctionType::Kind::RIPEMD160:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 	bool bound() const { return m_bound; }

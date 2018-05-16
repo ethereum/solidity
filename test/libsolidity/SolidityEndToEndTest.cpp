@@ -3959,6 +3959,51 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 	ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
 }
 
+BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
+{
+	char const* sourceCode = R"(
+		contract receiver {
+			uint public calledLength;
+			function() { calledLength = msg.data.length; }
+		}
+		contract sender {
+			receiver rec;
+			constructor() { rec = new receiver(); }
+			function viaCalldata() returns (uint) {
+				require(rec.call(msg.data));
+				return rec.calledLength();
+			}
+			function viaMemory() returns (uint) {
+				bytes memory x = msg.data;
+				require(rec.call(x));
+				return rec.calledLength();
+			}
+			bytes s;
+			function viaStorage() returns (uint) {
+				s = msg.data;
+				require(rec.call(s));
+				return rec.calledLength();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "sender");
+
+	// No additional data, just function selector
+	ABI_CHECK(callContractFunction("viaCalldata()"), encodeArgs(4));
+	ABI_CHECK(callContractFunction("viaMemory()"), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(4));
+	ABI_CHECK(callContractFunction("viaStorage()"), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(4));
+
+	// Some additional unpadded data
+	bytes unpadded = asBytes(string("abc"));
+	ABI_CHECK(callContractFunctionNoEncoding("viaCalldata()", unpadded), encodeArgs(7));
+	ABI_CHECK(callContractFunctionNoEncoding("viaMemory()", unpadded), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(7));
+	ABI_CHECK(callContractFunctionNoEncoding("viaStorage()", unpadded), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(7));
+}
+
 BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 {
 	char const* sourceCode = R"(
