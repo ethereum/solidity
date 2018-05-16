@@ -840,7 +840,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 				let length := and(div(slot_value, 2), 0x1f)
 				if iszero(length) { invalid() }
 
-				// Zero-out the suffix inlcluding the least significant byte.
+				// Zero-out the suffix including the least significant byte.
 				let mask := sub(exp(0x100, sub(33, length)), 1)
 				length := sub(length, 1)
 				slot_value := or(and(not(mask), slot_value), mul(length, 2))
