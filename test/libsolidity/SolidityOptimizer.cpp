@@ -139,7 +139,8 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 			function f(uint a) returns (uint b) {
 				return a;
 			}
-		})";
+		}
+	)";
 	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", u256(7));
 }
@@ -151,7 +152,8 @@ BOOST_AUTO_TEST_CASE(identities)
 			function f(int a) returns (int b) {
 				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
-		})";
+		}
+	)";
 	compileBothVersions(sourceCode);
 	compareVersions("f(int256)", u256(0x12334664));
 }
@@ -165,7 +167,8 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 				10 + 20;
 				data;
 			}
-		})";
+		}
+	)";
 	compileBothVersions(sourceCode);
 	compareVersions("f()");
 }
@@ -180,7 +183,8 @@ BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 			function f(uint x) returns (uint y) {
 				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
 			}
-		})";
+		}
+	)";
 	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", 7);
 }

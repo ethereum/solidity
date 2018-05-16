@@ -177,7 +177,8 @@ BOOST_AUTO_TEST_CASE(conditional_expression_with_return_values)
 			function f(bool cond, uint v) returns (uint a, uint b) {
 				cond ? a = v : b = v;
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(bool,uint256)", true, u256(20)), encodeArgs(u256(20), u256(0)));
 	ABI_CHECK(callContractFunction("f(bool,uint256)", false, u256(20)), encodeArgs(u256(0), u256(20)));
@@ -2216,7 +2217,8 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls)
 			function setHelper(address haddress) {
 				h = Helper(haddress);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2246,7 +2248,8 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_with_complex_parameters)
 			function setHelper(address haddress) {
 				h = Helper(haddress);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2277,7 +2280,8 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_accessing_this)
 			function setHelper(address addr) {
 				h = Helper(addr);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2308,7 +2312,8 @@ BOOST_AUTO_TEST_CASE(calls_to_this)
 			function setHelper(address addr) {
 				h = Helper(addr);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2343,7 +2348,8 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_with_local_vars)
 			function setHelper(address haddress) {
 				h = Helper(haddress);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2373,7 +2379,8 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_in_calls)
 			function setHelper(address addr) {
 				h = Helper(addr);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Helper");
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
@@ -2403,7 +2410,8 @@ BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 			}
 			function getFlag() returns (bool ret) { return h.getFlag(); }
 			function getName() returns (bytes3 ret) { return h.getName(); }
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 0, "Main");
 	ABI_CHECK(callContractFunction("getFlag()"), encodeArgs(true));
 	ABI_CHECK(callContractFunction("getName()"), encodeArgs("abc"));
@@ -2506,7 +2514,8 @@ BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 			}
 			function getName() returns (bytes3 ret) { return name; }
 			function setName(bytes3 _name) private { name = _name; }
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
 }
@@ -2632,7 +2641,8 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 			function getFlag() returns (bool ret) { return h.getFlag(); }
 			function getName() returns (bytes3 ret) { return h.getName(); }
 			function getBalances() returns (uint me, uint them) { me = this.balance; them = h.balance;}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode, 22, "Main");
 	BOOST_REQUIRE(callContractFunction("getFlag()") == encodeArgs(true));
 	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
@@ -3737,7 +3747,8 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 			{
 				d = sha3(a, b, c);
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 
 	ABI_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13), encodeArgs(
@@ -4404,7 +4415,8 @@ BOOST_AUTO_TEST_CASE(inline_member_init)
 				b = m_b;
 				c = m_c;
 			}
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("get()"), encodeArgs(5, 6, 8));
 }
@@ -4421,7 +4433,8 @@ BOOST_AUTO_TEST_CASE(inline_member_init_inheritence)
 			function Derived(){}
 			uint m_derived = 6;
 			function getDMember() returns (uint i) { return m_derived; }
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("getBMember()"), encodeArgs(5));
 	ABI_CHECK(callContractFunction("getDMember()"), encodeArgs(6));
@@ -4437,7 +4450,8 @@ BOOST_AUTO_TEST_CASE(inline_member_init_inheritence_without_constructor)
 		contract Derived is Base {
 			uint m_derived = 6;
 			function getDMember() returns (uint i) { return m_derived; }
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("getBMember()"), encodeArgs(5));
 	ABI_CHECK(callContractFunction("getDMember()"), encodeArgs(6));
@@ -5303,7 +5317,8 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 			{}
 		}
 		contract Final is Derived(4) {
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("m_i()"), encodeArgs(4));
 }
@@ -5326,7 +5341,8 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base)
 			{}
 		}
 		contract Final is Derived(4) {
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("m_i()"), encodeArgs(4));
 }
@@ -5346,7 +5362,8 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 			function Derived(uint i) Base(i) {}
 		}
 		contract Final is Derived(4) {
-		})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("m_i()"), encodeArgs(4));
 }
@@ -5357,7 +5374,8 @@ BOOST_AUTO_TEST_CASE(simple_constant_variables_test)
 		contract Foo {
 			function getX() returns (uint r) { return x; }
 			uint constant x = 56;
-	})";
+		}
+	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("getX()"), encodeArgs(56));
 }
@@ -5370,7 +5388,8 @@ BOOST_AUTO_TEST_CASE(constant_variables)
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			ActionChoices constant choices = ActionChoices.GoLeft;
 			bytes32 constant st = "abc\x00\xff__";
-	})";
+		}
+	)";
 	compileAndRun(sourceCode);
 }
 
