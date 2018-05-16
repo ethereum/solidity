@@ -37,6 +37,7 @@ namespace julia
 class ExpressionCopier: public boost::static_visitor<Expression>
 {
 public:
+	virtual ~ExpressionCopier() = default;
 	virtual Expression operator()(Literal const& _literal) = 0;
 	virtual Expression operator()(Identifier const& _identifier) = 0;
 	virtual Expression operator()(FunctionalInstruction const& _instr) = 0;
@@ -46,6 +47,7 @@ public:
 class StatementCopier: public boost::static_visitor<Statement>
 {
 public:
+	virtual ~StatementCopier() = default;
 	virtual Statement operator()(ExpressionStatement const& _statement) = 0;
 	virtual Statement operator()(Instruction const& _instruction) = 0;
 	virtual Statement operator()(Label const& _label) = 0;
@@ -66,6 +68,7 @@ public:
 class ASTCopier: public ExpressionCopier, public StatementCopier
 {
 public:
+	virtual ~ASTCopier() = default;
 	virtual Expression operator()(Literal const& _literal) override;
 	virtual Statement operator()(Instruction const& _instruction) override;
 	virtual Expression operator()(Identifier const& _identifier) override;

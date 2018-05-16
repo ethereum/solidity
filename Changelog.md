@@ -1,3 +1,30 @@
+### 0.4.24 (2018-05-16)
+
+Language Features:
+ * Code Generator: Use native shift instructions on target Constantinople.
+ * General: Allow multiple variables to be declared as part of a tuple assignment, e.g. ``(uint a, uint b) = ...``.
+ * General: Remove deprecated ``constant`` as function state modifier from documentation and tests (but still leave it as a valid feature).
+ * Type Checker: Deprecate the ``years`` unit denomination and raise a warning for it (or an error as experimental 0.5.0 feature).
+ * Type Checker: Make literals (without explicit type casting) an error for tight packing as experimental 0.5.0 feature.
+ * Type Checker: Warn about wildcard tuple assignments (this will turn into an error with version 0.5.0).
+ * Type Checker: Warn when ``keccak256``, ``sha256`` and ``ripemd160`` are not used with a single bytes argument (suggest to use ``abi.encodePacked(...)``). This will turn into an error with version 0.5.0.
+
+Compiler Features:
+ * Build System: Update internal dependency of jsoncpp to 1.8.4, which introduces more strictness and reduces memory usage.
+ * Control Flow Graph: Add Control Flow Graph as analysis structure.
+ * Control Flow Graph: Warn about returning uninitialized storage pointers.
+ * Gas Estimator: Only explore paths with higher gas costs. This reduces accuracy but greatly improves the speed of gas estimation.
+ * Optimizer: Remove unnecessary masking of the result of known short instructions (``ADDRESS``, ``CALLER``, ``ORIGIN`` and ``COINBASE``).
+ * Parser: Display nicer error messages by showing the actual tokens and not internal names.
+ * Parser: Use the entire location of the token instead of only its starting position as source location for parser errors.
+ * SMT Checker: Support state variables of integer and bool type.
+
+Bugfixes:
+ * Code Generator: Fix ``revert`` with reason coming from a state or local string variable.
+ * Type Checker: Show proper error when trying to ``emit`` a non-event.
+ * Type Checker: Warn about empty tuple components (this will turn into an error with version 0.5.0).
+ * Type Checker: The ABI encoding functions are pure and thus can be used for constants.
+
 ### 0.4.23 (2018-04-19)
 
 Features:

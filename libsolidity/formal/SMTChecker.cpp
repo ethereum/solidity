@@ -58,6 +58,19 @@ void SMTChecker::analyze(SourceUnit const& _source)
 		_source.accept(*this);
 }
 
+bool SMTChecker::visit(ContractDefinition const& _contract)
+{
+	for (auto _var : _contract.stateVariables())
+		if (_var->type()->isValueType())
+			createVariable(*_var);
+	return true;
+}
+
+void SMTChecker::endVisit(ContractDefinition const&)
+{
+	m_stateVariables.clear();
+}
+
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
@@ -72,13 +85,13 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 			"Assertion checker does not yet support constructors and functions with modifiers."
 		);
 	m_currentFunction = &_function;
-	// We only handle local variables, so we clear at the beginning of the function.
-	// If we add storage variables, those should be cleared differently.
 	m_interface->reset();
 	m_variables.clear();
+	m_variables.insert(m_stateVariables.begin(), m_stateVariables.end());
 	m_pathConditions.clear();
-	m_conditionalExecutionHappened = false;
+	m_loopExecutionHappened = false;
 	initializeLocalVariables(_function);
+	resetStateVariables();
 	return true;
 }
 
@@ -132,6 +145,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 
 		visitBranch(_node.body(), expr(_node.condition()));
 	}
+	m_loopExecutionHappened = true;
 	resetVariables(touchedVariables);
 
 	return false;
@@ -171,7 +185,7 @@ bool SMTChecker::visit(ForStatement const& _node)
 
 	m_interface->pop();
 
-	m_conditionalExecutionHappened = true;
+	m_loopExecutionHappened = true;
 	std::swap(sequenceCountersStart, m_variables);
 
 	resetVariables(touchedVariables);
@@ -548,7 +562,6 @@ SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _s
 	if (_condition)
 		popPathCondition();
 
-	m_conditionalExecutionHappened = true;
 	std::swap(m_variables, beforeVars);
 
 	return beforeVars;
@@ -586,15 +599,21 @@ void SMTChecker::checkCondition(
 				expressionsToEvaluate.emplace_back(currentValue(*var));
 				expressionNames.push_back(var->name());
 			}
+		for (auto const& var: m_stateVariables)
+			if (knownVariable(*var.first))
+			{
+				expressionsToEvaluate.emplace_back(currentValue(*var.first));
+				expressionNames.push_back(var.first->name());
+			}
 	}
 	smt::CheckResult result;
 	vector<string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string conditionalComment;
-	if (m_conditionalExecutionHappened)
-		conditionalComment =
-			"\nNote that some information is erased after conditional execution of parts of the code.\n"
+	string loopComment;
+	if (m_loopExecutionHappened)
+		loopComment =
+			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	switch (result)
 	{
@@ -607,17 +626,18 @@ void SMTChecker::checkCondition(
 			message << " for:\n";
 			solAssert(values.size() == expressionNames.size(), "");
 			for (size_t i = 0; i < values.size(); ++i)
-				message << "  " << expressionNames.at(i) << " = " << values.at(i) << "\n";
+				if (expressionsToEvaluate.at(i).name != values.at(i))
+					message << "  " << expressionNames.at(i) << " = " << values.at(i) << "\n";
 		}
 		else
 			message << ".";
-		m_errorReporter.warning(_location, message.str() + conditionalComment);
+		m_errorReporter.warning(_location, message.str() + loopComment);
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here." + conditionalComment);
+		m_errorReporter.warning(_location, _description + " might happen here." + loopComment);
 		break;
 	case smt::CheckResult::ERROR:
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
@@ -722,6 +742,15 @@ void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
 				setZeroValue(*retParam);
 }
 
+void SMTChecker::resetStateVariables()
+{
+	for (auto const& variable: m_stateVariables)
+	{
+		newValue(*variable.first);
+		setUnknownValue(*variable.first);
+	}
+}
+
 void SMTChecker::resetVariables(vector<Declaration const*> _variables)
 {
 	for (auto const* decl: _variables)
@@ -752,7 +781,14 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 	if (SSAVariable::isSupportedType(_varDecl.type()->category()))
 	{
 		solAssert(m_variables.count(&_varDecl) == 0, "");
-		m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
+		solAssert(m_stateVariables.count(&_varDecl) == 0, "");
+		if (_varDecl.isLocalVariable())
+			m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
+		else
+		{
+			solAssert(_varDecl.isStateVariable(), "");
+			m_stateVariables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
+		}
 		return true;
 	}
 	else

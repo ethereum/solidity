@@ -55,7 +55,8 @@ public:
 	explicit CompilerContext(EVMVersion _evmVersion = EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_evmVersion(_evmVersion),
-		m_runtimeContext(_runtimeContext)
+		m_runtimeContext(_runtimeContext),
+		m_abiFunctions(m_evmVersion)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());

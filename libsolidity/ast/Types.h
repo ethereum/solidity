@@ -138,6 +138,7 @@ private:
 class Type: private boost::noncopyable, public std::enable_shared_from_this<Type>
 {
 public:
+	virtual ~Type() = default;
 	enum class Category
 	{
 		Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
@@ -318,7 +319,7 @@ public:
 	};
 	virtual Category category() const override { return Category::Integer; }
 
-	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
+	explicit IntegerType(unsigned _bits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -341,7 +342,7 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBits() const { return m_bits; }
+	unsigned numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
@@ -349,7 +350,7 @@ public:
 	bigint maxValue() const;
 
 private:
-	int m_bits;
+	unsigned m_bits;
 	Modifier m_modifier;
 };
 
@@ -365,7 +366,7 @@ public:
 	};
 	virtual Category category() const override { return Category::FixedPoint; }
 
-	explicit FixedPointType(int _totalBits, int _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
+	explicit FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -385,9 +386,9 @@ public:
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	/// Number of bits used for this type in total.
-	int numBits() const { return m_totalBits; }
+	unsigned numBits() const { return m_totalBits; }
 	/// Number of decimal digits after the radix point.
-	int fractionalDigits() const { return m_fractionalDigits; }
+	unsigned fractionalDigits() const { return m_fractionalDigits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 	/// @returns the largest integer value this type con hold. Note that this is not the
 	/// largest value in general.
@@ -396,9 +397,12 @@ public:
 	/// smallest value in general.
 	bigint minIntegerValue() const;
 
+	/// @returns the smallest integer type that can hold this type with fractional parts shifted to integers.
+	std::shared_ptr<IntegerType> asIntegerType() const;
+
 private:
-	int m_totalBits;
-	int m_fractionalDigits;
+	unsigned m_totalBits;
+	unsigned m_fractionalDigits;
 	Modifier m_modifier;
 };
 
@@ -502,11 +506,7 @@ class FixedBytesType: public Type
 public:
 	virtual Category category() const override { return Category::FixedBytes; }
 
-	/// @returns the smallest bytes type for the given literal or an empty pointer
-	/// if no type fits.
-	static std::shared_ptr<FixedBytesType> smallestTypeForLiteral(std::string const& _literal);
-
-	explicit FixedBytesType(int _bytes);
+	explicit FixedBytesType(unsigned _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -524,10 +524,10 @@ public:
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
-	int numBytes() const { return m_bytes; }
+	unsigned numBytes() const { return m_bytes; }
 
 private:
-	int m_bytes;
+	unsigned m_bytes;
 };
 
 /**
@@ -1046,8 +1046,8 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	/// @returns true if the result of this function only depends on its arguments
-	/// and it does not modify the state.
+	/// @returns true if the result of this function only depends on its arguments,
+	/// does not modify the state and is a compile-time constant.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
@@ -1058,6 +1058,22 @@ public:
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
 	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160 || m_kind == Kind::ABIEncodePacked); }
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
+	/// true iff the function takes a single bytes parameter and it is passed on without padding.
+	/// @todo until 0.5.0, this is just a "recommendation".
+	bool takesSinglePackedBytesParameter() const
+	{
+		// @todo add the call kinds here with 0.5.0 and perhaps also log0.
+		switch (m_kind)
+		{
+		case FunctionType::Kind::SHA3:
+		case FunctionType::Kind::SHA256:
+		case FunctionType::Kind::RIPEMD160:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 	bool bound() const { return m_bound; }

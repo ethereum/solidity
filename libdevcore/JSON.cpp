@@ -28,8 +28,8 @@
 using namespace std;
 
 static_assert(
-	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 7) && (JSONCPP_VERSION_PATCH == 7),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.7.7."
+	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 8) && (JSONCPP_VERSION_PATCH == 4),
+	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.8.4."
 );
 
 namespace dev

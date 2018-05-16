@@ -52,6 +52,7 @@ protected:
 		bool _insertVersionPragma = true,
 		bool _allowMultipleErrors = false
 	);
+	virtual ~AnalysisFramework() = default;
 
 	SourceUnit const* parseAndAnalyse(std::string const& _source);
 	bool success(std::string const& _source);

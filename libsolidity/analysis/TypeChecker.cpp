@@ -1067,6 +1067,7 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 {
 	if (
 		_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
+		type(_emit.eventCall().expression())->category() != Type::Category::Function ||
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
 		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event invocation.");
@@ -1075,6 +1076,7 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
+	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	if (!_statement.initialValue())
 	{
 		// No initial value is only permitted for single variables with specified type.
@@ -1091,7 +1093,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
 				solAssert(m_scope, "");
-				if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+				if (v050)
 					m_errorReporter.declarationError(varDecl.location(), errorText);
 				else
 					m_errorReporter.warning(varDecl.location(), errorText);
@@ -1131,12 +1133,33 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				") in value for variable assignment (0) needed"
 			);
 	}
-	else if (valueTypes.size() != variables.size() && !variables.front() && !variables.back())
-		m_errorReporter.fatalTypeError(
-			_statement.location(),
-			"Wildcard both at beginning and end of variable declaration list is only allowed "
-			"if the number of components is equal."
-		);
+	else if (valueTypes.size() != variables.size())
+	{
+		if (v050)
+			m_errorReporter.fatalTypeError(
+				_statement.location(),
+				"Different number of components on the left hand side (" +
+				toString(variables.size()) +
+				") than on the right hand side (" +
+				toString(valueTypes.size()) +
+				")."
+			);
+		else if (!variables.front() && !variables.back())
+			m_errorReporter.fatalTypeError(
+				_statement.location(),
+				"Wildcard both at beginning and end of variable declaration list is only allowed "
+				"if the number of components is equal."
+			);
+		else
+			m_errorReporter.warning(
+				_statement.location(),
+				"Different number of components on the left hand side (" +
+				toString(variables.size()) +
+				") than on the right hand side (" +
+				toString(valueTypes.size()) +
+				")."
+			);
+	}
 	size_t minNumValues = variables.size();
 	if (!variables.empty() && (!variables.back() || !variables.front()))
 		--minNumValues;
@@ -1200,8 +1223,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				string extension;
 				if (auto type = dynamic_cast<IntegerType const*>(var.annotation().type.get()))
 				{
-					int numBits = type->numBits();
+					unsigned numBits = type->numBits();
 					bool isSigned = type->isSigned();
+					solAssert(numBits > 0, "");
 					string minValue;
 					string maxValue;
 					if (isSigned)
@@ -1333,6 +1357,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 bool TypeChecker::visit(Assignment const& _assignment)
 {
+	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
@@ -1345,11 +1370,29 @@ bool TypeChecker::visit(Assignment const& _assignment)
 			);
 		// Sequenced assignments of tuples is not valid, make the result a "void" type.
 		_assignment.annotation().type = make_shared<TupleType>();
+
 		expectType(_assignment.rightHandSide(), *tupleType);
 
 		// expectType does not cause fatal errors, so we have to check again here.
-		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
+		if (TupleType const* rhsType = dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
+		{
 			checkDoubleStorageAssignment(_assignment);
+			// @todo For 0.5.0, this code shoud move to TupleType::isImplicitlyConvertibleTo,
+			// but we cannot do it right now.
+			if (rhsType->components().size() != tupleType->components().size())
+			{
+				string message =
+					"Different number of components on the left hand side (" +
+					toString(tupleType->components().size()) +
+					") than on the right hand side (" +
+					toString(rhsType->components().size()) +
+					").";
+				if (v050)
+					m_errorReporter.typeError(_assignment.location(), message);
+				else
+					m_errorReporter.warning(_assignment.location(), message);
+			}
+		}
 	}
 	else if (t->category() == Type::Category::Mapping)
 	{
@@ -1406,8 +1449,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
+		bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		bool isPure = true;
 		TypePointer inlineArrayType;
+
 		for (size_t i = 0; i < components.size(); ++i)
 		{
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
@@ -1417,6 +1462,17 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
+
+				if (types[i]->category() == Type::Category::Tuple)
+					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
+					{
+						if (_tuple.isInlineArray())
+							m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
+						if (v050)
+							m_errorReporter.fatalTypeError(components[i]->location(), "Tuple component cannot be empty.");
+						else
+							m_errorReporter.warning(components[i]->location(), "Tuple component cannot be empty.");
+					}
 
 				// Note: code generation will visit each of the expression even if they are not assigned from.
 				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
@@ -1648,12 +1704,22 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
 
+	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
+		string msg;
 		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
-			m_errorReporter.warning(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
+			msg = "\"sha3\" has been deprecated in favour of \"keccak256\"";
 		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
-			m_errorReporter.warning(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
+			msg = "\"suicide\" has been deprecated in favour of \"selfdestruct\"";
+		if (!msg.empty())
+		{
+			if (v050)
+				m_errorReporter.typeError(_functionCall.location(), msg);
+			else
+				m_errorReporter.warning(_functionCall.location(), msg);
+		}
 	}
 	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
 	{
@@ -1674,15 +1740,52 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			{
 				/* If no mobile type is available an error will be raised elsewhere. */
 				if (literal->mobileType())
-					m_errorReporter.warning(
-						arguments[i]->location(),
-						"The type of \"" +
-						argType->toString() +
-						"\" was inferred as " +
-						literal->mobileType()->toString() +
-						". This is probably not desired. Use an explicit type to silence this warning."
-					);
+				{
+					if (v050)
+						m_errorReporter.typeError(
+							arguments[i]->location(),
+							"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
+						);
+					else
+						m_errorReporter.warning(
+							arguments[i]->location(),
+							"The type of \"" +
+							argType->toString() +
+							"\" was inferred as " +
+							literal->mobileType()->toString() +
+							". This is probably not desired. Use an explicit type to silence this warning."
+						);
+				}
 			}
+		}
+	}
+
+	if (functionType->takesSinglePackedBytesParameter())
+	{
+		if (
+			(arguments.size() > 1) ||
+			(arguments.size() == 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		)
+		{
+			string msg =
+				"This function only accepts a single \"bytes\" argument. Please use "
+				"\"abi.encodePacked(...)\" or a similar function to encode the data.";
+			if (v050)
+				m_errorReporter.typeError(_functionCall.location(), msg);
+			else
+				m_errorReporter.warning(_functionCall.location(), msg);
+		}
+
+		if (arguments.size() == 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		{
+			string msg =
+				"The provided argument of type " +
+				type(*arguments.front())->toString() +
+				" is not implicitly convertible to expected type bytes memory.";
+			if (v050)
+				m_errorReporter.typeError(_functionCall.location(), msg);
+			else
+				m_errorReporter.warning(_functionCall.location(), msg);
 		}
 	}
 
@@ -2019,6 +2122,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto tt = dynamic_cast<TypeType const*>(exprType.get()))
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
+	if (auto magicType = dynamic_cast<MagicType const*>(exprType.get()))
+		if (magicType->kind() == MagicType::Kind::ABI)
+			annotation.isPure = true;
 
 	return false;
 }
@@ -2202,6 +2308,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}
+
 	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
 	{
 		if (v050)
@@ -2217,6 +2324,21 @@ void TypeChecker::endVisit(Literal const& _literal)
 				"You can use an expression of the form \"0x1234 * 1 day\" instead."
 			);
 	}
+
+	if (_literal.subDenomination() == Literal::SubDenomination::Year)
+	{
+		if (v050)
+			m_errorReporter.typeError(
+				_literal.location(),
+				"Using \"years\" as a unit denomination is deprecated."
+			);
+		else
+			m_errorReporter.warning(
+				_literal.location(),
+				"Using \"years\" as a unit denomination is deprecated."
+			);
+	}
+
 	if (!_literal.annotation().type)
 		_literal.annotation().type = Type::forLiteral(_literal);
 

@@ -24,8 +24,8 @@ Creating contracts programatically on Ethereum is best done via using the JavaSc
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its constructor (a function with the same
-name as the contract) is executed once.
+When a contract is created, its constructor (a function declared with the
+``constructor`` keyword) is executed once.
 A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
 
@@ -473,7 +473,7 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` on functions is an alias to ``view``, but this is deprecated and is planned to be dropped in version 0.5.0.
+  ``constant`` on functions is an alias to ``view``, but this is deprecated and will be dropped in version 0.5.0.
 
 .. note::
   Getter methods are marked ``view``.
@@ -841,10 +841,10 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity ^0.4.22;
 
     contract owned {
-        function owned() { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address owner;
     }
 
@@ -875,7 +875,7 @@ Details are given in the following example.
     // also a base class of `mortal`, yet there is only a single
     // instance of `owned` (as for virtual inheritance in C++).
     contract named is owned, mortal {
-        function named(bytes32 name) {
+        constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
@@ -913,10 +913,10 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract owned {
-        function owned() public { owner = msg.sender; }
+        constructor() public { owner = msg.sender; }
         address owner;
     }
 
@@ -942,10 +942,10 @@ derived override, but this function will bypass
 ``Base1.kill``, basically because it does not even know about
 ``Base1``.  The way around this is to use ``super``::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract owned {
-        function owned() public { owner = msg.sender; }
+        constructor() public { owner = msg.sender; }
         address owner;
     }
 
@@ -982,7 +982,7 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
 default constructor: ``contructor() public {}``.
 
@@ -1030,10 +1030,11 @@ A constructor set as ``internal`` causes the contract to be marked as :ref:`abst
 Arguments for Base Constructors
 ===============================
 
-Derived contracts need to provide all arguments needed for
-the base constructors. This can be done in two ways::
+The constructors of all the base contracts will be called following the
+linearization rules explained below. If the base constructors have arguments,
+derived contracts need to specify all of them. This can be done in two ways::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.22;
 
     contract Base {
         uint x;
@@ -1059,6 +1060,9 @@ derived contract. Arguments have to be given either in the
 inheritance list or in modifier-style in the derived constuctor.
 Specifying arguments in both places is an error.
 
+If a derived contract doesn't specify the arguments to all of its base
+contracts' constructors, it will be abstract.
+
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
 Multiple Inheritance and Linearization
@@ -1066,12 +1070,15 @@ Multiple Inheritance and Linearization
 
 Languages that allow multiple inheritance have to deal with
 several problems.  One is the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
-Solidity follows the path of Python and uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
+Solidity is similar to Python in that it uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
 to force a specific order in the DAG of base classes. This
 results in the desirable property of monotonicity but
 disallows some inheritance graphs. Especially, the order in
 which the base classes are given in the ``is`` directive is
-important. In the following code, Solidity will give the
+important: You have to list the direct base contracts
+in the order from "most base-like" to "most derived".
+Note that this order is different from the one used in Python.
+In the following code, Solidity will give the
 error "Linearization of inheritance graph impossible".
 
 ::
@@ -1088,9 +1095,6 @@ The reason for this is that ``C`` requests ``X`` to override ``A``
 (by specifying ``A, X`` in this order), but ``A`` itself
 requests to override ``X``, which is a contradiction that
 cannot be resolved.
-
-A simple rule to remember is to specify the base classes in
-the order from "most base-like" to "most derived".
 
 Inheriting Different Kinds of Members of the Same Name
 ======================================================
@@ -1139,8 +1143,10 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
+Abstract contracts are useful in the same way that defining methods in an interface is useful. It is a way for the designer of the abstract contract to say "any child of mine must implement this method".
+
 
 .. index:: ! contract;interface, ! interface contract
 

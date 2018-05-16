@@ -1,11 +1,11 @@
 contract C {
     function f() public pure {
-        bytes32 h = keccak256(keccak256, f, this.f.gas, block.blockhash);
+        bytes32 h = keccak256(abi.encodePacked(keccak256, f, this.f.gas, block.blockhash));
         h;
     }
 }
 // ----
-// TypeError: (74-83): This type cannot be encoded.
-// TypeError: (85-86): This type cannot be encoded.
-// TypeError: (88-98): This type cannot be encoded.
-// TypeError: (100-115): This type cannot be encoded.
+// TypeError: (91-100): This type cannot be encoded.
+// TypeError: (102-103): This type cannot be encoded.
+// TypeError: (105-115): This type cannot be encoded.
+// TypeError: (117-132): This type cannot be encoded.

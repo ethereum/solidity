@@ -35,7 +35,7 @@ npm / Node.js
 =============
 
 Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has less features than all options further down this page. Our 
+`solcjs` program has fewer features than all options further down this page. Our 
 :ref:`commandline-compiler` documentation assumes you are using
 the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
 stop reading the documentation here and then continue to `solc-js <https://github.com/ethereum/solc-js>`_.
@@ -203,19 +203,38 @@ Prerequisites - Windows
 
 You will need to install the following dependencies for Windows builds of Solidity:
 
-+------------------------------+-------------------------------------------------------+
-| Software                     | Notes                                                 |
-+==============================+=======================================================+
-| `Git for Windows`_           | Command-line tool for retrieving source from Github.  |
-+------------------------------+-------------------------------------------------------+
-| `CMake`_                     | Cross-platform build file generator.                  |
-+------------------------------+-------------------------------------------------------+
-| `Visual Studio 2015`_        | C++ compiler and dev environment.                     |
-+------------------------------+-------------------------------------------------------+
++-----------------------------------+-------------------------------------------------------+
+| Software                          | Notes                                                 |
++===================================+=======================================================+
+| `Git for Windows`_                | Command-line tool for retrieving source from Github.  |
++-----------------------------------+-------------------------------------------------------+
+| `CMake`_                          | Cross-platform build file generator.                  |
++-----------------------------------+-------------------------------------------------------+
+| `Visual Studio 2017 Build Tools`_ | C++ compiler                                          |
++-----------------------------------+-------------------------------------------------------+
+| `Visual Studio 2017`_  (Optional) | C++ compiler and dev environment.                     |
++-----------------------------------+-------------------------------------------------------+
+
+If you've already had one IDE and only need compiler and libraries,
+you could install Visual Studio 2017 Build Tools.
+
+Visual Studio 2017 provides both IDE and necessary compiler and libraries.
+So if you have not got an IDE and prefer to develop solidity, Visual Studio 2017
+may be an choice for you to get everything setup easily.
+
+Here is the list of components that should be installed
+in Visual Studio 2017 Build Tools or Visual Studio 2017:
+
+* Visual Studio C++ core features
+* VC++ 2017 v141 toolset (x86,x64)
+* Windows Universal CRT SDK
+* Windows 8.1 SDK
+* C++/CLI support
 
 .. _Git for Windows: https://git-scm.com/download/win
 .. _CMake: https://cmake.org/download/
-.. _Visual Studio 2015: https://www.visualstudio.com/products/vs-2015-product-editions
+.. _Visual Studio 2017: https://www.visualstudio.com/vs/
+.. _Visual Studio 2017 Build Tools: https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017
 
 
 External Dependencies
@@ -263,7 +282,7 @@ And even for Windows:
 
     mkdir build
     cd build
-    cmake -G "Visual Studio 14 2015 Win64" ..
+    cmake -G "Visual Studio 15 2017 Win64" ..
 
 This latter set of instructions should result in the creation of
 **solidity.sln** in that build directory.  Double-clicking on that file

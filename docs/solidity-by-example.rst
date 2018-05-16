@@ -66,7 +66,7 @@ of votes.
         Proposal[] public proposals;
 
         /// Create a new ballot to choose one of `proposalNames`.
-        function Ballot(bytes32[] proposalNames) public {
+        constructor(bytes32[] proposalNames) public {
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
@@ -256,7 +256,7 @@ activate themselves.
         /// Create a simple auction with `_biddingTime`
         /// seconds bidding time on behalf of the
         /// beneficiary address `_beneficiary`.
-        function SimpleAuction(
+        constructor(
             uint _biddingTime,
             address _beneficiary
         ) public {
@@ -388,7 +388,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >0.4.23 <0.5.0;
 
     contract BlindAuction {
         struct Bid {
@@ -418,7 +418,7 @@ high or low invalid bids.
         modifier onlyBefore(uint _time) { require(now < _time); _; }
         modifier onlyAfter(uint _time) { require(now > _time); _; }
 
-        function BlindAuction(
+        constructor(
             uint _biddingTime,
             uint _revealTime,
             address _beneficiary
@@ -467,8 +467,8 @@ high or low invalid bids.
 
             uint refund;
             for (uint i = 0; i < length; i++) {
-                var bid = bids[msg.sender][i];
-                var (value, fake, secret) =
+                Bid storage bid = bids[msg.sender][i];
+                (uint value, bool fake, bytes32 secret) =
                         (_values[i], _fake[i], _secret[i]);
                 if (bid.blindedBid != keccak256(value, fake, secret)) {
                     // Bid was not actually revealed.
@@ -553,7 +553,7 @@ Safe Remote Purchase
         // Ensure that `msg.value` is an even number.
         // Division will truncate if it is an odd number.
         // Check via multiplication that it wasn't an odd number.
-        function Purchase() public payable {
+        constructor() public payable {
             seller = msg.sender;
             value = msg.value / 2;
             require((2 * value) == msg.value, "Value has to be even.");
@@ -602,7 +602,7 @@ Safe Remote Purchase
         {
             emit Aborted();
             state = State.Inactive;
-            seller.transfer(this.balance);
+            seller.transfer(address(this).balance);
         }
 
         /// Confirm the purchase as buyer.
@@ -637,7 +637,7 @@ Safe Remote Purchase
             // block the refund - the withdraw pattern should be used.
 
             buyer.transfer(value);
-            seller.transfer(this.balance);
+            seller.transfer(address(this).balance);
         }
     }
 
