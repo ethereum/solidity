@@ -99,8 +99,8 @@ void SyntaxTestTool::printContract() const
 		for (auto const& error: m_test->errorList())
 			if (error.locationStart >= 0 && error.locationEnd >= 0)
 			{
-				assert(static_cast<size_t>(error.locationStart) < source.length());
-				assert(static_cast<size_t>(error.locationEnd) < source.length());
+				assert(static_cast<size_t>(error.locationStart) <= source.length());
+				assert(static_cast<size_t>(error.locationEnd) <= source.length());
 				bool isWarning = error.type == "Warning";
 				for (int i = error.locationStart; i < error.locationEnd; i++)
 					if (isWarning)
