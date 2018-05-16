@@ -54,6 +54,7 @@ public:
 	template <class NodeType, typename... Args>
 	ASTPointer<NodeType> createNode(Args&& ... _args)
 	{
+		solAssert(m_location.sourceName, "");
 		if (m_location.end < 0)
 			markEndPosition();
 		return make_shared<NodeType>(m_location, forward<Args>(_args)...);
@@ -1086,15 +1087,79 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	LookAheadInfo statementType;
 	IndexAccessedPath iap;
 
-	tie(statementType, iap) = tryParseIndexAccessedPath();
-	switch (statementType)
+	if (m_scanner->currentToken() == Token::LParen)
 	{
-	case LookAheadInfo::VariableDeclaration:
-		return parseVariableDeclarationStatement(_docString, typeNameFromIndexAccessStructure(iap));
-	case LookAheadInfo::Expression:
-		return parseExpressionStatement(_docString, expressionFromIndexAccessStructure(iap));
-	default:
-		solAssert(false, "");
+		ASTNodeFactory nodeFactory(*this);
+		size_t emptyComponents = 0;
+		// First consume all empty components.
+		expectToken(Token::LParen);
+		while (m_scanner->currentToken() == Token::Comma)
+		{
+			m_scanner->next();
+			emptyComponents++;
+		}
+
+		// Now see whether we have a variable declaration or an expression.
+		tie(statementType, iap) = tryParseIndexAccessedPath();
+		switch (statementType)
+		{
+		case LookAheadInfo::VariableDeclaration:
+		{
+			vector<ASTPointer<VariableDeclaration>> variables;
+			ASTPointer<Expression> value;
+			// We have already parsed something like `(,,,,a.b.c[2][3]`
+			VarDeclParserOptions options;
+			options.allowLocationSpecifier = true;
+			variables = vector<ASTPointer<VariableDeclaration>>(emptyComponents, nullptr);
+			variables.push_back(parseVariableDeclaration(options, typeNameFromIndexAccessStructure(iap)));
+
+			while (m_scanner->currentToken() != Token::RParen)
+			{
+				expectToken(Token::Comma);
+				if (m_scanner->currentToken() == Token::Comma || m_scanner->currentToken() == Token::RParen)
+					variables.push_back(nullptr);
+				else
+					variables.push_back(parseVariableDeclaration(options));
+			}
+			expectToken(Token::RParen);
+			expectToken(Token::Assign);
+			value = parseExpression();
+			nodeFactory.setEndPositionFromNode(value);
+			return nodeFactory.createNode<VariableDeclarationStatement>(_docString, variables, value);
+		}
+		case LookAheadInfo::Expression:
+		{
+			// Complete parsing the expression in the current component.
+			vector<ASTPointer<Expression>> components(emptyComponents, nullptr);
+			components.push_back(parseExpression(expressionFromIndexAccessStructure(iap)));
+			while (m_scanner->currentToken() != Token::RParen)
+			{
+				expectToken(Token::Comma);
+				if (m_scanner->currentToken() == Token::Comma || m_scanner->currentToken() == Token::RParen)
+					components.push_back(ASTPointer<Expression>());
+				else
+					components.push_back(parseExpression());
+			}
+			nodeFactory.markEndPosition();
+			expectToken(Token::RParen);
+			return parseExpressionStatement(_docString, nodeFactory.createNode<TupleExpression>(components, false));
+		}
+		default:
+			solAssert(false, "");
+		}
+	}
+	else
+	{
+		tie(statementType, iap) = tryParseIndexAccessedPath();
+		switch (statementType)
+		{
+		case LookAheadInfo::VariableDeclaration:
+			return parseVariableDeclarationStatement(_docString, typeNameFromIndexAccessStructure(iap));
+		case LookAheadInfo::Expression:
+			return parseExpressionStatement(_docString, expressionFromIndexAccessStructure(iap));
+		default:
+			solAssert(false, "");
+		}
 	}
 }
 
@@ -1144,6 +1209,9 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	ASTPointer<TypeName> const& _lookAheadArrayType
 )
 {
+	// This does not parse multi variable declaration statements starting directly with
+	// `(`, they are parsed in parseSimpleStatement, because they are hard to distinguish
+	// from tuple expressions.
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	if (_lookAheadArrayType)
