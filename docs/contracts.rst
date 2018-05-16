@@ -1145,7 +1145,7 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
 Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
-Abstract contracts are useful in the same way that defining methods in an Interface is useful. It's a way for the designer of the Abstract contract to say "any child of mine MUST implement this method".
+Abstract contracts are useful in the same way that defining methods in an interface is useful. It is a way for the designer of the abstract contract to say "any child of mine must implement this method".
 
 
 .. index:: ! contract;interface, ! interface contract
