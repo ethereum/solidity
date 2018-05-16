@@ -1762,22 +1762,24 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (functionType->takesSinglePackedBytesParameter())
 	{
-		string generalMessage =
-			"This function only accepts a single \"bytes\" argument. Please use "
-			"\"abi.encodePacked(...)\" or a similar function to encode the data.";
-
-		if (arguments.size() > 1)
-		{
-			if (v050)
-				m_errorReporter.typeError(_functionCall.location(), generalMessage);
-			else
-				m_errorReporter.warning(_functionCall.location(), generalMessage);
-		}
-		else if (arguments.size() == 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		if (
+			(arguments.size() > 1) ||
+			(arguments.size() == 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		)
 		{
 			string msg =
-				generalMessage +
-				" The provided argument of type " +
+				"This function only accepts a single \"bytes\" argument. Please use "
+				"\"abi.encodePacked(...)\" or a similar function to encode the data.";
+			if (v050)
+				m_errorReporter.typeError(_functionCall.location(), msg);
+			else
+				m_errorReporter.warning(_functionCall.location(), msg);
+		}
+
+		if (arguments.size() == 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		{
+			string msg =
+				"The provided argument of type " +
 				type(*arguments.front())->toString() +
 				" is not implicitly convertible to expected type bytes memory.";
 			if (v050)

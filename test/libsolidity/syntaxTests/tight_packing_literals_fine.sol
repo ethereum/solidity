@@ -19,8 +19,12 @@ contract C {
     }
 }
 // ----
-// Warning: (77-96): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data. The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
+// Warning: (77-96): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+// Warning: (77-96): The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
 // Warning: (168-182): "sha3" has been deprecated in favour of "keccak256"
-// Warning: (168-182): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data. The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
-// Warning: (254-270): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data. The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
-// Warning: (342-361): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data. The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
+// Warning: (168-182): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+// Warning: (168-182): The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
+// Warning: (254-270): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+// Warning: (254-270): The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
+// Warning: (342-361): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+// Warning: (342-361): The provided argument of type uint8 is not implicitly convertible to expected type bytes memory.
