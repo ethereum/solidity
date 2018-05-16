@@ -5,4 +5,6 @@ contract C {
     function h(uint[] memory) public pure {}
     // No warning on external functions, because of default to calldata.
     function i(uint[]) external pure {}
+    // No warning for events.
+    event e(uint[]);
 }
