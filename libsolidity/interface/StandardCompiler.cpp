@@ -600,7 +600,7 @@ string StandardCompiler::compile(string const& _input)
 		if (!jsonParseStrict(_input, input, &errors))
 			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
-	catch(...)
+	catch (...)
 	{
 		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
 	}
@@ -613,7 +613,7 @@ string StandardCompiler::compile(string const& _input)
 	{
 		return jsonCompactPrint(output);
 	}
-	catch(...)
+	catch (...)
 	{
 		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
