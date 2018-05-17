@@ -7,8 +7,14 @@ else()
 endif()
 
 include(GNUInstallDirs)
+set(libdir ${CMAKE_INSTALL_LIBDIR})
+if(CMAKE_LIBRARY_ARCHITECTURE)
+    # Do not use Debian multiarch library dir.
+    string(REPLACE "/${CMAKE_LIBRARY_ARCHITECTURE}" "" libdir ${libdir})
+endif()
+
 set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(JSONCPP_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(JSONCPP_LIBRARY "${prefix}/${libdir}/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
 if(NOT MSVC)
