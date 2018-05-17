@@ -59,6 +59,7 @@ install:
     - ps: $prerelease = "nightly."
     - ps: $prerelease += Get-Date -format "yyyy.M.d"
     - ps: Set-Content prerelease.txt $null
+    - ps: echo "e67f0147998a9e3835" > commit_hash.txt
     - scripts/install_deps.bat
     - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
