@@ -1837,39 +1837,12 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Evaluate arguments.
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
-	// This can be removed (will always be false) with 0.5.0
-	bool manualFunctionId = false;
-	if (
-		(funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
-		!_arguments.empty()
-	)
-	{
-		solAssert(_arguments.front()->annotation().type->mobileType(), "");
-		manualFunctionId =
-			_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
-			CompilerUtils::dataStartOffset;
-	}
-	if (manualFunctionId)
-	{
-		// If we have a Bare* and the first type has exactly 4 bytes, use it as
-		// function identifier.
-		_arguments.front()->accept(*this);
-		utils().convertType(
-			*_arguments.front()->annotation().type,
-			IntegerType(8 * CompilerUtils::dataStartOffset),
-			true
-		);
-		for (unsigned i = 0; i < gasValueSize; ++i)
-			m_context << swapInstruction(gasValueSize - i);
-		gasStackPos++;
-		valueStackPos++;
-	}
 	if (_functionType.bound())
 	{
 		argumentTypes.push_back(_functionType.selfType());
 		parameterTypes.insert(parameterTypes.begin(), _functionType.selfType());
 	}
-	for (size_t i = manualFunctionId ? 1 : 0; i < _arguments.size(); ++i)
+	for (size_t i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
 		argumentTypes.push_back(_arguments[i]->annotation().type);
@@ -1905,36 +1878,22 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	// Copy function identifier to memory.
 	utils().fetchFreeMemoryPointer();
-	if (!_functionType.isBareCall() || manualFunctionId)
+	if (!_functionType.isBareCall())
 	{
 		m_context << dupInstruction(2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
 		utils().storeInMemoryDynamic(IntegerType(8 * CompilerUtils::dataStartOffset), false);
 	}
 
-	// This is a function that takes a single bytes parameter which is supposed to be passed
-	// on inline and without padding.
-	if (_functionType.takesSinglePackedBytesParameter() && v050 && argumentTypes.size() == 1)
-	{
-		utils().encodeToMemory(
-			argumentTypes,
-			TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
-			false,
-			true
-		);
-	}
-	else
-	{
-		// If the function takes arbitrary parameters, copy dynamic length data in place.
-		// Move arguments to memory, will not update the free memory pointer (but will update the memory
-		// pointer on the stack).
-		utils().encodeToMemory(
-			argumentTypes,
-			parameterTypes,
-			_functionType.padArguments(),
-			_functionType.takesArbitraryParameters(),
-			isCallCode || isDelegateCall
-		);
-	}
+	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
+	// Move arguments to memory, will not update the free memory pointer (but will update the memory
+	// pointer on the stack).
+	utils().encodeToMemory(
+		argumentTypes,
+		parameterTypes,
+		_functionType.padArguments(),
+		_functionType.takesArbitraryParameters() || _functionType.isBareCall(),
+		isCallCode || isDelegateCall
+	);
 
 	// Stack now:
 	// <stack top>
@@ -2013,9 +1972,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	unsigned remainsSize =
 		2 + // contract address, input_memory_end
-		_functionType.valueSet() +
-		_functionType.gasSet() +
-		(!_functionType.isBareCall() || manualFunctionId);
+		(_functionType.valueSet() ? 1 : 0) +
+		(_functionType.gasSet() ? 1 : 0) +
+		(!_functionType.isBareCall() ? 1 : 0);
 
 	if (returnSuccessCondition)
 		m_context << swapInstruction(remainsSize);

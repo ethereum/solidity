@@ -599,9 +599,9 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	if (isAddress())
 		return {
 			{"balance", make_shared<IntegerType>(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
-			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
+			{"call", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
+			{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
+			{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
 		};
@@ -2999,6 +2999,25 @@ ASTPointer<ASTString> FunctionType::documentation() const
 		return function->documentation();
 
 	return ASTPointer<ASTString>();
+}
+
+bool FunctionType::padArguments() const
+{
+	// No padding only for hash functions, low-level calls and the packed encoding function.
+	switch (m_kind)
+	{
+	case Kind::BareCall:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
+	case Kind::SHA256:
+	case Kind::RIPEMD160:
+	case Kind::SHA3:
+	case Kind::ABIEncodePacked:
+		return false;
+	default:
+		return true;
+	}
+	return true;
 }
 
 string MappingType::richIdentifier() const

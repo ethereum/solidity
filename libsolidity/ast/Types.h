@@ -1058,8 +1058,9 @@ public:
 	ASTPointer<ASTString> documentation() const;
 
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
-	/// TODO should this be true in general for bareCall*?
-	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160 || m_kind == Kind::ABIEncodePacked); }
+	/// The only functions that do not pad are hash functions, the low-level call functions
+	/// and abi.encodePacked.
+	bool padArguments() const;
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	/// true iff the function takes a single bytes parameter and it is passed on without padding.
 	bool takesSinglePackedBytesParameter() const
