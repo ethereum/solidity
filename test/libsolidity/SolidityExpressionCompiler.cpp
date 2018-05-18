@@ -249,7 +249,8 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 			{
 				 var x = 1 finney;
 			}
-		})";
+		}
+	)";
 	bytes code = compileFirstExpression(sourceCode);
 
 	bytes expectation({byte(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});

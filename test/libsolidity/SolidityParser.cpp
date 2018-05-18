@@ -733,7 +733,8 @@ BOOST_AUTO_TEST_CASE(event)
 	char const* text = R"(
 		contract c {
 			event e();
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -742,7 +743,8 @@ BOOST_AUTO_TEST_CASE(event_arguments)
 	char const* text = R"(
 		contract c {
 			event e(uint a, bytes32 s);
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -751,7 +753,8 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 	char const* text = R"(
 		contract c {
 			event e(uint a, bytes32 indexed s, bool indexed b);
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -767,7 +770,8 @@ BOOST_AUTO_TEST_CASE(visibility_specifiers)
 			function f_priv() private {}
 			function f_public() public {}
 			function f_internal() internal {}
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -776,12 +780,14 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 	char const* text = R"(
 		contract c {
 			uint private internal a;
-		})";
+		}
+	)";
 	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
 	text = R"(
 		contract c {
 			function f() private external {}
-		})";
+		}
+	)";
 	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
 }
 
@@ -800,7 +806,8 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
 			uint256 b;
 			uint256 c;
 			uint256 d;
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -813,7 +820,8 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expression
 				 a = 1 wei * 100 wei + 7 szabo - 3;
 			}
 			uint256 a;
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -827,7 +835,8 @@ BOOST_AUTO_TEST_CASE(enum_valid_declaration)
 				a = foo.Value3;
 			}
 			uint256 a;
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -836,7 +845,8 @@ BOOST_AUTO_TEST_CASE(external_function)
 	char const* text = R"(
 		contract c {
 			function x() external {}
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -848,7 +858,8 @@ BOOST_AUTO_TEST_CASE(arrays_in_storage)
 			uint[] a2;
 			struct x { uint[2**20] b; y[0] c; }
 			struct y { uint d; mapping(uint=>x)[] e; }
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -857,7 +868,8 @@ BOOST_AUTO_TEST_CASE(arrays_in_events)
 	char const* text = R"(
 		contract c {
 			event e(uint[10] a, bytes7[8] indexed b, c[3] x);
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -866,7 +878,8 @@ BOOST_AUTO_TEST_CASE(arrays_in_expressions)
 	char const* text = R"(
 		contract c {
 			function f() { c[10] a = 7; uint8[10 * 2] x; }
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
@@ -875,7 +888,8 @@ BOOST_AUTO_TEST_CASE(multi_arrays)
 	char const* text = R"(
 		contract c {
 			mapping(uint => mapping(uint => int8)[8][][9])[] x;
-		})";
+		}
+	)";
 	BOOST_CHECK(successParse(text));
 }
 
