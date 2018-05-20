@@ -312,7 +312,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 		case Declaration::Visibility::External:
 			return {};
 		default:
-			solAssert(false, "visibility() should not return a Visibility");
+			solAssert(false, "visibility() should return a Visibility");
 		}
 	}
 	else
@@ -328,7 +328,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 		case Declaration::Visibility::External:
 			return make_shared<FunctionType>(*this, _internal);
 		default:
-			solAssert(false, "visibility() should not return a Visibility");
+			solAssert(false, "visibility() should return a Visibility");
 		}
 	}
 
