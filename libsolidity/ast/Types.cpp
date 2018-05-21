@@ -590,9 +590,9 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)},
-			{"balanceOf", make_shared<FunctionType>(strings{ "bytes10" }, strings{ "uint" }, FunctionType::Kind::BalanceOf)},
-			{"transferAsset", make_shared<FunctionType>(strings{ "bytes10","uint" }, strings(), FunctionType::Kind::TransferAsset)},
-			{"sendAsset", make_shared<FunctionType>(strings{ "bytes10","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) }
+			{"balanceOf", make_shared<FunctionType>(strings{ "address" }, strings{ "uint" }, FunctionType::Kind::BalanceOf)},
+			{"transferAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings(), FunctionType::Kind::TransferAsset)},
+			{"sendAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) }
 
 
 
