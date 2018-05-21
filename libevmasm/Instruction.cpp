@@ -168,7 +168,12 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{ "CREATE2", Instruction::CREATE2 },
 	{ "REVERT", Instruction::REVERT },
 	{ "INVALID", Instruction::INVALID },
-	{ "SELFDESTRUCT", Instruction::SELFDESTRUCT }
+	{ "SELFDESTRUCT", Instruction::SELFDESTRUCT },
+	{"BALANCEOF",Instruction::BALANCEOF},
+    {"TRANSFERASSET", Instruction::TRANSFERASSET},
+	{"SENDASSET", Instruction::SENDASSET}
+
+
 };
 
 static const std::map<Instruction, InstructionInfo> c_instructionInfo =
@@ -311,7 +316,10 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::CREATE2,		{ "CREATE2",		0, 4, 1, true, Tier::Special } },
 	{ Instruction::REVERT,		{ "REVERT",		0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },
-	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Special } }
+	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Special } },
+	{Instruction::BALANCEOF,{ "BALANCEOF",		0, 2, 1, true, Tier::Zero } },
+	{Instruction::TRANSFERASSET, { "TRANSFERASSET",		0, 3, 1, true, Tier::Special } },
+	{Instruction::SENDASSET, { "SENDASSET",		0, 3, 1, true, Tier::Zero } }
 };
 
 void dev::solidity::eachInstruction(

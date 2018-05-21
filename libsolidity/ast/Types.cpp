@@ -589,7 +589,13 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
+			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)},
+			{"balanceOf", make_shared<FunctionType>(strings{ "bytes10" }, strings{ "uint" }, FunctionType::Kind::BalanceOf)},
+			{"transferAsset", make_shared<FunctionType>(strings{ "bytes10","uint" }, strings(), FunctionType::Kind::TransferAsset)},
+			{"sendAsset", make_shared<FunctionType>(strings{ "bytes10","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) }
+
+
+
 		};
 	else
 		return MemberList::MemberMap();
@@ -2492,6 +2498,9 @@ string FunctionType::richIdentifier() const
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
+	case Kind::TransferAsset: id += "transferAsset"; break;
+	case Kind::SendAsset: id += "sendAsset"; break;
+	case Kind::BalanceOf: id += "balanceOf"; break;
 	case Kind::SHA3: id += "sha3"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
