@@ -33,7 +33,7 @@ Storage
 The first line simply tells that the source code is written for
 Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.5.0). This is to ensure that the
-contract does not suddenly behave differently with a new compiler version. The keyword ``pragma`` is called that way because, in general,
+contract does not suddenly behave differently with a new compiler version. The keyword ``pragma`` is called that because, in general,
 pragmas are instructions for the compiler about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
 
@@ -62,7 +62,7 @@ so that only you can alter the number.
     the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
 
 .. warning::
-    Be careful with using Unicode text as similarly looking (or even identical) characters can
+    Be careful with using Unicode text, as similar looking (or even identical) characters can
     have different code points and as such will be encoded as a different byte array.
 
 .. index:: ! subcurrency
@@ -75,7 +75,7 @@ cryptocurrency. It is possible to generate coins out of thin air, but
 only the person that created the contract will be able to do that (it is trivial
 to implement a different issuance scheme).
 Furthermore, anyone can send coins to each other without any need for
-registering with username and password - all you need is an Ethereum keypair.
+registering with username and password — all you need is an Ethereum keypair.
 
 
 ::
@@ -88,7 +88,7 @@ registering with username and password - all you need is an Ethereum keypair.
         address public minter;
         mapping (address => uint) public balances;
 
-        // Events allow light clients to react on
+        // Events allow light clients to react to
         // changes efficiently.
         event Sent(address from, address to, uint amount);
 
