@@ -19,7 +19,7 @@ if (NOT ETH_BUILD_PLATFORM)
 	set(ETH_BUILD_PLATFORM "unknown")
 endif()
 
-# Logic here: If prereleases.txt exists but is empty, it is a non-pre release.
+# Logic here: If prerelease.txt exists but is empty, it is a non-pre release.
 # If it does not exist, create our own prerelease string
 if (EXISTS ${ETH_SOURCE_DIR}/prerelease.txt)
 	file(READ ${ETH_SOURCE_DIR}/prerelease.txt SOL_VERSION_PRERELEASE)
