@@ -675,7 +675,7 @@ possible:
         function f() public {
             // The next line creates a type error because uint[3] memory
             // cannot be converted to uint[] memory.
-            uint[] x = [uint(1), 3, 4];
+            uint[] memory x = [uint(1), 3, 4];
         }
     }
 
