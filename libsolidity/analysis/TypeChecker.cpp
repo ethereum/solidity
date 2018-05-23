@@ -1918,7 +1918,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 					if (!found)
 						m_errorReporter.typeError(
 							_functionCall.location(),
-							"Named argument does not match function declaration."
+							"Named argument \"" + *argumentNames[i] +  "\" does not match function declaration."
 						);
 				}
 		}

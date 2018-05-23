@@ -20,7 +20,7 @@ Bugfixes:
 
 
 Features:
-
+ * Type Checker: Show named argument in case of error.
 
 Bugfixes:
 
