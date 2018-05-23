@@ -8,6 +8,7 @@ Breaking Changes:
  * Commandline interface: Require ``-`` if standard input is used as source.
  * General: New keywords: ``calldata``
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
+ * Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * Type Checker: Disallow arithmetic operations for Boolean variables.
  * Disallow trailing dots that are not followed by a number.
  * Remove assembly instructions ``sha3`` and ``suicide``

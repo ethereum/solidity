@@ -149,6 +149,7 @@ namespace solidity
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Enum, "enum", 0)                                                 \
+	K(Emit, "emit", 0)                                                 \
 	K(Event, "event", 0)                                               \
 	K(External, "external", 0)                                         \
 	K(For, "for", 0)                                                   \
