@@ -21,6 +21,15 @@ contract C {
         do {
             if (s.f) {
                 break;
+            }
+            else {
+                c = s;
+            }
+        } while(false);
+    }
+    function i() internal view returns (S storage c) {
+        do {
+            if (s.f) {
                 continue;
             }
             else {
@@ -28,8 +37,16 @@ contract C {
             }
         } while(false);
     }
+    function j() internal view returns (S storage c) {
+        do {
+            continue;
+            c = s;
+        } while(false);
+    }
 }
 // ----
 // Warning: (87-98): This variable is of storage pointer type and might be returned without assignment. This can cause storage corruption. Assign the variable (potentially from itself) to remove this warning.
 // Warning: (223-234): This variable is of storage pointer type and might be returned without assignment. This can cause storage corruption. Assign the variable (potentially from itself) to remove this warning.
 // Warning: (440-451): This variable is of storage pointer type and might be returned without assignment. This can cause storage corruption. Assign the variable (potentially from itself) to remove this warning.
+// Warning: (654-665): This variable is of storage pointer type and might be returned without assignment. This can cause storage corruption. Assign the variable (potentially from itself) to remove this warning.
+// Warning: (871-882): This variable is of storage pointer type and might be returned without assignment. This can cause storage corruption. Assign the variable (potentially from itself) to remove this warning.

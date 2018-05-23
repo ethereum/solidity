@@ -139,24 +139,54 @@ rm -rf "$TMPDIR"
 echo "Done."
 
 printTask "Testing library checksum..."
-echo '' | "$SOLC" --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222
-! echo '' | "$SOLC" --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 2>/dev/null
+echo '' | "$SOLC" - --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
+! echo '' | "$SOLC" - --link --libraries a:0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null
 
 printTask "Testing long library names..."
-echo '' | "$SOLC" --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222
+echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
 
-printTask "Testing overwriting files"
+printTask "Testing overwriting files..."
 TMPDIR=$(mktemp -d)
 (
     set -e
     # First time it works
-    echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Second time it fails
-    ! echo 'contract C {} ' | "$SOLC" --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Unless we force
-    echo 'contract C {} ' | "$SOLC" --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
 )
 rm -rf "$TMPDIR"
+
+printTask "Testing assemble, yul, strict-assembly..."
+echo '{}' | "$SOLC" - --assemble &>/dev/null
+echo '{}' | "$SOLC" - --julia &>/dev/null
+echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
+
+printTask "Testing standard input..."
+TMPDIR=$(mktemp -d)
+(
+    set +e
+    output=$("$SOLC" --bin  2>&1)
+    result=$?
+    set -e
+
+    # This should fail
+    if [[ !("$output" =~ "No input files given") || ($result == 0) ]] ; then
+        printError "Incorrect response to empty input arg list: $STDERR"
+        exit 1
+    fi
+
+    set +e
+    output=$(echo 'contract C {} ' | "$SOLC" - --bin 2>/dev/null | grep -q "<stdin>:C")
+    result=$?
+    set -e
+
+    # The contract should be compiled
+    if [[ "$result" != 0 ]] ; then
+        exit 1
+    fi
+)
 
 printTask "Testing soljson via the fuzzer..."
 TMPDIR=$(mktemp -d)
