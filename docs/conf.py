@@ -24,7 +24,7 @@ import re
 def setup(sphinx):
     thisdir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, thisdir + '/utils')
-    from SolidityLexer import SolidityLexer
+    from pygments_lexer_solidity import SolidityLexer
     sphinx.add_lexer('Solidity', SolidityLexer())
 
 # -- General configuration ------------------------------------------------
