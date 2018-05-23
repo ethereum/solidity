@@ -173,6 +173,7 @@ namespace solidity
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \
+	K(CallData, "calldata", 0)                                         \
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
 	K(Using, "using", 0)                                               \
@@ -289,7 +290,7 @@ public:
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
-	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
+	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage || op == CallData; }
 	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
@@ -348,7 +349,7 @@ public:
 	unsigned int secondNumber() const { return m_secondNumber; }
 	Token::Value token() const { return m_token; }
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokenValue = false) const 
+	std::string toString(bool const& tokenValue = false) const
 	{
 		std::string name = Token::toString(m_token);
 		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))

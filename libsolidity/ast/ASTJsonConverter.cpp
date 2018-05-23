@@ -751,6 +751,8 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 		return "storage";
 	case VariableDeclaration::Location::Memory:
 		return "memory";
+	case VariableDeclaration::Location::CallData:
+		return "calldata";
 	default:
 		solAssert(false, "Unknown declaration location.");
 	}

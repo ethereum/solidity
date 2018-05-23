@@ -57,7 +57,7 @@ Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external' | StateMutability )*
                    ( 'returns' FunctionTypeParameterList )?
-StorageLocation = 'memory' | 'storage'
+StorageLocation = 'memory' | 'storage' | 'calldata'
 StateMutability = 'pure' | 'constant' | 'view' | 'payable'
 
 Block = '{' Statement* '}'

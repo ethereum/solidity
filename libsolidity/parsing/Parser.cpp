@@ -592,11 +592,22 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				else if (!type)
 					parserError(string("Location specifier needs explicit type name."));
 				else
-					location = (
-						token == Token::Memory ?
-						VariableDeclaration::Location::Memory :
-						VariableDeclaration::Location::Storage
-					);
+				{
+					switch (token)
+					{
+					case Token::Storage:
+						location = VariableDeclaration::Location::Storage;
+						break;
+					case Token::Memory:
+						location = VariableDeclaration::Location::Memory;
+						break;
+					case Token::CallData:
+						location = VariableDeclaration::Location::CallData;
+						break;
+					default:
+						solAssert(false, "Unknown data location.");
+					}
+				}
 			}
 			else
 				break;
