@@ -265,18 +265,18 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 // Information in joining branches is not retained anymore.
 BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 {
-	// This tests that the optimizer knows that we already have "z == keccak256(y)" inside both branches.
+	// This tests that the optimizer knows that we already have "z == keccak256(abi.encodePacked(y))" inside both branches.
 	char const* sourceCode = R"(
 		contract c {
 			bytes32 d;
 			uint a;
 			function f(uint x, bytes32 y) returns (uint r_a, bytes32 r_d) {
-				bytes32 z = keccak256(y);
+				bytes32 z = keccak256(abi.encodePacked(y));
 				if (x > 8) {
-					z = keccak256(y);
+					z = keccak256(abi.encodePacked(y));
 					a = x;
 				} else {
-					z = keccak256(y);
+					z = keccak256(abi.encodePacked(y));
 					a = x;
 				}
 				r_a = a;
@@ -313,19 +313,19 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 		contract test {
 			bytes32 data;
 			function f(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
-				r_d = keccak256(y);
+				r_d = keccak256(abi.encodePacked(y));
 				shared(y);
-				r_d = keccak256(y);
+				r_d = keccak256(abi.encodePacked(y));
 				r_a = 5;
 			}
 			function g(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
-				r_d = keccak256(y);
+				r_d = keccak256(abi.encodePacked(y));
 				shared(y);
-				r_d = bytes32(uint(keccak256(y)) + 2);
+				r_d = bytes32(uint(keccak256(abi.encodePacked(y))) + 2);
 				r_a = 7;
 			}
 			function shared(bytes32 y) internal {
-				data = keccak256(y);
+				data = keccak256(abi.encodePacked(y));
 			}
 		}
 	)";
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(sequence_number_for_calls)
 	// to storage), so the sequence number should be incremented.
 	char const* sourceCode = R"(
 		contract test {
-			function f(string a, string b) returns (bool) { return sha256(a) == sha256(b); }
+			function f(string a, string b) returns (bool) { return sha256(bytes(a)) == sha256(bytes(b)); }
 		}
 	)";
 	compileBothVersions(sourceCode);

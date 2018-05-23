@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 		contract test {
 			bytes32 public shaValue;
 			function f(uint a) {
-				shaValue = keccak256(a);
+				shaValue = keccak256(abi.encodePacked(a));
 			}
 		}
 	)";
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(store_keccak256)
 		contract test {
 			bytes32 public shaValue;
 			function test(uint a) {
-				shaValue = keccak256(a);
+				shaValue = keccak256(abi.encodePacked(a));
 			}
 		}
 	)";

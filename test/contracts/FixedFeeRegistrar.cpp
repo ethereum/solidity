@@ -82,7 +82,7 @@ contract FixedFeeRegistrar is Registrar {
 		}
 	}
 	function disown(string _name, address _refund) onlyrecordowner(_name) {
-		delete m_recordData[uint(keccak256(_name)) / 8];
+		delete m_recordData[uint(keccak256(bytes(_name))) / 8];
 		if (!_refund.send(c_fee))
 			throw;
 		Changed(_name);
@@ -118,7 +118,7 @@ contract FixedFeeRegistrar is Registrar {
 
 	Record[2**253] m_recordData;
 	function m_record(string _name) constant internal returns (Record storage o_record) {
-		return m_recordData[uint(keccak256(_name)) / 8];
+		return m_recordData[uint(keccak256(bytes(_name))) / 8];
 	}
 	uint constant c_fee = 69 ether;
 }

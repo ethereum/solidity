@@ -1,13 +1,13 @@
 contract C {
     function f() public pure {
-        bool a = address(this).call(address(this).delegatecall, super);
-        bool b = address(this).delegatecall(log0, tx, mulmod);
+        bool a = address(this).call(abi.encode(address(this).delegatecall, super));
+        bool b = address(this).delegatecall(abi.encode(log0, tx, mulmod));
         a; b;
     }
 }
 // ----
-// TypeError: (80-106): This type cannot be encoded.
-// TypeError: (108-113): This type cannot be encoded.
-// TypeError: (160-164): This type cannot be encoded.
-// TypeError: (166-168): This type cannot be encoded.
-// TypeError: (170-176): This type cannot be encoded.
+// TypeError: (91-117): This type cannot be encoded.
+// TypeError: (119-124): This type cannot be encoded.
+// TypeError: (183-187): This type cannot be encoded.
+// TypeError: (189-191): This type cannot be encoded.
+// TypeError: (193-199): This type cannot be encoded.
