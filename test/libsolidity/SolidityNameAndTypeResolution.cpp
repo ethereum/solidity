@@ -472,9 +472,9 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 
 BOOST_AUTO_TEST_CASE(enum_external_type)
 {
-	// bug #1801
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
+		// test for bug #1801
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			function boo(ActionChoices enumArg) external returns (uint ret) {
@@ -977,8 +977,8 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 
 BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 {
-	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
 	char const* text = R"(
+		// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
 		contract Parent {
 			uint256 public m_aMember;
 		}
@@ -2275,13 +2275,12 @@ BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
 		contract Test {
 			string constant x = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
 			function f() public {
+				// Even if this is made possible in the future, we should not allow assignment
+				// to elements of constant arrays.
 				x[0] = "f";
 			}
 		}
 	)";
-
-	// Even if this is made possible in the future, we should not allow assignment
-	// to elements of constant arrays.
 	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
 }
 
@@ -2382,11 +2381,11 @@ BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
 
 BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
 {
-	// literal 1 can be both converted to uint and uint8, so the call is ambiguous.
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint8 a) public returns (uint) { return a; }
-			function f(uint a) public returns (uint) { return 2*a; }
+			function f(uint a) public returns (uint) { return 2 * a; }
+			// literal 1 can be both converted to uint and uint8, so the call is ambiguous.
 			function g() public returns (uint) { return f(1); }
 		}
 	)";
@@ -2809,12 +2808,12 @@ BOOST_AUTO_TEST_CASE(function_argument_storage_to_mem)
 
 BOOST_AUTO_TEST_CASE(mem_array_assignment_changes_base_type)
 {
-	// Such an assignment is possible in storage, but not in memory
-	// (because it would incur an otherwise unnecessary copy).
-	// This requirement might be lifted, though.
 	char const* sourceCode = R"(
 		contract C {
 			function f(uint8[] memory x) private {
+				// Such an assignment is possible in storage, but not in memory
+				// (because it would incur an otherwise unnecessary copy).
+				// This requirement might be lifted, though.
 				uint[] memory y = x;
 			}
 		}
@@ -3358,13 +3357,13 @@ BOOST_AUTO_TEST_CASE(using_for_mismatch)
 
 BOOST_AUTO_TEST_CASE(using_for_not_used)
 {
-	// This is an error because the function is only bound to uint.
-	// Had it been bound to *, it would have worked.
 	char const* text = R"(
 		library D { function double(uint self) public returns (uint) { return 2; } }
 		contract C {
 			using D for uint;
 			function f(uint16 a) public returns (uint) {
+				// This is an error because the function is only bound to uint.
+				// Had it been bound to *, it would have worked.
 				return a.double();
 			}
 		}
@@ -3386,12 +3385,12 @@ BOOST_AUTO_TEST_CASE(library_memory_struct)
 
 BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
 {
-	// Bound to a, but self type does not match.
 	char const* text = R"(
 		library D { function double(bytes32 self) public returns (uint) { return 2; } }
 		contract C {
 			using D for *;
 			function f(uint a) public returns (uint) {
+				// Bound to a, but self type does not match.
 				return a.double();
 			}
 		}
@@ -4769,20 +4768,19 @@ BOOST_AUTO_TEST_CASE(illegal_override_payable_nonpayable)
 
 BOOST_AUTO_TEST_CASE(function_variable_mixin)
 {
-       // bug #1798 (cpp-ethereum), related to #1286 (solidity)
-       char const* text = R"(
-               contract attribute {
-                       bool ok = false;
-               }
-               contract func {
-                       function ok() public returns (bool) { return true; }
-               }
-
-               contract attr_func is attribute, func {
-                       function checkOk() public returns (bool) { return ok(); }
-               }
-       )";
-       CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
+	char const* text = R"(
+		// bug #1798 (cpp-ethereum), related to #1286 (solidity)
+		contract attribute {
+			bool ok = false;
+		}
+		contract func {
+			function ok() public returns (bool) { return true; }
+		}
+		contract attr_func is attribute, func {
+			function checkOk() public returns (bool) { return ok(); }
+		}
+	)";
+	CHECK_ERROR(text, DeclarationError, "Identifier already declared.");
 }
 
 BOOST_AUTO_TEST_CASE(calling_payable)
@@ -5492,14 +5490,15 @@ BOOST_AUTO_TEST_CASE(invalid_address_length_long)
 
 BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
 {
-	// A previous implementation claimed the string would be an address
 	char const* text = R"(
+		// A previous implementation claimed the string would be an address
 		contract AddrString {
 			address public test = "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "is not implicitly convertible to expected type address");
 	text = R"(
+		// A previous implementation claimed the string would be an address
 		contract AddrString {
 			function f() public returns (address) {
 				return "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c";
@@ -5511,8 +5510,8 @@ BOOST_AUTO_TEST_CASE(address_test_for_bug_in_implementation)
 
 BOOST_AUTO_TEST_CASE(early_exit_on_fatal_errors)
 {
-	// This tests a crash that occured because we did not stop for fatal errors.
 	char const* text = R"(
+		// This tests a crash that occured because we did not stop for fatal errors.
 		contract C {
 			struct S {
 				ftring a;
@@ -6059,9 +6058,10 @@ BOOST_AUTO_TEST_CASE(callable_crash)
 
 BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 {
-	// This used to be a test for a.transfer to generate a warning
-	// because A's fallback function is not payable.
 	char const* text = R"(
+		// This used to be a test for a.transfer to generate a warning
+		// because A's fallback function is not payable.
+
 		contract A {
 			function() public {}
 		}
@@ -6082,9 +6082,10 @@ BOOST_AUTO_TEST_CASE(error_transfer_non_payable_fallback)
 
 BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 {
-	// This used to be a test for a.transfer to generate a warning
-	// because A does not have a payable fallback function.
-	std::string text = R"(
+	char const* text = R"(
+		// This used to be a test for a.transfer to generate a warning
+		// because A does not have a payable fallback function.
+
 		contract A {}
 
 		contract B {
@@ -6103,9 +6104,10 @@ BOOST_AUTO_TEST_CASE(error_transfer_no_fallback)
 
 BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 {
-	// This used to be a test for a.send to generate a warning
-	// because A does not have a payable fallback function.
-	std::string text = R"(
+	char const* text = R"(
+		// This used to be a test for a.send to generate a warning
+		// because A does not have a payable fallback function.
+
 		contract A {
 			function() public {}
 		}
@@ -6126,9 +6128,10 @@ BOOST_AUTO_TEST_CASE(error_send_non_payable_fallback)
 
 BOOST_AUTO_TEST_CASE(does_not_error_transfer_payable_fallback)
 {
-	// This used to be a test for a.transfer to generate a warning
-	// because A does not have a payable fallback function.
 	char const* text = R"(
+		// This used to be a test for a.transfer to generate a warning
+		// because A does not have a payable fallback function.
+
 		contract A {
 			function() payable public {}
 		}
@@ -6428,8 +6431,8 @@ BOOST_AUTO_TEST_CASE(using_this_in_constructor)
 
 BOOST_AUTO_TEST_CASE(do_not_crash_on_not_lvalue)
 {
-	// This checks for a bug that caused a crash because of continued analysis.
 	char const* text = R"(
+		// This checks for a bug that caused a crash because of continued analysis.
 		contract C {
 			mapping (uint => uint) m;
 			function f() public {
@@ -6635,8 +6638,8 @@ BOOST_AUTO_TEST_CASE(library_function_without_implementation)
 
 BOOST_AUTO_TEST_CASE(using_for_with_non_library)
 {
-	// This tests a crash that was resolved by making the first error fatal.
 	char const* text = R"(
+		// This tests a crash that was resolved by making the first error fatal.
 		library L {
 			struct S { uint d; }
 			using S for S;
@@ -6858,7 +6861,7 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression)
 
 BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 {
-	std::string text = R"(
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.balance;
@@ -6919,7 +6922,7 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 
 BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 {
-	std::string text = R"(
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				C c;
