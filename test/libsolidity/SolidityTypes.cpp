@@ -36,6 +36,33 @@ namespace test
 
 BOOST_AUTO_TEST_SUITE(SolidityTypes)
 
+BOOST_AUTO_TEST_CASE(int_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Int, 0, 0)) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
+	for (unsigned i = 8; i <= 256; i += 8)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::IntM, i, 0)) == *make_shared<IntegerType>(i, IntegerType::Modifier::Signed));
+}
+
+BOOST_AUTO_TEST_CASE(uint_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UInt, 0, 0)) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
+	for (unsigned i = 8; i <= 256; i += 8)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UIntM, i, 0)) == *make_shared<IntegerType>(i, IntegerType::Modifier::Unsigned));
+}
+
+BOOST_AUTO_TEST_CASE(byte_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Byte, 0, 0)) == *make_shared<FixedBytesType>(1));
+	for (unsigned i = 1; i <= 32; i++)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, i, 0)) == *make_shared<FixedBytesType>(i));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
+}
+
 BOOST_AUTO_TEST_CASE(storage_layout_simple)
 {
 	MemberList members(MemberList::MemberMap({
