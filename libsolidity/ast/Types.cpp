@@ -3180,6 +3180,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	case Kind::Message:
 		return MemberList::MemberMap({
 			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"asset", make_shared<IntegerType>(160,IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},

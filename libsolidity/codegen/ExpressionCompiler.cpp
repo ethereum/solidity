@@ -1328,6 +1328,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::GASLIMIT;
 		else if (member == "sender")
 			m_context << Instruction::CALLER;
+		else if (member == "asset")
+			m_context << Instruction::ASSET;
 		else if (member == "value")
 			m_context << Instruction::CALLVALUE;
 		else if (member == "origin")

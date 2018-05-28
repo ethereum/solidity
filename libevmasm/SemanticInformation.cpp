@@ -228,6 +228,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::BALANCE:
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
+	case Instruction::ASSET:
 	case Instruction::CALLVALUE:
 	case Instruction::GAS:
 	case Instruction::GASPRICE:

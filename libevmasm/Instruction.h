@@ -176,11 +176,6 @@ enum class Instruction: uint8_t
 	LOG3,				///< Makes a log entry; 3 topics.
 	LOG4,				///< Makes a log entry; 4 topics.
 
-	BALANCEOF = 0xe0,     ///< make test
-	TRANSFERASSET,
-	SENDASSET,
-
-
 	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
 	JUMPIF,             ///< conditionally alter the program counter -- not part of Instructions.cpp
 	JUMPV,              ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
@@ -191,6 +186,12 @@ enum class Instruction: uint8_t
 	RETURNSUB,          ///< return to subroutine jumped from -- not part of Instructions.cpp
 	PUTLOCAL,           ///< pop top of stack to local variable -- not part of Instructions.cpp
 	GETLOCAL,           ///< push local variable to top of stack -- not part of Instructions.cpp
+
+	//muti-asset extensions
+	BALANCEOF = 0xe0,   ///< get balance of one asset: address.BalanceOf(address)
+	TRANSFERASSET,		///< transfer asset: address.TransferAsset(asset, amount) 
+	SENDASSET,			///< send asset :address.SendAsset(asset,amount) returns (bool)
+	ASSET,				///< msg.asset, get the assetID of a transaction, if msg.asset == address(0), it means the main token.
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account
