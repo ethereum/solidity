@@ -526,9 +526,14 @@ In addition to the list of state modifying statements explained above, the follo
   It is not possible to prevent functions from reading the state at the level
   of the EVM, it is only possible to prevent them from writing to the state
   (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
+  It is a non-circumventable runtime checks done by the EVM.
 
 .. warning::
   Before version 0.4.17 the compiler didn't enforce that ``pure`` is not reading the state.
+  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
+  between contract types, because the compiler can verify that the type of the contract does
+  not do state-changing operations, but it cannot check that the contract that will be called
+  at runtime is actually of that type.
 
 .. index:: ! fallback function, function;fallback
 
