@@ -33,6 +33,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
@@ -312,22 +314,34 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	string name = _name;
-	DataLocation location = DataLocation::Storage;
-	if (boost::algorithm::ends_with(name, " memory"))
-	{
-		name = name.substr(0, name.length() - 7);
-		location = DataLocation::Memory;
-	}
-	unsigned short firstNum;
-	unsigned short secondNum;
+	vector<string> nameParts;
+	boost::split(nameParts, _name, boost::is_any_of(" "));
+	solAssert(nameParts.size() == 1 || nameParts.size() == 2, "Cannot parse elementary type: " + _name);
 	Token::Value token;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
+	unsigned short firstNum, secondNum;
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(nameParts[0]);
 	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
 	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
+	{
+		DataLocation location = DataLocation::Storage;
+		if (nameParts.size() == 2)
+		{
+			if (nameParts[1] == "storage")
+				location = DataLocation::Storage;
+			else if (nameParts[1] == "calldata")
+				location = DataLocation::CallData;
+			else if (nameParts[1] == "memory")
+				location = DataLocation::Memory;
+			else
+				solAssert(false, "Unknown data location: " + nameParts[1]);
+		}
 		return ref->copyForLocation(location, true);
+	}
 	else
+	{
+		solAssert(nameParts.size() == 1, "Storage location suffix only allowed for reference types");
 		return t;
+	}
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -985,7 +999,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
 			using boost::multiprecision::pow;
@@ -1131,7 +1145,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -1183,7 +1197,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1192,7 +1206,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
