@@ -204,7 +204,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install python-sphinx
+            apt-get -qy install python-sphinx python-pip
       - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
