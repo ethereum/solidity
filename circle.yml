@@ -129,6 +129,7 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -150,6 +151,8 @@ jobs:
             brew install z3
             brew install boost
             brew install cmake
+            brew install wget
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
