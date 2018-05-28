@@ -115,7 +115,7 @@ you really know what you are doing.
 
                // Iterate until the bound is not met.
                for
-                   { let end := add(data, len) }
+                   { let end := add(data, mul(len, 0x20)) }
                    lt(data, end)
                    { data := add(data, 0x20) }
                {
