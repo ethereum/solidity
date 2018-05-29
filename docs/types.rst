@@ -218,18 +218,6 @@ Members:
     It is possible to use an array of bytes as ``byte[]``, but it is wasting a lot of space, 31 bytes every element,
     to be exact, when passing in calls. It is better to use ``bytes``.
 
-Dynamically-sized byte array
-----------------------------
-
-``bytes``:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
-``string``:
-    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
-As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
-for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
-number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
-
 .. index:: address, literal;address
 
 .. _address_literals:
@@ -516,6 +504,18 @@ more carefully than the value-types we have already seen. Since copying
 them can be quite expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
+
+Dynamically-sized byte array
+----------------------------
+
+``bytes``:
+    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
+``string``:
+    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
+
+As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
+for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
+number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 Data location
 -------------
