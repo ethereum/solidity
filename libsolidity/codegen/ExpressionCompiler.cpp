@@ -866,6 +866,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
+		case FunctionType::Kind::ArrayPop:
+		{
+			_functionCall.expression().accept(*this);
+			solAssert(function.parameterTypes().empty(), "");
+
+			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
+				*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
+			);
+			solAssert(arrayType.dataStoredIn(DataLocation::Storage), "");
+
+			ArrayUtils(m_context).popStorageArrayElement(arrayType);
+			break;
+		}
 		case FunctionType::Kind::ObjectCreation:
 		{
 			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
@@ -1345,11 +1358,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					break;
 				}
 		}
-		else if (member == "push")
+		else if (member == "push" || member == "pop")
 		{
 			solAssert(
-				type.isDynamicallySized() && type.location() == DataLocation::Storage,
-				"Tried to use .push() on a non-dynamically sized array"
+				type.isDynamicallySized() &&
+				type.location() == DataLocation::Storage &&
+				type.category() == Type::Category::Array,
+				"Tried to use ." + member + "() on a non-dynamically sized array"
 			);
 		}
 		else

@@ -1,5 +1,7 @@
 ### 0.5.0 (unreleased)
 
+Language Features:
+ * General: Support ``pop()`` for storage arrays.
 
 Breaking Changes:
  * Disallow conversions between bytesX and uintY of different size.

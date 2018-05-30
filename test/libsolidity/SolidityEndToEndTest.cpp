@@ -5111,6 +5111,292 @@ BOOST_AUTO_TEST_CASE(byte_array_push_transition)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(array_pop)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[] data;
+			function test() public returns (uint x, uint l) {
+				data.push(7);
+				x = data.push(3);
+				data.pop();
+				x = data.length;
+				data.pop();
+				l = data.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(1, 0));
+}
+
+BOOST_AUTO_TEST_CASE(array_pop_uint16_transition)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint16[] data;
+			function test() public returns (uint16 x, uint16 y, uint16 z) {
+				for (uint i = 1; i <= 48; i++)
+					data.push(uint16(i));
+				for (uint j = 1; j <= 10; j++)
+					data.pop();
+				x = data[data.length - 1];
+				for (uint k = 1; k <= 10; k++)
+					data.pop();
+				y = data[data.length - 1];
+				for (uint l = 1; l <= 10; l++)
+					data.pop();
+				z = data[data.length - 1];
+				for (uint m = 1; m <= 18; m++)
+					data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(38, 28, 18));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(array_pop_uint24_transition)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			uint24[] data;
+			function test() public returns (uint24 x, uint24 y) {
+				for (uint i = 1; i <= 30; i++)
+					data.push(uint24(i));
+				for (uint j = 1; j <= 10; j++)
+					data.pop();
+				x = data[data.length - 1];
+				for (uint k = 1; k <= 10; k++)
+					data.pop();
+				y = data[data.length - 1];
+				for (uint l = 1; l <= 10; l++)
+					data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(20, 10));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(array_pop_array_transition)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			uint16[] inner = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+			uint16[][] data;
+			function test() public returns (uint x, uint y, uint z) {
+				for (uint i = 1; i <= 48; i++)
+					data.push(inner);
+				for (uint j = 1; j <= 10; j++)
+					data.pop();
+				x = data[data.length - 1][0];
+				for (uint k = 1; k <= 10; k++)
+					data.pop();
+				y = data[data.length - 1][1];
+				for (uint l = 1; l <= 10; l++)
+					data.pop();
+				z = data[data.length - 1][2];
+				for (uint m = 1; m <= 18; m++)
+					data.pop();
+				delete inner;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(1, 2, 3));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(array_pop_empty_exception)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[] data;
+			function test() public returns (bool) {
+				data.pop();
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(array_pop_storage_empty)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[] data;
+			function test() public {
+				data.push(7);
+				data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function test() public returns (uint x, uint y, uint l) {
+				data.push(7);
+				x = data.push(3);
+				data.pop();
+				data.pop();
+				y = data.push(2);
+				l = data.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(2, 1, 1));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_empty_exception)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			bytes data;
+			function test() public returns (bool) {
+				data.pop();
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_storage_empty)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function test() public {
+				data.push(7);
+				data.push(5);
+				data.push(3);
+				data.pop();
+				data.pop();
+				data.pop();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_long_storage_empty)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			bytes data;
+			function test() public returns (bool) {
+				for (uint8 i = 0; i <= 40; i++)
+					data.push(byte(i+1));
+				for (int8 j = 40; j >= 0; j--) {
+					require(data[uint8(j)] == byte(j+1));
+					require(data.length == uint8(j+1));
+					data.pop();
+				}
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(true));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_long_storage_empty_garbage_ref)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint256 a;
+			uint256 b;
+			bytes data;
+			function test() public {
+				for (uint8 i = 0; i <= 40; i++)
+					data.push(3);
+				for (uint8 j = 0; j <= 40; j++) {
+					assembly {
+						mstore(0, "garbage")
+					}
+					data.pop();
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_masking_long)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function test() public returns (bytes) {
+				for (uint i = 0; i < 34; i++)
+					data.push(3);
+				data.pop();
+				return data;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(
+		u256(0x20),
+		u256(33),
+		asString(fromHex("0303030303030303030303030303030303030303030303030303030303030303")),
+		asString(fromHex("03"))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_copy_long)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function test() public returns (bytes) {
+				for (uint i = 0; i < 33; i++)
+					data.push(3);
+				for (uint j = 0; j < 4; j++)
+					data.pop();
+				return data;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(
+		u256(0x20),
+		u256(29),
+		asString(fromHex("0303030303030303030303030303030303030303030303030303030303"))
+	));
+}
+
 BOOST_AUTO_TEST_CASE(external_array_args)
 {
 	char const* sourceCode = R"(
