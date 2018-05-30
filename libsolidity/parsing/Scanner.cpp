@@ -768,8 +768,14 @@ Token::Value Scanner::scanNumber(char _charSeen)
 			scanDecimalDigits();  // optional
 			if (m_char == '.')
 			{
+				// A '.' has to be followed by a number.
+				if (m_source.isPastEndOfInput() || !isDecimalDigit(m_source.get(1)))
+				{
+					literal.complete();
+					return Token::Number;
+				}
 				addLiteralCharAndAdvance();
-				scanDecimalDigits();  // optional
+				scanDecimalDigits();
 			}
 		}
 	}
