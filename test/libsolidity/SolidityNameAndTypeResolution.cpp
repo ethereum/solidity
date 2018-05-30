@@ -293,6 +293,22 @@ BOOST_AUTO_TEST_CASE(comparison_of_function_types)
 	text = R"(
 		contract C {
 			function f() public returns (bool ret) {
+				return this.f > this.f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator > not compatible");
+	text = R"(
+		contract C {
+			function f() public returns (bool ret) {
+				return f > f;
+			}
+		}
+	)";
+	CHECK_ERROR(text, TypeError, "Operator > not compatible");
+	text = R"(
+		contract C {
+			function f() public returns (bool ret) {
 				return f == f;
 			}
 			function g() public returns (bool ret) {
