@@ -1469,12 +1469,20 @@ string ReferenceType::stringForReferencePart() const
 string ReferenceType::identifierLocationSuffix() const
 {
 	string id;
-	if (location() == DataLocation::Storage)
+	switch (location())
+	{
+	case DataLocation::Storage:
 		id += "_storage";
-	else if (location() == DataLocation::Memory)
+		break;
+	case DataLocation::Memory:
 		id += "_memory";
-	else
+		break;
+	case DataLocation::CallData:
 		id += "_calldata";
+		break;
+	default:
+		solAssert(false, "Unknown location returned by location()");
+	}
 	if (isPointer())
 		id += "_ptr";
 	return id;

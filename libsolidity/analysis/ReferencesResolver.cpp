@@ -327,7 +327,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else
 				{
 					// force location of external function parameters (not return) to calldata
-					if (varLoc != Location::Default)
+					if (varLoc != Location::CallData && varLoc != Location::Default)
 						fatalTypeError(_variable.location(),
 							"Location has to be calldata for external functions "
 							"(remove the \"memory\" or \"storage\" keyword)."
@@ -344,15 +344,22 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
 				);
 				// force locations of public or external function (return) parameters to memory
-				if (varLoc == Location::Storage && !contract.isLibrary())
+				if (varLoc != Location::Memory && varLoc != Location::Default && !contract.isLibrary())
 					fatalTypeError(_variable.location(),
 						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" keyword)."
+						"(remove the \"storage\" or \"calldata\" keyword)."
 					);
 				if (varLoc == Location::Default || !contract.isLibrary())
 					typeLoc = DataLocation::Memory;
 				else
+				{
+					if (varLoc == Location::CallData)
+						fatalTypeError(_variable.location(),
+							"Location cannot be calldata for non-external functions "
+							"(remove the \"calldata\" keyword)."
+						);
 					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+				}
 			}
 			else
 			{
@@ -361,7 +368,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					if (varLoc != Location::Default && varLoc != Location::Memory)
 						fatalTypeError(
 							_variable.location(),
-							"Storage location has to be \"memory\" (or unspecified) for constants."
+							"Data location has to be \"memory\" (or unspecified) for constants."
 						);
 					typeLoc = DataLocation::Memory;
 				}
@@ -377,7 +384,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
 								typeError(
 									_variable.location(),
-									"Storage location must be specified as either \"memory\" or \"storage\"."
+									"Data location must be specified as either \"memory\" or \"storage\"."
 								);
 							else
 								m_errorReporter.warning(
@@ -389,14 +396,31 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					}
 				}
 				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+				{
+					switch (varLoc)
+					{
+					case Location::Memory:
+						typeLoc = DataLocation::Memory;
+						break;
+					case Location::Storage:
+						typeLoc = DataLocation::Storage;
+						break;
+					case Location::CallData:
+						fatalTypeError(_variable.location(),
+							"Variable cannot be declared as \"calldata\" (remove the \"calldata\" keyword)."
+						);
+						break;
+					default:
+						solAssert(false, "Unknown data location");
+					}
+				}
 				isPointer = !_variable.isStateVariable();
 			}
 
 			type = ref->copyForLocation(typeLoc, isPointer);
 		}
 		else if (varLoc != Location::Default && !ref)
-			typeError(_variable.location(), "Storage location can only be given for array or struct types.");
+			typeError(_variable.location(), "Data location can only be given for array or struct types.");
 
 		_variable.annotation().type = type;
 	}

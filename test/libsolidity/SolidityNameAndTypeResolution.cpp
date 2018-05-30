@@ -6280,7 +6280,7 @@ BOOST_AUTO_TEST_CASE(unspecified_storage_v050)
 			}
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Storage location must be specified as either \"memory\" or \"storage\".");
+	CHECK_ERROR(text, TypeError, "Data location must be specified as either \"memory\" or \"storage\".");
 }
 
 BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed)
@@ -6290,7 +6290,7 @@ BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed)
 			function f(uint storage a) public { }
 		}
 	)";
-	CHECK_ERROR(text, TypeError, "Storage location can only be given for array or struct types.");
+	CHECK_ERROR(text, TypeError, "Data location can only be given for array or struct types.");
 }
 
 BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed_is_not_fatal)
@@ -6302,7 +6302,7 @@ BOOST_AUTO_TEST_CASE(storage_location_non_array_or_struct_disallowed_is_not_fata
 			}
 		}
 	)";
-	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Storage location can only be given for array or struct types."}));
+	CHECK_ERROR_ALLOW_MULTI(text, TypeError, (std::vector<std::string>{"Data location can only be given for array or struct types."}));
 }
 
 BOOST_AUTO_TEST_CASE(implicit_conversion_disallowed)

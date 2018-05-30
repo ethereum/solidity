@@ -351,7 +351,7 @@ void TypeChecker::annotateBaseConstructorArguments(
 
 		SourceLocation const* mainLocation = nullptr;
 		SecondarySourceLocation ssl;
-	
+
 		if (
 			_currentContract.location().contains(previousNode->location()) ||
 			_currentContract.location().contains(_argumentNode->location())

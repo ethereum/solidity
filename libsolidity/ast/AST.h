@@ -656,7 +656,7 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	enum Location { Default, Storage, Memory };
+	enum Location { Default, Storage, Memory, CallData };
 
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,

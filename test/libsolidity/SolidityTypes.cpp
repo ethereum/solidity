@@ -151,7 +151,12 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bool")->identifier(), "t_bool");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes")->identifier(), "t_bytes_storage_ptr");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes memory")->identifier(), "t_bytes_memory_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes storage")->identifier(), "t_bytes_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes calldata")->identifier(), "t_bytes_calldata_ptr");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string")->identifier(), "t_string_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string memory")->identifier(), "t_string_memory_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string storage")->identifier(), "t_string_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string calldata")->identifier(), "t_string_calldata_ptr");
 	ArrayType largeintArray(DataLocation::Memory, Type::fromElementaryTypeName("int128"), u256("2535301200456458802993406410752"));
 	BOOST_CHECK_EQUAL(largeintArray.identifier(), "t_array$_t_int128_$2535301200456458802993406410752_memory_ptr");
 	TypePointer stringArray = make_shared<ArrayType>(DataLocation::Storage, Type::fromElementaryTypeName("string"), u256("20"));
