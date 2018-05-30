@@ -4807,7 +4807,9 @@ BOOST_AUTO_TEST_CASE(non_payable_constructor)
 
 BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 {
-	char const* text = "contract C {}";
+	char const* text = R"(
+		contract C {}
+	)";
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
 	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
