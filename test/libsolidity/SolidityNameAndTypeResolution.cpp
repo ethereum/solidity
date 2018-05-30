@@ -2195,7 +2195,7 @@ BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
 			bytes32 a = bytes32(7);
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_ERROR(text, TypeError, "Explicit type conversion not allowed from \"int_const 7\" to \"bytes32\"");
 }
 
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
@@ -3831,6 +3831,19 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 				// magic doesn't fit in here
 
 				// module doesn't fit in here
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
+}
+
+BOOST_AUTO_TEST_CASE(index_access_for_bytes)
+{
+	char const* text = R"(
+		contract C {
+			bytes20 x;
+			function f(bytes16 b) public {
+				b[uint(uint8(x[2]))];
 			}
 		}
 	)";

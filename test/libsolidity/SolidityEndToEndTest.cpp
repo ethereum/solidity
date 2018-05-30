@@ -5097,12 +5097,12 @@ BOOST_AUTO_TEST_CASE(byte_array_push_transition)
 			function test() returns (uint) {
 				for (uint8 i = 1; i < 40; i++)
 				{
-					data.push(byte(i));
+					data.push(byte(uint8(i)));
 					if (data.length != i) return 0x1000 + i;
-					if (data[data.length - 1] != byte(i)) return i;
+					if (data[data.length - 1] != byte(uint8(i))) return i;
 				}
 				for (i = 1; i < 40; i++)
-					if (data[i - 1] != byte(i)) return 0x1000000 + i;
+					if (data[i - 1] != byte(uint8(i))) return 0x1000000 + i;
 				return 0;
 			}
 		}
@@ -5435,13 +5435,13 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 			}
 			function storageWrite() external returns (uint) {
 				data.length = 35;
-				data[31] = 0x77;
-				data[32] = 0x14;
+				data[31] = byte(uint8(0x77));
+				data[32] = byte(uint8(0x14));
 
-				data[31] = 1;
-				data[31] |= 8;
-				data[30] = 1;
-				data[32] = 3;
+				data[31] = byte(uint8(1));
+				data[31] |= byte(uint8(8));
+				data[30] = byte(uint8(1));
+				data[32] = byte(uint8(3));
 				return uint(uint8(data[30])) * 0x100 | uint(uint8(data[31])) * 0x10 | uint(uint8(data[32]));
 			}
 		}
@@ -8585,15 +8585,15 @@ BOOST_AUTO_TEST_CASE(inline_array_return)
 {
 	char const* sourceCode = R"(
 		contract C {
-			uint8[] tester; 
+			uint8[] tester;
 			function f() returns (uint8[5]) {
 				return ([1,2,3,4,5]);
 			}
 			function test() returns (uint8, uint8, uint8, uint8, uint8) {
-				tester = f(); 
+				tester = f();
 				return (tester[0], tester[1], tester[2], tester[3], tester[4]);
 			}
-			
+
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
@@ -8617,13 +8617,13 @@ BOOST_AUTO_TEST_CASE(inline_array_singleton)
 BOOST_AUTO_TEST_CASE(inline_long_string_return)
 {
 		char const* sourceCode = R"(
-		contract C { 
+		contract C {
 			function f() returns (string) {
 				return (["somethingShort", "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"][1]);
 			}
 		}
 	)";
-	
+
 	string strLong = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), encodeDyn(strLong));
@@ -8656,7 +8656,7 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_length_access)
 		contract C {
 			byte a;
 			function f(bytes32 x) returns (uint, uint, uint) {
-				return (x.length, bytes16(2).length, a.length + 7);
+				return (x.length, bytes16(uint128(2)).length, a.length + 7);
 			}
 		}
 	)";
@@ -9199,9 +9199,9 @@ BOOST_AUTO_TEST_CASE(iszero_bnot_correct)
 			function f() returns (bool) {
 				bytes32 x = 1;
 				assembly { x := not(x) }
-				if (x != ~bytes32(1)) return false;
+				if (x != ~bytes32(uint256(1))) return false;
 				assembly { x := iszero(x) }
-				if (x != bytes32(0)) return false;
+				if (x != bytes32(uint256(0))) return false;
 				return true;
 			}
 		}
