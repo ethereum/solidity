@@ -643,6 +643,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
+		{
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -678,10 +679,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
-		/////////////////////////////////////////////////
+		}
 		case FunctionType::Kind::TransferAsset:
 		case FunctionType::Kind::SendAsset:
 		case FunctionType::Kind::BalanceOf:
+		{
 			_functionCall.expression().accept(*this);
 			vector<ASTPointer<Expression const>>::iterator  itor = arguments.begin();
 			for (; itor != arguments.end(); itor++)
@@ -708,7 +710,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << Instruction::BALANCEOF;
 			}
 			break;
-			////////////////////////////////////////////////////////////////////
+		}
 		case FunctionType::Kind::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
