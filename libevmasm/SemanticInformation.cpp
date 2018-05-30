@@ -214,6 +214,8 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::SSTORE:
+	case Instruction::TRANSFERASSET:
+	case Instruction::SENDASSET:
 		return true;
 	default:
 		return false;
@@ -242,6 +244,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::GASLIMIT:
 	case Instruction::STATICCALL:
 	case Instruction::SLOAD:
+	case Instruction::BALANCEOF:
 		return true;
 	default:
 		break;
@@ -267,6 +270,8 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE2:
 	case Instruction::SELFDESTRUCT:
+	case Instruction::SENDASSET:
+	case Instruction::TRANSFERASSET:
 		return true;
 	default:
 		break;

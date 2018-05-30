@@ -594,8 +594,6 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"transferAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings(), FunctionType::Kind::TransferAsset)},
 			{"sendAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) }
 
-
-
 		};
 	else
 		return MemberList::MemberMap();

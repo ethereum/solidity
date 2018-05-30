@@ -643,61 +643,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
-			/////////////////////////////////////////////////
-		case FunctionType::Kind::TransferAsset:
-		case FunctionType::Kind::SendAsset:
-		case FunctionType::Kind::BalanceOf:
-     		if (function.kind() == FunctionType::Kind::SendAsset)
-			{
-				_functionCall.expression().accept(*this);
-				vector<ASTPointer<Expression const>>::iterator  itor = arguments.begin();
-				for (; itor != arguments.end(); itor++)
-				{
-					(*itor)->accept(*this);
-
-				}
-				m_context << Instruction::SENDASSET;
-				break;
-
-			}
-			if (function.kind() == FunctionType::Kind::TransferAsset)
-			{
-				_functionCall.expression().accept(*this);
-				vector<ASTPointer<Expression const>>::iterator  itor = arguments.begin();
-				for (; itor != arguments.end(); itor++)
-				{
-					(*itor)->accept(*this);
-
-				}
-				//arguments.front()->accept(*this);
-				//arguments[1]->accept(*this);
-				m_context << Instruction::TRANSFERASSET;
-
-				if (function.kind() == FunctionType::Kind::Transfer || function.kind() == FunctionType::Kind::TransferAsset)
-				{
-					// Check if zero (out of stack or not enough balance).
-					// TODO: bubble up here, but might also be different error.
-					m_context << Instruction::ISZERO;
-					m_context.appendConditionalRevert(true);
-				}
-				break;
-			}
-
-			if (function.kind() == FunctionType::Kind::BalanceOf)
-			{
-				_functionCall.expression().accept(*this);
-				vector<ASTPointer<Expression const>>::iterator  itor = arguments.begin();
-				for (; itor != arguments.end(); itor++)
-				{
-					(*itor)->accept(*this);
-
-				}
-				m_context << Instruction::BALANCEOF;
-				break;
-			}
-
-
-			////////////////////////////////////////////////////////////////////
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -725,7 +670,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
-			if (function.kind() == FunctionType::Kind::Transfer || function.kind() == FunctionType::Kind::TransferAsset)
+			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
 				// TODO: bubble up here, but might also be different error.
@@ -733,6 +678,37 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
+		/////////////////////////////////////////////////
+		case FunctionType::Kind::TransferAsset:
+		case FunctionType::Kind::SendAsset:
+		case FunctionType::Kind::BalanceOf:
+			_functionCall.expression().accept(*this);
+			vector<ASTPointer<Expression const>>::iterator  itor = arguments.begin();
+			for (; itor != arguments.end(); itor++)
+			{
+				(*itor)->accept(*this);
+			}
+			//special
+     		if (function.kind() == FunctionType::Kind::SendAsset)
+			{
+				m_context << Instruction::SENDASSET;
+			}
+
+			if (function.kind() == FunctionType::Kind::TransferAsset)
+			{
+				m_context << Instruction::TRANSFERASSET;
+				// Check if zero (out of stack or not enough balance).
+				// TODO: bubble up here, but might also be different error.
+				m_context << Instruction::ISZERO;
+				m_context.appendConditionalRevert(true);
+			}
+
+			if (function.kind() == FunctionType::Kind::BalanceOf)
+			{
+				m_context << Instruction::BALANCEOF;
+			}
+			break;
+			////////////////////////////////////////////////////////////////////
 		case FunctionType::Kind::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
