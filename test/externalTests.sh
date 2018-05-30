@@ -56,5 +56,6 @@ function test_truffle
     rm -rf "$DIR"
 }
 
-test_truffle Gnosis https://github.com/gnosis/pm-contracts.git
-test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git
+# Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
+test_truffle Gnosis https://github.com/axic/pm-contracts.git -b solidity-050
+test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git -b solidity-050
