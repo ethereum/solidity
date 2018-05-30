@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(intermediately_overflowing_literals)
 	// have been applied
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = (0xffffffffffffffffffffffffffffffffffffffff * 0xffffffffffffffffffffffffff01) & 0xbf; }
+			function f() { var x = (0x00ffffffffffffffffffffffffffffffffffffffff * 0xffffffffffffffffffffffffff01) & 0xbf; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);

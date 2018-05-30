@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 	string text = R"(
 		contract C
 		{
-			address a;
+			uint a;
 			bool b;
 			uint c;
 			function f(uint x) public {
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 	text = R"(
 		contract C
 		{
-			address a;
+			uint a;
 			bool b;
 			uint c;
 			function f() public view {
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 				require(a < 100);
 				assert(c >= 0);
 			}
-			address a;
+			uint a;
 			bool b;
 			uint c;
 		}

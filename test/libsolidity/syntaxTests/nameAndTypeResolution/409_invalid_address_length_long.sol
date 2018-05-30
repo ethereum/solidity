@@ -5,5 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (64-107): This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
-// TypeError: (52-107): Type int_const 2284...(42 digits omitted)...9360 is not implicitly convertible to expected type address.
+// SyntaxError: (64-107): This looks like an address but is not exactly 40 hex digits. It is 41 hex digits.

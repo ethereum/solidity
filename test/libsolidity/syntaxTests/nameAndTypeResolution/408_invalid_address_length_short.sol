@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (64-105): This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x0A0BfC97E48458494ccD857e1A85Dc91f7f0046e'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+// SyntaxError: (64-105): This looks like an address but is not exactly 40 hex digits. It is 39 hex digits.
