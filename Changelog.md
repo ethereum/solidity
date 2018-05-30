@@ -4,6 +4,7 @@
 Breaking Changes:
  * Disallow conversions between bytesX and uintY of different size.
  * Commandline interface: Require ``-`` if standard input is used as source.
+ * General: New keywords: ``calldata``
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
  * Type Checker: Disallow arithmetic operations for Boolean variables.
 
