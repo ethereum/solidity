@@ -7069,7 +7069,7 @@ BOOST_AUTO_TEST_CASE(array_length_invalid_expression_division_by_zero)
 	CHECK_ERROR(text, TypeError, "Operator / not compatible with types int_const 3 and int_const 0");
 }
 
-BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_balance)
 {
 	char const* text = R"(
 		contract C {
@@ -7079,7 +7079,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 		}
 	)";
 	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated.");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_transfer)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.transfer;
@@ -7090,7 +7094,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
 		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_send)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.send;
@@ -7101,7 +7109,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
 		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_call)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.call;
@@ -7109,7 +7121,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 		}
 	)";
 	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated.");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_callcode)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.callcode;
@@ -7120,7 +7136,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 		{Error::Type::Warning, "Using contract member \"callcode\" inherited from the address type is deprecated"},
 		{Error::Type::Warning, "\"callcode\" has been deprecated in favour of \"delegatecall\""}
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract_delegatecall)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				this.delegatecall;
@@ -7130,7 +7150,7 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_contract)
 	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated.");
 }
 
-BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_balance)
 {
 	char const* text = R"(
 		contract C {
@@ -7141,7 +7161,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 		}
 	)";
 	CHECK_WARNING(text, "Using contract member \"balance\" inherited from the address type is deprecated");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_transfer)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				C c;
@@ -7153,7 +7177,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 		{Error::Type::Warning, "Using contract member \"transfer\" inherited from the address type is deprecated"},
 		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_send)
+{
+	char const* text = R"(
 		contract C {
 			function f() view public {
 				C c;
@@ -7165,7 +7193,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 		{Error::Type::Warning, "Using contract member \"send\" inherited from the address type is deprecated"},
 		{Error::Type::TypeError, "Value transfer to a contract without a payable fallback function"}
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_call)
+{
+	char const* text = R"(
 		contract C {
 			function f() pure public {
 				C c;
@@ -7174,7 +7206,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 		}
 	)";
 	CHECK_WARNING(text, "Using contract member \"call\" inherited from the address type is deprecated");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_callcode)
+{
+	char const* text = R"(
 		contract C {
 			function f() pure public {
 				C c;
@@ -7186,7 +7222,11 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 		"Using contract member \"callcode\" inherited from the address type is deprecated",
 		"\"callcode\" has been deprecated in favour of \"delegatecall\""
 	}));
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract_delegatecall)
+{
+	char const* text = R"(
 		contract C {
 			function f() pure public {
 				C c;
@@ -7197,7 +7237,7 @@ BOOST_AUTO_TEST_CASE(warn_about_address_members_on_non_this_contract)
 	CHECK_WARNING(text, "Using contract member \"delegatecall\" inherited from the address type is deprecated");
 }
 
-BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_balance_v050)
 {
 	char const* text = R"(
 		pragma experimental "v0.5.0";
@@ -7208,7 +7248,11 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"balance\" not found or not visible after argument-dependent lookup in contract");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_transfer_v050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
 			function f() public {
@@ -7217,7 +7261,11 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"transfer\" not found or not visible after argument-dependent lookup in contract");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_send_v050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
 			function f() public {
@@ -7226,7 +7274,11 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"send\" not found or not visible after argument-dependent lookup in contract");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_call_v050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
 			function f() public {
@@ -7235,7 +7287,11 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"call\" not found or not visible after argument-dependent lookup in contract");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_callcode_v050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
 			function f() public {
@@ -7244,7 +7300,11 @@ BOOST_AUTO_TEST_CASE(no_address_members_on_contract)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Member \"callcode\" not found or not visible after argument-dependent lookup in contract");
-	text = R"(
+}
+
+BOOST_AUTO_TEST_CASE(no_address_members_on_contract_delegatecall_v050)
+{
+	char const* text = R"(
 		pragma experimental "v0.5.0";
 		contract C {
 			function f() public {
