@@ -691,7 +691,6 @@ doing it using:
     var hash = web3.sha3("message to sign");
     web3.personal.sign(hash, web3.eth.defaultAccount, function () {...});
 
-::
 
 Remind that the prefix includes the length of the message.
 Hashing first means the message will always be 32 bytes long,
@@ -720,7 +719,6 @@ themselves, a nonce. And our smart contract will check if that nonce is reused.
          // ...
     }
 
-::
 
 There's another type of replay attacks, it occurs when the
 owner deploy a ReceiverPays smart contract, make some payments,
@@ -760,8 +758,7 @@ creates the proper signature for the `ReceiverPays` example:
         
         web3.personal.sign(hash, web3.eth.defaultAccount, callback);
     }
-    
-::
+  
 
 Recovering the Message Signer in Solidity
 -----------------------------------------
@@ -807,7 +804,6 @@ We'll use the `inline assembly <https://solidity.readthedocs.io/en/develop/assem
         return (v, r, s);
     }
 
-::
 
 Here's a brief explanation of the code:
 
@@ -841,7 +837,6 @@ for signature verification:
         msg.sender.transfer(amount);
     }
 
-::
 
 Our implementation of `recoverSigner`:
 
@@ -861,7 +856,6 @@ Our implementation of `recoverSigner`:
         return ecrecover(message, v, r, s);
     }
 
-::
 
 Writing a Simple Payment Channel
 ================================
@@ -918,7 +912,6 @@ and a maximum duration for the channel to exist.
         }
     }
 
-::
 
 Making Payments
 ---------------
@@ -967,8 +960,7 @@ Here's the modified code to cryptographic a message from the previous chapter:
         var message = constructPaymentMessage(contractAddress, amount);
         signMessage(message, callback);
     }
-    
-::
+  
 
 Verifying Payments
 ------------------
@@ -1015,7 +1007,6 @@ The following code borrows the `constructMessage` function from the signing code
             ethereumjs.Util.stripHexPrefix(expectedSigner).toLowerCase();
     }
 
-::
 
 Closing the Payment Channel
 ---------------------------
@@ -1056,7 +1047,6 @@ JavaScript counterparts in the previous section. The latter is borrowed from the
         selfdesctruct(sender);
     }
 
-::
 
 The *close* function can only be called by the payment channel recipient,
 who will naturally pass the most recent payment message because that message
@@ -1084,7 +1074,6 @@ at the time of contract deployment. Once that time is reached, the sender can ca
         selfdestruct(sender);
     }
 
-::
 
 After this function is called, the recipient can no longer receive any ether,
 so it's important that the recipient close the channel before the expiration is reached.
