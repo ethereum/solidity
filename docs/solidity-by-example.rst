@@ -278,7 +278,7 @@ activate themselves.
             // Revert the call if the bidding
             // period is over.
             require(
-                now <= auctionEnd,
+                !ended,
                 "Auction already ended."
             );
 
