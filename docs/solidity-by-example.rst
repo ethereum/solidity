@@ -648,17 +648,42 @@ Micropayment Channel
 Creating and verifying signatures
 =================================
 
-Signatures are used to authorize transactions, and they're a general tool that's available to smart contracts. In this chapter we'll use it to prove to a smart contract that a certain account approved a certain message. We'll build a simple smart contract that lets me transmit ether, but in a unsual way, instead of calling a function myself to initiate a payment, I'll let the receiver of the payment do that, and therefore pay the transaction fee. All this using cryptographics signatures that I'll make and send off-chain (e.g. via email). We'll call our contract as ReceiverPays, it will works a lot like writing a check. Our contract will works like that:
+Signatures are used to authorize transactions,
+and they're a general tool that's available to
+smart contracts. In this chapter we'll use it to
+prove to a smart contract that a certain account
+approved a certain message. We'll build a simple
+smart contract that lets me transmit ether, but
+in a unsual way, instead of calling a function myself
+to initiate a payment, I'll let the receiver of
+the payment do that, and therefore pay the transaction
+fee. All this using cryptographics signatures that I'll
+make and send off-chain (e.g. via email). We'll call our
+contract as ReceiverPays, it will works a lot like
+writing a check.Our contract will works like that:
 
     1. The owner deploys ReceiverPays, attaching enough ether to cover the payments that will be made.
     2. The owner authorizes a payment by signing a message with their private key.
     3. The owner sends the cryptographically signed message to the designated recipient. The message does not need to be kept secret (you'll understand it later), and the mechanism for sending it doesn't matter.
     4. The recipient claims their payment by presenting the signed message to the smart contract, it verifies the authenticity of the message and then releases the funds.
-    
+
 Creating the signature
 ----------------------
 
-We don't need the to interact with Ethereum network to do that. The proccess is completely offline, and the every major programming language has the libraries to do it. The signature algorithm Ethereum has the support for is the `Elliptic Curve Signature Algorithm(EDCSA) <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_. In this tutorial, we'll signing messages in the web browser using web3.js and MetaMask. We can sign messages in too many ways, but some of them are incompatible. We'll use the new standard way to do that `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_, it provides a number of other security benefits. Is recommended to stick with the most standard format of signing, as specified by the `eth_sign JSON-RPC method <https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign>`_ In MetaMask, this algorithm is followed best by the web3.js function `web3.personal.sign`, doing it using:
+We don't need the to interact with Ethereum network to
+do that. The proccess is completely offline, and the
+every major programming language has the libraries to do it.
+The signature algorithm Ethereum has the support for is the
+`Elliptic Curve Signature Algorithm(EDCSA) <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_.
+In this tutorial, we'll signing messages in the web browser
+using web3.js and MetaMask. We can sign messages in too many ways,
+but some of them are incompatible. We'll use the new standard
+way to do that `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
+it provides a number of other security benefits.
+Is recommended to stick with the most standard format of signing,
+as specified by the `eth_sign JSON-RPC method <https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign>`_
+In MetaMask, this algorithm is followed best by the web3.js function `web3.personal.sign`,
+doing it using:
 
 ::
 
@@ -668,7 +693,9 @@ We don't need the to interact with Ethereum network to do that. The proccess is 
 
 ::
 
-Remind that the prefix includes the length of the message. Hashing first means the message will always be 32 bytes long, which means the prefix is always the same, this makes everything easier.
+Remind that the prefix includes the length of the message.
+Hashing first means the message will always be 32 bytes long,
+which means the prefix is always the same, this makes everything easier.
 
 What to Sign
 ------------
@@ -679,7 +706,8 @@ For a contract that fulfills payments, the signed message must include:
     2. The amount to be transferred
     3. An additional data to protects agains replay attacks
 
-To avoid replay attacks we'll use the same as in Ethereum transactions themselves, a nonce. And our smart contract will check if that nonce is reused.
+To avoid replay attacks we'll use the same as in Ethereum transactions
+themselves, a nonce. And our smart contract will check if that nonce is reused.
 
 ::
 
@@ -694,12 +722,29 @@ To avoid replay attacks we'll use the same as in Ethereum transactions themselve
 
 ::
 
-There's another type of replay attacks, it occurs when the owner deploy a ReceiverPays smart contract, make some payments, and then destroy the contract. Later, he decide to deploy the RecipientPays smart contract again, but the new contract doesn't know the nonces used in the previous deployment, so the attacker can use the old messages again. We can protect agains it including the contract's address in our message, and only accepting the messages containing contract's address itself.
+There's another type of replay attacks, it occurs when the
+owner deploy a ReceiverPays smart contract, make some payments,
+and then destroy the contract. Later, he decide to deploy the
+RecipientPays smart contract again, but the new contract doesn't
+know the nonces used in the previous deployment, so the attacker
+can use the old messages again. We can protect agains it including
+the contract's address in our message, and only accepting the
+messages containing contract's address itself.
 
 Packing arguments
 -----------------
 
-Now that we have identified what information to include in the signed message, we're ready to put the message together, hash it, and sign it. Solidity's `keccak256/sha3 function <http://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_ hashes by first concatenating them in a tightly packed form. For the hash generated on the client match the one generated in the smart contract, the arguments must be concatenated in the same way. The [ethereumjs-aby]() library provides a function called `soliditySHA3` that mimics the behavior of Solidity's `keccak256` function. Putting it all together, here's a JavaScript function that creates the proper signature for the `ReceiverPays` example:
+Now that we have identified what information to include in the
+signed message, we're ready to put the message together, hash it,
+and sign it. Solidity's `keccak256/sha3 function <http://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_
+hashes by first concatenating them in a tightly packed form.
+For the hash generated on the client match the one generated in the smart contract,
+the arguments must be concatenated in the same way. The 
+`ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_ library provides
+a function called `soliditySHA3` that mimics the behavior
+of Solidity's `keccak256` function.
+Putting it all together, here's a JavaScript function that
+creates the proper signature for the `ReceiverPays` example:
 
 ::
 
@@ -721,12 +766,22 @@ Now that we have identified what information to include in the signed message, w
 Recovering the Message Signer in Solidity
 -----------------------------------------
 
-In general, ECDSA signatures consist of two parameters, *r* and *s*. Signatures in Ethereum include a thir parameter *v*, that can be used to recover which account's private key was used to sign in the message, the transaction's sender. Solidity provides a built-in function `ecrecover <https://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_ that accepts a message along with the *r*, *s* and *v* parameters and returns the address that was used to sign the message.
+In general, ECDSA signatures consist of two parameters, *r* and *s*.
+Signatures in Ethereum include a thir parameter *v*, that can be used
+to recover which account's private key was used to sign in the message,
+the transaction's sender. Solidity provides a built-in function `ecrecover <https://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_
+that accepts a message along with the *r*, *s* and *v* parameters and
+returns the address that was used to sign the message.
 
 Extracting the Signature Parameters
 -----------------------------------
 
-Signatures produced by web3.js are the concatenation of *r*, *s* and *v*, so the 1st step is sppliting those parameters back out. It can be done on the client, but doing it inside the smart contract means only one signature parameter needs to be sent rather than three. Sppliting apart a bytes array into component parts is a little messy. We'll use the `inline assembly <https://solidity.readthedocs.io/en/develop/assembly.html>`_ to do the job:
+Signatures produced by web3.js are the concatenation of *r*, *s* and *v*,
+so the 1st step is sppliting those parameters back out. It can be done on the client,
+but doing it inside the smart contract means only one signature parameter
+needs to be sent rather than three.
+Sppliting apart a bytes array into component parts is a little messy.
+We'll use the `inline assembly <https://solidity.readthedocs.io/en/develop/assembly.html>`_ to do the job:
 
 ::
 
@@ -763,7 +818,9 @@ Here's a brief explanation of the code:
 Computing the Message Hash
 --------------------------
  
-The smart contract needs to know exactly what parameters were signed, and so it must recreate the message from the parameters and use that for signature verification:
+The smart contract needs to know exactly what parameters were signed,
+and so it must recreate the message from the parameters and use that
+for signature verification:
 
 ::
 
@@ -809,25 +866,40 @@ Our implementation of `recoverSigner`:
 Writing a Simple Payment Channel
 ================================
 
-We'll build a simple, but complete, implementation of a payment channel. Payment channels use cryptographic signatures to make repeated transfers of ether securely, instantaneously, and without transaction fees. but...
+We'll build a simple, but complete, implementation of a payment channel.
+Payment channels use cryptographic signatures to make repeated transfers
+of ether securely, instantaneously, and without transaction fees. but...
 
 What is a Payment Channel?
 --------------------------
 
-Payment channels allow participants to make repeated transfers of ether without using transactions. This means that the delays and fees associated with transactions can be avoided. We're going to explore a simple unidirectional payment channel between two parties. Using it involves three steps:
+Payment channels allow participants to make repeated transfers of ether without
+using transactions. This means that the delays and fees associated with transactions
+can be avoided. We're going to explore a simple unidirectional payment channel between
+two parties. Using it involves three steps:
 
     1. The sender funds a smart contract with ether. This "opens" the payment channel.
     2. The sender signs messages that specify how much of that ether is owed to the recipient. This step is repeated for each payment.
     3. The recipient "closes" the payment channel, withdrawing their portion of the ether and sending the remainder back to the sender.
     
-A note: only steps 1 and 3 require Ethereum transactions, the step 2 means that the sender a cryptographic signature to the recipient via off chain ways (e.g. email). This means only two transactions are required to support any number of transfers.
+A note: only steps 1 and 3 require Ethereum transactions, the step 2 means that
+the sender a cryptographic signature to the recipient via off chain ways (e.g. email).
+This means only two transactions are required to support any number of transfers.
 
-The recipient is guaranteed to receive their funds because the smart contract escrows the ether and honors a valid signed message. The smart contract also enforces a timeout, so the sender is guaranteed to eventually recover their funds even if the recipient refuses to close the channel. It's up to the participants in a payment channel to decide how long to keep it open. For a short-lived transaction, such as paying an internet cafe for each minute of network access, or for a longer relationship, such as paying an employee an hourly wage, a payment could last for months or years.
+The recipient is guaranteed to receive their funds because the smart contract escrows
+the ether and honors a valid signed message. The smart contract also enforces a timeout,
+so the sender is guaranteed to eventually recover their funds even if the recipient refuses
+to close the channel.
+It's up to the participants in a payment channel to decide how long to keep it open.
+For a short-lived transaction, such as paying an internet cafe for each minute of network access,
+or for a longer relationship, such as paying an employee an hourly wage, a payment could last for months or years.
 
 Opening the Payment Channel
 ---------------------------
 
-To open the payment channel, the sender deploys the smart contract, attaching the ether to be escrowed and specifying the intendend recipient and a maximum duration for the channel to exist.
+To open the payment channel, the sender deploys the smart contract,
+attaching the ether to be escrowed and specifying the intendend recipient
+and a maximum duration for the channel to exist.
 
 ::
 
@@ -851,14 +923,23 @@ To open the payment channel, the sender deploys the smart contract, attaching th
 Making Payments
 ---------------
 
-The sender makes payments by sending messages to the recipient. This step is performed entirely outside of the Ethereum network. Messages are cryptographically signed by the sender and then transmitted directly to the recipient.
+The sender makes payments by sending messages to the recipient.
+This step is performed entirely outside of the Ethereum network.
+Messages are cryptographically signed by the sender and then transmitted directly to the recipient.
 
 Each message includes the following information:
 
     * The smart contract's address, used to prevent cross-contract replay attacks.
     * The total amount of ether that is owed the recipient so far.
     
-A payment channel is closed just once, at the of a series of transfers. Because of this, only one of the messages sent will be redeemed. This is why each message specifies a cumulative total amount of ether owed, rather than the amount of the individual micropayment. The recipient will naturally choose to redeem the most recent message because that's the one with the highest total. We don't need anymore the nonce per-message, because the smart contract will only honor a single message. The address of the smart contract is still used to prevent a message intended for one payment channel from being used for a different channel.
+A payment channel is closed just once, at the of a series of transfers.
+Because of this, only one of the messages sent will be redeemed. This is why
+each message specifies a cumulative total amount of ether owed, rather than the
+amount of the individual micropayment. The recipient will naturally choose to
+redeem the most recent message because that's the one with the highest total.
+We don't need anymore the nonce per-message, because the smart contract will
+only honor a single message. The address of the smart contract is still used
+to prevent a message intended for one payment channel from being used for a different channel.
 
 Here's the modified code to cryptographic a message from the previous chapter:
 
@@ -892,7 +973,11 @@ Here's the modified code to cryptographic a message from the previous chapter:
 Verifying Payments
 ------------------
 
-Unlike in our previous chapter, messages in a payment channel aren't redeemed right away. The recipient keeps track of the latest message and redeems it when it's time to close the payment channel. This means it's critical that the recipient perform their own verification of each message. Otherwise there is no guarantee that the recipient will be able to get paid
+Unlike in our previous chapter, messages in a payment channel aren't
+redeemed right away. The recipient keeps track of the latest message and
+redeems it when it's time to close the payment channel. This means it's
+critical that the recipient perform their own verification of each message.
+Otherwise there is no guarantee that the recipient will be able to get paid
 in the end.
 
 The recipient should verify each message using the following process:
@@ -902,7 +987,9 @@ The recipient should verify each message using the following process:
     3. Verify that the new total does not exceed the amount of ether escrowed.
     4. Verify that the signature is valid and comes from the payment channel sender.
     
-We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_ library to write this verifications. The following code borrows the `constructMessage` function from the signing code above:
+We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
+library to write this verifications.
+The following code borrows the `constructMessage` function from the signing code above:
 
 ::
 
@@ -933,9 +1020,17 @@ We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
 Closing the Payment Channel
 ---------------------------
 
-When the recipient is ready to receive their funds, it's time to close the payment channel by calling a *close* function on the smart contract. Closing the channel pays the recipient the ether they're owed and destroys the contract, sending any remaining ether back to the sender. To close the channel, the recipient needs to share a message signed by the sender.
+When the recipient is ready to receive their funds, it's time to
+close the payment channel by calling a *close* function on the smart contract.
+Closing the channel pays the recipient the ether they're owed and destroys the contract,
+sending any remaining ether back to the sender.
+To close the channel, the recipient needs to share a message signed by the sender.
 
-The smart contract must verify that the message contains a valid signature from the sender. The process for doing this verification is the same as the process the recipient uses. The Solidity functions *isValidSignature* and *recoverSigner* work just like their JavaScript counterparts in the previous section. The latter is borrowed from the *ReceiverPays* contract in the previous chapter.
+The smart contract must verify that the message contains a valid signature from the sender.
+The process for doing this verification is the same as the process the recipient uses.
+The Solidity functions *isValidSignature* and *recoverSigner* work just like their
+JavaScript counterparts in the previous section. The latter is borrowed from the
+*ReceiverPays* contract in the previous chapter.
 
 ::
 
@@ -963,14 +1058,22 @@ The smart contract must verify that the message contains a valid signature from 
 
 ::
 
-The *close* function can only be called by the payment channel recipient, who will naturally pass the most recent payment message because that message carries the highest total owed. If the sender were allowed to call this function, they could provide a message with a lower amount and cheat the recipient out of what they're owed.
+The *close* function can only be called by the payment channel recipient,
+who will naturally pass the most recent payment message because that message
+carries the highest total owed. If the sender were allowed to call this function,
+they could provide a message with a lower amount and cheat the recipient out of what they're owed.
 
-The function verifies the signed message matches the given parameters. If everything checks out, the recipient is sent their portion of the ether, and the sender is sent the rest via a *selfdesctruct*.
+The function verifies the signed message matches the given parameters.
+If everything checks out, the recipient is sent their portion of the ether,
+and the sender is sent the rest via a *selfdesctruct*.
 
 Channel Expriration
 -------------------
 
-The recipient can close the payment channel at any time, but if they fail to do so, the sender needs a way to recover their escrowed funds. An *expiration* time was set at the time of contract deployment. Once that time is reached, the sender can call *claimTimeout* to recover their funds.
+The recipient can close the payment channel at any time, but if they fail to do so,
+the sender needs a way to recover their escrowed funds. An *expiration* time was set
+at the time of contract deployment. Once that time is reached, the sender can call
+*claimTimeout* to recover their funds.
 
 ::
 
@@ -983,4 +1086,5 @@ The recipient can close the payment channel at any time, but if they fail to do 
 
 ::
 
-After this function is called, the recipient can no longer receive any ether, so it's important that the recipient close the channel before the expiration is reached.
+After this function is called, the recipient can no longer receive any ether,
+so it's important that the recipient close the channel before the expiration is reached.
