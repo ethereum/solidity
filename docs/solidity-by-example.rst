@@ -687,7 +687,7 @@ doing it using:
 
 ::
 
-    // Hashing first makes a few things easier
+    /// Hashing first makes a few things easier
     var hash = web3.sha3("message to sign");
     web3.personal.sign(hash, web3.eth.defaultAccount, function () {...});
 
@@ -707,19 +707,6 @@ For a contract that fulfills payments, the signed message must include:
 
 To avoid replay attacks we'll use the same as in Ethereum transactions
 themselves, a nonce. And our smart contract will check if that nonce is reused.
-
-::
-
-    mapping(uint256 => bool) usedNonces;
-    
-    function claimPayment(uint256 amount, uint256 nonce, bytes signature) public {
-        require(!usedNonces[nonce]);
-        usedNonces[nonce] = true;
-        
-         // ...
-    }
-
-
 There's another type of replay attacks, it occurs when the
 owner deploy a ReceiverPays smart contract, make some payments,
 and then destroy the contract. Later, he decide to deploy the
@@ -728,6 +715,8 @@ know the nonces used in the previous deployment, so the attacker
 can use the old messages again. We can protect agains it including
 the contract's address in our message, and only accepting the
 messages containing contract's address itself.
+You can see this function reading the  *first two lines* in the *claimPayment()* function in the full contract,
+it is at the end of this chapter.
 
 Packing arguments
 -----------------
@@ -741,15 +730,15 @@ the arguments must be concatenated in the same way. The
 `ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_ library provides
 a function called `soliditySHA3` that mimics the behavior
 of Solidity's `keccak256` function.
-Putting it all together, here's a JavaScript function that
+Putting it all together, here's a **JavaScript function** that
 creates the proper signature for the `ReceiverPays` example:
 
 ::
 
-    // recipient is the address that should be paid.
-    // amount, in wei, specifies how much ether should be sent.
-    // nonce can be any unique number, do you remind the replay attacks? we are preventing them here
-    // contractAddress do you remind the cross-contract replay attacks?
+    /// recipient is the address that should be paid.
+    /// amount, in wei, specifies how much ether should be sent.
+    /// nonce can be any unique number, do you remind the replay attacks? we are preventing them here
+    /// contractAddress do you remind the cross-contract replay attacks?
     function signPayment(recipient, amount, nonce, contractAddress, callback) {
         var hash = "0x" + ethereumjs.ABI.soliditySHA3(
             ["address", "uint256", "uint256", "address"],
@@ -758,7 +747,6 @@ creates the proper signature for the `ReceiverPays` example:
         
         web3.personal.sign(hash, web3.eth.defaultAccount, callback);
     }
-  
 
 Recovering the Message Signer in Solidity
 -----------------------------------------
@@ -778,83 +766,96 @@ so the 1st step is sppliting those parameters back out. It can be done on the cl
 but doing it inside the smart contract means only one signature parameter
 needs to be sent rather than three.
 Sppliting apart a bytes array into component parts is a little messy.
-We'll use the `inline assembly <https://solidity.readthedocs.io/en/develop/assembly.html>`_ to do the job:
+We'll use the `inline assembly <https://solidity.readthedocs.io/en/develop/assembly.html>`_ to do the job
+in the *splitSignature* function, it is the 3rd function in the full contract, this is at the end of this
+chapter.
 
-::
-
-    function splitSignature(bytes sig)
-        internal
-        pure
-        returns (uint8, bytes32, bytes32)
-    {
-        require(sig.length == 65);
-    
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-    
-        assembly {
-            // first 32 bytes, after the length prefix
-            r := mload(add(sig, 32))
-            // second 32 bytes
-            s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes)
-            v := byte(0, mload(add(sig, 96)))
-        }
-        return (v, r, s);
-    }
-
-
-Here's a brief explanation of the code:
-
-    * Dynamically-sized arrays are represented in a memory by a 32-byte length followed by the actual data. The code here starts reading data at byte 32 to skip past that length. The `require` at the top of the function ensures the signature is the correct length.
-    * *r* and *s* are 32 bytes each and together make up the first 64 bytes of the signature.
-    * *v* is the 65th byte, which can be found at byte offset 96 (32 bytes for the length, 64 bytes for *r* and *s*). The `mload` opcode loads 32 bytes at a time, so the function then needs to extract just the first byte of the word that was read. This is what `byte(0, ...)` does.
- 
 Computing the Message Hash
 --------------------------
  
 The smart contract needs to know exactly what parameters were signed,
 and so it must recreate the message from the parameters and use that
-for signature verification:
+for signature verification. We need the functions *prefixed* and
+*recoverSigner* to do it, in function *claimPayment* you can see the
+use of that functions.
+
+
+The full contract
+-----------------
 
 ::
 
-    // builds a prefixed hash to mimic the behavior of eth_sign.
-    function prefixed(bytes32 hash) internal pure returns(bytes32) {
-        return keccak256("\x19Ethereum Signed Message:\n32", hash);
+    pragma solidity ^0.4.20;
+
+    contract ReceiverPays {
+        address owner = msg.sender;
+
+        mapping(uint256 => bool) usedNonces;
+
+        function ReceiverPays() public payable {}
+
+        function claimPayment(uint256 amount, uint256 nonce, bytes signature) public {
+            require(!usedNonces[nonce]);
+            usedNonces[nonce] = true;
+
+            // this recreates the message that was signed on the client
+            bytes32 message = prefixed(keccak256(msg.sender, amount, nonce, this));
+
+            require(recoverSigner(message,sig) == owner);
+
+            msg.sender.transfer(amount);
+        }
+
+        /// destroy the contract and reclaim the leftover funds.
+        function kill() public {
+            require(msg.sender == owner);
+            selfdestruct(msg.sender);
+        }
+
+        /// signature methods.
+        function splitSignature(bytes sig)
+            internal
+            pure
+            returns (uint8, bytes32, bytes32)
+        {
+            require(sig.length == 65);
+
+            bytes32 r;
+            bytes32 s;
+            uint8 v;
+
+            assembly {
+                // first 32 bytes, after the length prefix.
+                r := mload(add(sig,32))
+                // second 32 bytes.
+                s := mload(add(sig,64))
+                // final byte (first byte of the next 32 bytes).
+                v := byte(0, mload(add(sig, 96)))
+            }
+
+            return (v, r, s);
+        }
+
+        function recoverSigner(bytes32 message, bytes sig)
+            internal
+            pure
+            returns (address)
+        {
+            uint8;
+            bytes32 r;
+            bytes32 s;
+
+            (v, r, s) = splitSignature(sig);
+
+            return ecrecover(message, v, r, s);
+        }
+
+        /// builds a prefixed hash to mimic the behavior of eth_sign.
+        function prefixed(bytes32 hash) internal pure return (bytes32) {
+            return keccak256("\x19Ethereum Signed Message:\n32", hash);
+        }
     }
-    
-    function claimPayment(uint256 amount, uint256 nonce, bytes sig) public {
-        require(!usedNonces[nonce]);
-        usedNonces[nonce] = true;
-        
-        // this recreates the message that was signed on the client.
-        bytes32 message = prefixed(keccak256(msg.sender, amount, nonce, this));
-        
-        require(recoverSigner(message, sig) == owner);
-        
-        msg.sender.transfer(amount);
-    }
 
-
-Our implementation of `recoverSigner`:
-
-::
-
-    function recoverSigner(bytes32  message, bytes sig)
-        internal
-        pure
-        returns (address)
-    {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        
-        (v, r, s) = splitSignature(sig);
-        
-        return ecrecover(message, v, r, s);
-    }
 
 
 Writing a Simple Payment Channel
@@ -893,25 +894,8 @@ Opening the Payment Channel
 
 To open the payment channel, the sender deploys the smart contract,
 attaching the ether to be escrowed and specifying the intendend recipient
-and a maximum duration for the channel to exist.
-
-::
-
-    contract SimplePaymentChannel {
-        address public sender;      // The account sending payments.
-        address public recipient;   // The account receiving the payments.
-        uint256 public expiration;  // Timeout in case the recipient never closes.
-        
-        function SimplePaymentChannel(address _recipient, uint256 duration)
-            public
-            payable
-        {
-            sender = msg.sender;
-            recipient = _recipient;
-            expiration = now + duration;
-        }
-    }
-
+and a maximum duration for the channel to exist. It is the function
+*SimplePaymentChannel* in the contract, that is at the end of this chapter.
 
 Making Payments
 ---------------
@@ -934,7 +918,7 @@ We don't need anymore the nonce per-message, because the smart contract will
 only honor a single message. The address of the smart contract is still used
 to prevent a message intended for one payment channel from being used for a different channel.
 
-Here's the modified code to cryptographic a message from the previous chapter:
+Here's the modified **javascript code** to cryptographic a message from the previous chapter:
 
 ::
 
@@ -960,6 +944,155 @@ Here's the modified code to cryptographic a message from the previous chapter:
         var message = constructPaymentMessage(contractAddress, amount);
         signMessage(message, callback);
     }
+
+Closing the Payment Channel
+---------------------------
+
+When the recipient is ready to receive their funds, it's time to
+close the payment channel by calling a *close* function on the smart contract.
+Closing the channel pays the recipient the ether they're owed and destroys the contract,
+sending any remaining ether back to the sender.
+To close the channel, the recipient needs to share a message signed by the sender.
+
+The smart contract must verify that the message contains a valid signature from the sender.
+The process for doing this verification is the same as the process the recipient uses.
+The Solidity functions *isValidSignature* and *recoverSigner* work just like their
+JavaScript counterparts in the previous section. The latter is borrowed from the
+*ReceiverPays* contract in the previous chapter.
+
+The *close* function can only be called by the payment channel recipient,
+who will naturally pass the most recent payment message because that message
+carries the highest total owed. If the sender were allowed to call this function,
+they could provide a message with a lower amount and cheat the recipient out of what they're owed.
+
+The function verifies the signed message matches the given parameters.
+If everything checks out, the recipient is sent their portion of the ether,
+and the sender is sent the rest via a *selfdestruct*.
+You can see the *close* function in the full contract.
+
+Channel Expriration
+-------------------
+
+The recipient can close the payment channel at any time, but if they fail to do so,
+the sender needs a way to recover their escrowed funds. An *expiration* time was set
+at the time of contract deployment. Once that time is reached, the sender can call
+*claimTimeout* to recover their funds. You can see the *claimTimeout* function in the
+full contract.
+
+After this function is called, the recipient can no longer receive any ether,
+so it's important that the recipient close the channel before the expiration is reached.
+
+
+The full contract
+-----------------
+
+::
+
+    pragma solidity ^0.4.20;
+
+    contract SimplePaymentChannel {
+        address public sender;      // The account sending payments.
+        address public recipient;   // The account receiving the payments.
+        uint256 public expiration;  // Timeout in case the recipient never closes.
+
+        function SimplePaymentChannel(address _recipient, uint256 duration)
+            public
+            payable
+        {
+            sender = msg.sender;
+            recipient = _recipient;
+            expiration = now + duration;
+        }
+
+        function isValidSignature(uint256 amount, bytes signature)
+        internal
+        view
+        returns (bool)
+        {
+            bytes32 message = prefixed(keccak256(this, amount));
+
+            // check that the signature is from the payment sender
+            return recoverSigner(message, signature) == sender;
+        }
+
+        /// the recipient can close the channel at any time by presenting a
+        /// signed amount from the sender. the recipient will be sent that amount,
+        /// and the remainder will go back to the sender
+        function close(uint256 amount, bytes signature) public {
+            require(msg.sender == recipient);
+            require(isValidSignature(amount, signature));
+
+            recipient.transfer(amount);
+            selfdestruct(sender);
+        }
+
+        /// the sender can extend the expiration at any time
+        function extend(uint256 newExpiration) public {
+            require(msg.sender == sender);
+            require(newExpiration > expiration);
+
+            expiration = newExpiration;
+        }
+
+        /// if the timeout is reached without the recipient closing the channel,
+        /// then the ether is realeased back to the sender.
+        funtion clainTimeout() public {
+            require(now >= expiration);
+            selfdestruct(sender);
+        }
+
+        /// from here to the end of this contract, all the functions we already wrote, in
+        /// the 'creating and verifying signatures' chapter, so if you already know what them
+        /// does, you can skip it.
+
+        /// the same functions we wrote in the 'creating and verifying signatures' chapter,
+        /// you can go there to find the full explanations
+
+        function splitSignature(bytes sig)
+            internal
+            pure
+            returns (uint8, bytes32, bytes32)
+        {
+            require(sig.length == 65);
+
+            bytes32 r;
+            bytes32 s;
+            uint8 v;
+
+            assembly {
+                // first 32 bytes, after the length prefix
+                r := mload(add(sig, 32))
+                // second 32 bytes
+                s := mload(add(sig, 64))
+                // final byte (first byte of the next 32 bytes)
+                v := byte(0, mload(add(sig, 96)))
+            }
+            
+            return (v, r, s);
+        }
+        
+        function recoverSigner(bytes32 message, bytes sig)
+            internal
+            pure
+            returns (address)
+        {
+            uint8 v;
+            bytes32 r;
+            bytes32 s;
+
+            (v, r, s) = splitSignature(sig);
+
+            return ecrecover(message, v, r, s);
+        }
+
+        /// builds a prefixed hash to mimic the behavior of eth_sign.
+        function prefixed(bytes32 hash) internal pure returns (bytes32) {
+            return keccak256("\x19Ethereum Signed Message:\n32", hash);
+        }
+    }
+
+
+
   
 
 Verifying Payments
@@ -980,8 +1113,10 @@ The recipient should verify each message using the following process:
     4. Verify that the signature is valid and comes from the payment channel sender.
     
 We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
-library to write this verifications.
-The following code borrows the `constructMessage` function from the signing code above:
+library to write this verifications. The final step can be done a number of ways,
+but if it's being done in **JavaScript**.
+The following code borrows the `constructMessage` function from the signing **JavaScript code**
+above:
 
 ::
 
@@ -1006,74 +1141,3 @@ The following code borrows the `constructMessage` function from the signing code
         return signer.toLowerCase() ==
             ethereumjs.Util.stripHexPrefix(expectedSigner).toLowerCase();
     }
-
-
-Closing the Payment Channel
----------------------------
-
-When the recipient is ready to receive their funds, it's time to
-close the payment channel by calling a *close* function on the smart contract.
-Closing the channel pays the recipient the ether they're owed and destroys the contract,
-sending any remaining ether back to the sender.
-To close the channel, the recipient needs to share a message signed by the sender.
-
-The smart contract must verify that the message contains a valid signature from the sender.
-The process for doing this verification is the same as the process the recipient uses.
-The Solidity functions *isValidSignature* and *recoverSigner* work just like their
-JavaScript counterparts in the previous section. The latter is borrowed from the
-*ReceiverPays* contract in the previous chapter.
-
-::
-
-    function isValidSignature(uint256 amount, bytes signature)
-        internal
-        view
-        returns (bool)
-    {
-        bytes32 message = prefixed(keccak256(this, amount));
-        
-        // check that the signature is from the payment sender.
-        return recoverSigner(message, signature) == sender;
-    }
-    
-    // the recipient can close the channel at any time by presentating a signed
-    // amount from the sender. The recipient will be sent that amount,
-    // and the reaminder will go back to the sender.
-    function close(uint256 amount, bytes signature) public {
-        require(msg.sender == recipient);
-        require(isValidSignature(amount, signature));
-        
-        recipient.transafer(amount);
-        selfdesctruct(sender);
-    }
-
-
-The *close* function can only be called by the payment channel recipient,
-who will naturally pass the most recent payment message because that message
-carries the highest total owed. If the sender were allowed to call this function,
-they could provide a message with a lower amount and cheat the recipient out of what they're owed.
-
-The function verifies the signed message matches the given parameters.
-If everything checks out, the recipient is sent their portion of the ether,
-and the sender is sent the rest via a *selfdesctruct*.
-
-Channel Expriration
--------------------
-
-The recipient can close the payment channel at any time, but if they fail to do so,
-the sender needs a way to recover their escrowed funds. An *expiration* time was set
-at the time of contract deployment. Once that time is reached, the sender can call
-*claimTimeout* to recover their funds.
-
-::
-
-    // if the timeout is reached without the recipient closing the channel then,
-    // the ether is released back to the sender.
-    function claimTimeout() public {
-        require(now >= expiration);
-        selfdestruct(sender);
-    }
-
-
-After this function is called, the recipient can no longer receive any ether,
-so it's important that the recipient close the channel before the expiration is reached.
