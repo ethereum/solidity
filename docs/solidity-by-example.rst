@@ -792,7 +792,7 @@ The full contract
 
         mapping(uint256 => bool) usedNonces;
 
-        function ReceiverPays() public payable {}
+        constructor() public payable {}
 
         function claimPayment(uint256 amount, uint256 nonce, bytes signature) public {
             require(!usedNonces[nonce]);
@@ -801,7 +801,7 @@ The full contract
             // this recreates the message that was signed on the client
             bytes32 message = prefixed(keccak256(msg.sender, amount, nonce, this));
 
-            require(recoverSigner(message,sig) == owner);
+            require(recoverSigner(message, signature) == owner);
 
             msg.sender.transfer(amount);
         }
@@ -841,7 +841,7 @@ The full contract
             pure
             returns (address)
         {
-            uint8;
+            uint8 v;
             bytes32 r;
             bytes32 s;
 
