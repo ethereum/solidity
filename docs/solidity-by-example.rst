@@ -1036,7 +1036,7 @@ The full contract
 
         /// if the timeout is reached without the recipient closing the channel,
         /// then the ether is realeased back to the sender.
-        funtion clainTimeout() public {
+        function clainTimeout() public {
             require(now >= expiration);
             selfdestruct(sender);
         }
