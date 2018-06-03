@@ -970,7 +970,7 @@ If everything checks out, the recipient is sent their portion of the ether,
 and the sender is sent the rest via a *selfdestruct*.
 You can see the *close* function in the full contract.
 
-Channel Expriration
+Channel Expiration
 -------------------
 
 The recipient can close the payment channel at any time, but if they fail to do so,
