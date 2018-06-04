@@ -194,10 +194,10 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
     contract C {
         uint private data;
 
-        function f(uint a) private returns(uint b) { return a + 1; }
+        function f(uint a) private pure returns(uint b) { return a + 1; }
         function setData(uint a) public { data = a; }
-        function getData() public returns(uint) { return data; }
-        function compute(uint a, uint b) internal returns (uint) { return a+b; }
+        function getData() public view returns(uint) { return data; }
+        function compute(uint a, uint b) internal pure returns (uint) { return a + b; }
     }
 
     contract D {
