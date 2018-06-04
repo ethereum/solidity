@@ -402,6 +402,21 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
+BOOST_AUTO_TEST_CASE(create2_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() public { uint create2; assembly { create2(0, 0, 0, 0) } }}
+	)";
+	// This needs special treatment, because the message mentions the EVM version,
+	// so cannot be run via isoltest.
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::Warning, "The \"create2\" instruction is not supported by the VM version"},
+		{Error::Type::DeclarationError, "Unbalanced stack"},
+		{Error::Type::Warning, "not supposed to return values"}
+	}));
+}
+
 BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 {
 	char const* text = R"(
