@@ -5397,6 +5397,40 @@ BOOST_AUTO_TEST_CASE(byte_array_pop_copy_long)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(array_pop_isolated)
+{
+	char const* sourceCode = R"(
+		// This tests that the compiler knows the correct size of the function on the stack.
+		contract c {
+			uint[] data;
+			function test() public returns (uint x) {
+				x = 2;
+				data.pop;
+				x = 3;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(byte_array_pop_isolated)
+{
+	char const* sourceCode = R"(
+		// This tests that the compiler knows the correct size of the function on the stack.
+		contract c {
+			bytes data;
+			function test() public returns (uint x) {
+				x = 2;
+				data.pop;
+				x = 3;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(3));
+}
+
 BOOST_AUTO_TEST_CASE(external_array_args)
 {
 	char const* sourceCode = R"(

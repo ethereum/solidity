@@ -2529,6 +2529,7 @@ string FunctionType::richIdentifier() const
 	case Kind::AddMod: id += "addmod"; break;
 	case Kind::MulMod: id += "mulmod"; break;
 	case Kind::ArrayPush: id += "arraypush"; break;
+	case Kind::ArrayPop: id += "arraypop"; break;
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
@@ -2683,6 +2684,7 @@ unsigned FunctionType::sizeOnStack() const
 	case Kind::BareDelegateCall:
 	case Kind::Internal:
 	case Kind::ArrayPush:
+	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
 		size = 1;
 		break;
