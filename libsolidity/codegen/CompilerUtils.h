@@ -102,7 +102,7 @@ public:
 	/// area. Also has a hard cap of 0x100000000 for any given length/offset field.
 	/// Stack pre: <source_offset> <length>
 	/// Stack post: <value0> <value1> ... <valuen>
-	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false, bool _revertOnOutOfBounds = false);
+	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false);
 
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.

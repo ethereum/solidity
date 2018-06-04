@@ -181,7 +181,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 }
 
-void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory, bool _revertOnOutOfBounds)
+void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory)
 {
 	/// Stack: <source_offset> <length>
 	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
@@ -194,14 +194,10 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	}
 
 	//@todo this does not yet support nested dynamic arrays
-
-	if (_revertOnOutOfBounds)
-	{
-		size_t encodedSize = 0;
-		for (auto const& t: _typeParameters)
-			encodedSize += t->decodingType()->calldataEncodedSize(true);
-		m_context.appendInlineAssembly("{ if lt(len, " + to_string(encodedSize) + ") { revert(0, 0) } }", {"len"});
-	}
+	size_t encodedSize = 0;
+	for (auto const& t: _typeParameters)
+		encodedSize += t->decodingType()->calldataEncodedSize(true);
+	m_context.appendInlineAssembly("{ if lt(len, " + to_string(encodedSize) + ") { revert(0, 0) } }", {"len"});
 
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
@@ -231,26 +227,21 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 				{
 					// compute data pointer
 					m_context << Instruction::DUP1 << Instruction::MLOAD;
-					if (_revertOnOutOfBounds)
-					{
-						// Check that the data pointer is valid and that length times
-						// item size is still inside the range.
-						Whiskers templ(R"({
-							if gt(ptr, 0x100000000) { revert(0, 0) }
-							ptr := add(ptr, base_offset)
-							let array_data_start := add(ptr, 0x20)
-							if gt(array_data_start, input_end) { revert(0, 0) }
-							let array_length := mload(ptr)
-							if or(
-								gt(array_length, 0x100000000),
-								gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
-							) { revert(0, 0) }
-						})");
-						templ("item_size", to_string(arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true)));
-						m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr"});
-					}
-					else
-						m_context << Instruction::DUP3 << Instruction::ADD;
+					// Check that the data pointer is valid and that length times
+					// item size is still inside the range.
+					Whiskers templ(R"({
+						if gt(ptr, 0x100000000) { revert(0, 0) }
+						ptr := add(ptr, base_offset)
+						let array_data_start := add(ptr, 0x20)
+						if gt(array_data_start, input_end) { revert(0, 0) }
+						let array_length := mload(ptr)
+						if or(
+							gt(array_length, 0x100000000),
+							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
+						) { revert(0, 0) }
+					})");
+					templ("item_size", to_string(arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true)));
+					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr"});
 					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset v(k)
 					moveIntoStack(3);
 					m_context << u256(0x20) << Instruction::ADD;
@@ -273,30 +264,25 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
 					m_context << Instruction::SWAP1;
 					// stack: input_end base_offset next_pointer data_offset
-					if (_revertOnOutOfBounds)
-						m_context.appendInlineAssembly("{ if gt(data_offset, 0x100000000) { revert(0, 0) } }", {"data_offset"});
+					m_context.appendInlineAssembly("{ if gt(data_offset, 0x100000000) { revert(0, 0) } }", {"data_offset"});
 					m_context << Instruction::DUP3 << Instruction::ADD;
 					// stack: input_end base_offset next_pointer array_head_ptr
-					if (_revertOnOutOfBounds)
-						m_context.appendInlineAssembly(
-							"{ if gt(add(array_head_ptr, 0x20), input_end) { revert(0, 0) } }",
-							{"input_end", "base_offset", "next_ptr", "array_head_ptr"}
-						);
+					m_context.appendInlineAssembly(
+						"{ if gt(add(array_head_ptr, 0x20), input_end) { revert(0, 0) } }",
+						{"input_end", "base_offset", "next_ptr", "array_head_ptr"}
+					);
 					// retrieve length
 					loadFromMemoryDynamic(IntegerType(256), !_fromMemory, true);
 					// stack: input_end base_offset next_pointer array_length data_pointer
 					m_context << Instruction::SWAP2;
 					// stack: input_end base_offset data_pointer array_length next_pointer
-					if (_revertOnOutOfBounds)
-					{
-						unsigned itemSize = arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true);
-						m_context.appendInlineAssembly(R"({
-							if or(
-								gt(array_length, 0x100000000),
-								gt(add(data_ptr, mul(array_length, )" + to_string(itemSize) + R"()), input_end)
-							) { revert(0, 0) }
-						})", {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
-					}
+					unsigned itemSize = arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true);
+					m_context.appendInlineAssembly(R"({
+						if or(
+							gt(array_length, 0x100000000),
+							gt(add(data_ptr, mul(array_length, )" + to_string(itemSize) + R"()), input_end)
+						) { revert(0, 0) }
+					})", {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
 				}
 				else
 				{

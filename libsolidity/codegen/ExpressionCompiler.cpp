@@ -2065,7 +2065,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 				mstore(0x40, newMem)
 			})", {"start", "size"});
 
-		utils().abiDecode(returnTypes, true, true);
+		utils().abiDecode(returnTypes, true);
 	}
 }
 
