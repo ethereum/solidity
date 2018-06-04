@@ -14,7 +14,7 @@ defaults:
       command: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr
         make -j4
   - run_tests: &run_tests
       name: Tests
