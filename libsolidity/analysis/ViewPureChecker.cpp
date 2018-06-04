@@ -117,7 +117,7 @@ private:
 bool ViewPureChecker::check()
 {
 	// The bool means "enforce view with errors".
-	map<ContractDefinition const*, bool> contracts;
+	vector<pair<ContractDefinition const*, bool>> contracts;
 
 	for (auto const& node: m_ast)
 	{
@@ -125,7 +125,7 @@ bool ViewPureChecker::check()
 		solAssert(source, "");
 		bool enforceView = source->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		for (ContractDefinition const* c: source->filteredNodes<ContractDefinition>(source->nodes()))
-			contracts[c] = enforceView;
+			contracts.emplace_back(c, enforceView);
 	}
 
 	// Check modifiers first to infer their state mutability.
