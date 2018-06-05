@@ -541,7 +541,7 @@ Above, ``Block`` refers to ``Block`` in the JULIA code grammar explained in the 
 
 An example JULIA Object is shown below:
 
-..code::
+.. code::
 
     // Code consists of a single object. A single "code" node is the code of the object.
     // Every (other) named object or data section is serialized and
