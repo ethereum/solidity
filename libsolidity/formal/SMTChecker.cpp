@@ -68,7 +68,7 @@ bool SMTChecker::visit(ContractDefinition const& _contract)
 
 void SMTChecker::endVisit(ContractDefinition const&)
 {
-	m_stateVariables.clear();
+	m_variables.clear();
 }
 
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
@@ -86,12 +86,10 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		);
 	m_currentFunction = &_function;
 	m_interface->reset();
-	m_variables.clear();
-	m_variables.insert(m_stateVariables.begin(), m_stateVariables.end());
 	m_pathConditions.clear();
 	m_loopExecutionHappened = false;
-	initializeLocalVariables(_function);
 	resetStateVariables();
+	initializeLocalVariables(_function);
 	return true;
 }
 
@@ -100,6 +98,7 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	// TOOD we could check for "reachability", i.e. satisfiability here.
 	// We only handle local variables, so we clear at the beginning of the function.
 	// If we add storage variables, those should be cleared differently.
+	clearLocalVariables();
 	m_currentFunction = nullptr;
 }
 
@@ -583,19 +582,7 @@ void SMTChecker::checkCondition(
 			expressionsToEvaluate.emplace_back(*_additionalValue);
 			expressionNames.push_back(_additionalValueName);
 		}
-		for (auto const& param: m_currentFunction->parameters())
-			if (knownVariable(*param))
-			{
-				expressionsToEvaluate.emplace_back(currentValue(*param));
-				expressionNames.push_back(param->name());
-			}
-		for (auto const& var: m_currentFunction->localVariables())
-			if (knownVariable(*var))
-			{
-				expressionsToEvaluate.emplace_back(currentValue(*var));
-				expressionNames.push_back(var->name());
-			}
-		for (auto const& var: m_stateVariables)
+		for (auto const& var: m_variables)
 			if (knownVariable(*var.first))
 			{
 				expressionsToEvaluate.emplace_back(currentValue(*var.first));
@@ -740,10 +727,15 @@ void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
 
 void SMTChecker::resetStateVariables()
 {
-	for (auto const& variable: m_stateVariables)
+	for (auto const& variable: m_variables)
 	{
-		newValue(*variable.first);
-		setUnknownValue(*variable.first);
+		VariableDeclaration const* _decl = dynamic_cast<VariableDeclaration const*>(variable.first);
+		solAssert(_decl, "");
+		if (_decl->isStateVariable())
+		{
+			newValue(*variable.first);
+			setUnknownValue(*variable.first);
+		}
 	}
 }
 
@@ -777,14 +769,7 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 	if (SSAVariable::isSupportedType(_varDecl.type()->category()))
 	{
 		solAssert(m_variables.count(&_varDecl) == 0, "");
-		solAssert(m_stateVariables.count(&_varDecl) == 0, "");
-		if (_varDecl.isLocalVariable())
-			m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
-		else
-		{
-			solAssert(_varDecl.isStateVariable(), "");
-			m_stateVariables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
-		}
+		m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
 		return true;
 	}
 	else
@@ -908,4 +893,17 @@ void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
 void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
 {
 	m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), _e));
+}
+
+void SMTChecker::clearLocalVariables()
+{
+	for (auto it = m_variables.begin(); it != m_variables.end(); )
+	{
+		VariableDeclaration const* _decl = dynamic_cast<VariableDeclaration const*>(it->first);
+		solAssert(_decl, "");
+		if (_decl->isLocalVariable())
+			it = m_variables.erase(it);
+		else
+			++it;
+	}
 }
