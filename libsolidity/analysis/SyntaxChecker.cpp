@@ -121,6 +121,21 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	return true;
 }
 
+bool SyntaxChecker::visit(ContractDefinition const& _contractDef)
+{
+	const ASTString& contractName = _contractDef.name();
+
+	for (const FunctionDefinition* const fd : _contractDef.definedFunctions())
+		if (fd->name() == contractName)
+			m_errorReporter.syntaxError(fd->location(), "Old style constructors not allowed.");
+
+	return true;
+}
+
+void SyntaxChecker::endVisit(ContractDefinition const&)
+{
+}
+
 bool SyntaxChecker::visit(ModifierDefinition const&)
 {
 	m_placeholderFound = false;
