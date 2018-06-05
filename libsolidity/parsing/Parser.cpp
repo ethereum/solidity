@@ -344,7 +344,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	m_scanner->next();
 
   if (result.isConstructor)
-		result.name = make_shared<ASTString>("");
+		result.name = make_shared<ASTString>("constructor");
 	else if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
 		result.name = make_shared<ASTString>();
 	else if (m_scanner->currentToken() == Token::Constructor && !result.isConstructor)
