@@ -303,7 +303,7 @@ We will use a destructuring notation for the AST nodes.
 Type Conversion Functions
 -------------------------
 
-JULIA has no support for implicit type conversion and therefore functions exists to provide explicit conversion.
+JULIA has no support for implicit type conversion and therefore functions exist to provide explicit conversion.
 When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
 
 Truncating conversions are supported between the following types:
