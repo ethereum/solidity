@@ -1,18 +1,19 @@
-#################################################
-Joyfully Universal Language for (Inline) Assembly
-#################################################
+###
+Yul
+###
 
-.. _julia:
+.. _yul:
 
-.. index:: ! assembly, ! asm, ! evmasm, ! julia
+.. index:: ! assembly, ! asm, ! evmasm, ! yul, julia, iulia
 
-JULIA is an intermediate language that can compile to various different backends
+Yul (previously also called JULIA or IULIA) is an intermediate language that can
+compile to various different backends
 (EVM 1.0, EVM 1.5 and eWASM are planned).
 Because of that, it is designed to be a usable common denominator of all three
 platforms.
 It can already be used for "inline assembly" inside Solidity and
-future versions of the Solidity compiler will even use JULIA as intermediate
-language. It should also be easy to build high-level optimizer stages for JULIA.
+future versions of the Solidity compiler will even use Yul as intermediate
+language. It should also be easy to build high-level optimizer stages for Yul.
 
 .. note::
 
@@ -21,14 +22,14 @@ language. It should also be easy to build high-level optimizer stages for JULIA.
     to the EVM opcodes. Please resort to the inline assembly documentation
     for details.
 
-The core components of JULIA are functions, blocks, variables, literals,
+The core components of Yul are functions, blocks, variables, literals,
 for-loops, if-statements, switch-statements, expressions and assignments to variables.
 
-JULIA is typed, both variables and literals must specify the type with postfix
+Yul is typed, both variables and literals must specify the type with postfix
 notation. The supported types are ``bool``, ``u8``, ``s8``, ``u32``, ``s32``,
 ``u64``, ``s64``, ``u128``, ``s128``, ``u256`` and ``s256``.
 
-JULIA in itself does not even provide operators. If the EVM is targeted,
+Yul in itself does not even provide operators. If the EVM is targeted,
 opcodes will be available as built-in functions, but they can be reimplemented
 if the backend changes. For a list of mandatory built-in functions, see the section below.
 
@@ -69,10 +70,10 @@ and ``add`` to be available.
         }
     }
 
-Specification of JULIA
-======================
+Specification of Yul
+====================
 
-JULIA code is described in this chapter. JULIA code is usually placed into a JULIA object, which is described in the following chapter.
+This chapter describes Yul code. It is usually placed inside a Yul object, which is described in the following chapter.
 
 Grammar::
 
@@ -156,7 +157,7 @@ Literals cannot be larger than the their type. The largest type defined is 256-b
 Scoping Rules
 -------------
 
-Scopes in JULIA are tied to Blocks (exceptions are functions and the for loop
+Scopes in Yul are tied to Blocks (exceptions are functions and the for loop
 as explained below) and all declarations
 (``FunctionDefinition``, ``VariableDeclaration``)
 introduce new identifiers into these scopes.
@@ -186,7 +187,7 @@ outside of that function.
 Formal Specification
 --------------------
 
-We formally specify JULIA by providing an evaluation function E overloaded
+We formally specify Yul by providing an evaluation function E overloaded
 on the various nodes of the AST. Any functions can have side effects, so
 E takes two state objects and the AST node and returns two new
 state objects and a variable number of other values.
@@ -303,7 +304,7 @@ We will use a destructuring notation for the AST nodes.
 Type Conversion Functions
 -------------------------
 
-JULIA has no support for implicit type conversion and therefore functions exist to provide explicit conversion.
+Yul has no support for implicit type conversion and therefore functions exist to provide explicit conversion.
 When converting a larger type to a shorter type a runtime exception can occur in case of an overflow.
 
 Truncating conversions are supported between the following types:
@@ -507,7 +508,7 @@ The following functions must be available:
 Backends
 --------
 
-Backends or targets are the translators from JULIA to a specific bytecode. Each of the backends can expose functions
+Backends or targets are the translators from Yul to a specific bytecode. Each of the backends can expose functions
 prefixed with the name of the backend. We reserve ``evm_`` and ``ewasm_`` prefixes for the two proposed backends.
 
 Backend: EVM
@@ -525,8 +526,8 @@ Backend: eWASM
 
 TBD
 
-Specification of JULIA Object
-=============================
+Specification of Yul Object
+===========================
 
 Grammar::
 
@@ -537,9 +538,9 @@ Grammar::
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
-Above, ``Block`` refers to ``Block`` in the JULIA code grammar explained in the previous chapter.
+Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the previous chapter.
 
-An example JULIA Object is shown below:
+An example Yul Object is shown below:
 
 .. code::
 
