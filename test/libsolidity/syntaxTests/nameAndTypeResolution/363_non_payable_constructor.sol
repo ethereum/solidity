@@ -1,5 +1,5 @@
 contract C {
-    function C() { }
+    constructor() { }
 }
 contract D {
     function f() public returns (uint) {
@@ -8,5 +8,4 @@ contract D {
     }
 }
 // ----
-// Warning: (17-33): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-// TypeError: (98-111): Member "value" not found or not visible after argument-dependent lookup in function () returns (contract C) - did you forget the "payable" modifier?
+// TypeError: (99-112): Member "value" not found or not visible after argument-dependent lookup in function () returns (contract C) - did you forget the "payable" modifier?
