@@ -121,6 +121,21 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	return true;
 }
 
+bool SyntaxChecker::visit(ContractDefinition const& _contractDef)
+{
+	const ASTString& contractName = _contractDef.name();
+
+	for (const FunctionDefinition* const fd : _contractDef.definedFunctions())
+		if (fd->name() == contractName)
+			m_errorReporter.syntaxError(fd->location(), "Old style constructors not allowed.");
+
+	return true;
+}
+
+void SyntaxChecker::endVisit(ContractDefinition const&)
+{
+}
+
 bool SyntaxChecker::visit(ModifierDefinition const&)
 {
 	m_placeholderFound = false;
@@ -217,21 +232,6 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 	if (v050 && _function.noVisibilitySpecified())
 		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
 
-	if (_function.isOldStyleConstructor())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(
-				_function.location(),
-				"Functions are not allowed to have the same name as the contract. "
-				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
-			);
-		else
-			m_errorReporter.warning(
-				_function.location(),
-				"Defining constructors as functions with the same name as the contract is deprecated. "
-				"Use \"constructor(...) { ... }\" instead."
-			);
-	}
 	if (!_function.isImplemented() && !_function.modifiers().empty())
 	{
 		if (v050)
@@ -239,7 +239,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		else
 			m_errorReporter.warning(_function.location(), "Modifiers of functions without implementation are ignored." );
 	}
-	if (_function.name() == "constructor")
+	if (_function.name() == "constructor" && !_function.isConstructor())
 		m_errorReporter.warning(_function.location(),
 			"This function is named \"constructor\" but is not the constructor of the contract. "
 			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."

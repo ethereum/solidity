@@ -614,7 +614,6 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
-	bool isOldStyleConstructor() const { return m_isConstructor && !name().empty(); }
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }

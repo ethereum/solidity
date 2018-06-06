@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (118-119): Expected ';' but got identifier
+// ParserError: (104-115): Expected primary expression.

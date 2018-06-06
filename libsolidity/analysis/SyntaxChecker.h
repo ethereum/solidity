@@ -49,6 +49,9 @@ private:
 	virtual void endVisit(SourceUnit const& _sourceUnit) override;
 	virtual bool visit(PragmaDirective const& _pragma) override;
 
+	virtual bool visit(ContractDefinition const& _contractDef) override;
+	virtual void endVisit(ContractDefinition const& _contractDef) override;
+
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual void endVisit(ModifierDefinition const& _modifier) override;
 
