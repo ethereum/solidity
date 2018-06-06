@@ -98,7 +98,7 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	// TOOD we could check for "reachability", i.e. satisfiability here.
 	// We only handle local variables, so we clear at the beginning of the function.
 	// If we add storage variables, those should be cleared differently.
-	clearLocalVariables();
+	removeLocalVariables();
 	m_currentFunction = nullptr;
 }
 
@@ -729,9 +729,8 @@ void SMTChecker::resetStateVariables()
 {
 	for (auto const& variable: m_variables)
 	{
-		VariableDeclaration const* _decl = dynamic_cast<VariableDeclaration const*>(variable.first);
-		solAssert(_decl, "");
-		if (_decl->isStateVariable())
+		VariableDeclaration const& _decl = dynamic_cast<VariableDeclaration const&>(*variable.first);
+		if (_decl.isStateVariable())
 		{
 			newValue(*variable.first);
 			setUnknownValue(*variable.first);
@@ -895,13 +894,12 @@ void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
 	m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), _e));
 }
 
-void SMTChecker::clearLocalVariables()
+void SMTChecker::removeLocalVariables()
 {
 	for (auto it = m_variables.begin(); it != m_variables.end(); )
 	{
-		VariableDeclaration const* _decl = dynamic_cast<VariableDeclaration const*>(it->first);
-		solAssert(_decl, "");
-		if (_decl->isLocalVariable())
+		VariableDeclaration const& _decl = dynamic_cast<VariableDeclaration const&>(*it->first);
+		if (_decl.isLocalVariable())
 			it = m_variables.erase(it);
 		else
 			++it;
