@@ -659,26 +659,6 @@ BOOST_AUTO_TEST_CASE(struct_function)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(empty_struct)
-{
-	string sourceCode = R"(
-		contract C {
-			struct S { }
-			function f(uint a, S s, uint b) public pure returns (uint x, uint y) {
-				assembly { x := a y := b }
-			}
-			function g() public returns (uint, uint) {
-				return this.f(7, S(), 8);
-			}
-		}
-	)";
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f(uint256,(),uint256)", 7, 8), encodeArgs(7, 8));
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(7, 8));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(mediocre_struct)
 {
 	string sourceCode = R"(
