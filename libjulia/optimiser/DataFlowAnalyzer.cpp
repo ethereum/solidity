@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Base class to perform data flaw analysis during AST walks.
+ * Base class to perform data flow analysis during AST walks.
  * Tracks assignments and is used as base class for both Rematerialiser and
  * Common Subexpression Eliminator.
  */
