@@ -8,4 +8,4 @@ contract test {
 }
 // ----
 // Warning: (31-37): This declaration shadows an existing declaration.
-// TypeError: (153-168): Named argument does not match function declaration.
+// TypeError: (153-168): Named argument "c" does not match function declaration.
