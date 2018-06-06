@@ -203,10 +203,10 @@ BOOST_AUTO_TEST_CASE(external_structs)
 		pragma experimental ABIEncoderV2;
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-			struct Empty {}
+			struct Simple { uint i; }
 			struct Nested { X[2][] a; uint y; }
-			struct X { bytes32 x; Test t; Empty[] e; }
-			function f(ActionChoices, uint, Empty) external {}
+			struct X { bytes32 x; Test t; Simple[] s; }
+			function f(ActionChoices, uint, Simple) external {}
 			function g(Test, Nested) external {}
 			function h(function(Nested) external returns (uint)[]) external {}
 			function i(Nested[]) external {}
@@ -218,10 +218,10 @@ BOOST_AUTO_TEST_CASE(external_structs)
 		{
 			auto functions = contract->definedFunctions();
 			BOOST_REQUIRE(!functions.empty());
-			BOOST_CHECK_EQUAL("f(uint8,uint256,())", functions[0]->externalSignature());
-			BOOST_CHECK_EQUAL("g(address,((bytes32,address,()[])[2][],uint256))", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL("f(uint8,uint256,(uint256))", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("g(address,((bytes32,address,(uint256)[])[2][],uint256))", functions[1]->externalSignature());
 			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
-			BOOST_CHECK_EQUAL("i(((bytes32,address,()[])[2][],uint256)[])", functions[3]->externalSignature());
+			BOOST_CHECK_EQUAL("i(((bytes32,address,(uint256)[])[2][],uint256)[])", functions[3]->externalSignature());
 		}
 }
 
@@ -231,10 +231,10 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 		pragma experimental ABIEncoderV2;
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-			struct Empty {}
+			struct Simple { uint i; }
 			struct Nested { X[2][] a; uint y; }
-			struct X { bytes32 x; Test t; Empty[] e; }
-			function f(ActionChoices, uint, Empty) external {}
+			struct X { bytes32 x; Test t; Simple[] s; }
+			function f(ActionChoices, uint, Simple) external {}
 			function g(Test, Nested) external {}
 			function h(function(Nested) external returns (uint)[]) external {}
 			function i(Nested[]) external {}
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 		{
 			auto functions = contract->definedFunctions();
 			BOOST_REQUIRE(!functions.empty());
-			BOOST_CHECK_EQUAL("f(Test.ActionChoices,uint256,Test.Empty)", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("f(Test.ActionChoices,uint256,Test.Simple)", functions[0]->externalSignature());
 			BOOST_CHECK_EQUAL("g(Test,Test.Nested)", functions[1]->externalSignature());
 			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
 			BOOST_CHECK_EQUAL("i(Test.Nested[])", functions[3]->externalSignature());
