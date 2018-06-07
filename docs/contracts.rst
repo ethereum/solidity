@@ -742,7 +742,7 @@ All non-indexed arguments will be stored in the data part of the log.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.21;
 
     contract ClientReceipt {
         event Deposit(
