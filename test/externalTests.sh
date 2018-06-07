@@ -76,5 +76,7 @@ function test_truffle
 # Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
 test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity-050
 
+test_truffle dYdX https://github.com/dydxprotocol/protocol.git
+
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
