@@ -72,8 +72,7 @@ The following non-fixed-size types exist:
 
 - ``<type>[]``: a variable-length array of elements of the given type.
 
-Types can be combined to a tuple by enclosing a finite non-negative number
-of them inside parentheses, separated by commas:
+Types can be combined to a tuple by enclosing them inside parentheses, separated by commas:
 
 - ``(T1,T2,...,Tn)``: tuple consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
 
