@@ -1742,12 +1742,20 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		else
 		{
 			if (c_valueSigned)
-				// For negative values xor_mask has all bits set and xor(value_to_shift, xor_mask) will be
-				// the bitwise complement of value_to_shift, i.e. abs(value_to_shift) - 1. Dividing this by
-				// exp(2, shift_amount) results in a value that is positive and strictly smaller than the
-				// absolute value of the desired result. Taking the complement again changes the sign
-				// back to negative and subtracts one, resulting in rounding towards negative infinity.
-				// For positive values xor_mask is zero and xor(value_to_shift, xor_mask) is again value_to_shift.
+				// In the following assembly snippet, xor_mask will be zero, if value_to_shift is positive.
+				// Therefor xor'ing with xor_mask is the identity and the computation reduces to
+				// div(value_to_shift, exp(2, shift_amount)), which is correct, since for positive values
+				// arithmetic right shift is dividing by a power of two (which, as a bitwise operation, results
+				// in discarding bits on the right and filling with zeros from the left).
+				// For negative values arithmetic right shift, viewed as a bitwise operation, discards bits to the
+				// right and fills in ones from the left. This is achieved as follows:
+				// If value_to_shift is negative, then xor_mask will have all bits set, so xor'ing with xor_mask
+				// will flip all bits. First all bits in value_to_shift are flipped. As for the positive case,
+				// dividing by a power of two using integer arithmetic results in discarding bits to the right
+				// and filling with zeros from the left. Flipping all bits in the result again, turns all zeros
+				// on the left to ones and restores the non-discarded, shifted bits to their original value (they
+				// have now been flipped twice). In summary we now have discarded bits to the right and filled with
+				// ones from the left, i.e. we have performed an arithmetic right shift.
 				m_context.appendInlineAssembly(R"({
 					let xor_mask := sub(0, slt(value_to_shift, 0))
 					value_to_shift := xor(div(xor(value_to_shift, xor_mask), exp(2, shift_amount)), xor_mask)
