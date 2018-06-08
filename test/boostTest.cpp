@@ -37,6 +37,7 @@
 
 #include <test/Options.h>
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/libsolidity/SemanticsTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -147,6 +148,16 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"SolidityOptimizer"
 		})
 			removeTestSuite(suite);
+	}
+	else
+	{
+		SemanticsTest::ipcPath = dev::test::Options::get().ipcPath;
+		solAssert(registerTests(
+			master,
+			dev::test::Options::get().testPath / "libsolidity",
+			"semanticsTests",
+			SemanticsTest::create
+		) > 0, "no semantics tests found");
 	}
 	if (dev::test::Options::get().disableSMT)
 		removeTestSuite("SMTChecker");

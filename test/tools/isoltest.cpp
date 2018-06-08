@@ -17,6 +17,7 @@
 
 #include <libdevcore/CommonIO.h>
 #include <test/libsolidity/AnalysisFramework.h>
+#include <test/libsolidity/SemanticsTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 
 #include <boost/algorithm/string.hpp>
@@ -250,6 +251,7 @@ int main(int argc, char *argv[])
 		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
+	bool disableIPC = false;
 	bool formatted = true;
 	po::options_description options(
 		R"(isoltest, tool for interactively managing test contracts.
@@ -262,6 +264,8 @@ Allowed options)",
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
+		("ipcpath", po::value<string>(&SemanticsTest::ipcPath), "path to ipc socket")
+		("no-ipc", "disable semantics tests")
 		("no-color", "don't use colors")
 		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
 
@@ -282,6 +286,21 @@ Allowed options)",
 			formatted = false;
 
 		po::notify(arguments);
+
+		if (arguments.count("no-ipc"))
+			disableIPC = true;
+		else
+		{
+			solAssert(
+				!SemanticsTest::ipcPath.empty(),
+				"No ipc path specified. The --ipcpath argument is required, unless --no-ipc is used."
+			);
+			solAssert(
+				fs::exists(SemanticsTest::ipcPath),
+				"Invalid ipc path specified."
+			);
+		}
+
 	}
 	catch (std::exception const& _exception)
 	{
@@ -310,22 +329,60 @@ Allowed options)",
 		}
 	}
 
+	TestStats global_stats { 0, 0 };
+
 	fs::path syntaxTestPath = testPath / "libsolidity" / "syntaxTests";
 
 	if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
 	{
 		auto stats = TestTool::processPath(SyntaxTest::create, testPath / "libsolidity", "syntaxTests", formatted);
 
-		cout << endl << "Summary: ";
+		cout << endl << "Syntax Test Summary: ";
 		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
 			stats.successCount << "/" << stats.runCount;
-		cout << " tests successful." << endl;
+		cout << " tests successful." << endl << endl;
 
-		return stats ? 0 : 1;
+		global_stats.runCount += stats.runCount;
+		global_stats.successCount += stats.successCount;
 	}
 	else
 	{
 		cerr << "Syntax tests not found. Use the --testpath argument." << endl;
 		return 1;
 	}
+
+	if (!disableIPC)
+	{
+		fs::path semanticsTestPath = testPath / "libsolidity" / "semanticsTests";
+
+		if (fs::exists(semanticsTestPath) && fs::is_directory(semanticsTestPath))
+		{
+			auto stats = TestTool::processPath(SemanticsTest::create, testPath / "libsolidity", "semanticsTests", formatted);
+
+			cout << endl << "Semantics Test Summary: ";
+			FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
+				stats.successCount << "/" << stats.runCount;
+			cout << " tests successful." << endl << endl;
+
+			global_stats.runCount += stats.runCount;
+			global_stats.successCount += stats.successCount;
+		}
+		else
+		{
+			cerr << "Semantics tests not found. Use the --testpath argument." << endl;
+			return 1;
+		}
+	}
+	else
+	{
+		FormattedScope(cout, formatted, { YELLOW }) << "Warning:";
+		cout << " semantics tests were not run." << endl;
+	}
+
+	cout << endl << "Summary: ";
+	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
+		global_stats.successCount << "/" << global_stats.runCount;
+	cout << " tests successful." << endl;
+
+	return global_stats ? 0 : 1;
 }
