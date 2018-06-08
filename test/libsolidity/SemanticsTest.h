@@ -111,9 +111,11 @@ private:
 		std::vector<ByteRangeFormat> expectedFormat;
 	};
 
-	static std::vector<SemanticsTestFunctionCall> parseCalls(std::istream& _stream);
+	void parseExpectations(std::istream &_stream);
 
-
+	std::map<std::string, dev::test::Address> m_libraryAddresses;
+	std::vector<std::function<void(void)>> m_initializations;
+	bool m_hasDeploy = false;
 	std::string m_source;
 	std::vector<SemanticsTestFunctionCall> m_calls;
 	std::vector<bytes> m_results;

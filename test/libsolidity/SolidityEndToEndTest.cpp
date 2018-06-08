@@ -7212,21 +7212,6 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(library_call)
-{
-	char const* sourceCode = R"(
-		library Lib { function m(uint x, uint y) returns (uint) { return x * y; } }
-		contract Test {
-			function f(uint x) returns (uint) {
-				return Lib.m(x, 9);
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
-	ABI_CHECK(callContractFunction("f(uint256)", u256(33)), encodeArgs(u256(33) * 9));
-}
-
 BOOST_AUTO_TEST_CASE(library_function_external)
 {
 	char const* sourceCode = R"(

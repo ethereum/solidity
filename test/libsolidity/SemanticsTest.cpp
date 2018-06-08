@@ -46,13 +46,16 @@ SemanticsTest::SemanticsTest(string const& _filename):
 	file.exceptions(ios::badbit);
 
 	m_source = parseSource(file);
-	m_calls = parseCalls(file);
+	parseExpectations(file);
 }
 
 
 bool SemanticsTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	compileAndRun(m_source);
+	for (auto const& fn: m_initializations)
+		fn();
+	if (!m_hasDeploy)
+		compileAndRun(m_source, 0, "", bytes(), m_libraryAddresses);
 
 	bool success = true;
 	m_results.clear();
@@ -447,10 +450,10 @@ void SemanticsTest::printCalls(
 	}
 }
 
-vector<SemanticsTest::SemanticsTestFunctionCall> SemanticsTest::parseCalls(istream& _stream)
+void SemanticsTest::parseExpectations(istream &_stream)
 {
-	vector<SemanticsTestFunctionCall> expectations;
 	string line;
+	bool isPreamble = true;
 	while (getline(_stream, line))
 	{
 		auto it = line.begin();
@@ -458,15 +461,77 @@ vector<SemanticsTest::SemanticsTestFunctionCall> SemanticsTest::parseCalls(istre
 		skipSlashes(it, line.end());
 		skipWhitespace(it, line.end());
 
+		if (it == line.end())
+			continue;
+
+		if (isPreamble)
+		{
+			if (starts_with(iterator_range<string::const_iterator>(it, line.end()), "DEPLOY:"))
+			{
+				it += 7; // skip "DEPLOY:"
+
+				skipWhitespace(it, line.end());
+
+				auto contractNameBegin = it;
+				while (it != line.end() && *it != '[' && *it != ':')
+					++it;
+
+				string contractName(contractNameBegin, it);
+				u256 ether(0);
+				bytes argumentBytes;
+
+				if (it != line.end() && *it == '[')
+				{
+					++it;
+					auto etherBegin = it;
+					while (it != line.end() && *it != ']')
+						++it;
+					string etherString(etherBegin, it);
+					ether = u256(etherString);
+					expect(it, line.end(), ']');
+				}
+
+				skipWhitespace(it, line.end());
+
+				if (it != line.end())
+				{
+					expect(it, line.end(), ':');
+					skipWhitespace(it, line.end());
+					argumentBytes = stringToBytes(string(it, line.end()));
+				}
+
+				m_initializations.emplace_back([=](){
+					compileAndRun(m_source, ether, contractName, argumentBytes, m_libraryAddresses);
+				});
+
+				m_hasDeploy = true;
+
+				continue;
+			}
+			else if (starts_with(iterator_range<string::const_iterator>(it, line.end()), "DEPLOYLIB:"))
+			{
+				it += 10; // skip "DEPLOYLIB:"
+
+				skipWhitespace(it, line.end());
+				string libName(it, line.end());
+
+				m_initializations.emplace_back([=](){
+					compileAndRun(m_source, 0, libName, bytes{}, m_libraryAddresses);
+					m_libraryAddresses[libName] = m_contractAddress;
+				});
+
+				continue;
+			}
+
+			isPreamble = false;
+		}
+
 		string arguments;
 		bytes argumentBytes;
 		u256 ether(0);
 		string expectedResult;
 		bytes expectedBytes;
 		vector<ByteRangeFormat> expectedFormat;
-
-		if (it == line.end())
-			continue;
 
 		auto signatureBegin = it;
 		while (it != line.end() && *it != ')')
@@ -517,7 +582,7 @@ vector<SemanticsTest::SemanticsTestFunctionCall> SemanticsTest::parseCalls(istre
 			for (char c: string("REVERT"))
 				expect(it, line.end(), c);
 
-		expectations.emplace_back(SemanticsTestFunctionCall{
+		m_calls.emplace_back(SemanticsTestFunctionCall{
 			std::move(signature),
 			std::move(arguments),
 			std::move(argumentBytes),
@@ -527,7 +592,6 @@ vector<SemanticsTest::SemanticsTestFunctionCall> SemanticsTest::parseCalls(istre
 			std::move(expectedFormat)
 		});
 	}
-	return expectations;
 }
 
 string SemanticsTest::ipcPath;
