@@ -33,28 +33,10 @@ using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
-template<typename IteratorType>
-void skipWhitespace(IteratorType& _it, IteratorType _end)
+namespace
 {
-	while (_it != _end && isspace(*_it))
-		++_it;
-}
 
-template<typename IteratorType>
-void skipSlashes(IteratorType& _it, IteratorType _end)
-{
-	while (_it != _end && *_it == '/')
-		++_it;
-}
-
-void expect(string::iterator& _it, string::iterator _end, string::value_type _c)
-{
-	if (_it == _end || *_it != _c)
-		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
-	++_it;
-}
-
-int parseUnsignedInteger(string::iterator &_it, string::iterator _end)
+int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
 	if (_it == _end || !isdigit(*_it))
 		throw runtime_error("Invalid test expectation. Source location expected.");
@@ -66,6 +48,8 @@ int parseUnsignedInteger(string::iterator &_it, string::iterator _end)
 		++_it;
 	}
 	return result;
+}
+
 }
 
 SyntaxTest::SyntaxTest(string const& _filename)
@@ -120,6 +104,55 @@ bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _fo
 	return true;
 }
 
+void SyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool const _formatted) const
+{
+	if (_formatted)
+	{
+		if (m_source.empty())
+			return;
+
+		vector<char const*> sourceFormatting(m_source.length(), formatting::RESET);
+		for (auto const& error: m_errorList)
+			if (error.locationStart >= 0 && error.locationEnd >= 0)
+			{
+				assert(static_cast<size_t>(error.locationStart) <= m_source.length());
+				assert(static_cast<size_t>(error.locationEnd) <= m_source.length());
+				bool isWarning = error.type == "Warning";
+				for (int i = error.locationStart; i < error.locationEnd; i++)
+					if (isWarning)
+					{
+						if (sourceFormatting[i] == formatting::RESET)
+							sourceFormatting[i] = formatting::ORANGE_BACKGROUND;
+					}
+					else
+						sourceFormatting[i] = formatting::RED_BACKGROUND;
+			}
+
+		_stream << _linePrefix << sourceFormatting.front() << m_source.front();
+		for (size_t i = 1; i < m_source.length(); i++)
+		{
+			if (sourceFormatting[i] != sourceFormatting[i - 1])
+				_stream << sourceFormatting[i];
+			if (m_source[i] != '\n')
+				_stream << m_source[i];
+			else
+			{
+				_stream << formatting::RESET << endl;
+				if (i + 1 < m_source.length())
+					_stream << _linePrefix << sourceFormatting[i];
+			}
+		}
+		_stream << formatting::RESET;
+	}
+	else
+	{
+		stringstream stream(m_source);
+		string line;
+		while (getline(stream, line))
+			_stream << _linePrefix << line << endl;
+	}
+}
+
 void SyntaxTest::printErrorList(
 	ostream& _stream,
 	vector<SyntaxTestError> const& _errorList,
@@ -157,19 +190,6 @@ string SyntaxTest::errorMessage(Exception const& _e)
 		return boost::replace_all_copy(*_e.comment(), "\n", "\\n");
 	else
 		return "NONE";
-}
-
-string SyntaxTest::parseSource(istream& _stream)
-{
-	string source;
-	string line;
-	string const delimiter("// ----");
-	while (getline(_stream, line))
-		if (boost::algorithm::starts_with(line, delimiter))
-			break;
-		else
-			source += line + "\n";
-	return source;
 }
 
 vector<SyntaxTestError> SyntaxTest::parseExpectations(istream& _stream)
@@ -219,72 +239,4 @@ vector<SyntaxTestError> SyntaxTest::parseExpectations(istream& _stream)
 		});
 	}
 	return expectations;
-}
-
-#if BOOST_VERSION < 105900
-test_case *make_test_case(
-	function<void()> const& _fn,
-	string const& _name,
-	string const& /* _filename */,
-	size_t /* _line */
-)
-{
-	return make_test_case(_fn, _name);
-}
-#endif
-
-bool SyntaxTest::isTestFilename(boost::filesystem::path const& _filename)
-{
-	return _filename.extension().string() == ".sol" &&
-		!boost::starts_with(_filename.string(), "~") &&
-		!boost::starts_with(_filename.string(), ".");
-}
-
-int SyntaxTest::registerTests(
-	boost::unit_test::test_suite& _suite,
-	boost::filesystem::path const& _basepath,
-	boost::filesystem::path const& _path
-)
-{
-	int numTestsAdded = 0;
-	fs::path fullpath = _basepath / _path;
-	if (fs::is_directory(fullpath))
-	{
-		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
-		for (auto const& entry: boost::iterator_range<fs::directory_iterator>(
-			fs::directory_iterator(fullpath),
-			fs::directory_iterator()
-		))
-			if (fs::is_directory(entry.path()) || isTestFilename(entry.path().filename()))
-				numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename());
-		_suite.add(sub_suite);
-	}
-	else
-	{
-		static vector<unique_ptr<string>> filenames;
-
-		filenames.emplace_back(new string(_path.string()));
-		_suite.add(make_test_case(
-			[fullpath]
-			{
-				BOOST_REQUIRE_NO_THROW({
-					try
-					{
-						stringstream errorStream;
-						if (!SyntaxTest(fullpath.string()).run(errorStream))
-							BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
-					}
-					catch (boost::exception const& _e)
-					{
-						BOOST_ERROR("Exception during syntax test: " << boost::diagnostic_information(_e));
-					}
-				});
-			},
-			_path.stem().string(),
-			*filenames.back(),
-			0
-		));
-		numTestsAdded = 1;
-	}
-	return numTestsAdded;
 }

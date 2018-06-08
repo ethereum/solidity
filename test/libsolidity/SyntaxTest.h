@@ -19,10 +19,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/FormattedScope.h>
+#include <test/libsolidity/TestCase.h>
 #include <libsolidity/interface/Exceptions.h>
-
-#include <boost/noncopyable.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <iosfwd>
 #include <string>
@@ -52,17 +50,24 @@ struct SyntaxTestError
 };
 
 
-class SyntaxTest: AnalysisFramework
+class SyntaxTest: AnalysisFramework, public TestCase
 {
 public:
+	static std::unique_ptr<TestCase> create(std::string const& _filename)
+	{ return std::unique_ptr<TestCase>(new SyntaxTest(_filename)); }
 	SyntaxTest(std::string const& _filename);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false);
+	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	std::vector<SyntaxTestError> const& expectations() const { return m_expectations; }
-	std::string const& source() const { return m_source; }
-	std::vector<SyntaxTestError> const& errorList() const { return m_errorList; }
+	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
+	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
+	{
+		if (!m_errorList.empty())
+			printErrorList(_stream, m_errorList, _linePrefix, false);
+	}
 
+	static std::string errorMessage(Exception const& _e);
+private:
 	static void printErrorList(
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,
@@ -70,15 +75,6 @@ public:
 		bool const _formatted = false
 	);
 
-	static int registerTests(
-		boost::unit_test::test_suite& _suite,
-		boost::filesystem::path const& _basepath,
-		boost::filesystem::path const& _path
-	);
-	static bool isTestFilename(boost::filesystem::path const& _filename);
-	static std::string errorMessage(Exception const& _e);
-private:
-	static std::string parseSource(std::istream& _stream);
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
 	std::string m_source;

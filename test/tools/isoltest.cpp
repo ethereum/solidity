@@ -37,18 +37,22 @@ using namespace std;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-struct SyntaxTestStats
+struct TestStats
 {
 	int successCount;
 	int runCount;
 	operator bool() const { return successCount == runCount; }
 };
 
-class SyntaxTestTool
+class TestTool
 {
 public:
-	SyntaxTestTool(string const& _name, fs::path const& _path, bool _formatted):
-		m_formatted(_formatted), m_name(_name), m_path(_path)
+	TestTool(
+		TestCase::TestCaseCreator _testCaseCreator,
+		string const& _name,
+		fs::path const& _path,
+		bool _formatted
+	): m_testCaseCreator(_testCaseCreator), m_formatted(_formatted), m_name(_name), m_path(_path)
 	{}
 
 	enum class Result
@@ -60,7 +64,8 @@ public:
 
 	Result process();
 
-	static SyntaxTestStats processPath(
+	static TestStats processPath(
+		TestCase::TestCaseCreator _testCaseCreator,
 		fs::path const& _basepath,
 		fs::path const& _path,
 		bool const _formatted
@@ -77,68 +82,16 @@ private:
 
 	Request handleResponse(bool const _exception);
 
-	void printContract() const;
-
+	TestCase::TestCaseCreator m_testCaseCreator;
 	bool const m_formatted;
 	string const m_name;
 	fs::path const m_path;
-	unique_ptr<SyntaxTest> m_test;
+	unique_ptr<TestCase> m_test;
 };
 
-string SyntaxTestTool::editor;
+string TestTool::editor;
 
-void SyntaxTestTool::printContract() const
-{
-	if (m_formatted)
-	{
-		string const& source = m_test->source();
-		if (source.empty())
-			return;
-
-		std::vector<char const*> sourceFormatting(source.length(), formatting::RESET);
-		for (auto const& error: m_test->errorList())
-			if (error.locationStart >= 0 && error.locationEnd >= 0)
-			{
-				assert(static_cast<size_t>(error.locationStart) <= source.length());
-				assert(static_cast<size_t>(error.locationEnd) <= source.length());
-				bool isWarning = error.type == "Warning";
-				for (int i = error.locationStart; i < error.locationEnd; i++)
-					if (isWarning)
-					{
-						if (sourceFormatting[i] == formatting::RESET)
-							sourceFormatting[i] = formatting::ORANGE_BACKGROUND;
-					}
-					else
-						sourceFormatting[i] = formatting::RED_BACKGROUND;
-			}
-
-		cout << "    " << sourceFormatting.front() << source.front();
-		for (size_t i = 1; i < source.length(); i++)
-		{
-			if (sourceFormatting[i] != sourceFormatting[i - 1])
-				cout << sourceFormatting[i];
-			if (source[i] != '\n')
-				cout << source[i];
-			else
-			{
-				cout << formatting::RESET << endl;
-				if (i + 1 < source.length())
-					cout << "    " << sourceFormatting[i];
-			}
-		}
-		cout << formatting::RESET << endl;
-	}
-	else
-	{
-		stringstream stream(m_test->source());
-		string line;
-		while (getline(stream, line))
-			cout << "    " << line << endl;
-		cout << endl;
-	}
-}
-
-SyntaxTestTool::Result SyntaxTestTool::process()
+TestTool::Result TestTool::process()
 {
 	bool success;
 	std::stringstream outputMessages;
@@ -147,7 +100,7 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 
 	try
 	{
-		m_test = unique_ptr<SyntaxTest>(new SyntaxTest(m_path.string()));
+		m_test = m_testCaseCreator(m_path.string());
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
 	catch(boost::exception const& _e)
@@ -179,14 +132,14 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 		FormattedScope(cout, m_formatted, {BOLD, RED}) << "FAIL" << endl;
 
 		FormattedScope(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
-		printContract();
+		m_test->printSource(cout, "    ", m_formatted);
 
-		cout << outputMessages.str() << endl;
+		cout << endl << outputMessages.str() << endl;
 		return Result::Failure;
 	}
 }
 
-SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _exception)
+TestTool::Request TestTool::handleResponse(bool const _exception)
 {
 	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
@@ -208,15 +161,14 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _exception)
 			{
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
-				file << m_test->source();
+				m_test->printSource(file);
 				file << "// ----" << endl;
-				if (!m_test->errorList().empty())
-					m_test->printErrorList(file, m_test->errorList(), "// ", false);
+				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;
 			}
 		case 'e':
 			cout << endl << endl;
-			if (system((editor + " \"" + m_path.string() + "\"").c_str()))
+			if (system((TestTool::editor + " \"" + m_path.string() + "\"").c_str()))
 				cerr << "Error running editor command." << endl << endl;
 			return Request::Rerun;
 		case 'q':
@@ -228,8 +180,8 @@ SyntaxTestTool::Request SyntaxTestTool::handleResponse(bool const _exception)
 	}
 }
 
-
-SyntaxTestStats SyntaxTestTool::processPath(
+TestStats TestTool::processPath(
+	TestCase::TestCaseCreator _testCaseCreator,
 	fs::path const& _basepath,
 	fs::path const& _path,
 	bool const _formatted
@@ -252,12 +204,12 @@ SyntaxTestStats SyntaxTestTool::processPath(
 				fs::directory_iterator(fullpath),
 				fs::directory_iterator()
 			))
-				if (fs::is_directory(entry.path()) || SyntaxTest::isTestFilename(entry.path().filename()))
+				if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
 					paths.push(currentPath / entry.path().filename());
 		}
 		else
 		{
-			SyntaxTestTool testTool(currentPath.string(), fullpath, _formatted);
+			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _formatted);
 			++runCount;
 			auto result = testTool.process();
 
@@ -293,9 +245,9 @@ SyntaxTestStats SyntaxTestTool::processPath(
 int main(int argc, char *argv[])
 {
 	if (getenv("EDITOR"))
-		SyntaxTestTool::editor = getenv("EDITOR");
+		TestTool::editor = getenv("EDITOR");
 	else if (fs::exists("/usr/bin/editor"))
-		SyntaxTestTool::editor = "/usr/bin/editor";
+		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
 	bool formatted = true;
@@ -311,7 +263,7 @@ Allowed options)",
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
 		("no-color", "don't use colors")
-		("editor", po::value<string>(&SyntaxTestTool::editor), "editor for opening contracts");
+		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
 
 	po::variables_map arguments;
 	try
@@ -331,7 +283,7 @@ Allowed options)",
 
 		po::notify(arguments);
 	}
-	catch (po::error const& _exception)
+	catch (std::exception const& _exception)
 	{
 		cerr << _exception.what() << endl;
 		return 1;
@@ -362,7 +314,7 @@ Allowed options)",
 
 	if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
 	{
-		auto stats = SyntaxTestTool::processPath(testPath / "libsolidity", "syntaxTests", formatted);
+		auto stats = TestTool::processPath(SyntaxTest::create, testPath / "libsolidity", "syntaxTests", formatted);
 
 		cout << endl << "Summary: ";
 		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
@@ -373,7 +325,7 @@ Allowed options)",
 	}
 	else
 	{
-		cerr << "Test path not found. Use the --testpath argument." << endl;
+		cerr << "Syntax tests not found. Use the --testpath argument." << endl;
 		return 1;
 	}
 }

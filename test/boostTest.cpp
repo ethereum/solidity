@@ -38,7 +38,26 @@
 #include <test/Options.h>
 #include <test/libsolidity/SyntaxTest.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
+
 using namespace boost::unit_test;
+using namespace dev::solidity::test;
+namespace fs = boost::filesystem;
+using namespace std;
+
+#if BOOST_VERSION < 105900
+test_case *make_test_case(
+	function<void()> const& _fn,
+	string const& _name,
+	string const& /* _filename */,
+	size_t /* _line */
+)
+{
+	return make_test_case(_fn, _name);
+}
+#endif
 
 namespace
 {
@@ -49,6 +68,56 @@ void removeTestSuite(std::string const& _name)
 	assert(id != INV_TEST_UNIT_ID);
 	master.remove(id);
 }
+
+int registerTests(
+	boost::unit_test::test_suite& _suite,
+	boost::filesystem::path const& _basepath,
+	boost::filesystem::path const& _path,
+	TestCase::TestCaseCreator _testCaseCreator
+)
+{
+	int numTestsAdded = 0;
+	fs::path fullpath = _basepath / _path;
+	if (fs::is_directory(fullpath))
+	{
+		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
+		for (auto const& entry: boost::iterator_range<fs::directory_iterator>(
+			fs::directory_iterator(fullpath),
+			fs::directory_iterator()
+		))
+			if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+				numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename(), _testCaseCreator);
+		_suite.add(sub_suite);
+	}
+	else
+	{
+		static vector<unique_ptr<string>> filenames;
+
+		filenames.emplace_back(new string(_path.string()));
+		_suite.add(make_test_case(
+			[fullpath, _testCaseCreator]
+			{
+				BOOST_REQUIRE_NO_THROW({
+					try
+					{
+						stringstream errorStream;
+						if (!_testCaseCreator(fullpath.string())->run(errorStream))
+							BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+					}
+					catch (boost::exception const& _e)
+					{
+						BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
+					}
+			   });
+			},
+			_path.stem().string(),
+			*filenames.back(),
+			0
+		));
+		numTestsAdded = 1;
+	}
+	return numTestsAdded;
+}
 }
 
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
@@ -56,10 +125,11 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
 	dev::test::Options::get().validate();
-	solAssert(dev::solidity::test::SyntaxTest::registerTests(
+	solAssert(registerTests(
 		master,
 		dev::test::Options::get().testPath / "libsolidity",
-		"syntaxTests"
+		"syntaxTests",
+		SyntaxTest::create
 	) > 0, "no syntax tests found");
 	if (dev::test::Options::get().disableIPC)
 	{
