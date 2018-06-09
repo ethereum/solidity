@@ -742,7 +742,7 @@ All non-indexed arguments will be stored in the data part of the log.
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.0;
 
     contract ClientReceipt {
         event Deposit(
@@ -1406,24 +1406,24 @@ Using For
 
 The directive ``using A for B;`` can be used to attach library
 functions (from the library ``A``) to any type (``B``).
-These functions will receive the object they are called on
-as their first parameter (like the ``self`` variable in
-Python).
 
 The effect of ``using A for *;`` is that the functions from
 the library ``A`` are attached to any type.
 
-In both situations, all functions, even those where the
-type of the first parameter does not match the type of
-the object, are attached. The type is checked at the
+In both situations, all functions in the library are attached,
+even those where the type of the first parameter does not
+match the type of the object. The type is checked at the
 point the function is called and function overload
 resolution is performed.
 
-The ``using A for B;`` directive is active for the current
-scope, which is limited to a contract for now but will
-be lifted to the global scope later, so that by including
-a module, its data types including library functions are
+The ``using A for B;`` directive is active only within the current
+contract (i.e. within the contract, but outside any of its functions).
+
+By including a module, its data types including library functions are
 available without having to add further code.
+When such functions are called,
+they will receive the object they are called on
+as their first parameter (like the ``self`` variable in Python).
 
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
