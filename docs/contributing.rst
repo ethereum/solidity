@@ -239,3 +239,25 @@ escaping and without iterated replacements. An area can be delimited by ``<#name
 by as many concatenations of its contents as there were sets of variables supplied to the template system,
 each time replacing any ``<inner>`` items by their respective value. Top-level variables can also be used
 inside such areas.
+
+Upcoming changes on v0.5.0
+==========================
+
+There are long list of major changes which are supposed to be happen in v0.5.0.
+List of major changes are
+Language Features:
+ * General: Support ``pop()`` for storage arrays.
+
+Breaking Changes:
+ * Disallow conversions between bytesX and uintY of different size.
+ * Commandline interface: Require ``-`` if standard input is used as source.
+ * General: New keywords: ``calldata``
+ * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body).
+ * Type Checker: Disallow arithmetic operations for Boolean variables.
+ * Disallow trailing dots that are not followed by a number.
+ * Remove assembly instructions ``sha3`` and ``suicide``
+
+Language Features:
+ * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
+
+Bugfixes: <https://github.com/ethereum/solidity/issues?q=is%3Aissue+is%3Aopen+label%3A%22breaking+for+0.5.0%22>
