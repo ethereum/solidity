@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 			function b() returns (uint r) { r = a({a: , b: , c: }); }
 		}
 	)";
-	CHECK_PARSE_ERROR(text, "Expected primary expression");
+	CHECK_PARSE_ERROR(text, "syntax error, unexpected");
 }
 
 BOOST_AUTO_TEST_CASE(trailing_comma_in_named_args)
