@@ -11,6 +11,7 @@ Breaking Changes:
  * Type Checker: Disallow arithmetic operations for Boolean variables.
  * Disallow trailing dots that are not followed by a number.
  * Remove assembly instructions ``sha3`` and ``suicide``
+ * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
 
 Language Features:
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
