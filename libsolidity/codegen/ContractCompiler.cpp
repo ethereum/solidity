@@ -749,16 +749,16 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 bool ContractCompiler::visit(Continue const& _continueStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _continueStatement);
-	if (!m_continueTags.empty())
-		m_context.appendJumpTo(m_continueTags.back());
+	solAssert(!m_continueTags.empty(), "");
+	m_context.appendJumpTo(m_continueTags.back());
 	return false;
 }
 
 bool ContractCompiler::visit(Break const& _breakStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _breakStatement);
-	if (!m_breakTags.empty())
-		m_context.appendJumpTo(m_breakTags.back());
+	solAssert(!m_breakTags.empty(), "");
+	m_context.appendJumpTo(m_breakTags.back());
 	return false;
 }
 
