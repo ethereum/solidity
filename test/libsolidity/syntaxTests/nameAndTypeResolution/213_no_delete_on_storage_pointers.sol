@@ -1,10 +1,9 @@
 contract C {
     uint[] data;
     function f() public {
-        var x = data;
+        uint[] storage x = data;
         delete x;
     }
 }
 // ----
-// Warning: (64-69): Use of the "var" keyword is deprecated.
-// TypeError: (86-94): Unary operator delete cannot be applied to type uint256[] storage pointer
+// TypeError: (97-105): Unary operator delete cannot be applied to type uint256[] storage pointer

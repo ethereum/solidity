@@ -1,8 +1,7 @@
 contract C {
     function f(uint size) public {
-        var x = new uint(7);
+        uint x = new uint(7);
     }
 }
 // ----
-// Warning: (56-61): Use of the "var" keyword is deprecated.
-// TypeError: (64-72): Contract or array type expected.
+// TypeError: (65-73): Contract or array type expected.

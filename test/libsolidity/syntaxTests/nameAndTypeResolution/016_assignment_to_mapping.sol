@@ -4,10 +4,9 @@ contract test {
     }
     str data;
     function fun() public {
-        var a = data.map;
+        mapping(uint=>uint) a = data.map;
         data.map = a;
     }
 }
 // ----
-// Warning: (122-127): Use of the "var" keyword is deprecated.
-// TypeError: (148-160): Mappings cannot be assigned to.
+// TypeError: (164-176): Mappings cannot be assigned to.

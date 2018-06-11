@@ -25,7 +25,7 @@ contract C {
         h += 1; // Avoid unused var warning
 
         // string literal
-        var i = true ? "hello" : "world";
+        string memory i = true ? "hello" : "world";
         i = "used"; //Avoid unused var warning
     }
     function f2() public {
@@ -38,18 +38,18 @@ contract C {
         // array
         byte[2] memory a;
         byte[2] memory b;
-        var k = true ? a : b;
+        byte[2] memory k = true ? a : b;
         k[0] = byte(0); //Avoid unused var warning
 
         bytes memory e;
         bytes memory f;
-        var l = true ? e : f;
+        bytes memory l = true ? e : f;
         l[0] = byte(0); // Avoid unused var warning
 
         // fixed bytes
         bytes2 c;
         bytes2 d;
-        var m = true ? c : d;
+        bytes2 m = true ? c : d;
         m &= m;
 
     }
@@ -60,7 +60,7 @@ contract C {
         struct_x = true ? struct_x : struct_y;
 
         // function
-        var r = true ? fun_x : fun_y;
+        function () r = true ? fun_x : fun_y;
         r(); // Avoid unused var warning
         // enum
         small enum_x;
@@ -68,13 +68,13 @@ contract C {
         enum_x = true ? enum_x : enum_y;
 
         // tuple
-        var (n, o) = true ? (1, 2) : (3, 4);
+        (uint n, uint o) = true ? (1, 2) : (3, 4);
         (n, o) = (o, n); // Avoid unused var warning
         // mapping
-        var p = true ? table1 : table2;
+        mapping(uint8 => uint8) p = true ? table1 : table2;
         p[0] = 0; // Avoid unused var warning
         // typetype
-        var q = true ? uint32(1) : uint32(2);
+        uint32 q = true ? uint32(1) : uint32(2);
         q += 1; // Avoid unused var warning
         // modifier doesn't fit in here
 
@@ -84,17 +84,8 @@ contract C {
     }
 }
 // ----
-// Warning: (546-551): Use of the "var" keyword is deprecated.
-// Warning: (878-883): Use of the "var" keyword is deprecated.
-// Warning: (1008-1013): Use of the "var" keyword is deprecated.
-// Warning: (1150-1155): Use of the "var" keyword is deprecated.
-// Warning: (1357-1362): Use of the "var" keyword is deprecated.
-// Warning: (1560-1561): Use of the "var" keyword is deprecated.
-// Warning: (1563-1564): Use of the "var" keyword is deprecated.
-// Warning: (1672-1677): Use of the "var" keyword is deprecated.
-// Warning: (1778-1783): Use of the "var" keyword is deprecated.
-// Warning: (984-998): This declaration shadows an existing declaration.
+// Warning: (1005-1019): This declaration shadows an existing declaration.
 // Warning: (90-116): Function state mutability can be restricted to pure
 // Warning: (121-147): Function state mutability can be restricted to pure
-// Warning: (257-632): Function state mutability can be restricted to pure
-// Warning: (637-1194): Function state mutability can be restricted to pure
+// Warning: (257-642): Function state mutability can be restricted to pure
+// Warning: (647-1227): Function state mutability can be restricted to pure
