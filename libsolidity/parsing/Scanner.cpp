@@ -628,8 +628,46 @@ void Scanner::scanToken()
 	}
 	while (token == Token::Whitespace);
 	m_nextToken.location.end = sourcePos();
-	m_nextToken.token = token;
-	m_nextToken.extendedTokenInfo = make_tuple(m, n);
+	
+	bool isNotConverted = true;
+	if (token == Token::Identifier)
+	{
+		std::string _name = m_nextToken.literal;
+		const int nfixAddrLen = 43;
+		const int nfixHeadLen = 3;
+		const int nInnerLen = nfixAddrLen - nfixHeadLen;
+		if (_name.length() == nfixAddrLen)
+		{
+			std::string aoaHead, aoaAddr;
+			aoaHead = _name.substr(0, nfixHeadLen);
+			transform(aoaHead.begin(), aoaHead.end(), aoaHead.begin(), [](unsigned char _c) { return tolower(_c); });
+			if ( !aoaHead.compare("aoa"))
+			{
+				aoaAddr = _name.substr(nfixHeadLen, nInnerLen);
+				bool isHex = true;
+				for	(unsigned int i = 0;i < nInnerLen; i++) 
+				{
+					if (!isHexDigit(aoaAddr[i])) 
+					{
+						isHex = false;
+						break;
+					}
+				}
+				if (isHex)
+				{
+					m_nextToken.literal = "0x" + aoaAddr;
+					m_nextToken.token = Token::Number;
+					m_nextToken.extendedTokenInfo = make_tuple(m, n);
+					isNotConverted = false;
+				}
+			}
+		}
+	}
+	if (isNotConverted)
+	{
+		m_nextToken.token = token;
+		m_nextToken.extendedTokenInfo = make_tuple(m, n);
+	}
 }
 
 bool Scanner::scanEscape()
