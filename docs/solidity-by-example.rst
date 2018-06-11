@@ -795,7 +795,7 @@ The full contract
 
 ::
 
-    pragma solidity ^0.4.20;
+    pragma solidity ^0.4.24;
 
     contract ReceiverPays {
         address owner = msg.sender;
@@ -809,7 +809,7 @@ The full contract
             usedNonces[nonce] = true;
 
             // this recreates the message that was signed on the client
-            bytes32 message = prefixed(keccak256(msg.sender, amount, nonce, this));
+            bytes32 message = prefixed(keccak256(abi.encodePacked(msg.sender, amount, nonce, this)));
 
             require(recoverSigner(message, signature) == owner);
 
@@ -862,10 +862,9 @@ The full contract
 
         /// builds a prefixed hash to mimic the behavior of eth_sign.
         function prefixed(bytes32 hash) internal pure returns (bytes32) {
-            return keccak256("\x19Ethereum Signed Message:\n32", hash);
+            return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
         }
     }
-
 
 
 Writing a Simple Payment Channel
@@ -999,14 +998,14 @@ The full contract
 
 ::
 
-    pragma solidity ^0.4.20;
+    pragma solidity ^0.4.24;
 
     contract SimplePaymentChannel {
         address public sender;      // The account sending payments.
         address public recipient;   // The account receiving the payments.
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
-        function SimplePaymentChannel(address _recipient, uint256 duration)
+        constructor (address _recipient, uint256 duration)
             public
             payable
         {
@@ -1020,7 +1019,7 @@ The full contract
         view
         returns (bool)
         {
-            bytes32 message = prefixed(keccak256(this, amount));
+            bytes32 message = prefixed(keccak256(abi.encodePacked(this, amount)));
 
             // check that the signature is from the payment sender
             return recoverSigner(message, signature) == sender;
@@ -1098,7 +1097,7 @@ The full contract
 
         /// builds a prefixed hash to mimic the behavior of eth_sign.
         function prefixed(bytes32 hash) internal pure returns (bytes32) {
-            return keccak256("\x19Ethereum Signed Message:\n32", hash);
+            return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
         }
     }
 
