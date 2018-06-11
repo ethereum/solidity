@@ -845,9 +845,24 @@ assigning it to a local variable, as in
 ``campaigns[campaignID].amount = 0``.
 
 Also, if you want to add a new element to a struct array then conventional way of doing is ::
-    MyStruct memory newStruct;
-        ... // modifiying newStruct variables
-    myStructsArray.push(newStruct);
+    contract Quiz {
+
+        struct Answer
+         {
+          bytes32 text; 
+             uint voteCount; // number of accumulated votes
+             // add more non-key fields as needed
+         }       
+
+         struct Question
+         {
+             bytes32 text;
+             bytes32[] answerList; // list of answer keys so we can look them up
+                mapping(bytes32 => Answer) answerStructs; // random access by question key and answer key
+                 // add more non-key fields as needed
+          }
+
+    
 
 .. index:: !mapping
 
