@@ -61,6 +61,23 @@ BOOST_AUTO_TEST_CASE(fixed_types)
 {
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
+
+	/// @todo add more comprehensive tests
+
+	// too low number of totalBits
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(0, 0, false), false);
+
+	// totalBits not divisible by 8
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(257, 0, false), false);
+
+	// too high number of totalBits
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(264, 0, false), false);
+
+	// fractionalDigits won't fit into totalBits
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(256, 77, false), true);
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(256, 78, false), false);
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(256, 76, true), true);
+	BOOST_CHECK_EQUAL(FixedPointType::isValid(256, 77, true), false);
 }
 
 BOOST_AUTO_TEST_CASE(storage_layout_simple)

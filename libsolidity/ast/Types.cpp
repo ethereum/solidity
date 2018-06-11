@@ -618,11 +618,20 @@ FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, 
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 
-	unsigned const bitsAvailable = m_totalBits - (isSigned() ? 1 : 0);
 	solAssert(
-		boost::multiprecision::pow(bigint(10), m_fractionalDigits) <= (bigint(1) << bitsAvailable),
-		"Number of fractional digits do not fit the specified bit width"
+		isValid(_totalBits, _fractionalDigits, isSigned()),
+		"Number of fractional digits do not fit the specified bit width: " +
+		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
+}
+
+bool FixedPointType::isValid(unsigned _totalBits, unsigned _fractionalDigits, bool _isSigned)
+{
+	if (_totalBits < 8 || _totalBits > 256 || _totalBits % 8 != 0 || _fractionalDigits > 80)
+		return false;
+
+	unsigned const bitsAvailable = _totalBits - (_isSigned ? 1 : 0);
+	return boost::multiprecision::pow(bigint(10), _fractionalDigits) <= (bigint(1) << bitsAvailable);
 }
 
 string FixedPointType::richIdentifier() const

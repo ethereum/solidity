@@ -369,6 +369,8 @@ public:
 
 	explicit FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, Modifier _modifier = Modifier::Unsigned);
 
+	static bool isValid(unsigned _totalBits, unsigned _fractionalDigits, bool _isSigned);
+
 	virtual std::string richIdentifier() const override;
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
