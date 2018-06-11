@@ -262,14 +262,9 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 
 bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (!_declaration.typeName())
 	{
-		if (v050)
-			m_errorReporter.syntaxError(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
-		else
-			m_errorReporter.warning(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
+		m_errorReporter.syntaxError(_declaration.location(), "Use of the \"var\" keyword is disallowed.");
 	}
 	return true;
 }
