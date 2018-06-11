@@ -1233,6 +1233,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
+
 	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
 	if (negative)
@@ -1245,6 +1246,9 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 
 	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
+
+	if (!FixedPointType::isValid(totalBits, fractionalDigits, negative))
+		return shared_ptr<FixedPointType const>();
 
 	return make_shared<FixedPointType>(
 		totalBits, fractionalDigits,
