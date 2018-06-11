@@ -2291,10 +2291,12 @@ void TypeChecker::endVisit(Literal const& _literal)
 		_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 
 		if (_literal.value().length() != 42) // "0x" + 40 hex digits
+			// looksLikeAddress enforces that it is a hex literal starting with "0x"
 			m_errorReporter.syntaxError(
 				_literal.location(),
-				"This looks like an address but is not exactly 20 bytes long. Current length is " +
-				to_string(_literal.value().length()) + " (should be 42)."
+				"This looks like an address but is not exactly 40 hex digits. It is " +
+				to_string(_literal.value().length() - 2) +
+				" hex digits."
 			);
 		else if (!_literal.passesAddressChecksum())
 			m_errorReporter.syntaxError(
