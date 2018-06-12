@@ -268,9 +268,16 @@ int SyntaxTest::registerTests(
 			[fullpath]
 			{
 				BOOST_REQUIRE_NO_THROW({
-					stringstream errorStream;
-					if (!SyntaxTest(fullpath.string()).run(errorStream))
-						BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+					try
+					{
+						stringstream errorStream;
+						if (!SyntaxTest(fullpath.string()).run(errorStream))
+							BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+					}
+					catch (boost::exception const& _e)
+					{
+						BOOST_ERROR("Exception during syntax test: " << boost::diagnostic_information(_e));
+					}
 				});
 			},
 			_path.stem().string(),
