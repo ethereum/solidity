@@ -148,7 +148,7 @@ rm -rf "$TMPDIR"
 
 printTask "Testing assemble, yul, strict-assembly..."
 echo '{}' | "$SOLC" - --assemble &>/dev/null
-echo '{}' | "$SOLC" - --julia &>/dev/null
+echo '{}' | "$SOLC" - --yul &>/dev/null
 echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
 
 printTask "Testing standard input..."
