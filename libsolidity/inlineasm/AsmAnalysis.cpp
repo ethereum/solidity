@@ -99,7 +99,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	}
 	else if (_literal.kind == assembly::LiteralKind::Boolean)
 	{
-		solAssert(m_flavour == AsmFlavour::IULIA, "");
+		solAssert(m_flavour == AsmFlavour::Yul, "");
 		solAssert(_literal.value == "true" || _literal.value == "false", "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
@@ -162,7 +162,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(m_flavour != AsmFlavour::IULIA, "");
+	solAssert(m_flavour != AsmFlavour::Yul, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -550,7 +550,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (m_flavour != AsmFlavour::IULIA)
+	if (m_flavour != AsmFlavour::Yul)
 		return;
 
 	if (!builtinTypes.count(type))
