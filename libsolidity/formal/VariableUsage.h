@@ -27,7 +27,7 @@ namespace solidity
 {
 
 class ASTNode;
-class Declaration;
+class VariableDeclaration;
 
 /**
  * This class collects information about which local variables of value type
@@ -38,11 +38,11 @@ class VariableUsage
 public:
 	explicit VariableUsage(ASTNode const& _node);
 
-	std::vector<Declaration const*> touchedVariables(ASTNode const& _node) const;
+	std::vector<VariableDeclaration const*> touchedVariables(ASTNode const& _node) const;
 
 private:
 	// Variable touched by a specific AST node.
-	std::map<ASTNode const*, Declaration const*> m_touchedVariable;
+	std::map<ASTNode const*, VariableDeclaration const*> m_touchedVariable;
 	std::map<ASTNode const*, std::vector<ASTNode const*>> m_children;
 };
 
