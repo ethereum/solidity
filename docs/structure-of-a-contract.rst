@@ -16,9 +16,8 @@ Furthermore, contracts can inherit from other contracts.
 State Variables
 ===============
 
-State variables are values which can be changed, depending on the conditions or on the information passed to program.
-Please, don't get confuse values with variables. Variables got names and scopes while values doesn't have. Variable
-names are just the symbolic representation of a memory location.
+State variables are the values which can be changed, depending on the conditions or on the information passed to the 
+smart contract.
 
 ::
 
