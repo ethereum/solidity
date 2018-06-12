@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Common functions the iulia tests.
+ * Common functions the Yul tests.
  */
 
 #include <test/libjulia/Common.h>
@@ -52,9 +52,9 @@ void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _sca
 }
 
 
-pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test::parse(string const& _source, bool _julia)
+pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test::parse(string const& _source, bool _yul)
 {
-	auto flavour = _julia ? assembly::AsmFlavour::IULIA : assembly::AsmFlavour::Strict;
+	auto flavour = _yul ? assembly::AsmFlavour::Yul : assembly::AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
@@ -83,13 +83,13 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	return {};
 }
 
-assembly::Block dev::julia::test::disambiguate(string const& _source, bool _julia)
+assembly::Block dev::julia::test::disambiguate(string const& _source, bool _yul)
 {
-	auto result = parse(_source, _julia);
+	auto result = parse(_source, _yul);
 	return boost::get<Block>(Disambiguator(*result.second)(*result.first));
 }
 
-string dev::julia::test::format(string const& _source, bool _julia)
+string dev::julia::test::format(string const& _source, bool _yul)
 {
-	return assembly::AsmPrinter(_julia)(*parse(_source, _julia).first);
+	return assembly::AsmPrinter(_yul)(*parse(_source, _yul).first);
 }

@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for the iulia name disambiguator.
+ * Unit tests for the Yul name disambiguator.
  */
 
 #include <test/libjulia/Common.h>
