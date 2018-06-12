@@ -67,7 +67,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
     }
     // determine our operation hash.
     _r = keccak256(msg.data, block.number);
-    if (!confirm(_r) && txs[_r].to == 0) {
+    if (!confirm(_r) && txs[_r].to == address(0)) {
       txs[_r].to = _to;
       txs[_r].value = _value;
       txs[_r].data = _data;
@@ -81,7 +81,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
    * @param _h The transaction hash to approve.
    */
   function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
-    if (txs[_h].to != 0) {
+    if (txs[_h].to != address(0)) {
       if (!txs[_h].to.call.value(txs[_h].value)(txs[_h].data)) {
         throw;
       }

@@ -48,7 +48,7 @@ contract Bounty is PullPayment, Destructible {
    */
   function claim(Target target) {
     address researcher = researchers[target];
-    if (researcher == 0) {
+    if (researcher == address(0)) {
       throw;
     }
     // Check Target contract invariants

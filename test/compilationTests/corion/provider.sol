@@ -161,7 +161,7 @@ contract provider is module, safeMath, announcementTypes {
         if ( schellingRound == 0 ) {
             schellingRound = currentSchellingRound;
         }
-        if ( clients[addr].providerAddress != 0 ) {
+        if ( clients[addr].providerAddress != address(0x00) ) {
             ProviderAddress = clients[addr].providerAddress;
             ProviderHeight  = clients[addr].providerHeight;
             ConnectedOn     = clients[addr].providerConnected;
@@ -233,7 +233,7 @@ contract provider is module, safeMath, announcementTypes {
             @admin          The admin’s address
         */
         require( ! providers[msg.sender].data[providers[msg.sender].currentHeight].valid );
-        require( clients[msg.sender].providerAddress == 0x00 );
+        require( clients[msg.sender].providerAddress == address(0x00) );
         require( ! checkICO() );
         if ( priv ) {
             require( getTokenBalance(msg.sender) >= minFundsForPrivate );
@@ -245,7 +245,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[msg.sender].currentHeight++;
         uint256 currHeight = providers[msg.sender].currentHeight;
         providers[msg.sender].data[currHeight].valid           = true;
-        if ( admin == 0x00 ) { 
+        if ( admin == address(0x00) ) {
             providers[msg.sender].data[currHeight].admin      = msg.sender;
         } else {
             providers[msg.sender].data[currHeight].admin      = admin;
@@ -288,7 +288,7 @@ contract provider is module, safeMath, announcementTypes {
         require( providers[addr].data[currHeight].valid );
         require( checkCorrectRate(providers[addr].data[currHeight].priv, rate) );
         require( providers[addr].data[currHeight].admin == msg.sender || msg.sender == addr );
-        if ( admin != 0x00 ) {
+        if ( admin != address(0x00) ) {
             require( msg.sender == addr );
             providers[addr].data[currHeight].admin = admin;
         }
@@ -419,7 +419,7 @@ contract provider is module, safeMath, announcementTypes {
         */
         uint256 currHeight = providers[provider].currentHeight;
         require( ! providers[msg.sender].data[currHeight].valid );
-        require( clients[msg.sender].providerAddress == 0x00 );
+        require( clients[msg.sender].providerAddress == address(0x00) );
         require( providers[provider].data[currHeight].valid );
         if ( providers[provider].data[currHeight].priv ) {
             require( providers[provider].data[currHeight].allowedUsers[msg.sender] &&
@@ -446,7 +446,7 @@ contract provider is module, safeMath, announcementTypes {
             It is only possible to disconnect those providers who were connected by us before.
         */
         address provider = clients[msg.sender].providerAddress;
-        require( provider != 0x0 );
+        require( provider != address(0x00) );
         uint256 currHeight = clients[msg.sender].providerHeight;
         bool providerHasClosed = false;
         if ( providers[provider].data[currHeight].close > 0 ) {
@@ -479,7 +479,7 @@ contract provider is module, safeMath, announcementTypes {
         if ( providers[addr].data[providers[addr].currentHeight].valid ) {
             uint256 a;
             (reward, a) = getProviderReward(addr, 0);
-        } else if ( clients[addr].providerAddress != 0x0 ) {
+        } else if ( clients[addr].providerAddress != address(0x00) ) {
             reward = getClientReward(0);
         }
     }
@@ -504,14 +504,14 @@ contract provider is module, safeMath, announcementTypes {
         address _beneficiary = beneficiary;
         address _provider = provider;
         if ( _limit == 0 ) { _limit = gasProtectMaxRounds; }
-        if ( _beneficiary == 0x00 ) { _beneficiary = msg.sender; }
-        if ( _provider == 0x00 ) { _provider = msg.sender; }
+        if ( _beneficiary == address(0x00) ) { _beneficiary = msg.sender; }
+        if ( _provider == address(0x00) ) { _provider = msg.sender; }
         uint256 clientReward;
         uint256 providerReward;
         if ( providers[_provider].data[providers[_provider].currentHeight].valid ) {
             require( providers[_provider].data[providers[_provider].currentHeight].admin == msg.sender || msg.sender == _provider );
             (providerReward, clientReward) = getProviderReward(_provider, _limit);
-        } else if ( clients[msg.sender].providerAddress != 0x00 ) {
+        } else if ( clients[msg.sender].providerAddress != address(0x00) ) {
             clientReward = getClientReward(_limit);
         } else {
             throw;
@@ -745,7 +745,7 @@ contract provider is module, safeMath, announcementTypes {
             @value      Rate of the change.
             @neg        ype of the change. If it is TRUE then the balance has been decreased if it is FALSE then it has been increased.
         */
-        if ( clients[addr].providerAddress != 0 ) {
+        if ( clients[addr].providerAddress != address(0x00) ) {
             checkFloatingSupply(clients[addr].providerAddress, providers[clients[addr].providerAddress].currentHeight, ! neg, value);
             if (clients[addr].lastSupplyID != currentSchellingRound) {
                 clients[addr].supply[currentSchellingRound] = TEMath(clients[addr].supply[clients[addr].lastSupplyID], value, neg);

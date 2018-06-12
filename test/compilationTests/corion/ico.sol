@@ -162,7 +162,7 @@ contract ico is safeMath {
         interest_s memory _idb;
         address _addr = beneficiary;
         uint256 _to = (block.number - startBlock) / interestBlockDelay;
-        if ( _addr == 0x00 ) { _addr = msg.sender; }
+        if ( _addr == address(0x00) ) { _addr = msg.sender; }
         
         require( block.number > icoDelay );
         require( ! aborted );
@@ -257,7 +257,7 @@ contract ico is safeMath {
             @premiumContractAddr    Address of the corion premium token contract
         */
         require( msg.sender == owner );
-        require( tokenAddr == 0x00 && premiumAddr == 0x00 );
+        require( tokenAddr == address(0x00) && premiumAddr == address(0x00) );
         tokenAddr = tokenContractAddr;
         premiumAddr = premiumContractAddr;
     }
@@ -281,7 +281,7 @@ contract ico is safeMath {
             If they call the contract without any function then this process will be taken place.
         */
         require( isICO() );
-        require( buy(msg.sender, 0x00) );
+        require( buy(msg.sender, address(0x00)) );
     }
     
     function buy(address beneficiaryAddress, address affilateAddress) payable returns (bool success) {
@@ -300,9 +300,9 @@ contract ico is safeMath {
             @affilateAddress        The address of the person who offered who will get the referral reward. It can not be equal with the beneficiaryAddress.
         */
         require( isICO() );
-        if ( beneficiaryAddress == 0x00) { beneficiaryAddress = msg.sender; }
+        if ( beneficiaryAddress == address(0x00)) { beneficiaryAddress = msg.sender; }
         if ( beneficiaryAddress == affilateAddress ) {
-            affilateAddress = 0x00;
+            affilateAddress = address(0x00);
         }
         uint256 _value = msg.value;
         if ( beneficiaryAddress.balance < 0.2 ether ) {
@@ -317,7 +317,7 @@ contract ico is safeMath {
         totalMint = safeAdd(totalMint, _reward);
         require( foundationAddress.send(_value * 10 / 100) );
         uint256 extra;
-        if ( affilateAddress != 0x00 && ( brought[affilateAddress].eth > 0 || interestDB[affilateAddress][0].amount > 0 ) ) {
+        if ( affilateAddress != address(0x00) && ( brought[affilateAddress].eth > 0 || interestDB[affilateAddress][0].amount > 0 ) ) {
             affiliate[affilateAddress].weight = safeAdd(affiliate[affilateAddress].weight, _reward);
             extra = affiliate[affilateAddress].weight;
             uint256 rate;

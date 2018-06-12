@@ -81,9 +81,9 @@ contract Campaign {
         public
     {
         // Validate input
-        require(   address(_eventContract) != 0
-                && address(_marketFactory) != 0
-                && address(_marketMaker) != 0
+        require(   address(_eventContract) != address(0)
+                && address(_marketFactory) != address(0)
+                && address(_marketMaker) != address(0)
                 && _fee < FEE_RANGE
                 && _funding > 0
                 && now < _deadline);
