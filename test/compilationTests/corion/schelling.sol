@@ -335,7 +335,7 @@ contract schelling is module, announcementTypes, schellingVars {
         
         require( voter.status == voterStatus.afterPrepareVote );
         require( voter.roundID < currentRound );
-        if ( sha3(vote) == voter.hash ) {
+        if ( keccak256(vote) == voter.hash ) {
             delete voter.hash;
             if (round.blockHeight+roundBlockDelay/2 >= block.number) {
                 if ( bytes(vote)[0] == aboveChar ) {

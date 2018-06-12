@@ -21,12 +21,12 @@ contract multiOwner is safeMath {
         Externals
     */
     function insertOwner(address addr) external {
-        if ( insertAndCheckDo(calcDoHash("insertOwner", sha3(addr))) ) {
+        if ( insertAndCheckDo(calcDoHash("insertOwner", keccak256(addr))) ) {
             _addOwner(addr);
         }
     }
     function dropOwner(address addr) external {
-        if ( insertAndCheckDo(calcDoHash("dropOwner", sha3(addr))) ) {
+        if ( insertAndCheckDo(calcDoHash("dropOwner", keccak256(addr))) ) {
             _delOwner(addr);
         }
     }
@@ -42,7 +42,7 @@ contract multiOwner is safeMath {
         return ownerCount * 75 / 100;
     }
     function calcDoHash(string job, bytes32 data) public constant returns (bytes32 hash) {
-        return sha3(job, data);
+        return keccak256(job, data);
     }
     function validDoHash(bytes32 doHash) public constant returns (bool valid) {
         return doDB[doHash].length > 0;
