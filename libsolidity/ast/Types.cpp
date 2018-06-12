@@ -1244,8 +1244,13 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	if (v > u256(-1))
 		return shared_ptr<FixedPointType const>();
 
-	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
-	solAssert(totalBits <= 256, "");
+	// In case the integral part is non-zero, `bytesRequired(v)` will present the correct figure.
+	// However if it is zero and the fractional part has leading zeroes, it will be incorrect.
+	// In this case `bytesForFractional` should present an accurate requirement.
+	unsigned bytesForFractional = bytesRequired(bigint(boost::multiprecision::pow(bigint(10), fractionalDigits)));
+	unsigned totalBits = max(bytesRequired(v), max(bytesForFractional, 1u)) * 8;
+	if (totalBits > 256)
+		return shared_ptr<FixedPointType const>();
 
 	if (!FixedPointType::isValid(totalBits, fractionalDigits, negative))
 		return shared_ptr<FixedPointType const>();
