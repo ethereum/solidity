@@ -409,8 +409,11 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``let``, ``match``, ``null``,
-``of``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``.
+``abstract``, ``after``, ``alias``, ``apply``, ``auto``, ``case``, ``catch``, ``copyof``, ``default``,
+``define``, ``final``, ``immutable``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
+``mutable``, ``null``, ``of``, ``override``, ``partial``, ``promise``, ``reference``, ``relocatable``,
+``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``try``, ``type``, ``typedef``, ``typeof``,
+``unchecked``.
 
 Language Grammar
 ================
