@@ -40,7 +40,7 @@ using namespace dev::solidity::assembly;
 
 string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 {
-	solAssert(!m_julia, "");
+	solAssert(!m_yul, "");
 	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
 }
 
@@ -92,7 +92,7 @@ string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
 {
-	solAssert(!m_julia, "");
+	solAssert(!m_yul, "");
 	return
 		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
 		"(" +
@@ -109,13 +109,13 @@ string AsmPrinter::operator()(ExpressionStatement const& _statement)
 
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
-	solAssert(!m_julia, "");
+	solAssert(!m_yul, "");
 	return _label.name + ":";
 }
 
 string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
 {
-	solAssert(!m_julia, "");
+	solAssert(!m_yul, "");
 	return "=: " + (*this)(_assignment.variableName);
 }
 
@@ -225,7 +225,7 @@ string AsmPrinter::operator()(Block const& _block)
 
 string AsmPrinter::appendTypeName(std::string const& _type) const
 {
-	if (m_julia)
+	if (m_yul)
 		return ":" + _type;
 	return "";
 }
