@@ -76,11 +76,11 @@ private:
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
-	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
-	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
-	using VariableSequenceCounters = std::map<Declaration const*, SSAVariable>;
+	using VariableSequenceCounters = std::map<VariableDeclaration const*, SSAVariable>;
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
@@ -114,11 +114,11 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void resetStateVariables();
-	void resetVariables(std::vector<Declaration const*> _variables);
+	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
+	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
@@ -127,21 +127,21 @@ private:
 
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
 	/// has a valid sequence number
-	bool knownVariable(Declaration const& _decl);
+	bool knownVariable(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
-	smt::Expression currentValue(Declaration const& _decl);
+	smt::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given sequence point. Does not ensure that this sequence point exists.
-	smt::Expression valueAtSequence(Declaration const& _decl, int _sequence);
+	smt::Expression valueAtSequence(VariableDeclaration const& _decl, int _sequence);
 	/// Allocates a new sequence number for the declaration, updates the current
 	/// sequence number to this value and returns the expression.
-	smt::Expression newValue(Declaration const& _decl);
+	smt::Expression newValue(VariableDeclaration const& _decl);
 
 	/// Sets the value of the declaration to zero.
-	void setZeroValue(Declaration const& _decl);
+	void setZeroValue(VariableDeclaration const& _decl);
 	/// Resets the variable to an unknown value (in its range).
-	void setUnknownValue(Declaration const& decl);
+	void setUnknownValue(VariableDeclaration const& decl);
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
@@ -168,7 +168,7 @@ private:
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	std::map<Expression const*, smt::Expression> m_expressions;
-	std::map<Declaration const*, SSAVariable> m_variables;
+	std::map<VariableDeclaration const*, SSAVariable> m_variables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
