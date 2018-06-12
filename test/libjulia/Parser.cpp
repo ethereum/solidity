@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for parsing Julia.
+ * Unit tests for parsing Yul.
  */
 
 #include <test/Options.h>
@@ -52,7 +52,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner, false);
+		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Yul).parse(scanner, false);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
@@ -61,7 +61,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				assembly::AsmFlavour::IULIA
+				assembly::AsmFlavour::Yul
 			)).analyze(*parserResult);
 		}
 	}
