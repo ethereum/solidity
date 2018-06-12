@@ -10508,6 +10508,39 @@ BOOST_AUTO_TEST_CASE(shift_right_garbled)
 	ABI_CHECK(callContractFunction("f(uint8,uint8)", u256(0x0), u256(0x1004)), encodeArgs(u256(0xf)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_right_garbled_signed)
+{
+	char const* sourceCode = R"(
+			contract C {
+				function f(int8 a, uint8 b) returns (int) {
+					assembly {
+						a := 0xfffffff0
+					}
+					// Higher bits should be signextended before the shift
+					return a >> b;
+				}
+				function g(int8 a, uint8 b) returns (int) {
+					assembly {
+						a := 0xf0
+					}
+					// Higher bits should be signextended before the shift
+					return a >> b;
+				}
+			}
+		)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(3)), encodeArgs(u256(-2)));
+	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(4)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(0xFF)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(0x1003)), encodeArgs(u256(-2)));
+	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(0x1004)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("g(int8,uint8)", u256(0x0), u256(3)), encodeArgs(u256(-2)));
+	ABI_CHECK(callContractFunction("g(int8,uint8)", u256(0x0), u256(4)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("g(int8,uint8)", u256(0x0), u256(0xFF)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("g(int8,uint8)", u256(0x0), u256(0x1003)), encodeArgs(u256(-2)));
+	ABI_CHECK(callContractFunction("g(int8,uint8)", u256(0x0), u256(0x1004)), encodeArgs(u256(-1)));
+}
+
 BOOST_AUTO_TEST_CASE(shift_right_uint32)
 {
 	char const* sourceCode = R"(

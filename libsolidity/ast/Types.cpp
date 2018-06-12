@@ -1088,8 +1088,13 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				else
 				{
 					if (m_value.numerator() < 0)
-						// add 1 to the negative value before dividing to get a result that is strictly too large
-						// subtract 1 afterwards to round towards negative infinity
+						// Add 1 to the negative value before dividing to get a result that is strictly too large,
+						// then subtract 1 afterwards to round towards negative infinity.
+						// This is the same algorithm as used in ExpressionCompiler::appendShiftOperatorCode(...).
+						// To see this note that for negative x, xor(x,all_ones) = (-x-1) and
+						// therefore xor(div(xor(x,all_ones), exp(2, shift_amount)), all_ones) is
+						// -(-x - 1) / 2^shift_amount - 1, which is the same as
+						// (x + 1) / 2^shift_amount - 1.
 						value = rational((m_value.numerator() + 1) / boost::multiprecision::pow(bigint(2), exponent) - bigint(1), 1);
 					else
 						value = rational(m_value.numerator() / boost::multiprecision::pow(bigint(2), exponent), 1);
