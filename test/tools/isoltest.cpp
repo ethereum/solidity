@@ -150,39 +150,22 @@ SyntaxTestTool::Result SyntaxTestTool::process()
 		m_test = unique_ptr<SyntaxTest>(new SyntaxTest(m_path.string()));
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
-	catch(CompilerError const& _e)
+	catch(boost::exception const& _e)
 	{
 		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
-			"Exception: " << SyntaxTest::errorMessage(_e) << endl;
-		return Result::Exception;
-	}
-	catch(InternalCompilerError const& _e)
-	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
-			"InternalCompilerError: " << SyntaxTest::errorMessage(_e) << endl;
-		return Result::Exception;
-	}
-	catch(FatalError const& _e)
-	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
-			"FatalError: " << SyntaxTest::errorMessage(_e) << endl;
-		return Result::Exception;
-	}
-	catch(UnimplementedFeatureError const& _e)
-	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
-			"UnimplementedFeatureError: " << SyntaxTest::errorMessage(_e) << endl;
+			"Exception during syntax test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) << "Exception: " << _e.what() << endl;
+		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+			"Exception during syntax test: " << _e.what() << endl;
 		return Result::Exception;
 	}
 	catch(...)
 	{
 		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
-			"Unknown Exception" << endl;
+			"Unknown exception during syntax test." << endl;
 		return Result::Exception;
 	}
 
