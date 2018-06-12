@@ -40,14 +40,24 @@ function test_truffle
 {
     name="$1"
     repo="$2"
+    branch="$3"
     echo "Running $name tests..."
     DIR=$(mktemp -d)
     (
-      git clone --depth 1 "$repo" "$DIR"
+      if [ -n "$branch" ]
+      then
+        echo "Cloning $branch of $repo..."
+        git clone --depth 1 "$repo" -b "$branch" "$DIR"
+      else
+        echo "Cloning $repo..."
+        git clone --depth 1 "$repo" "$DIR"
+      fi
       cd "$DIR"
+      echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
       if [ "$name" == "Gnosis" ]; then
+        echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
         find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
       fi
@@ -57,5 +67,5 @@ function test_truffle
 }
 
 # Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
-test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git -b solidity-050
-test_truffle Gnosis https://github.com/axic/pm-contracts.git -b solidity-050
+test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity-050
+test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
