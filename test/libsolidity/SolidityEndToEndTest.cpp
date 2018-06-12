@@ -3457,7 +3457,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK_EQUAL(toHex(m_logs[0].data), toHex(encodeArgs(10, 0x60, 15, 4) + FixedHash<4>(dev::keccak256("deposit()")).asBytes()));
+	BOOST_CHECK_EQUAL(toHex(m_logs[0].data), toHex(encodeArgs(10, 0x60, 15, 4, asString(FixedHash<4>(dev::keccak256("deposit()")).asBytes()))));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -3964,7 +3964,8 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 	compileAndRun(sourceCode, 0, "sender");
 
 	// No additional data, just function selector
-	ABI_CHECK(callContractFunction("viaCalldata()"), encodeArgs(4));
+	ABI_CHECK(callContractFunction("viaCalldata()"), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(4));
 	ABI_CHECK(callContractFunction("viaMemory()"), encodeArgs(0x20));
 	// Should be this with 0.5.0: encodeArgs(4));
 	ABI_CHECK(callContractFunction("viaStorage()"), encodeArgs(0x20));
@@ -3972,7 +3973,8 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 
 	// Some additional unpadded data
 	bytes unpadded = asBytes(string("abc"));
-	ABI_CHECK(callContractFunctionNoEncoding("viaCalldata()", unpadded), encodeArgs(7));
+	ABI_CHECK(callContractFunctionNoEncoding("viaCalldata()", unpadded), encodeArgs(0x20));
+	// Should be this with 0.5.0: encodeArgs(7));
 	ABI_CHECK(callContractFunctionNoEncoding("viaMemory()", unpadded), encodeArgs(0x20));
 	// Should be this with 0.5.0: encodeArgs(7));
 	ABI_CHECK(callContractFunctionNoEncoding("viaStorage()", unpadded), encodeArgs(0x20));

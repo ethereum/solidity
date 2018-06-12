@@ -374,15 +374,12 @@ BOOST_AUTO_TEST_CASE(calldata)
 	)";
 	string s("abcdef");
 	string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
-	bool newEncoder = false;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(bytes)", 0x20, s.size(), s);
-		// The old encoder did not pad to multiples of 32 bytes
-		REQUIRE_LOG_DATA(encodeArgs(0x20, s.size()) + (newEncoder ? encodeArgs(s) : asBytes(s)));
+		REQUIRE_LOG_DATA(encodeArgs(0x20, s.size(), s));
 		callContractFunction("f(bytes)", 0x20, t.size(), t);
-		REQUIRE_LOG_DATA(encodeArgs(0x20, t.size()) + (newEncoder ? encodeArgs(t) : asBytes(t)));
-		newEncoder = true;
+		REQUIRE_LOG_DATA(encodeArgs(0x20, t.size(), t));
 	)
 }
 
