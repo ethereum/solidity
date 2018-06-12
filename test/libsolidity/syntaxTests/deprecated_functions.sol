@@ -8,5 +8,5 @@ contract test {
 	}
 }
 // ----
-// Warning: (58-64): "sha3" has been deprecated in favour of "keccak256"
-// Warning: (99-109): "suicide" has been deprecated in favour of "selfdestruct"
+// TypeError: (58-64): "sha3" has been deprecated in favour of "keccak256"
+// TypeError: (99-109): "suicide" has been deprecated in favour of "selfdestruct"

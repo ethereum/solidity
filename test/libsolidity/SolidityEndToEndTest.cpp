@@ -1971,25 +1971,6 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(suicide)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function test() payable {}
-			function a(address receiver) returns (uint ret) {
-				suicide(receiver);
-				return 10;
-			}
-		}
-	)";
-	u256 amount(130);
-	compileAndRun(sourceCode, amount);
-	u160 address(23);
-	ABI_CHECK(callContractFunction("a(address)", address), bytes());
-	BOOST_CHECK(!addressHasCode(m_contractAddress));
-	BOOST_CHECK_EQUAL(balanceAt(address), amount);
-}
-
 BOOST_AUTO_TEST_CASE(selfdestruct)
 {
 	char const* sourceCode = R"(
@@ -2026,23 +2007,6 @@ BOOST_AUTO_TEST_CASE(keccak256)
 	testContractAgainstCpp("a(bytes32)", f, u256(4));
 	testContractAgainstCpp("a(bytes32)", f, u256(5));
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
-}
-
-BOOST_AUTO_TEST_CASE(sha3)
-{
-	char const* sourceCode = R"(
-		contract test {
-			// to confuse the optimiser
-			function b(bytes32 input) returns (bytes32) {
-				return sha3(input);
-			}
-			function a(bytes32 input) returns (bool) {
-				return keccak256(input) == b(input);
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_REQUIRE(callContractFunction("a(bytes32)", u256(42)) == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(sha256)
@@ -3757,27 +3721,6 @@ BOOST_AUTO_TEST_CASE(iterated_keccak256_with_bytes)
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("foo()"), encodeArgs(
 		u256(dev::keccak256(bytes{'b'} + dev::keccak256("xyz").asBytes() + bytes{'a'}))
-	));
-}
-
-BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
-{
-	char const* sourceCode = R"(
-		contract c {
-			function foo(uint a, uint b, uint c) returns (bytes32 d)
-			{
-				d = sha3(a, b, c);
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-
-	ABI_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13), encodeArgs(
-		dev::keccak256(
-			toBigEndian(u256(10)) +
-			toBigEndian(u256(12)) +
-			toBigEndian(u256(13))
-		)
 	));
 }
 
@@ -11642,13 +11585,13 @@ BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 				return value;
 			}
 			function get_delegated() external returns (bool) {
-				return this.delegatecall(bytes4(sha3("get()")));
+				return this.delegatecall(bytes4(keccak256("get()")));
 			}
 			function assert0() external view {
 				assert(value == 0);
 			}
 			function assert0_delegated() external returns (bool) {
-				return this.delegatecall(bytes4(sha3("assert0()")));
+				return this.delegatecall(bytes4(keccak256("assert0()")));
 			}
 		}
 	)DELIMITER";

@@ -4,12 +4,13 @@ Breaking Changes:
  * Code Generator: Signed right shift uses proper arithmetic shift, i.e. rounding towards negative infinity. Warning: this may silently change the semantics of existing code!
  * Commandline interface: Require ``-`` if standard input is used as source.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
+ * General: Disallow ``sha3`` and ``suicide`` aliases.
  * General: Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * General: New keywords: ``calldata``
  * General: New reserved keywords: ``alias``, ``apply``, ``auto``, ``copyof``, ``define``, ``immutable``,
    ``implements``, ``macro``, ``mutable``, ``override``, ``partial``, ``promise``, ``reference``, ``sealed``,
    ``sizeof``, ``supports``, ``typedef`` and ``unchecked``.
- * General: Remove assembly instructions ``sha3`` and ``suicide``
+ * General: Remove assembly instruction aliases ``sha3`` and ``suicide``
  * Parser: Disallow trailing dots that are not followed by a number.
  * Type Checker: Disallow arithmetic operations for boolean variables.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
