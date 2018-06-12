@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Full assembly stack that can support EVM-assembly and JULIA as input and EVM, EVM1.5 and
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * eWasm as output.
  */
 
@@ -48,11 +48,11 @@ assembly::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
 		return assembly::AsmFlavour::Loose;
 	case AssemblyStack::Language::StrictAssembly:
 		return assembly::AsmFlavour::Strict;
-	case AssemblyStack::Language::JULIA:
-		return assembly::AsmFlavour::IULIA;
+	case AssemblyStack::Language::Yul:
+		return assembly::AsmFlavour::Yul;
 	}
 	solAssert(false, "");
-	return assembly::AsmFlavour::IULIA;
+	return assembly::AsmFlavour::Yul;
 }
 
 }
@@ -117,7 +117,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		julia::EVMAssembly assembly(true);
-		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::JULIA, true)(*m_parserResult);
+		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TOOD: fill out text representation
 		return object;
@@ -132,5 +132,5 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 string AssemblyStack::print() const
 {
 	solAssert(m_parserResult, "");
-	return assembly::AsmPrinter(m_language == Language::JULIA)(*m_parserResult);
+	return assembly::AsmPrinter(m_language == Language::Yul)(*m_parserResult);
 }
