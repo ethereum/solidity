@@ -196,7 +196,7 @@ contract MilestoneTracker {
     }
 
     /// @notice `onlyDonor` Approves the proposed milestone list
-    /// @param _hashProposals The sha3() of the proposed milestone list's
+    /// @param _hashProposals The keccak256() of the proposed milestone list's
     ///  bytecode; this confirms that the `donor` knows the set of milestones
     ///  they are approving
     function acceptProposedMilestones(bytes32 _hashProposals
@@ -205,7 +205,7 @@ contract MilestoneTracker {
         uint i;
 
         if (!changingMilestones) throw;
-        if (sha3(proposedMilestones) != _hashProposals) throw;
+        if (keccak256(proposedMilestones) != _hashProposals) throw;
 
         // Cancel all the unfinished milestones
         for (i=0; i<milestones.length; i++) {

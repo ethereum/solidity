@@ -54,11 +54,11 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( owners[msg.sender] );
         require( modules.length == 0 );
         foundationAddress = foundation;
-        addModule( modules_s(Token,      sha3('Token'),      false, false),  ! forReplace);
-        addModule( modules_s(Premium,    sha3('Premium'),    false, false),  ! forReplace);
-        addModule( modules_s(Publisher,  sha3('Publisher'),  false, true),   ! forReplace);
-        addModule( modules_s(Schelling,  sha3('Schelling'),  false, true),   ! forReplace);
-        addModule( modules_s(Provider,   sha3('Provider'),   true, true),    ! forReplace);
+        addModule( modules_s(Token,      keccak256('Token'),      false, false),  ! forReplace);
+        addModule( modules_s(Premium,    keccak256('Premium'),    false, false),  ! forReplace);
+        addModule( modules_s(Publisher,  keccak256('Publisher'),  false, true),   ! forReplace);
+        addModule( modules_s(Schelling,  keccak256('Schelling'),  false, true),   ! forReplace);
+        addModule( modules_s(Provider,   keccak256('Provider'),   true, true),    ! forReplace);
     }
     function addModule(modules_s input, bool call) internal {
         /*
@@ -117,7 +117,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @id         Index of module.
             @found      Was there any result or not.
         */
-        bytes32 _name = sha3(name);
+        bytes32 _name = keccak256(name);
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].name == _name ) {
                 return (true, true, a);
@@ -151,9 +151,9 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
         require( _success );
-        if ( ! ( _found && modules[_id].name == sha3('Publisher') )) {
+        if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModule", sha3(name, addr, callCallback))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(name, addr, callCallback))) ) {
                 return true;
             }
         }
@@ -169,7 +169,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     
     function callReplaceCallback(string moduleName, address newModule) external returns (bool success) {
         require( block.number < debugModeUntil );
-        if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", sha3(moduleName, newModule))) ) {
+        if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", keccak256(moduleName, newModule))) ) {
             return true;
         }
         var (_success, _found, _id) = getModuleIDByName(moduleName);
@@ -190,13 +190,13 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
         require( _success );
-        if ( ! ( _found && modules[_id].name == sha3('Publisher') )) {
+        if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("newModule", sha3(name, addr, schellingEvent, transferEvent))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("newModule", keccak256(name, addr, schellingEvent, transferEvent))) ) {
                 return true;
             }
         }
-        addModule( modules_s(addr, sha3(name), schellingEvent, transferEvent), true);
+        addModule( modules_s(addr, keccak256(name), schellingEvent, transferEvent), true);
         return true;
     }
     function dropModule(string name, bool callCallback) external returns (bool success) {
@@ -209,9 +209,9 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
         require( _success );
-        if ( ! ( _found && modules[_id].name == sha3('Publisher') )) {
+        if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModule", sha3(name, callCallback))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(name, callCallback))) ) {
                 return true;
             }
         }
@@ -226,7 +226,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     
     function callDisableCallback(string moduleName) external returns (bool success) {
         require( block.number < debugModeUntil );
-        if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", sha3(moduleName))) ) {
+        if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", keccak256(moduleName))) ) {
             return true;
         }
         var (_success, _found, _id) = getModuleIDByName(moduleName);
@@ -248,7 +248,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @bool       Was the function successfull?
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
-        require( _success && _found && modules[_id].name == sha3('Token') );
+        require( _success && _found && modules[_id].name == keccak256('Token') );
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].transferEvent && abstractModule(modules[a].addr).isActive() ) {
                 require( abstractModule(modules[a].addr).transferEvent(from, to, value) );
@@ -267,7 +267,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @bool           Was the function successfull?
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
-        require( _success && _found && modules[_id].name == sha3('Schelling') );
+        require( _success && _found && modules[_id].name == keccak256('Schelling') );
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].schellingEvent && abstractModule(modules[a].addr).isActive() ) {
                 require( abstractModule(modules[a].addr).newSchellingRoundEvent(roundID, reward) );
@@ -287,9 +287,9 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
         require( _success );
-        if ( ! ( _found && modules[_id].name == sha3('Publisher') )) {
+        if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModuleHandler", sha3(newHandler))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModuleHandler", keccak256(newHandler))) ) {
                 return true;
             }
         }
@@ -353,7 +353,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @success    Was the function successfull?
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
-        require( _success && _found && modules[_id].name == sha3('Provider') );
+        require( _success && _found && modules[_id].name == keccak256('Provider') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
         require( token(modules[_id].addr).mint(to, value) );
@@ -385,7 +385,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @success    Was the function successfull?
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
-        require( _success && _found && modules[_id].name == sha3('Provider') );
+        require( _success && _found && modules[_id].name == keccak256('Provider') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
         require( token(modules[_id].addr).processTransactionFee(from, value) );
@@ -400,7 +400,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @success    Was the function successfull?
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
-        require( _success && _found && modules[_id].name == sha3('Schelling') );
+        require( _success && _found && modules[_id].name == keccak256('Schelling') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
         require( token(modules[_id].addr).burn(from, value) );
@@ -417,9 +417,9 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
         require( _success );
-        if ( ! ( _found && modules[_id].name == sha3('Publisher') )) {
+        if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("configureModule", sha3(moduleName, aType, value))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("configureModule", keccak256(moduleName, aType, value))) ) {
                 return true;
             }
         }
@@ -437,7 +437,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         require( owners[msg.sender] );
         if ( forever ) {
-            if ( ! insertAndCheckDo(calcDoHash("freezing", sha3(forever))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("freezing", keccak256(forever))) ) {
                 return;
             }            
         }
