@@ -321,7 +321,7 @@ Global Variables
 - ``abi.encodePacked(...) returns (bytes)``: Performes :ref:`packed encoding <abi_packed_mode>` of the given arguments
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
    starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
 - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
@@ -342,10 +342,10 @@ Global Variables
 - ``revert()``: abort execution and revert state changes
 - ``revert(string message)``: abort execution and revert state changes providing an explanatory string
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
-- ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-- ``sha3(...) returns (bytes32)``: an alias to ``keccak256``
-- ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-- ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
+- ``keccak256(bytes memory) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the input
+- ``sha3(bytes memory) returns (bytes32)``: an alias to ``keccak256``
+- ``sha256(bytes memory) returns (bytes32)``: compute the SHA-256 hash of the input
+- ``ripemd160(bytes memory) returns (bytes20)``: compute the RIPEMD-160 hash of the input
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.

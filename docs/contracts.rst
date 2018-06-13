@@ -113,7 +113,7 @@ This means that cyclic creation dependencies are impossible.
         {
             // Check some arbitrary condition.
             address tokenAddress = msg.sender;
-            return (keccak256(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
+            return (keccak256(abi.encodePacked(newOwner)) & 0xff) == (bytes20(tokenAddress) & 0xff);
         }
     }
 
@@ -377,7 +377,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         /// The `return 7` statement assigns 7 to the return value but still
         /// executes the statement `locked = false` in the modifier.
         function f() public noReentrancy returns (uint) {
-            require(msg.sender.call());
+            require(msg.sender.call(""));
             return 7;
         }
     }
@@ -604,7 +604,7 @@ Like any function, the fallback function can execute complex operations as long 
 
     contract Caller {
         function callTest(Test test) public {
-            test.call(0xabcdef01); // hash does not exist
+            test.call(abi.encodeWithSignature("nonExistingFunction()"));
             // results in test.x becoming == 1.
 
             // The following will not compile, but even

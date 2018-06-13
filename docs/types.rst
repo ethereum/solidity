@@ -143,27 +143,37 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
 * ``call``, ``callcode`` and ``delegatecall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
-the function ``call`` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
+or to get more direct control over the encoding,
+the function ``call`` is provided which takes a single byte array as input.
+The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
+and ``abi.encodeWithSignature`` can be used to encode structured data.
 
-::
+.. warning::
+    All these functions are low-level functions and should be used with care.
+    Specifically, any unknown contract might be malicious and if you call it, you
+    hand over control to that contract which could in turn call back into
+    your contract, so be prepared for changes to your state variables
+    when the call returns. The regular way to interact with other contracts
+    is to call a function on a contract object (``x.f()``).
 
-    address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
-    nameReg.call("register", "MyName");
-    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
+:: note::
+    Previous versions of Solidity allowed these functions to receive
+    arbitrary arguments and would also handle a first argument of type
+    ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
-``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
+``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned with plain Solidity. However, using inline assembly it is possible to make a raw ``call`` and access the actual data returned with the ``returndatacopy`` instruction.
 
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
-    namReg.call.gas(1000000)("register", "MyName");
+    namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
-    nameReg.call.value(1 ether)("register", "MyName");
+    nameReg.call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    nameReg.call.gas(1000000).value(1 ether)("register", "MyName");
+    nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 .. note::
     It is not yet possible to use the gas or value modifiers on overloaded functions.
@@ -183,13 +193,6 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
-
-.. warning::
-    All these functions are low-level functions and should be used with care.
-    Specifically, any unknown contract might be malicious and if you call it, you
-    hand over control to that contract which could in turn call back into
-    your contract, so be prepared for changes to your state variables
-    when the call returns.
 
 .. index:: byte array, bytes32
 
