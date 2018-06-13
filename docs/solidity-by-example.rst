@@ -606,6 +606,7 @@ Safe Remote Purchase
         }
 
         /// Confirm the purchase as buyer.
+        /// By default state is set to create.
         /// Transaction has to include `2 * value` ether.
         /// The ether will be locked until confirmReceived
         /// is called.
