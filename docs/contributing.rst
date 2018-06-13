@@ -113,8 +113,8 @@ expected compiler errors or warnings. This section can be empty in case that the
 
 In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifier was already declared.
 
-The tool that is being used for those tests is called ``oldest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
-editing of failing contracts using your pilfered text editor. Let's try to break this test by removing the second declaration of ``variable``:
+The tool that is being used for those tests is called ``isolest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
+editing of failing contracts using your prefered text editor. Let's try to break this test by removing the second declaration of ``variable``:
 
 ::
 
