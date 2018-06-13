@@ -16,7 +16,8 @@ Furthermore, contracts can inherit from other contracts.
 State Variables
 ===============
 
-State variables are values which are permanently stored in contract storage.
+State variables are the values which can be changed, depending on the conditions or on the information passed to the 
+smart contract.
 
 ::
 
