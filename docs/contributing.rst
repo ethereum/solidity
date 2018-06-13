@@ -111,7 +111,7 @@ Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
 A syntax test must contain at least the contract under test itself, followed by the seperator ``----``. The additional comments above are used to describe the
 expected compiler errors or warnings. This section can be empty in case that the contract should compile without any errors or warnings.
 
-In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifer was already declared.
+In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifier was already declared.
 
 The tool that is being used for those tests is called ``isoltest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
 editing of failing contracts using your prefered text editor. Let's try to break this test by removing the second declaration of ``variable``:
