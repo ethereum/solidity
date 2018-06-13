@@ -61,6 +61,13 @@ function test_truffle
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
         find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
       fi
+      assertsol="node_modules/truffle/build/Assert.sol"
+      if [ -f "$assertsol" ]
+      then
+        echo "Replace Truffle's Assert.sol with a known good version"
+        rm "$assertsol"
+        wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
+      fi
       npm run test
     )
     rm -rf "$DIR"
