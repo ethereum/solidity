@@ -88,7 +88,6 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
-static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
@@ -132,7 +131,6 @@ static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCloneBinary = g_strCloneBinary;
 static string const g_argCombinedJson = g_strCombinedJson;
 static string const g_argCompactJSON = g_strCompactJSON;
-static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
@@ -216,7 +214,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argBinary,
 		g_argBinaryRuntime,
 		g_argCloneBinary,
-		g_argFormal,
 		g_argMetadata,
 		g_argNatspecUser,
 		g_argNatspecDev,
@@ -639,8 +636,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argFormal.c_str(), "Translated source suitable for formal analysis. (Deprecated)");
+		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -1236,9 +1232,6 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
 	} // end of contracts iteration
-
-	if (m_args.count(g_argFormal))
-		cerr << "Support for the Why3 output was removed." << endl;
 }
 
 }
