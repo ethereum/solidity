@@ -24,6 +24,8 @@ contract C {
 // ----
 // f(uint256): 21
 // -> 21, 21
+// f(uint256): 42 # some comment
+// -> 42, 42 # some other comment
 // g()
 // -> 42000
 // g2()

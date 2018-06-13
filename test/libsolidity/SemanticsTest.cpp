@@ -19,6 +19,7 @@
 #include <test/Options.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
@@ -63,7 +64,7 @@ bool SemanticsTest::run(ostream& _stream, string const& _linePrefix, bool const 
 	{
 		m_results.emplace_back(callContractFunctionWithValueNoEncoding(
 			test.signature,
-			test.value,
+			test.etherValue,
 			test.argumentBytes
 		));
 
@@ -422,12 +423,12 @@ void SemanticsTest::printCalls(
 	{
 		auto const& call = m_calls[i];
 		_stream << _linePrefix << call.signature;
-		if (call.value > u256(0))
-			_stream << "[" << call.value << "]";
+		if (call.etherValue > u256(0))
+			_stream << "[" << call.etherValue << "]";
 		if (!call.arguments.empty())
-		{
-			_stream << ": " << call.arguments;
-		}
+			_stream << ": " << boost::algorithm::trim_copy(call.arguments);
+		if (!call.argumentComment.empty())
+			_stream << " # " << call.argumentComment;
 		_stream << endl;
 		string result;
 		std::vector<ByteRangeFormat> formatList;
@@ -443,9 +444,11 @@ void SemanticsTest::printCalls(
 		if (result.empty())
 			_stream << "REVERT";
 		else
-			_stream << "-> " << result;
+			_stream << "-> " << boost::algorithm::trim_copy(result);
 		if (_formatted && m_results[i] != expectedBytes)
 			_stream << formatting::RESET;
+		if (!call.resultComment.empty())
+			_stream << " # " << call.resultComment;
 		_stream << endl;
 	}
 }
@@ -526,19 +529,14 @@ void SemanticsTest::parseExpectations(istream &_stream)
 			isPreamble = false;
 		}
 
-		string arguments;
-		bytes argumentBytes;
-		u256 ether(0);
-		string expectedResult;
-		bytes expectedBytes;
-		vector<ByteRangeFormat> expectedFormat;
+		SemanticsTestFunctionCall call;
 
 		auto signatureBegin = it;
 		while (it != line.end() && *it != ')')
 			++it;
 		expect(it, line.end(), ')');
 
-		string signature(signatureBegin, it);
+		call.signature = string(signatureBegin, it);
 
 		if (it != line.end() && *it == '[')
 		{
@@ -547,7 +545,7 @@ void SemanticsTest::parseExpectations(istream &_stream)
 			while (it != line.end() && *it != ']')
 				++it;
 			string etherString(etherBegin, it);
-			ether = u256(etherString);
+			call.etherValue = u256(etherString);
 			expect(it, line.end(), ']');
 		}
 
@@ -555,10 +553,25 @@ void SemanticsTest::parseExpectations(istream &_stream)
 
 		if (it != line.end())
 		{
-			expect(it, line.end(), ':');
-			skipWhitespace(it, line.end());
-			arguments = string(it, line.end());
-			argumentBytes = stringToBytes(arguments);
+			if (*it != '#')
+			{
+				expect(it, line.end(), ':');
+				skipWhitespace(it, line.end());
+
+				auto argumentBegin = it;
+				// TODO: allow # in quotes
+				while (it != line.end() && *it != '#')
+					++it;
+				call.arguments = string(argumentBegin, it);
+				call.argumentBytes = stringToBytes(call.arguments);
+			}
+
+			if (it != line.end())
+			{
+				expect(it, line.end(), '#');
+				skipWhitespace(it, line.end());
+				call.argumentComment = string(it, line.end());
+			}
 		}
 
 		if (!getline(_stream, line))
@@ -575,22 +588,26 @@ void SemanticsTest::parseExpectations(istream &_stream)
 
 			skipWhitespace(it, line.end());
 
-			expectedResult = string(it, line.end());
-			expectedBytes = stringToBytes(expectedResult, &expectedFormat);
+			auto expectedResultBegin = it;
+			// TODO: allow # in quotes
+			while (it != line.end() && *it != '#')
+				++it;
+
+			call.expectedResult = string(expectedResultBegin, it);
+			call.expectedBytes = stringToBytes(call.expectedResult, &call.expectedFormat);
+
+			if (it != line.end())
+			{
+				expect(it, line.end(), '#');
+				skipWhitespace(it, line.end());
+				call.resultComment = string(it, line.end());
+			}
 		}
 		else
 			for (char c: string("REVERT"))
 				expect(it, line.end(), c);
 
-		m_calls.emplace_back(SemanticsTestFunctionCall{
-			std::move(signature),
-			std::move(arguments),
-			std::move(argumentBytes),
-			std::move(ether),
-			std::move(expectedResult),
-			std::move(expectedBytes),
-			std::move(expectedFormat)
-		});
+		m_calls.emplace_back(std::move(call));
 	}
 }
 

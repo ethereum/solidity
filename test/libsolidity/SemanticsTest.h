@@ -105,10 +105,12 @@ private:
 		std::string signature;
 		std::string arguments;
 		bytes argumentBytes;
-		u256 value;
+		std::string argumentComment;
+		u256 etherValue;
 		std::string expectedResult;
 		bytes expectedBytes;
 		std::vector<ByteRangeFormat> expectedFormat;
+		std::string resultComment;
 	};
 
 	void parseExpectations(std::istream &_stream);
