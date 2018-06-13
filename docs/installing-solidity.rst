@@ -295,6 +295,13 @@ Alternatively, you can build for Windows on the command-line, like so:
 
     cmake --build . --config RelWithDebInfo
 
+To get to know the version of solidty which you have installed, you need to use:
+
+.. code:: bash
+
+    solc --version
+
+
 CMake options
 =============
 
