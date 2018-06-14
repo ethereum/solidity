@@ -492,7 +492,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			}
 			bytes binAddr = fromHex(addrString);
 			h160 address(binAddr, h160::AlignRight);
-			if (binAddr.size() > 20 || address == h160())
+			if (binAddr.size() > 21 || address == h160())
 			{
 				cerr << "Invalid address for library \"" << libName << "\": " << addrString << endl;
 				return false;
@@ -1050,12 +1050,12 @@ bool CommandLineInterface::link()
 {
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
-	int const placeholderSize = 40; // 20 bytes or 40 hex characters
+	int const placeholderSize = 42; // 21 bytes or 42 hex characters
 	for (auto const& library: m_libraries)
 	{
 		string const& name = library.first;
-		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
-		// This leaves 36 characters for the library name, while too short library names are
+		// Library placeholders are 42 hex digits (21 bytes) that start and end with '__'.
+		// This leaves 38 characters for the library name, while too short library names are
 		// padded on the right with '_' and too long names are truncated.
 		string replacement = "__";
 		for (size_t i = 0; i < placeholderSize - 4; ++i)

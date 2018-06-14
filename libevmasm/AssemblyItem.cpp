@@ -77,7 +77,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 		return 1 + _addressLength;
 	case PushLibraryAddress:
 	case PushDeployTimeAddress:
-		return 1 + 20;
+		return 1 + 21;
 	default:
 		break;
 	}

@@ -41,6 +41,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <limits>
+//#include <execinfo.h>
 
 using namespace std;
 using namespace dev;
@@ -296,7 +297,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+		return make_shared<IntegerType>(168, IntegerType::Modifier::Address);
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -442,8 +443,15 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
+	cout << this->toString(false) << " " << m_bits << endl;
+
+	// Print stack of function call
+//    void *array[10];
+//    int size = backtrace(array, 10);
+//    backtrace_symbols_fd(array, size, STDERR_FILENO);
+
 	if (isAddress())
-		solAssert(m_bits == 160, "");
+		solAssert(m_bits == 168, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
 		"Invalid bit number for integer type: " + dev::toString(m_bits)
@@ -1872,7 +1880,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 
 void ContractType::addNonConflictingAddressMembers(MemberList::MemberMap& _members)
 {
-	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
+	MemberList::MemberMap addressMembers = IntegerType(168, IntegerType::Modifier::Address).nativeMembers(nullptr);
 	for (auto const& addressMember: addressMembers)
 	{
 		bool clash = false;
@@ -3194,7 +3202,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"coinbase", make_shared<IntegerType>(168, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -3203,7 +3211,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"sender", make_shared<IntegerType>(168, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -3211,7 +3219,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"origin", make_shared<IntegerType>(168, IntegerType::Modifier::Address)},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	case Kind::ABI:

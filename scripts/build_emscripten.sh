@@ -30,5 +30,10 @@ set -e
 
 if [[ "$OSTYPE" != "darwin"* ]]; then
     ./scripts/travis-emscripten/install_deps.sh
-    docker run -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.35.4-64bit ./scripts/travis-emscripten/build_emscripten.sh
+    docker run -it -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.35.4-64bit ./scripts/travis-emscripten/build_emscripten.sh
 fi
+
+# MacOS: run install_deps.sh in container !!!
+# apt-get update
+# apt-get install wget gcc
+

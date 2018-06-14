@@ -105,9 +105,9 @@ cmake \
 make -j 4
 
 cd ..
-mkdir -p upload
-cp build/libsolc/soljson.js upload/
-cp build/libsolc/soljson.js ./
+# mkdir -p upload
+# cp build/libsolc/soljson.js upload/
+# cp build/libsolc/soljson.js ./
 
 OUTPUT_SIZE=`ls -la soljson.js`
 

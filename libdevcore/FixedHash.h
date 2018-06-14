@@ -154,6 +154,6 @@ inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 
 // Common types of FixedHash.
 using h256 = FixedHash<32>;
-using h160 = FixedHash<20>;
+using h160 = FixedHash<21>;
 
 }
