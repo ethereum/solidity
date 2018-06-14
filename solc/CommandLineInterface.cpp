@@ -92,7 +92,7 @@ static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
-static string const g_strJulia = "julia";
+static string const g_strYul = "yul";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -134,7 +134,7 @@ static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
-static string const g_argJulia = g_strJulia;
+static string const g_argYul = g_strYul;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -597,8 +597,8 @@ Allowed options)",
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
 		)
 		(
-			g_argJulia.c_str(),
-			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+			g_argYul.c_str(),
+			"Switch to Yul mode, ignoring all options except --machine and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
@@ -607,7 +607,7 @@ Allowed options)",
 		(
 			g_argMachine.c_str(),
 			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
-			"Target machine in assembly or JULIA mode."
+			"Target machine in assembly or Yul mode."
 		)
 		(
 			g_argLink.c_str(),
@@ -781,13 +781,13 @@ bool CommandLineInterface::processInput()
 		m_evmVersion = *versionOption;
 	}
 
-	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argYul))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = AssemblyStack::Language;
 		using Machine = AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
+		Input inputLanguage = m_args.count(g_argYul) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		if (m_args.count(g_argMachine))
 		{
