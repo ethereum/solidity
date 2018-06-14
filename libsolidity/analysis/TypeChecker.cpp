@@ -1136,14 +1136,21 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	else if (valueTypes.size() != variables.size())
 	{
 		if (v050)
-			m_errorReporter.fatalTypeError(
-				_statement.location(),
-				"Different number of components on the left hand side (" +
-				toString(variables.size()) +
-				") than on the right hand side (" +
-				toString(valueTypes.size()) +
-				")."
-			);
+		{
+			// XXX If the RHS is "void", then we already have an error generated elsewhere,
+			// such as "Not enough components (0) in value to assign all variables (1).".
+			// Hence, we only report here iff RHS has values, so we avoid superfluous reports.
+			// See "syntaxTests/parsing/var_assigning_void.sol" as an example.
+			if (!valueTypes.empty())
+				m_errorReporter.fatalTypeError(
+					_statement.location(),
+					"Different number of components on the left hand side (" +
+					toString(variables.size()) +
+					") than on the right hand side (" +
+					toString(valueTypes.size()) +
+					")."
+				);
+		}
 		else if (!variables.front() && !variables.back())
 			m_errorReporter.fatalTypeError(
 				_statement.location(),

@@ -1,3 +1,6 @@
+// This "v0.5.0" flag is here to avoid a double-warning that got introduced due to the var-keyword removal
+pragma experimental "v0.5.0";
+
 contract C {
     function returnsVoid() pure public { }
 
@@ -11,6 +14,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (142-155): Type tuple() is not implicitly convertible to expected type uint256.
-// Warning: (228-250): Different number of components on the left hand side (1) than on the right hand side (0).
-// TypeError: (228-250): Not enough components (0) in value to assign all variables (1).
+// TypeError: (280-293): Type tuple() is not implicitly convertible to expected type uint256.
+// TypeError: (366-388): Not enough components (0) in value to assign all variables (1).
