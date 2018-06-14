@@ -19,6 +19,7 @@ Breaking Changes:
  * Type Checker: Disallow arithmetic operations for boolean variables.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
+ * Syntax Checker: Named return values in function types are an error.
 
 Language Features:
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
