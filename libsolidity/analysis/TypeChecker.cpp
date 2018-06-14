@@ -1133,39 +1133,20 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				") in value for variable assignment (0) needed"
 			);
 	}
-	else if (valueTypes.size() != variables.size())
+	else if (valueTypes.size() != variables.size() && !valueTypes.empty())
 	{
-		if (v050)
-		{
-			// XXX If the RHS is "void", then we already have an error generated elsewhere,
-			// such as "Not enough components (0) in value to assign all variables (1).".
-			// Hence, we only report here iff RHS has values, so we avoid superfluous reports.
-			// See "syntaxTests/parsing/var_assigning_void.sol" as an example.
-			if (!valueTypes.empty())
-				m_errorReporter.fatalTypeError(
-					_statement.location(),
-					"Different number of components on the left hand side (" +
-					toString(variables.size()) +
-					") than on the right hand side (" +
-					toString(valueTypes.size()) +
-					")."
-				);
-		}
-		else if (!variables.front() && !variables.back())
-			m_errorReporter.fatalTypeError(
-				_statement.location(),
-				"Wildcard both at beginning and end of variable declaration list is only allowed "
-				"if the number of components is equal."
-			);
-		else
-			m_errorReporter.warning(
-				_statement.location(),
-				"Different number of components on the left hand side (" +
-				toString(variables.size()) +
-				") than on the right hand side (" +
-				toString(valueTypes.size()) +
-				")."
-			);
+		// XXX If the RHS is "void", then we already have an error generated elsewhere,
+		// such as "Not enough components (0) in value to assign all variables (1).".
+		// Hence, we only report here iff RHS has values, so we avoid superfluous reports.
+		// See "syntaxTests/parsing/var_assigning_void.sol" as an example.
+		m_errorReporter.fatalTypeError(
+			_statement.location(),
+			"Different number of components on the left hand side (" +
+			toString(variables.size()) +
+			") than on the right hand side (" +
+			toString(valueTypes.size()) +
+			")."
+		);
 	}
 	size_t minNumValues = variables.size();
 	if (!variables.empty() && (!variables.back() || !variables.front()))
