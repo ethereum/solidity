@@ -16,7 +16,7 @@
 */
 /**
  * @date 2018
- * Unit tests for the Julia MainFunction transformation.
+ * Unit tests for the Yul MainFunction transformation.
  */
 
 #include <test/libjulia/Common.h>
@@ -45,7 +45,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(JuliaMainFunction)
+BOOST_AUTO_TEST_SUITE(YulMainFunction)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

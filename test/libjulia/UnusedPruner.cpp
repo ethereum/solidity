@@ -48,7 +48,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaUnusedPruner)
+BOOST_AUTO_TEST_SUITE(YulUnusedPruner)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

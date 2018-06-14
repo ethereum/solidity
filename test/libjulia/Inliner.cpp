@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for the iulia function inliner.
+ * Unit tests for the Yul function inliner.
  */
 
 #include <test/libjulia/Common.h>
@@ -72,7 +72,7 @@ string fullInline(string const& _source, bool _julia = true)
 }
 
 
-BOOST_AUTO_TEST_SUITE(IuliaInlinableFunctionFilter)
+BOOST_AUTO_TEST_SUITE(YulInlinableFunctionFilter)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(negative)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(IuliaFunctionInliner)
+BOOST_AUTO_TEST_SUITE(YulFunctionInliner)
 
 BOOST_AUTO_TEST_CASE(simple)
 {
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(double_recursive_calls)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(IuliaFullInliner)
+BOOST_AUTO_TEST_SUITE(YulFullInliner)
 
 BOOST_AUTO_TEST_CASE(simple)
 {
