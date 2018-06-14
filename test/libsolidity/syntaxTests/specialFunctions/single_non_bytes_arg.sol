@@ -7,6 +7,6 @@ contract C {
     function g(bytes32) pure internal {}
 }
 // ----
-// TypeError: (64-71): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested.
-// TypeError: (92-99): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested.
-// TypeError: (123-130): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested.
+// TypeError: (64-71): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.
+// TypeError: (92-99): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.
+// TypeError: (123-130): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.
