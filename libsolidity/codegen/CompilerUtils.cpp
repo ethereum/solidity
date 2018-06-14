@@ -607,7 +607,7 @@ void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
 	{
 		m_context << Instruction::DUP1;
 		rightShiftNumberOnStack(32);
-		m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
+		m_context << ((u256(1) << 168) - 1) << Instruction::AND << Instruction::SWAP1;
 	}
 	m_context << u256(0xffffffffUL) << Instruction::AND;
 }
@@ -617,7 +617,7 @@ void CompilerUtils::combineExternalFunctionType(bool _leftAligned)
 	// <address> <function_id>
 	m_context << u256(0xffffffffUL) << Instruction::AND << Instruction::SWAP1;
 	if (!_leftAligned)
-		m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+		m_context << ((u256(1) << 168) - 1) << Instruction::AND;
 	leftShiftNumberOnStack(32);
 	m_context << Instruction::OR;
 	if (_leftAligned)
@@ -755,7 +755,7 @@ void CompilerUtils::convertType(
 		else
 		{
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
-			IntegerType addressType(160, IntegerType::Modifier::Address);
+			IntegerType addressType(168, IntegerType::Modifier::Address);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::RationalNumber)

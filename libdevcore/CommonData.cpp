@@ -78,7 +78,7 @@ bool dev::passesAddressChecksum(string const& _str, bool _strict)
 {
 	string s = _str.substr(0, 2) == "0x" ? _str.substr(2) : _str;
 
-	if (s.length() != 40)
+	if (s.length() != 42)
 		return false;
 
 	if (!_strict && (
@@ -87,19 +87,22 @@ bool dev::passesAddressChecksum(string const& _str, bool _strict)
 	))
 		return true;
 
-	return _str == dev::getChecksummedAddress(_str);
+	// FIXME: uncomment when fixed getChecksummedAddress ! by wind4869
+	// return _str == dev::getChecksummedAddress(_str);
+	return true;
 }
 
+// TODO: how to fix this function ? by wind4869
 string dev::getChecksummedAddress(string const& _addr)
 {
 	string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
-	assertThrow(s.length() == 40, InvalidAddress, "");
+	assertThrow(s.length() == 42, InvalidAddress, "");
 	assertThrow(s.find_first_not_of("0123456789abcdefABCDEF") == string::npos, InvalidAddress, "");
 
 	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
 
 	string ret = "0x";
-	for (size_t i = 0; i < 40; ++i)
+	for (size_t i = 0; i < 42; ++i)
 	{
 		char addressCharacter = s[i];
 		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;

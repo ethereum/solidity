@@ -1228,7 +1228,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						identifier = FunctionType(*function).externalIdentifier();
 					else
 						solAssert(false, "Contract member is neither variable nor function.");
-					utils().convertType(type, IntegerType(160, IntegerType::Modifier::Address), true);
+					utils().convertType(type, IntegerType(168, IntegerType::Modifier::Address), true);
 					m_context << identifier;
 				}
 				else
@@ -1245,7 +1245,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				utils().convertType(
 					*_memberAccess.expression().annotation().type,
-					IntegerType(160, IntegerType::Modifier::Address),
+					IntegerType(168, IntegerType::Modifier::Address),
 					true
 				);
 				m_context << Instruction::BALANCE;
@@ -1253,7 +1253,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
 				utils().convertType(
 					*_memberAccess.expression().annotation().type,
-					IntegerType(160, IntegerType::Modifier::Address),
+					IntegerType(168, IntegerType::Modifier::Address),
 					true
 				);
 			else
@@ -2019,8 +2019,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		// fix: built-in contract returns right-aligned data
 		utils().fetchFreeMemoryPointer();
-		utils().loadFromMemoryDynamic(IntegerType(160), false, true, false);
-		utils().convertType(IntegerType(160), FixedBytesType(20));
+		utils().loadFromMemoryDynamic(IntegerType(168), false, true, false);
+		utils().convertType(IntegerType(168), FixedBytesType(21));
 	}
 	else if (funKind == FunctionType::Kind::ECRecover)
 	{

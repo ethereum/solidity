@@ -2087,7 +2087,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	{
 		// Warn about using address members on contracts
 		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-		for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
+		for (auto const& addressMember: IntegerType(168, IntegerType::Modifier::Address).nativeMembers(nullptr))
 			if (addressMember.name == memberName && *annotation.type == *addressMember.type)
 			{
 				solAssert(!v050, "Address member still present on contract in v0.5.0.");
@@ -2298,7 +2298,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		if (_literal.passesAddressChecksum())
-			_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+			_literal.annotation().type = make_shared<IntegerType>(168, IntegerType::Modifier::Address);
 		else
 			m_errorReporter.warning(
 				_literal.location(),

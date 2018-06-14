@@ -181,7 +181,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 		Instruction::COINBASE
 	})
 	{
-		u256 const mask = (u256(1) << 160) - 1;
+		u256 const mask = (u256(1) << 168) - 1;
 		rules.push_back({
 			{Instruction::AND, {{op, mask}}},
 			[=]() -> Pattern { return op; },
