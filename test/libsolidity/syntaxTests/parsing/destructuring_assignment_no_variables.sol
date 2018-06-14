@@ -1,9 +1,9 @@
 contract C {
+    // ensures solc fails on multi-assignment without named variables.
     function g() pure public returns (int, int, int) {}
     function f() pure public {
-        // ensure this test is failing
         (,,) = g();
     }
 }
 // ----
-// ParserError: (150-151): Expected primary expression.
+// ParserError: (182-183): Expected primary expression.
