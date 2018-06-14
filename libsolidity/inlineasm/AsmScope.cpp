@@ -32,7 +32,7 @@ bool Scope::registerLabel(string const& _name)
 	return true;
 }
 
-bool Scope::registerVariable(string const& _name, JuliaType const& _type)
+bool Scope::registerVariable(string const& _name, YulType const& _type)
 {
 	if (exists(_name))
 		return false;
@@ -42,7 +42,7 @@ bool Scope::registerVariable(string const& _name, JuliaType const& _type)
 	return true;
 }
 
-bool Scope::registerFunction(string const& _name, std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns)
+bool Scope::registerFunction(string const& _name, std::vector<YulType> const& _arguments, std::vector<YulType> const& _returns)
 {
 	if (exists(_name))
 		return false;

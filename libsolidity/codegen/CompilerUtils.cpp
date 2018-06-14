@@ -186,7 +186,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	/// Stack: <source_offset> <length>
 	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
 	{
-		// Use the new JULIA-based decoding function
+		// Use the new Yul-based decoding function
 		auto stackHeightBefore = m_context.stackHeight();
 		abiDecodeV2(_typeParameters, _fromMemory);
 		solAssert(m_context.stackHeight() - stackHeightBefore == sizeOnStack(_typeParameters) - 2, "");
@@ -368,7 +368,7 @@ void CompilerUtils::encodeToMemory(
 		m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
 	)
 	{
-		// Use the new JULIA-based encoding function
+		// Use the new Yul-based encoding function
 		auto stackHeightBefore = m_context.stackHeight();
 		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes);
 		solAssert(stackHeightBefore - m_context.stackHeight() == sizeOnStack(_givenTypes), "");

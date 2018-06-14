@@ -62,27 +62,27 @@ struct GenericVisitor<>: public boost::static_visitor<> {
 
 struct Scope
 {
-	using JuliaType = std::string;
+	using YulType = std::string;
 	using LabelID = size_t;
 
-	struct Variable { JuliaType type; };
+	struct Variable { YulType type; };
 	struct Label { };
 	struct Function
 	{
-		std::vector<JuliaType> arguments;
-		std::vector<JuliaType> returns;
+		std::vector<YulType> arguments;
+		std::vector<YulType> returns;
 	};
 
 	using Identifier = boost::variant<Variable, Label, Function>;
 	using Visitor = GenericVisitor<Variable const, Label const, Function const>;
 	using NonconstVisitor = GenericVisitor<Variable, Label, Function>;
 
-	bool registerVariable(std::string const& _name, JuliaType const& _type);
+	bool registerVariable(std::string const& _name, YulType const& _type);
 	bool registerLabel(std::string const& _name);
 	bool registerFunction(
 		std::string const& _name,
-		std::vector<JuliaType> const& _arguments,
-		std::vector<JuliaType> const& _returns
+		std::vector<YulType> const& _arguments,
+		std::vector<YulType> const& _returns
 	);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if found
