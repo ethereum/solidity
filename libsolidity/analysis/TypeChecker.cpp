@@ -41,15 +41,13 @@ bool typeSupportedByOldABIEncoder(Type const& _type)
 {
 	if (_type.dataStoredIn(DataLocation::Storage))
 		return true;
-	else if (_type.category() == Type::Category::Struct)
+	if (_type.category() == Type::Category::Struct)
 		return false;
-	else if (_type.category() == Type::Category::Array)
+	if (_type.category() == Type::Category::Array)
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
 		auto base = arrayType.baseType();
-		if (!typeSupportedByOldABIEncoder(*base))
-			return false;
-		else if (base->category() == Type::Category::Array && base->isDynamicallySized())
+		if (!typeSupportedByOldABIEncoder(*base) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
 			return false;
 	}
 	return true;
