@@ -1781,6 +1781,23 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			for (auto const& member: membersRemovedForStructConstructor)
 				msg += " " + member;
 		}
+		else if (
+			functionType->kind() == FunctionType::Kind::BareCall ||
+			functionType->kind() == FunctionType::Kind::BareCallCode ||
+			functionType->kind() == FunctionType::Kind::BareDelegateCall
+		)
+		{
+			if (arguments.empty())
+				msg += " This function requires a single bytes argument. Use \"\" as argument to provide empty calldata.";
+			else
+				msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
+		}
+		else if (
+			functionType->kind() == FunctionType::Kind::SHA3 ||
+			functionType->kind() == FunctionType::Kind::SHA256 ||
+			functionType->kind() == FunctionType::Kind::RIPEMD160
+		)
+			msg += " This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.";
 		m_errorReporter.typeError(_functionCall.location(), msg);
 	}
 	else if (isPositionalCall)
@@ -1817,15 +1834,28 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				}
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
-				m_errorReporter.typeError(
-					arguments[i]->location(),
+			{
+				string msg =
 					"Invalid type for argument in function call. "
 					"Invalid implicit conversion from " +
 					type(*arguments[i])->toString() +
 					" to " +
 					parameterTypes[i]->toString() +
-					" requested."
-				);
+					" requested.";
+				if (
+					functionType->kind() == FunctionType::Kind::BareCall ||
+					functionType->kind() == FunctionType::Kind::BareCallCode ||
+					functionType->kind() == FunctionType::Kind::BareDelegateCall
+				)
+					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
+				else if (
+					functionType->kind() == FunctionType::Kind::SHA3 ||
+					functionType->kind() == FunctionType::Kind::SHA256 ||
+					functionType->kind() == FunctionType::Kind::RIPEMD160
+				)
+					msg += " This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.";
+				m_errorReporter.typeError(arguments[i]->location(), msg);
+			}
 		}
 	}
 	else
