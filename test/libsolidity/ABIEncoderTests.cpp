@@ -447,28 +447,6 @@ BOOST_AUTO_TEST_CASE(structs)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(empty_struct)
-{
-	string sourceCode = R"(
-		contract C {
-			struct S { }
-			S s;
-			event e(uint16, S, uint16);
-			function f() returns (uint, S, uint) {
-				e(7, s, 8);
-				return (7, s, 8);
-			}
-		}
-	)";
-
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(7, 8);
-		BOOST_CHECK(callContractFunction("f()") == encoded);
-		REQUIRE_LOG_DATA(encoded);
-	)
-}
-
 BOOST_AUTO_TEST_CASE(structs2)
 {
 	string sourceCode = R"(

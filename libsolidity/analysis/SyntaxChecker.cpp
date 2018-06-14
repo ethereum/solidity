@@ -276,14 +276,8 @@ bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
 
 bool SyntaxChecker::visit(StructDefinition const& _struct)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_struct.members().empty())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
-		else
-			m_errorReporter.warning(_struct.location(), "Defining empty structs is deprecated.");
-	}
+		m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
+
 	return true;
 }

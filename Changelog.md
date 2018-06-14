@@ -6,6 +6,7 @@ Breaking Changes:
  * Commandline interface: Remove obsolete ``--formal`` option.
  * Commandline interface: Require ``-`` if standard input is used as source.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
+ * General: Disallow declaring empty structs.
  * General: Disallow ``sha3`` and ``suicide`` aliases.
  * General: Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * General: New keywords: ``calldata``

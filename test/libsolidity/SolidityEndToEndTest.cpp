@@ -1271,7 +1271,6 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 		contract test {
 			struct topStruct {
 				nestedStruct nstr;
-				emptyStruct empty;
 				uint topValue;
 				mapping (uint => uint) topMapping;
 			}
@@ -1280,8 +1279,6 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 			struct nestedStruct {
 				uint nestedValue;
 				mapping (uint => bool) nestedMapping;
-			}
-			struct emptyStruct{
 			}
 			function test(){
 				toDelete = 5;
