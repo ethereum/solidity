@@ -967,6 +967,18 @@ BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(peephole_truthy_and)
+{
+  AssemblyItems items{
+    u256(0),
+    Instruction::NOT,
+    Instruction::AND
+  };
+  PeepholeOptimiser peepOpt(items);
+  BOOST_REQUIRE(peepOpt.optimise());
+  BOOST_CHECK(items.empty());
+}
+
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
 {
 	AssemblyItems items{
