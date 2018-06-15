@@ -62,14 +62,16 @@ bool SemanticsTest::run(ostream& _stream, string const& _linePrefix, bool const 
 	m_results.clear();
 	for (auto const& test: m_calls)
 	{
-		m_results.emplace_back(callContractFunctionWithValueNoEncoding(
+		bytes output = callContractFunctionWithValueNoEncoding(
 			test.signature,
 			test.etherValue,
 			test.argumentBytes
-		));
+		);
 
-		if (m_results.back() != test.expectedBytes)
+		if ((m_transactionSuccessful != test.expectedStatus) || (output != test.expectedBytes))
 			success = false;
+
+		m_results.emplace_back(m_transactionSuccessful, std::move(output));
 	}
 
 	if (!success)
@@ -434,18 +436,27 @@ void SemanticsTest::printCalls(
 		std::vector<ByteRangeFormat> formatList;
 		auto expectedBytes = stringToBytes(call.expectedResult, &formatList);
 		if (_actualResults)
-			result = bytesToString(m_results[i], formatList);
+		{
+			if (m_results[i].first)
+				result = "-> " + bytesToString(m_results[i].second, formatList);
+			else
+				result = "REVERT";
+		}
 		else
-			result = call.expectedResult;
+		{
+			if (call.expectedStatus)
+				result = "-> " + call.expectedResult;
+			else
+				result = "REVERT";
+		}
+
+		bool expectationsMatch = (m_results[i].first == call.expectedStatus) && (m_results[i].second == expectedBytes);
 
 		_stream << _linePrefix;
-		if (_formatted && m_results[i] != expectedBytes)
+		if (_formatted && !expectationsMatch)
 			_stream << formatting::RED_BACKGROUND;
-		if (result.empty())
-			_stream << "REVERT";
-		else
-			_stream << "-> " << boost::algorithm::trim_copy(result);
-		if (_formatted && m_results[i] != expectedBytes)
+		_stream << boost::algorithm::trim_copy(result);
+		if (_formatted && !expectationsMatch)
 			_stream << formatting::RESET;
 		if (!call.resultComment.empty())
 			_stream << " # " << call.resultComment;
@@ -595,6 +606,7 @@ void SemanticsTest::parseExpectations(istream &_stream)
 
 			call.expectedResult = string(expectedResultBegin, it);
 			call.expectedBytes = stringToBytes(call.expectedResult, &call.expectedFormat);
+			call.expectedStatus = true;
 
 			if (it != line.end())
 			{
@@ -604,8 +616,11 @@ void SemanticsTest::parseExpectations(istream &_stream)
 			}
 		}
 		else
+		{
 			for (char c: string("REVERT"))
 				expect(it, line.end(), c);
+			call.expectedStatus = false;
+		}
 
 		m_calls.emplace_back(std::move(call));
 	}

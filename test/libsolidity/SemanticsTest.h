@@ -107,6 +107,7 @@ private:
 		bytes argumentBytes;
 		std::string argumentComment;
 		u256 etherValue;
+		bool expectedStatus = true;
 		std::string expectedResult;
 		bytes expectedBytes;
 		std::vector<ByteRangeFormat> expectedFormat;
@@ -120,7 +121,7 @@ private:
 	bool m_hasDeploy = false;
 	std::string m_source;
 	std::vector<SemanticsTestFunctionCall> m_calls;
-	std::vector<bytes> m_results;
+	std::vector<std::pair<bool, bytes>> m_results;
 };
 
 }

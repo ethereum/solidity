@@ -8,7 +8,7 @@ contract C {
     function g2() public returns(uint256) {
         return 0x42001;
     }
-    function h() public returns(uint256) {
+    function h() public {
         revert();
     }
     function i() public returns(bytes32) {

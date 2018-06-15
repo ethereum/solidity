@@ -1,8 +1,7 @@
 contract Main {
     string public s;
-    function set(string _s) external returns (bool) {
+    function set(string _s) external {
         s = _s;
-        return true;
     }
     function get1() returns (string r) {
         return s;
@@ -13,7 +12,7 @@ contract Main {
 }
 // ----
 // set(string): 0x20, 5, "Julia"
-// -> true
+// ->
 // get1()
 // -> 0x20, 5, "Julia"
 // get2()
