@@ -223,6 +223,7 @@ protected:
 			s_compiledRegistrar.reset(new bytes(compileContract(registrarCode, "GlobalRegistrar")));
 
 		sendMessage(*s_compiledRegistrar, true);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 

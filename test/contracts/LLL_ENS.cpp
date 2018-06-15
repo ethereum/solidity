@@ -349,6 +349,7 @@ protected:
 			BOOST_REQUIRE(errors.empty());
 		}
 		sendMessage(*s_compiledEns, true);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 

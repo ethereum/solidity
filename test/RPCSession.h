@@ -99,6 +99,8 @@ public:
 		std::string contractAddress;
 		std::vector<LogEntry> logEntries;
 		std::string blockNumber;
+		/// note: pre-byzantium the status field will be empty
+		std::string status;
 	};
 
 	static RPCSession& instance(std::string const& _path);
@@ -136,6 +138,7 @@ private:
 	unsigned m_maxMiningTime = 6000000; // 600 seconds
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
+	bool m_receiptHasStatusField = false;
 
 	std::vector<std::string> m_accounts;
 };
