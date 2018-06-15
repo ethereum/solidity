@@ -3,4 +3,4 @@ contract c {
     function g() public { f(); }
 }
 // ----
-// DeclarationError: (68-69): Undeclared identifier. Did you mean "f"?
+// DeclarationError: (68-69): Undeclared identifier. "f" is not (or not yet) visible at this point.

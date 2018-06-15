@@ -54,11 +54,10 @@ NameAndTypeResolver::NameAndTypeResolver(
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope)
 {
-	bool useC99Scoping = _sourceUnit.annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
-		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, useC99Scoping, m_errorReporter, _currentScope);
+		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errorReporter, _currentScope);
 	}
 	catch (FatalError const&)
 	{
@@ -449,11 +448,9 @@ string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
-	bool _useC99Scoping,
 	ErrorReporter& _errorReporter,
 	ASTNode const* _currentScope
 ):
-	m_useC99Scoping(_useC99Scoping),
 	m_scopes(_scopes),
 	m_currentScope(_currentScope),
 	m_errorReporter(_errorReporter)
@@ -629,29 +626,25 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
 	_block.setScope(m_currentScope);
-	if (m_useC99Scoping)
-		enterNewSubScope(_block);
+	enterNewSubScope(_block);
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(Block&)
 {
-	if (m_useC99Scoping)
-		closeCurrentScope();
+	closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
 	_for.setScope(m_currentScope);
-	if (m_useC99Scoping)
-		enterNewSubScope(_for);
+	enterNewSubScope(_for);
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(ForStatement&)
 {
-	if (m_useC99Scoping)
-		closeCurrentScope();
+	closeCurrentScope();
 }
 
 void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
@@ -716,9 +709,8 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 		if (fun->isConstructor())
 			warnAboutShadowing = false;
 
-	// Register declaration as inactive if we are in block scope and C99 mode.
+	// Register declaration as inactive if we are in block scope.
 	bool inactive =
-		m_useC99Scoping &&
 		(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
