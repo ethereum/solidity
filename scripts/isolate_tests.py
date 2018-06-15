@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 #
 # This script reads C++ or RST source files and writes all
 # multi-line strings into individual files.
