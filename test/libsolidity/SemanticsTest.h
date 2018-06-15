@@ -116,6 +116,8 @@ private:
 
 	void parseExpectations(std::istream &_stream);
 
+	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments);
+
 	std::map<std::string, dev::test::Address> m_libraryAddresses;
 	std::vector<std::function<void(void)>> m_initializations;
 	bool m_hasDeploy = false;

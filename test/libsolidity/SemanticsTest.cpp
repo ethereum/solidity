@@ -56,7 +56,8 @@ bool SemanticsTest::run(ostream& _stream, string const& _linePrefix, bool const 
 	for (auto const& fn: m_initializations)
 		fn();
 	if (!m_hasDeploy)
-		compileAndRun(m_source, 0, "", bytes(), m_libraryAddresses);
+		if (!deploy("", 0, bytes()))
+			BOOST_THROW_EXCEPTION(runtime_error("Failed to deploy contract."));
 
 	bool success = true;
 	m_results.clear();
@@ -515,7 +516,8 @@ void SemanticsTest::parseExpectations(istream &_stream)
 				}
 
 				m_initializations.emplace_back([=](){
-					compileAndRun(m_source, ether, contractName, argumentBytes, m_libraryAddresses);
+					if(!deploy(contractName, ether, argumentBytes))
+						BOOST_THROW_EXCEPTION(runtime_error("Failed to deploy contract \"" + contractName + "\""));
 				});
 
 				m_hasDeploy = true;
@@ -530,7 +532,8 @@ void SemanticsTest::parseExpectations(istream &_stream)
 				string libName(it, line.end());
 
 				m_initializations.emplace_back([=](){
-					compileAndRun(m_source, 0, libName, bytes{}, m_libraryAddresses);
+					if (!deploy(libName, 0, bytes()))
+						BOOST_THROW_EXCEPTION(runtime_error("Failed to deploy library \"" + libName + "\""));
 					m_libraryAddresses[libName] = m_contractAddress;
 				});
 
@@ -624,6 +627,12 @@ void SemanticsTest::parseExpectations(istream &_stream)
 
 		m_calls.emplace_back(std::move(call));
 	}
+}
+
+bool SemanticsTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments)
+{
+	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments, m_libraryAddresses);
+	return !output.empty() && m_transactionSuccessful;
 }
 
 string SemanticsTest::ipcPath;
