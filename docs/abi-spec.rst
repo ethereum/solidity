@@ -278,7 +278,7 @@ All together, the encoding is (newline after function selector and each 32-bytes
       000000000000000000000000000000000000000000000000000000000000000d
       48656c6c6f2c20776f726c642100000000000000000000000000000000000000
 
-Lets apply the same principle to encode a function with a signature ``g(uint[][],string[])`` with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
+Let us apply the same principle to encode the data for a function with a signature ``g(uint[][],string[])`` with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
 
 First we encode the length and data of the first embeded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
 
@@ -291,11 +291,22 @@ Then we encode the length and data of the second embeded dynamic array ``[3]`` o
  - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
  - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
 
-Since ``[1, 2]`` and ``[3]`` are dynamic arrays we need to find offsets of their content from the data part of the encoding of the first root array ``[[1, 2], [3]]`` and prepend their count which is not considered for offsets:
+Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays  ``[1, 2]`` and ``[3]``. To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]`` enumerating each line in the encoding:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000040`` (64 bytes offset to the start of the content of the first embeded dynamic array ``[1, 2]``)
- - ``0x00000000000000000000000000000000000000000000000000000000000000a0`` (160 bytes offset to the start of the content of the second embeded argument ``[3]``)
+::
+
+ 0 - a                                                                - offset of [1, 2]
+ 1 - b                                                                - offset of [3]
+ 2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+ 3 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+ 4 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+ 5 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+ 6 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+
+Offset ``a`` points to the start of the content of the array ``[1, 2]`` which is line 2 (64 bytes); thus ``a = 0x0000000000000000000000000000000000000000000000000000000000000040``.
+
+Offset ``b`` points to the start of the content of the array ``[3]`` which is line 5 (160 bytes); thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
+
 
 Then we encode the embeded strings of the second root array:
 
@@ -306,45 +317,66 @@ Then we encode the embeded strings of the second root array:
  - ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
  - ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
 
-In parallel to the first root array, since strings are dynamic elements we need to find their offsets and prepend their count:
-
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000060`` (96 bytes offset to the content of the first string)
- - ``0x00000000000000000000000000000000000000000000000000000000000000a0`` (160 bytes offset to the content of the second string)
- - ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (224 bytes offset to the content of the thrird string)
-
-Note that encodings of the embeded elements of the root arrays are not dependent on each other and would have the same encodings for a fuction with a signature ``g(string[],uint[][])``.
-
-Finally we can count the offsets to the content of the root dynamic arrays ``[[1, 2], [3]]`` and ``["one", "two", "three"]``:
-
- - ``0x0000000000000000000000000000000000000000000000000000000000000040`` (64 bytes offset to the start of the content of the first root dynamic array ``[[1, 2], [3]]``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000140`` (320 bytes offset to the start of the content of the second root dynamic array ``["one", "two", "three"]``)
-
-Now we can assemble parts in the correct order ending up with: 
+In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
 
 ::
 
-	0x2289b18c                                                         - function signature
-	  0000000000000000000000000000000000000000000000000000000000000040 - offset of [[1, 2], [3]]
-	  0000000000000000000000000000000000000000000000000000000000000140 - offset of ["one", "two", "three"]
-	  0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
-	  0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
-	  00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
-	  0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
-	  0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
-	  0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
-	  0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
-	  0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
-	  0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
-	  0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
-	  00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
-	  00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
-	  0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
-	  6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
-	  0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
-	  74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
-	  0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
-	  7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+ 0 - c                                                                - offset for "one"
+ 1 - d                                                                - offset for "two"
+ 2 - e                                                                - offset for "three"
+ 3 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+ 4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+ 5 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+ 6 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+ 7 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+ 8 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+
+Offset ``c`` points to the start of the content of the string ``"one"`` which is line 3 (96 bytes); thus ``c = 0x0000000000000000000000000000000000000000000000000000000000000060``.
+
+Offset ``d`` points to the start of the content of the string ``"two"`` which is line 5 (160 bytes); thus ``d = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
+
+Offset ``e`` points to the start of the content of the string ``"three"`` which is line 7 (224 bytes); thus ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``.
+
+
+Note that the encodings of the embeded elements of the root arrays are not dependent on each other and have the same encodings for a fuction with a signature ``g(string[],uint[][])``.
+
+Then we encode the length of the first root array:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
+
+Then we encode the length of the second root array:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
+
+Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and ``["one", "two", "three"]``, and assemble parts in the correct order:
+
+::
+
+ 0x2289b18c                                                            - function signature
+  0 - f                                                                - offset of [[1, 2], [3]]
+  1 - g                                                                - offset of ["one", "two", "three"]
+  2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
+  3 - 0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
+  4 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
+  5 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+  6 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+  7 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+  8 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+  9 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+ 10 - 0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
+ 11 - 0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
+ 12 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
+ 13 - 00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
+ 14 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+ 15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+ 16 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+ 17 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+ 18 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+ 19 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+
+Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` which is line 2 (64 bytes); thus ``f = 0x0000000000000000000000000000000000000000000000000000000000000040``.
+
+Offset ``g`` points to the start of the content of the array ``["one", "two", "three"]`` which is line 10 (320 bytes); thus ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``.
 
 Events
 ======
