@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// Warning: (55-77): "callcode" has been deprecated in favour of "delegatecall".
+// TypeError: (55-77): "callcode" has been deprecated in favour of "delegatecall".
