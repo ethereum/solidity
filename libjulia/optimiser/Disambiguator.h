@@ -38,7 +38,7 @@ namespace julia
 {
 
 /**
- * Creates a copy of a iulia AST replacing all identifiers by unique names.
+ * Creates a copy of a Yul AST replacing all identifiers by unique names.
  */
 class Disambiguator: public ASTCopier
 {

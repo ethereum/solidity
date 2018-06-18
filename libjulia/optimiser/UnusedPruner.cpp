@@ -59,7 +59,7 @@ void UnusedPruner::operator()(Block& _block)
 			// Multi-variable declarations are special. We can only remove it
 			// if all vairables are unused and the right-hand-side is either
 			// movable or it return a single value. In the latter case, we
-			// replace `let a := f()` by `pop(f())` (in pure IULIA, this will be
+			// replace `let a := f()` by `pop(f())` (in pure Yul, this will be
 			// `drop(f())`).
 			if (boost::algorithm::none_of(
 				varDecl.variables,
@@ -74,7 +74,7 @@ void UnusedPruner::operator()(Block& _block)
 					statement = Block{std::move(varDecl.location), {}};
 				}
 				else if (varDecl.variables.size() == 1)
-					// In pure IULIA, this should be replaced by a function call to `drop`
+					// In pure Yul, this should be replaced by a function call to `drop`
 					// instead of `pop`.
 					statement = ExpressionStatement{varDecl.location, FunctionalInstruction{
 						varDecl.location,

@@ -1,6 +1,6 @@
-## IULIA Optimiser
+## Yul Optimiser
 
-The iulia optimiser consists of several stages and components that all transform
+The Yul optimiser consists of several stages and components that all transform
 the AST in a semantically equivalent way. The goal is to end up either with code
 that is shorter or at least only marginally longer but will allow further
 optimisation steps.
@@ -81,7 +81,7 @@ a loop or conditional, the first one is not inside), the first assignment is rem
 
 ## Expression Simplifier
 
-This step can only be applied for the EVM-flavoured dialect of iulia. It applies
+This step can only be applied for the EVM-flavoured dialect of Yul. It applies
 simple rules like ``x + 0 == x`` to simplify expressions.
 
 ## Ineffective Statement Remover

@@ -62,7 +62,7 @@ public:
 };
 
 /**
- * Creates a copy of a iulia AST potentially replacing identifier names.
+ * Creates a copy of a Yul AST potentially replacing identifier names.
  * Base class to be extended.
  */
 class ASTCopier: public ExpressionCopier, public StatementCopier
