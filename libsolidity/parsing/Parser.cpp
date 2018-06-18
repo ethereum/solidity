@@ -265,6 +265,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 			subNodes.push_back(parseEventDefinition());
 		else if (currentTokenValue == Token::Using)
 			subNodes.push_back(parseUsingDirective());
+		else if (currentTokenValue == Token::Apply)
+			subNodes.push_back(parseModifierArea(name.get()));
 		else
 			fatalParserError(string("Function, variable, struct or modifier declaration expected."));
 	}
@@ -337,7 +339,11 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
+	bool _forceEmptyName,
+	bool _allowModifiers,
+	ModifierArea const* _modifierArea
+)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
@@ -402,12 +408,22 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				));
 				m_scanner->next();
 			}
+			else if (_modifierArea && _modifierArea->visibility() != Declaration::Visibility::Default)
+			{
+				parserError("Cannot override modifier area's visibility.");
+				m_scanner->next();
+			}
 			else
 				result.visibility = parseVisibilitySpecifier(token);
 		}
 		else if (Token::isStateMutabilitySpecifier(token))
 		{
-			if (result.stateMutability != StateMutability::NonPayable)
+			if (_modifierArea && _modifierArea->stateMutability() != StateMutability::NonPayable)
+			{
+				parserError("Cannot override modifier area's state mutability.");
+				m_scanner->next();
+			}
+			else if (result.stateMutability != StateMutability::NonPayable)
 			{
 				parserError(string(
 					"State mutability already specified as \"" +
@@ -433,7 +449,9 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	return result;
 }
 
-ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
+ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(
+	ModifierArea* const& _modifierArea
+)
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -441,7 +459,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
+	FunctionHeaderParserResult header = parseFunctionHeader(false, true, _modifierArea);
 
 	if (
 		header.isConstructor ||
@@ -461,6 +479,13 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 		}
 		else
 			m_scanner->next(); // just consume the ';'
+
+		if (_modifierArea)
+		{
+			header.visibility = _modifierArea->visibility();
+			header.stateMutability = _modifierArea->stateMutability();
+		}
+
 		return nodeFactory.createNode<FunctionDefinition>(
 			header.name,
 			header.visibility,
@@ -470,7 +495,8 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 			header.parameters,
 			header.modifiers,
 			header.returnParameters,
-			block
+			block,
+			_modifierArea
 		);
 	}
 	else
@@ -713,6 +739,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::Using);
+
 	ASTPointer<UserDefinedTypeName> library(parseUserDefinedTypeName());
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
@@ -723,6 +750,85 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<UsingForDirective>(library, typeName);
+}
+
+ASTPointer<ModifierArea> Parser::parseModifierArea(ASTString const* _contractName, ModifierArea* const& _parent)
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	std::vector<ASTPointer<ModifierInvocation>> modifiers;
+
+	expectToken(Token::Apply);
+
+	Declaration::Visibility visibility = _parent ? _parent->visibility() : Declaration::Visibility::Default;
+	StateMutability mutability = _parent ? _parent->stateMutability() : StateMutability::NonPayable;
+
+	while (true)
+	{
+		Token::Value token = currentToken();
+		if (Token::isVisibilitySpecifier(token))
+		{
+			if (visibility == Declaration::Visibility::Default)
+				visibility = parseVisibilitySpecifier(token);
+			else
+			{
+				parserError("Cannot override parent modifier area's visibility of \"" + Declaration::visibilityToString(visibility) +  "\".");
+				m_scanner->next();
+			}
+		}
+		else if (Token::isStateMutabilitySpecifier(token))
+		{
+			if (mutability == StateMutability::NonPayable)
+				mutability = parseStateMutability(token);
+			else
+			{
+				parserError("Cannot override parent modifier area's state mutability of \"" + stateMutabilityToString(mutability) + "\".");
+				m_scanner->next();
+			}
+		}
+		else if (token == Token::Identifier)
+			modifiers.push_back(parseModifierInvocation());
+		else if (token == Token::LBrace)
+			break;
+		else
+		{
+			fatalParserError("Expected visibility specifier, mutability specifier, modifier invocation, or left brace.");
+			break;
+		}
+	}
+
+	expectToken(Token::LBrace);
+
+	ASTPointer<std::vector<ASTPointer<FunctionDefinition>>> functions = std::make_shared<std::vector<ASTPointer<FunctionDefinition>>>();
+	ASTPointer<std::vector<ASTPointer<ModifierArea>>> subAreas = std::make_shared<std::vector<ASTPointer<ModifierArea>>>();
+
+	ASTPointer<ModifierArea> modifierArea = nodeFactory.createNode<ModifierArea>(modifiers, visibility, mutability, functions, subAreas, _parent);
+
+	while (true)
+	{
+		Token::Value currentToken = m_scanner->currentToken();
+		if (currentToken == Token::RBrace)
+			break;
+		else if (currentToken == Token::Function)
+		{
+			ASTPointer<ASTNode> functionNode = parseFunctionDefinitionOrFunctionTypeStateVariable(modifierArea.get());
+			if (auto functionDefinition = dynamic_pointer_cast<FunctionDefinition>(functionNode))
+				functions->push_back(functionDefinition);
+			else
+				parserError(string("State variable declaration not permitted"));
+		}
+		else if (currentToken == Token::Apply)
+		{
+			subAreas->push_back(parseModifierArea(_contractName, modifierArea.get()));
+		}
+		else
+			fatalParserError(string("Expected modifier area declaration, function definition, or right brace."));
+	}
+
+	expectToken(Token::RBrace);
+
+	return modifierArea;
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()

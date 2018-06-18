@@ -74,8 +74,14 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	StateMutability parseStateMutability(Token::Value _token);
-	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
-	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable();
+	FunctionHeaderParserResult parseFunctionHeader(
+		bool _forceEmptyName,
+		bool _allowModifiers,
+		ModifierArea const* _modifierArea = nullptr
+	);
+	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable(
+		ModifierArea* const& _modifierArea = nullptr
+	);
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
@@ -86,7 +92,12 @@ private:
 	);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
+
 	ASTPointer<UsingForDirective> parseUsingDirective();
+	ASTPointer<ModifierArea> parseModifierArea(
+		ASTString const* _contractName,
+		ModifierArea* const& _parent = nullptr
+	);
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
