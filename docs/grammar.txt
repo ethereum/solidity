@@ -12,7 +12,7 @@ ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
                      '{' ContractPart* '}'
 
 ContractPart = StateVariableDeclaration | UsingForDeclaration
-             | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
+             | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition | ModifierArea
 
 InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
@@ -24,13 +24,17 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
+FunctionModifier = ModifierInvocation | StateMutability | Visibility
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
+                     FunctionModifier*
                      ( 'returns' ParameterList )? ( ';' | Block )
 EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
+
+ModifierArea = 'using modifier' FunctionModifier FunctionModifier*
+               '{' (ModifierArea | FunctionDefinition)* '}'
 
 ParameterList = '(' ( Parameter (',' Parameter)* )? ')'
 Parameter = TypeName StorageLocation? Identifier?
@@ -59,6 +63,7 @@ FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external
                    ( 'returns' FunctionTypeParameterList )?
 StorageLocation = 'memory' | 'storage' | 'calldata'
 StateMutability = 'pure' | 'view' | 'payable'
+Visibility = 'public' | 'external' | 'internal' | 'private'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |

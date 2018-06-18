@@ -139,3 +139,100 @@ Enums can be used to create custom types with a finite set of 'constant values' 
     contract Purchase {
         enum State { Created, Locked, Inactive } // Enum
     }
+
+
+.. _structure-modifier-areas:
+
+Modifier Areas
+==============
+
+Modifier areas can be used to apply modifier invocations,
+a visibility specifier, or a mutability specifier to an
+entire group of functions. They take the following syntax:
+
+::
+
+    pragma soliditiy [TBD];
+
+    contract Purchase {
+        private State currentState = Created;
+
+        enum State { Created, Locked, Inactive } // Enum
+
+        modifier inState(State requiredState) { require(currentState = requiredState); }
+
+        using modifier inState(State.Created) {
+            function lock() { currentState = State.Locked; }
+
+            // Other functions only callable in state Created
+        }
+
+        using modifier inState(State.Locked) {
+            function inactivate() { currentState = State.Inactive; }
+
+            // Other functions only callable in state Locked
+        }
+
+        using modifier inState(State.Inactive) {
+            // Functions only callable in state Inactive
+        }
+    }
+
+Multiple modifier invocations can be used in a single modifier area:
+`using modifier A, B { /* ... */ }` declares a modifier area
+where both modifiers `A` and `B` are used on every function.
+
+Modifier areas can be nested by declaring a modifier area
+inside the scope of another. Inside the nested modifier area,
+all modifiers from all parents apply in addition to those
+declared on that modifier area.
+
+::
+
+    contract C {
+        modifier A { /* ... */ }
+        modifier B { /* ... */ }
+
+        using modifier A {
+            // Functions where only A applies
+
+            using modifier B {
+                // Functions where A and B apply
+            }
+        }
+    }
+
+Modifier areas can also apply a mutability or visiblity specifier to
+a group of functions.
+
+::
+
+    contract C {
+        using modifier public {
+            // Functions that are public
+        }
+        
+        using modifier payable {
+            // Functions that are payable
+        }
+    }
+
+State and mutability specifiers also nest, just like modifiers.
+
+::
+
+    contract C {
+        using modifier public {
+            // Functions that are public
+            
+            using modifier payable {
+                // Functions that are public and payable
+            }
+        }
+    }
+
+It is **not** permissible to do any of the following:
+1. Declare a nested modifier area with a different visibility or
+mutability than any of its parents
+2. Declare a function within a modifier area with a different
+visibility or mutability than any of its parents.
