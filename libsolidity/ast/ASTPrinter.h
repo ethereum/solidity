@@ -58,6 +58,7 @@ public:
 	bool visit(ParameterList const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	bool visit(VariableDeclaration const& _node) override;
+	bool visit(ModifierArea const& _node) override;
 	bool visit(ModifierDefinition const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	bool visit(EventDefinition const& _node) override;
@@ -103,6 +104,7 @@ public:
 	void endVisit(ParameterList const&) override;
 	void endVisit(FunctionDefinition const&) override;
 	void endVisit(VariableDeclaration const&) override;
+	void endVisit(ModifierArea const&) override;
 	void endVisit(ModifierDefinition const&) override;
 	void endVisit(ModifierInvocation const&) override;
 	void endVisit(EventDefinition const&) override;

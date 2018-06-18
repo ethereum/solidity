@@ -359,6 +359,16 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(ModifierArea const& _node)
+{
+	setJsonNode(_node, "ModifierArea", {
+		make_pair("modifiers", toJson(_node.declaredModifiers())),
+		make_pair("functions", toJson(_node.definedFunctions())),
+		make_pair("subAreas", toJson(_node.subAreas()))
+	});
+	return false;
+}
+
 bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 {
 	setJsonNode(_node, "ModifierDefinition", {
