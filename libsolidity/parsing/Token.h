@@ -182,6 +182,7 @@ namespace solidity
 	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
 	K(While, "while", 0)                                               \
+	K(Apply, "apply", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
 	K(SubWei, "wei", 0)                                                \
@@ -225,7 +226,6 @@ namespace solidity
 	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
 	K(Alias, "alias", 0)                                               \
-	K(Apply, "apply", 0)                                               \
 	K(Auto, "auto", 0)                                                 \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
