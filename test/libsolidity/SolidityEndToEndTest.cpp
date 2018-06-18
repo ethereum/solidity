@@ -12835,6 +12835,106 @@ BOOST_AUTO_TEST_CASE(write_storage_external)
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(12));
 }
 
+BOOST_AUTO_TEST_CASE(modifier_area_simple)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier A(uint x) { require(x == 0); _; }
+
+			apply A(0) {
+				function f() public returns (uint) { return 1; }
+			}
+			apply A(1) {
+				function g() public returns (uint) { return 2; }
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(modifier_area_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier A(uint x) { require(x == 0); _; }
+
+			apply A(0) {
+				function f() public returns (uint) { return 1; }
+				apply A(1) {
+					function g() public returns (uint) { return 2; }
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(modifier_area_nested_inverted)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier A(uint x) { require(x == 0); _; }
+
+			apply A(1) {
+				function f() public returns (uint) { return 1; }
+				apply A(0) {
+					function g() public returns (uint) { return 2; }
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(modifier_area_extra_modifiers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier A(uint x) { require(x == 0); _;}
+			modifier B(uint x, uint y) { require(x == y); _;}
+
+			apply A(0) B(1,1) {
+				function f() public B(2,2) returns (uint) { return 1; }
+			}
+			apply A(0) B(1,1) {
+				function g() public B(1,2) returns (uint) { return 2; }
+			}
+			apply A(0) B(1,2) {
+				function h() public B(2,2) returns (uint) { return 3; }
+			}
+			apply A(1) B(1,1) {
+				function i() public B(2,2) returns (uint) { return 4; }
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs());
+	ABI_CHECK(callContractFunction("h()"), encodeArgs());
+	ABI_CHECK(callContractFunction("i()"), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(modifier_area_mutability)
+{
+	char const* sourceCode = R"(
+		contract C {
+			apply payable {
+				function f() returns (uint256) {
+					return msg.value;
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunctionWithValue("f()", 1337), encodeArgs(1337));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

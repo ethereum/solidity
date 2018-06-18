@@ -492,7 +492,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"abstract",
 		"after",
 		"alias",
-		"apply",
 		"auto",
 		"case",
 		"catch",
