@@ -385,7 +385,8 @@ public:
 	std::vector<EnumDefinition const*> definedEnums() const { return filteredNodes<EnumDefinition>(m_subNodes); }
 	std::vector<VariableDeclaration const*> stateVariables() const { return filteredNodes<VariableDeclaration>(m_subNodes); }
 	std::vector<ModifierDefinition const*> functionModifiers() const { return filteredNodes<ModifierDefinition>(m_subNodes); }
-	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
+	std::vector<FunctionDefinition const*> definedFunctions() const;
+	std::vector<ModifierArea const*> modifierAreas() const { return filteredNodes<ModifierArea>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
@@ -599,16 +600,9 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
-		ASTPointer<Block> const& _body
-	):
-		CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
-		Documented(_documentation),
-		ImplementationOptional(_body != nullptr),
-		m_stateMutability(_stateMutability),
-		m_isConstructor(_isConstructor),
-		m_functionModifiers(_modifiers),
-		m_body(_body)
-	{}
+		ASTPointer<Block> const& _body,
+		ModifierArea* const& _modifierArea = nullptr
+	);
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -620,6 +614,9 @@ public:
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
+	ModifierArea* modifierArea() { return m_modifierArea; }
+
+	std::string fullyQualifiedName() const;
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
@@ -646,6 +643,7 @@ private:
 	bool m_isConstructor;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
+	ModifierArea* m_modifierArea;
 };
 
 /**
@@ -721,6 +719,42 @@ private:
 	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant; ///< Whether the variable is a compile-time constant.
 	Location m_location; ///< Location of the variable if it is of reference type.
+};
+
+class ModifierArea: public ASTNode
+{
+public:
+	ModifierArea(
+		SourceLocation const& _location,
+		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
+		Declaration::Visibility const& _visibility,
+		StateMutability const& _mutability,
+		ASTPointer<std::vector<ASTPointer<FunctionDefinition>>> const& _functions,
+		ASTPointer<std::vector<ASTPointer<ModifierArea>>> const& _subAreas,
+		ModifierArea* _parent = nullptr
+	);
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	/// Returns only modifiers defined
+	std::vector<ASTPointer<ModifierInvocation>> const& declaredModifiers() const { return m_declaredModifiers; }
+	/// Returns all modifiers in effect (including ones from parents)
+	std::vector<ASTPointer<ModifierInvocation>> const& totalModifiers() const { return m_totalModifiers; }
+	Declaration::Visibility const& visibility() const { return m_visibility; }
+	StateMutability const& stateMutability() const { return m_mutability; }
+	std::vector<ASTPointer<FunctionDefinition>> const& definedFunctions() const { return *m_functions; }
+	std::vector<ASTPointer<ModifierArea>> const& subAreas() const { return *m_subAreas; }
+	ModifierArea const& parent() const { return *m_parent; }
+
+private:
+	std::vector<ASTPointer<ModifierInvocation>> m_declaredModifiers;
+	std::vector<ASTPointer<ModifierInvocation>> m_totalModifiers;
+	Declaration::Visibility m_visibility;
+	StateMutability m_mutability;
+	ASTPointer<std::vector<ASTPointer<FunctionDefinition>> const> m_functions;
+	ASTPointer<std::vector<ASTPointer<ModifierArea>> const> m_subAreas;
+	ModifierArea* m_parent;
 };
 
 /**

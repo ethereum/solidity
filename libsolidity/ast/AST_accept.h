@@ -239,6 +239,28 @@ void VariableDeclaration::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void ModifierArea::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		listAccept(m_declaredModifiers, _visitor);
+		listAccept(*m_functions, _visitor);
+		listAccept(*m_subAreas, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ModifierArea::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		listAccept(m_declaredModifiers, _visitor);
+		listAccept(*m_functions, _visitor);
+		listAccept(*m_subAreas, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void ModifierDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

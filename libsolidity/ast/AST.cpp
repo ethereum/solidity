@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 
 using namespace std;
 using namespace dev;
@@ -252,6 +253,28 @@ ContractDefinitionAnnotation& ContractDefinition::annotation() const
 	return dynamic_cast<ContractDefinitionAnnotation&>(*m_annotation);
 }
 
+std::vector<FunctionDefinition const*> ContractDefinition::definedFunctions() const
+{
+	std::vector<FunctionDefinition const*> totalFunctions = filteredNodes<FunctionDefinition>(m_subNodes);
+	std::vector<ModifierArea const*> currentGroup = modifierAreas();
+	std::vector<ModifierArea const*> nextGroup;
+
+	while (!currentGroup.empty())
+	{
+		for (auto const& modifierArea : currentGroup)
+		{
+			for (auto const& subFunction: modifierArea->definedFunctions())
+				totalFunctions.push_back(subFunction.get());
+			for (auto const& subArea: modifierArea->subAreas())
+				nextGroup.push_back(subArea.get());
+		}
+		currentGroup = nextGroup;
+		nextGroup.clear();
+	}
+
+	return totalFunctions;
+}
+
 TypeNameAnnotation& TypeName::annotation() const
 {
 	if (!m_annotation)
@@ -352,6 +375,30 @@ FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 	if (!m_annotation)
 		m_annotation = new FunctionDefinitionAnnotation();
 	return dynamic_cast<FunctionDefinitionAnnotation&>(*m_annotation);
+}
+
+FunctionDefinition::FunctionDefinition(
+	SourceLocation const &_location, ASTPointer<ASTString> const &_name,
+	Declaration::Visibility _visibility, StateMutability _stateMutability,
+	bool _isConstructor, ASTPointer<ASTString> const &_documentation,
+	ASTPointer<ParameterList> const &_parameters,
+	std::vector<ASTPointer<ModifierInvocation>> const &_modifiers,
+	ASTPointer<ParameterList> const &_returnParameters,
+	ASTPointer<Block> const &_body,
+	ModifierArea* const &_modifierArea
+):
+	CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
+	Documented(_documentation),
+	ImplementationOptional(_body != nullptr),
+	m_stateMutability(_stateMutability),
+	m_isConstructor(_isConstructor),
+	m_body(_body),
+	m_modifierArea(_modifierArea)
+{
+	if (_modifierArea)
+		m_functionModifiers = _modifierArea->totalModifiers() + _modifiers;
+	else
+		m_functionModifiers = _modifiers;
 }
 
 TypePointer ModifierDefinition::type() const
@@ -498,6 +545,27 @@ VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 	if (!m_annotation)
 		m_annotation = new VariableDeclarationAnnotation();
 	return dynamic_cast<VariableDeclarationAnnotation&>(*m_annotation);
+}
+
+ModifierArea::ModifierArea(SourceLocation const& _location,
+						   std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
+						   Declaration::Visibility const& _visibility,
+						   StateMutability const& _mutability,
+						   ASTPointer<std::vector<ASTPointer<FunctionDefinition>>> const& _functions,
+						   ASTPointer<std::vector<ASTPointer<ModifierArea>>> const& _subAreas,
+						   ModifierArea* _parent) :
+		ASTNode(_location),
+		m_declaredModifiers(_modifiers),
+		m_visibility(_visibility),
+		m_mutability(_mutability),
+		m_functions(_functions),
+		m_subAreas(_subAreas),
+		m_parent(_parent)
+{
+	if (_parent)
+		m_totalModifiers = _parent->totalModifiers() + _modifiers;
+	else
+		m_totalModifiers = _modifiers;
 }
 
 StatementAnnotation& Statement::annotation() const

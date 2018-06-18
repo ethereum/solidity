@@ -47,6 +47,7 @@ class EnumValue;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
+class ModifierArea;
 class ModifierDefinition;
 class ModifierInvocation;
 class EventDefinition;

@@ -56,6 +56,7 @@ public:
 	virtual bool visit(ParameterList& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclaration& _node) { return visitNode(_node); }
+	virtual bool visit(ModifierArea& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierInvocation& _node) { return visitNode(_node); }
 	virtual bool visit(EventDefinition& _node) { return visitNode(_node); }
@@ -102,6 +103,7 @@ public:
 	virtual void endVisit(ParameterList& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclaration& _node) { endVisitNode(_node); }
+	virtual void endVisit(ModifierArea& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierInvocation& _node) { endVisitNode(_node); }
 	virtual void endVisit(EventDefinition& _node) { endVisitNode(_node); }
@@ -161,6 +163,7 @@ public:
 	virtual bool visit(ParameterList const& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclaration const& _node) { return visitNode(_node); }
+	virtual bool visit(ModifierArea const& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierInvocation const& _node) { return visitNode(_node); }
 	virtual bool visit(EventDefinition const& _node) { return visitNode(_node); }
@@ -207,6 +210,7 @@ public:
 	virtual void endVisit(ParameterList const& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclaration const& _node) { endVisitNode(_node); }
+	virtual void endVisit(ModifierArea const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierInvocation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(EventDefinition const& _node) { endVisitNode(_node); }
