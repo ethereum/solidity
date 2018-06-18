@@ -7,10 +7,8 @@ Types
 *****
 
 Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified (or at least known -
-see :ref:`type-deduction` below) at
-compile-time. Solidity provides several elementary types which can be combined
-to form complex types.
+variable (state and local) needs to be specified.
+Solidity provides several elementary types which can be combined to form complex types.
 
 In addition, types can interact with each other in expressions containing
 operators. For a quick reference of the various operators, see :ref:`order`.
@@ -548,7 +546,7 @@ memory-stored reference type do not create a copy.
         // the data location of memoryArray is memory
         function f(uint[] memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
-            var y = x; // works, assigns a pointer, data location of y is storage
+            uint[] storage y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
             y.length = 2; // fine, modifies x through y
             delete x; // fine, clears the array, also modifies y
@@ -985,27 +983,4 @@ converted to a matching size. This makes alignment and padding explicit::
     uint16 x = 0xffff;
     bytes32(uint256(x)); // pad on the left
     bytes32(bytes2(x)); // pad on the right
-
-.. index:: ! type;deduction, ! var
-
-.. _type-deduction:
-
-Type Deduction
-==============
-
-For convenience, it is not always necessary to explicitly specify the type of a
-variable, the compiler automatically infers it from the type of the first
-expression that is assigned to the variable::
-
-    uint24 x = 0x123;
-    var y = x;
-
-Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
-parameters or return parameters.
-
-.. warning::
-    The type is only deduced from the first assignment, so
-    the loop in the following snippet is infinite, as ``i`` will have the type
-    ``uint8`` and the highest value of this type is smaller than ``2000``.
-    ``for (var i = 0; i < 2000; i++) { ... }``
 

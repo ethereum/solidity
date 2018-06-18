@@ -157,7 +157,7 @@ These steps are applied to each basic block and the newly generated code is used
 
 ::
 
-    var x = 7;
+    uint x = 7;
     data[7] = 9;
     if (data[x] != x + 2)
       return 2;
