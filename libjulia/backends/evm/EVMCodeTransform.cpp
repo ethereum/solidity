@@ -331,7 +331,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	CodeTransform(
 		m_assembly,
 		m_info,
-		m_julia,
+		m_yul,
 		m_evm15,
 		m_identifierAccess,
 		m_useNamedLabelsForFunctions,

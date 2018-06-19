@@ -49,14 +49,14 @@ public:
 	CodeTransform(
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
-		bool _julia = false,
+		bool _yul = false,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
-		_julia,
+		_yul,
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
@@ -78,7 +78,7 @@ protected:
 	CodeTransform(
 		julia::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
-		bool _julia,
+		bool _yul,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
@@ -87,7 +87,7 @@ protected:
 	):
 		m_assembly(_assembly),
 		m_info(_analysisInfo),
-		m_julia(_julia),
+		m_yul(_yul),
 		m_evm15(_evm15),
 		m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
 		m_identifierAccess(_identifierAccess),
@@ -142,7 +142,7 @@ private:
 	julia::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
 	solidity::assembly::Scope* m_scope = nullptr;
-	bool m_julia = false;
+	bool m_yul = false;
 	bool m_evm15 = false;
 	bool m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;

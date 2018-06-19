@@ -55,19 +55,19 @@ string inlinableFunctions(string const& _source)
 	);
 }
 
-string inlineFunctions(string const& _source, bool _julia = true)
+string inlineFunctions(string const& _source, bool _yul = true)
 {
-	auto ast = disambiguate(_source, _julia);
+	auto ast = disambiguate(_source, _yul);
 	ExpressionInliner(ast).run();
-	return assembly::AsmPrinter(_julia)(ast);
+	return assembly::AsmPrinter(_yul)(ast);
 }
-string fullInline(string const& _source, bool _julia = true)
+string fullInline(string const& _source, bool _yul = true)
 {
-	Block ast = disambiguate(_source, _julia);
+	Block ast = disambiguate(_source, _yul);
 	(FunctionHoister{})(ast);
 	(FunctionGrouper{})(ast);\
 	FullInliner(ast).run();
-	return assembly::AsmPrinter(_julia)(ast);
+	return assembly::AsmPrinter(_yul)(ast);
 }
 }
 
