@@ -201,6 +201,26 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	BOOST_CHECK(result.isMember("contracts"));
 }
 
+BOOST_AUTO_TEST_CASE(new_api)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	BOOST_CHECK_EQUAL(string(version()), string(solidity_version()));
+	BOOST_CHECK_EQUAL(string(license()), string(solidity_license()));
+	BOOST_CHECK_EQUAL(
+		string(compileStandard(input, nullptr)),
+		string(solidity_compile(input, nullptr))
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
