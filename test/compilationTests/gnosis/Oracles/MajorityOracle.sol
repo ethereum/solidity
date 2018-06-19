@@ -16,7 +16,7 @@ contract MajorityOracle is Oracle {
      */
     /// @dev Allows to create an oracle for a majority vote based on other oracles
     /// @param _oracles List of oracles taking part in the majority vote
-    constructor(Oracle[] _oracles)
+    constructor(Oracle[] memory _oracles)
         public
     {
         // At least 2 oracles should be defined

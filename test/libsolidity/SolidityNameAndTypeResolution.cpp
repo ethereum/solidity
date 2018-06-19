@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f(uint) public returns (string);
+			function f(uint) public returns (string memory);
 			function g() public {
 				string memory x = this.f(2);
 				// we can assign to x but it is not usable.

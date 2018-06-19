@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(structs)
 			struct T { uint64[2] x; }
 			S s;
 			event e(uint16, S);
-			function f() public returns (uint, S) {
+			function f() public returns (uint, S memory) {
 				uint16 x = 7;
 				s.a = 8;
 				s.b = 9;
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 			enum E {A, B, C}
 			struct T { uint x; E e; uint8 y; }
 			struct S { C c; T[] t;}
-			function f() public returns (uint a, S[2] s1, S[] s2, uint b) {
+			function f() public returns (uint a, S[2] memory s1, S[] memory s2, uint b) {
 				a = 7;
 				b = 8;
 				s1[0].c = this;

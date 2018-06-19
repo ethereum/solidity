@@ -66,7 +66,7 @@ of votes.
         Proposal[] public proposals;
 
         /// Create a new ballot to choose one of `proposalNames`.
-        constructor(bytes32[] proposalNames) public {
+        constructor(bytes32[] memory proposalNames) public {
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
@@ -452,9 +452,9 @@ high or low invalid bids.
         /// correctly blinded invalid bids and for all bids except for
         /// the totally highest.
         function reveal(
-            uint[] _values,
-            bool[] _fake,
-            bytes32[] _secret
+            uint[] memory _values,
+            bool[] memory _fake,
+            bytes32[] memory _secret
         )
             public
             onlyAfter(biddingEnd)
