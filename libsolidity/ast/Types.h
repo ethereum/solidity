@@ -692,9 +692,9 @@ public:
 	virtual Category category() const override { return Category::Contract; }
 	explicit ContractType(ContractDefinition const& _contract, bool _super = false):
 		m_contract(_contract), m_super(_super) {}
-	/// Contracts can be implicitly converted to super classes and to addresses.
+	/// Contracts can be implicitly converted only to base contracts.
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
-	/// Contracts can be converted to themselves and to integers.
+	/// Contracts can only be explicitly converted to address types and base contracts.
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual std::string richIdentifier() const override;

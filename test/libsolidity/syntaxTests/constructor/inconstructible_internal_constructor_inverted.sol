@@ -3,11 +3,10 @@
 contract B {
 	A a;
 	constructor() public {
-		a = new A(this);
+		a = new A(address(this));
 	}
 }
 contract A {
-	constructor(address a) internal {}
+	constructor(address) public {}
 }
 // ----
-// TypeError: (141-146): Contract with internal constructor cannot be created directly.

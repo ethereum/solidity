@@ -1403,15 +1403,15 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (*this == _convertTo)
 		return true;
-	if (_convertTo.category() == Category::Integer)
-		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
 	if (_convertTo.category() == Category::Contract)
 	{
 		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		if (m_super && bases.size() <= 1)
 			return false;
-		return find(m_super ? ++bases.begin() : bases.begin(), bases.end(),
-					&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()) != bases.end();
+		return find(
+			m_super ? ++bases.begin() : bases.begin(), bases.end(),
+			&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()
+		) != bases.end();
 	}
 	return false;
 }
@@ -1420,8 +1420,7 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return
 		isImplicitlyConvertibleTo(_convertTo) ||
-		_convertTo.category() == Category::Integer ||
-		_convertTo.category() == Category::Contract;
+		_convertTo == IntegerType(160, IntegerType::Modifier::Address);
 }
 
 bool ContractType::isPayable() const

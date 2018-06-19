@@ -192,6 +192,23 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
+Contract Types
+--------------
+
+Every :ref:`contract<contracts>` defines its own type. Contracts can be implicitly converted
+to contracts they inherit from. They can be explicitly converted from and to ``address`` types.
+
+The data representation of a contract is identical to that of the ``address`` type and
+this type is also used in the :ref:`ABI<ABI>`.
+
+Contracts do not support any operators.
+
+The members of contract types are the external functions of the contract including
+public state variables.
+
+.. note::
+    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
+
 .. index:: byte array, bytes32
 
 
