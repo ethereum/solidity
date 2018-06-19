@@ -49,7 +49,7 @@ class TestTool
 {
 public:
 	TestTool(
-		TestCase::TestCaseCreator _testCaseCreator,
+		TestCase::TestCaseCreator const& _testCaseCreator,
 		string const& _name,
 		fs::path const& _path,
 		bool _formatted
@@ -66,7 +66,7 @@ public:
 	Result process();
 
 	static TestStats processPath(
-		TestCase::TestCaseCreator _testCaseCreator,
+		TestCase::TestCaseCreator const& _testCaseCreator,
 		fs::path const& _basepath,
 		fs::path const& _path,
 		bool const _formatted
@@ -182,7 +182,7 @@ TestTool::Request TestTool::handleResponse(bool const _exception)
 }
 
 TestStats TestTool::processPath(
-	TestCase::TestCaseCreator _testCaseCreator,
+	TestCase::TestCaseCreator const& _testCaseCreator,
 	fs::path const& _basepath,
 	fs::path const& _path,
 	bool const _formatted

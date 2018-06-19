@@ -34,7 +34,7 @@ namespace test
 class TestCase
 {
 public:
-	using TestCaseCreator = std::unique_ptr<TestCase>(*)(std::string const&);
+	using TestCaseCreator = std::function<std::unique_ptr<TestCase>(std::string const&)>;
 
 	virtual ~TestCase() {}
 

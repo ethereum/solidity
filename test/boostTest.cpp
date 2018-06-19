@@ -74,7 +74,7 @@ int registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
-	TestCase::TestCaseCreator _testCaseCreator
+	TestCase::TestCaseCreator const& _testCaseCreator
 )
 {
 	int numTestsAdded = 0;
