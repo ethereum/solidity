@@ -54,6 +54,8 @@ However, if you are making a larger change, please consult with the `Solidity De
 <https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this on is
 focused on compiler and language development instead of language use) first.
 
+New features and bugfixes should be added to the ``Changelog.md`` file: please
+follow the style of previous entries, when applicable.
 
 Finally, please make sure you respect the `coding style
 <https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
