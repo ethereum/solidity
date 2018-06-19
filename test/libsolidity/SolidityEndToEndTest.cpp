@@ -3745,38 +3745,6 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 50 - 2);
 }
 
-BOOST_AUTO_TEST_CASE(generic_callcode)
-{
-	char const* sourceCode = R"**(
-			contract Receiver {
-				uint public received;
-				function receive(uint256 x) payable { received = x; }
-			}
-			contract Sender {
-				uint public received;
-				function Sender() payable { }
-				function doSend(address rec) returns (uint d)
-				{
-					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
-					rec.callcode.value(2)(signature, 23);
-					return Receiver(rec).received();
-				}
-			}
-	)**";
-	compileAndRun(sourceCode, 0, "Receiver");
-	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "Sender");
-	u160 const c_senderAddress = m_contractAddress;
-	ABI_CHECK(callContractFunction("doSend(address)", c_receiverAddress), encodeArgs(0));
-	ABI_CHECK(callContractFunction("received()"), encodeArgs(23));
-	m_contractAddress = c_receiverAddress;
-	ABI_CHECK(callContractFunction("received()"), encodeArgs(0));
-	BOOST_CHECK(storageEmpty(c_receiverAddress));
-	BOOST_CHECK(!storageEmpty(c_senderAddress));
-	BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
-	BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50);
-}
-
 BOOST_AUTO_TEST_CASE(generic_delegatecall)
 {
 	char const* sourceCode = R"**(
@@ -11558,9 +11526,6 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 			function f() external returns (bool) {
 				return address(0x4242).call();
 			}
-			function g() external returns (bool) {
-				return address(0x4242).callcode();
-			}
 			function h() external returns (bool) {
 				return address(0x4242).delegatecall();
 			}
@@ -11568,7 +11533,6 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(1)));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(u256(1)));
 }
 
