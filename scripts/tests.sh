@@ -88,12 +88,12 @@ function download_eth()
             ETH_BINARY=aleth_2018-06-20_artful
             ETH_HASH="02e6c4b3d98299885e73f7db6c9e3fbe3d66d444"
         fi
-        wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
-        test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
-        sync
-        chmod +x /tmp/test/eth
-        sync # Otherwise we might get a "text file busy" error
         ETH_PATH="/tmp/test/eth"
+        wget -q -O $ETH_PATH https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
+        test "$(shasum $ETH_PATH)" = "$ETH_HASH  $ETH_PATH"
+        sync
+        chmod +x $ETH_PATH
+        sync # Otherwise we might get a "text file busy" error
     fi
 
 }
