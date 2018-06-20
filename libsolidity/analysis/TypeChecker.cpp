@@ -2316,18 +2316,10 @@ void TypeChecker::endVisit(Literal const& _literal)
 	}
 
 	if (_literal.subDenomination() == Literal::SubDenomination::Year)
-	{
-		if (v050)
-			m_errorReporter.typeError(
-				_literal.location(),
-				"Using \"years\" as a unit denomination is deprecated."
-			);
-		else
-			m_errorReporter.warning(
-				_literal.location(),
-				"Using \"years\" as a unit denomination is deprecated."
-			);
-	}
+		m_errorReporter.typeError(
+			_literal.location(),
+			"Using \"years\" as a unit denomination is deprecated."
+		);
 
 	if (!_literal.annotation().type)
 		_literal.annotation().type = Type::forLiteral(_literal);

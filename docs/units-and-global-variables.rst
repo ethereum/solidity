@@ -32,7 +32,7 @@ Due to the fact that leap seconds cannot be predicted, an exact calendar
 library has to be updated by an external oracle.
 
 .. note::
-    The suffix ``years`` has been deprecated due to the reasons above.
+    The suffix ``years`` has been deprecated due to the reasons above and cannot be used starting version 0.5.0.
 
 These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
