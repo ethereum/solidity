@@ -669,7 +669,7 @@ void CompilerStack::resolveImports()
 	swap(m_sourceOrder, sourceOrder);
 }
 
-string CompilerStack::absolutePath(string const& _path, string const& _reference) const
+string CompilerStack::absolutePath(string const& _path, string const& _reference)
 {
 	using path = boost::filesystem::path;
 	path p(_path);
