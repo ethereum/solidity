@@ -711,9 +711,15 @@ void CompilerStack::compileContract(
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
+	compiledContract.compiler = compiler;
+
 	string metadata = createMetadata(compiledContract);
+	compiledContract.metadata = metadata;
+
+	// Prepare CBOR metadata for the bytecode
 	bytes cborEncodedHash =
 		// CBOR-encoding of the key "bzzr0"
 		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
@@ -734,8 +740,9 @@ void CompilerStack::compileContract(
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
+
+	// Run optimiser and compile the contract.
 	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
-	compiledContract.compiler = compiler;
 
 	try
 	{
@@ -763,7 +770,6 @@ void CompilerStack::compileContract(
 		solAssert(false, "Assembly exception for deployed bytecode");
 	}
 
-	compiledContract.metadata = metadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	try
