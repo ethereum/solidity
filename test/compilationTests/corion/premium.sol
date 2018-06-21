@@ -19,7 +19,7 @@ contract premium is module, safeMath {
         return true;
     }
     modifier isReady {
-        var (_success, _active) = super.isActive();
+        (bool _success, bool _active) = super.isActive();
         require( _success && _active ); 
         _;
     }
@@ -150,7 +150,7 @@ contract premium is module, safeMath {
             @remaining      Tokens to be spent
             @nonce          Transaction count
         */
-        var (_success, _remaining, _nonce) = db.getAllowance(owner, spender);
+        (bool _success, uint256 _remaining, uint256 _nonce) = db.getAllowance(owner, spender);
         require( _success );
         return (_remaining, _nonce);
     }
@@ -202,7 +202,7 @@ contract premium is module, safeMath {
             @success    If the function was successful.
         */
         if ( from != msg.sender ) {
-            var (_success, _reamining, _nonce) = db.getAllowance(from, msg.sender);
+            (bool _success, uint256 _reamining, uint256 _nonce) = db.getAllowance(from, msg.sender);
             require( _success );
             _reamining = safeSub(_reamining, amount);
             _nonce = safeAdd(_nonce, 1);
@@ -255,7 +255,7 @@ contract premium is module, safeMath {
             @extraData      Extra data that will be given to the receiver
         */
         _transfer(from, to, amount);
-        var (_success, _back) = thirdPartyPContractAbstract(to).receiveCorionPremiumToken(from, amount, extraData);
+        (bool _success, uint256 _back) = thirdPartyPContractAbstract(to).receiveCorionPremiumToken(from, amount, extraData);
         require( _success );
         require( amount > _back );
         if ( _back > 0 ) {

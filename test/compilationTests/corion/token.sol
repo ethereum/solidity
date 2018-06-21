@@ -22,7 +22,7 @@ contract token is safeMath, module, announcementTypes {
         return true;
     }
     modifier isReady {
-        var (_success, _active) = super.isActive();
+        (bool _success, bool _active) = super.isActive();
         require( _success && _active ); 
         _;
     }
@@ -165,7 +165,7 @@ contract token is safeMath, module, announcementTypes {
             @remaining     Tokens to be spent
             @nonce         Transaction count
         */
-        var (_success, _remaining, _nonce) = db.getAllowance(owner, spender);
+        (bool _success, uint256 _remaining, uint256 _nonce) = db.getAllowance(owner, spender);
         require( _success );
         return (_remaining, _nonce);
     }
@@ -217,7 +217,7 @@ contract token is safeMath, module, announcementTypes {
             @success    Was the Function successful?
         */
         if ( from != msg.sender ) {
-            var (_success, _reamining, _nonce) = db.getAllowance(from, msg.sender);
+            (bool _success, uint256 _reamining, uint256 _nonce) = db.getAllowance(from, msg.sender);
             require( _success );
             _reamining = safeSub(_reamining, amount);
             _nonce = safeAdd(_nonce, 1);
@@ -298,7 +298,7 @@ contract token is safeMath, module, announcementTypes {
             @extraData      Extra data the receiver will get
         */
         _transfer(from, to, amount, exchangeAddress == to);
-        var (_success, _back) = thirdPartyContractAbstract(to).receiveCorionToken(from, amount, extraData);
+        (bool _success, uint256 _back) = thirdPartyContractAbstract(to).receiveCorionToken(from, amount, extraData);
         require( _success );
         require( amount > _back );
         if ( _back > 0 ) {
@@ -321,7 +321,7 @@ contract token is safeMath, module, announcementTypes {
             @fee        Deduct transaction fee - yes or no?
         */
         if( fee ) {
-            var (success, _fee) = getTransactionFee(amount);
+            (bool success, uint256 _fee) = getTransactionFee(amount);
             require( success );
             require( db.balanceOf(from) >= amount + _fee );
         }
@@ -366,7 +366,7 @@ contract token is safeMath, module, announcementTypes {
             @value      Quantity to calculate the fee
         */
         if ( isICO ) { return; }
-        var (_success, _fee) = getTransactionFee(value);
+        (bool _success, uint256 _fee) = getTransactionFee(value);
         require( _success );
         uint256 _forBurn = _fee * transactionFeeBurn / 100;
         uint256 _forSchelling = _fee - _forBurn;

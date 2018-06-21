@@ -216,22 +216,22 @@ contract MilestoneTracker {
         // Decode the RLP encoded milestones and add them to the milestones list
         bytes memory mProposedMilestones = proposedMilestones;
 
-        var itmProposals = mProposedMilestones.toRLPItem(true);
+        RLP.RLPItem memory itmProposals = mProposedMilestones.toRLPItem(true);
 
         if (!itmProposals.isList()) throw;
 
-        var itrProposals = itmProposals.iterator();
+        RLP.Iterator memory itrProposals = itmProposals.iterator();
 
         while(itrProposals.hasNext()) {
 
 
-            var itmProposal = itrProposals.next();
+            RLP.RLPItem memory itmProposal = itrProposals.next();
 
             Milestone milestone = milestones[milestones.length ++];
 
             if (!itmProposal.isList()) throw;
 
-            var itrProposal = itmProposal.iterator();
+            RLP.Iterator memory itrProposal = itmProposal.iterator();
 
             milestone.description = itrProposal.next().toAscii();
             milestone.url = itrProposal.next().toAscii();

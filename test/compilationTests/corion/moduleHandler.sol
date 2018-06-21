@@ -69,7 +69,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @call   Is connect to the module or not.
         */
         if ( call ) { require( abstractModule(input.addr).connectModule() ); }
-        var (success, found, id) = getModuleIDByAddress(input.addr);
+        (bool success, bool found, uint256 id) = getModuleIDByAddress(input.addr);
         require( success && ! found );
         (success, found, id) = getModuleIDByHash(input.name);
         require( success && ! found );
@@ -90,7 +90,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @found      Is there any result.
             @success    Was the transaction succesfull or not.
         */
-        var (_success, _found, _id) = getModuleIDByName(name);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName(name);
         if ( _success && _found ) { return (true, true, modules[_id].addr); }
         return (true, false, 0x00);
     }
@@ -149,7 +149,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @bool           Was there any result or not.
             @callCallback   Call the replaceable module to confirm replacement or not.
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
@@ -172,7 +172,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", keccak256(moduleName, newModule))) ) {
             return true;
         }
-        var (_success, _found, _id) = getModuleIDByName(moduleName);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName(moduleName);
         require( _success);
         require( abstractModule(modules[_id].addr).replaceModule(newModule) );
         return true;
@@ -188,7 +188,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @transferEvent      Gets it new transaction notification?
             @bool               Was there any result or not.
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
@@ -207,7 +207,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @bool           Was the function successfull?
             @callCallback   Call the replaceable module to confirm replacement or not.
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
@@ -229,7 +229,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", keccak256(moduleName))) ) {
             return true;
         }
-        var (_success, _found, _id) = getModuleIDByName(moduleName);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName(moduleName);
         require( _success);
         require( abstractModule(modules[_id].addr).disableModule(true) );
         return true;
@@ -247,7 +247,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      amount.
             @bool       Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Token') );
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].transferEvent && abstractModule(modules[a].addr).isActive() ) {
@@ -266,7 +266,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @reward         Coin emission in this Schelling round.
             @bool           Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Schelling') );
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].schellingEvent && abstractModule(modules[a].addr).isActive() ) {
@@ -285,7 +285,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @newHandler     Address of the new ModuleHandler.
             @bool           Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
@@ -306,7 +306,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      balance.
             @success    was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByName('Token');
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
         return (true, token(modules[_id].addr).balanceOf(owner));
     }
@@ -317,7 +317,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      amount.
             @success    was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByName('Token');
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
         return (true, token(modules[_id].addr).totalSupply());
     }
@@ -328,7 +328,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @ico        Is ICO in progress?.
             @success    was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByName('Token');
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
         return (true, token(modules[_id].addr).isICO());
     }
@@ -339,7 +339,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @round      Schelling round.
             @success    was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByName('Schelling');
+        (bool _success, bool _found, uint256 _id) = getModuleIDByName('Schelling');
         require( _success && _found );
         return (true, schelling(modules[_id].addr).getCurrentSchellingRoundID());
     }
@@ -352,7 +352,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             
             @success    Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Provider') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -369,7 +369,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @fee        Transaction fee will be charged or not?
             @success    Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -384,7 +384,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      Token amount.
             @success    Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Provider') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -399,7 +399,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      Token amount.
             @success    Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Schelling') );
         (_success, _found, _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -415,7 +415,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @value      New value
             @success    Was the function successfull?
         */
-        var (_success, _found, _id) = getModuleIDByAddress(msg.sender);
+        (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
