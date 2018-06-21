@@ -10,6 +10,7 @@ Breaking Changes:
  * General: Disallow declaring empty structs.
  * General: Disallow raw ``callcode`` (was already deprecated in 0.4.12). It is still possible to use it via inline assembly.
  * General: Disallow ``sha3`` and ``suicide`` aliases.
+ * General: Disallow the ``years`` unit denomination (was already deprecated in 0.4.24)
  * General: Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * General: New keywords: ``calldata``
  * General: New reserved keywords: ``alias``, ``apply``, ``auto``, ``copyof``, ``define``, ``immutable``,
