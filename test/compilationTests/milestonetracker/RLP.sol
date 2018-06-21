@@ -32,8 +32,8 @@ library RLP {
 
  function next(Iterator memory self) internal constant returns (RLPItem memory subItem) {
      if(hasNext(self)) {
-         var ptr = self._unsafe_nextPtr;
-         var itemLength = _itemLength(ptr);
+         uint ptr = self._unsafe_nextPtr;
+         uint itemLength = _itemLength(ptr);
          subItem._unsafe_memPtr = ptr;
          subItem._unsafe_length = itemLength;
          self._unsafe_nextPtr = ptr + itemLength;
@@ -50,7 +50,7 @@ library RLP {
  }
 
  function hasNext(Iterator memory self) internal constant returns (bool) {
-     var item = self._unsafe_item;
+     RLPItem memory item = self._unsafe_item;
      return self._unsafe_nextPtr < item._unsafe_memPtr + item._unsafe_length;
  }
 
@@ -76,7 +76,7 @@ library RLP {
  /// @param strict Will throw if the data is not RLP encoded.
  /// @return An RLPItem
  function toRLPItem(bytes memory self, bool strict) internal constant returns (RLPItem memory) {
-     var item = toRLPItem(self);
+     RLPItem memory item = toRLPItem(self);
      if(strict) {
          uint len = self.length;
          if(_payloadOffset(item) > len)
@@ -170,7 +170,7 @@ library RLP {
  /// @param self The RLPItem.
  /// @return The bytes.
  function toBytes(RLPItem memory self) internal constant returns (bytes memory bts) {
-     var len = self._unsafe_length;
+     uint len = self._unsafe_length;
      if (len == 0)
          return;
      bts = new bytes(len);
@@ -184,7 +184,7 @@ library RLP {
  function toData(RLPItem memory self) internal constant returns (bytes memory bts) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
  }
@@ -196,9 +196,9 @@ library RLP {
  function toList(RLPItem memory self) internal constant returns (RLPItem[] memory list) {
      if(!isList(self))
          throw;
-     var numItems = items(self);
+     uint numItems = items(self);
      list = new RLPItem[](numItems);
-     var it = iterator(self);
+     Iterator memory it = iterator(self);
      uint idx;
      while(hasNext(it)) {
          list[idx] = next(it);
@@ -213,7 +213,7 @@ library RLP {
  function toAscii(RLPItem memory self) internal constant returns (string memory str) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      bytes memory bts = new bytes(len);
      _copyToBytes(rStartPos, bts, len);
      str = string(bts);
@@ -226,7 +226,7 @@ library RLP {
  function toUint(RLPItem memory self) internal constant returns (uint data) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      if (len > 32 || len == 0)
          throw;
      assembly {
@@ -241,7 +241,7 @@ library RLP {
  function toBool(RLPItem memory self) internal constant returns (bool data) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      if (len != 1)
          throw;
      uint temp;
@@ -260,7 +260,7 @@ library RLP {
  function toByte(RLPItem memory self) internal constant returns (byte data) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      if (len != 1)
          throw;
      uint8 temp;
@@ -293,7 +293,7 @@ library RLP {
  function toAddress(RLPItem memory self) internal constant returns (address data) {
      if(!isData(self))
          throw;
-     var (rStartPos, len) = _decode(self);
+     (uint rStartPos, uint len) = _decode(self);
      if (len != 20)
          throw;
      assembly {
