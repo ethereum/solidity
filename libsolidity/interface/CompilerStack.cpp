@@ -741,16 +741,20 @@ void CompilerStack::compileContract(
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
 
-	// Run optimiser and compile the contract.
-	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
-
 	try
 	{
-		compiledContract.object = compiler->assembledObject();
+		// Run optimiser and compile the contract.
+		compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	}
 	catch(eth::OptimizerException const&)
 	{
-		solAssert(false, "Assembly optimizer exception for bytecode");
+		solAssert(false, "Optimizer exception during compilation");
+	}
+
+	try
+	{
+		// Assemble deployment (incl. runtime)  object.
+		compiledContract.object = compiler->assembledObject();
 	}
 	catch(eth::AssemblyException const&)
 	{
@@ -759,11 +763,8 @@ void CompilerStack::compileContract(
 
 	try
 	{
+		// Assemble runtime object.
 		compiledContract.runtimeObject = compiler->runtimeObject();
-	}
-	catch(eth::OptimizerException const&)
-	{
-		solAssert(false, "Assembly optimizer exception for deployed bytecode");
 	}
 	catch(eth::AssemblyException const&)
 	{
