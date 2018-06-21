@@ -155,7 +155,8 @@ library strings {
         // Starting at ptr-31 means the LSB will be the byte we care about
         var ptr = self._ptr - 31;
         var end = ptr + self._len;
-        for (uint len = 0; ptr < end; len++) {
+        uint len;
+        for (len = 0; ptr < end; len++) {
             uint8 b;
             assembly { b := and(mload(ptr), 0xFF) }
             if (b < 0x80) {
@@ -695,7 +696,7 @@ library strings {
         uint retptr;
         assembly { retptr := add(ret, 32) }
 
-        for(i = 0; i < parts.length; i++) {
+        for(uint i = 0; i < parts.length; i++) {
             memcpy(retptr, parts[i]._ptr, parts[i]._len);
             retptr += parts[i]._len;
             if (i < parts.length - 1) {

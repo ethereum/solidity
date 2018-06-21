@@ -1,4 +1,3 @@
-pragma experimental "v0.5.0";
 contract test {
     function f() public {
         {
@@ -8,4 +7,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (123-124): Undeclared identifier.
+// DeclarationError: (93-94): Undeclared identifier.

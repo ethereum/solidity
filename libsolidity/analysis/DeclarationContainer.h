@@ -58,7 +58,7 @@ public:
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr) const;
 
-	/// Activates a previously inactive (invisible) variable. To be used in C99 scpoing for
+	/// Activates a previously inactive (invisible) variable. To be used in C99 scoping for
 	/// VariableDeclarationStatements.
 	void activateVariable(ASTString const& _name);
 

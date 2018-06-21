@@ -133,22 +133,6 @@ BOOST_AUTO_TEST_CASE(assignment_in_declaration)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(use_before_declaration)
-{
-	string text = R"(
-		contract C {
-			function f() public pure { a = 3; uint a = 2; assert(a == 2); }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f() public pure { assert(a == 0); uint a = 2; assert(a == 2); }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
 BOOST_AUTO_TEST_CASE(function_call_does_not_clear_local_vars)
 {
 	string text = R"(

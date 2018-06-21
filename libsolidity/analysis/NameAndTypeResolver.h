@@ -69,7 +69,7 @@ public:
 	/// that create their own scope.
 	/// @returns false in case of error.
 	bool updateDeclaration(Declaration const& _declaration);
-	/// Activates a previously inactive (invisible) variable. To be used in C99 scpoing for
+	/// Activates a previously inactive (invisible) variable. To be used in C99 scoping for
 	/// VariableDeclarationStatements.
 	void activateVariable(std::string const& _name);
 
@@ -142,7 +142,6 @@ public:
 	DeclarationRegistrationHelper(
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		ASTNode& _astRoot,
-		bool _useC99Scoping,
 		ErrorReporter& _errorReporter,
 		ASTNode const* _currentScope = nullptr
 	);
@@ -190,7 +189,6 @@ private:
 	/// @returns the canonical name of the current scope.
 	std::string currentCanonicalName() const;
 
-	bool m_useC99Scoping = false;
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 	ASTNode const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;

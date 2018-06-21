@@ -536,8 +536,9 @@ contract provider is module, safeMath, announcementTypes {
         address provAddr;
         uint256 provHeight;
         bool interest = false;
+        uint256 a;
         var rate = clients[msg.sender].lastRate;
-        for ( uint256 a = (clients[msg.sender].paidUpTo + 1) ; a <= currentSchellingRound ; a++ ) {
+        for ( a = (clients[msg.sender].paidUpTo + 1) ; a <= currentSchellingRound ; a++ ) {
             if (globalFunds[a].reward > 0 && globalFunds[a].supply > 0) {
                 provAddr = clients[msg.sender].providerAddress;
                 provHeight = clients[msg.sender].providerHeight;
@@ -585,8 +586,9 @@ contract provider is module, safeMath, announcementTypes {
         uint256 steps;
         uint256 currHeight = providers[addr].currentHeight;
         uint256 LTSID = providers[addr].data[currHeight].lastSupplyID;
+        uint256 a;
         var rate = providers[addr].data[currHeight].lastPaidRate;
-        for ( uint256 a = (providers[addr].data[currHeight].paidUpTo + 1) ; a <= currentSchellingRound ; a++ ) {
+        for ( a = (providers[addr].data[currHeight].paidUpTo + 1) ; a <= currentSchellingRound ; a++ ) {
             if (globalFunds[a].reward > 0 && globalFunds[a].supply > 0) {
                 if ( providers[addr].data[currHeight].rateHistory[a].valid ) {
                     rate = providers[addr].data[currHeight].rateHistory[a].value;

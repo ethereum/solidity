@@ -1323,6 +1323,7 @@ custom types without the overhead of external function calls:
             if (carry > 0) {
                 // too bad, we have to add a limb
                 uint[] memory newLimbs = new uint[](r.limbs.length + 1);
+                uint i;
                 for (i = 0; i < r.limbs.length; ++i)
                     newLimbs[i] = r.limbs[i];
                 newLimbs[i] = carry;
