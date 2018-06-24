@@ -856,7 +856,9 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.category() == Category::Integer)
+	switch (_convertTo.category())
+	{
+	case Category::Integer:
 	{
 		if (m_value == rational(0))
 			return true;
@@ -874,21 +876,24 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 			return true;
 		return false;
 	}
-	if (_convertTo.category() == Category::FixedPoint)
+	case Category::FixedPoint:
 	{
 		if (auto fixed = fixedPointType())
 			return fixed->isImplicitlyConvertibleTo(_convertTo);
 		return false;
 	}
-	if (_convertTo.category() == Category::FixedBytes)
+	case Category::FixedBytes:
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
 		if (isFractional())
 			return false;
 		if (integerType())
 			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		return false;
 	}
-	return false;
+	default:
+		return false;
+	}
 }
 
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
