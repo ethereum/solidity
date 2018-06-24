@@ -865,9 +865,14 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
 		unsigned forSignBit = (targetType.isSigned() ? 1 : 0);
 		if (m_value > rational(0))
-			return m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)) ? true : false;
-		if (targetType.isSigned())
-			return -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)) ? true : false;
+		{
+			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
+				return true;
+			return false;
+		}
+		if (targetType.isSigned() && -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
+			return true;
+		return false;
 	}
 	if (_convertTo.category() == Category::FixedPoint)
 	{
@@ -878,7 +883,10 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() == Category::FixedBytes)
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return !isFractional() && integerType() ? fixedBytes.numBytes() * 8 >= integerType()->numBits() : false;
+		if (isFractional())
+			return false;
+		if (integerType())
+			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
 	}
 	return false;
 }
