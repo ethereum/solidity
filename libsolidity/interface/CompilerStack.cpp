@@ -359,7 +359,6 @@ std::string const CompilerStack::filesystemFriendlyName(string const& _contractN
 		{
 			// If it does, then return its fully-qualified name, made fs-friendly
 			std::string friendlyName = boost::algorithm::replace_all_copy(_contractName, "/", "_");
-			boost::algorithm::replace_all(friendlyName, "\\", "_");
 			boost::algorithm::replace_all(friendlyName, ":", "_");
 			boost::algorithm::replace_all(friendlyName, ".", "_");
 			return friendlyName;

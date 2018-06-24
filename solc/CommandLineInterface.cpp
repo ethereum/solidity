@@ -69,6 +69,52 @@ namespace dev
 namespace solidity
 {
 
+struct unix_friendly_path
+{
+	string path;
+  unix_friendly_path() {}
+  unix_friendly_path(string _path)
+  {
+    path = _path;
+  }
+
+  friend istream& operator>>(istream& is, unix_friendly_path& ufp)
+  {
+		string path;
+		is >> path;
+    #ifdef _WIN32
+		boost::algorithm::replace_all(path, "\\", "/");
+    #endif
+		ufp.path = path;
+		return is;
+	}
+
+  operator string()
+  {
+    return path;
+  }
+
+	operator boost::filesystem::path()
+  {
+		return boost::filesystem::path(path);
+	}
+};
+
+struct unix_friendly_paths
+{
+  vector<unix_friendly_path> paths;
+
+  friend istream& operator>>(istream& is, unix_friendly_paths& ufps)
+  {
+    string joined_paths;
+    is >> joined_paths;
+    vector<string> paths;
+    boost::split(paths, joined_paths, boost::is_any_of(","));
+    ufps.paths = vector<unix_friendly_path>(paths.begin(), paths.end());
+    return is;
+  }
+};
+
 static string const g_stdinFileNameStr = "<stdin>";
 static string const g_strAbi = "abi";
 static string const g_strAllowPaths = "allow-paths";
@@ -407,47 +453,50 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 	if (!m_args.count(g_argInputFile))
 		addStdin = true;
 	else
-		for (string path: m_args[g_argInputFile].as<vector<string>>())
-		{
-			auto eq = find(path.begin(), path.end(), '=');
-			if (eq != path.end())
-				path = string(eq + 1, path.end());
-			else if (path == "-")
-				addStdin = true;
-			else
-			{
-				auto infile = boost::filesystem::path(path);
-				if (!boost::filesystem::exists(infile))
-				{
-					if (!ignoreMissing)
-					{
-						cerr << "\"" << infile << "\" is not found" << endl;
-						return false;
-					}
-					else
-						cerr << "\"" << infile << "\" is not found. Skipping." << endl;
+  {
+    vector<unix_friendly_path> paths = m_args[g_argInputFile].as<vector<unix_friendly_path>>();
+    for (string path: vector<string> (paths.begin(), paths.end()))
+    {
+      auto eq = find(path.begin(), path.end(), '=');
+      if (eq != path.end())
+      path = string(eq + 1, path.end());
+      else if (path == "-")
+      addStdin = true;
+      else
+      {
+        auto infile = boost::filesystem::path(path);
+        if (!boost::filesystem::exists(infile))
+        {
+          if (!ignoreMissing)
+          {
+            cerr << "\"" << infile << "\" is not found" << endl;
+            return false;
+          }
+          else
+          cerr << "\"" << infile << "\" is not found. Skipping." << endl;
 
-					continue;
-				}
+          continue;
+        }
 
-				if (!boost::filesystem::is_regular_file(infile))
-				{
-					if (!ignoreMissing)
-					{
-						cerr << "\"" << infile << "\" is not a valid file" << endl;
-						return false;
-					}
-					else
-						cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
+        if (!boost::filesystem::is_regular_file(infile))
+        {
+          if (!ignoreMissing)
+          {
+            cerr << "\"" << infile << "\" is not a valid file" << endl;
+            return false;
+          }
+          else
+          cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
 
-					continue;
-				}
+          continue;
+        }
 
-				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
-				path = boost::filesystem::canonical(infile).string();
-			}
-			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
-		}
+        m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
+        path = boost::filesystem::canonical(infile).string();
+      }
+      m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
+    }
+  }
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
 
@@ -507,11 +556,11 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 {
 	namespace fs = boost::filesystem;
 	// create directory if not existent
-	fs::path p(m_args.at(g_argOutputDir).as<string>());
+	fs::path p(m_args.at(g_argOutputDir).as<unix_friendly_path>());
 	// Do not try creating the directory if the first item is . or ..
 	if (p.filename() != "." && p.filename() != "..")
 		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
+	string pathName = p.string() + "/" + _fileName;
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
 		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
@@ -577,7 +626,7 @@ Allowed options)",
 		)
 		(
 			(g_argOutputDir + ",o").c_str(),
-			po::value<string>()->value_name("path"),
+			po::value<unix_friendly_path>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
 		)
 		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
@@ -617,7 +666,7 @@ Allowed options)",
 		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
 		(
 			g_argAllowPaths.c_str(),
-			po::value<string>()->value_name("path(s)"),
+			po::value<unix_friendly_paths>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
 		)
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
@@ -641,7 +690,7 @@ Allowed options)",
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
-	allOptions.add_options()(g_argInputFile.c_str(), po::value<vector<string>>(), "input file");
+	allOptions.add_options()(g_argInputFile.c_str(), po::value<vector<unix_friendly_path>>(), "input file");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;
@@ -740,9 +789,9 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argAllowPaths))
 	{
-		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(","))) {
-			auto filesystem_path = boost::filesystem::path(path);
+		vector<unix_friendly_path> paths = m_args[g_argAllowPaths].as<unix_friendly_paths>().paths;
+		for (unix_friendly_path path: paths) {
+      auto filesystem_path = boost::filesystem::path(path);
 			// If the given path had a trailing slash, the Boost filesystem
 			// path will have it's last component set to '.'. This breaks
 			// path comparison in later parts of the code, so we need to strip
@@ -824,7 +873,10 @@ bool CommandLineInterface::processInput()
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
-			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+    {
+      vector<unix_friendly_path> paths = m_args[g_argInputFile].as<vector<unix_friendly_path>>();
+      m_compiler->setRemappings(vector<string>(paths.begin(), paths.end()));
+    }
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
