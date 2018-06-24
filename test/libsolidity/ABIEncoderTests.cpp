@@ -374,15 +374,12 @@ BOOST_AUTO_TEST_CASE(calldata)
 	)";
 	string s("abcdef");
 	string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
-	bool newEncoder = false;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(bytes)", 0x20, s.size(), s);
-		// The old encoder did not pad to multiples of 32 bytes
-		REQUIRE_LOG_DATA(encodeArgs(0x20, s.size()) + (newEncoder ? encodeArgs(s) : asBytes(s)));
+		REQUIRE_LOG_DATA(encodeArgs(0x20, s.size(), s));
 		callContractFunction("f(bytes)", 0x20, t.size(), t);
-		REQUIRE_LOG_DATA(encodeArgs(0x20, t.size()) + (newEncoder ? encodeArgs(t) : asBytes(t)));
-		newEncoder = true;
+		REQUIRE_LOG_DATA(encodeArgs(0x20, t.size(), t));
 	)
 }
 
@@ -445,28 +442,6 @@ BOOST_AUTO_TEST_CASE(structs)
 			12, 0,
 			0, 13
 		);
-		BOOST_CHECK(callContractFunction("f()") == encoded);
-		REQUIRE_LOG_DATA(encoded);
-	)
-}
-
-BOOST_AUTO_TEST_CASE(empty_struct)
-{
-	string sourceCode = R"(
-		contract C {
-			struct S { }
-			S s;
-			event e(uint16, S, uint16);
-			function f() returns (uint, S, uint) {
-				e(7, s, 8);
-				return (7, s, 8);
-			}
-		}
-	)";
-
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(7, 8);
 		BOOST_CHECK(callContractFunction("f()") == encoded);
 		REQUIRE_LOG_DATA(encoded);
 	)

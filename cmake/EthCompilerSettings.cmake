@@ -62,8 +62,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
-			# Set stack size to 16MB - by default Apple's clang defines a stack size of 8MB, some tests require more.
-			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x1000000")
+			# Set stack size to 32MB - by default Apple's clang defines a stack size of 8MB.
+			# Normally 16MB is enough to run all tests, but it will exceed the stack, if -DSANITIZE=address is used.
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-stack_size -Wl,0x2000000")
 		endif()
 
 		# Some Linux-specific Clang settings.  We don't want these for OS X.

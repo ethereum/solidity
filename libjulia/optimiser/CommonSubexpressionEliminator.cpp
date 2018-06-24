@@ -23,6 +23,7 @@
 
 #include <libjulia/optimiser/Metrics.h>
 #include <libjulia/optimiser/SyntacticalEquality.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -37,7 +38,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		// TODO this search rather inefficient.
 		for (auto const& var: m_value)
 		{
-			solAssert(var.second, "");
+			assertThrow(var.second, OptimizerException, "");
 			if (SyntacticalEqualityChecker::equal(_e, *var.second))
 			{
 				_e = Identifier{locationOf(_e), var.first};

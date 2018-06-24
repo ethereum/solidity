@@ -249,6 +249,23 @@ struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
 	}
 };
 
+struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd, 3>
+{
+	static bool applySimple(
+		AssemblyItem const& _push,
+		AssemblyItem const& _not,
+		AssemblyItem const& _and,
+		std::back_insert_iterator<AssemblyItems>
+	)
+	{
+		return (
+			_push.type() == Push && _push.data() == 0 &&
+			_not == Instruction::NOT &&
+			_and == Instruction::AND
+		);
+	}
+};
+
 /// Removes everything after a JUMP (or similar) until the next JUMPDEST.
 struct UnreachableCode
 {
@@ -305,7 +322,7 @@ bool PeepholeOptimiser::optimise()
 {
 	OptimiserState state {m_items, 0, std::back_inserter(m_optimisedItems)};
 	while (state.i < m_items.size())
-		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(), JumpToNext(), UnreachableCode(), TagConjunctions(), Identity());
+		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(), JumpToNext(), UnreachableCode(), TagConjunctions(), TruthyAnd(), Identity());
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
 			eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3) ||

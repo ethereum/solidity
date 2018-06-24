@@ -72,7 +72,7 @@ contract MajorityOracle is Oracle {
         constant
         returns (bool)
     {
-        var (outcomeSet, ) = getStatusAndOutcome();
+        (bool outcomeSet, ) = getStatusAndOutcome();
         return outcomeSet;
     }
 
@@ -83,7 +83,7 @@ contract MajorityOracle is Oracle {
         constant
         returns (int)
     {
-        var (, winningOutcome) = getStatusAndOutcome();
+        (, int winningOutcome) = getStatusAndOutcome();
         return winningOutcome;
     }
 }

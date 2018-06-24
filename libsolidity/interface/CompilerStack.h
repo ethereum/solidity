@@ -273,9 +273,9 @@ private:
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
-	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
+	static std::string absolutePath(std::string const& _path, std::string const& _reference);
 	/// Helper function to return path converted strings.
-	std::string sanitizePath(std::string const& _path) const { return boost::filesystem::path(_path).generic_string(); }
+	static std::string sanitizePath(std::string const& _path) { return boost::filesystem::path(_path).generic_string(); }
 
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;

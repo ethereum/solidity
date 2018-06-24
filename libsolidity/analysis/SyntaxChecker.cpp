@@ -255,7 +255,7 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 
 	for (auto const& decl: _node.returnParameterTypeList()->parameters())
 		if (!decl->name().empty())
-			m_errorReporter.warning(decl->location(), "Naming function type return parameters is deprecated.");
+			m_errorReporter.syntaxError(decl->location(), "Return parameters in function types may not be named.");
 
 	return true;
 }
@@ -276,14 +276,8 @@ bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
 
 bool SyntaxChecker::visit(StructDefinition const& _struct)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_struct.members().empty())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
-		else
-			m_errorReporter.warning(_struct.location(), "Defining empty structs is deprecated.");
-	}
+		m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
+
 	return true;
 }

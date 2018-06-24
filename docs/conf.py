@@ -22,8 +22,9 @@ import re
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 def setup(sphinx):
-    sys.path.insert(0, os.path.abspath('./utils'))
-    from SolidityLexer import SolidityLexer
+    thisdir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, thisdir + '/utils')
+    from pygments_lexer_solidity import SolidityLexer
     sphinx.add_lexer('Solidity', SolidityLexer())
 
 # -- General configuration ------------------------------------------------
@@ -111,7 +112,7 @@ highlight_language = 'Solidity'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

@@ -1,7 +1,7 @@
 contract C {
     struct S { uint x; }
     S s;
-    struct T { }
+    struct T { uint y; }
     T t;
     enum A { X, Y }
     function f() public pure {
@@ -9,9 +9,8 @@ contract C {
     }
 }
 // ----
-// Warning: (51-63): Defining empty structs is deprecated.
-// TypeError: (168-169): This type cannot be encoded.
-// TypeError: (171-172): This type cannot be encoded.
+// TypeError: (176-177): This type cannot be encoded.
 // TypeError: (179-180): This type cannot be encoded.
-// TypeError: (182-186): This type cannot be encoded.
-// TypeError: (188-194): This type cannot be encoded.
+// TypeError: (187-188): This type cannot be encoded.
+// TypeError: (190-194): This type cannot be encoded.
+// TypeError: (196-202): This type cannot be encoded.

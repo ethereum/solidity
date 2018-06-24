@@ -111,7 +111,7 @@ contract publisher is announcementTypes, module, safeMath {
             @success        Opposed or not
         */
         if ( ! oppositable ) { return false; }
-        var (_success, _amount) = moduleHandler(moduleHandlerAddress).totalSupply();
+        (bool _success, uint256 _amount) = moduleHandler(moduleHandlerAddress).totalSupply();
         require( _success );
         return _amount * oppositeRate / 100 > weight;
     }
@@ -229,7 +229,7 @@ contract publisher is announcementTypes, module, safeMath {
                 newArrayID = a;
             }
         }
-        var (_success, _balance) = moduleHandler(moduleHandlerAddress).balanceOf(msg.sender);
+        (bool _success, uint256 _balance) = moduleHandler(moduleHandlerAddress).balanceOf(msg.sender);
         require( _success );
         require( _balance > 0);
         if ( foundEmptyArrayID ) {
@@ -266,7 +266,7 @@ contract publisher is announcementTypes, module, safeMath {
             Inner function to check the ICO status.
             @bool       Is the ICO in proccess or not?
         */
-        var (_success, _isICO) = moduleHandler(moduleHandlerAddress).isICO();
+        (bool _success, bool _isICO) = moduleHandler(moduleHandlerAddress).isICO();
         require( _success );
         return _isICO;
     }

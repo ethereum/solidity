@@ -309,7 +309,7 @@ contract ico is safeMath {
             require( beneficiaryAddress.send(0.2 ether) );
             _value = safeSub(_value, 0.2 ether);
         }
-        var _reward = getIcoReward(_value);
+        uint256 _reward = getIcoReward(_value);
         require( _reward > 0 );
         require( token(tokenAddr).mint(beneficiaryAddress, _reward) );
         brought[beneficiaryAddress].eth = safeAdd(brought[beneficiaryAddress].eth, _value);

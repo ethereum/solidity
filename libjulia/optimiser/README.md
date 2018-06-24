@@ -25,13 +25,13 @@ a semantically equivalent transformation as long as it is performed after the
 disambiguation stage. The reason is that moving a definition upwards cannot decrease
 its visibility and it is impossible to reference variables defined in a different function.
 
-The benefit of this stage is that function definitions can be lookup up more easily.
+The benefit of this stage is that function definitions can be looked up more easily.
 
 ## Function Grouper
 
 The function grouper has to be applied after the disambiguator and the function hoister.
 Its effect is that all topmost elements that are not function definitions are moved
-into a single block which is the first satement of the root block.
+into a single block which is the first statement of the root block.
 
 After this step, a program has the following normal form:
 
@@ -87,3 +87,12 @@ simple rules like ``x + 0 == x`` to simplify expressions.
 ## Ineffective Statement Remover
 
 This step removes statements that have no side-effects.
+
+## WebAssembly specific
+
+### Main Function
+
+Changes the topmost block to be a function with a specific name ("main") which has no
+inputs nor outputs.
+
+Depends on the Function Grouper.

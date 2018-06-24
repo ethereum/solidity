@@ -203,7 +203,7 @@ situation.
 
 If you do not want to throw, you can return a pair::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >0.4.23 <0.5.0;
 
     contract C {
         uint[] counters;
@@ -219,7 +219,7 @@ If you do not want to throw, you can return a pair::
         }
 
         function checkCounter(uint index) public view {
-            var (counter, error) = getCounter(index);
+            (uint counter, bool error) = getCounter(index);
             if (error) {
                 // ...
             } else {

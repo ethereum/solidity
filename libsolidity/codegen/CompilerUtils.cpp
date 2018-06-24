@@ -89,7 +89,6 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
 	toSizeAfterFreeMemoryPointer();
 	m_context << Instruction::REVERT;
-	m_context.adjustStackOffset(_argumentType.sizeOnStack());
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -110,7 +109,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 	bool _padToWordBoundaries,
 	bool _keepUpdatedMemoryOffset
 )
-{		
+{
 	if (_keepUpdatedMemoryOffset)
 		m_context << Instruction::DUP1;
 
@@ -187,7 +186,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	/// Stack: <source_offset> <length>
 	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
 	{
-		// Use the new JULIA-based decoding function
+		// Use the new Yul-based decoding function
 		auto stackHeightBefore = m_context.stackHeight();
 		abiDecodeV2(_typeParameters, _fromMemory);
 		solAssert(m_context.stackHeight() - stackHeightBefore == sizeOnStack(_typeParameters) - 2, "");
@@ -369,7 +368,7 @@ void CompilerUtils::encodeToMemory(
 		m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
 	)
 	{
-		// Use the new JULIA-based encoding function
+		// Use the new Yul-based encoding function
 		auto stackHeightBefore = m_context.stackHeight();
 		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes);
 		solAssert(stackHeightBefore - m_context.stackHeight() == sizeOnStack(_givenTypes), "");
@@ -396,7 +395,7 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
-			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using less variables.");
+			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using fewer variables.");
 		}
 		else
 		{
@@ -741,7 +740,7 @@ void CompilerUtils::convertType(
 		else if (targetTypeCategory == Type::Category::FixedPoint)
 		{
 			solAssert(
-				stackTypeCategory == Type::Category::Integer || 
+				stackTypeCategory == Type::Category::Integer ||
 				stackTypeCategory == Type::Category::RationalNumber ||
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."

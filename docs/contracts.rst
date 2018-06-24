@@ -24,8 +24,8 @@ Creating contracts programatically on Ethereum is best done via using the JavaSc
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its constructor (a function with the same
-name as the contract) is executed once.
+When a contract is created, its constructor (a function declared with the
+``constructor`` keyword) is executed once.
 A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
 
@@ -194,10 +194,10 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
     contract C {
         uint private data;
 
-        function f(uint a) private returns(uint b) { return a + 1; }
+        function f(uint a) private pure returns(uint b) { return a + 1; }
         function setData(uint a) public { data = a; }
-        function getData() public returns(uint) { return data; }
-        function compute(uint a, uint b) internal returns (uint) { return a+b; }
+        function getData() public view returns(uint) { return data; }
+        function compute(uint a, uint b) internal pure returns (uint) { return a + b; }
     }
 
     contract D {
@@ -473,7 +473,7 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` on functions is an alias to ``view``, but this is deprecated and is planned to be dropped in version 0.5.0.
+  ``constant`` on functions is an alias to ``view``, but this is deprecated and will be dropped in version 0.5.0.
 
 .. note::
   Getter methods are marked ``view``.
@@ -526,9 +526,14 @@ In addition to the list of state modifying statements explained above, the follo
   It is not possible to prevent functions from reading the state at the level
   of the EVM, it is only possible to prevent them from writing to the state
   (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
+  It is a non-circumventable runtime checks done by the EVM.
 
 .. warning::
   Before version 0.4.17 the compiler didn't enforce that ``pure`` is not reading the state.
+  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
+  between contract types, because the compiler can verify that the type of the contract does
+  not do state-changing operations, but it cannot check that the contract that will be called
+  at runtime is actually of that type.
 
 .. index:: ! fallback function, function;fallback
 
@@ -718,26 +723,22 @@ the contract can only see the last 256 block hashes.
 
 Up to three parameters can
 receive the attribute ``indexed`` which will cause the respective arguments
-to be searched for: It is possible to filter for specific values of
-indexed arguments in the user interface.
-
-If arrays (including ``string`` and ``bytes``) are used as indexed arguments, the
-Keccak-256 hash of it is stored as topic instead.
-
-The hash of the signature of the event is one of the topics except if you
+to be stored in a special data structure as so-called "topics", which allows them to be searched for,
+for example when filtering a sequence of blocks for certain events. Events can always
+be filtered by the address of the contract that emitted the event. Also,
+the hash of the signature of the event is one of the topics except if you
 declared the event with ``anonymous`` specifier. This means that it is
 not possible to filter for specific anonymous events by name.
 
-All non-indexed arguments will be stored in the data part of the log.
+If arrays (including ``string`` and ``bytes``) are used as indexed arguments, the
+Keccak-256 hash of it is stored as topic instead. This is because a topic
+can only hold a single word (32 bytes).
 
-.. note::
-    Indexed arguments will not be stored themselves.  You can only
-    search for the values, but it is impossible to retrieve the
-    values themselves.
+All non-indexed arguments will be :ref:`ABI-encoded <ABI>` into the data part of the log.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.21;
 
     contract ClientReceipt {
         event Deposit(
@@ -769,7 +770,7 @@ The use in the JavaScript API would be as follows:
     // watch for changes
     event.watch(function(error, result){
         // result will contain various information
-        // including the argumets given to the `Deposit`
+        // including the arguments given to the `Deposit`
         // call.
         if (!error)
             console.log(result);
@@ -802,7 +803,7 @@ as topics. The event call above can be performed in the same way as
             log3(
                 bytes32(msg.value),
                 bytes32(0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20),
-                bytes32(msg.sender),
+                bytes32(uint256(msg.sender)),
                 _id
             );
         }
@@ -982,7 +983,7 @@ virtual method lookup.
 
 Constructors
 ============
-A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation. 
+A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
 default constructor: ``contructor() public {}``.
 
@@ -1030,8 +1031,9 @@ A constructor set as ``internal`` causes the contract to be marked as :ref:`abst
 Arguments for Base Constructors
 ===============================
 
-Derived contracts need to provide all arguments needed for
-the base constructors. This can be done in two ways::
+The constructors of all the base contracts will be called following the
+linearization rules explained below. If the base constructors have arguments,
+derived contracts need to specify all of them. This can be done in two ways::
 
     pragma solidity ^0.4.22;
 
@@ -1058,6 +1060,9 @@ constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the
 inheritance list or in modifier-style in the derived constuctor.
 Specifying arguments in both places is an error.
+
+If a derived contract doesn't specify the arguments to all of its base
+contracts' constructors, it will be abstract.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
@@ -1139,8 +1144,10 @@ Example of a Function Type (a variable declaration, where the variable is of typ
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and 
+Abstract contracts decouple the definition of a contract from its implementation providing better extensibility and self-documentation and
 facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
+Abstract contracts are useful in the same way that defining methods in an interface is useful. It is a way for the designer of the abstract contract to say "any child of mine must implement this method".
+
 
 .. index:: ! contract;interface, ! interface contract
 
@@ -1150,11 +1157,11 @@ Interfaces
 
 Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
 
-#. Cannot inherit other contracts or interfaces.
-#. Cannot define constructor.
-#. Cannot define variables.
-#. Cannot define structs.
-#. Cannot define enums.
+- Cannot inherit other contracts or interfaces.
+- Cannot define constructor.
+- Cannot define variables.
+- Cannot define structs.
+- Cannot define enums.
 
 Some of these restrictions might be lifted in the future.
 
@@ -1316,6 +1323,7 @@ custom types without the overhead of external function calls:
             if (carry > 0) {
                 // too bad, we have to add a limb
                 uint[] memory newLimbs = new uint[](r.limbs.length + 1);
+                uint i;
                 for (i = 0; i < r.limbs.length; ++i)
                     newLimbs[i] = r.limbs[i];
                 newLimbs[i] = carry;

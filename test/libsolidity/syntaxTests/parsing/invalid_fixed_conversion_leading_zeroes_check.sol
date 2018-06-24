@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError: (44-44): Expected primary expression.
+// ParserError: (44-47): Expected primary expression.

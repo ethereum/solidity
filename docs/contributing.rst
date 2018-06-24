@@ -54,6 +54,8 @@ However, if you are making a larger change, please consult with the `Solidity De
 <https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this on is
 focused on compiler and language development instead of language use) first.
 
+New features and bugfixes should be added to the ``Changelog.md`` file: please
+follow the style of previous entries, when applicable.
 
 Finally, please make sure you respect the `coding style
 <https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
@@ -111,7 +113,7 @@ Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
 A syntax test must contain at least the contract under test itself, followed by the seperator ``----``. The additional comments above are used to describe the
 expected compiler errors or warnings. This section can be empty in case that the contract should compile without any errors or warnings.
 
-In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifer was already declared.
+In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifier was already declared.
 
 The tool that is being used for those tests is called ``isoltest`` and can be found under ``./test/tools/``. It is an interactive tool which allows
 editing of failing contracts using your prefered text editor. Let's try to break this test by removing the second declaration of ``variable``:

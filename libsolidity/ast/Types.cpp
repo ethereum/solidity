@@ -33,6 +33,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
@@ -312,22 +314,34 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	string name = _name;
-	DataLocation location = DataLocation::Storage;
-	if (boost::algorithm::ends_with(name, " memory"))
-	{
-		name = name.substr(0, name.length() - 7);
-		location = DataLocation::Memory;
-	}
-	unsigned short firstNum;
-	unsigned short secondNum;
+	vector<string> nameParts;
+	boost::split(nameParts, _name, boost::is_any_of(" "));
+	solAssert(nameParts.size() == 1 || nameParts.size() == 2, "Cannot parse elementary type: " + _name);
 	Token::Value token;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(name);
+	unsigned short firstNum, secondNum;
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(nameParts[0]);
 	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
 	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
+	{
+		DataLocation location = DataLocation::Storage;
+		if (nameParts.size() == 2)
+		{
+			if (nameParts[1] == "storage")
+				location = DataLocation::Storage;
+			else if (nameParts[1] == "calldata")
+				location = DataLocation::CallData;
+			else if (nameParts[1] == "memory")
+				location = DataLocation::Memory;
+			else
+				solAssert(false, "Unknown data location: " + nameParts[1]);
+		}
 		return ref->copyForLocation(location, true);
+	}
 	else
+	{
+		solAssert(nameParts.size() == 1, "Storage location suffix only allowed for reference types");
 		return t;
+	}
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -476,7 +490,7 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
-		_convertTo.category() == Category::FixedBytes ||
+		(_convertTo.category() == Category::FixedBytes && numBits() == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8) ||
 		_convertTo.category() == Category::FixedPoint;
 }
 
@@ -664,7 +678,7 @@ string FixedPointType::toString(bool) const
 bigint FixedPointType::maxIntegerValue() const
 {
 	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
-	return maxValue / pow(bigint(10), m_fractionalDigits);
+	return maxValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 }
 
 bigint FixedPointType::minIntegerValue() const
@@ -672,7 +686,7 @@ bigint FixedPointType::minIntegerValue() const
 	if (isSigned())
 	{
 		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
-		return minValue / pow(bigint(10), m_fractionalDigits);
+		return minValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 	}
 	else
 		return bigint(0);
@@ -884,7 +898,10 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	TypePointer mobType = mobileType();
-	return mobType && mobType->isExplicitlyConvertibleTo(_convertTo);
+	return
+		(mobType && mobType->isExplicitlyConvertibleTo(_convertTo)) ||
+		(!isFractional() && _convertTo.category() == Category::FixedBytes)
+	;
 }
 
 TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
@@ -982,10 +999,9 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
-			using boost::multiprecision::pow;
 			if (other.isFractional())
 				return TypePointer();
 			solAssert(other.m_value.denominator() == 1, "");
@@ -1019,7 +1035,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 					else if (_base == -1)
 						return 1 - 2 * int(_exponent & 1);
 					else
-						return pow(_base, _exponent);
+						return boost::multiprecision::pow(_base, _exponent);
 				};
 
 				bigint numerator = optimizedPow(m_value.numerator(), absExp);
@@ -1035,7 +1051,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		}
 		case Token::SHL:
 		{
-			using boost::multiprecision::pow;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
@@ -1049,7 +1064,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
 				if (!fitsPrecisionBase2(abs(m_value.numerator()), exponent))
 					return TypePointer();
-				value = m_value.numerator() * pow(bigint(2), exponent);
+				value = m_value.numerator() * boost::multiprecision::pow(bigint(2), exponent);
 			}
 			break;
 		}
@@ -1057,7 +1072,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		//       determines the resulting type and the type of shift (SAR or SHR).
 		case Token::SAR:
 		{
-			namespace mp = boost::multiprecision;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
@@ -1069,10 +1083,22 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			else
 			{
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (exponent > mostSignificantBit(mp::abs(m_value.numerator())))
-					value = 0;
+				if (exponent > mostSignificantBit(boost::multiprecision::abs(m_value.numerator())))
+					value = m_value.numerator() < 0 ? -1 : 0;
 				else
-					value = rational(m_value.numerator() / mp::pow(bigint(2), exponent), 1);
+				{
+					if (m_value.numerator() < 0)
+						// Add 1 to the negative value before dividing to get a result that is strictly too large,
+						// then subtract 1 afterwards to round towards negative infinity.
+						// This is the same algorithm as used in ExpressionCompiler::appendShiftOperatorCode(...).
+						// To see this note that for negative x, xor(x,all_ones) = (-x-1) and
+						// therefore xor(div(xor(x,all_ones), exp(2, shift_amount)), all_ones) is
+						// -(-x - 1) / 2^shift_amount - 1, which is the same as
+						// (x + 1) / 2^shift_amount - 1.
+						value = rational((m_value.numerator() + 1) / boost::multiprecision::pow(bigint(2), exponent) - bigint(1), 1);
+					else
+						value = rational(m_value.numerator() / boost::multiprecision::pow(bigint(2), exponent), 1);
+				}
 			}
 			break;
 		}
@@ -1128,7 +1154,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -1137,7 +1163,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		auto fixed = fixedPointType();
 		solAssert(fixed, "");
 		int fractionalDigits = fixed->fractionalDigits();
-		shiftedValue = m_value.numerator() * pow(bigint(10), fractionalDigits) / m_value.denominator();
+		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
@@ -1180,7 +1206,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1189,7 +1215,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
@@ -1281,7 +1307,7 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == Category::Integer ||
+	return (_convertTo.category() == Category::Integer && numBytes() * 8 == dynamic_cast<IntegerType const&>(_convertTo).numBits()) ||
 		_convertTo.category() == Category::FixedPoint ||
 		_convertTo.category() == category();
 }
@@ -1358,7 +1384,7 @@ TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer c
 {
 	if (category() != _other->category())
 		return TypePointer();
-	if (Token::isCompareOp(_operator) || _operator == Token::And || _operator == Token::Or)
+	if (_operator == Token::Equal || _operator == Token::NotEqual || _operator == Token::And || _operator == Token::Or)
 		return _other;
 	else
 		return TypePointer();
@@ -1452,12 +1478,20 @@ string ReferenceType::stringForReferencePart() const
 string ReferenceType::identifierLocationSuffix() const
 {
 	string id;
-	if (location() == DataLocation::Storage)
+	switch (location())
+	{
+	case DataLocation::Storage:
 		id += "_storage";
-	else if (location() == DataLocation::Memory)
+		break;
+	case DataLocation::Memory:
 		id += "_memory";
-	else
+		break;
+	case DataLocation::CallData:
 		id += "_calldata";
+		break;
+	default:
+		solAssert(false, "Unknown location returned by location()");
+	}
 	if (isPointer())
 		id += "_ptr";
 	return id;
@@ -1672,6 +1706,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 	{
 		members.push_back({"length", make_shared<IntegerType>(256)});
 		if (isDynamicallySized() && location() == DataLocation::Storage)
+		{
 			members.push_back({"push", make_shared<FunctionType>(
 				TypePointers{baseType()},
 				TypePointers{make_shared<IntegerType>(256)},
@@ -1679,6 +1714,14 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			)});
+			members.push_back({"pop", make_shared<FunctionType>(
+				TypePointers{},
+				TypePointers{},
+				strings{string()},
+				strings{string()},
+				FunctionType::Kind::ArrayPop
+			)});
+		}
 	}
 	return members;
 }
@@ -2495,6 +2538,7 @@ string FunctionType::richIdentifier() const
 	case Kind::AddMod: id += "addmod"; break;
 	case Kind::MulMod: id += "mulmod"; break;
 	case Kind::ArrayPush: id += "arraypush"; break;
+	case Kind::ArrayPop: id += "arraypop"; break;
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
@@ -2649,6 +2693,7 @@ unsigned FunctionType::sizeOnStack() const
 	case Kind::BareDelegateCall:
 	case Kind::Internal:
 	case Kind::ArrayPush:
+	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
 		size = 1;
 		break;
@@ -2865,7 +2910,11 @@ bool FunctionType::isPure() const
 		m_kind == Kind::RIPEMD160 ||
 		m_kind == Kind::AddMod ||
 		m_kind == Kind::MulMod ||
-		m_kind == Kind::ObjectCreation;
+		m_kind == Kind::ObjectCreation ||
+		m_kind == Kind::ABIEncode ||
+		m_kind == Kind::ABIEncodePacked ||
+		m_kind == Kind::ABIEncodeWithSelector ||
+		m_kind == Kind::ABIEncodeWithSignature;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)

@@ -29,7 +29,7 @@ namespace solidity
 
 enum class ExperimentalFeature
 {
-	ABIEncoderV2, // new ABI encoder that makes use of JULIA
+	ABIEncoderV2, // new ABI encoder that makes use of Yul
 	SMTChecker,
 	V050, // v0.5.0 breaking changes
 	Test,

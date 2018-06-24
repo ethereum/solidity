@@ -37,15 +37,18 @@ namespace julia
 class NameCollector: public ASTWalker
 {
 public:
+	explicit NameCollector(Block const& _block)
+	{
+		(*this)(_block);
+	}
+
 	using ASTWalker::operator ();
 	virtual void operator()(VariableDeclaration const& _varDecl) override;
 	virtual void operator()(FunctionDefinition const& _funDef) override;
 
-	std::set<std::string> const& names() const { return m_names; }
-	std::map<std::string, FunctionDefinition const*> const& functions() const { return m_functions; }
+	std::set<std::string> names() const { return m_names; }
 private:
 	std::set<std::string> m_names;
-	std::map<std::string, FunctionDefinition const*> m_functions;
 };
 
 /**

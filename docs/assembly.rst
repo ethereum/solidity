@@ -115,7 +115,7 @@ you really know what you are doing.
 
                // Iterate until the bound is not met.
                for
-                   { let end := add(data, len) }
+                   { let end := add(data, mul(len, 0x20)) }
                    lt(data, end)
                    { data := add(data, 0x20) }
                {
@@ -219,8 +219,6 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | signextend(i, x)        |     | F | sign extend from (i*8+7)th bit counting from least significant  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | keccak256(p, n)         |     | F | keccak(mem[p...(p+n)))                                          |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| sha3(p, n)              |     | F | keccak(mem[p...(p+n)))                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | jump(label)             | `-` | F | jump to label / code position                                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+

@@ -29,6 +29,8 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/ControlFlowAnalyzer.h>
+#include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/TypeChecker.h>
@@ -220,6 +222,22 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (!postTypeChecker.check(*source->ast))
 					noErrors = false;
+		}
+
+		if (noErrors)
+		{
+			CFG cfg(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (!cfg.constructFlow(*source->ast))
+					noErrors = false;
+
+			if (noErrors)
+			{
+				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
+				for (Source const* source: m_sourceOrder)
+					if (!controlFlowAnalyzer.analyze(*source->ast))
+						noErrors = false;
+			}
 		}
 
 		if (noErrors)
@@ -651,7 +669,7 @@ void CompilerStack::resolveImports()
 	swap(m_sourceOrder, sourceOrder);
 }
 
-string CompilerStack::absolutePath(string const& _path, string const& _reference) const
+string CompilerStack::absolutePath(string const& _path, string const& _reference)
 {
 	using path = boost::filesystem::path;
 	path p(_path);
@@ -693,9 +711,15 @@ void CompilerStack::compileContract(
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _compiledContracts);
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
+	compiledContract.compiler = compiler;
+
 	string metadata = createMetadata(compiledContract);
+	compiledContract.metadata = metadata;
+
+	// Prepare CBOR metadata for the bytecode
 	bytes cborEncodedHash =
 		// CBOR-encoding of the key "bzzr0"
 		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
@@ -716,16 +740,21 @@ void CompilerStack::compileContract(
 	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
 	// 16-bit big endian length
 	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
-	compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
-	compiledContract.compiler = compiler;
 
 	try
 	{
-		compiledContract.object = compiler->assembledObject();
+		// Run optimiser and compile the contract.
+		compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
 	}
 	catch(eth::OptimizerException const&)
 	{
-		solAssert(false, "Assembly optimizer exception for bytecode");
+		solAssert(false, "Optimizer exception during compilation");
+	}
+
+	try
+	{
+		// Assemble deployment (incl. runtime)  object.
+		compiledContract.object = compiler->assembledObject();
 	}
 	catch(eth::AssemblyException const&)
 	{
@@ -734,18 +763,14 @@ void CompilerStack::compileContract(
 
 	try
 	{
+		// Assemble runtime object.
 		compiledContract.runtimeObject = compiler->runtimeObject();
-	}
-	catch(eth::OptimizerException const&)
-	{
-		solAssert(false, "Assembly optimizer exception for deployed bytecode");
 	}
 	catch(eth::AssemblyException const&)
 	{
 		solAssert(false, "Assembly exception for deployed bytecode");
 	}
 
-	compiledContract.metadata = metadata;
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 
 	try

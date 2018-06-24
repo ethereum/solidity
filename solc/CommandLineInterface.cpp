@@ -134,12 +134,11 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
-static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
-static string const g_strJulia = "julia";
+static string const g_strYul = "yul";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -178,11 +177,10 @@ static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCloneBinary = g_strCloneBinary;
 static string const g_argCombinedJson = g_strCombinedJson;
 static string const g_argCompactJSON = g_strCompactJSON;
-static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
-static string const g_argJulia = g_strJulia;
+static string const g_argYul = g_strYul;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -262,7 +260,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argBinary,
 		g_argBinaryRuntime,
 		g_argCloneBinary,
-		g_argFormal,
 		g_argMetadata,
 		g_argNatspecUser,
 		g_argNatspecDev,
@@ -450,55 +447,58 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
-	if (!m_args.count(g_argInputFile))
-		addStdin = true;
-	else
-  {
-    vector<unix_friendly_path> paths = m_args[g_argInputFile].as<vector<unix_friendly_path>>();
-    for (string path: vector<string> (paths.begin(), paths.end()))
-    {
-      auto eq = find(path.begin(), path.end(), '=');
-      if (eq != path.end())
-      path = string(eq + 1, path.end());
-      else if (path == "-")
-      addStdin = true;
-      else
-      {
-        auto infile = boost::filesystem::path(path);
-        if (!boost::filesystem::exists(infile))
-        {
-          if (!ignoreMissing)
-          {
-            cerr << "\"" << infile << "\" is not found" << endl;
-            return false;
-          }
-          else
-          cerr << "\"" << infile << "\" is not found. Skipping." << endl;
+	if (m_args.count(g_argInputFile))
+	{
+		vector<unix_friendly_path> paths = m_args[g_argInputFile].as<vector<unix_friendly_path>>();
+		for (string path: vector<string> (paths.begin(), paths.end()))
+		{
+			auto eq = find(path.begin(), path.end(), '=');
+			if (eq != path.end())
+			path = string(eq + 1, path.end());
+			else if (path == "-")
+			addStdin = true;
+			else
+			{
+				auto infile = boost::filesystem::path(path);
+				if (!boost::filesystem::exists(infile))
+				{
+					if (!ignoreMissing)
+					{
+						cerr << "\"" << infile << "\" is not found" << endl;
+						return false;
+					}
+					else
+					cerr << "\"" << infile << "\" is not found. Skipping." << endl;
 
-          continue;
-        }
+					continue;
+				}
 
-        if (!boost::filesystem::is_regular_file(infile))
-        {
-          if (!ignoreMissing)
-          {
-            cerr << "\"" << infile << "\" is not a valid file" << endl;
-            return false;
-          }
-          else
-          cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
+				if (!boost::filesystem::is_regular_file(infile))
+				{
+					if (!ignoreMissing)
+					{
+						cerr << "\"" << infile << "\" is not a valid file" << endl;
+						return false;
+					}
+					else
+					cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
 
-          continue;
-        }
+					continue;
+				}
 
-        m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
-        path = boost::filesystem::canonical(infile).string();
-      }
-      m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
-    }
-  }
+				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
+				path = boost::filesystem::canonical(infile).string();
+			}
+			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
+		}
+	}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+	if (m_sourceCodes.size() == 0)
+	{
+		cerr << "No input files given. If you wish to use the standard input please specify \"-\" explicity." << endl;
+		return false;
+	}
 
 	return true;
 }
@@ -646,8 +646,8 @@ Allowed options)",
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
 		)
 		(
-			g_argJulia.c_str(),
-			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+			g_argYul.c_str(),
+			"Switch to Yul mode, ignoring all options except --machine and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
@@ -656,7 +656,7 @@ Allowed options)",
 		(
 			g_argMachine.c_str(),
 			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
-			"Target machine in assembly or JULIA mode."
+			"Target machine in assembly or Yul mode."
 		)
 		(
 			g_argLink.c_str(),
@@ -685,8 +685,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argFormal.c_str(), "Translated source suitable for formal analysis. (Deprecated)");
+		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -831,13 +830,13 @@ bool CommandLineInterface::processInput()
 		m_evmVersion = *versionOption;
 	}
 
-	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argYul))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = AssemblyStack::Language;
 		using Machine = AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
+		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		if (m_args.count(g_argMachine))
 		{
@@ -1285,9 +1284,6 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
 	} // end of contracts iteration
-
-	if (m_args.count(g_argFormal))
-		cerr << "Support for the Why3 output was removed." << endl;
 }
 
 }

@@ -190,7 +190,7 @@ important for static analysis tools that operate on bytecode level and
 for displaying the current position in the source code inside a debugger
 or for breakpoint handling.
 
-Both kinds of source mappings use integer indentifiers to refer to source files.
+Both kinds of source mappings use integer identifiers to refer to source files.
 These are regular array indices into a list of source files usually called
 ``"sourceList"``, which is part of the combined-json and the output of
 the json / npm compiler.
@@ -409,8 +409,11 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``let``, ``match``, ``null``,
-``of``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``.
+``abstract``, ``after``, ``alias``, ``apply``, ``auto``, ``case``, ``catch``, ``copyof``, ``default``,
+``define``, ``final``, ``immutable``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
+``mutable``, ``null``, ``of``, ``override``, ``partial``, ``promise``, ``reference``, ``relocatable``,
+``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``try``, ``type``, ``typedef``, ``typeof``,
+``unchecked``.
 
 Language Grammar
 ================

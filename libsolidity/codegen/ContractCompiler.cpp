@@ -666,32 +666,36 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _whileStatement);
+
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
-	m_continueTags.push_back(loopStart);
 	m_breakTags.push_back(loopEnd);
 
 	m_context << loopStart;
 
-	// While loops have the condition prepended
-	if (!_whileStatement.isDoWhile())
-	{
-		compileExpression(_whileStatement.condition());
-		m_context << Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(loopEnd);
-	}
-
-	_whileStatement.body().accept(*this);
-
-	// Do-while loops have the condition appended
 	if (_whileStatement.isDoWhile())
 	{
+		eth::AssemblyItem condition = m_context.newTag();
+		m_continueTags.push_back(condition);
+
+		_whileStatement.body().accept(*this);
+
+		m_context << condition;
+		compileExpression(_whileStatement.condition());
+		m_context << Instruction::ISZERO << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(loopStart);
+	}
+	else
+	{
+		m_continueTags.push_back(loopStart);
 		compileExpression(_whileStatement.condition());
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
-	}
 
-	m_context.appendJumpTo(loopStart);
+		_whileStatement.body().accept(*this);
+
+		m_context.appendJumpTo(loopStart);
+	}
 	m_context << loopEnd;
 
 	m_continueTags.pop_back();
@@ -745,16 +749,16 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 bool ContractCompiler::visit(Continue const& _continueStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _continueStatement);
-	if (!m_continueTags.empty())
-		m_context.appendJumpTo(m_continueTags.back());
+	solAssert(!m_continueTags.empty(), "");
+	m_context.appendJumpTo(m_continueTags.back());
 	return false;
 }
 
 bool ContractCompiler::visit(Break const& _breakStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _breakStatement);
-	if (!m_breakTags.empty())
-		m_context.appendJumpTo(m_breakTags.back());
+	solAssert(!m_breakTags.empty(), "");
+	m_context.appendJumpTo(m_breakTags.back());
 	return false;
 }
 

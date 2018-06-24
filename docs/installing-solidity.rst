@@ -35,7 +35,7 @@ npm / Node.js
 =============
 
 Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has less features than all options further down this page. Our 
+`solcjs` program has fewer features than all options further down this page. Our 
 :ref:`commandline-compiler` documentation assumes you are using
 the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
 stop reading the documentation here and then continue to `solc-js <https://github.com/ethereum/solc-js>`_.

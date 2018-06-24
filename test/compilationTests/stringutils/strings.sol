@@ -135,7 +135,7 @@ library strings {
      * @return A newly allocated string containing the slice's text.
      */
     function toString(slice self) internal returns (string) {
-        var ret = new string(self._len);
+        string memory ret = new string(self._len);
         uint retptr;
         assembly { retptr := add(ret, 32) }
 
@@ -153,9 +153,10 @@ library strings {
      */
     function len(slice self) internal returns (uint) {
         // Starting at ptr-31 means the LSB will be the byte we care about
-        var ptr = self._ptr - 31;
-        var end = ptr + self._len;
-        for (uint len = 0; ptr < end; len++) {
+        uint ptr = self._ptr - 31;
+        uint end = ptr + self._len;
+        uint len;
+        for (len = 0; ptr < end; len++) {
             uint8 b;
             assembly { b := and(mload(ptr), 0xFF) }
             if (b < 0x80) {
@@ -198,8 +199,8 @@ library strings {
         if (other._len < self._len)
             shortest = other._len;
 
-        var selfptr = self._ptr;
-        var otherptr = other._ptr;
+        uint selfptr = self._ptr;
+        uint otherptr = other._ptr;
         for (uint idx = 0; idx < shortest; idx += 32) {
             uint a;
             uint b;
@@ -210,7 +211,7 @@ library strings {
             if (a != b) {
                 // Mask out irrelevant bytes and check again
                 uint mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
-                var diff = (a & mask) - (b & mask);
+                uint diff = (a & mask) - (b & mask);
                 if (diff != 0)
                     return int(diff);
             }
@@ -299,7 +300,7 @@ library strings {
 
         // Load the rune into the MSBs of b
         assembly { word:= mload(mload(add(self, 32))) }
-        var b = word / div;
+        uint b = word / div;
         if (b < 0x80) {
             ret = b;
             len = 1;
@@ -339,7 +340,7 @@ library strings {
      */
     function keccak(slice self) internal returns (bytes32 ret) {
         assembly {
-            ret := sha3(mload(add(self, 32)), mload(self))
+            ret := keccak256(mload(add(self, 32)), mload(self))
         }
     }
 
@@ -363,7 +364,7 @@ library strings {
             let len := mload(needle)
             let selfptr := mload(add(self, 0x20))
             let needleptr := mload(add(needle, 0x20))
-            equal := eq(sha3(selfptr, len), sha3(needleptr, len))
+            equal := eq(keccak256(selfptr, len), keccak256(needleptr, len))
         }
         return equal;
     }
@@ -386,7 +387,7 @@ library strings {
                 let len := mload(needle)
                 let selfptr := mload(add(self, 0x20))
                 let needleptr := mload(add(needle, 0x20))
-                equal := eq(sha3(selfptr, len), sha3(needleptr, len))
+                equal := eq(keccak256(selfptr, len), keccak256(needleptr, len))
             }
         }
 
@@ -409,7 +410,7 @@ library strings {
             return false;
         }
 
-        var selfptr = self._ptr + self._len - needle._len;
+        uint selfptr = self._ptr + self._len - needle._len;
 
         if (selfptr == needle._ptr) {
             return true;
@@ -419,7 +420,7 @@ library strings {
         assembly {
             let len := mload(needle)
             let needleptr := mload(add(needle, 0x20))
-            equal := eq(sha3(selfptr, len), sha3(needleptr, len))
+            equal := eq(keccak256(selfptr, len), keccak256(needleptr, len))
         }
 
         return equal;
@@ -437,13 +438,13 @@ library strings {
             return self;
         }
 
-        var selfptr = self._ptr + self._len - needle._len;
+        uint selfptr = self._ptr + self._len - needle._len;
         bool equal = true;
         if (selfptr != needle._ptr) {
             assembly {
                 let len := mload(needle)
                 let needleptr := mload(add(needle, 0x20))
-                equal := eq(sha3(selfptr, len), sha3(needleptr, len))
+                equal := eq(keccak256(selfptr, len), keccak256(needleptr, len))
             }
         }
 
@@ -479,11 +480,11 @@ library strings {
             } else {
                 // For long needles, use hashing
                 bytes32 hash;
-                assembly { hash := sha3(needleptr, needlelen) }
+                assembly { hash := keccak256(needleptr, needlelen) }
                 ptr = selfptr;
                 for (idx = 0; idx <= selflen - needlelen; idx++) {
                     bytes32 testHash;
-                    assembly { testHash := sha3(ptr, needlelen) }
+                    assembly { testHash := keccak256(ptr, needlelen) }
                     if (hash == testHash)
                         return ptr;
                     ptr += 1;
@@ -519,11 +520,11 @@ library strings {
             } else {
                 // For long needles, use hashing
                 bytes32 hash;
-                assembly { hash := sha3(needleptr, needlelen) }
+                assembly { hash := keccak256(needleptr, needlelen) }
                 ptr = selfptr + (selflen - needlelen);
                 while (ptr >= selfptr) {
                     bytes32 testHash;
-                    assembly { testHash := sha3(ptr, needlelen) }
+                    assembly { testHash := keccak256(ptr, needlelen) }
                     if (hash == testHash)
                         return ptr + needlelen;
                     ptr -= 1;
@@ -667,7 +668,7 @@ library strings {
      * @return The concatenation of the two strings.
      */
     function concat(slice self, slice other) internal returns (string) {
-        var ret = new string(self._len + other._len);
+        string memory ret = new string(self._len + other._len);
         uint retptr;
         assembly { retptr := add(ret, 32) }
         memcpy(retptr, self._ptr, self._len);
@@ -691,11 +692,11 @@ library strings {
         for(uint i = 0; i < parts.length; i++)
             len += parts[i]._len;
 
-        var ret = new string(len);
+        string memory ret = new string(len);
         uint retptr;
         assembly { retptr := add(ret, 32) }
 
-        for(i = 0; i < parts.length; i++) {
+        for(uint i = 0; i < parts.length; i++) {
             memcpy(retptr, parts[i]._ptr, parts[i]._len);
             retptr += parts[i]._len;
             if (i < parts.length - 1) {

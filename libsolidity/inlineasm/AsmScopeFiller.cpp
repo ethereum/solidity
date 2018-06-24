@@ -75,10 +75,10 @@ bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
 {
 	bool success = true;
-	vector<Scope::JuliaType> arguments;
+	vector<Scope::YulType> arguments;
 	for (auto const& _argument: _funDef.parameters)
 		arguments.push_back(_argument.type);
-	vector<Scope::JuliaType> returns;
+	vector<Scope::YulType> returns;
 	for (auto const& _return: _funDef.returnVariables)
 		returns.push_back(_return.type);
 	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))

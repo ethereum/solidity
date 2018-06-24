@@ -36,7 +36,7 @@ namespace assembly
 class AsmPrinter: public boost::static_visitor<std::string>
 {
 public:
-	explicit AsmPrinter(bool _julia = false): m_julia(_julia) {}
+	explicit AsmPrinter(bool _yul = false): m_yul(_yul) {}
 
 	std::string operator()(assembly::Instruction const& _instruction);
 	std::string operator()(assembly::Literal const& _literal);
@@ -57,7 +57,7 @@ public:
 private:
 	std::string appendTypeName(std::string const& _type) const;
 
-	bool m_julia = false;
+	bool m_yul = false;
 };
 
 }

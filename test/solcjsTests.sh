@@ -53,6 +53,11 @@ DIR=$(mktemp -d)
     rm -f soljson.js
     cp "$SOLJSON" soljson.js
 
+    # ensure to use always 0.5.0 sources
+    # FIXME: should be removed once the version bump in this repo is done
+    rm -rf test/DAO040
+    cp -R test/DAO test/DAO040
+
     # Update version (needed for some tests)
     echo "Updating package.json to version $VERSION"
     npm version --no-git-tag-version $VERSION

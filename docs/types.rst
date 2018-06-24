@@ -60,15 +60,14 @@ operators are :ref:`literals<rational_literals>` (or literal expressions).
 Division by zero and modulus with zero throws a runtime exception.
 
 The result of a shift operation is the type of the left operand. The
-expression ``x << y`` is equivalent to ``x * 2**y``, and ``x >> y`` is
-equivalent to ``x / 2**y``. This means that shifting negative numbers
-sign extends. Shifting by a negative amount throws a runtime exception.
+expression ``x << y`` is equivalent to ``x * 2**y``, and, for positive integers,
+``x >> y`` is equivalent to ``x / 2**y``. For negative ``x``, ``x >> y``
+is equivalent to dividing by a power of ``2`` while rounding down (towards negative infinity).
+Shifting by a negative amount throws a runtime exception.
 
 .. warning::
-    The results produced by shift right of negative values of signed integer types is different from those produced
-    by other programming languages. In Solidity, shift right maps to division so the shifted negative values
-    are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
-    works like division with rounding down (towards negative infinity).
+    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
+    i.e. right shifts used rounding towards zero instead of rounding towards negative infinity.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
@@ -225,10 +224,6 @@ Dynamically-sized byte array
     Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
 ``string``:
     Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
-As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
-for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
-number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. index:: address, literal;address
 
@@ -602,8 +597,10 @@ shaves off one level in the type from the right).
 Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
 but it is packed tightly in calldata. ``string`` is equal to ``bytes`` but does not allow
 length or index access (for now).
-
 So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
+As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
+for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
+number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. note::
     If you want to access the byte-representation of a string ``s``, use
@@ -675,14 +672,14 @@ possible:
         function f() public {
             // The next line creates a type error because uint[3] memory
             // cannot be converted to uint[] memory.
-            uint[] x = [uint(1), 3, 4];
+            uint[] memory x = [uint(1), 3, 4];
         }
     }
 
 It is planned to remove this restriction in the future but currently creates
 some complications because of how arrays are passed in the ABI.
 
-.. index:: ! array;length, length, push, !array;push
+.. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
 Members
 ^^^^^^^
@@ -693,6 +690,8 @@ Members
     ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
+**pop**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that can be used to remove an element from the end of the array.
 
 .. warning::
     It is not yet possible to use arrays of arrays in external functions.
@@ -762,7 +761,7 @@ Members
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
-                b[i] = byte(i);
+                b[i] = byte(uint8(i));
             return b;
         }
     }
@@ -974,6 +973,15 @@ cut off::
 
     uint32 a = 0x12345678;
     uint16 b = uint16(a); // b will be 0x5678 now
+
+Since 0.5.0 explicit conversions between integers and fixed-size byte arrays
+are only allowed, if both have the same size. To convert between integers and
+fixed-size byte arrays of different size, they first have to be explicitly
+converted to a matching size. This makes alignment and padding explicit::
+
+    uint16 x = 0xffff;
+    bytes32(uint256(x)); // pad on the left
+    bytes32(bytes2(x)); // pad on the right
 
 .. index:: ! type;deduction, ! var
 

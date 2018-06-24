@@ -48,9 +48,7 @@ bool ReferencesResolver::visit(Block const& _block)
 	if (!m_resolveInsideCode)
 		return false;
 	m_experimental050Mode = _block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(&_block);
+	m_resolver.setScope(&_block);
 	return true;
 }
 
@@ -59,9 +57,7 @@ void ReferencesResolver::endVisit(Block const& _block)
 	if (!m_resolveInsideCode)
 		return;
 
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(_block.scope());
+	m_resolver.setScope(_block.scope());
 }
 
 bool ReferencesResolver::visit(ForStatement const& _for)
@@ -69,9 +65,7 @@ bool ReferencesResolver::visit(ForStatement const& _for)
 	if (!m_resolveInsideCode)
 		return false;
 	m_experimental050Mode = _for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(&_for);
+	m_resolver.setScope(&_for);
 	return true;
 }
 
@@ -79,18 +73,16 @@ void ReferencesResolver::endVisit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return;
-	if (m_experimental050Mode)
-		m_resolver.setScope(_for.scope());
+	m_resolver.setScope(_for.scope());
 }
 
 void ReferencesResolver::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (!m_resolveInsideCode)
 		return;
-	if (m_experimental050Mode)
-		for (auto const& var: _varDeclStatement.declarations())
-			if (var)
-				m_resolver.activateVariable(var->name());
+	for (auto const& var: _varDeclStatement.declarations())
+		if (var)
+			m_resolver.activateVariable(var->name());
 }
 
 bool ReferencesResolver::visit(Identifier const& _identifier)
@@ -99,9 +91,14 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	if (declarations.empty())
 	{
 		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
-		string errorMessage =
-			"Undeclared identifier." +
-			(suggestions.empty()? "": " Did you mean " + std::move(suggestions) + "?");
+		string errorMessage = "Undeclared identifier.";
+		if (!suggestions.empty())
+		{
+			if ("\"" + _identifier.name() + "\"" == suggestions)
+				errorMessage += " " + std::move(suggestions) + " is not (or not yet) visible at this point.";
+			else
+				errorMessage += " Did you mean " + std::move(suggestions) + "?";
+		}
 		declarationError(_identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
@@ -327,7 +324,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else
 				{
 					// force location of external function parameters (not return) to calldata
-					if (varLoc != Location::Default)
+					if (varLoc != Location::CallData && varLoc != Location::Default)
 						fatalTypeError(_variable.location(),
 							"Location has to be calldata for external functions "
 							"(remove the \"memory\" or \"storage\" keyword)."
@@ -344,15 +341,22 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
 				);
 				// force locations of public or external function (return) parameters to memory
-				if (varLoc == Location::Storage && !contract.isLibrary())
+				if (varLoc != Location::Memory && varLoc != Location::Default && !contract.isLibrary())
 					fatalTypeError(_variable.location(),
 						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" keyword)."
+						"(remove the \"storage\" or \"calldata\" keyword)."
 					);
 				if (varLoc == Location::Default || !contract.isLibrary())
 					typeLoc = DataLocation::Memory;
 				else
+				{
+					if (varLoc == Location::CallData)
+						fatalTypeError(_variable.location(),
+							"Location cannot be calldata for non-external functions "
+							"(remove the \"calldata\" keyword)."
+						);
 					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+				}
 			}
 			else
 			{
@@ -361,7 +365,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					if (varLoc != Location::Default && varLoc != Location::Memory)
 						fatalTypeError(
 							_variable.location(),
-							"Storage location has to be \"memory\" (or unspecified) for constants."
+							"Data location has to be \"memory\" (or unspecified) for constants."
 						);
 					typeLoc = DataLocation::Memory;
 				}
@@ -377,7 +381,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
 								typeError(
 									_variable.location(),
-									"Storage location must be specified as either \"memory\" or \"storage\"."
+									"Data location must be specified as either \"memory\" or \"storage\"."
 								);
 							else
 								m_errorReporter.warning(
@@ -389,14 +393,31 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					}
 				}
 				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+				{
+					switch (varLoc)
+					{
+					case Location::Memory:
+						typeLoc = DataLocation::Memory;
+						break;
+					case Location::Storage:
+						typeLoc = DataLocation::Storage;
+						break;
+					case Location::CallData:
+						fatalTypeError(_variable.location(),
+							"Variable cannot be declared as \"calldata\" (remove the \"calldata\" keyword)."
+						);
+						break;
+					default:
+						solAssert(false, "Unknown data location");
+					}
+				}
 				isPointer = !_variable.isStateVariable();
 			}
 
 			type = ref->copyForLocation(typeLoc, isPointer);
 		}
 		else if (varLoc != Location::Default && !ref)
-			typeError(_variable.location(), "Storage location can only be given for array or struct types.");
+			typeError(_variable.location(), "Data location can only be given for array or struct types.");
 
 		_variable.annotation().type = type;
 	}

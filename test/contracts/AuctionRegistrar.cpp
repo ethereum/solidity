@@ -109,7 +109,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		uint renewalDate;
 	}
 
-	uint constant c_renewalInterval = 1 years;
+	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
 	function Registrar() {

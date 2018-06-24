@@ -1,4 +1,3 @@
-pragma experimental "v0.5.0";
 contract test {
     function f() pure public {
         x = 3;
@@ -6,4 +5,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (85-86): Undeclared identifier. Did you mean "x"?
+// DeclarationError: (55-56): Undeclared identifier. "x" is not (or not yet) visible at this point.

@@ -388,7 +388,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >0.4.23 <0.5.0;
 
     contract BlindAuction {
         struct Bid {
@@ -467,8 +467,8 @@ high or low invalid bids.
 
             uint refund;
             for (uint i = 0; i < length; i++) {
-                var bid = bids[msg.sender][i];
-                var (value, fake, secret) =
+                Bid storage bid = bids[msg.sender][i];
+                (uint value, bool fake, bytes32 secret) =
                         (_values[i], _fake[i], _secret[i]);
                 if (bid.blindedBid != keccak256(value, fake, secret)) {
                     // Bid was not actually revealed.

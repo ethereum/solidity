@@ -3,4 +3,4 @@ contract test {
 	function b() returns (uint r) { r = a({a: , b: , c: }); }
 }
 // ----
-// ParserError: (146-146): Expected primary expression.
+// ParserError: (146-147): Expected primary expression.

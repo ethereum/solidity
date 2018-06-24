@@ -19,8 +19,6 @@ defaults:
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
-      environment:
-        TERM: dumb
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -36,6 +34,8 @@ jobs:
   build_emscripten:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - restore_cache:
@@ -68,6 +68,8 @@ jobs:
   test_emscripten_solcjs:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -92,6 +94,8 @@ jobs:
   test_emscripten_external:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -116,6 +120,8 @@ jobs:
   build_x86_linux:
     docker:
       - image: buildpack-deps:artful
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - run:
@@ -123,6 +129,7 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -131,6 +138,8 @@ jobs:
   build_x86_mac:
     macos:
       xcode: "9.0"
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - run:
@@ -142,6 +151,8 @@ jobs:
             brew install z3
             brew install boost
             brew install cmake
+            brew install wget
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -150,6 +161,8 @@ jobs:
   test_x86_linux:
     docker:
       - image: buildpack-deps:artful
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -167,6 +180,8 @@ jobs:
   test_x86_mac:
     macos:
       xcode: "9.0"
+    environment:
+      TERM: xterm
     steps:
       - checkout
       - attach_workspace:
@@ -192,7 +207,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install python-sphinx
+            apt-get -qy install python-sphinx python-pip
       - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation

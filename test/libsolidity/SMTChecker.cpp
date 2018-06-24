@@ -133,22 +133,6 @@ BOOST_AUTO_TEST_CASE(assignment_in_declaration)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(use_before_declaration)
-{
-	string text = R"(
-		contract C {
-			function f() public pure { a = 3; uint a = 2; assert(a == 2); }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f() public pure { assert(a == 0); uint a = 2; assert(a == 2); }
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
 BOOST_AUTO_TEST_CASE(function_call_does_not_clear_local_vars)
 {
 	string text = R"(
@@ -388,35 +372,6 @@ BOOST_AUTO_TEST_CASE(bool_simple)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				bool y;
-				assert(x <= y);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion violation happens here");
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				bool y;
-				assert(x >= y);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(bool x) public pure {
-				require(x);
-				bool y;
-				assert(x > y);
-				assert(y < x);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(bool_int_mixed)
@@ -465,6 +420,82 @@ BOOST_AUTO_TEST_CASE(bool_int_mixed)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(storage_value_vars)
+{
+	string text = R"(
+		contract C
+		{
+			address a;
+			bool b;
+			uint c;
+			function f(uint x) public {
+				if (x == 0)
+				{
+					a = 100;
+					b = true;
+				}
+				else
+				{
+					a = 200;
+					b = false;
+				}
+				assert(a > 0 && b);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+	text = R"(
+		contract C
+		{
+			address a;
+			bool b;
+			uint c;
+			function f() public view {
+				assert(c > 0);
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+	text = R"(
+		contract C
+		{
+			function f(uint x) public {
+				if (x == 0)
+				{
+					a = 100;
+					b = true;
+				}
+				else
+				{
+					a = 200;
+					b = false;
+				}
+				assert(b == (a < 200));
+			}
+
+			function g() public view {
+				require(a < 100);
+				assert(c >= 0);
+			}
+			address a;
+			bool b;
+			uint c;
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C
+		{
+			function f() public view {
+				assert(c > 0);
+			}
+			uint c;
+		}
+	)";
+	CHECK_WARNING(text, "Assertion violation happens here");
+
 }
 
 BOOST_AUTO_TEST_CASE(while_loop_simple)

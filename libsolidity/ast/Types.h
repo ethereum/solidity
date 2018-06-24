@@ -151,7 +151,8 @@ public:
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken const& _type);
-	/// Converts a given elementary type name with optional suffix " memory" to a type pointer.
+	/// Converts a given elementary type name with optional data location
+	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
@@ -913,6 +914,7 @@ public:
 		AddMod, ///< ADDMOD
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
+		ArrayPop, ///< .pop() from a dynamically sized array in storage
 		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
@@ -1046,8 +1048,8 @@ public:
 		return *m_declaration;
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
-	/// @returns true if the result of this function only depends on its arguments
-	/// and it does not modify the state.
+	/// @returns true if the result of this function only depends on its arguments,
+	/// does not modify the state and is a compile-time constant.
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
@@ -1058,6 +1060,22 @@ public:
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
 	bool padArguments() const { return !(m_kind == Kind::SHA3 || m_kind == Kind::SHA256 || m_kind == Kind::RIPEMD160 || m_kind == Kind::ABIEncodePacked); }
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
+	/// true iff the function takes a single bytes parameter and it is passed on without padding.
+	/// @todo until 0.5.0, this is just a "recommendation".
+	bool takesSinglePackedBytesParameter() const
+	{
+		// @todo add the call kinds here with 0.5.0 and perhaps also log0.
+		switch (m_kind)
+		{
+		case FunctionType::Kind::SHA3:
+		case FunctionType::Kind::SHA256:
+		case FunctionType::Kind::RIPEMD160:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 	bool bound() const { return m_bound; }

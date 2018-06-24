@@ -36,6 +36,33 @@ namespace test
 
 BOOST_AUTO_TEST_SUITE(SolidityTypes)
 
+BOOST_AUTO_TEST_CASE(int_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Int, 0, 0)) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
+	for (unsigned i = 8; i <= 256; i += 8)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::IntM, i, 0)) == *make_shared<IntegerType>(i, IntegerType::Modifier::Signed));
+}
+
+BOOST_AUTO_TEST_CASE(uint_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UInt, 0, 0)) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
+	for (unsigned i = 8; i <= 256; i += 8)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UIntM, i, 0)) == *make_shared<IntegerType>(i, IntegerType::Modifier::Unsigned));
+}
+
+BOOST_AUTO_TEST_CASE(byte_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Byte, 0, 0)) == *make_shared<FixedBytesType>(1));
+	for (unsigned i = 1; i <= 32; i++)
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, i, 0)) == *make_shared<FixedBytesType>(i));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_types)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
+}
+
 BOOST_AUTO_TEST_CASE(storage_layout_simple)
 {
 	MemberList members(MemberList::MemberMap({
@@ -124,7 +151,12 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bool")->identifier(), "t_bool");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes")->identifier(), "t_bytes_storage_ptr");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes memory")->identifier(), "t_bytes_memory_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes storage")->identifier(), "t_bytes_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes calldata")->identifier(), "t_bytes_calldata_ptr");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string")->identifier(), "t_string_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string memory")->identifier(), "t_string_memory_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string storage")->identifier(), "t_string_storage_ptr");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("string calldata")->identifier(), "t_string_calldata_ptr");
 	ArrayType largeintArray(DataLocation::Memory, Type::fromElementaryTypeName("int128"), u256("2535301200456458802993406410752"));
 	BOOST_CHECK_EQUAL(largeintArray.identifier(), "t_array$_t_int128_$2535301200456458802993406410752_memory_ptr");
 	TypePointer stringArray = make_shared<ArrayType>(DataLocation::Storage, Type::fromElementaryTypeName("string"), u256("20"));

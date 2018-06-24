@@ -127,6 +127,26 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(trailing_dot)
+{
+	Scanner scanner(CharStream("2.5"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("2.5e10"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream(".5"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream(".5e10"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("2."), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
 	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;"));
