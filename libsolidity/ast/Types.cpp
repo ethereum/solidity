@@ -872,8 +872,11 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 				return true;
 			return false;
 		}
-		if (targetType.isSigned() && -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
-			return true;
+		if (targetType.isSigned())
+		{
+			if (-m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
+				return true;
+		}
 		return false;
 	}
 	case Category::FixedPoint:
