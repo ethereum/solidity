@@ -719,27 +719,10 @@ void CompilerStack::compileContract(
 	string metadata = createMetadata(compiledContract);
 	compiledContract.metadata = metadata;
 
-	// Prepare CBOR metadata for the bytecode
-	bytes cborEncodedHash =
-		// CBOR-encoding of the key "bzzr0"
-		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
-		// CBOR-encoding of the hash
-		bytes{0x58, 0x20} + dev::swarmHash(metadata).asBytes();
-	bytes cborEncodedMetadata;
-	if (onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures))
-		cborEncodedMetadata =
-			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
-			bytes{0xa1} +
-			cborEncodedHash;
-	else
-		cborEncodedMetadata =
-			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
-			bytes{0xa2} +
-			cborEncodedHash +
-			bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
-	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
-	// 16-bit big endian length
-	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
+	bytes cborEncodedMetadata = createCBORMetadata(
+		metadata,
+		!onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures)
+	);
 
 	try
 	{
@@ -899,6 +882,31 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	meta["output"]["devdoc"] = natspecDev(_contract);
 
 	return jsonCompactPrint(meta);
+}
+
+bytes CompilerStack::createCBORMetadata(string _metadata, bool _experimentalMode)
+{
+	bytes cborEncodedHash =
+		// CBOR-encoding of the key "bzzr0"
+		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
+		// CBOR-encoding of the hash
+		bytes{0x58, 0x20} + dev::swarmHash(_metadata).asBytes();
+	bytes cborEncodedMetadata;
+	if (_experimentalMode)
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
+			bytes{0xa2} +
+			cborEncodedHash +
+			bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
+	else
+		cborEncodedMetadata =
+			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
+			bytes{0xa1} +
+			cborEncodedHash;
+	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
+	// 16-bit big endian length
+	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
+	return cborEncodedMetadata;
 }
 
 string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) const

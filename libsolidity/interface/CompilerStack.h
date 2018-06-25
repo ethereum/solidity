@@ -295,6 +295,8 @@ private:
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	std::string createMetadata(Contract const& _contract) const;
+	/// @returns the metadata CBOR for the given serialised metadata JSON.
+	static bytes createCBORMetadata(std::string _metadata, bool _experimentalMode);
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 	Json::Value const& contractABI(Contract const&) const;
 	Json::Value const& natspecUser(Contract const&) const;
