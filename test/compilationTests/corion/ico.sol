@@ -50,7 +50,7 @@ contract ico is safeMath {
     uint256 public totalMint;
     uint256 public totalPremiumMint;
     
-    function ico(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] genesisAddr, uint256[] genesisValue) {
+    constructor(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] genesisAddr, uint256[] genesisValue) {
         /*
             Installation function.
             

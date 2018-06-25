@@ -22,7 +22,7 @@ contract RefundVault is Ownable {
   event RefundsEnabled();
   event Refunded(address indexed beneficiary, uint256 weiAmount);
 
-  function RefundVault(address _wallet) {
+  constructor(address _wallet) {
     require(_wallet != address(0x0));
     wallet = _wallet;
     state = State.Active;

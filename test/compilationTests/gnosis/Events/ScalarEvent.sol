@@ -28,7 +28,7 @@ contract ScalarEvent is Event {
     /// @param _oracle Oracle contract used to resolve the event
     /// @param _lowerBound Lower bound for event outcome
     /// @param _upperBound Lower bound for event outcome
-    function ScalarEvent(
+    constructor(
         Token _collateralToken,
         Oracle _oracle,
         int _lowerBound,

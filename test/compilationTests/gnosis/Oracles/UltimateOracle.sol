@@ -46,7 +46,7 @@ contract UltimateOracle is Oracle {
     /// @param _challengePeriod Time to challenge oracle outcome
     /// @param _challengeAmount Amount to challenge the outcome
     /// @param _frontRunnerPeriod Time to overbid the front-runner
-    function UltimateOracle(
+    constructor(
         Oracle _forwardedOracle,
         Token _collateralToken,
         uint8 _spreadMultiplier,

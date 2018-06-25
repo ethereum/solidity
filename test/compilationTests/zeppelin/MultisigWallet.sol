@@ -25,8 +25,8 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
    * @param _owners A list of owners.
    * @param _required The amount required for a transaction to be approved.
    */
-  function MultisigWallet(address[] _owners, uint256 _required, uint256 _daylimit)       
-    Shareable(_owners, _required)        
+  constructor(address[] _owners, uint256 _required, uint256 _daylimit)       
+    Shareable(_owners, _required)
     DayLimit(_daylimit) { }
 
   /** 

@@ -108,7 +108,7 @@ contract MilestoneTracker {
     /// @param _arbitrator Address assigned to be the arbitrator
     /// @param _donor Address assigned to be the donor
     /// @param _recipient Address assigned to be the recipient
-    function MilestoneTracker (
+    constructor (
         address _arbitrator,
         address _donor,
         address _recipient

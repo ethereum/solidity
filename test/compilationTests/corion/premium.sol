@@ -40,7 +40,7 @@ contract premium is module, safeMath {
     
     mapping(address => bool) public genesis;
     
-    function premium(bool forReplace, address moduleHandler, address dbAddress, address icoContractAddr, address[] genesisAddr, uint256[] genesisValue) {
+    constructor(bool forReplace, address moduleHandler, address dbAddress, address icoContractAddr, address[] genesisAddr, uint256[] genesisValue) {
         /*
             Setup function.
             If an ICOaddress is defined then the balance of the genesis addresses will be set as well.
