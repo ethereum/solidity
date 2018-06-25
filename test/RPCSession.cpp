@@ -245,6 +245,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 			"extraData": "0x",
 			"gasLimit": "0x1000000000000",
+			"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+			"nonce": "0x0000000000000042",
 			"difficulty": "1"
 		},
 		"accounts": {
