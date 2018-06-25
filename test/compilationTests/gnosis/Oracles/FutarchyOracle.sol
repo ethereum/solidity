@@ -55,7 +55,7 @@ contract FutarchyOracle is Oracle {
     /// @param marketMaker Market maker contract
     /// @param fee Market fee
     /// @param _deadline Decision deadline
-    function FutarchyOracle(
+    constructor(
         address _creator,
         EventFactory eventFactory,
         Token collateralToken,

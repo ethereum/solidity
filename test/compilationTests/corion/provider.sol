@@ -118,7 +118,7 @@ contract provider is module, safeMath, announcementTypes {
     
     uint256 private currentSchellingRound = 1;
 
-    function provider(address _moduleHandler) {
+    constructor(address _moduleHandler) {
         /*
             Install function.
             

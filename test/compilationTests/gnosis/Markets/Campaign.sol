@@ -70,7 +70,7 @@ contract Campaign {
     /// @param _fee Market fee
     /// @param _funding Initial funding for market
     /// @param _deadline Campaign deadline
-    function Campaign(
+    constructor(
         Event _eventContract,
         MarketFactory _marketFactory,
         MarketMaker _marketMaker,

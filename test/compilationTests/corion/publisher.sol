@@ -61,7 +61,7 @@ contract publisher is announcementTypes, module, safeMath {
     
     mapping (address => uint256[]) public opponents;
     
-    function publisher(address moduleHandler) {
+    constructor(address moduleHandler) {
         /*
             Installation function.  The installer will be registered in the admin list automatically
             

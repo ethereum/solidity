@@ -48,7 +48,7 @@ contract token is safeMath, module, announcementTypes {
     
     mapping(address => bool) public genesis;
     
-    function token(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] genesisAddr, uint256[] genesisValue) payable {
+    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] genesisAddr, uint256[] genesisValue) payable {
         /*
             Installation function
             

@@ -38,7 +38,7 @@ contract SignedMessageOracle is Oracle {
     /// @param v Signature parameter
     /// @param r Signature parameter
     /// @param s Signature parameter
-    function SignedMessageOracle(bytes32 _descriptionHash, uint8 v, bytes32 r, bytes32 s)
+    constructor(bytes32 _descriptionHash, uint8 v, bytes32 r, bytes32 s)
         public
     {
         signer = ecrecover(_descriptionHash, v, r, s);

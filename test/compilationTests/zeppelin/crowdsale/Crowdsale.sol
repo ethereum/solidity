@@ -40,7 +40,7 @@ contract Crowdsale {
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
 
-  function Crowdsale(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address _wallet) {
+  constructor(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address _wallet) {
     require(_startBlock >= block.number);
     require(_endBlock >= _startBlock);
     require(_rate > 0);

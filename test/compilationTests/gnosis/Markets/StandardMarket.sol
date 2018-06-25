@@ -38,7 +38,7 @@ contract StandardMarket is Market {
     /// @param _eventContract Event contract
     /// @param _marketMaker Market maker contract
     /// @param _fee Market fee
-    function StandardMarket(address _creator, Event _eventContract, MarketMaker _marketMaker, uint24 _fee)
+    constructor(address _creator, Event _eventContract, MarketMaker _marketMaker, uint24 _fee)
         public
     {
         // Validate inputs

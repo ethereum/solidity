@@ -59,7 +59,7 @@ contract Shareable {
    * @param _owners A list of owners.
    * @param _required The amount required for a transaction to be approved.
    */
-  function Shareable(address[] _owners, uint256 _required) {
+  constructor(address[] _owners, uint256 _required) {
     owners[1] = msg.sender;
     ownerIndex[msg.sender] = 1;
     for (uint256 i = 0; i < _owners.length; ++i) {

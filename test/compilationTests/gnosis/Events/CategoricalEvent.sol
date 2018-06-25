@@ -13,7 +13,7 @@ contract CategoricalEvent is Event {
     /// @param _collateralToken Tokens used as collateral in exchange for outcome tokens
     /// @param _oracle Oracle contract used to resolve the event
     /// @param outcomeCount Number of event outcomes
-    function CategoricalEvent(
+    constructor(
         Token _collateralToken,
         Oracle _oracle,
         uint8 outcomeCount
