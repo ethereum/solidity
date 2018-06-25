@@ -1056,7 +1056,8 @@ The full contract
         /// does, you can skip it.
 
         /// the same functions we wrote in the 'creating and verifying signatures' chapter,
-        /// you can go there to find the full explanations
+        /// you can go there to find the full explanations.
+        /// please read the notes below this contract.
 
         function splitSignature(bytes sig)
             internal
@@ -1102,6 +1103,9 @@ The full contract
     }
 
 
+Note: The function *splitSignature* uses the code from the `gist <https://gist.github.com/axic/5b33912c6f61ae6fd96d6c4a47afde6d>`_. In
+a real implementation should be used a more tested library, such as the
+openzepplin's fork of the original code, `library <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol>`_.
 
   
 
