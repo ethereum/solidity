@@ -2237,24 +2237,19 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 		size_t minNumValues = targets.size();
 		if (!targets.back() || !targets.front())
 			--minNumValues; // wildcards can also match 0 components
-		if (components().size() < minNumValues)
-			return false;
-		if (components().size() > targets.size() && targets.front() && targets.back())
+		if ((components().size() < minNumValues) || (components().size() > targets.size() && targets.front() && targets.back()))
 			return false; // larger source and no wildcard
 		bool fillRight = !targets.back() || targets.front();
 		for (size_t i = 0; i < min(targets.size(), components().size()); ++i)
 		{
 			auto const& s = components()[fillRight ? i : components().size() - i - 1];
 			auto const& t = targets[fillRight ? i : targets.size() - i - 1];
-			if (!s && t)
-				return false;
-			else if (s && t && !s->isImplicitlyConvertibleTo(*t))
+			if ((!s && t) || (s && t && !s->isImplicitlyConvertibleTo(*t)))
 				return false;
 		}
 		return true;
 	}
-	else
-		return false;
+	return false;
 }
 
 string TupleType::richIdentifier() const
