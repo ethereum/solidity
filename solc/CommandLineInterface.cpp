@@ -93,11 +93,6 @@ struct unix_friendly_path
   {
     return path;
   }
-
-	operator boost::filesystem::path()
-  {
-		return boost::filesystem::path(path);
-	}
 };
 
 struct unix_friendly_paths
@@ -556,7 +551,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 {
 	namespace fs = boost::filesystem;
 	// create directory if not existent
-	fs::path p = (fs::path) m_args.at(g_argOutputDir).as<unix_friendly_path>();
+	fs::path p((string) m_args.at(g_argOutputDir).as<unix_friendly_path>());
 	// Do not try creating the directory if the first item is . or ..
 	if (p.filename() != "." && p.filename() != "..")
 		fs::create_directories(p);
@@ -790,7 +785,7 @@ bool CommandLineInterface::processInput()
 	{
 		vector<unix_friendly_path> paths = m_args[g_argAllowPaths].as<unix_friendly_paths>().paths;
 		for (unix_friendly_path path: paths) {
-      auto filesystem_path = (boost::filesystem::path) path;
+      auto filesystem_path = boost::filesystem::path((string) path);
 			// If the given path had a trailing slash, the Boost filesystem
 			// path will have it's last component set to '.'. This breaks
 			// path comparison in later parts of the code, so we need to strip
