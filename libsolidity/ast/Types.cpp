@@ -537,18 +537,12 @@ u256 IntegerType::literalValue(Literal const* _literal) const
 
 bigint IntegerType::minValue() const
 {
-	if (isSigned())
-		return -(bigint(1) << (m_bits - 1));
-	else
-		return bigint(0);
+	return isSigned() ? -(bigint(1) << (m_bits - 1)) : bigint(0);
 }
 
 bigint IntegerType::maxValue() const
 {
-	if (isSigned())
-		return (bigint(1) << (m_bits - 1)) - 1;
-	else
-		return (bigint(1) << m_bits) - 1;
+	return isSigned() ? (bigint(1) << (m_bits - 1)) - 1 : (bigint(1) << m_bits) - 1;
 }
 
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
