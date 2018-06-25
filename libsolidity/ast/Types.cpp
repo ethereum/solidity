@@ -460,29 +460,29 @@ string IntegerType::richIdentifier() const
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.category() == category())
+	switch (_convertTo.category())
+	{
+	case category():
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
 		if (convertTo.m_bits < m_bits)
 			return false;
 		if (isAddress())
 			return convertTo.isAddress();
-		else if (isSigned())
+		if (isSigned())
 			return convertTo.isSigned();
-		else
-			return !convertTo.isSigned() || convertTo.m_bits > m_bits;
+		return !convertTo.isSigned() || convertTo.m_bits > m_bits;
 	}
-	else if (_convertTo.category() == Category::FixedPoint)
+	case Category::FixedPoint:
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-
 		if (isAddress())
 			return false;
-		else
-			return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
+		return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
 	}
-	else
+	default:
 		return false;
+	}
 }
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
