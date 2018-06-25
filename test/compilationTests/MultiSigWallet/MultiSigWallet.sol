@@ -50,7 +50,7 @@ contract MultiSigWallet {
     }
 
     modifier transactionExists(uint transactionId) {
-        if (transactions[transactionId].destination == 0)
+        if (transactions[transactionId].destination == address(0))
             throw;
         _;
     }
@@ -74,7 +74,7 @@ contract MultiSigWallet {
     }
 
     modifier notNull(address _address) {
-        if (_address == 0)
+        if (_address == address(0))
             throw;
         _;
     }
@@ -107,7 +107,7 @@ contract MultiSigWallet {
         validRequirement(_owners.length, _required)
     {
         for (uint i=0; i<_owners.length; i++) {
-            if (isOwner[_owners[i]] || _owners[i] == 0)
+            if (isOwner[_owners[i]] || _owners[i] == address(0))
                 throw;
             isOwner[_owners[i]] = true;
         }

@@ -35,6 +35,6 @@ contract Claimable is Ownable {
    */
   function claimOwnership() onlyPendingOwner {
     owner = pendingOwner;
-    pendingOwner = 0x0;
+    pendingOwner = address(0x0);
   }
 }

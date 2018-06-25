@@ -433,15 +433,15 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 			function f(uint x) public {
 				if (x == 0)
 				{
-					a = 100;
+					a = 0x0000000000000000000000000000000000000100;
 					b = true;
 				}
 				else
 				{
-					a = 200;
+					a = 0x0000000000000000000000000000000000000200;
 					b = false;
 				}
-				assert(a > 0 && b);
+				assert(a > 0x0000000000000000000000000000000000000000 && b);
 			}
 		}
 	)";
@@ -464,19 +464,19 @@ BOOST_AUTO_TEST_CASE(storage_value_vars)
 			function f(uint x) public {
 				if (x == 0)
 				{
-					a = 100;
+					a = 0x0000000000000000000000000000000000000100;
 					b = true;
 				}
 				else
 				{
-					a = 200;
+					a = 0x0000000000000000000000000000000000000200;
 					b = false;
 				}
-				assert(b == (a < 200));
+				assert(b == (a < 0x0000000000000000000000000000000000000200));
 			}
 
 			function g() public view {
-				require(a < 100);
+				require(a < 0x0000000000000000000000000000000000000100);
 				assert(c >= 0);
 			}
 			address a;

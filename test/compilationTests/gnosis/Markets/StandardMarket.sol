@@ -42,7 +42,7 @@ contract StandardMarket is Market {
         public
     {
         // Validate inputs
-        require(address(_eventContract) != 0 && address(_marketMaker) != 0 && _fee < FEE_RANGE);
+        require(address(_eventContract) != address(0) && address(_marketMaker) != address(0) && _fee < FEE_RANGE);
         creator = _creator;
         createdAtBlock = block.number;
         eventContract = _eventContract;

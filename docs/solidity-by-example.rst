@@ -496,7 +496,7 @@ high or low invalid bids.
             if (value <= highestBid) {
                 return false;
             }
-            if (highestBidder != 0) {
+            if (highestBidder != address(0)) {
                 // Refund the previously highest bidder.
                 pendingReturns[highestBidder] += highestBid;
             }

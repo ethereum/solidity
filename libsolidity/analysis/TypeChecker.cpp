@@ -2287,14 +2287,28 @@ void TypeChecker::endVisit(Literal const& _literal)
 
 	if (_literal.looksLikeAddress())
 	{
-		if (_literal.passesAddressChecksum())
-			_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
-		else
-			m_errorReporter.warning(
+		// Assign type here if it even looks like an address. This prevents double error in 050 mode for invalid address
+		_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+
+		string msg;
+		if (_literal.value().length() != 42) // "0x" + 40 hex digits
+			// looksLikeAddress enforces that it is a hex literal starting with "0x"
+			msg =
+				"This looks like an address but is not exactly 40 hex digits. It is " +
+				to_string(_literal.value().length() - 2) +
+				" hex digits.";
+		else if (!_literal.passesAddressChecksum())
+		{
+			msg = "This looks like an address but has an invalid checksum.";
+			if (!_literal.getChecksummedAddress().empty())
+				msg += " Correct checksummed address: \"" + _literal.getChecksummedAddress() + "\".";
+		}
+
+		if (!msg.empty())
+			m_errorReporter.syntaxError(
 				_literal.location(),
-				"This looks like an address but has an invalid checksum. "
-				"If this is not used as an address, please prepend '00'. " +
-				(!_literal.getChecksummedAddress().empty() ? "Correct checksummed address: '" + _literal.getChecksummedAddress() + "'. " : "") +
+				msg +
+				" If this is not used as an address, please prepend '00'. " +
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}

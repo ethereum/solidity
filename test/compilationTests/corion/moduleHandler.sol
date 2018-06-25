@@ -73,7 +73,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( success && ! found );
         (success, found, id) = getModuleIDByHash(input.name);
         require( success && ! found );
-        (success, found, id) = getModuleIDByAddress(0x00);
+        (success, found, id) = getModuleIDByAddress(address(0x00));
         require( success );
         if ( ! found ) {
             id = modules.length;
@@ -92,7 +92,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName(name);
         if ( _success && _found ) { return (true, true, modules[_id].addr); }
-        return (true, false, 0x00);
+        return (true, false, address(0x00));
     }
     function getModuleIDByHash(bytes32 hashOfName) public constant returns( bool success, bool found, uint256 id ) {
         /*

@@ -36,7 +36,7 @@ contract DelayedClaimable is Claimable {
     if ((block.number > end) || (block.number < start))
         throw;
     owner = pendingOwner;
-    pendingOwner = 0x0;
+    pendingOwner = address(0x0);
     end = 0;
   }
 

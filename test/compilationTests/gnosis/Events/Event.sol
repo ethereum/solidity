@@ -37,7 +37,7 @@ contract Event {
         public
     {
         // Validate input
-        require(address(_collateralToken) != 0 && address(_oracle) != 0 && outcomeCount >= 2);
+        require(address(_collateralToken) != address(0) && address(_oracle) != address(0) && outcomeCount >= 2);
         collateralToken = _collateralToken;
         oracle = _oracle;
         // Create an outcome token for each outcome

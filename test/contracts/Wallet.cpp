@@ -399,7 +399,7 @@ contract Wallet is multisig, multiowned, daylimit {
 		}
 		// determine our operation hash.
 		_r = keccak256(msg.data, block.number);
-		if (!confirm(_r) && m_txs[_r].to == 0) {
+		if (!confirm(_r) && m_txs[_r].to == 0x0000000000000000000000000000000000000000) {
 			m_txs[_r].to = _to;
 			m_txs[_r].value = _value;
 			m_txs[_r].data = _data;
@@ -410,7 +410,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// confirm a transaction through just the hash. we use the previous transactions map, m_txs, in order
 	// to determine the body of the transaction from the hash provided.
 	function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
-		if (m_txs[_h].to != 0) {
+		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
 			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
 			MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
 			delete m_txs[_h];
