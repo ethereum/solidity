@@ -163,10 +163,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 
 pair<u256, unsigned> const* StorageOffsets::offset(size_t _index) const
 {
-	if (m_offsets.count(_index))
-		return &m_offsets.at(_index);
-	else
-		return nullptr;
+	return m_offsets.count(_index) ? &m_offsets.at(_index) : nullptr;
 }
 
 MemberList& MemberList::operator=(MemberList&& _other)
