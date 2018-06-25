@@ -28,8 +28,8 @@ namespace dev
 namespace julia
 {
 
-struct IuliaException: virtual Exception {};
-struct OptimizerException: virtual IuliaException {};
+struct YulException: virtual Exception {};
+struct OptimizerException: virtual YulException {};
 
 }
 }
