@@ -5,12 +5,10 @@ library L {
 contract C {
     function f(uint size) public {
         L.S[][] memory x = new L.S[][](10);
-        var y = new uint[](20);
-        var z = new bytes(size);
+        uint[] memory y = new uint[](20);
+        bytes memory z = new bytes(size);
         x;y;z;
     }
 }
 // ----
-// Warning: (205-210): Use of the "var" keyword is deprecated.
-// Warning: (237-242): Use of the "var" keyword is deprecated.
-// Warning: (122-282): Function state mutability can be restricted to pure
+// Warning: (122-301): Function state mutability can be restricted to pure
