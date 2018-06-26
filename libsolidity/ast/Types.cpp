@@ -856,7 +856,9 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.category() == Category::Integer)
+	switch (_convertTo.category())
+	{
+	case Category::Integer:
 	{
 		if (isFractional())
 			return false;
@@ -870,31 +872,33 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		{
 			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
 				return true;
+			return false;
 		}
-		else if (targetType.isSigned() && -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
-			return true;
+		if (targetType.isSigned())
+		{
+			if (-m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
+				return true;
+		}
 		return false;
 	}
-	else if (_convertTo.category() == Category::FixedPoint)
+	case Category::FixedPoint:
 	{
 		if (auto fixed = fixedPointType())
 			return fixed->isImplicitlyConvertibleTo(_convertTo);
-		else
-			return false;
+		return false;
 	}
-	else if (_convertTo.category() == Category::FixedBytes)
+	case Category::FixedBytes:
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		if (!isFractional())
-		{
-			if (integerType())
-				return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		if (isFractional())
 			return false;
-		}
-		else
-			return false;
+		if (integerType())
+			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		return false;
 	}
-	return false;
+	default:
+		return false;
+	}
 }
 
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
