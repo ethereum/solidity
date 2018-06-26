@@ -92,7 +92,7 @@ void SMTPortfolio::addAssertion(Expression const& _expr)
  * This comment explains how this result is decided.
  *
  * When a solver is queried, there are four possible answers:
- *   SATISFIABLE (SAT), UNSATISFIABLE (UNSAT), UNKNOWN, ERROR
+ *   SATISFIABLE (SAT), UNSATISFIABLE (UNSAT), UNKNOWN, CONFLICTING, ERROR
  * We say that a solver _answered_ the query if it returns either:
  *   SAT or UNSAT
  * A solver did not answer the query if it returns either:
@@ -107,7 +107,7 @@ void SMTPortfolio::addAssertion(Expression const& _expr)
  *   because one buggy solver/integration shouldn't break the portfolio.
  *
  * 2) If at least one solver answers SAT and at least one answers UNSAT, at least one of them is buggy
- * and the result is conflicting and we abort.
+ * and the result is CONFLICTING.
  *   In the future if we have more than 2 solvers enabled we could go with the majority.
  *
  * 3) If NO solver answers the query:
@@ -135,7 +135,8 @@ pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& 
 			}
 			else if (lastResult != result)
 			{
-				solAssert(false, "At least two SMT solvers gave opposing results.");
+				lastResult = CheckResult::CONFLICTING;
+				break;
 			}
 		}
 		else if (result == CheckResult::UNKNOWN && lastResult == CheckResult::ERROR)

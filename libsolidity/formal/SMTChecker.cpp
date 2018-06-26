@@ -617,6 +617,9 @@ void SMTChecker::checkCondition(
 	case smt::CheckResult::UNKNOWN:
 		m_errorReporter.warning(_location, _description + " might happen here." + loopComment);
 		break;
+	case smt::CheckResult::CONFLICTING:
+		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		break;
 	case smt::CheckResult::ERROR:
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
 		break;
@@ -644,6 +647,8 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 
 	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
 		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
+	else if (positiveResult == smt::CheckResult::CONFLICTING || negatedResult == smt::CheckResult::CONFLICTING)
+		m_errorReporter.warning(_condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 	else if (positiveResult == smt::CheckResult::SATISFIABLE && negatedResult == smt::CheckResult::SATISFIABLE)
 	{
 		// everything fine.
