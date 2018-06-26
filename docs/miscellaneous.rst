@@ -79,6 +79,7 @@ Solidity always places new objects at the free memory pointer and memory is neve
 .. warning::
   There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
 
+  While it may seem like a good idea to use ``msize`` to arrive at a definitely zeroed out memory area, using such a pointer non-temporarily without updating the free memory pointer can have adverse results.
 
 .. index: calldata layout
 
