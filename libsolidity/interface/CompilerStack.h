@@ -122,6 +122,8 @@ public:
 		m_optimizeRuns = _runs;
 	}
 
+	/// Set the EVM version used before running compile.
+	/// When called without an argument it will revert to the default version.
 	void setEVMVersion(EVMVersion _version = EVMVersion{});
 
 	/// Sets the list of requested contract names. If empty, no filtering is performed and every contract
@@ -240,9 +242,7 @@ public:
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
 private:
-	/**
-	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
-	 */
+	/// The state per source unit. Filled gradually during parsing.
 	struct Source
 	{
 		std::shared_ptr<Scanner> scanner;
@@ -251,13 +251,14 @@ private:
 		void reset() { scanner.reset(); ast.reset(); }
 	};
 
+	/// The state per contract. Filled gradually during compilation.
 	struct Contract
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		eth::LinkerObject object;
-		eth::LinkerObject runtimeObject;
-		eth::LinkerObject cloneObject;
+		eth::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
+		eth::LinkerObject runtimeObject; ///< Runtime object.
+		eth::LinkerObject cloneObject; ///< Clone object (deprecated).
 		std::string metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
@@ -272,8 +273,10 @@ private:
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
+
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	static std::string absolutePath(std::string const& _path, std::string const& _reference);
+
 	/// Helper function to return path converted strings.
 	static std::string sanitizePath(std::string const& _path) { return boost::filesystem::path(_path).generic_string(); }
 
@@ -285,21 +288,42 @@ private:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 	);
+
+	/// Links all the known library addresses in the available objects. Any unknown
+	/// library will still be kept as an unlinked placeholder in the objects.
 	void link();
 
+	/// @returns the contract object for the given @a _contractName.
+	/// Can only be called after state is CompilationSuccessful.
 	Contract const& contract(std::string const& _contractName) const;
+
+	/// @returns the source object for the given @a _sourceName.
+	/// Can only be called after state is SourcesSet.
 	Source const& source(std::string const& _sourceName) const;
 
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
+	/// @returns the metadata JSON as a compact string for the given contract.
 	std::string createMetadata(Contract const& _contract) const;
+
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
 	static bytes createCBORMetadata(std::string _metadata, bool _experimentalMode);
+
+	/// @returns the computer source mapping string.
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
+
+	/// @returns the contract ABI as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& contractABI(Contract const&) const;
+
+	/// @returns the Natspec User documentation as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& natspecUser(Contract const&) const;
+
+	/// @returns the Natspec Developer documentation as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& natspecDev(Contract const&) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
