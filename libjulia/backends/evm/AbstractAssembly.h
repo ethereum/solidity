@@ -42,7 +42,7 @@ namespace julia
 {
 
 ///
-/// Assembly class that abstracts both the libevmasm assembly and the new julia evm assembly.
+/// Assembly class that abstracts both the libevmasm assembly and the new Yul assembly.
 ///
 class AbstractAssembly
 {

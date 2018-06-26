@@ -48,7 +48,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaSimplifier)
+BOOST_AUTO_TEST_SUITE(YulSimplifier)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

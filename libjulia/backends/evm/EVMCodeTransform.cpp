@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Common code generator for translating Julia / inline assembly to EVM and EVM1.5.
+ * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
  */
 
 #include <libjulia/backends/evm/EVMCodeTransform.h>
@@ -331,7 +331,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	CodeTransform(
 		m_assembly,
 		m_info,
-		m_julia,
+		m_yul,
 		m_evm15,
 		m_identifierAccess,
 		m_useNamedLabelsForFunctions,

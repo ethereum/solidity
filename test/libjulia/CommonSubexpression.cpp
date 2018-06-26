@@ -47,7 +47,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaCSE)
+BOOST_AUTO_TEST_SUITE(YulCSE)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

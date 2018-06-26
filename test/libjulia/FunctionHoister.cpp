@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for the iulia function hoister.
+ * Unit tests for the Yul function hoister.
  */
 
 #include <test/libjulia/Common.h>
@@ -43,7 +43,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaFunctionHoister)
+BOOST_AUTO_TEST_SUITE(YulFunctionHoister)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

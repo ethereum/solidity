@@ -119,7 +119,7 @@ do \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
-BOOST_AUTO_TEST_SUITE(JuliaParser)
+BOOST_AUTO_TEST_SUITE(YulParser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

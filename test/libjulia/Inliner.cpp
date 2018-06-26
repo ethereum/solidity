@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for the iulia function inliner.
+ * Unit tests for the Yul function inliner.
  */
 
 #include <test/libjulia/Common.h>
@@ -55,24 +55,24 @@ string inlinableFunctions(string const& _source)
 	);
 }
 
-string inlineFunctions(string const& _source, bool _julia = true)
+string inlineFunctions(string const& _source, bool _yul = true)
 {
-	auto ast = disambiguate(_source, _julia);
+	auto ast = disambiguate(_source, _yul);
 	ExpressionInliner(ast).run();
-	return assembly::AsmPrinter(_julia)(ast);
+	return assembly::AsmPrinter(_yul)(ast);
 }
-string fullInline(string const& _source, bool _julia = true)
+string fullInline(string const& _source, bool _yul = true)
 {
-	Block ast = disambiguate(_source, _julia);
+	Block ast = disambiguate(_source, _yul);
 	(FunctionHoister{})(ast);
 	(FunctionGrouper{})(ast);\
 	FullInliner(ast).run();
-	return assembly::AsmPrinter(_julia)(ast);
+	return assembly::AsmPrinter(_yul)(ast);
 }
 }
 
 
-BOOST_AUTO_TEST_SUITE(IuliaInlinableFunctionFilter)
+BOOST_AUTO_TEST_SUITE(YulInlinableFunctionFilter)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(negative)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(IuliaFunctionInliner)
+BOOST_AUTO_TEST_SUITE(YulFunctionInliner)
 
 BOOST_AUTO_TEST_CASE(simple)
 {
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(double_recursive_calls)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(IuliaFullInliner)
+BOOST_AUTO_TEST_SUITE(YulFullInliner)
 
 BOOST_AUTO_TEST_CASE(simple)
 {

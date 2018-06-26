@@ -39,7 +39,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaDisambiguator)
+BOOST_AUTO_TEST_SUITE(YulDisambiguator)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
