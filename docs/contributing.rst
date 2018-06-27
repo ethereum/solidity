@@ -208,7 +208,7 @@ If the compilation is going well you should be able to see messages saying that 
     afl-cc 2.52b by <lcamtuf@google.com>
     [100%] Built target solfuzzer
 
-Otherwise, an abort will happen with a _no instrumentation detected_ error.
+Otherwise, an abort will happen with a `no instrumentation detected`` error.
 
 
 Next, you need some example source files. This will make it much easer for the fuzzer
