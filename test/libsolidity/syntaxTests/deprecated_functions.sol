@@ -1,6 +1,6 @@
 contract test {
 	function f() pure public {
-		bytes32 x = sha3();
+		bytes32 x = sha3("");
 		x;
 	}
 	function g() public {
@@ -8,5 +8,5 @@ contract test {
 	}
 }
 // ----
-// TypeError: (58-64): "sha3" has been deprecated in favour of "keccak256"
-// TypeError: (99-150): "suicide" has been deprecated in favour of "selfdestruct"
+// TypeError: (58-66): "sha3" has been deprecated in favour of "keccak256"
+// TypeError: (101-152): "suicide" has been deprecated in favour of "selfdestruct"

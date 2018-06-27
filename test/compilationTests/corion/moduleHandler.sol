@@ -117,7 +117,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @id         Index of module.
             @found      Was there any result or not.
         */
-        bytes32 _name = keccak256(name);
+        bytes32 _name = keccak256(bytes(name));
         for ( uint256 a=0 ; a<modules.length ; a++ ) {
             if ( modules[a].name == _name ) {
                 return (true, true, a);
@@ -153,7 +153,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(name, addr, callCallback))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(abi.encodePacked(name, addr, callCallback)))) ) {
                 return true;
             }
         }
@@ -169,7 +169,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     
     function callReplaceCallback(string moduleName, address newModule) external returns (bool success) {
         require( block.number < debugModeUntil );
-        if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", keccak256(moduleName, newModule))) ) {
+        if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", keccak256(abi.encodePacked(moduleName, newModule)))) ) {
             return true;
         }
         (bool _success, bool _found, uint256 _id) = getModuleIDByName(moduleName);
@@ -192,11 +192,11 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("newModule", keccak256(name, addr, schellingEvent, transferEvent))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("newModule", keccak256(abi.encodePacked(name, addr, schellingEvent, transferEvent)))) ) {
                 return true;
             }
         }
-        addModule( modules_s(addr, keccak256(name), schellingEvent, transferEvent), true);
+        addModule( modules_s(addr, keccak256(bytes(name)), schellingEvent, transferEvent), true);
         return true;
     }
     function dropModule(string name, bool callCallback) external returns (bool success) {
@@ -211,7 +211,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(name, callCallback))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModule", keccak256(abi.encodePacked(name, callCallback)))) ) {
                 return true;
             }
         }
@@ -226,7 +226,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     
     function callDisableCallback(string moduleName) external returns (bool success) {
         require( block.number < debugModeUntil );
-        if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", keccak256(moduleName))) ) {
+        if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", keccak256(bytes(moduleName)))) ) {
             return true;
         }
         (bool _success, bool _found, uint256 _id) = getModuleIDByName(moduleName);
@@ -289,7 +289,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("replaceModuleHandler", keccak256(newHandler))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("replaceModuleHandler", keccak256(abi.encodePacked(newHandler)))) ) {
                 return true;
             }
         }
@@ -419,7 +419,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success );
         if ( ! ( _found && modules[_id].name == keccak256('Publisher') )) {
             require( block.number < debugModeUntil );
-            if ( ! insertAndCheckDo(calcDoHash("configureModule", keccak256(moduleName, aType, value))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("configureModule", keccak256(abi.encodePacked(moduleName, aType, value)))) ) {
                 return true;
             }
         }
@@ -437,7 +437,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         */
         require( owners[msg.sender] );
         if ( forever ) {
-            if ( ! insertAndCheckDo(calcDoHash("freezing", keccak256(forever))) ) {
+            if ( ! insertAndCheckDo(calcDoHash("freezing", keccak256(abi.encodePacked(forever)))) ) {
                 return;
             }            
         }

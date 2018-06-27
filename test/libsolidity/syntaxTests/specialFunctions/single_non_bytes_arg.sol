@@ -7,9 +7,6 @@ contract C {
     function g(bytes32) pure internal {}
 }
 // ----
-// Warning: (54-72): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
-// Warning: (54-72): The provided argument of type uint256 is not implicitly convertible to expected type bytes memory.
-// Warning: (85-100): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
-// Warning: (85-100): The provided argument of type uint256 is not implicitly convertible to expected type bytes memory.
-// Warning: (113-131): This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
-// Warning: (113-131): The provided argument of type uint256 is not implicitly convertible to expected type bytes memory.
+// TypeError: (64-71): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour or abi.encode(...) to use ABI encoding.
+// TypeError: (92-99): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour or abi.encode(...) to use ABI encoding.
+// TypeError: (123-130): Invalid type for argument in function call. Invalid implicit conversion from uint256 to bytes memory requested. This function requires a single bytes argument. Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour or abi.encode(...) to use ABI encoding.

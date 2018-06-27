@@ -35,7 +35,7 @@ contract EventFactory {
         public
         returns (CategoricalEvent eventContract)
     {
-        bytes32 eventHash = keccak256(collateralToken, oracle, outcomeCount);
+        bytes32 eventHash = keccak256(abi.encodePacked(collateralToken, oracle, outcomeCount));
         // Event should not exist yet
         require(address(categoricalEvents[eventHash]) == address(0));
         // Create event
@@ -63,7 +63,7 @@ contract EventFactory {
         public
         returns (ScalarEvent eventContract)
     {
-        bytes32 eventHash = keccak256(collateralToken, oracle, lowerBound, upperBound);
+        bytes32 eventHash = keccak256(abi.encodePacked(collateralToken, oracle, lowerBound, upperBound));
         // Event should not exist yet
         require(address(scalarEvents[eventHash]) == address(0));
         // Create event

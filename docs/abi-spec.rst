@@ -559,7 +559,7 @@ would result in the JSON:
 Non-standard Packed Mode
 ========================
 
-Solidity supports a non-standard packed mode where:
+Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode where:
 
 - no :ref:`function selector <abi_function_selector>` is encoded,
 - types shorter than 32 bytes are neither zero padded nor sign extended and
@@ -577,3 +577,9 @@ More specifically, each statically-sized type takes as many bytes as its range h
 and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
 their length field. This means that the encoding is ambiguous as soon as there are two
 dynamically-sized elements.
+
+Note that constants will be packed using the minimum number of bytes required to store them.
+This means that, for example, ``abi.encodePacked(0) == abi.encodePacked(uint8(0)) == hex"00"`` and
+``abi.encodePacked(0x12345678) == abi.encodePacked(uint32(0x12345678)) == hex"12345678"``.
+
+If padding is needed, explicit type conversions can be used: ``abi.encodePacked(uint16(0x12)) == hex"0012"``.

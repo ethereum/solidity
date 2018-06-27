@@ -58,7 +58,7 @@ contract SignedMessageOracle is Oracle {
         // Result is not set yet and nonce and signer are valid
         require(   !isSet
                 && _nonce > nonce
-                && signer == ecrecover(keccak256(descriptionHash, newSigner, _nonce), v, r, s));
+                && signer == ecrecover(keccak256(abi.encodePacked(descriptionHash, newSigner, _nonce)), v, r, s));
         nonce = _nonce;
         signer = newSigner;
         emit SignerReplacement(newSigner);
@@ -74,7 +74,7 @@ contract SignedMessageOracle is Oracle {
     {
         // Result is not set yet and signer is valid
         require(   !isSet
-                && signer == ecrecover(keccak256(descriptionHash, _outcome), v, r, s));
+                && signer == ecrecover(keccak256(abi.encodePacked(descriptionHash, _outcome)), v, r, s));
         isSet = true;
         outcome = _outcome;
         emit OutcomeAssignment(_outcome);

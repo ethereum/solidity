@@ -66,7 +66,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
       return 0;
     }
     // determine our operation hash.
-    _r = keccak256(msg.data, block.number);
+    _r = keccak256(abi.encodePacked(msg.data, block.number));
     if (!confirm(_r) && txs[_r].to == address(0)) {
       txs[_r].to = _to;
       txs[_r].value = _value;

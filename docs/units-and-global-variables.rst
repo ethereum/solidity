@@ -100,16 +100,16 @@ ABI Encoding Functions
 ----------------------
 
 - ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes)``: Performes packed encoding of the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performes :ref:`packed encoding <abi_packed_mode>` of the given arguments
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments
    starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(signature), ...)```
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
 
 .. note::
     These encoding functions can be used to craft data for function calls without actually
-    calling a function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a more
-    explicit way to compute ``keccak256(a, b)``, which will be deprecated in future
-    versions.
+    calling a function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
+    to compute the hash of structured data (although be aware that it is possible to
+    craft a "hash collision" using different inputs types).
 
 See the documentation about the :ref:`ABI <ABI>` and the
 :ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
@@ -139,33 +139,17 @@ Mathematical and Cryptographic Functions
     compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
-``keccak256(...) returns (bytes32)``:
-    compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-``sha256(...) returns (bytes32)``:
-    compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-``sha3(...) returns (bytes32)``:
+``keccak256(bytes memory) returns (bytes32)``:
+    compute the Ethereum-SHA-3 (Keccak-256) hash of the input
+``sha256(bytes memory) returns (bytes32)``:
+    compute the SHA-256 hash of the input
+``sha3(bytes memory) returns (bytes32)``:
     alias to ``keccak256``
-``ripemd160(...) returns (bytes20)``:
-    compute RIPEMD-160 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
+``ripemd160(bytes memory) returns (bytes20)``:
+    compute RIPEMD-160 hash of the input
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature or return zero on error
     (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
-
-In the above, "tightly packed" means that the arguments are concatenated without padding.
-This means that the following are all identical::
-
-    keccak256("ab", "c")
-    keccak256("abc")
-    keccak256(0x616263)
-    keccak256(6382179)
-    keccak256(97, 98, 99)
-
-If padding is needed, explicit type conversions can be used: ``keccak256("\x00\x12")`` is the
-same as ``keccak256(uint16(0x12))``.
-
-Note that constants will be packed using the minimum number of bytes required to store them.
-This means that, for example, ``keccak256(0) == keccak256(uint8(0))`` and
-``keccak256(0x12345678) == keccak256(uint32(0x12345678))``.
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
@@ -181,12 +165,12 @@ Address Related
     send given amount of Wei to :ref:`address`, throws on failure, forwards 2300 gas stipend, not adjustable
 ``<address>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
-``<address>.call(...) returns (bool)``:
-    issue low-level ``CALL``, returns ``false`` on failure, forwards all available gas, adjustable
-``<address>.callcode(...) returns (bool)``:
-    issue low-level ``CALLCODE``, returns ``false`` on failure, forwards all available gas, adjustable
-``<address>.delegatecall(...) returns (bool)``:
-    issue low-level ``DELEGATECALL``, returns ``false`` on failure, forwards all available gas, adjustable
+``<address>.call(bytes memory) returns (bool)``:
+    issue low-level ``CALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
+``<address>.callcode(bytes memory) returns (bool)``:
+    issue low-level ``CALLCODE`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
+``<address>.delegatecall(bytes memory) returns (bool)``:
+    issue low-level ``DELEGATECALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
 
 For more information, see the section on :ref:`address`.
 

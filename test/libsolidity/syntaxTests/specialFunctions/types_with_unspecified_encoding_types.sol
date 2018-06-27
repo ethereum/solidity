@@ -5,12 +5,13 @@ contract C {
     T t;
     enum A { X, Y }
     function f() public pure {
-        bool a = address(this).delegatecall(S, A, A.X, T, uint, uint[]);
+        bytes memory a = abi.encodePacked(S, A, A.X, T, uint, uint[]);
+        a;
     }
 }
 // ----
-// TypeError: (176-177): This type cannot be encoded.
-// TypeError: (179-180): This type cannot be encoded.
-// TypeError: (187-188): This type cannot be encoded.
-// TypeError: (190-194): This type cannot be encoded.
-// TypeError: (196-202): This type cannot be encoded.
+// TypeError: (174-175): This type cannot be encoded.
+// TypeError: (177-178): This type cannot be encoded.
+// TypeError: (185-186): This type cannot be encoded.
+// TypeError: (188-192): This type cannot be encoded.
+// TypeError: (194-200): This type cannot be encoded.
