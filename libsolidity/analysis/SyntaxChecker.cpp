@@ -200,6 +200,14 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 bool SyntaxChecker::visit(ContractDefinition const& _contract)
 {
 	m_isInterface = _contract.contractKind() == ContractDefinition::ContractKind::Interface;
+
+	ASTString const& contractName = _contract.name();
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+		if (function->name() == contractName)
+			m_errorReporter.syntaxError(function->location(),
+				"Functions are not allowed to have the same name as the contract. "
+				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
+			);
 	return true;
 }
 
@@ -216,21 +224,6 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		);
 	}
 
-	if (_function.isOldStyleConstructor())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(
-				_function.location(),
-				"Functions are not allowed to have the same name as the contract. "
-				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
-			);
-		else
-			m_errorReporter.warning(
-				_function.location(),
-				"Defining constructors as functions with the same name as the contract is deprecated. "
-				"Use \"constructor(...) { ... }\" instead."
-			);
-	}
 	if (!_function.isImplemented() && !_function.modifiers().empty())
 	{
 		if (v050)
@@ -238,11 +231,6 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		else
 			m_errorReporter.warning(_function.location(), "Modifiers of functions without implementation are ignored." );
 	}
-	if (_function.name() == "constructor")
-		m_errorReporter.warning(_function.location(),
-			"This function is named \"constructor\" but is not the constructor of the contract. "
-			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."
-		);
 	return true;
 }
 
