@@ -182,7 +182,8 @@ does not fail if e.g. the code contains an error. This way, internal problems in
 can be found by fuzzing tools.
 
 We mainly use `AFL <http://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
-build AFL manually. Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
+install AFL packages from your repos (afl, afl-clang) or build them manually.
+Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
 ::
 
@@ -191,6 +192,47 @@ build AFL manually. Next, build Solidity (or just the ``solfuzzer`` binary) with
     make clean
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-gcc -DCMAKE_CXX_COMPILER=path/to/afl-g++
     make solfuzzer
+
+At this stage you should be able to see a message similar to the following:
+
+::
+    
+    Scanning dependencies of target solfuzzer                            
+    [ 98%] Building CXX object test/tools/CMakeFiles/solfuzzer.dir/fuzzer.cpp.o         
+    afl-cc 2.52b by <lcamtuf@google.com>                                                       
+    afl-as 2.52b by <lcamtuf@google.com>                                                                   
+    [+] Instrumented 1949 locations (64-bit, non-hardened mode, ratio 100%).
+    [100%] Linking CXX executable solfuzzer       
+
+If the instrumentation messages did not appear, try switching the cmake flags pointing to AFL's clang binaries:
+
+::
+    # if previously failed
+    make clean
+    cmake .. -DCMAKE_C_COMPILER=path/to/afl-clang -DCMAKE_CXX_COMPILER=path/to/afl-clang++
+    make solfuzzer
+
+Othwerise, upon execution the fuzzer will halt with an error saying binary is not instrumented:
+
+::
+
+    afl-fuzz 2.52b by <lcamtuf@google.com>                                                                                                          
+    ... (truncated messages)
+    [*] Validating target binary...
+
+    [-] Looks like the target binary is not instrumented! The fuzzer depends on
+        compile-time instrumentation to isolate interesting test cases while
+        mutating the input data. For more information, and for tips on how to
+        instrument binaries, please see /usr/share/doc/afl-doc/docs/README.
+
+        When source code is not available, you may be able to leverage QEMU
+        mode support. Consult the README for tips on how to enable this.
+        (It is also possible to use afl-fuzz as a traditional, "dumb" fuzzer.
+        For that, you can use the -n option - but expect much worse results.)
+
+    [-] PROGRAM ABORT : No instrumentation detected
+             Location : check_binary(), afl-fuzz.c:6920
+
 
 Next, you need some example source files. This will make it much easer for the fuzzer
 to find errors. You can either copy some files from the syntax tests or extract test files
