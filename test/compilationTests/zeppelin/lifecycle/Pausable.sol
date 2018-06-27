@@ -36,7 +36,7 @@ contract Pausable is Ownable {
    */
   function pause() onlyOwner whenNotPaused returns (bool) {
     paused = true;
-    Pause();
+    emit Pause();
     return true;
   }
 
@@ -45,7 +45,7 @@ contract Pausable is Ownable {
    */
   function unpause() onlyOwner whenPaused returns (bool) {
     paused = false;
-    Unpause();
+    emit Unpause();
     return true;
   }
 }

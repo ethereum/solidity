@@ -22,6 +22,6 @@ contract CentralizedOracleFactory {
         returns (CentralizedOracle centralizedOracle)
     {
         centralizedOracle = new CentralizedOracle(msg.sender, ipfsHash);
-        CentralizedOracleCreation(msg.sender, centralizedOracle, ipfsHash);
+        emit CentralizedOracleCreation(msg.sender, centralizedOracle, ipfsHash);
     }
 }

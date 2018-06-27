@@ -42,7 +42,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   function() payable {
     // just being sent some cash?
     if (msg.value > 0)
-      Deposit(msg.sender, msg.value);
+      emit Deposit(msg.sender, msg.value);
   }
 
   /**
@@ -58,7 +58,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   function execute(address _to, uint256 _value, bytes _data) external onlyOwner returns (bytes32 _r) {
     // first, take the opportunity to check that we're under the daily limit.
     if (underLimit(_value)) {
-      SingleTransact(msg.sender, _value, _to, _data);
+      emit SingleTransact(msg.sender, _value, _to, _data);
       // yes - just execute the call.
       if (!_to.call.value(_value)(_data)) {
         throw;
@@ -71,7 +71,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
       txs[_r].to = _to;
       txs[_r].value = _value;
       txs[_r].data = _data;
-      ConfirmationNeeded(_r, msg.sender, _value, _to, _data);
+      emit ConfirmationNeeded(_r, msg.sender, _value, _to, _data);
     }
   }
 
@@ -85,7 +85,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
       if (!txs[_h].to.call.value(txs[_h].value)(txs[_h].data)) {
         throw;
       }
-      MultiTransact(msg.sender, _h, txs[_h].value, txs[_h].to, txs[_h].data);
+      emit MultiTransact(msg.sender, _h, txs[_h].value, txs[_h].to, txs[_h].data);
       delete txs[_h];
       return true;
     }

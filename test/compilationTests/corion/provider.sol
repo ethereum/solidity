@@ -268,7 +268,7 @@ contract provider is module, safeMath, announcementTypes {
         } else {
             delete providers[msg.sender].data[currHeight].supply[currentSchellingRound];
         }
-        EProviderOpen(msg.sender, currHeight);
+        emit EProviderOpen(msg.sender, currHeight);
     }
     function setProviderDetails(address addr, string website, string country, string info, uint8 rate, address admin) isReady external {
         /*
@@ -297,7 +297,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[addr].data[currHeight].country         = country;
         providers[addr].data[currHeight].info            = info;
         providers[addr].data[currHeight].currentRate     = rate;
-        EProviderDetailsChanged(addr, currHeight, website, country, info, rate, admin);
+        emit EProviderDetailsChanged(addr, currHeight, website, country, info, rate, admin);
     }
     function getProviderInfo(address addr, uint256 height) public constant returns (string name, string website, string country, string info, uint256 create) {
         /*
@@ -367,7 +367,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[msg.sender].data[currHeight].valid = false;
         providers[msg.sender].data[currHeight].close = currentSchellingRound;
         setRightForInterest(getProviderCurrentSupply(msg.sender), 0, providers[msg.sender].data[currHeight].priv);
-        EProviderClose(msg.sender, currHeight);
+        emit EProviderClose(msg.sender, currHeight);
     }
     function allowUsers(address provider, address[] addr) isReady external {
         /*
@@ -437,7 +437,7 @@ contract provider is module, safeMath, announcementTypes {
         clients[msg.sender].paidUpTo = currentSchellingRound;
         clients[msg.sender].lastRate = providers[provider].data[currHeight].currentRate;
         clients[msg.sender].providerConnected = now;
-        ENewClient(msg.sender, provider, currHeight, bal);
+        emit ENewClient(msg.sender, provider, currHeight, bal);
     }
     function partProvider() isReady external {
         /*
@@ -467,7 +467,7 @@ contract provider is module, safeMath, announcementTypes {
         delete clients[msg.sender].paidUpTo;
         delete clients[msg.sender].lastRate;
         delete clients[msg.sender].providerConnected;
-        EClientLost(msg.sender, provider, currHeight, bal);
+        emit EClientLost(msg.sender, provider, currHeight, bal);
     }
     function checkReward(address addr) public constant returns (uint256 reward) {
         /*
@@ -522,7 +522,7 @@ contract provider is module, safeMath, announcementTypes {
         if ( providerReward > 0 ) {
             require( moduleHandler(moduleHandlerAddress).transfer(address(this), provider, providerReward, false) );
         }
-        EReward(msg.sender, provider, clientReward, providerReward);
+        emit EReward(msg.sender, provider, clientReward, providerReward);
     }
     function getClientReward(uint256 limit) internal returns (uint256 reward) {
         /*

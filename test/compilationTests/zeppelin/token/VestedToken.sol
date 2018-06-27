@@ -65,7 +65,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
 
     transfer(_to, _value);
 
-    NewTokenGrant(msg.sender, _to, _value, count - 1);
+    emit NewTokenGrant(msg.sender, _to, _value, count - 1);
   }
 
   /**
@@ -96,7 +96,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
     balances[receiver] = balances[receiver].add(nonVested);
     balances[_holder] = balances[_holder].sub(nonVested);
 
-    Transfer(_holder, receiver, nonVested);
+    emit Transfer(_holder, receiver, nonVested);
   }
 
 

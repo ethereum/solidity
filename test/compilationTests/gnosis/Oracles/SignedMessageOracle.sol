@@ -61,7 +61,7 @@ contract SignedMessageOracle is Oracle {
                 && signer == ecrecover(keccak256(descriptionHash, newSigner, _nonce), v, r, s));
         nonce = _nonce;
         signer = newSigner;
-        SignerReplacement(newSigner);
+        emit SignerReplacement(newSigner);
     }
 
     /// @dev Sets outcome based on signed message
@@ -77,7 +77,7 @@ contract SignedMessageOracle is Oracle {
                 && signer == ecrecover(keccak256(descriptionHash, _outcome), v, r, s));
         isSet = true;
         outcome = _outcome;
-        OutcomeAssignment(_outcome);
+        emit OutcomeAssignment(_outcome);
     }
 
     /// @dev Returns if winning outcome

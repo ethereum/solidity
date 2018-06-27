@@ -148,7 +148,7 @@ contract publisher is announcementTypes, module, safeMath {
         announcements[announcementsLength]._str = _str;
         announcements[announcementsLength]._uint = _uint;
         announcements[announcementsLength]._addr = _addr;
-        ENewAnnouncement(announcementsLength, Type);
+        emit ENewAnnouncement(announcementsLength, Type);
     }
     
     function closeAnnouncement(uint256 id) onlyOwner external {
@@ -238,7 +238,7 @@ contract publisher is announcementTypes, module, safeMath {
             opponents[msg.sender].push(id);
         }
         announcements[id].oppositionWeight += _balance;
-        EOppositeAnnouncement(id, msg.sender, _balance);
+        emit EOppositeAnnouncement(id, msg.sender, _balance);
     }
     
     function invalidateAnnouncement(uint256 id) onlyOwner external {
@@ -250,7 +250,7 @@ contract publisher is announcementTypes, module, safeMath {
         require( announcements[id].open );
         announcements[id].end = block.number;
         announcements[id].open = false;
-        EInvalidateAnnouncement(id);
+        emit EInvalidateAnnouncement(id);
     }
     
     modifier onlyOwner() {

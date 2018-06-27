@@ -111,7 +111,7 @@ contract Campaign {
         contributions[msg.sender] = contributions[msg.sender].add(amount);
         if (amount == maxAmount)
             stage = Stages.AuctionSuccessful;
-        CampaignFunding(msg.sender, amount);
+        emit CampaignFunding(msg.sender, amount);
     }
 
     /// @dev Withdraws refund amount
@@ -126,7 +126,7 @@ contract Campaign {
         contributions[msg.sender] = 0;
         // Refund collateral tokens
         require(eventContract.collateralToken().transfer(msg.sender, refundAmount));
-        CampaignRefund(msg.sender, refundAmount);
+        emit CampaignRefund(msg.sender, refundAmount);
     }
 
     /// @dev Allows to create market after successful funding
@@ -141,7 +141,7 @@ contract Campaign {
         require(eventContract.collateralToken().approve(market, funding));
         market.fund(funding);
         stage = Stages.MarketCreated;
-        MarketCreation(market);
+        emit MarketCreation(market);
         return market;
     }
 
@@ -158,7 +158,7 @@ contract Campaign {
         eventContract.redeemWinnings();
         finalBalance = eventContract.collateralToken().balanceOf(this);
         stage = Stages.MarketClosed;
-        MarketClosing();
+        emit MarketClosing();
     }
 
     /// @dev Allows to withdraw fees from campaign contract to contributor
@@ -172,6 +172,6 @@ contract Campaign {
         contributions[msg.sender] = 0;
         // Send fee share to contributor
         require(eventContract.collateralToken().transfer(msg.sender, fees));
-        FeeWithdrawal(msg.sender, fees);
+        emit FeeWithdrawal(msg.sender, fees);
     }
 }

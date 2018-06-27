@@ -179,7 +179,7 @@ contract MilestoneTracker {
     ) onlyRecipient campaignNotCanceled {
         proposedMilestones = _newMilestones;
         changingMilestones = true;
-        NewMilestoneListProposed();
+        emit NewMilestoneListProposed();
     }
 
 
@@ -192,7 +192,7 @@ contract MilestoneTracker {
     function unproposeMilestones() onlyRecipient campaignNotCanceled {
         delete proposedMilestones;
         changingMilestones = false;
-        NewMilestoneListUnproposed();
+        emit NewMilestoneListUnproposed();
     }
 
     /// @notice `onlyDonor` Approves the proposed milestone list
@@ -249,7 +249,7 @@ contract MilestoneTracker {
 
         delete proposedMilestones;
         changingMilestones = false;
-        NewMilestoneListAccepted();
+        emit NewMilestoneListAccepted();
     }
 
     /// @notice `onlyRecipientOrLeadLink`Marks a milestone as DONE and
@@ -268,7 +268,7 @@ contract MilestoneTracker {
         if (now > milestone.maxCompletionDate) throw;
         milestone.status = MilestoneStatus.Completed;
         milestone.doneTime = now;
-        ProposalStatusChanged(_idMilestone, milestone.status);
+        emit ProposalStatusChanged(_idMilestone, milestone.status);
     }
 
     /// @notice `onlyReviewer` Approves a specific milestone
@@ -297,7 +297,7 @@ contract MilestoneTracker {
             (milestone.status != MilestoneStatus.Completed)) throw;
 
         milestone.status = MilestoneStatus.AcceptedAndInProgress;
-        ProposalStatusChanged(_idMilestone, milestone.status);
+        emit ProposalStatusChanged(_idMilestone, milestone.status);
     }
 
     /// @notice `onlyRecipientOrLeadLink` Sends the milestone payment as
@@ -330,7 +330,7 @@ contract MilestoneTracker {
             throw;
 
         milestone.status = MilestoneStatus.Canceled;
-        ProposalStatusChanged(_idMilestone, milestone.status);
+        emit ProposalStatusChanged(_idMilestone, milestone.status);
     }
 
     /// @notice `onlyArbitrator` Forces a milestone to be paid out as long as it
@@ -350,7 +350,7 @@ contract MilestoneTracker {
     ///  milestones.
     function arbitrateCancelCampaign() onlyArbitrator campaignNotCanceled {
         campaignCanceled = true;
-        CampaignCanceled();
+        emit CampaignCanceled();
     }
 
     // @dev This internal function is executed when the milestone is paid out
@@ -362,6 +362,6 @@ contract MilestoneTracker {
         milestone.status = MilestoneStatus.AuthorizedForPayment;
         if (!milestone.paymentSource.call.value(0)(milestone.payData))
             throw;
-        ProposalStatusChanged(_idMilestone, milestone.status);
+        emit ProposalStatusChanged(_idMilestone, milestone.status);
     }
 }

@@ -72,7 +72,7 @@ contract ScalarEvent is Event {
         outcomeTokens[LONG].revoke(msg.sender, longOutcomeTokenCount);
         // Payout winnings to sender
         require(collateralToken.transfer(msg.sender, winnings));
-        WinningsRedemption(msg.sender, winnings);
+        emit WinningsRedemption(msg.sender, winnings);
     }
 
     /// @dev Calculates and returns event hash

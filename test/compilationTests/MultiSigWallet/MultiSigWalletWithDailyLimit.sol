@@ -33,7 +33,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         onlyWallet
     {
         dailyLimit = _dailyLimit;
-        DailyLimitChange(_dailyLimit);
+        emit DailyLimitChange(_dailyLimit);
     }
 
     /// @dev Allows anyone to execute a confirmed transaction or ether withdraws until daily limit is reached.
@@ -49,9 +49,9 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
             if (!confirmed)
                 spentToday += tx.value;
             if (tx.destination.call.value(tx.value)(tx.data))
-                Execution(transactionId);
+                emit Execution(transactionId);
             else {
-                ExecutionFailure(transactionId);
+                emit ExecutionFailure(transactionId);
                 tx.executed = false;
                 if (!confirmed)
                     spentToday -= tx.value;
