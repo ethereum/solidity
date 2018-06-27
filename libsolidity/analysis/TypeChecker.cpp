@@ -1712,12 +1712,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			m_errorReporter.typeError(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
 	}
 	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
-	{
-		if (m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-			m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
-		else
-			m_errorReporter.warning(_functionCall.location(), "Invoking events without \"emit\" prefix is deprecated.");
-	}
+		m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 

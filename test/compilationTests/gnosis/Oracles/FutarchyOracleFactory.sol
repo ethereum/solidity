@@ -78,7 +78,7 @@ contract FutarchyOracleFactory {
             fee,
             deadline
         );
-        FutarchyOracleCreation(
+        emit FutarchyOracleCreation(
             msg.sender,
             futarchyOracle,
             collateralToken,

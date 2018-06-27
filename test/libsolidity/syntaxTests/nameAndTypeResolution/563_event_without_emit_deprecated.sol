@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (62-65): Invoking events without "emit" prefix is deprecated.
+// TypeError: (62-65): Event invocations have to be prefixed by "emit".

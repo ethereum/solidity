@@ -37,7 +37,7 @@ contract DifficultyOracle is Oracle {
         // Block number was reached and outcome was not set yet
         require(block.number >= blockNumber && difficulty == 0);
         difficulty = block.difficulty;
-        OutcomeAssignment(difficulty);
+        emit OutcomeAssignment(difficulty);
     }
 
     /// @dev Returns if difficulty is set

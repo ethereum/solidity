@@ -123,7 +123,7 @@ contract multiowned {
 		if (pending.ownersDone & ownerIndexBit > 0) {
 			pending.yetNeeded++;
 			pending.ownersDone -= ownerIndexBit;
-			Revoke(msg.sender, _operation);
+			emit Revoke(msg.sender, _operation);
 		}
 	}
 
@@ -137,7 +137,7 @@ contract multiowned {
 		m_owners[ownerIndex] = uint(_to);
 		m_ownerIndex[uint(_from)] = 0;
 		m_ownerIndex[uint(_to)] = ownerIndex;
-		OwnerChanged(_from, _to);
+		emit OwnerChanged(_from, _to);
 	}
 
 	function addOwner(address _owner) onlymanyowners(keccak256(msg.data)) external {
@@ -151,7 +151,7 @@ contract multiowned {
 		m_numOwners++;
 		m_owners[m_numOwners] = uint(_owner);
 		m_ownerIndex[uint(_owner)] = m_numOwners;
-		OwnerAdded(_owner);
+		emit OwnerAdded(_owner);
 	}
 
 	function removeOwner(address _owner) onlymanyowners(keccak256(msg.data)) external {
@@ -163,14 +163,14 @@ contract multiowned {
 		m_ownerIndex[uint(_owner)] = 0;
 		clearPending();
 		reorganizeOwners(); //make sure m_numOwner is equal to the number of owners and always points to the optimal free slot
-		OwnerRemoved(_owner);
+		emit OwnerRemoved(_owner);
 	}
 
 	function changeRequirement(uint _newRequired) onlymanyowners(keccak256(msg.data)) external {
 		if (_newRequired > m_numOwners) return;
 		m_required = _newRequired;
 		clearPending();
-		RequirementChanged(_newRequired);
+		emit RequirementChanged(_newRequired);
 	}
 
 	function isOwner(address _addr) returns (bool) {
@@ -215,7 +215,7 @@ contract multiowned {
 		uint ownerIndexBit = 2**ownerIndex;
 		// make sure we (the message sender) haven't confirmed this operation previously.
 		if (pending.ownersDone & ownerIndexBit == 0) {
-			Confirmation(msg.sender, _operation);
+			emit Confirmation(msg.sender, _operation);
 			// ok - check if count is enough to go ahead.
 			if (pending.yetNeeded <= 1) {
 				// enough confirmations: reset and run interior.
@@ -382,7 +382,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	function() payable {
 		// just being sent some cash?
 		if (msg.value > 0)
-			Deposit(msg.sender, msg.value);
+			emit Deposit(msg.sender, msg.value);
 	}
 
 	// Outside-visible transact entry point. Executes transacion immediately if below daily spend limit.
@@ -392,7 +392,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	function execute(address _to, uint _value, bytes _data) external onlyowner returns (bytes32 _r) {
 		// first, take the opportunity to check that we're under the daily limit.
 		if (underLimit(_value)) {
-			SingleTransact(msg.sender, _value, _to, _data);
+			emit SingleTransact(msg.sender, _value, _to, _data);
 			// yes - just execute the call.
 			_to.call.value(_value)(_data);
 			return 0;
@@ -403,7 +403,7 @@ contract Wallet is multisig, multiowned, daylimit {
 			m_txs[_r].to = _to;
 			m_txs[_r].value = _value;
 			m_txs[_r].data = _data;
-			ConfirmationNeeded(_r, msg.sender, _value, _to, _data);
+			emit ConfirmationNeeded(_r, msg.sender, _value, _to, _data);
 		}
 	}
 
@@ -412,7 +412,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
 		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
 			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
-			MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
+			emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
 			delete m_txs[_h];
 			return true;
 		}

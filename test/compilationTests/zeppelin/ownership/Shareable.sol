@@ -87,7 +87,7 @@ contract Shareable {
     if (pending.ownersDone & ownerIndexBit > 0) {
       pending.yetNeeded++;
       pending.ownersDone -= ownerIndexBit;
-      Revoke(msg.sender, _operation);
+      emit Revoke(msg.sender, _operation);
     }
   }
 
@@ -156,7 +156,7 @@ contract Shareable {
     uint256 ownerIndexBit = 2**index;
     // make sure we (the message sender) haven't confirmed this operation previously.
     if (pending.ownersDone & ownerIndexBit == 0) {
-      Confirmation(msg.sender, _operation);
+      emit Confirmation(msg.sender, _operation);
       // ok - check if count is enough to go ahead.
       if (pending.yetNeeded <= 1) {
         // enough confirmations: reset and run interior.

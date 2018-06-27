@@ -32,7 +32,7 @@ contract StandardToken is ERC20, BasicToken {
     balances[_to] = balances[_to].add(_value);
     balances[_from] = balances[_from].sub(_value);
     allowed[_from][msg.sender] = _allowance.sub(_value);
-    Transfer(_from, _to, _value);
+    emit Transfer(_from, _to, _value);
   }
 
   /**
@@ -49,7 +49,7 @@ contract StandardToken is ERC20, BasicToken {
     if ((_value != 0) && (allowed[msg.sender][_spender] != 0)) throw;
 
     allowed[msg.sender][_spender] = _value;
-    Approval(msg.sender, _spender, _value);
+    emit Approval(msg.sender, _spender, _value);
   }
 
   /**

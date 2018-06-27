@@ -52,7 +52,7 @@ contract CentralizedOracle is Oracle {
         // Result is not set yet
         require(!isSet);
         owner = newOwner;
-        OwnerReplacement(newOwner);
+        emit OwnerReplacement(newOwner);
     }
 
     /// @dev Sets event outcome
@@ -65,7 +65,7 @@ contract CentralizedOracle is Oracle {
         require(!isSet);
         isSet = true;
         outcome = _outcome;
-        OutcomeAssignment(_outcome);
+        emit OutcomeAssignment(_outcome);
     }
 
     /// @dev Returns if winning outcome is set

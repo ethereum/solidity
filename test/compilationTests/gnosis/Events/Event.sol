@@ -44,7 +44,7 @@ contract Event {
         for (uint8 i = 0; i < outcomeCount; i++) {
             OutcomeToken outcomeToken = new OutcomeToken();
             outcomeTokens.push(outcomeToken);
-            OutcomeTokenCreation(outcomeToken, i);
+            emit OutcomeTokenCreation(outcomeToken, i);
         }
     }
 
@@ -58,7 +58,7 @@ contract Event {
         // Issue new outcome tokens to sender
         for (uint8 i = 0; i < outcomeTokens.length; i++)
             outcomeTokens[i].issue(msg.sender, collateralTokenCount);
-        OutcomeTokenSetIssuance(msg.sender, collateralTokenCount);
+        emit OutcomeTokenSetIssuance(msg.sender, collateralTokenCount);
     }
 
     /// @dev Sells equal number of tokens of all outcomes, exchanging collateral tokens and sets of outcome tokens 1:1
@@ -71,7 +71,7 @@ contract Event {
             outcomeTokens[i].revoke(msg.sender, outcomeTokenCount);
         // Transfer collateral tokens to sender
         require(collateralToken.transfer(msg.sender, outcomeTokenCount));
-        OutcomeTokenSetRevocation(msg.sender, outcomeTokenCount);
+        emit OutcomeTokenSetRevocation(msg.sender, outcomeTokenCount);
     }
 
     /// @dev Sets winning event outcome
@@ -83,7 +83,7 @@ contract Event {
         // Set winning outcome
         outcome = oracle.getOutcome();
         isOutcomeSet = true;
-        OutcomeAssignment(outcome);
+        emit OutcomeAssignment(outcome);
     }
 
     /// @dev Returns outcome count

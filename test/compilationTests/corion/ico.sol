@@ -337,7 +337,7 @@ contract ico is safeMath {
             token(tokenAddr).mint(affilateAddress, extra);
         }
         checkPremium(beneficiaryAddress);
-        EICO(beneficiaryAddress, _reward, affilateAddress, extra);
+        emit EICO(beneficiaryAddress, _reward, affilateAddress, extra);
         return true;
     }
 

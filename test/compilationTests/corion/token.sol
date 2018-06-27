@@ -78,7 +78,7 @@ contract token is safeMath, module, announcementTypes {
                 genesis[genesisAddr[a]] = true;
                 require( db.increase(genesisAddr[a], genesisValue[a]) );
                 if ( ! genesisAddr[a].send(0.2 ether) ) {}
-                Mint(genesisAddr[a], genesisValue[a]);
+                emit Mint(genesisAddr[a], genesisValue[a]);
             }
         }
     }
@@ -152,7 +152,7 @@ contract token is safeMath, module, announcementTypes {
         require( msg.sender != spender );
         require( db.balanceOf(msg.sender) >= amount );
         require( db.setAllowance(msg.sender, spender, amount, nonce) );
-        Approval(msg.sender, spender, amount);
+        emit Approval(msg.sender, spender, amount);
     }
     
     function allowance(address owner, address spender) constant returns (uint256 remaining, uint256 nonce) {
@@ -193,7 +193,7 @@ contract token is safeMath, module, announcementTypes {
         } else {
             _transfer( msg.sender, to, amount, true);
         }
-        Transfer(msg.sender, to, amount, _data);
+        emit Transfer(msg.sender, to, amount, _data);
         return true;
     }
     
@@ -222,7 +222,7 @@ contract token is safeMath, module, announcementTypes {
             _reamining = safeSub(_reamining, amount);
             _nonce = safeAdd(_nonce, 1);
             require( db.setAllowance(from, msg.sender, _reamining, _nonce) );
-            AllowanceUsed(msg.sender, from, amount);
+            emit AllowanceUsed(msg.sender, from, amount);
         }
         bytes memory _data;
         if ( isContract(to) ) {
@@ -230,7 +230,7 @@ contract token is safeMath, module, announcementTypes {
         } else {
             _transfer( from, to, amount, true);
         }
-        Transfer(from, to, amount, _data);
+        emit Transfer(from, to, amount, _data);
         return true;
     }
     
@@ -256,7 +256,7 @@ contract token is safeMath, module, announcementTypes {
         bytes memory _data;
         require( super.isModuleHandler(msg.sender) );
         _transfer( from, to, amount, fee);
-        Transfer(from, to, amount, _data);
+        emit Transfer(from, to, amount, _data);
         return true;
     }
     
@@ -284,7 +284,7 @@ contract token is safeMath, module, announcementTypes {
         } else {
             _transfer( msg.sender, to, amount, true);
         }
-        Transfer(msg.sender, to, amount, extraData);
+        emit Transfer(msg.sender, to, amount, extraData);
         return true;
     }
     
@@ -379,7 +379,7 @@ contract token is safeMath, module, announcementTypes {
             require( db.increase(_schellingAddr, _forSchelling) );
             _burn(owner, _forBurn);
             bytes memory _data;
-            Transfer(owner, _schellingAddr, _forSchelling, _data);
+            emit Transfer(owner, _schellingAddr, _forSchelling, _data);
             require( moduleHandler(moduleHandlerAddress).broadcastTransfer(owner, _schellingAddr, _forSchelling) );
         } else {
             _burn(owner, _fee);
@@ -428,7 +428,7 @@ contract token is safeMath, module, announcementTypes {
         if ( isICO ) {
             require( ico(icoAddr).setInterestDB(owner, db.balanceOf(owner)) );
         }
-        Mint(owner, value);
+        emit Mint(owner, value);
     }
     
     function burn(address owner, uint256 value) isReady external returns (bool success) {
@@ -454,7 +454,7 @@ contract token is safeMath, module, announcementTypes {
         */
         require( db.decrease(owner, value) );
         require( moduleHandler(moduleHandlerAddress).broadcastTransfer(owner, address(0x00), value) );
-        Burn(owner, value);
+        emit Burn(owner, value);
     }
     
     function isContract(address addr) internal returns (bool success) {

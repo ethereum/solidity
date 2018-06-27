@@ -70,7 +70,7 @@ contract AuctionSystem {
 		var auction = m_auctions[_name];
 		if (auction.endDate > 0 && now > auction.endDate)
 		{
-			AuctionEnded(_name, auction.highestBidder);
+			emit AuctionEnded(_name, auction.highestBidder);
 			onAuctionEnd(_name);
 			delete m_auctions[_name];
 			return;
@@ -84,7 +84,7 @@ contract AuctionSystem {
 			auction.highestBidder = _bidder;
 			auction.endDate = now + c_biddingTime;
 
-			NewBid(_name, _bidder, _value);
+			emit NewBid(_name, _bidder, _value);
 		}
 	}
 
@@ -122,7 +122,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		var previousOwner = record.owner;
 		record.renewalDate = now + c_renewalInterval;
 		record.owner = auction.highestBidder;
-		Changed(_name);
+		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
 			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
 				throw;
@@ -146,7 +146,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 			if (record.owner != 0x0000000000000000000000000000000000000000)
 				throw;
 			m_toRecord[_name].owner = msg.sender;
-			Changed(_name);
+			emit Changed(_name);
 		}
 	}
 
@@ -158,35 +158,35 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	function transfer(string _name, address _newOwner) onlyrecordowner(_name) {
 		m_toRecord[_name].owner = _newOwner;
-		Changed(_name);
+		emit Changed(_name);
 	}
 
 	function disown(string _name) onlyrecordowner(_name) {
 		if (stringsEqual(m_toName[m_toRecord[_name].primary], _name))
 		{
-			PrimaryChanged(_name, m_toRecord[_name].primary);
+			emit PrimaryChanged(_name, m_toRecord[_name].primary);
 			m_toName[m_toRecord[_name].primary] = "";
 		}
 		delete m_toRecord[_name];
-		Changed(_name);
+		emit Changed(_name);
 	}
 
 	function setAddress(string _name, address _a, bool _primary) onlyrecordowner(_name) {
 		m_toRecord[_name].primary = _a;
 		if (_primary)
 		{
-			PrimaryChanged(_name, _a);
+			emit PrimaryChanged(_name, _a);
 			m_toName[_a] = _name;
 		}
-		Changed(_name);
+		emit Changed(_name);
 	}
 	function setSubRegistrar(string _name, address _registrar) onlyrecordowner(_name) {
 		m_toRecord[_name].subRegistrar = _registrar;
-		Changed(_name);
+		emit Changed(_name);
 	}
 	function setContent(string _name, bytes32 _content) onlyrecordowner(_name) {
 		m_toRecord[_name].content = _content;
-		Changed(_name);
+		emit Changed(_name);
 	}
 
 	function stringsEqual(string storage _a, string memory _b) internal returns (bool) {

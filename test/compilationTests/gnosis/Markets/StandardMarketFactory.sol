@@ -20,6 +20,6 @@ contract StandardMarketFactory is MarketFactory {
         returns (Market market)
     {
         market = new StandardMarket(msg.sender, eventContract, marketMaker, fee);
-        MarketCreation(msg.sender, market, eventContract, marketMaker, fee);
+        emit MarketCreation(msg.sender, market, eventContract, marketMaker, fee);
     }
 }

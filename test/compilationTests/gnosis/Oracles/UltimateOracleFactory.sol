@@ -50,7 +50,7 @@ contract UltimateOracleFactory {
             challengeAmount,
             frontRunnerPeriod
         );
-        UltimateOracleCreation(
+        emit UltimateOracleCreation(
             msg.sender,
             ultimateOracle,
             oracle,

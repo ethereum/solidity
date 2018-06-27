@@ -63,7 +63,7 @@ contract premium is module, safeMath {
             for ( uint256 a=0 ; a<genesisAddr.length ; a++ ) {
                 genesis[genesisAddr[a]] = true;
                 require( db.increase(genesisAddr[a], genesisValue[a]) );
-                Mint(genesisAddr[a], genesisValue[a]);
+                emit Mint(genesisAddr[a], genesisValue[a]);
             }
         }
     }
@@ -137,7 +137,7 @@ contract premium is module, safeMath {
         require( msg.sender != spender );
         require( db.balanceOf(msg.sender) >= amount );
         require( db.setAllowance(msg.sender, spender, amount, nonce) );
-        Approval(msg.sender, spender, amount);
+        emit Approval(msg.sender, spender, amount);
     }
     
     function allowance(address owner, address spender) constant returns (uint256 remaining, uint256 nonce) {
@@ -178,7 +178,7 @@ contract premium is module, safeMath {
         } else {
             _transfer(msg.sender, to, amount);
         }
-        Transfer(msg.sender, to, amount, _data);
+        emit Transfer(msg.sender, to, amount, _data);
         return true;
     }
     
@@ -207,7 +207,7 @@ contract premium is module, safeMath {
             _reamining = safeSub(_reamining, amount);
             _nonce = safeAdd(_nonce, 1);
             require( db.setAllowance(from, msg.sender, _reamining, _nonce) );
-            AllowanceUsed(msg.sender, from, amount);
+            emit AllowanceUsed(msg.sender, from, amount);
         }
         bytes memory _data;
         if ( isContract(to) ) {
@@ -215,7 +215,7 @@ contract premium is module, safeMath {
         } else {
             _transfer( from, to, amount);
         }
-        Transfer(from, to, amount, _data);
+        emit Transfer(from, to, amount, _data);
         return true;
     }
     
@@ -242,7 +242,7 @@ contract premium is module, safeMath {
         } else {
             _transfer( msg.sender, to, amount);
         }
-        Transfer(msg.sender, to, amount, extraData);
+        emit Transfer(msg.sender, to, amount, extraData);
         return true;
     }
     
@@ -301,7 +301,7 @@ contract premium is module, safeMath {
             @value     Amount
         */
         require( db.increase(owner, value) );
-        Mint(owner, value);
+        emit Mint(owner, value);
     }
     
     function isContract(address addr) internal returns (bool success) {
