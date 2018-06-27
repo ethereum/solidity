@@ -1,0 +1,2 @@
+contract A { constructor() public {} }
+// ----
