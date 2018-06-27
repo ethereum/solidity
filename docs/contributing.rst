@@ -192,6 +192,25 @@ build AFL manually. Next, build Solidity (or just the ``solfuzzer`` binary) with
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-gcc -DCMAKE_CXX_COMPILER=path/to/afl-g++
     make solfuzzer
 
+Depending on your distro you may need to switch the cmake flags pointing to afl's clangs binary.
+
+::
+
+    cmake .. -DCMAKE_C_COMPILER=/usr/bin/afl-clang -DCMAKE_CXX_COMPILER=/usr/bin/afl-clang++
+
+If the compilation is going well you should be able to see messages saying that a number of locations were instrumented.
+
+::
+
+    afl-as 2.52b by <lcamtuf@google.com>
+    [+] Instrumented 1949 locations (64-bit, non-hardened mode, ratio 100%).
+    [100%] Linking CXX executable solfuzzer
+    afl-cc 2.52b by <lcamtuf@google.com>
+    [100%] Built target solfuzzer
+
+Otherwise, an abort will happen with a _no instrumentation detected_ error.
+
+
 Next, you need some example source files. This will make it much easer for the fuzzer
 to find errors. You can either copy some files from the syntax tests or extract test files
 from the documentation or the other tests:
@@ -220,6 +239,7 @@ Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
 The fuzzer will create source files that lead to failures in ``/tmp/fuzzer_reports``.
 Often it finds many similar source files that produce the same error. You can
 use the tool ``scripts/uniqueErrors.sh`` to filter out the unique errors.
+
 
 Whiskers
 ========
