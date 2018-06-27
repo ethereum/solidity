@@ -115,12 +115,13 @@ BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 	BOOST_CHECK(ArrayType(DataLocation::Storage, make_shared<FixedBytesType>(32), 9).storageSize() == 9);
 }
 
-BOOST_AUTO_TEST_CASE(type_escaping)
+BOOST_AUTO_TEST_CASE(type_identifier_escaping)
 {
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("("), "$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier(")"), "_$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier(","), "_$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("$"), "$$$");
+	BOOST_CHECK_EQUAL(Type::escapeIdentifier(")$("), "_$$$$$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("()"), "$__$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("(,)"), "$__$__$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("(,$,)"), "$__$_$$$_$__$");
