@@ -1797,7 +1797,10 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			functionType->kind() == FunctionType::Kind::SHA256 ||
 			functionType->kind() == FunctionType::Kind::RIPEMD160
 		)
-			msg += " This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.";
+			msg +=
+				" This function requires a single bytes argument."
+				" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
+				" or abi.encode(...) to use ABI encoding.";
 		m_errorReporter.typeError(_functionCall.location(), msg);
 	}
 	else if (isPositionalCall)
@@ -1853,7 +1856,10 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 					functionType->kind() == FunctionType::Kind::SHA256 ||
 					functionType->kind() == FunctionType::Kind::RIPEMD160
 				)
-					msg += " This function requires a single bytes argument. Use abi.encodePacked(...) to properly encode the values.";
+					msg +=
+						" This function requires a single bytes argument."
+						" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
+						" or abi.encode(...) to use ABI encoding.";
 				m_errorReporter.typeError(arguments[i]->location(), msg);
 			}
 		}
