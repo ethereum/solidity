@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test(uint param1, test param2, bool param3) {}
+			constructor(uint param1, test param2, bool param3) {}
 		}
 	)";
 
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(payable_constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test(uint param1, test param2, bool param3) payable {}
+			constructor(uint param1, test param2, bool param3) payable {}
 		}
 	)";
 
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 	char const* sourceCode = R"(
 		contract test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-			function test(ActionChoices param) {}
+			constructor(ActionChoices param) {}
 			function ret() returns(ActionChoices) {
 				ActionChoices action = ActionChoices.GoLeft;
 				return action;

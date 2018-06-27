@@ -101,7 +101,7 @@ contract multiowned {
 
 	// constructor is given number of sigs required to do protected "onlymanyowners" transactions
 	// as well as the selection of addresses capable of confirming them.
-	function multiowned(address[] _owners, uint _required) {
+	constructor(address[] _owners, uint _required) {
 		m_numOwners = _owners.length + 1;
 		m_owners[1] = uint(msg.sender);
 		m_ownerIndex[uint(msg.sender)] = 1;
@@ -288,7 +288,7 @@ contract daylimit is multiowned {
 	// METHODS
 
 	// constructor - stores initial daily limit and records the present day's index.
-	function daylimit(uint _limit) {
+	constructor(uint _limit) {
 		m_dailyLimit = _limit;
 		m_lastDay = today();
 	}
@@ -369,7 +369,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// constructor - just pass on the owner array to the multiowned and
 	// the limit to daylimit
-	function Wallet(address[] _owners, uint _required, uint _daylimit) payable
+	constructor(address[] _owners, uint _required, uint _daylimit) payable
 			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
