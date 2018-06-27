@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for solc/jsonCompiler.cpp.
+ * Unit tests for libsolc/libsolc.cpp.
  */
 
 #include <string>
@@ -70,7 +70,7 @@ Json::Value compile(string const& _input)
 
 } // end anonymous namespace
 
-BOOST_AUTO_TEST_SUITE(JSONCompiler)
+BOOST_AUTO_TEST_SUITE(LibSolc)
 
 BOOST_AUTO_TEST_CASE(read_version)
 {
