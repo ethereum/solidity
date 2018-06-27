@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 				assembly { b := 7 }
 				C c;
 				assembly { c := sub(0, 5) }
-				E(10, uint16(uint256(-2)), uint24(0x12121212), int24(int256(-1)), bytes3(x), b, c);
+				emit E(10, uint16(uint256(-2)), uint24(0x12121212), int24(int256(-1)), bytes3(x), b, c);
 			}
 		}
 	)";
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(string_literal)
 		contract C {
 			event E(string, bytes20, string);
 			function f() public {
-				E("abcdef", "abcde", "abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl");
+				emit E("abcdef", "abcde", "abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl");
 			}
 		}
 	)";
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(conversion)
 				int8 c;
 				int16 d;
 				assembly { a := sub(0, 1) c := 0x0101ff d := 0xff01 }
-				E(10, x, a, uint8(b), c, int8(d));
+				emit E(10, x, a, uint8(b), c, int8(d));
 			}
 		}
 	)";
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 						mstore(add(x, mul(add(i, 1), 0x20)), add(0xfffffffe, i))
 					}
 				}
-				E(10, x, 11);
+				emit E(10, x, 11);
 			}
 		}
 	)";
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 				x[0][2] = -1;
 				x[1][0] = 4;
 				x[1][1] = 5;
-				E(10, x, 11);
+				emit E(10, x, 11);
 			}
 		}
 	)";
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(memory_byte_array)
 				bytes[] memory x = new bytes[](2);
 				x[0] = "abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw";
 				x[1] = "abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw";
-				E(10, x, 11);
+				emit E(10, x, 11);
 			}
 		}
 	)";
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(storage_byte_array)
 			function f() public {
 				short = "123456789012345678901234567890a";
 				long = "ffff123456789012345678901234567890afffffffff123456789012345678901234567890a";
-				E(short, long);
+				emit E(short, long);
 			}
 		}
 	)";
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(storage_array)
 					sstore(1, sub(0, 2))
 					sstore(2, sub(0, 3))
 				}
-				E(addr);
+				emit E(addr);
 			}
 		}
 	)";
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 				addr.push(0x0000000000000000000000000000000000000001);
 				addr.push(0x0000000000000000000000000000000000000002);
 				addr.push(0x0000000000000000000000000000000000000003);
-				E(addr);
+				emit E(addr);
 			}
 		}
 	)";
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(storage_array_compact)
 				x.push(6);
 				x.push(-7);
 				x.push(8);
-				E(x);
+				emit E(x);
 			}
 		}
 	)";
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(external_function)
 			function(uint) external returns (uint) g;
 			function f(uint) public returns (uint) {
 				g = this.f;
-				E(this.f, g);
+				emit E(this.f, g);
 			}
 		}
 	)";
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 			function f(uint) public returns (uint) {
 				function(uint) external returns (uint)[1] memory h;
 				assembly { sstore(0, sub(0, 1)) mstore(h, sub(0, 1)) }
-				E(h[0], g);
+				emit E(h[0], g);
 			}
 		}
 	)";
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(calldata)
 		contract C {
 			event E(bytes);
 			function f(bytes a) external {
-				E(a);
+				emit E(a);
 			}
 		}
 	)";
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(structs)
 				s.sub[0].x[0] = 11;
 				s.sub[1].x[0] = 12;
 				s.sub[2].x[1] = 13;
-				e(x, s);
+				emit e(x, s);
 				return (x, s);
 			}
 		}

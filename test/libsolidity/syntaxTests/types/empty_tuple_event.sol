@@ -6,5 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (95-106): Event invocations have to be prefixed by "emit".
-// Warning: (95-106): Tuple component cannot be empty.
+// ParserError: (95-99): Expected primary expression.

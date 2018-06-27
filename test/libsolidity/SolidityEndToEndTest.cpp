@@ -3122,7 +3122,7 @@ BOOST_AUTO_TEST_CASE(event)
 					bytes32 s = 0x19dacbf83c5de6658e14cbf7bcae5c15eca2eedecf1c66fbca928e4d351bea0f;
 					log3(bytes32(msg.value), s, bytes32(uint256(msg.sender)), _id);
 				} else {
-					Deposit(msg.sender, _id, msg.value);
+					emit Deposit(msg.sender, _id, msg.value);
 				}
 			}
 		}
@@ -3172,7 +3172,7 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 		contract ClientReceipt {
 			event Deposit();
 			function deposit() {
-				Deposit();
+				emit Deposit();
 			}
 		}
 	)";
@@ -3184,28 +3184,6 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 	BOOST_CHECK(m_logs[0].data.empty());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
-}
-
-BOOST_AUTO_TEST_CASE(event_access_through_base_name)
-{
-	char const* sourceCode = R"(
-		contract A {
-			event x();
-		}
-		contract B is A {
-			function f() returns (uint) {
-				A.x();
-				return 1;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	callContractFunction("f()");
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data.empty());
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("x()")));
 }
 
 BOOST_AUTO_TEST_CASE(event_access_through_base_name_emit)
@@ -3238,67 +3216,15 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 			event Deposit(address _addr);
 			event Deposit(address _addr, uint _amount);
 			function deposit() returns (uint) {
-				Deposit();
+				emit Deposit();
 				return 1;
 			}
 			function deposit(address _addr) returns (uint) {
-				Deposit(_addr);
+				emit Deposit(_addr);
 				return 1;
 			}
 			function deposit(address _addr, uint _amount) returns (uint) {
-				Deposit(_addr, _amount);
-				return 1;
-			}
-		}
-	)";
-	u160 const c_loggedAddress = m_contractAddress;
-
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data.empty());
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
-
-	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
-
-	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
-}
-
-BOOST_AUTO_TEST_CASE(events_with_same_name_inherited)
-{
-	char const* sourceCode = R"(
-		contract A {
-			event Deposit();
-		}
-
-		contract B {
-			event Deposit(address _addr);
-		}
-
-		contract ClientReceipt is A, B {
-			event Deposit(address _addr, uint _amount);
-			function deposit() returns (uint) {
-				Deposit();
-				return 1;
-			}
-			function deposit(address _addr) returns (uint) {
-				Deposit(_addr);
-				return 1;
-			}
-			function deposit(address _addr, uint _amount) returns (uint) {
-				Deposit(_addr, _amount);
+				emit Deposit(_addr, _amount);
 				return 1;
 			}
 		}
@@ -3386,7 +3312,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous)
 		contract ClientReceipt {
 			event Deposit() anonymous;
 			function deposit() {
-				Deposit();
+				emit Deposit();
 			}
 		}
 	)";
@@ -3401,7 +3327,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 		contract ClientReceipt {
 			event Deposit(address indexed _from, bytes32 indexed _id, uint indexed _value, uint indexed _value2, bytes32 data) anonymous;
 			function deposit(bytes32 _id) payable {
-				Deposit(msg.sender, _id, msg.value, 2, "abc");
+				emit Deposit(msg.sender, _id, msg.value, 2, "abc");
 			}
 		}
 	)";
@@ -3425,7 +3351,7 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 		contract ClientReceipt {
 			event Deposit(address _from, bytes32 _id, uint _value, bool _flag);
 			function deposit(bytes32 _id) payable {
-				Deposit(msg.sender, _id, msg.value, true);
+				emit Deposit(msg.sender, _id, msg.value, true);
 			}
 		}
 	)";
@@ -3446,7 +3372,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
 		contract ClientReceipt {
 			event Deposit(uint fixeda, bytes dynx, uint fixedb);
 			function deposit() {
-				Deposit(10, msg.data, 15);
+				emit Deposit(10, msg.data, 15);
 			}
 		}
 	)";
@@ -3470,7 +3396,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 				x[0] = "A";
 				x[1] = "B";
 				x[2] = "C";
-				Deposit(10, x, 15);
+				emit Deposit(10, x, 15);
 			}
 		}
 	)";
@@ -3495,7 +3421,7 @@ BOOST_AUTO_TEST_CASE(event_really_really_lots_of_data_from_storage)
 				x[1] = "B";
 				x[2] = "C";
 				x[30] = "Z";
-				Deposit(10, x, 15);
+				emit Deposit(10, x, 15);
 			}
 		}
 	)";
@@ -3523,7 +3449,7 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 				y[1] = 5;
 				y[2] = 6;
 				y[3] = 7;
-				E(x, y);
+				emit E(x, y);
 			}
 		}
 	)";
@@ -4246,7 +4172,7 @@ BOOST_AUTO_TEST_CASE(storing_invalid_boolean)
 				assembly {
 					tmp := 5
 				}
-				Ev(tmp);
+				emit Ev(tmp);
 				return 1;
 			}
 		}
@@ -6034,12 +5960,12 @@ BOOST_AUTO_TEST_CASE(invalid_enum_logged)
 				assembly {
 					garbled := 5
 				}
-				Log(garbled);
+				emit Log(garbled);
 				return 1;
 			}
 			function test_log_ok() returns (uint) {
 				X x = X.A;
-				Log(x);
+				emit Log(x);
 				return 1;
 			}
 		}
@@ -11932,7 +11858,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[7] = 9643208548031422463313148630985736896287522941726746581856185889848792022807;
 			input[8] = 18066496933330839731877828156604;
 			if (verify(input, proof) == 0) {
-				Verified("Transaction successfully verified.");
+				emit Verified("Transaction successfully verified.");
 				return true;
 			} else {
 				return false;

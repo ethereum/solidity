@@ -175,10 +175,10 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		m_toRecord[_name].primary = _a;
 		if (_primary)
 		{
-			PrimaryChanged(_name, _a);
+			emit PrimaryChanged(_name, _a);
 			m_toName[_a] = _name;
 		}
-		Changed(_name);
+		emit Changed(_name);
 	}
 	function setSubRegistrar(string _name, address _registrar) onlyrecordowner(_name) {
 		m_toRecord[_name].subRegistrar = _registrar;

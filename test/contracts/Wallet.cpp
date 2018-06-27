@@ -215,7 +215,7 @@ contract multiowned {
 		uint ownerIndexBit = 2**ownerIndex;
 		// make sure we (the message sender) haven't confirmed this operation previously.
 		if (pending.ownersDone & ownerIndexBit == 0) {
-			Confirmation(msg.sender, _operation);
+			emit Confirmation(msg.sender, _operation);
 			// ok - check if count is enough to go ahead.
 			if (pending.yetNeeded <= 1) {
 				// enough confirmations: reset and run interior.
@@ -392,7 +392,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	function execute(address _to, uint _value, bytes _data) external onlyowner returns (bytes32 _r) {
 		// first, take the opportunity to check that we're under the daily limit.
 		if (underLimit(_value)) {
-			SingleTransact(msg.sender, _value, _to, _data);
+			emit SingleTransact(msg.sender, _value, _to, _data);
 			// yes - just execute the call.
 			_to.call.value(_value)(_data);
 			return 0;
@@ -412,7 +412,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
 		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
 			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
-			MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
+			emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
 			delete m_txs[_h];
 			return true;
 		}
