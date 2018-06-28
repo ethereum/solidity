@@ -60,7 +60,21 @@ BOOST_AUTO_TEST_CASE(byte_types)
 BOOST_AUTO_TEST_CASE(fixed_types)
 {
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed));
+	for (unsigned i = 8; i <= 256; i += 8)
+	{
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 0)) == *make_shared<FixedPointType>(i, 0, FixedPointType::Modifier::Signed));
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 2)) == *make_shared<FixedPointType>(i, 2, FixedPointType::Modifier::Signed));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(ufixed_types)
+{
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned));
+	for (unsigned i = 8; i <= 256; i += 8)
+	{
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 0)) == *make_shared<FixedPointType>(i, 0, FixedPointType::Modifier::Unsigned));
+		BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 2)) == *make_shared<FixedPointType>(i, 2, FixedPointType::Modifier::Unsigned));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(storage_layout_simple)
@@ -115,12 +129,13 @@ BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 	BOOST_CHECK(ArrayType(DataLocation::Storage, make_shared<FixedBytesType>(32), 9).storageSize() == 9);
 }
 
-BOOST_AUTO_TEST_CASE(type_escaping)
+BOOST_AUTO_TEST_CASE(type_identifier_escaping)
 {
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("("), "$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier(")"), "_$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier(","), "_$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("$"), "$$$");
+	BOOST_CHECK_EQUAL(Type::escapeIdentifier(")$("), "_$$$$$_");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("()"), "$__$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("(,)"), "$__$__$");
 	BOOST_CHECK_EQUAL(Type::escapeIdentifier("(,$,)"), "$__$_$$$_$__$");
@@ -137,7 +152,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("int128")->identifier(), "t_int128");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("address")->identifier(), "t_address");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("uint8")->identifier(), "t_uint8");
-	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("ufixed8x64")->identifier(), "t_ufixed8x64");
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("ufixed64x2")->identifier(), "t_ufixed64x2");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("fixed128x8")->identifier(), "t_fixed128x8");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(7, 1)).identifier(), "t_rational_7_by_1");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(200, 77)).identifier(), "t_rational_200_by_77");
@@ -146,6 +161,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 		StringLiteralType(Literal(SourceLocation{}, Token::StringLiteral, make_shared<string>("abc - def"))).identifier(),
 		 "t_stringliteral_196a9142ee0d40e274a6482393c762b16dd8315713207365e1e13d8d85b74fc4"
 	);
+	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("byte")->identifier(), "t_bytes1");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes8")->identifier(), "t_bytes8");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bytes32")->identifier(), "t_bytes32");
 	BOOST_CHECK_EQUAL(Type::fromElementaryTypeName("bool")->identifier(), "t_bool");
