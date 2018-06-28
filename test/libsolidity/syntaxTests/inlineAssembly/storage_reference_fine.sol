@@ -3,9 +3,9 @@ contract C {
     function() public { 
         uint[] storage y = x;
         assembly {
-            pop(y)
+            pop(y_slot)
+            pop(y_offset)
         }
     }
 }
 // ----
-// TypeError: (117-118): You have to use the _slot or _offset suffix to access storage reference variables.
