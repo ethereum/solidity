@@ -39,6 +39,7 @@ Breaking Changes:
  * Type Checker: Disallow values for constants that are not compile-time constants. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow arithmetic operations for boolean variables.
  * Type Checker: Disallow tight packing of literals. This was already the case in the experimental 0.5.0 mode.
+ * Type Checker: Disallow calling base constructors without parentheses. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Type Checker: Disallow conversions between unrelated contract types. Explicit conversion via ``address`` can still achieve it.
  * Type Checker: Disallow empty tuple components. This was partly already the case in the experimental 0.5.0 mode.

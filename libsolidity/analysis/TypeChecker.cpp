@@ -279,8 +279,6 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
 {
-	bool const v050 = _contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 
 	// Determine the arguments that are used for the base constructors.
@@ -296,18 +294,10 @@ void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const
 						annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
 				}
 				else
-				{
-					if (v050)
-						m_errorReporter.declarationError(
-							modifier->location(),
-							"Modifier-style base constructor call without arguments."
-						);
-					else
-						m_errorReporter.warning(
-							modifier->location(),
-							"Modifier-style base constructor call without arguments."
-						);
-				}
+					m_errorReporter.declarationError(
+						modifier->location(),
+						"Modifier-style base constructor call without arguments."
+					);
 			}
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
