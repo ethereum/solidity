@@ -352,16 +352,16 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		contract C {
 			function f(uint) public returns (string);
 			function g() public {
-				var x = this.f(2);
+				string memory x = this.f(2);
 				// we can assign to x but it is not usable.
 				bytes(x).length;
 			}
 		}
 	)";
 	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
-		CHECK_ERROR(sourceCode, TypeError, "Explicit type conversion not allowed from \"inaccessible dynamic type\" to \"bytes storage pointer\".");
+		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
 	else
-		CHECK_WARNING(sourceCode, "Use of the \"var\" keyword is deprecated");
+		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)

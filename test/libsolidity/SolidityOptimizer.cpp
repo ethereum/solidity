@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 		contract test {
 			uint d;
 			function f(uint a) returns (uint r) {
-				var x = d;
+				uint x = d;
 				for (uint i = 1; i < a * a; i++) {
 					r = d;
 					d = i;
