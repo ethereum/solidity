@@ -6,4 +6,4 @@ contract Derived is Base, Base1 {
     constructor(uint i) Base(i) public {}
 }
 // ----
-// Warning: (138-145): Base constructor arguments given twice.
+// DeclarationError: (138-145): Base constructor arguments given twice.

@@ -335,8 +335,6 @@ void TypeChecker::annotateBaseConstructorArguments(
 	ASTNode const* _argumentNode
 )
 {
-	bool const v050 = _currentContract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	solAssert(_baseConstructor, "");
 	solAssert(_argumentNode, "");
 
@@ -365,18 +363,11 @@ void TypeChecker::annotateBaseConstructorArguments(
 			ssl.append("Second constructor call is here: ", previousNode->location());
 		}
 
-		if (v050)
-			m_errorReporter.declarationError(
-				*mainLocation,
-				ssl,
-				"Base constructor arguments given twice."
-			);
-		else
-			m_errorReporter.warning(
-				*mainLocation,
-				"Base constructor arguments given twice.",
-				ssl
-			);
+		m_errorReporter.declarationError(
+			*mainLocation,
+			ssl,
+			"Base constructor arguments given twice."
+		);
 	}
 
 }
