@@ -2,15 +2,15 @@
 // because A does not have a payable fallback function.
 
 contract A {
-    function() payable public {}
+    function() payable external {}
 }
 
 contract B {
     A a;
 
-    function() public {
+    function() external {
         a.transfer(100);
     }
 }
 // ----
-// Warning: (224-234): Using contract member "transfer" inherited from the address type is deprecated. Convert the contract to "address" type to access the member, for example use "address(contract).transfer" instead.
+// Warning: (228-238): Using contract member "transfer" inherited from the address type is deprecated. Convert the contract to "address" type to access the member, for example use "address(contract).transfer" instead.

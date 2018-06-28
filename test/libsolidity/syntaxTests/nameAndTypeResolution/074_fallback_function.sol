@@ -1,4 +1,4 @@
 contract C {
     uint x;
-    function() public { x = 2; }
+    function() external { x = 2; }
 }

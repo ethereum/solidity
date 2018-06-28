@@ -39,7 +39,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   /** 
    * @dev Fallback function, receives value and emits a deposit event. 
    */
-  function() payable {
+  function() external payable {
     // just being sent some cash?
     if (msg.value > 0)
       emit Deposit(msg.sender, msg.value);

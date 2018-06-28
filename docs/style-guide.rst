@@ -278,7 +278,7 @@ Yes::
             ...
         }
 
-        function() public {
+        function() external {
             ...
         }
 
@@ -308,6 +308,10 @@ No::
         // External functions
         // ...
 
+        function() external {
+            ...
+        }
+
         // Private functions
         // ...
 
@@ -315,10 +319,6 @@ No::
         // ...
 
         function A() public {
-            ...
-        }
-
-        function() public {
             ...
         }
 
@@ -374,13 +374,13 @@ Don't include a whitespace in the fallback function:
 
 Yes::
 
-    function() public {
+    function() external {
         ...
     }
 
 No::
 
-    function () public {
+    function () external {
         ...
     }
 

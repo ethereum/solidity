@@ -1,5 +1,5 @@
 contract C {
-    function() public returns (uint) { }
+    function() external returns (uint) { }
 }
 // ----
-// TypeError: (43-49): Fallback function cannot return values.
+// TypeError: (45-51): Fallback function cannot return values.

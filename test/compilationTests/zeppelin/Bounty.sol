@@ -18,7 +18,7 @@ contract Bounty is PullPayment, Destructible {
   /**
    * @dev Fallback function allowing the contract to recieve funds, if they haven't already been claimed.
    */
-  function() payable {
+  function() external payable {
     if (claimed) {
       throw;
     }

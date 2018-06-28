@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(simple_alias)
 {
 	CompilerStack c;
 	c.addSource("a", "contract A {} pragma solidity >=0.0;");
-	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B is x.A { function() { x.A r = x.A(20); } } pragma solidity >=0.0;");
+	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B is x.A { function() external { x.A r = x.A(20); } } pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }

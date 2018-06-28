@@ -1812,7 +1812,7 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 		}
 
 		contract C {
-			function () payable {
+			function () external payable {
 				throw;
 			}
 		}
@@ -2506,7 +2506,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 {
 	char const* sourceCode = R"(
 		contract helper {
-			function() payable { } // can receive ether
+			function() external payable { } // can receive ether
 		}
 		contract test {
 			helper h;
@@ -3054,7 +3054,7 @@ BOOST_AUTO_TEST_CASE(fallback_function)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function() { data = 1; }
+			function() external { data = 1; }
 			function getData() returns (uint r) { return data; }
 		}
 	)";
@@ -3069,7 +3069,7 @@ BOOST_AUTO_TEST_CASE(inherited_fallback_function)
 	char const* sourceCode = R"(
 		contract A {
 			uint data;
-			function() { data = 1; }
+			function() external { data = 1; }
 			function getData() returns (uint r) { return data; }
 		}
 		contract B is A {}
@@ -3100,7 +3100,7 @@ BOOST_AUTO_TEST_CASE(short_data_calls_fallback)
 			uint public x;
 			// Signature is d88e0b00
 			function fow() { x = 3; }
-			function () { x = 2; }
+			function () external { x = 2; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -3802,11 +3802,11 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 		contract receiver {
 			uint public received;
 			function receive(uint x) { received += x + 1; }
-			function() { received = 0x80; }
+			function() external { received = 0x80; }
 		}
 		contract sender {
 			function sender() { rec = new receiver(); }
-			function() { savedData = msg.data; }
+			function() external { savedData = msg.data; }
 			function forward() returns (bool) { !rec.call(savedData); return true; }
 			function clear() returns (bool) { delete savedData; return true; }
 			function val() returns (uint) { return rec.received(); }
@@ -3830,7 +3830,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 	char const* sourceCode = R"(
 		contract receiver {
 			uint public calledLength;
-			function() { calledLength = msg.data.length; }
+			function() external { calledLength = msg.data.length; }
 		}
 		contract sender {
 			receiver rec;
@@ -3872,11 +3872,11 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 		contract receiver {
 			uint public received;
 			function receive(uint x) { received += x + 1; }
-			function() { received = 0x80; }
+			function() external { received = 0x80; }
 		}
 		contract sender {
 			function sender() { rec = new receiver(); }
-			function() { savedData1 = savedData2 = msg.data; }
+			function() external { savedData1 = savedData2 = msg.data; }
 			function forward(bool selector) returns (bool) {
 				if (selector) { rec.call(savedData1); delete savedData1; }
 				else { rec.call(savedData2); delete savedData2; }
@@ -3903,7 +3903,7 @@ BOOST_AUTO_TEST_CASE(delete_removes_bytes_data)
 {
 	char const* sourceCode = R"(
 		contract c {
-			function() { data = msg.data; }
+			function() external { data = msg.data; }
 			function del() returns (bool) { delete data; return true; }
 			bytes data;
 		}
@@ -3920,7 +3920,7 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 	char const* sourceCode = R"(
 		contract c {
 			function set() returns (bool) { data = msg.data; return true; }
-			function() { data = msg.data; }
+			function() external { data = msg.data; }
 			bytes data;
 		}
 	)";
@@ -6265,7 +6265,7 @@ BOOST_AUTO_TEST_CASE(failing_send)
 	char const* sourceCode = R"(
 		contract Helper {
 			uint[] data;
-			function () {
+			function () external {
 				data[9]; // trigger exception
 			}
 		}
@@ -6289,7 +6289,7 @@ BOOST_AUTO_TEST_CASE(send_zero_ether)
 	// (it previously did not because the gas stipend was not provided by the EVM)
 	char const* sourceCode = R"(
 		contract Receiver {
-			function () payable {
+			function () external payable {
 			}
 		}
 		contract Main {
@@ -7805,7 +7805,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 			function f(address x) returns (bool) {
 				return x.send(1);
 			}
-			function () payable {}
+			function () external payable {}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "lib");
@@ -9335,7 +9335,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 				else
 					return fund.withdrawUnprotected(10);
 			}
-			function() payable {
+			function() external payable {
 				callDepth++;
 				if (callDepth < 4)
 					attackInternal();
@@ -9461,7 +9461,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 			function f() payable returns (uint) {
 				return msg.value;
 			}
-			function() payable {
+			function() external payable {
 				a = msg.value + 1;
 			}
 		}
@@ -9500,7 +9500,7 @@ BOOST_AUTO_TEST_CASE(non_payable_throw)
 			function f() returns (uint) {
 				return msg.value;
 			}
-			function() {
+			function() external {
 				a = msg.value + 1;
 			}
 		}
@@ -11189,7 +11189,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 {
 	char const* sourceCode = R"(
 		contract D {
-			function() public payable {
+			function() external payable {
 				revert("message");
 			}
 			function f() public {
@@ -11340,7 +11340,7 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 		interface I {
 			event A();
 			function f() returns (bool);
-			function() payable;
+			function() external payable;
 		}
 
 		contract A is I {
@@ -11352,7 +11352,7 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 				return true;
 			}
 
-			function() payable {
+			function() external payable {
 			}
 		}
 

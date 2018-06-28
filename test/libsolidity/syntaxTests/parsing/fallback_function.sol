@@ -1,5 +1,4 @@
 contract c {
-    function() { }
+    function() external { }
 }
 // ----
-// Warning: (17-31): No visibility specified. Defaulting to "public". 

@@ -1,5 +1,5 @@
 library C {
-    function() public {}
+    function() external {}
 }
 // ----
-// TypeError: (16-36): Libraries cannot have fallback functions.
+// TypeError: (16-38): Libraries cannot have fallback functions.

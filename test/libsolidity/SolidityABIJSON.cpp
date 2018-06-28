@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function() {}
+			function() external {}
 		}
 	)";
 
@@ -897,7 +897,7 @@ BOOST_AUTO_TEST_CASE(payable_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function () payable {}
+			function () external payable {}
 		}
 	)";
 
