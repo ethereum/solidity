@@ -214,7 +214,7 @@ void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _defini
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
+				if (FunctionType(*overloads[i]).hasEqualParameterTypes(FunctionType(*overloads[j])))
 				{
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
@@ -252,7 +252,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
 			{
-				return funType->hasEqualArgumentTypes(*_funAndFlag.first);
+				return funType->hasEqualParameterTypes(*_funAndFlag.first);
 			});
 			if (it == overloads.end())
 				overloads.push_back(make_pair(funType, function->isImplemented()));
@@ -404,7 +404,7 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, Func
 	FunctionType functionType(function);
 	FunctionType superType(super);
 
-	if (!functionType.hasEqualArgumentTypes(superType))
+	if (!functionType.hasEqualParameterTypes(superType))
 		return;
 
 	if (!function.annotation().superFunction)
@@ -475,7 +475,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 	for (auto const& it: externalDeclarations)
 		for (size_t i = 0; i < it.second.size(); ++i)
 			for (size_t j = i + 1; j < it.second.size(); ++j)
-				if (!it.second[i].second->hasEqualArgumentTypes(*it.second[j].second))
+				if (!it.second[i].second->hasEqualParameterTypes(*it.second[j].second))
 					m_errorReporter.typeError(
 						it.second[j].first->location(),
 						"Function overload clash during conversion to external types for arguments."
