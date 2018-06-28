@@ -123,10 +123,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 				m_errorReporter.typeError(function->parameterList().location(), "Fallback function cannot take parameters.");
 			if (!function->returnParameters().empty())
 				m_errorReporter.typeError(function->returnParameterList()->location(), "Fallback function cannot return values.");
-			if (
-				_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) &&
-				function->visibility() != FunctionDefinition::Visibility::External
-			)
+			if (function->visibility() != FunctionDefinition::Visibility::External)
 				m_errorReporter.typeError(function->location(), "Fallback function must be defined as \"external\".");
 		}
 
