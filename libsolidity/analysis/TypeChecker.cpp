@@ -286,19 +286,19 @@ void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const
 	{
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
-			{
-				auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name()));
-				if (modifier->arguments())
+				if (auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name())))
 				{
-					if (baseContract && baseContract->constructor())
-						annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+					if (modifier->arguments())
+					{
+						if (baseContract->constructor())
+							annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+					}
+					else
+						m_errorReporter.declarationError(
+							modifier->location(),
+							"Modifier-style base constructor call without arguments."
+						);
 				}
-				else
-					m_errorReporter.declarationError(
-						modifier->location(),
-						"Modifier-style base constructor call without arguments."
-					);
-			}
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
 		{
