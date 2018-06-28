@@ -133,7 +133,7 @@ case $(uname -s) in
 # Arch Linux
 #------------------------------------------------------------------------------
 
-            Arch*)
+            Arch*|ManjaroLinux)
                 #Arch
                 echo "Installing solidity dependencies on Arch Linux."
 
