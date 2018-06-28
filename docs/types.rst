@@ -426,8 +426,26 @@ function type should not return anything, the whole ``returns (<return types>)``
 part has to be omitted.
 
 By default, function types are internal, so the ``internal`` keyword can be
-omitted. In contrast, contract functions themselves are public by default,
-only when used as the name of a type, the default is internal.
+omitted. Note that this only applies to function types. Visibility has
+to be specified explicitly for functions defined in contracts, they
+do not have a default.
+
+A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
+their parameter types are identical, their return types are identical,
+their internal/external property is identical and the state mutability of ``A``
+is not more restrictive than the state mutability of ``B``. In particular:
+
+ - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
+ - ``view`` functions can be converted to ``non-payable`` functions
+ - ``payable`` functions can be converted to ``non-payable`` functions
+
+No other conversions are possible.
+
+The rule about ``payable`` and ``non-payable`` might be a little
+confusing, but in essence, if a function is ``payable``, this means that it
+also accepts a payment of zero Ether, so it also is ``non-payable``.
+On the other hand, a ``non-payable`` function will reject Ether sent to it,
+so ``non-payable`` functions cannot be converted to ``payable`` functions.
 
 If a function type variable is not initialized, calling it will result
 in an exception. The same happens if you call a function after using ``delete``

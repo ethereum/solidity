@@ -1012,6 +1012,7 @@ public:
 
 	virtual std::string richIdentifier() const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override;
@@ -1041,8 +1042,12 @@ public:
 	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
 	/// expression the function is called on.
 	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
-	/// @returns true if the types of parameters are equal (doesn't check return parameter types)
+	/// @returns true if the types of parameters are equal (does not check return parameter types)
 	bool hasEqualParameterTypes(FunctionType const& _other) const;
+	/// @returns true iff the return types are equal (does not check parameter types)
+	bool hasEqualReturnTypes(FunctionType const& _other) const;
+	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
+	bool equalExcludingStateMutability(FunctionType const& _other) const;
 
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)
 	bool isBareCall() const;
