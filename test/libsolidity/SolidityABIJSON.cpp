@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
+			function f(uint a) public returns (uint d) { return a * 7; }
 		}
 	)";
 
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
-			function g(uint b) returns(uint e) { return b * 8; }
+			function f(uint a) public returns (uint d) { return a * 7; }
+			function g(uint b) public returns (uint e) { return b * 8; }
 		}
 	)";
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint a, uint b) public returns (uint d) { return a + b; }
 		}
 	)";
 
@@ -202,8 +202,8 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	// methods are expected to be in alpabetical order
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
-			function c(uint b) returns(uint e) { return b * 8; }
+			function f(uint a) public returns (uint d) { return a * 7; }
+			function c(uint b) public returns (uint e) { return b * 8; }
 		}
 	)";
 
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(view_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function foo(uint a, uint b) returns(uint d) { return a + b; }
+			function foo(uint a, uint b) public returns (uint d) { return a + b; }
 			function boo(uint32 a) view returns(uint b) { return a * 4; }
 		}
 	)";
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(pure_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function foo(uint a, uint b) returns(uint d) { return a + b; }
+			function foo(uint a, uint b) public returns (uint d) { return a + b; }
 			function boo(uint32 a) pure returns(uint b) { return a * 4; }
 		}
 	)";
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(events)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
+			function f(uint a) public returns (uint d) { return a * 7; }
 			event e1(uint b, address indexed c);
 			event e2();
 			event e2(uint a);
@@ -463,11 +463,11 @@ BOOST_AUTO_TEST_CASE(inherited)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function baseFunction(uint p) returns (uint i) { return p; }
+			function baseFunction(uint p) public returns (uint i) { return p; }
 			event baseEvent(bytes32 indexed evtArgBase);
 		}
 		contract Derived is Base {
-			function derivedFunction(bytes32 p) returns (bytes32 i) { return p; }
+			function derivedFunction(bytes32 p) public returns (bytes32 i) { return p; }
 			event derivedEvent(uint indexed evtArgDerived);
 		}
 	)";
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint, uint k) returns(uint ret_k, uint ret_g) {
+			function f(uint, uint k) public returns (uint ret_k, uint ret_g) {
 				uint g = 8;
 				ret_k = k;
 				ret_g = g;
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint k) returns(uint) {
+			function f(uint k) public returns (uint) {
 				return k;
 			}
 		}
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 		contract test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			constructor(ActionChoices param) {}
-			function ret() returns(ActionChoices) {
+			function ret() public returns (ActionChoices) {
 				ActionChoices action = ActionChoices.GoLeft;
 				return action;
 			}
@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	char const* sourceCode = R"(
 		library test {
 			struct StructType { uint a; }
-			function f(StructType storage b, uint[] storage c, test d) returns (uint[] e, StructType storage f) {}
+			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] e, StructType storage f) {}
 		}
 	)";
 
@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[2] x; }
-			function f() returns (uint x, S s) {
+			function f() public returns (uint x, S s) {
 			}
 		}
 	)";
@@ -940,7 +940,7 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { C[] x; C y; }
-			function f() returns (S s, C c) {
+			function f() public returns (S s, C c) {
 			}
 		}
 	)";

@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns (uint b) {
+			function f(uint a) public returns (uint b) {
 				return a;
 			}
 		}
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(identities)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(int a) returns (int b) {
+			function f(int a) public returns (int b) {
 				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
 		}
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 	char const* sourceCode = R"(
 		contract test {
 			uint data;
-			function f() returns (uint a, uint b) {
+			function f() public returns (uint a, uint b) {
 				10 + 20;
 				data;
 			}
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 	// literals as late as possible
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint x) returns (uint y) {
+			function f(uint x) public returns (uint y) {
 				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
 			}
 		}
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(storage_access)
 	char const* sourceCode = R"(
 		contract test {
 			uint8[40] data;
-			function f(uint x) returns (uint y) {
+			function f(uint x) public returns (uint y) {
 				data[2] = data[7] = uint8(x);
 				data[4] = data[2] * 10 + data[3];
 			}
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 		contract test {
 			bytes2[] data1;
 			bytes5[] data2;
-			function f(uint x) returns (uint l, uint y) {
+			function f(uint x) public returns (uint l, uint y) {
 				data1.length = msg.data.length;
 				for (uint i = 0; i < msg.data.length; ++i)
 					data1[i] = msg.data[i];
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(function_calls)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f1(uint x) returns (uint) { return x*x; }
-			function f(uint x) returns (uint) { return f1(7+x) - this.f1(x**9); }
+			function f1(uint x) public returns (uint) { return x*x; }
+			function f(uint x) public returns (uint) { return f1(7+x) - this.f1(x**9); }
 		}
 	)";
 	compileBothVersions(sourceCode);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 	char const* sourceCode = R"(
 		contract test {
 			uint d;
-			function f(uint a) returns (uint r) {
+			function f(uint a) public returns (uint r) {
 				uint x = d;
 				for (uint i = 1; i < a * a; i++) {
 					r = d;
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 		contract c {
 			bytes32 d;
 			uint a;
-			function f(uint x, bytes32 y) returns (uint r_a, bytes32 r_d) {
+			function f(uint x, bytes32 y) public returns (uint r_a, bytes32 r_d) {
 				bytes32 z = keccak256(abi.encodePacked(y));
 				if (x > 8) {
 					z = keccak256(abi.encodePacked(y));
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
 		contract C
 		{
 			mapping(uint => uint) data;
-			function f() returns (uint)
+			function f() public returns (uint)
 			{
 				if(data[now] == 0)
 					data[uint(-7)] = 5;
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(sequence_number_for_calls)
 	// to storage), so the sequence number should be incremented.
 	char const* sourceCode = R"(
 		contract test {
-			function f(string a, string b) returns (bool) { return sha256(bytes(a)) == sha256(bytes(b)); }
+			function f(string a, string b) public returns (bool) { return sha256(bytes(a)) == sha256(bytes(b)); }
 		}
 	)";
 	compileBothVersions(sourceCode);
@@ -385,10 +385,10 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 			uint m_b;
 			uint m_c;
 			uint m_d;
-			constructor() {
+			constructor() public {
 				set();
 			}
-			function set() returns (uint) {
+			function set() public returns (uint) {
 				m_a = 0x77abc0000000000000000000000000000000000000000000000000000000001;
 				m_b = 0x817416927846239487123469187231298734162934871263941234127518276;
 				g();
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 			function h() {
 				m_d = 0xff05694900000000000000000000000000000000000000000000000000000000;
 			}
-			function get() returns (uint ra, uint rb, uint rc, uint rd) {
+			function get() public returns (uint ra, uint rb, uint rc, uint rd) {
 				ra = m_a;
 				rb = m_b;
 				rc = m_c;
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	pragma solidity ^0.4.0;
 
 	contract HexEncoding {
-		function hexEncodeTest(address addr) returns (bytes32 ret) {
+		function hexEncodeTest(address addr) public returns (bytes32 ret) {
 			uint x = uint(addr) / 2**32;
 
 			// Nibble interleave
@@ -561,11 +561,11 @@ BOOST_AUTO_TEST_CASE(dead_code_elimination_across_assemblies)
 	char const* sourceCode = R"(
 		contract DCE {
 			function () internal returns (uint) stored;
-			constructor() {
+			constructor() public {
 				stored = f;
 			}
 			function f() internal returns (uint) { return 7; }
-			function test() returns (uint) { return stored(); }
+			function test() public returns (uint) { return stored(); }
 		}
 	)";
 	compileBothVersions(sourceCode);
@@ -577,12 +577,12 @@ BOOST_AUTO_TEST_CASE(invalid_state_at_control_flow_join)
 	char const* sourceCode = R"(
 		contract Test {
 			uint256 public totalSupply = 100;
-			function f() returns (uint r) {
+			function f() public returns (uint r) {
 				if (false)
 					r = totalSupply;
 				totalSupply -= 10;
 			}
-			function test() returns (uint) {
+			function test() public returns (uint) {
 				f();
 				return this.totalSupply();
 			}

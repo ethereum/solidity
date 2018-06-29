@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 {
 	char const* sourceCode = R"(
 	contract test {
-		function f() returns (uint256 a) {
+		function f() public returns (uint256 a) {
 			return 16;
 		}
 	}

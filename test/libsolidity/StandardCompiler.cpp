@@ -556,10 +556,10 @@ BOOST_AUTO_TEST_CASE(library_filename_with_colon)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"git:library.sol\"; contract A { function f() returns (uint) { return L.g(); } }"
+				"content": "import \"git:library.sol\"; contract A { function f() public returns (uint) { return L.g(); } }"
 			},
 			"git:library.sol": {
-				"content": "library L { function g() returns (uint) { return 1; } }"
+				"content": "library L { function g() public returns (uint) { return 1; } }"
 			}
 		}
 	}
@@ -706,10 +706,10 @@ BOOST_AUTO_TEST_CASE(library_linking)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"library.sol\"; import \"library2.sol\"; contract A { function f() returns (uint) { L2.g(); return L.g(); } }"
+				"content": "import \"library.sol\"; import \"library2.sol\"; contract A { function f() public returns (uint) { L2.g(); return L.g(); } }"
 			},
 			"library.sol": {
-				"content": "library L { function g() returns (uint) { return 1; } }"
+				"content": "library L { function g() public returns (uint) { return 1; } }"
 			},
 			"library2.sol": {
 				"content": "library L2 { function g() { } }"
