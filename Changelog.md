@@ -27,6 +27,7 @@ Breaking Changes:
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
  * Parser: Disallow trailing dots that are not followed by a number.
  * Type Checker: Disallow arithmetic operations for boolean variables.
+ * Type Checker: Disallow tight packing of literals. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Type Checker: Only accept a single ``bytes`` type for ``.call()`` (and family), ``keccak256()``, ``sha256()`` and ``ripemd160()``.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.

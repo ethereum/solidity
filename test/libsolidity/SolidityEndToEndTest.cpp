@@ -2082,7 +2082,7 @@ BOOST_AUTO_TEST_CASE(packed_keccak256)
 			function a(bytes32 input) returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return keccak256(abi.encodePacked(8, input, b, input, c));
+				return keccak256(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -2134,7 +2134,7 @@ BOOST_AUTO_TEST_CASE(packed_sha256)
 			function a(bytes32 input) returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return sha256(abi.encodePacked(8, input, b, input, c));
+				return sha256(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -2161,7 +2161,7 @@ BOOST_AUTO_TEST_CASE(packed_ripemd160)
 			function a(bytes32 input) returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return ripemd160(abi.encodePacked(8, input, b, input, c));
+				return ripemd160(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -3578,7 +3578,7 @@ BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_numeric_literals)
 		contract c {
 			function foo(uint a, uint16 b) returns (bytes32 d)
 			{
-				d = keccak256(abi.encodePacked(a, b, 145));
+				d = keccak256(abi.encodePacked(a, b, uint8(145)));
 			}
 		}
 	)";
@@ -3603,7 +3603,7 @@ BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_string_literals)
 			}
 			function bar(uint a, uint16 b) returns (bytes32 d)
 			{
-				d = keccak256(abi.encodePacked(a, b, 145, "foo"));
+				d = keccak256(abi.encodePacked(a, b, uint8(145), "foo"));
 			}
 		}
 	)";
