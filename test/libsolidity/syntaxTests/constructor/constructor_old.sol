@@ -1,3 +1,3 @@
 contract A { function A() public {} }
 // ----
-// Warning: (13-35): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+// SyntaxError: (13-35): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
