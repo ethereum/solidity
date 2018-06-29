@@ -929,7 +929,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(_identifier.location, "You have to use the _slot or _offset prefix to access storage reference variables.");
+				m_errorReporter.typeError(_identifier.location, "You have to use the _slot or _offset suffix to access storage reference variables.");
 				return size_t(-1);
 			}
 			else if (var->type()->sizeOnStack() != 1)
