@@ -304,6 +304,9 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
+Solidity doesn't have any inbuilt string utility functions, you first have to convert it to a ``bytes`` type before any comparisons or manipulation.
+
+You can find examples of utility functions in `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_ and `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
 .. index:: literal, bytes
 
 Hexadecimal Literals
@@ -320,9 +323,8 @@ Hexademical Literals behave like String Literals and have the same convertibilit
 Enums
 -----
 
-Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.  The explicit conversions
-check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
+Enums are one way to create a user-defined type in Solidity. They are explicitly convertible to and from all integer types but implicit conversion is not allowed.  The explicit conversions check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
+
 
 ::
 
@@ -361,7 +363,7 @@ Function Types
 Function types are the types of functions. Variables of function type
 can be assigned from functions and function parameters of function type
 can be used to pass functions to and return functions from function calls.
-Function types come in two flavours - *internal* and *external* functions:
+Function types come in two flavors - *internal* and *external* functions:
 
 Internal functions can only be called inside the current contract (more specifically,
 inside the current code unit, which also includes internal library functions
@@ -581,10 +583,7 @@ Default data location:
 Arrays
 ------
 
-Arrays can have a compile-time fixed size or they can be dynamic.
-For storage arrays, the element type can be arbitrary (i.e. also other
-arrays, mappings or structs). For memory arrays, it cannot be a mapping and
-has to be an ABI type if it is an argument of a publicly-visible function.
+Arrays can have a compile-time fixed size or they can be dynamic. For storage arrays, the element type can be arbitrary (i.e. also other arrays, mappings or structs). For memory arrays, it cannot be a mapping and has to be an ABI type if it is an argument of a publicly-visible function.
 
 An array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
 an array of dynamic size as ``T[]``. As an example, an array of 5 dynamic
@@ -607,6 +606,22 @@ number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are mu
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
+
+You can initialize an array inline using syntax such as ``string[] myarray = ["a", "b"];``. However, this only works for statically sized memory arrays. For example:
+
+    pragma solidity ^0.4.16;
+
+    contract C {
+        function f() public pure returns (uint8[5]) {
+            string[4] memory adaArr = ["This", "is", "an", "array"];
+            return ([1, 2, 3, 4, 5]);
+        }
+    }
+
+You can create and initialize multi-dimensional arrays in the same ways, but note that filling arrays can cost a lot of gas, so make sure you optimize how you use them.
+
+...note::
+    Optimizing storage access can reduce the gas costs considerably, because you can store 32 ``uint8`` values in a single slot. These optimizations do not work across loops and also have a problem with bounds checking.
 
 It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
@@ -686,8 +701,7 @@ Members
 
 **length**:
     Arrays have a ``length`` member to hold their number of elements.
-    Dynamic arrays can be resized in storage (not in memory) by changing the
-    ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
+    You can resize dynamic arrays in storage (**not in memory**) by changing the ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created. If you try to resize a non dynamic array that isn't in storage, you receive a ``Value must be an lvalue`` error.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
 **pop**:
@@ -807,7 +821,7 @@ shown in the following example:
 
         function contribute(uint campaignID) public payable {
             Campaign storage c = campaigns[campaignID];
-            // Creates a new temporary memory struct, initialised with the given values
+            // Creates a new temporary memory struct, initialized with the given values
             // and copies it over to storage.
             // Note that you can also use Funder(msg.sender, msg.value) to initialise.
             c.funders[c.numFunders++] = Funder({addr: msg.sender, amount: msg.value});
@@ -826,22 +840,29 @@ shown in the following example:
     }
 
 The contract does not provide the full functionality of a crowdfunding
-contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
-contain mappings and arrays.
+contract, but it contains the basic concepts necessary to understand structs. Struct types can be used inside mappings and arrays and they can itself contain mappings and arrays.
 
-It is not possible for a struct to contain a member of its own type,
-although the struct itself can be the value type of a mapping member.
-This restriction is necessary, as the size of the struct has to be finite.
+It is not possible for a struct to contain a member of its own type, although the struct itself can be the value type of a mapping member. This restriction is necessary, as the size of the struct has to be finite.
 
-Note how in all the functions, a struct type is assigned to a local variable
-(of the default storage data location).
-This does not copy the struct but only stores a reference so that assignments to
-members of the local variable actually write to the state.
+...note::
+    All the functions above assign a ``struct`` type to a local variable (of the default storage data location). This does not copy the ``struct`` but only stores a reference so that assignments to members of the local variable actually write to the state.
 
-Of course, you can also directly access the members of the struct without
-assigning it to a local variable, as in
-``campaigns[campaignID].amount = 0``.
+If you copy a struct over another struct, for example:
+
+    struct User {
+        mapping(string => string) comments;
+    }
+
+    function somefunction public {
+       User user1;
+       user1.comments["Hello"] = "World";
+       User user2 = user1;
+    }
+
+Then the mapping of the struct being copied over is ignored as there is no list of mapped keys and it's not possible to find out which values should be copied over.
+
+
+You can also directly access the members of the struct without assigning it to a local variable, as in ``campaigns[campaignID].amount = 0``.
 
 .. index:: !mapping
 
@@ -956,7 +977,7 @@ Explicit Conversions
 
 If the compiler does not allow implicit conversion but you know what you are
 doing, an explicit type conversion is sometimes possible. Note that this may
-give you some unexpected behaviour so be sure to test to ensure that the
+give you some unexpected behavior so be sure to test to ensure that the
 result is what you want! Take the following example where you are converting
 a negative ``int8`` to a ``uint``:
 
@@ -1005,4 +1026,3 @@ parameters or return parameters.
     the loop in the following snippet is infinite, as ``i`` will have the type
     ``uint8`` and the highest value of this type is smaller than ``2000``.
     ``for (var i = 0; i < 2000; i++) { ... }``
-

@@ -260,6 +260,10 @@ blocks that are added on top, the less likely it is. So it might be that your tr
 are reverted and even removed from the blockchain, but the longer you wait, the less
 likely it will be.
 
+.. note::
+    Transactions are not guaranteed to happen on the next block or any future specific block, since it is up to the miners to include transactions and not the submitter of the transaction. This applies to function calls/transactions and contract creation transactions.
+
+    If you want to schedule future calls of your contract, you can use the `alarm clock <http://www.ethereum-alarm-clock.com/>`_.
 
 .. _the-ethereum-virtual-machine:
 
@@ -352,6 +356,8 @@ If the gas is used up at any point (i.e. it is negative),
 an out-of-gas exception is triggered, which reverts all modifications
 made to the state in the current call frame.
 
+Any unused gas is refunded as part of the transaction.
+
 .. index:: ! storage, ! memory, ! stack
 
 Storage, Memory and the Stack
@@ -412,7 +418,7 @@ a top-level message call which in turn can create further message calls.
 A contract can decide how much of its remaining **gas** should be sent
 with the inner message call and how much it wants to retain.
 If an out-of-gas exception happens in the inner call (or any
-other exception), this will be signalled by an error value put onto the stack.
+other exception), this will be signaled by an error value put onto the stack.
 In this case, only the gas sent together with the call is used up.
 In Solidity, the calling contract causes a manual exception by default in
 such situations, so that exceptions "bubble up" the call stack.
@@ -472,19 +478,20 @@ receives the address of the new contract on the stack.
 
 .. index:: selfdestruct
 
-Self-destruct
-=============
+Deactivate and Self-destruct
+============================
 
-The only possibility that code is removed from the blockchain is
-when a contract at that address performs the ``selfdestruct`` operation.
-The remaining Ether stored at that address is sent to a designated
-target and then the storage and code is removed from the state.
+The only way to remove code from the blockchain is when a contract at that address performs the ``selfdestruct`` operation. The remaining Ether stored at that address is sent to a designated target and then the storage and code is removed from the state. Removing the contract and 'cleaning it up' sounds like a good idea, but the operation doesn't really clean up. If you send Ether to removed contracts, the Ether is forever lost.
 
-.. warning:: Even if a contract's code does not contain a call to ``selfdestruct``,
-  it can still perform that operation using ``delegatecall`` or ``callcode``.
+.. note::
+    Even if a contract's code does not contain a call to ``selfdestruct``, it can still perform that operation using ``delegatecall`` or ``callcode``.
 
-.. note:: The pruning of old contracts may or may not be implemented by Ethereum
-  clients. Additionally, archive nodes could choose to keep the contract storage
-  and code indefinitely.
+If you want to deactivate your contracts, you should instead **disable** them by changing some internal state which causes all functions to throw an exception. This makes it impossible to use the contract it returns ether immediately.
 
-.. note:: Currently **external accounts** cannot be removed from the state.
+.. note::
+    Currently you cannot remove **external accounts** from the state.
+
+`This contract <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_ has an example that does this by checking it's the creator calling the operation inside a constructor and then using ``selfdestruct(creator);`` to kill and return funds.
+
+.. note::
+    The pruning of old contracts may or may not be implemented by Ethereum clients. Additionally, archive nodes could choose to keep the contract storage and code indefinitely.

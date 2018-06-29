@@ -35,14 +35,19 @@ As always, with open source documentation, please help us extend this section
 Pitfalls
 ********
 
-Private Information and Randomness
-==================================
+Private Information
+===================
 
 Everything you use in a smart contract is publicly visible, even
 local variables and state variables marked ``private``.
 
-Using random numbers in smart contracts is quite tricky if you do not want
-miners to be able to cheat.
+Randomness
+==========
+
+Using random numbers in smart contracts is tricky if you don't want
+miners to be able to cheat. Getting randomness right is often the crucial part in a crypto project and most failures result from bad random number generators.
+
+If you don't want your contract to be safe, try something like the `coin flipper <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/35_coin_flipper.sol>`_ or use a contract that supplies randomness, like the `RANDAO <https://github.com/randao/randao>`_.
 
 Re-Entrancy
 ===========
@@ -289,7 +294,7 @@ unknown contracts, so it is probably better to just always apply this pattern.
 Include a Fail-Safe Mode
 ========================
 
-While making your system fully decentralised will remove any intermediary,
+While making your system fully decentralized will remove any intermediary,
 it might be a good idea, especially for new code, to include some kind
 of fail-safe mechanism:
 

@@ -210,3 +210,6 @@ for the two input parameters and two returned values.
             p = 2 * (w + h);
         }
     }
+
+.. note::
+    Comments are removed during compilation and don't consume any additional gas.

@@ -24,8 +24,8 @@ Creating contracts programatically on Ethereum is best done via using the JavaSc
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its constructor (a function declared with the
-``constructor`` keyword) is executed once.
+When a contract is created, its constructor (a function declared with the ``constructor`` keyword) is executed once, making it useful if you want to execute code when the contract is first mined. See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_ for an example.
+
 A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
 
@@ -295,7 +295,7 @@ is no good way to provide the key for the mapping.
 Function Modifiers
 ******************
 
-Modifiers can be used to easily change the behaviour of functions.  For example,
+Modifiers can be used to easily change the behavior of functions.  For example,
 they can automatically check a condition prior to executing the function. Modifiers are
 inheritable properties of contracts and may be overridden by derived contracts.
 
@@ -1054,11 +1054,11 @@ One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier would be invoked as part of the header of
 the derived constructor (``Base(_y * _y)``). The first way to
 do it is more convenient if the constructor argument is a
-constant and defines the behaviour of the contract or
+constant and defines the behavior of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the
-inheritance list or in modifier-style in the derived constuctor.
+inheritance list or in modifier-style in the derived constructor.
 Specifying arguments in both places is an error.
 
 If a derived contract doesn't specify the arguments to all of its base

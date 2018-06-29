@@ -31,6 +31,25 @@ See the :ref:`types` section for valid state variable types and
 :ref:`visibility-and-getters` for possible choices for
 visibility.
 
+You can initialize a state variable inline for all types (even for structs). But for arrays you must declare them as static memory arrays. For example::
+
+    pragma solidity ^0.4.0;
+
+    contract C {
+        struct S {
+            uint a;
+            uint b;
+        }
+
+        S public x = S(1, 2);
+        string name = "Ada";
+        string[4] adaArr = ["This", "is", "an", "array"];
+    }
+
+    contract D {
+        C c = new C();
+    }
+
 .. _structure-functions:
 
 Functions

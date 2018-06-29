@@ -9,92 +9,6 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-Is it possible to do something on a specific block number? (e.g. publish a contract or execute a transaction)
-=============================================================================================================
-
-Transactions are not guaranteed to happen on the next block or any future
-specific block, since it is up to the miners to include transactions and not up
-to the submitter of the transaction. This applies to function calls/transactions and contract
-creation transactions.
-
-If you want to schedule future calls of your contract, you can use the
-`alarm clock <http://www.ethereum-alarm-clock.com/>`_.
-
-What is the transaction "payload"?
-==================================
-
-This is just the bytecode "data" sent along with the request.
-
-Is there a decompiler available?
-================================
-
-There is no exact decompiler to Solidity, but
-`Porosity <https://github.com/comaeio/porosity>`_ is close.
-Because some information like variable names, comments, and
-source code formatting is lost in the compilation process,
-it is not possible to completely recover the original source code.
-
-Bytecode can be disassembled to opcodes, a service that is provided by
-several blockchain explorers.
-
-Contracts on the blockchain should have their original source
-code published if they are to be used by third parties.
-
-Create a contract that can be killed and return funds
-=====================================================
-
-First, a word of warning: Killing contracts sounds like a good idea, because "cleaning up"
-is always good, but as seen above, it does not really clean up. Furthermore,
-if Ether is sent to removed contracts, the Ether will be forever lost.
-
-If you want to deactivate your contracts, it is preferable to **disable** them by changing some
-internal state which causes all functions to throw. This will make it impossible
-to use the contract and ether sent to the contract will be returned automatically.
-
-Now to answering the question: Inside a constructor, ``msg.sender`` is the
-creator. Save it. Then ``selfdestruct(creator);`` to kill and return funds.
-
-`example <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
-
-Note that if you ``import "mortal"`` at the top of your contracts and declare
-``contract SomeContract is mortal { ...`` and compile with a compiler that already
-has it (which includes `Remix <https://remix.ethereum.org/>`_), then
-``kill()`` is taken care of for you. Once a contract is "mortal", then you can
-``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
-examples.
-
-Can you return an array or a ``string`` from a solidity function call?
-======================================================================
-
-Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
-
-What is problematic, though, is returning any variably-sized data (e.g. a
-variably-sized array like ``uint[]``) from a fuction **called from within Solidity**.
-This is a limitation of the EVM and will be solved with the next protocol update.
-
-Returning variably-sized data as part of an external transaction or call is fine.
-
-Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
-=========================================================================================
-
-Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
-array in the return statement. Pretty cool, huh?
-
-Example::
-
-    pragma solidity ^0.4.16;
-
-    contract C {
-        function f() public pure returns (uint8[5]) {
-            string[4] memory adaArr = ["This", "is", "an", "array"];
-            return ([1, 2, 3, 4, 5]);
-        }
-    }
-
-Can a contract function return a ``struct``?
-============================================
-
-Yes, but only in ``internal`` function calls.
 
 If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
 ===========================================================================================
@@ -103,78 +17,6 @@ Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
-Can state variables be initialized in-line?
-===========================================
-
-Yes, this is possible for all types (even for structs). However, for arrays it
-should be noted that you must declare them as static memory arrays.
-
-Examples::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        struct S {
-            uint a;
-            uint b;
-        }
-
-        S public x = S(1, 2);
-        string name = "Ada";
-        string[4] adaArr = ["This", "is", "an", "array"];
-    }
-
-    contract D {
-        C c = new C();
-    }
-
-How do structs work?
-====================
-
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
-
-How do for loops work?
-======================
-
-Very similar to JavaScript. There is one point to watch out for, though:
-
-If you use ``for (var i = 0; i < a.length; i ++) { a[i] = i; }``, then
-the type of ``i`` will be inferred only from ``0``, whose type is ``uint8``.
-This means that if ``a`` has more than ``255`` elements, your loop will
-not terminate because ``i`` can only hold values up to ``255``.
-
-Better use ``for (uint i = 0; i < a.length...``
-
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
-
-What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
-==================================================================================================
-
-There are some string utility functions at `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_
-which will be extended in the future. In addition, Arachnid has written `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
-
-For now, if you want to modify a string (even when you only want to know its length),
-you should always convert it to a ``bytes`` first::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        string s;
-
-        function append(byte c) public {
-            bytes(s).push(c);
-        }
-
-        function set(uint i, byte c) public {
-            bytes(s)[i] = c;
-        }
-    }
-
-
-Can I concatenate two strings?
-==============================
-
-You have to do it manually for now.
 
 Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
 =============================================================================================================================================================================
@@ -187,10 +29,7 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Is unused gas automatically refunded?
-=====================================
 
-Yes and it is immediate, i.e. done as part of the transaction.
 
 When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
 ============================================================================================================
@@ -229,11 +68,7 @@ If you do not want to throw, you can return a pair::
     }
 
 
-Are comments included with deployed contracts and do they increase deployment gas?
-==================================================================================
 
-No, everything that is not needed for execution is removed during compilation.
-This includes, among others, comments, variable names and type names.
 
 What happens if you send ether along with a function call to a contract?
 ========================================================================
@@ -242,12 +77,7 @@ It gets added to the total balance of the contract, just like when you send ethe
 You can only send ether along to a function that has the ``payable`` modifier,
 otherwise an exception is thrown.
 
-Is it possible to get a tx receipt for a transaction executed contract-to-contract?
-===================================================================================
 
-No, a function call from one contract to another does not create its own transaction,
-you have to look in the overall transaction. This is also the reason why several
-block explorer do not show Ether sent between contracts correctly.
 
 What is the ``memory`` keyword? What does it do?
 ================================================
@@ -358,14 +188,7 @@ The correct way to do this is the following::
 Advanced Questions
 ******************
 
-How do you get a random number in a contract? (Implement a self-returning gambling contract.)
-=============================================================================================
 
-Getting randomness right is often the crucial part in a crypto project and
-most failures result from bad random number generators.
-
-If you do not want it to be safe, you build something similar to the `coin flipper <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/35_coin_flipper.sol>`_
-but otherwise, rather use a contract that supplies randomness, like the `RANDAO <https://github.com/randao/randao>`_.
 
 Get return value from non-constant function from another contract
 =================================================================
@@ -375,47 +198,8 @@ The key point is that the calling contract needs to know about the function it i
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Get contract to do something when it is first mined
-===================================================
 
-Use the constructor. Anything inside it will be executed when the contract is first mined.
 
-See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
-
-How do you create 2-dimensional arrays?
-=======================================
-
-See `2D_array.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/55_2D_array.sol>`_.
-
-Note that filling a 10x10 square of ``uint8`` + contract creation took more than ``800,000``
-gas at the time of this writing. 17x17 took ``2,000,000`` gas. With the limit at
-3.14 million... well, there’s a pretty low ceiling for what you can create right
-now.
-
-Note that merely "creating" the array is free, the costs are in filling it.
-
-Note2: Optimizing storage access can pull the gas costs down considerably, because
-32 ``uint8`` values can be stored in a single slot. The problem is that these optimizations
-currently do not work across loops and also have a problem with bounds checking.
-You might get much better results in the future, though.
-
-What happens to a ``struct``'s mapping when copying over a ``struct``?
-======================================================================
-
-This is a very interesting question. Suppose that we have a contract field set up like such::
-
-    struct User {
-        mapping(string => string) comments;
-    }
-
-    function somefunction public {
-       User user1;
-       user1.comments["Hello"] = "World";
-       User user2 = user1;
-    }
-
-In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
-Therefore it is not possible to find out which values should be copied over.
 
 How do I initialize a contract with only a specific amount of wei?
 ==================================================================
@@ -440,11 +224,8 @@ In this example::
         }
     }
 
-Can a contract function accept a two-dimensional array?
-=======================================================
+.. TODO: Does this mean it does work for internal?
 
-This is not yet implemented for external calls and dynamic arrays -
-you can only use one level of dynamic arrays.
 
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
 ========================================================================================================================================================================
@@ -499,55 +280,6 @@ to create an independent copy of the storage value in memory
 ``h(x)`` successfully modifies ``x`` because only a reference
 and not a copy is passed.
 
-Sometimes, when I try to change the length of an array with ex: ``arrayname.length = 7;`` I get a compiler error ``Value must be an lvalue``. Why?
-==================================================================================================================================================
-
-You can resize a dynamic array in storage (i.e. an array declared at the
-contract level) with ``arrayname.length = <some new length>;``. If you get the
-"lvalue" error, you are probably doing one of two things wrong.
-
-1. You might be trying to resize an array in "memory", or
-
-2. You might be trying to resize a non-dynamic array.
-
-::
-
-    // This will not compile
-
-    pragma solidity ^0.4.18;
-
-    contract C {
-        int8[] dynamicStorageArray;
-        int8[5] fixedStorageArray;
-
-        function f() {
-            int8[] memory memArr;        // Case 1
-            memArr.length++;             // illegal
-
-            int8[5] storage storageArr = fixedStorageArray;   // Case 2
-            storageArr.length++;                             // illegal
-
-            int8[] storage storageArr2 = dynamicStorageArray;
-            storageArr2.length++;                     // legal
-
-
-        }
-    }
-
-**Important note:** In Solidity, array dimensions are declared backwards from the way you
-might be used to declaring them in C or Java, but they are access as in
-C or Java.
-
-For example, ``int8[][5] somearray;`` are 5 dynamic ``int8`` arrays.
-
-The reason for this is that ``T[5]`` is always an array of 5 ``T``'s,
-no matter whether ``T`` itself is an array or not (this is not the
-case in C or Java).
-
-Is it possible to return an array of strings (``string[]``) from a Solidity function?
-=====================================================================================
-
-Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
 
 If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
 ===========================================================================================================================
