@@ -3,11 +3,10 @@ contract C {
         uint a;
         string b;
     }
-    function f() {
+    function f() public {
         S[2] memory x = [S({a: 1, b: "fish"}), S({a: 2, b: "fish"})];
     }
 }
 // ----
-// Warning: (72-162): No visibility specified. Defaulting to "public". 
-// Warning: (95-108): Unused local variable.
-// Warning: (72-162): Function state mutability can be restricted to pure
+// Warning: (102-115): Unused local variable.
+// Warning: (72-169): Function state mutability can be restricted to pure

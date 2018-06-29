@@ -1,5 +1,5 @@
 contract c {
-    function f()
+    function f() public
     {
          a = 1 wei;
          b = 2 szabo;
@@ -12,5 +12,4 @@ contract c {
     uint256 d;
 }
 // ----
-// Warning: (163-172): This declaration shadows an existing declaration.
-// Warning: (17-128): No visibility specified. Defaulting to "public". 
+// Warning: (170-179): This declaration shadows an existing declaration.
