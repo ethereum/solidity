@@ -1,3 +1,3 @@
-contract test { bytes a; bytes b; function() public { a == b; } }
+contract test { bytes a; bytes b; function() external { a == b; } }
 // ----
-// TypeError: (54-60): Operator == not compatible with types bytes storage ref and bytes storage ref
+// TypeError: (56-62): Operator == not compatible with types bytes storage ref and bytes storage ref

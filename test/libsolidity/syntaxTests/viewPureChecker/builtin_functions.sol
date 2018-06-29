@@ -14,5 +14,5 @@ contract C {
         assert(true);
         x; y; z;
     }
-    function() payable public {}
+    function() payable external {}
 }

@@ -543,7 +543,7 @@ Fallback Function
 =================
 
 A contract can have exactly one unnamed function. This function cannot have
-arguments and cannot return anything.
+arguments, cannot return anything and has to have ``external`` visibility.
 It is executed on a call to the contract if none of the other
 functions match the given function identifier (or if no data was supplied at
 all).
@@ -591,7 +591,7 @@ Like any function, the fallback function can execute complex operations as long 
         // Sending Ether to this contract will cause an exception,
         // because the fallback function does not have the `payable`
         // modifier.
-        function() public { x = 1; }
+        function() external { x = 1; }
         uint x;
     }
 
@@ -599,7 +599,7 @@ Like any function, the fallback function can execute complex operations as long 
     // This contract keeps all Ether sent to it with no way
     // to get it back.
     contract Sink {
-        function() public payable { }
+        function() external payable { }
     }
 
     contract Caller {

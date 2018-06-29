@@ -1,0 +1,4 @@
+contract C {
+    function () internal { }
+}
+// ----

@@ -379,7 +379,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	}
 
 	// gets called when no other function matches
-	function() payable {
+	function() external payable {
 		// just being sent some cash?
 		if (msg.value > 0)
 			emit Deposit(msg.sender, msg.value);
