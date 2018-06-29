@@ -96,24 +96,35 @@ int main(int argc, char** argv)
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
+		switch (arg)
+		{
+		case "-h":
+		case "--help":
 			help();
-		else if (arg == "-b" || arg == "--binary")
+		case "-b":
+		case "--binary":
 			mode = Binary;
-		else if (arg == "-x" || arg == "--hex")
+		case "-x":
+		case "--hex":
 			mode = Hex;
-		else if (arg == "-a" || arg == "--assembly")
+		case "-a":
+		case "--assembly":
 			mode = Assembly;
-		else if (arg == "-t" || arg == "--parse-tree")
+		case "-t":
+		case "--parse-tree":
 			mode = ParseTree;
-		else if (arg == "-o" || arg == "--optimise")
+		case "-o":
+		case "--optimise":
 			optimise = 1;
-		else if (arg == "-d" || arg == "--disassemble")
+		case "-d":
+		case "--disassemble":
 			mode = Disassemble;
-		else if (arg == "-V" || arg == "--version")
+		case "-V":
+		case "--version":
 			version();
-		else
+		default:
 			infile = argv[i];
+		}
 	}
 
 	string src;
