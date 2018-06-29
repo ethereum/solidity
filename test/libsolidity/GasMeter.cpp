@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(store_keccak256)
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
-			function test(uint a) {
+			constructor(uint a) {
 				shaValue = keccak256(abi.encodePacked(a));
 			}
 		}
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(updating_store)
 		contract test {
 			uint data;
 			uint data2;
-			function test() {
+			constructor() {
 				data = 1;
 				data = 2;
 				data2 = 0;

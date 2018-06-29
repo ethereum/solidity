@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test () {
+			constructor() {
 				 var x = 1 wei;
 			}
 		}
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test () {
+			constructor() {
 				 var x = 1 szabo;
 			}
 		}
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test ()
+			constructor()
 			{
 				 var x = 1 finney;
 			}
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(int_with_ether_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test () {
+			constructor() {
 				 var x = 1 ether;
 			}
 		}
