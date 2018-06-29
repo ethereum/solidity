@@ -1402,24 +1402,25 @@ Using For
 *********
 
 The directive ``using A for B;`` can be used to attach library
-functions (from the library ``A``) to any type (``B``).
+functions (from the library ``A``) to any type (``B``).  
 These functions will receive the object they are called on
-as their first parameter (like the ``self`` variable in
-Python).
+as their first parameter (like the ``self`` variable in Python).
 
 The effect of ``using A for *;`` is that the functions from
-the library ``A`` are attached to any type.
+the library ``A`` are attached to *any* type.
 
-In both situations, all functions, even those where the
-type of the first parameter does not match the type of
-the object, are attached. The type is checked at the
+In both situations, *all* functions in the library are attached,
+even those where the type of the first parameter does not
+match the type of the object. The type is checked at the
 point the function is called and function overload
 resolution is performed.
 
-The ``using A for B;`` directive is active for the current
-scope, which is limited to a contract for now but will
-be lifted to the global scope later, so that by including
-a module, its data types including library functions are
+The ``using A for B;`` directive is active only within the current
+contract, including within all of its functions, and has no effect
+outside of the contract in which it is used. The directive
+may only be used inside a contract, not inside any of its functions.
+
+By including a library, its data types including library functions are
 available without having to add further code.
 
 Let us rewrite the set example from the
