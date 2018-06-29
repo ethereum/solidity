@@ -2733,7 +2733,7 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments)
 				m_a *= m_a;
 			}
 		}
-		contract Derived is Base() public {
+		contract Derived is Base() {
 			function getA() public returns (uint r) { return m_a; }
 		}
 	)";
@@ -2753,7 +2753,7 @@ BOOST_AUTO_TEST_CASE(function_usage_in_constructor_arguments)
 		}
 		contract Base is BaseBase(BaseBase.g()) {
 		}
-		contract Derived is Base() public {
+		contract Derived is Base() {
 			function getA() public returns (uint r) { return m_a; }
 		}
 	)";
@@ -2774,7 +2774,7 @@ BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
 		}
 		contract Base is BaseBase(BaseBase.g()) {
 		}
-		contract Derived is Base() public {
+		contract Derived is Base() {
 			function getA() public returns (uint r) { return m_a; }
 			function overridden() public returns (uint r) { return 2; }
 		}
@@ -9627,7 +9627,7 @@ BOOST_AUTO_TEST_CASE(pass_function_types_internally)
 			function f(uint x) public returns (uint) {
 				return eval(g, x);
 			}
-			function eval(function(uint) public returns (uint) x, uint a) internal returns (uint) {
+			function eval(function(uint) internal returns (uint) x, uint a) internal returns (uint) {
 				return x(a);
 			}
 			function g(uint x) public returns (uint) { return x + 1; }
@@ -9703,7 +9703,7 @@ BOOST_AUTO_TEST_CASE(store_function)
 			function addTwo(uint x) public returns (uint) { return x + 2; }
 		}
 		contract C {
-			function (function (uint) external returns (uint)) public returns (uint) ev;
+			function (function (uint) external returns (uint)) internal returns (uint) ev;
 			function (uint) external returns (uint) x;
 			function store(function(uint) external returns (uint) y) {
 				x = y;
@@ -9836,7 +9836,7 @@ BOOST_AUTO_TEST_CASE(function_type_library_internal)
 {
 	char const* sourceCode = R"(
 		library Utils {
-			function reduce(uint[] memory array, function(uint, uint) public returns (uint) f, uint init) internal returns (uint) {
+			function reduce(uint[] memory array, function(uint, uint) internal returns (uint) f, uint init) internal returns (uint) {
 				for (uint i = 0; i < array.length; i++) {
 					init = f(array[i], init);
 				}
@@ -9932,7 +9932,7 @@ BOOST_AUTO_TEST_CASE(packed_functions)
 	char const* sourceCode = R"(
 		contract C {
 			// these should take the same slot
-			function() public returns (uint) a;
+			function() external returns (uint) a;
 			function() external returns (uint) b;
 			function() external returns (uint) c;
 			function() public returns (uint) d;
