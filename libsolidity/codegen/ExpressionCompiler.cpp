@@ -1070,6 +1070,27 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack now: <memory pointer>
 			break;
 		}
+		case FunctionType::Kind::ABIDecode:
+		{
+			arguments.front()->accept(*this);
+			TypePointer firstArgType = arguments.front()->annotation().type;
+			TypePointers const& targetTypes = dynamic_cast<TupleType const&>(*_functionCall.annotation().type).components();
+			if (
+				*firstArgType == ArrayType(DataLocation::CallData) ||
+				*firstArgType == ArrayType(DataLocation::CallData, true)
+			)
+				utils().abiDecode(targetTypes, false);
+			else
+			{
+				utils().convertType(*firstArgType, ArrayType(DataLocation::Memory));
+				m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
+				m_context << Instruction::SWAP1 << Instruction::MLOAD;
+				// stack now: <mem_pos> <length>
+
+				utils().abiDecode(targetTypes, true);
+			}
+			break;
+		}
 		case FunctionType::Kind::GasLeft:
 			m_context << Instruction::GAS;
 			break;

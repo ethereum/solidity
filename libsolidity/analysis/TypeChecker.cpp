@@ -525,6 +525,75 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		);
 }
 
+TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2)
+{
+	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
+	if (arguments.size() != 2)
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"This function takes two arguments, but " +
+			toString(arguments.size()) +
+			" were provided."
+		);
+	if (arguments.size() >= 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		m_errorReporter.typeError(
+			arguments.front()->location(),
+			"Invalid type for argument in function call. "
+			"Invalid implicit conversion from " +
+			type(*arguments.front())->toString() +
+			" to bytes memory requested."
+		);
+
+	TypePointer returnType = make_shared<TupleType>();
+
+	if (arguments.size() < 2)
+		return returnType;
+
+	// The following is a rather syntactic restriction, but we check it here anyway:
+	// The second argument has to be a tuple expression containing type names.
+	TupleExpression const* tupleExpression = dynamic_cast<TupleExpression const*>(arguments[1].get());
+	if (!tupleExpression)
+	{
+		m_errorReporter.typeError(
+			arguments[1]->location(),
+			"The second argument to \"abi.decode\" has to be a tuple of types."
+		);
+		return returnType;
+	}
+
+	vector<TypePointer> components;
+	for (auto const& typeArgument: tupleExpression->components())
+	{
+		solAssert(typeArgument, "");
+		if (TypeType const* argTypeType = dynamic_cast<TypeType const*>(type(*typeArgument).get()))
+		{
+			TypePointer actualType = argTypeType->actualType();
+			solAssert(actualType, "");
+			// We force memory because the parser currently cannot handle
+			// data locations. Furthermore, storage can be a little dangerous and
+			// calldata is not really implemented anyway.
+			actualType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, actualType);
+			solAssert(
+				!actualType->dataStoredIn(DataLocation::CallData) &&
+				!actualType->dataStoredIn(DataLocation::Storage),
+				""
+			);
+			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
+				m_errorReporter.typeError(
+					typeArgument->location(),
+					"Decoding type " + actualType->toString(false)  + " not supported."
+				);
+			components.push_back(actualType);
+		}
+		else
+		{
+			m_errorReporter.typeError(typeArgument->location(), "Argument has to be a type name.");
+			components.push_back(make_shared<TupleType>());
+		}
+	}
+	return make_shared<TupleType>(components);
+}
+
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
@@ -1727,7 +1796,11 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
-	if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
+	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
+
+	if (functionType->kind() == FunctionType::Kind::ABIDecode)
+		_functionCall.annotation().type = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
+	else if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
 	{
 		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
 		m_errorReporter.typeError(
@@ -1782,8 +1855,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
-		bool const abiEncodeV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
-
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
@@ -1796,7 +1867,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 						errored = true;
 					}
-				if (!errored && !argType->fullEncodingType(false, abiEncodeV2, !functionType->padArguments()))
+				if (!errored && !argType->fullEncodingType(false, abiEncoderV2, !functionType->padArguments()))
 					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))

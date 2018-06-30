@@ -295,7 +295,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	{
 		// we can ignore the kind of magic and only look at the name of the member
 		set<string> static const pureMembers{
-			"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "data", "sig", "blockhash"
+			"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode", "data", "sig", "blockhash"
 		};
 		if (!pureMembers.count(member))
 			mutability = StateMutability::View;

@@ -2553,6 +2553,7 @@ string FunctionType::richIdentifier() const
 	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
+	case Kind::ABIDecode: id += "abidecode"; break;
 	default: solAssert(false, "Unknown function location."); break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
@@ -2959,7 +2960,8 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ABIEncode ||
 		m_kind == Kind::ABIEncodePacked ||
 		m_kind == Kind::ABIEncodeWithSelector ||
-		m_kind == Kind::ABIEncodeWithSignature;
+		m_kind == Kind::ABIEncodeWithSignature ||
+		m_kind == Kind::ABIDecode;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -3313,6 +3315,15 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				strings{},
 				strings{},
 				FunctionType::Kind::ABIEncodeWithSignature,
+				true,
+				StateMutability::Pure
+			)},
+			{"decode", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers(),
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIDecode,
 				true,
 				StateMutability::Pure
 			)}
