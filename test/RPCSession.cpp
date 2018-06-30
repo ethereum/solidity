@@ -247,8 +247,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"gasLimit": "0x1000000000000",
 			"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 			"nonce": "0x0000000000000042",
-			"difficulty": "1"
-		},
+			"difficulty": "131072"
+        },
 		"accounts": {
 			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
 			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
