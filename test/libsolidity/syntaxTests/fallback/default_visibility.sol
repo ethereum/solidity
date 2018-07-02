@@ -3,4 +3,4 @@ contract C {
     function() {}
 }
 // ----
-// Warning: (90-103): No visibility specified. Defaulting to "public". 
+// Warning: (90-103): No visibility specified. Defaulting to "public".
