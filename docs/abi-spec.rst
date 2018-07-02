@@ -437,7 +437,7 @@ For example,
 
 ::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >0.4.24;
 
     contract Test {
       constructor() public { b = 0x12345678901234567890123456789012; }

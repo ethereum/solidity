@@ -990,7 +990,7 @@ default constructor: ``contructor() public {}``.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >0.4.24;
 
     contract A {
         uint public a;
@@ -1007,7 +1007,7 @@ default constructor: ``contructor() public {}``.
 A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
 
 .. warning ::
-    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax was deprecated is not allowed anymore in version 0.5.0.
+    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax was deprecated and is not allowed anymore in version 0.5.0.
 
 
 .. index:: ! base;constructor

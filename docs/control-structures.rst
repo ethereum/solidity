@@ -225,7 +225,7 @@ creation-dependencies are not possible.
 
 ::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >0.4.24;
 
     contract D {
         uint x;

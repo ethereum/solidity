@@ -426,7 +426,7 @@ In the case of a ``contract A`` calling a new instance of ``contract B``, parent
 You will need to make sure that you have both contracts aware of each other's presence and that ``contract B`` has a ``payable`` constructor.
 In this example::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >0.4.24;
 
     contract B {
         constructor() public payable {}
