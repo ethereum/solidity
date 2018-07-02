@@ -81,7 +81,7 @@ contract ico is safeMath {
         }
     }
     
-    function ICObonus() public constant returns(uint256 bonus) {
+    function ICObonus() public view returns(uint256 bonus) {
         /*
             Query of current bonus
             
@@ -113,7 +113,7 @@ contract ico is safeMath {
         return true;
     }
     
-    function checkInterest(address addr) public constant returns(uint256 amount) {
+    function checkInterest(address addr) public view returns(uint256 amount) {
         /*
             Query of compound interest
             
@@ -355,7 +355,7 @@ contract ico is safeMath {
         }
     }
     
-    function getIcoReward(uint256 value) public constant returns (uint256 reward) {
+    function getIcoReward(uint256 value) public view returns (uint256 reward) {
         /*
             Expected token volume at token purchase
             
@@ -368,7 +368,7 @@ contract ico is safeMath {
         if ( reward < 5e6) { return 0; }
     }
     
-    function isICO() public constant returns (bool success) {
+    function isICO() public view returns (bool success) {
         return startBlock <= block.number && block.number <= icoDelay && ( ! aborted ) && ( ! closed );
     }
     

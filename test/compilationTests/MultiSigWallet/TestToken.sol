@@ -59,7 +59,7 @@ contract TestToken {
     }
 
     function allowance(address _owner, address _spender)
-        constant
+        view
         public
         returns (uint256 remaining)
     {
@@ -67,7 +67,7 @@ contract TestToken {
     }
 
     function balanceOf(address _owner)
-        constant
+        view
         public
         returns (uint256 balance)
     {

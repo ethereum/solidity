@@ -38,13 +38,13 @@ contract multiOwner is safeMath {
     /*
         Constants
     */
-    function ownersForChange() public constant returns (uint256 owners) {
+    function ownersForChange() public view returns (uint256 owners) {
         return ownerCount * 75 / 100;
     }
-    function calcDoHash(string job, bytes32 data) public constant returns (bytes32 hash) {
+    function calcDoHash(string job, bytes32 data) public pure returns (bytes32 hash) {
         return keccak256(abi.encodePacked(job, data));
     }
-    function validDoHash(bytes32 doHash) public constant returns (bool valid) {
+    function validDoHash(bytes32 doHash) public view returns (bool valid) {
         return doDB[doHash].length > 0;
     }
     /*

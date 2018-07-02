@@ -147,7 +147,7 @@ contract provider is module, safeMath, announcementTypes {
         else { return false; }
         return true;
     }
-    function getUserDetails(address addr, uint256 schellingRound) public constant returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
+    function getUserDetails(address addr, uint256 schellingRound) public view returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
         /*
             Collecting the datas of the client.
             
@@ -168,7 +168,7 @@ contract provider is module, safeMath, announcementTypes {
             value           = clients[addr].supply[schellingRound];
         }
     }
-    function rightForInterest(uint256 value, bool priv) internal returns (bool) {
+    function rightForInterest(uint256 value, bool priv) internal view returns (bool) {
         /*
             the share from the token emission.
             In case is a private provider it has to be checked if it has enough connected capital to be able to accept share from the token emission.
@@ -299,7 +299,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[addr].data[currHeight].currentRate     = rate;
         emit EProviderDetailsChanged(addr, currHeight, website, country, info, rate, admin);
     }
-    function getProviderInfo(address addr, uint256 height) public constant returns (string name, string website, string country, string info, uint256 create) {
+    function getProviderInfo(address addr, uint256 height) public view returns (string name, string website, string country, string info, uint256 create) {
         /*
             for the infos of the provider.
             In case the height is unknown then the system will use the last known height.
@@ -321,7 +321,7 @@ contract provider is module, safeMath, announcementTypes {
         info            = providers[addr].data[height].info;
         create          = providers[addr].data[height].create;
     }
-    function getProviderDetails(address addr, uint256 height) public constant returns (uint8 rate, bool isForRent, uint256 clientsCount, bool priv, bool getInterest, bool valid) {
+    function getProviderDetails(address addr, uint256 height) public view returns (uint8 rate, bool isForRent, uint256 clientsCount, bool priv, bool getInterest, bool valid) {
         /*
             Asking for the datas of the provider.
             In case the height is unknown then the system will use the last known height.
@@ -345,7 +345,7 @@ contract provider is module, safeMath, announcementTypes {
         getInterest     = rightForInterest(getProviderCurrentSupply(addr), providers[addr].data[height].priv );
         valid           = providers[addr].data[height].valid;
     }
-    function getProviderCurrentSupply(address addr) internal returns (uint256) {
+    function getProviderCurrentSupply(address addr) internal view returns (uint256) {
         /*
             Inner function for polling the current height and the current quantity of the connected capital of the schelling round.
             
@@ -469,7 +469,7 @@ contract provider is module, safeMath, announcementTypes {
         delete clients[msg.sender].providerConnected;
         emit EClientLost(msg.sender, provider, currHeight, bal);
     }
-    function checkReward(address addr) public constant returns (uint256 reward) {
+    function checkReward(address addr) public returns (uint256 reward) {
         /*
             Polling the share from the token emission for clients and for providers.
             

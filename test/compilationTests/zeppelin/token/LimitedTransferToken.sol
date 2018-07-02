@@ -10,7 +10,7 @@ import "./ERC20.sol";
  * LimitedTransferToken has been designed to allow for different limiting factors,
  * this can be achieved by recursively calling super.transferableTokens() until the base class is 
  * hit. For example:
- *     function transferableTokens(address holder, uint64 time) constant public returns (uint256) {
+ *     function transferableTokens(address holder, uint64 time) view public returns (uint256) {
  *       return min256(unlockedTokens, super.transferableTokens(holder, time));
  *     }
  * A working example is VestedToken.sol:
@@ -51,7 +51,7 @@ contract LimitedTransferToken is ERC20 {
    * @dev Overwriting transferableTokens(address holder, uint64 time) is the way to provide the 
    * specific logic for limiting token transferability for a holder over time.
    */
-  function transferableTokens(address holder, uint64 time) constant public returns (uint256) {
+  function transferableTokens(address holder, uint64 time) view public returns (uint256) {
     return balanceOf(holder);
   }
 }

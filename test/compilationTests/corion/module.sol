@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 
 contract abstractModuleHandler {
     function transfer(address from, address to, uint256 value, bool fee) external returns (bool success) {}
-    function balanceOf(address owner) public constant returns (bool success, uint256 value) {}
+    function balanceOf(address owner) public view returns (bool success, uint256 value) {}
 }
 
 contract module {
@@ -127,7 +127,7 @@ contract module {
         if ( moduleStatus != status.Connected ) { return false; }
         return addr == moduleHandlerAddress;
     }
-    function isActive() public constant returns (bool success, bool active) {
+    function isActive() public view returns (bool success, bool active) {
         /*
             Check self for ready for functions or not.
             

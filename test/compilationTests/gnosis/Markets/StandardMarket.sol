@@ -186,7 +186,7 @@ contract StandardMarket is Market {
     /// @return Fee for trade
     function calcMarketFee(uint outcomeTokenCost)
         public
-        constant
+        view
         returns (uint)
     {
         return outcomeTokenCost * fee / FEE_RANGE;
