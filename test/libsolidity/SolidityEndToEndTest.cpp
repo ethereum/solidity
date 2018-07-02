@@ -3028,7 +3028,7 @@ BOOST_AUTO_TEST_CASE(super_in_constructor)
 		contract A { function f() public returns (uint r) { return 1; } }
 		contract B is A { function f() public returns (uint r) { return super.f() | 2; } }
 		contract C is A { function f() public returns (uint r) { return super.f() | 4; } }
-		contract D is B, C { uint data; function constructor() public { data = super.f() | 8; } function f() public returns (uint r) { return data; } }
+		contract D is B, C { uint data; constructor() public { data = super.f() | 8; } function f() public returns (uint r) { return data; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(1 | 2 | 4 | 8));
@@ -9932,10 +9932,10 @@ BOOST_AUTO_TEST_CASE(packed_functions)
 	char const* sourceCode = R"(
 		contract C {
 			// these should take the same slot
-			function() external returns (uint) a;
+			function() internal returns (uint) a;
 			function() external returns (uint) b;
 			function() external returns (uint) c;
-			function() public returns (uint) d;
+			function() internal returns (uint) d;
 			uint8 public x;
 
 			function set() public {
