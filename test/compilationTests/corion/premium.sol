@@ -140,7 +140,7 @@ contract premium is module, safeMath {
         emit Approval(msg.sender, spender, amount);
     }
     
-    function allowance(address owner, address spender) constant returns (uint256 remaining, uint256 nonce) {
+    function allowance(address owner, address spender) view returns (uint256 remaining, uint256 nonce) {
         /*
             Get the quantity of tokens given to be used
             
@@ -319,7 +319,7 @@ contract premium is module, safeMath {
         return _codeLength > 0;
     }
     
-    function balanceOf(address owner) constant returns (uint256 value) {
+    function balanceOf(address owner) view returns (uint256 value) {
         /*
             Token balance query
             
@@ -329,7 +329,7 @@ contract premium is module, safeMath {
         return db.balanceOf(owner);
     }
     
-    function totalSupply() constant returns (uint256 value) {
+    function totalSupply() view returns (uint256 value) {
         /*
             Total token quantity query
             

@@ -177,7 +177,7 @@ contract multiowned {
 		return m_ownerIndex[uint(_addr)] > 0;
 	}
 
-	function hasConfirmed(bytes32 _operation, address _owner) constant returns (bool) {
+	function hasConfirmed(bytes32 _operation, address _owner) view returns (bool) {
 		PendingState pending = m_pending[_operation];
 		uint ownerIndex = m_ownerIndex[uint(_owner)];
 
@@ -319,7 +319,7 @@ contract daylimit is multiowned {
 		return false;
 	}
 	// determines today's index.
-	function today() private constant returns (uint) { return now / 1 days; }
+	function today() private view returns (uint) { return now / 1 days; }
 
 	// FIELDS
 

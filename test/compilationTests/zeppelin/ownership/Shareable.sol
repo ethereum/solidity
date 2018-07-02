@@ -96,7 +96,7 @@ contract Shareable {
    * @param ownerIndex uint256 The index of the owner
    * @return The address of the owner
    */
-  function getOwner(uint256 ownerIndex) external constant returns (address) {
+  function getOwner(uint256 ownerIndex) external view returns (address) {
     return address(owners[ownerIndex + 1]);
   }
 
@@ -105,7 +105,7 @@ contract Shareable {
    * @param _addr address The address which you want to check.
    * @return True if the address is an owner and fase otherwise.
    */
-  function isOwner(address _addr) constant returns (bool) {
+  function isOwner(address _addr) view returns (bool) {
     return ownerIndex[_addr] > 0;
   }
 
@@ -115,7 +115,7 @@ contract Shareable {
    * @param _owner The owner address.
    * @return True if the owner has confirmed and false otherwise.
    */
-  function hasConfirmed(bytes32 _operation, address _owner) constant returns (bool) {
+  function hasConfirmed(bytes32 _operation, address _owner) view returns (bool) {
     PendingState memory pending = pendings[_operation];
     uint256 index = ownerIndex[_owner];
 

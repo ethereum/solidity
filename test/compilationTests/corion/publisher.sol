@@ -70,7 +70,7 @@ contract publisher is announcementTypes, module, safeMath {
         super.registerModuleHandler(moduleHandler);
     }
     
-    function Announcements(uint256 id) public constant returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string Announcement, string Link, bool Opposited, string _str, uint256 _uint, address _addr) {
+    function Announcements(uint256 id) public view returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string Announcement, string Link, bool Opposited, string _str, uint256 _uint, address _addr) {
         /*
             Announcement data query
             
@@ -101,7 +101,7 @@ contract publisher is announcementTypes, module, safeMath {
         _addr = announcements[id]._addr;
     }
     
-    function checkOpposited(uint256 weight, bool oppositable) public constant returns (bool success) {
+    function checkOpposited(uint256 weight, bool oppositable) public view returns (bool success) {
         /*
             Veto check
             

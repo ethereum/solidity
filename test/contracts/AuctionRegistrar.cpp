@@ -43,20 +43,20 @@ static char const* registrarCode = R"DELIMITER(
 pragma solidity ^0.4.0;
 
 contract NameRegister {
-	function addr(string _name) constant returns (address o_owner);
-	function name(address _owner) constant returns (string o_name);
+	function addr(string _name) view returns (address o_owner);
+	function name(address _owner) view returns (string o_name);
 }
 
 contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
-	function owner(string _name) constant returns (address o_owner);
-	function addr(string _name) constant returns (address o_address);
-	function subRegistrar(string _name) constant returns (address o_subRegistrar);
-	function content(string _name) constant returns (bytes32 o_content);
+	function owner(string _name) view returns (address o_owner);
+	function addr(string _name) view returns (address o_address);
+	function subRegistrar(string _name) view returns (address o_subRegistrar);
+	function content(string _name) view returns (bytes32 o_content);
 
-	function name(address _owner) constant returns (string o_name);
+	function name(address _owner) view returns (string o_name);
 }
 
 contract AuctionSystem {
@@ -201,11 +201,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		return true;
 	}
 
-	function owner(string _name) constant returns (address) { return m_toRecord[_name].owner; }
-	function addr(string _name) constant returns (address) { return m_toRecord[_name].primary; }
-	function subRegistrar(string _name) constant returns (address) { return m_toRecord[_name].subRegistrar; }
-	function content(string _name) constant returns (bytes32) { return m_toRecord[_name].content; }
-	function name(address _addr) constant returns (string o_name) { return m_toName[_addr]; }
+	function owner(string _name) view returns (address) { return m_toRecord[_name].owner; }
+	function addr(string _name) view returns (address) { return m_toRecord[_name].primary; }
+	function subRegistrar(string _name) view returns (address) { return m_toRecord[_name].subRegistrar; }
+	function content(string _name) view returns (bytes32) { return m_toRecord[_name].content; }
+	function name(address _addr) view returns (string o_name) { return m_toName[_addr]; }
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;

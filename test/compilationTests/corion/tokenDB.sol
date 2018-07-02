@@ -61,7 +61,7 @@ contract tokenDB is safeMath, ownedDB {
         return true;
     }
     
-    function getAllowance(address owner, address spender) constant returns(bool success, uint256 remaining, uint256 nonce) {
+    function getAllowance(address owner, address spender) view returns(bool success, uint256 remaining, uint256 nonce) {
         /*
             Get allowance from the database.
             

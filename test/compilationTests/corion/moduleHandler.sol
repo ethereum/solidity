@@ -16,7 +16,7 @@ contract abstractModule {
     function disconnectModule() external returns (bool success) {}
     function replaceModule(address addr) external returns (bool success) {}
     function disableModule(bool forever) external returns (bool success) {}
-    function isActive() public constant returns (bool success) {}
+    function isActive() public view returns (bool success) {}
     function replaceModuleHandler(address newHandler) external returns (bool success) {}
     function transferEvent(address from, address to, uint256 value) external returns (bool success) {}
     function newSchellingRoundEvent(uint256 roundID, uint256 reward) external returns (bool success) {}
@@ -81,7 +81,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         modules[id] = input;
     }
-    function getModuleAddressByName(string name) public constant returns( bool success, bool found, address addr ) {
+    function getModuleAddressByName(string name) public view returns( bool success, bool found, address addr ) {
         /*
             Search by name for module. The result is an Ethereum address.
             
@@ -94,7 +94,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         if ( _success && _found ) { return (true, true, modules[_id].addr); }
         return (true, false, address(0x00));
     }
-    function getModuleIDByHash(bytes32 hashOfName) public constant returns( bool success, bool found, uint256 id ) {
+    function getModuleIDByHash(bytes32 hashOfName) public view returns( bool success, bool found, uint256 id ) {
         /*
             Search by hash of name in the module array. The result is an index array.
             
@@ -109,7 +109,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return (true, false, 0);
     }
-    function getModuleIDByName(string name) public constant returns( bool success, bool found, uint256 id ) {
+    function getModuleIDByName(string name) public view returns( bool success, bool found, uint256 id ) {
         /*
             Search by name for module. The result is an index array.
             
@@ -125,7 +125,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return (true, false, 0);
     }
-    function getModuleIDByAddress(address addr) public constant returns( bool success, bool found, uint256 id ) {
+    function getModuleIDByAddress(address addr) public view returns( bool success, bool found, uint256 id ) {
         /*
             Search by ethereum address for module. The result is an index array.
             
@@ -298,7 +298,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return true;
     }
-    function balanceOf(address owner) public constant returns (bool success, uint256 value) {
+    function balanceOf(address owner) public view returns (bool success, uint256 value) {
         /*
             Query of token balance.
             
@@ -310,7 +310,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success && _found );
         return (true, token(modules[_id].addr).balanceOf(owner));
     }
-    function totalSupply() public constant returns (bool success, uint256 value) {
+    function totalSupply() public view returns (bool success, uint256 value) {
         /*
             Query of the whole token amount.
             
@@ -321,7 +321,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success && _found );
         return (true, token(modules[_id].addr).totalSupply());
     }
-    function isICO() public constant returns (bool success, bool ico) {
+    function isICO() public view returns (bool success, bool ico) {
         /*
             Query of ICO state
             
@@ -332,7 +332,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( _success && _found );
         return (true, token(modules[_id].addr).isICO());
     }
-    function getCurrentSchellingRoundID() public constant returns (bool success, uint256 round) {
+    function getCurrentSchellingRoundID() public view returns (bool success, uint256 round) {
         /*
             Query of number of the actual Schelling round.
             

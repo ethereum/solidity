@@ -124,7 +124,7 @@ contract MilestoneTracker {
 /////////
 
     /// @return The number of milestones ever created even if they were canceled
-    function numberOfMilestones() constant returns (uint) {
+    function numberOfMilestones() view returns (uint) {
         return milestones.length;
     }
 

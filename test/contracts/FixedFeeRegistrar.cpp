@@ -58,10 +58,10 @@ pragma solidity ^0.4.0;
 contract Registrar {
 	event Changed(string indexed name);
 
-	function owner(string _name) constant returns (address o_owner);
-	function addr(string _name) constant returns (address o_address);
-	function subRegistrar(string _name) constant returns (address o_subRegistrar);
-	function content(string _name) constant returns (bytes32 o_content);
+	function owner(string _name) view returns (address o_owner);
+	function addr(string _name) view returns (address o_address);
+	function subRegistrar(string _name) view returns (address o_subRegistrar);
+	function content(string _name) view returns (bytes32 o_content);
 }
 
 contract FixedFeeRegistrar is Registrar {
@@ -104,20 +104,20 @@ contract FixedFeeRegistrar is Registrar {
 		emit Changed(_name);
 	}
 
-	function record(string _name) constant returns (address o_addr, address o_subRegistrar, bytes32 o_content, address o_owner) {
+	function record(string _name) view returns (address o_addr, address o_subRegistrar, bytes32 o_content, address o_owner) {
 		Record rec = m_record(_name);
 		o_addr = rec.addr;
 		o_subRegistrar = rec.subRegistrar;
 		o_content = rec.content;
 		o_owner = rec.owner;
 	}
-	function addr(string _name) constant returns (address) { return m_record(_name).addr; }
-	function subRegistrar(string _name) constant returns (address) { return m_record(_name).subRegistrar; }
-	function content(string _name) constant returns (bytes32) { return m_record(_name).content; }
-	function owner(string _name) constant returns (address) { return m_record(_name).owner; }
+	function addr(string _name) view returns (address) { return m_record(_name).addr; }
+	function subRegistrar(string _name) view returns (address) { return m_record(_name).subRegistrar; }
+	function content(string _name) view returns (bytes32) { return m_record(_name).content; }
+	function owner(string _name) view returns (address) { return m_record(_name).owner; }
 
 	Record[2**253] m_recordData;
-	function m_record(string _name) constant internal returns (Record storage o_record) {
+	function m_record(string _name) view internal returns (Record storage o_record) {
 		return m_recordData[uint(keccak256(bytes(_name))) / 8];
 	}
 	uint constant c_fee = 69 ether;
