@@ -80,13 +80,13 @@ function download_eth()
         mkdir -p /tmp/test
         if grep -i trusty /etc/lsb-release >/dev/null 2>&1
         then
-            # built from 5ac09111bd0b6518365fe956e1bdb97a2db82af1 at 2018-04-05
-            ETH_BINARY=eth_2018-04-05_trusty
-            ETH_HASH="1e5e178b005e5b51f9d347df4452875ba9b53cc6"
+            # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
+            ETH_BINARY=aleth_2018-06-20_trusty
+            ETH_HASH="54b8a5455e45b295e3a962f353ff8f1580ed106c"
         else
-            # built from 5ac09111bd0b6518365fe956e1bdb97a2db82af1 at 2018-04-05
-            ETH_BINARY=eth_2018-04-05_artful
-            ETH_HASH="eb2d0df022753bb2b442ba73e565a9babf6828d6"
+            # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
+            ETH_BINARY=aleth_2018-06-20_artful
+            ETH_HASH="02e6c4b3d98299885e73f7db6c9e3fbe3d66d444"
         fi
         wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
         test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
