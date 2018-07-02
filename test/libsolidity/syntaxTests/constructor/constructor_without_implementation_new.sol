@@ -1,5 +1,5 @@
 contract C {
-	constructor();
+	constructor() public;
 }
 // ----
-// TypeError: (14-28): Constructor must be implemented if declared.
+// TypeError: (14-35): Constructor must be implemented if declared.

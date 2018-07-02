@@ -1,7 +1,7 @@
 contract C {
     // Fool parser into parsing a constructor as a function type.
-    constructor() x;
+    constructor() public x;
 }
 // ----
-// Warning: (83-99): Modifiers of functions without implementation are ignored.
-// DeclarationError: (97-98): Undeclared identifier.
+// Warning: (83-106): Modifiers of functions without implementation are ignored.
+// DeclarationError: (104-105): Undeclared identifier.

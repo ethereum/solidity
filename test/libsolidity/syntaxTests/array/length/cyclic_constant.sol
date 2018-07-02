@@ -1,6 +1,6 @@
 contract C {
     uint constant LEN = LEN;
-    function f() {
+    function f() public {
         uint[LEN] a;
     }
 }

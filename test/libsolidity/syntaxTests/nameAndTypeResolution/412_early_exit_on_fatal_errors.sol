@@ -4,7 +4,7 @@ contract C {
         ftring a;
     }
     S public s;
-    function s() s {
+    function s() public s {
     }
 }
 // ----

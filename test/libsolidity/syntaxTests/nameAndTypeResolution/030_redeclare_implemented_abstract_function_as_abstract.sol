@@ -1,5 +1,5 @@
-contract base { function foo(); }
+contract base { function foo() public; }
 contract derived is base { function foo() public {} }
-contract wrong is derived { function foo(); }
+contract wrong is derived { function foo() public; }
 // ----
-// TypeError: (116-131): Redeclaring an already implemented function as abstract
+// TypeError: (123-145): Redeclaring an already implemented function as abstract

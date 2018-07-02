@@ -1,5 +1,5 @@
 contract test {
-    function fa(uint) {}
+    function fa(uint) public {}
     function fb(uint) internal {}
     function fc(uint) internal {}
     function fd(uint) external {}
@@ -18,6 +18,6 @@ contract test {
     function(uint) pure internal public h = fh;
 }
 // ----
-// TypeError: (545-582): Internal or recursive type is not allowed for public state variables.
-// TypeError: (588-630): Internal or recursive type is not allowed for public state variables.
-// TypeError: (636-678): Internal or recursive type is not allowed for public state variables.
+// TypeError: (552-589): Internal or recursive type is not allowed for public state variables.
+// TypeError: (595-637): Internal or recursive type is not allowed for public state variables.
+// TypeError: (643-685): Internal or recursive type is not allowed for public state variables.
