@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(decode_function_type_array)
 			}
 			// uses "decode from memory"
 			function test1_dynamic() public returns (uint) {
-				var x = new function() external returns (uint)[](3);
+				function () external returns (uint)[] memory x = new function() external returns (uint)[](4);
 				x[0] = this.f1;
 				x[1] = this.f2;
 				x[2] = this.f3;
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(decode_function_type_array)
 			}
 			// uses "decode from calldata"
 			function test2_dynamic() public returns (uint) {
-				var x = new function() external returns (uint)[](3);
+				function () external returns (uint)[] memory x = new function() external returns (uint)[](3);
 				x[0] = this.f1;
 				x[1] = this.f2;
 				x[2] = this.f3;
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(storage_ptr)
 				r[2] = 3;
 				s.x = 11;
 				s.y = 12;
-				var (a, b, c, d) = L.f(r, s);
+				(uint a, uint b, uint c, uint d) = L.f(r, s);
 				return (r[2], s.x, a, b, c, d);
 			}
 		}

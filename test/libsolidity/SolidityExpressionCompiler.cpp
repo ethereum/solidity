@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(literal_true)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = true; }
+			function f() { bool x = true; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(literal_false)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = false; }
+			function f() { bool x = false; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(int_literal)
 {
 	char const* sourceCode = R"(
 		contract test {
-		  function f() { var x = 0x12345678901234567890; }
+		  function f() { uint x = 0x12345678901234567890; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 	char const* sourceCode = R"(
 		contract test {
 			constructor() {
-				 var x = 1 wei;
+				 uint x = 1 wei;
 			}
 		}
 	)";
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
-			constructor() {
-				 var x = 1 szabo;
+			function test () {
+				uint x = 1 szabo;
 			}
 		}
 	)";
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 		contract test {
 			constructor()
 			{
-				 var x = 1 finney;
+				 uint x = 1 finney;
 			}
 		}
 	)";
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(int_with_ether_ether_subdenomination)
 	char const* sourceCode = R"(
 		contract test {
 			constructor() {
-				 var x = 1 ether;
+				 uint x = 1 ether;
 			}
 		}
 	)";
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(comparison)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = (0x10aa < 0x11aa) != true; }
+			function f() { bool x = (0x10aa < 0x11aa) != true; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = true != (4 <= 8 + 10 || 9 != 2); }
+			function f() { bool x = true != (4 <= 8 + 10 || 9 != 2); }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(intermediately_overflowing_literals)
 	// have been applied
 	char const* sourceCode = R"(
 		contract test {
-			function f() { var x = (0x00ffffffffffffffffffffffffffffffffffffffff * 0xffffffffffffffffffffffffff01) & 0xbf; }
+			function f() { uint8 x = (0x00ffffffffffffffffffffffffffffffffffffffff * 0xffffffffffffffffffffffffff01) & 0xbf; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
